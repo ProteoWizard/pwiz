@@ -58,7 +58,7 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT + LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT + LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS + LIB_TEXT_NO_ADDUCT + TEXT_RIKEN);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -100,6 +100,7 @@ namespace pwiz.SkylineTest
 
             // Check ability to parse strangely decorated formula
             Assert.AreEqual(5, lib2Keys.Count(k => Equals("[M+]", k.Adduct.AdductFormula)));
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals("[M3H2+]", k.Adduct.AdductFormula))); // Label found in InChi description as ".../i1D3"
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("C11H22NO4", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("C6H14FO2P1", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
 
@@ -133,17 +134,19 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(28, peaksInfo.Peaks.Length);
 
             // Check use of ion mobility
-            var ccsDict = new Dictionary<string, double>()
+            var ccsDict = new Dictionary<string, double?>()
             {
                 {"Withanone; PlaSMA ID-2558", 220.9656493},
                 {"ACar 4:0", 23.145},
-                {"C6:OH b", 123.45}
+                {"C6:OH b", 123.45},
+                {"Glucolesquerellin", 189.9914404},
+                {"PRZ_M632a", null} // CCS given as "-1"
             };
             foreach (var kvp in ccsDict)
             {
                 var libEntry = lib2Keys.First(l => l.Target.DisplayName.Equals(kvp.Key));
-                AssertEx.IsTrue(lib2.TryGetIonMobilityInfos(new LibKey(libEntry.LibraryKey), null, out var ionMobilities));
-                AssertEx.AreEqual(kvp.Value,ionMobilities.First().CollisionalCrossSectionSqA??-1);
+                AssertEx.AreEqual(kvp.Value.HasValue, lib2.TryGetIonMobilityInfos(new LibKey(libEntry.LibraryKey), null, out var ionMobilities));
+                AssertEx.AreEqual(kvp.Value ?? -1,ionMobilities?.FirstOrDefault()?.CollisionalCrossSectionSqA??-1);
             }
 
         }
@@ -1289,6 +1292,47 @@ namespace pwiz.SkylineTest
             "235.1690 76988.90\n" +
             "235.2054 61542.45\n";
 
+        private const string LIB_TEXT_NO_ADDUCT =
+            "Name: (2,2,2,-2H3)ACETOPHENONE\n" +
+            "Spectrum_type: in-source\n" +
+            "InChIKey: KWOLFJPFCHCOCG-FIBGUPNXSA-N\n" +
+            "Spectrum_type: MS1\n" +
+            "Instrument_type: EI-B\n" +
+            "Instrument: HITACHI RMU-6M\n" +
+            "Ion_mode: P\n" +
+            "Formula: C8H8O\n" +
+            "MW: 123\n" +
+            "ExactMass: 123.076345\n" +
+            "DB#: 18525\n" +
+            "Comments: \"SMILES=[2H]C([2H])([2H])C(=O)c(c1)cccc1\" \"InChI=InChI=1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1D3\" \"computed SMILES=C([2H])([2H])([2H])C(=O)C1=CC=CC=C1\" \"accession=JP001492\" \"date=2016.01.19 (Created 2008.10.21, modified 2011.05.06)\" \"author=YAMAMOTO M, DEP. CHEMISTRY, FAC. SCIENCE, NARA WOMEN'S UNIV.\" \"license=CC BY-NC-SA\" \"exact mass=120.05751\" \"ionization energy=70 eV\" \"ion type=[M]+*\" \"SPLASH=splash10-0a6r-9700000000-d60fa0e8b56fa3eac3dd\" \"submitter=University of Tokyo Team (Faculty of Engineering, University of Tokyo)\" \"MoNA Rating=3.75\"\n" +
+            "Num Peaks: 26\n" +
+            "18 45.96\n" +
+            "27 23.98\n" +
+            "28 23.48\n" +
+            "37 11.79\n" +
+            "38 21.68\n" +
+            "38.5 11.49\n" +
+            "39 27.28\n" +
+            "40 13.39\n" +
+            "46 179.84\n" +
+            "50 110.80\n" +
+            "51 266.66\n" +
+            "52 31.57\n" +
+            "52.5 14.19\n" +
+            "53 13.19\n" +
+            "63 11.19\n" +
+            "74 37.77\n" +
+            "75 25.58\n" +
+            "76 30.27\n" +
+            "77 808.57\n" +
+            "78 64.64\n" +
+            "79 25.68\n" +
+            "105 999.00\n" +
+            "106 81.03\n" +
+            "122 13.69\n" +
+            "123 454.09\n" +
+            "124 43.66\n";
+
         private const string LIB_TEXT_RTINSECONDS =
             "Name: IDAGLSESYTCYLLSKGK/2\n" +
             "MW: 2003.9873686836993\n" +
@@ -1324,6 +1368,47 @@ namespace pwiz.SkylineTest
             "1801.867676	0	\"b16\"\n" +
             "1858.889160	13	\"b17\"\n" +
             "1891.910645	15	\"y17\"\n";
+
+        private const string TEXT_RIKEN =
+            "\n" +
+            "NAME: Glucolesquerellin\n" +
+            "PRECURSORMZ: 448.0775180239999\n" +
+            "PRECURSORTYPE: [M-H]-\n" +
+            "IONMODE: Negative\n" +
+            "FORMULA: C14H27NO9S3\n" +
+            "SMILES: CSCCCCCCC(=NOS(=O)(=O)O)S[C@H]1[C@@H]([C@H]([C@@H]([C@H](O1)CO)O)O)O\n" +
+            "INCHIKEY: ZAKICGFSIJSCSF-LPUQOGTASA-N\n" +
+            "IONIZATION: ESI\n" +
+            "INSTRUMENTTYPE: LC-ESI-QTOF\n" +
+            "COLLISIONENERGY: 30 eV\n" +
+            "RETENTIONTIME: 4.0667\n" +
+            "CCS: 189.9914404\n" +
+            "ONTOLOGY: Alkylglucosinolates\n" +
+            "COMMENT: DB#=SMI00033; origin=MassBank High Quality Mass Spectral Database\n" +
+            "Num Peaks: 4\n" +
+            "95.949\t819\n" +
+            "96.957\t1000\n" +
+            "259.012\t221\n" +
+            "274.987\t104\n" +
+            "\n" +
+            "NAME: PRZ_M632a\n" +
+            "PRECURSORMZ: 632.02808644783\n" +
+            "PRECURSORTYPE: [M-H]-\n" +
+            "FORMULA: C21H26Cl3N3O11S\n" +
+            "Ontology: NA\n" +
+            "INCHIKEY: UNCSXZRCRHPBJA-UHFFFAOYNA-N\n" +
+            "SMILES: CCCN(CCOC=1C(=CC(=C(C1Cl)OC2C(C(C(C(COS(O)(=O)=O)O2)O)O)O)Cl)Cl)C(N3C=CN=C3)=O\n" +
+            "RETENTIONTIME: \n" +
+            "CCS: -1\n" + // Note negative CCS, presumably means N/A
+            "IONMODE: Negative\n" +
+            "INSTRUMENTTYPE: LC-ESI-QFT\n" +
+            "INSTRUMENT: Q Exactive Orbitrap Thermo Scientific\n" +
+            "COLLISIONENERGY: 40 (nominal)\n" +
+            "Comment: DB#=ET201352; origin=MassBank-EU\n" +
+            "Num Peaks: 3\n" +
+            "67.0295	10\n" +
+            "96.9602	1000\n" +
+            "241.0032	9200\n";
 
         private const string TEXT_NIST_PARENTHESIS =
             "\n" +

@@ -778,6 +778,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_NAME = new Regex(@"^(?i:Name):\s*([A-Z()\[\]0-9]+)/(\d)", RegexOptions.CultureInvariant | RegexOptions.Compiled); // NIST libraries can contain M(O) and SpectraST M[16] TODO: Spectrast also has c- and n-term mods but we reject such entries for now - see example in TestLibraryExplorer
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^(?:Num ?Peaks|number of peaks):\s*(\d+)", NOCASE);  // NIST uses "Num peaks" and SpectraST "NumPeaks" and mzVault does its own thing
         private static readonly string COMMENT = "Comment:";
+        private static readonly string COMMENTS = "Comments:";
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ", NOCASE);
         private static readonly Regex REGEX_RT = new Regex(@" RetentionTime=([^ ,]+)", NOCASE); // In a comment
@@ -794,15 +795,18 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly string SYNON = "Synon:";
         private static readonly Regex REGEX_INCHIKEY = new Regex(@"^(?:Synon:.* )?InChIKey:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_INCHI = new Regex(@"^(?:Synon:.* )?InChI:\s*(?:InChI\=)?(.*)", NOCASE);
+        private static readonly Regex REGEX_INCHI_COMMENT = new Regex(@"(InChI=InChI=|InChI=)([^ ""]*)", NOCASE);
         private static readonly Regex REGEX_FORMULA = new Regex(@"^(Formula|Form):\s*(.*)", NOCASE);
         private static readonly Regex REGEX_CAS = new Regex(@"^(?:Synon:.* )?CAS(?:#?|No|Nbr):\s*(\d+-\d+-\d)", NOCASE); // CONSIDER(bspratt): capture NIST# as well?
         private static readonly Regex REGEX_KEGG = new Regex(@"^(?:Synon:.* )?KEGG:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_SMILES_COMMENT = new Regex(@"SMILES\=([^ ""]*)", NOCASE);
         private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type:\s*(.*)", NOCASE);
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
         private const string MZVAULT_POSITIVE_SCAN_INDICATOR = @"Positive scan";
@@ -865,12 +869,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     var adduct = Adduct.EMPTY;
                     string formula = null;
-                    var otherKeys = new Dictionary<string, string>();
-                    string inChiKey = null;
-                    string inChi = null;
-                    string CAS = null;
-                    string KEGG = null;
-                    string SMILES = null;
+                    var accessions = new Dictionary<string, string>();
 
                     int numPeaksDeclared = 0;
                     float? tfRatio = null;
@@ -878,6 +877,7 @@ namespace pwiz.Skyline.Model.Lib
                     int? copies = null;
                     double? precursorMz = null;
                     double? molWeight = null;
+                    double? exactMass = null;
                     bool? isPositive = null;
                     IonMobilityAndCCS ionMobility = IonMobilityAndCCS.EMPTY;
 
@@ -902,14 +902,13 @@ namespace pwiz.Skyline.Model.Lib
                             continue; // Line is fully consumed
                         }
 
-                        if (!isPeptide && ParseMolecule(line, otherKeys, lineCount, ref formula, ref inChiKey, ref inChi, ref CAS, 
-                                ref KEGG, ref SMILES, ref adduct, ref precursorMz, ref molWeight, ref isPositive))
+                        if (!isPeptide && ParseMolecule(line, accessions, lineCount, ref formula, ref adduct, ref precursorMz, ref molWeight, ref exactMass, ref isPositive))
                         {
                             continue;  // Line is fully consumed
                         }
 
                         // For peptides (and some molecules), a lot of useful info is jammed into the COMMENT line and must be further picked apart
-                        if (ParseComment(line, isPeptide, ref sequence, ref copies, ref tfRatio, ref rt, ref irt))
+                        if (ParseComment(line, isPeptide, ref sequence, ref copies, ref tfRatio, ref rt, ref irt, accessions))
                         {
                             continue;  // Line is fully consumed
                         }
@@ -938,6 +937,8 @@ namespace pwiz.Skyline.Model.Lib
 
                     } // End parser loop
 
+                    var accessionNumbers = MoleculeAccessionNumbers.Create(accessions);
+
                     if (formula != null)
                     {
                         // Watch for strange formula specification as seen in MoNA
@@ -954,7 +955,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     // Use molecular weight (if any) as mass cue if no precursor mz given
-                    precursorMz ??= molWeight;
+                    precursorMz ??= (exactMass ?? molWeight);
 
                     // Try to infer adduct if none given
                     if (charge == 0 && adduct.IsEmpty && !string.IsNullOrEmpty(formula))
@@ -965,7 +966,7 @@ namespace pwiz.Skyline.Model.Lib
                             if (ParsedMolecule.TryParseFormula(formula, out var _, out var errMessage))
                             {
                                 charge = SmallMoleculeTransitionListReader.ValidateFormulaWithMzAndAdduct(mzMatchTolerance, true,
-                                    ref formulaIn, ref adduct, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
+                                    ref formulaIn, ref adduct, accessionNumbers, new TypedMass(precursorMz.Value, MassType.Monoisotopic), null, isPositive, true, out _, out _, out _) ?? 0;
                             }
                             else
                             {
@@ -1001,7 +1002,12 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     if (charge == 0 && adduct.IsEmpty)
-                        continue; // In the end, couldn't understand this as a peptide nor as a small molecule - ignore. CONSIDER(bspratt): throw an error? Historical behavior is to be silent.
+                    {
+                        // In the end, couldn't understand this as a peptide nor as a small molecule - ignore. 
+                        // Historical behavior is to be silent, posting a user message is better than nothing.
+                        Messages.WriteAsyncUserMessage(LibResources.NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___ignored, sequence, lineCount); 
+                        continue; 
+                    }
 
                     if (numPeaksDeclared == 0)
                         ThrowIOException(lineCount, string.Format(LibResources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
@@ -1151,7 +1157,7 @@ namespace pwiz.Skyline.Model.Lib
                     NistSpectrumInfo info;
                     try
                     {
-                        var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, inChiKey, otherKeys), adduct);
+                        var key = isPeptide ? new LibKey(sequence, charge) : new LibKey(SmallMoleculeLibraryAttributes.Create(sequence, formula, accessions), adduct);
                         info = new NistSpectrumInfo(key, tfRatio ?? 1000, rt, irt, Convert.ToSingle(totalIntensity),
                             (ushort)(copies ?? 1), (ushort)numNonZeroPeaks, lenCompressed, lenAnnotations, location, ionMobility);
                         if (!isPeptide)
@@ -1327,9 +1333,10 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <returns>true if line was shown to be comment info, and parser can advance to next line</returns>
         private static bool ParseComment(string line, bool isPeptide, ref string sequence, ref int? copies, ref float? tfRatio,
-            ref double? rt, ref double? irt)
+            ref double? rt, ref double? irt, IDictionary<string,string> otherKeys)
         {
-            if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase)) // Case insensitive
+            if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase) || // Case insensitive
+                line.StartsWith(COMMENTS, StringComparison.InvariantCultureIgnoreCase))
             {
                 Match match;
                 if (isPeptide)
@@ -1344,6 +1351,11 @@ namespace pwiz.Skyline.Model.Lib
                         if (match.Success)
                             copies = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
                     }
+                }
+                else
+                {
+                    ParseAccession(line, otherKeys, MoleculeAccessionNumbers.TagInChI, REGEX_INCHI_COMMENT, 2);
+                    ParseAccession(line, otherKeys, MoleculeAccessionNumbers.TagSMILES, REGEX_SMILES_COMMENT);
                 }
 
                 if (!tfRatio.HasValue)
@@ -1379,13 +1391,26 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        private static bool ParseAccession(string line, IDictionary<string, string> accessions, string tag, Regex regex, int group = 1)
+        {
+            if (!accessions.ContainsKey(tag))
+            {
+                var match = regex.Match(line);
+                if (match.Success)
+                {
+                    accessions.Add(tag, match.Groups[group].Value);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Parse line for molecule information
         /// </summary>
         /// <returns>true if line was shown to be molecule info, and parser can advance to next line</returns>
-        private bool ParseMolecule(string line, Dictionary<string, string> otherKeys, long lineCount, ref string formula, ref string inChiKey,
-            ref string inChi, ref string CAS, ref string KEGG, ref string SMILES, ref Adduct adduct, ref double? precursorMz,
-            ref double? molWeight, ref bool? isPositive)
+        private bool ParseMolecule(string line, Dictionary<string, string> accessions, long lineCount, ref string formula, ref Adduct adduct, ref double? precursorMz,
+            ref double? molWeight, ref double? exactMass, ref bool? isPositive)
         {
             Match match;
             if (formula == null)
@@ -1404,55 +1429,16 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            if (inChiKey == null)
-            {
-                match = REGEX_INCHIKEY.Match(line);
-                if (match.Success)
-                {
-                    inChiKey = match.Groups[1].Value;
-                    return true;  // Line is fully consumed
-                }
-            }
-
-            if (inChi == null)
-            {
-                match = REGEX_INCHI.Match(line);
-                if (match.Success)
-                {
-                    otherKeys.Add(MoleculeAccessionNumbers.TagInChI, inChi = match.Groups[1].Value);
-                    return true;  // Line is fully consumed
-                }
-            }
-
-            if (CAS == null)
-            {
-                match = REGEX_CAS.Match(line);
-                if (match.Success)
-                {
-                    otherKeys.Add(MoleculeAccessionNumbers.TagCAS, CAS = match.Groups[1].Value);
-                    return true;  // Line is fully consumed
-                }
-            }
-
-            if (KEGG == null)
-            {
-                match = REGEX_KEGG.Match(line);
-                if (match.Success)
-                {
-                    otherKeys.Add(MoleculeAccessionNumbers.TagKEGG, KEGG = match.Groups[1].Value);
-                    return true;  // Line is fully consumed
-                }
-            }
-
-            if (SMILES == null)
-            {
-                match = REGEX_SMILES.Match(line);
-                if (match.Success)
-                {
-                    otherKeys.Add(MoleculeAccessionNumbers.TagSMILES, SMILES = match.Groups[1].Value);
-                    return true;  // Line is fully consumed
-                }
-            }
+            if (ParseAccession(line, accessions, MoleculeAccessionNumbers.TagInChiKey, REGEX_INCHIKEY))
+                return true; // Line is fully consumed
+            if (ParseAccession(line, accessions, MoleculeAccessionNumbers.TagInChI, REGEX_INCHI))
+                return true; // Line is fully consumed
+            if (ParseAccession(line, accessions, MoleculeAccessionNumbers.TagCAS, REGEX_CAS))
+                return true; // Line is fully consumed
+            if (ParseAccession(line, accessions, MoleculeAccessionNumbers.TagKEGG, REGEX_KEGG))
+                return true; // Line is fully consumed
+            if (ParseAccession(line, accessions, MoleculeAccessionNumbers.TagSMILES, REGEX_SMILES))
+                return true; // Line is fully consumed
 
             if (adduct.IsEmpty)
             {
@@ -1498,6 +1484,22 @@ namespace pwiz.Skyline.Model.Lib
                                 line));
                     }
                     molWeight = mw;
+                    return true;  // Line is fully consumed
+                }
+            }
+
+            if (!exactMass.HasValue)
+            {
+                match = REGEX_EXACTMASS.Match(line);
+                if (match.Success)
+                {
+                    if (!TextUtil.TryParseDoubleUncertainCulture(match.Groups[1].Value, out var em))
+                    {
+                        ThrowIOException(lineCount,
+                            string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                                line));
+                    }
+                    exactMass = em;
                     return true;  // Line is fully consumed
                 }
             }
