@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
@@ -302,7 +303,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", tutorialPage++);
 
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(() => importPeptideSearchDlg.ClickNextButton());
-            PauseForScreenShot("Associate Proteins", tutorialPage++);
+            PauseForScreenShot<AssociateProteinsDlg>("Associate Proteins", tutorialPage++);
             WaitForCondition(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
@@ -395,8 +396,8 @@ namespace pwiz.SkylineTestTutorial
             const int skylineWindowHeight = 792;
             RunUI(() =>
                 {
-                    // Make window screenshot size
-                    if (IsPauseForScreenShots && SkylineWindow.WindowState != FormWindowState.Maximized)
+                    // Make window screenshot size and scroll sequence tree
+                    if (SkylineWindow.WindowState != FormWindowState.Maximized)
                     {
                         SkylineWindow.Width = skylineWindowWidth;
                         SkylineWindow.Height = skylineWindowHeight;
@@ -446,7 +447,14 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowAlignedPeptideIDTimes(true));
             ChangePeakBounds(TIB_L, pepIndex, 38.79, 39.385);
             tutorialPage++;
-            PauseForScreenShot("Chromatogram graphs clipped from main window", tutorialPage++);
+            Func<Bitmap, Bitmap> clipChroms = bmp =>
+                ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
+                {
+                    SkylineWindow.GetGraphChrom("5b_MCF7_TiTip3"),
+                    SkylineWindow.GetGraphChrom("1_MCF7_TiB_L"),
+                });
+
+            PauseForScreenShot("Chromatogram graphs clipped from main window", tutorialPage++, null, clipChroms);
             CheckAnnotations(TIB_L, pepIndex, atest++);
 
             var alignmentForm = ShowDialog<AlignmentForm>(() => SkylineWindow.ShowRetentionTimeAlignmentForm());
