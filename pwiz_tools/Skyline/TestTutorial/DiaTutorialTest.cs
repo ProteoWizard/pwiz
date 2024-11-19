@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -59,7 +60,7 @@ namespace pwiz.SkylineTestTutorial
         public void TestDiaTutorial()
         {
             // Set true to look at tutorial screenshots.
-            // IsPauseForScreenShots = true;
+             IsPauseForScreenShots = true;
             // IsCoverShotMode = true;
             CoverShotName = "DIA";
             // PauseStartPage = 36;
@@ -264,7 +265,13 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             WaitForClosedForm(importPeptideSearchDlg);
             WaitForConditionUI(() => SkylineWindow.DocumentUI.PeptideGroupCount == 6);
-            RunUI(() => SkylineWindow.ExpandPrecursors());
+            RunUI(() =>
+            {
+                SkylineWindow.ExpandPrecursors();
+                if(IsPauseForScreenShots)
+                    FormUtil.SetScrollPos(SkylineWindow.SequenceTree, ScrollDirection.horz, 0);
+            });
+
             if (IsPauseForScreenShots)
             {
                 var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
@@ -274,7 +281,6 @@ namespace pwiz.SkylineTestTutorial
                     allChrom.Left = SkylineWindow.Right + 20;
                 });
 
-                FormUtil.SetScrollPos(SkylineWindow.SequenceTree,ScrollDirection.horz, 0);
                 PauseForScreenShot<SequenceTreeForm>("Targets view clipped - scrolled left and before fully imported", 26);
             }
             WaitForDocumentLoaded(10 * 60 * 1000);    // 10 minutes
