@@ -26,8 +26,6 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
 {
-    public enum ScrollDirection { horz = 0, vert = 1 }
-
     public static class FormUtil
     {
         /// <summary>
@@ -218,7 +216,7 @@ namespace pwiz.Common.SystemUtil
         [DllImport("user32.dll", SetLastError = true)]
         private static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
 
-        public static void SetScrollPos(this Control control, ScrollDirection sd, int pos)
+        public static void SetScrollPos(this Control control, Orientation sd, int pos)
         {
             SetScrollPos(control.Handle, (int)sd, pos, true);
         }
@@ -230,6 +228,23 @@ namespace pwiz.Common.SystemUtil
             return (
                 from Control childControl in control.Controls
                 select GetFocus(childControl)).FirstOrDefault(focus => focus != null);
+        }
+
+        private const int SWP_NOMOVE = 0x0002;
+        private const int SWP_NOSIZE = 0x0001;
+        private const int SWP_NOACTIVATE = 0x0010;
+        private const int SWP_SHOWWINDOW = 0x0040;
+
+        private static readonly IntPtr HWND_TOP = new IntPtr(0);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        public static void BringWindowToSameLevelWithoutActivating(this Form targetWindow, IntPtr referenceWindowHandle)
+        {
+            // Use SetWindowPos to adjust z-order without activating
+            SetWindowPos(targetWindow.Handle, referenceWindowHandle, 0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
     }
 }
