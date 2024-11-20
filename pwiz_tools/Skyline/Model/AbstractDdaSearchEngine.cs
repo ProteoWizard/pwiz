@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model
             public Setting(string name, bool defaultValue)
             {
                 Name = name;
-                _value = defaultValue;
+                _value = DefaultValue = defaultValue;
                 MinValue = false;
                 MaxValue = true;
             }
@@ -78,16 +78,16 @@ namespace pwiz.Skyline.Model
             {
                 Name = name;
                 MinValue = string.Empty;
-                _value = defaultValue ?? string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
             }
 
-            public Setting(Setting other)
+            public Setting(Setting other, object newValue = null)
             {
                 Name = other.Name;
                 MinValue = other.MinValue;
                 MaxValue = other.MaxValue;
-                _value = other.Value;
+                _value = DefaultValue = newValue ?? other.Value;
                 ValidValues = other.ValidValues;
             }
             
@@ -103,6 +103,9 @@ namespace pwiz.Skyline.Model
                 get { return _value; }
                 set { _value = Validate(value); }
             }
+
+            public object DefaultValue { get; }
+            public bool IsDefault => Equals(DefaultValue, _value);
 
             public object Validate(object value)
             {
@@ -224,6 +227,11 @@ namespace pwiz.Skyline.Model
 
         public abstract void SetModifications(IEnumerable<StaticMod> modifications, int maxVariableMods_);
 
-        public abstract void Dispose();
+        public bool IsDisposed;
+
+        public virtual void Dispose()
+        {
+            IsDisposed = true;
+        }
     }
 }

@@ -192,14 +192,30 @@ namespace pwiz.SkylineTestUtil
             _tutorialPath = tutorialPath;
         }
 
+        private SkylineWindow SkylineWindow => Program.MainWindow;
+
         public string ScreenshotUrl(int screenshotNum)
         {
             if (string.IsNullOrEmpty(_tutorialPath))
                 return null;
-            var fileUri = new Uri(Path.Combine(_tutorialPath, "index.html")).AbsoluteUri + "#s-" + screenshotNum;
+            return GetTutorialUrl("index.html") + "#s-" + screenshotNum;
+        }
+
+        public string ScreenshotImgUrl(int screenshotNum)
+        {
+            return GetTutorialUrl("s-" + screenshotNum + ".png");
+        }
+
+        private const string SCREENSHOT_URL_FOLDER = "24-1";
+
+        private string GetTutorialUrl(string filePart)
+        {
+            if (string.IsNullOrEmpty(_tutorialPath))
+                return null;
+            var fileUri = new Uri(Path.Combine(_tutorialPath, filePart)).AbsoluteUri;
             const string tutorialSearch = "/Tutorials/";
             int tutorialIndex = fileUri.IndexOf(tutorialSearch, StringComparison.Ordinal);
-            return "https://skyline.ms/tutorials/24-1/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
+            return "https://skyline.ms/tutorials/" + SCREENSHOT_URL_FOLDER + "/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
         }
 
         public string ScreenshotFile(int screenshotNum)
@@ -210,6 +226,27 @@ namespace pwiz.SkylineTestUtil
         public string ScreenshotDescription(int i, string description)
         {
             return string.Format("s-{0}: {1}", i, description);
+        }
+
+        public bool IsOverlappingScreenshot(Rectangle bounds)
+        {
+            var skylineRect = GetScreenshotBounds();
+            return !Rectangle.Intersect(skylineRect, bounds).IsEmpty;
+        }
+
+        public Rectangle GetScreenshotBounds()
+        {
+            return (Rectangle)SkylineWindow.Invoke((Func<Rectangle>)(() => SkylineWindow.Bounds));
+        }
+
+        public Rectangle GetScreenshotScreenBounds()
+        {
+            return GetScreenshotScreen().Bounds;
+        }
+
+        public Screen GetScreenshotScreen()
+        {
+            return (Screen)SkylineWindow.Invoke((Func<Screen>)(() => Screen.FromControl(SkylineWindow)));
         }
 
         public static void ActivateScreenshotForm(Control screenshotControl)
