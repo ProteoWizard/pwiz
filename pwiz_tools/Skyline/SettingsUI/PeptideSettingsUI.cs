@@ -1956,5 +1956,10 @@ namespace pwiz.Skyline.SettingsUI
             }
             ComboHelper.AutoSizeDropDown(comboLodMethod);
         }
+
+        public void SetSelectedLibrary(string name)
+        {
+            listLibraries.SelectedItem = name;
+        }
     }
 }

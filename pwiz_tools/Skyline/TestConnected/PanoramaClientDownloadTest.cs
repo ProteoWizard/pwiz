@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestConnected
     public class PanoramaClientDownloadTest : AbstractFunctionalTest
     {
         private const string TEST_USER = "skyline_tester@proteinms.net";
-        private const string TEST_PASSWORD = "lclcmsms";
+        private const string TEST_PASSWORD = "Lclcmsms1!";
         private const string PANORAMA_WEB = "https://panoramaweb.org";
         private const string TEST_FOLDER = "SkylineTest";
         private const string PANORAMA_FOLDER = "ForPanoramaClientTest";

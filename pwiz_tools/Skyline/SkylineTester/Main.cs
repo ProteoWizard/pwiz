@@ -241,7 +241,9 @@ namespace SkylineTester
             TestsRun = 0;
             if (Directory.Exists(_resultsDir))
                 Try.Multi<Exception>(() => Directory.Delete(_resultsDir, true), 4, false);
-            DeleteTestRunnerConfigFiles();
+            // Don't delete config files when pausing for screenshots
+            if (!args.Contains("pause=") || args.Contains("pause=0"))
+                DeleteTestRunnerConfigFiles();
 
             var testRunner = Path.Combine(GetSelectedBuildDir(), "TestRunner.exe");
             _testRunnerIndex = new List<int>();
