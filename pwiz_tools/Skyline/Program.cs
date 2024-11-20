@@ -352,12 +352,21 @@ namespace pwiz.Skyline
         {
             foreach (Form form in FormUtil.OpenForms)
             {
-                Rectangle rcForm = form.Bounds;
-                var screen = Screen.FromControl(form);
-                if (!rcForm.IntersectsWith(screen.WorkingArea))
-                {
-                    FormEx.ForceOnScreen(form);
-                }
+                // Just in case a form has been created on a different thread
+                if (form.InvokeRequired)
+                    form.Invoke((Action)(() => ForceFormOnScreen(form)));
+                else
+                    ForceFormOnScreen(form);
+            }
+        }
+
+        private static void ForceFormOnScreen(Form form)
+        {
+            var rcForm = form.Bounds;
+            var screen = Screen.FromControl(form);
+            if (!rcForm.IntersectsWith(screen.WorkingArea))
+            {
+                FormEx.ForceOnScreen(form);
             }
         }
 
