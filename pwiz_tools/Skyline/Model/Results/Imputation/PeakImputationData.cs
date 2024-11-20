@@ -189,14 +189,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
 
-            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters, AlignmentResults alignments, ChromatogramTimeRanges chromatogramTimeRanges)
+            private IEnumerable<MoleculePeaks> GetRows(ProductionMonitor productionMonitor, Parameters parameters,
+                AlignmentResults alignments, ChromatogramTimeRanges chromatogramTimeRanges)
             {
                 var peptideIdentityPaths = parameters.PeptideIdentityPaths?.ToHashSet();
                 var document = parameters.Document;
                 var measuredResults = document.MeasuredResults;
                 if (measuredResults == null)
                 {
-                    yield break;
+                    return Array.Empty<MoleculePeaks>();
                 }
 
                 Dictionary<Target, double> standardTimes = null;
@@ -204,106 +205,122 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 {
                     standardTimes = CollectionUtil.SafeToDictionary(alignments.StandardTimes);
                 }
+
                 var resultFileInfos = ReplicateFileInfo.List(document.MeasuredResults);
                 var resultFileInfoDict =
-                    resultFileInfos.ToDictionary(resultFileInfo => ReferenceValue.Of(resultFileInfo.ReplicateFileId.FileId));
-                int moleculeIndex = 0;
-                int moleculeCount = peptideIdentityPaths?.Count ?? document.MoleculeCount;
-                foreach (var moleculeGroup in document.MoleculeGroups)
+                    resultFileInfos.ToDictionary(resultFileInfo =>
+                        ReferenceValue.Of(resultFileInfo.ReplicateFileId.FileId));
+                var molecules = document.MoleculeGroups.SelectMany(moleculeGroup =>
+                    moleculeGroup.Molecules.Where(mol => mol.GlobalStandardType == null && mol.Children.Count != 0)
+                        .Select(mol => Tuple.Create(moleculeGroup, mol))).ToList();
+                if (peptideIdentityPaths != null)
                 {
-                    foreach (var molecule in moleculeGroup.Molecules)
-                    {
-                        productionMonitor.CancellationToken.ThrowIfCancellationRequested();
-                        var timeRanges = chromatogramTimeRanges?.GetTimeRanges(molecule);
-                        var peptideIdentityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
-                        if (false == peptideIdentityPaths?.Contains(peptideIdentityPath))
-                        {
-                            continue;
-                        }
-                        productionMonitor.SetProgress(moleculeIndex * 100 / moleculeCount);
-                        moleculeIndex++;
-                        if (peptideIdentityPaths == null && molecule.GlobalStandardType != null)
-                        {
-                            continue;
-                        }
+                    molecules = molecules.Where(tuple =>
+                            peptideIdentityPaths.Contains(new IdentityPath(tuple.Item1.PeptideGroup,
+                                tuple.Item2.Peptide)))
+                        .ToList();
+                }
 
-                        if (molecule.Children.Count == 0)
+                var moleculePeaksArray = new MoleculePeaks[molecules.Count];
+                int progressCount = 0;
+                ParallelEx.For(0, molecules.Count, iMolecule =>
+                {
+                    if (productionMonitor.CancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+
+                    lock (moleculePeaksArray)
+                    {
+                        progressCount++;
+                        productionMonitor.SetProgress(progressCount * 100 / molecules.Count);
+                    }
+
+                    var moleculeGroup = molecules[iMolecule].Item1;
+                    var molecule = molecules[iMolecule].Item2;
+                    var timeRanges = chromatogramTimeRanges?.GetTimeRanges(molecule);
+
+                    var peptideIdentityPath = new IdentityPath(moleculeGroup.PeptideGroup, molecule.Peptide);
+                    var peaks = new List<RatedPeak>();
+                    for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
+                    {
+                        foreach (var peptideChromInfo in molecule.GetSafeChromInfo(replicateIndex))
                         {
-                            continue;
-                        }
-                        var peaks = new List<RatedPeak>();
-                        for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
-                        {
-                            foreach (var peptideChromInfo in molecule.GetSafeChromInfo(replicateIndex))
+                            productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                            if (!resultFileInfoDict.TryGetValue(peptideChromInfo.FileId, out var peakResultFile))
                             {
-                                productionMonitor.CancellationToken.ThrowIfCancellationRequested();
-                                if (!resultFileInfoDict.TryGetValue(peptideChromInfo.FileId, out var peakResultFile))
+                                // Shouldn't happen
+                                continue;
+                            }
+
+                            var chromFileInfo = document.MeasuredResults.Chromatograms[replicateIndex]
+                                .GetFileInfo(peptideChromInfo.FileId);
+                            PeptideDocNode scoredMolecule = molecule;
+                            bool manuallyIntegrated =
+                                IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
+                            if (manuallyIntegrated)
+                            {
+                                if (!parameters.OverwriteManualPeaks)
                                 {
-                                    // Shouldn't happen
                                     continue;
                                 }
-
-                                var chromFileInfo = document.MeasuredResults.Chromatograms[replicateIndex]
-                                    .GetFileInfo(peptideChromInfo.FileId);
-                                PeptideDocNode scoredMolecule = molecule;
-                                bool manuallyIntegrated = IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
-                                if (manuallyIntegrated)
-                                {
-                                    if (!parameters.OverwriteManualPeaks)
-                                    {
-                                        continue;
-                                    }
-                                }
-                                
-                                var rawPeakBounds = GetRawPeakBounds(scoredMolecule,
-                                    replicateIndex,
-                                    peptideChromInfo.FileId);
-                                var onDemandFeatureCalculator = new OnDemandFeatureCalculator(
-                                    parameters.ScoringModel.PeakFeatureCalculators, parameters.Document.Settings,
-                                    molecule, replicateIndex, chromFileInfo);
-                                var candidatePeakGroups = molecule.TransitionGroups.SelectMany(tg =>
-                                    onDemandFeatureCalculator.GetCandidatePeakGroups(tg.TransitionGroup)).ToList();
-                                CandidatePeakGroupData matchingPeakGroup = null;
-                                if (manuallyIntegrated)
-                                {
-                                    matchingPeakGroup = candidatePeakGroups
-                                        .OrderByDescending(group => group.Score.ModelScore).FirstOrDefault();
-                                }
-                                else
-                                {
-                                    if (rawPeakBounds != null)
-                                    {
-                                        matchingPeakGroup = candidatePeakGroups.FirstOrDefault(peakGroupData =>
-                                            peakGroupData.MinStartTime == rawPeakBounds.StartTime &&
-                                            peakGroupData.MaxEndTime == rawPeakBounds.EndTime);
-                                    }
-                                    if (matchingPeakGroup == null)
-                                    {
-                                        matchingPeakGroup =
-                                            onDemandFeatureCalculator.GetChosenPeakGroupData(molecule.TransitionGroups
-                                                .First().TransitionGroup);
-                                    }
-                                }
-                                double? score = matchingPeakGroup?.Score.ModelScore;
-                                var timeIntervals = timeRanges?.GetTimeIntervals(peakResultFile.MsDataFileUri);
-                                var peak = new RatedPeak(peakResultFile, alignments?.GetAlignment(peakResultFile.ReplicateFileId), timeIntervals, rawPeakBounds, score,
-                                    manuallyIntegrated);
-                                peaks.Add(peak);
                             }
+
+                            var rawPeakBounds = GetRawPeakBounds(scoredMolecule,
+                                replicateIndex,
+                                peptideChromInfo.FileId);
+                            var onDemandFeatureCalculator = new OnDemandFeatureCalculator(
+                                parameters.ScoringModel.PeakFeatureCalculators, parameters.Document.Settings,
+                                molecule, replicateIndex, chromFileInfo);
+                            var candidatePeakGroups = molecule.TransitionGroups.SelectMany(tg =>
+                                onDemandFeatureCalculator.GetCandidatePeakGroups(tg.TransitionGroup)).ToList();
+                            CandidatePeakGroupData matchingPeakGroup = null;
+                            if (manuallyIntegrated)
+                            {
+                                matchingPeakGroup = candidatePeakGroups
+                                    .OrderByDescending(group => group.Score.ModelScore).FirstOrDefault();
+                            }
+                            else
+                            {
+                                if (rawPeakBounds != null)
+                                {
+                                    matchingPeakGroup = candidatePeakGroups.FirstOrDefault(peakGroupData =>
+                                        peakGroupData.MinStartTime == rawPeakBounds.StartTime &&
+                                        peakGroupData.MaxEndTime == rawPeakBounds.EndTime);
+                                }
+
+                                if (matchingPeakGroup == null)
+                                {
+                                    matchingPeakGroup =
+                                        onDemandFeatureCalculator.GetChosenPeakGroupData(molecule.TransitionGroups
+                                            .First().TransitionGroup);
+                                }
+                            }
+
+                            double? score = matchingPeakGroup?.Score.ModelScore;
+                            var timeIntervals = timeRanges?.GetTimeIntervals(peakResultFile.MsDataFileUri);
+                            var peak = new RatedPeak(peakResultFile,
+                                alignments?.GetAlignment(peakResultFile.ReplicateFileId), timeIntervals, rawPeakBounds,
+                                score,
+                                manuallyIntegrated);
+                            peaks.Add(peak);
                         }
-                        var moleculePeaks = new MoleculePeaks(peptideIdentityPath, peaks);
-                        if (true == standardTimes?.TryGetValue(molecule.ModifiedTarget, out var standardTime))
-                        {
-                            moleculePeaks = moleculePeaks.ChangeAlignmentStandardTime(standardTime);
-                        }
-                        yield return moleculePeaks;
                     }
-                }
+
+                    var moleculePeaks = new MoleculePeaks(peptideIdentityPath, peaks);
+                    if (true == standardTimes?.TryGetValue(molecule.ModifiedTarget, out var standardTime))
+                    {
+                        moleculePeaks = moleculePeaks.ChangeAlignmentStandardTime(standardTime);
+                    }
+
+                    moleculePeaksArray[iMolecule] = moleculePeaks;
+                });
+                return moleculePeaksArray.Where(p => p != null);
             }
 
             public override string GetDescription(object workParameter)
             {
-                return "Peak Imputation Data";
+                return "Evaluating peaks";
             }
         }
 

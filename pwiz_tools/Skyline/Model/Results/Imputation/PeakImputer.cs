@@ -9,9 +9,10 @@ namespace pwiz.Skyline.Model.Results.Imputation
     public class PeakImputer
     {
         private OnDemandFeatureCalculator _onDemandFeatureCalculator;
-        public PeakImputer(SrmDocument document, IdentityPath peptideIdentityPath, PeakScoringModelSpec scoringModel, ReplicateFileInfo replicateFileInfo)
+        public PeakImputer(SrmDocument document, ChromatogramTimeRanges chromatogramTimeRanges, IdentityPath peptideIdentityPath, PeakScoringModelSpec scoringModel, ReplicateFileInfo replicateFileInfo)
         {
             SrmSettings  = document.Settings;
+            ChromatogramTimeRanges = chromatogramTimeRanges;
             ReplicateFileInfo = replicateFileInfo;
             PeptideIdentityPath = peptideIdentityPath;
             ScoringModel = scoringModel;
@@ -23,6 +24,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         }
 
         public SrmSettings SrmSettings { get; }
+        public ChromatogramTimeRanges ChromatogramTimeRanges { get; }
         private ReplicateFileInfo ReplicateFileInfo { get; }
         public IdentityPath PeptideIdentityPath { get; }
         public PeptideDocNode PeptideDocNode { get; }
@@ -54,10 +56,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
             RatedPeak.PeakBounds bestPeakBounds)
         {
             var chromatogramGroupInfos = LoadChromatogramGroupInfos(document, peptideDocNode).ToList();
-            var timeIntervals = new TriggeredAcquisition().InferTimeIntervals(
-                chromatogramGroupInfos.SelectMany(chromatogramGroupInfo =>
-                    Enumerable.Range(0, chromatogramGroupInfo.NumTransitions).Select(i =>
-                        chromatogramGroupInfo.GetTransitionInfo(i, TransformChrom.raw).Times)));
+            var timeRanges = ChromatogramTimeRanges.GetTimeRanges(peptideDocNode);
+            var timeIntervals = timeRanges?.GetTimeIntervals(ReplicateFileInfo.MsDataFileUri);
             if (!MaxRtShift.HasValue)
             {
                 return RatedPeak.MakeValidPeakBounds(timeIntervals, bestPeakBounds);

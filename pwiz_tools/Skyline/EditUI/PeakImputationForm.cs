@@ -554,7 +554,7 @@ namespace pwiz.Skyline.EditUI
                             {
                                 continue;
                             }
-                            var peakImputer = new PeakImputer(newDoc, row.Peptide.IdentityPath, scoringModel,
+                            var peakImputer = new PeakImputer(newDoc, _data.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
                                 rejectedPeak.ReplicateFileInfo);
                             var bestPeakBounds =
                                 exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
