@@ -765,6 +765,40 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
+        // Wait for a MultiButtonMsgDlg to be shown with a message that could have been created with the given format
+        public static MultiButtonMsgDlg WaitForMultiButtonMsgDlg(string messageFormat, int millis = WAIT_TIME)
+        {
+            // Break the message format into its constant parts
+            // e.g. "foo {1} bar baz {0} hmm" => "foo ", " bar baz ", " hmm"
+            var parts = messageFormat.Split('{');
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+                if (part.Contains("}"))
+                {
+                    parts[i] = part.Substring(part.IndexOf('}')+1);
+                }
+            }
+
+            // Find an open MultiButtonMsgDlg whose message contains all the constant parts of the given format
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                foreach (var form in FindOpenForms<MultiButtonMsgDlg>())
+                {
+                    var message = form.Message;
+                    if (message != null && parts.All(p => string.IsNullOrEmpty(p) || message.Contains(p)))
+                    {
+                        return form; // Success
+                    }
+                }
+
+                Thread.Sleep(SLEEP_INTERVAL);
+            }
+            return null;
+
+        }
 
         public static TDlg WaitForOpenForm<TDlg>(int millis = WAIT_TIME) where TDlg : Form
         {
