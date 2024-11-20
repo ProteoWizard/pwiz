@@ -269,7 +269,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ExpandPrecursors();
                 if(IsPauseForScreenShots)
-                    FormUtil.SetScrollPos(SkylineWindow.SequenceTree, ScrollDirection.horz, 0);
+                    FormUtil.SetScrollPos(SkylineWindow.SequenceTree, Orientation.Horizontal, 0);
             });
 
             if (IsPauseForScreenShots)
