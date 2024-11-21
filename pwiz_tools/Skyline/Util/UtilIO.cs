@@ -843,22 +843,22 @@ namespace pwiz.Skyline.Util
             return !IsDirectory(path);
         }
 
-        public static bool IsWriteLocked(string path)
+        public static bool IsWritable(string path)
         {
             try
             {
                 using var fs = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.None);
-                return false;
+                return true;
             }
             catch (IOException)
             {
                 // An IOException means the file is locked
-                return true;
+                return false;
             }
             catch (UnauthorizedAccessException)
             {
-                // Or we lack permissions, treat it as locked
-                return true;
+                // Or we lack permissions can also make it not possible to write to
+                return false;
             }
         }
 
