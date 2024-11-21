@@ -47,6 +47,7 @@ namespace pwiz.SkylineTestUtil
         Control ScreenshotControl { get; }
         bool FullScreen { get; }
         Func<Bitmap, Bitmap> ProcessShot { get; }
+        Func<Rectangle, Rectangle> PreprocessArea { get; }
     }
 
     public partial class ScreenshotPreviewForm : Form
@@ -156,7 +157,7 @@ namespace pwiz.SkylineTestUtil
                 _linkUrl = _pauseTestController.LinkUrl;
                 _imageUrl = _pauseTestController.ImageUrl;
                 _screenshotValues = new ScreenshotValues(_pauseTestController.ScreenshotControl,
-                    _pauseTestController.FullScreen, _pauseTestController.ProcessShot, delayForScreenshot);
+                    _pauseTestController.FullScreen, _pauseTestController.ProcessShot, _pauseTestController.PreprocessArea, delayForScreenshot);
                 if (!Equals(_fileToSave, _pauseTestController.FileToSave))
                 {
                     _fileToSave = _pauseTestController.FileToSave;
@@ -541,19 +542,21 @@ namespace pwiz.SkylineTestUtil
 
         private struct ScreenshotValues
         {
-            public static readonly ScreenshotValues Empty = new ScreenshotValues(null, false, null, false);
+            public static readonly ScreenshotValues Empty = new ScreenshotValues(null, false, null, null, false);
 
-            public ScreenshotValues(Control control, bool fullScreen, Func<Bitmap, Bitmap> processShot, bool delay)
+            public ScreenshotValues(Control control, bool fullScreen, Func<Bitmap, Bitmap> processShot, Func<Rectangle, Rectangle> preprocessArea, bool delay)
             {
                 Control = control;
                 FullScreen = fullScreen;
                 ProcessShot = processShot;
+                PreprocessArea = preprocessArea;
                 Delay = delay;
             }
 
             public Control Control { get; }
             public bool FullScreen { get; }
             public Func<Bitmap, Bitmap> ProcessShot { get; }
+            public Func<Rectangle, Rectangle> PreprocessArea { get; }
             public bool Delay { get; }
         }
 
@@ -570,7 +573,7 @@ namespace pwiz.SkylineTestUtil
             ScreenshotManager.ActivateScreenshotForm(control);
             try
             {
-                return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
+                return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot, values.PreprocessArea);
             }
             catch (Exception e)
             {

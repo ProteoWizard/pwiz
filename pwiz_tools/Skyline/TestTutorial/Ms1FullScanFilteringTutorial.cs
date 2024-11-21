@@ -427,7 +427,66 @@ namespace pwiz.SkylineTestTutorial
                 peakAreasFloating.Top = SkylineWindow.Top;
                 peakAreasFloating.Size = new Size(504, 643);
             });
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view (show context menu)", tutorialPage++);
+
+            if (IsPauseForScreenShots)
+            {
+                var areaGraphView = TryWaitForOpenForm(typeof(GraphSummary.AreaGraphView));
+                RunUI(() =>
+                {
+                    var graphControl = FindZedGraph(areaGraphView);
+                    graphControl.ContextMenuStrip.Show(areaGraphView.PointToScreen(new Point(areaGraphView.Width - 20, 30)));
+
+                    var showDotProductItem = graphControl.ContextMenuStrip.Items.OfType<ToolStripMenuItem>().FirstOrDefault(i => i.Name == "showDotProductToolStripMenuItem");
+                    showDotProductItem.ShowDropDown(); 
+
+                    showDotProductItem.DropDownItems.OfType<ToolStripMenuItem>().FirstOrDefault(i => i.Text == "Labels").Select(); //localize since no Name? 
+                });
+
+                //manipulate the original screenshot area to include the context menu strip
+                Func<Rectangle, Rectangle> expandScreenshotAreaToIncludeMenu = area =>
+                {
+                    var contextMenuStrip = FindZedGraph(areaGraphView).ContextMenuStrip;
+                    var showDotProductItem = contextMenuStrip.Items.OfType<ToolStripMenuItem>().FirstOrDefault(i => i.Name == "showDotProductToolStripMenuItem");
+                    //for now we just use the same width offset value we used in opening the dropdown, but we could programatically calculate the Rectangle here too
+                    return new Rectangle(area.X, area.Y, area.Width + contextMenuStrip.Width + showDotProductItem.DropDown.Width - 20, area.Height);
+                };
+
+                //find all the rectangles which we would like to preserve in the screenshot and then clean up the bitmap
+                Func<Bitmap, Bitmap> cleanUpBackground = bmp =>
+                {
+                    var floatingWindow = ScreenshotManager.FindParent<FloatingWindow>(areaGraphView);
+                    var floatingWindowTitleOffset = floatingWindow.RectangleToScreen(floatingWindow.ClientRectangle).Top - floatingWindow.Top;
+                    var borderOffset = SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
+
+                    //using floatingWindow Width seems to copy too much area but it isnt obvious why
+                    var areaGraphViewRectangle = new Rectangle(0, 0, areaGraphView.Width + borderOffset, floatingWindow.Height + borderOffset);
+
+                    //find the rectangles for two controls using PointToClient
+                    var contextMenuStrip = FindZedGraph(areaGraphView).ContextMenuStrip;
+                    var contextMenuStripRelativeLocation = floatingWindow.PointToClient(contextMenuStrip.Bounds.Location);
+                    var contextMenuStripRectangle = new Rectangle(contextMenuStripRelativeLocation.X, contextMenuStripRelativeLocation.Y + floatingWindowTitleOffset, contextMenuStrip.Width + borderOffset, contextMenuStrip.Height + borderOffset);
+
+                    var showDotProductItemDropdown = contextMenuStrip.Items.OfType<ToolStripMenuItem>().FirstOrDefault(i => i.Name == "showDotProductToolStripMenuItem").DropDown;
+                    var showDotProductItemRelativeLocation = floatingWindow.PointToClient(showDotProductItemDropdown.Bounds.Location);
+                    var showDotProductItemRectangle = new Rectangle(showDotProductItemRelativeLocation.X, showDotProductItemRelativeLocation.Y + floatingWindowTitleOffset, showDotProductItemDropdown.Width + borderOffset, showDotProductItemDropdown.Height + borderOffset);
+
+                    //can be made reusable function that takes a list of rectangles
+                    Bitmap cleanedBitmap = new Bitmap(bmp);
+                    for (int y = 0; y < cleanedBitmap.Height; y++)
+                    {
+                        for (int x = 0; x < cleanedBitmap.Width; x++)
+                        {
+                            if (!areaGraphViewRectangle.Contains(x, y) && !contextMenuStripRectangle.Contains(x, y) && !showDotProductItemRectangle.Contains(x, y))
+                            {
+                                cleanedBitmap.SetPixel(x, y, Color.White);
+                            }
+                        }
+                    }
+
+                    return cleanedBitmap;
+                };
+                PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view (show context menu)", tutorialPage++, null, cleanUpBackground, expandScreenshotAreaToIncludeMenu);
+            }
 
             RunUI(() => SkylineWindow.Width = skylineWindowWidth);
             RestoreViewOnScreen(15);
@@ -447,13 +506,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowAlignedPeptideIDTimes(true));
             ChangePeakBounds(TIB_L, pepIndex, 38.79, 39.385);
             tutorialPage++;
+
             Func<Bitmap, Bitmap> clipChroms = bmp =>
                 ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
                 {
                     SkylineWindow.GetGraphChrom("5b_MCF7_TiTip3"),
                     SkylineWindow.GetGraphChrom("1_MCF7_TiB_L"),
                 });
-
             PauseForScreenShot("Chromatogram graphs clipped from main window", tutorialPage++, null, clipChroms);
             CheckAnnotations(TIB_L, pepIndex, atest++);
 

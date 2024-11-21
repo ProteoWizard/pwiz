@@ -1537,10 +1537,10 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShotInternal(description, null, screenshotForm, timeout);
         }
 
-        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void   PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null, Func<Rectangle, Rectangle> preprocessArea = null)
             where TView : IFormView
         {
-            PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot);
+            PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot, preprocessArea);
         }
 
         public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
@@ -1574,7 +1574,7 @@ namespace pwiz.SkylineTestUtil
             PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), pageNum, timeout, processShot);
         }
 
-        private ZedGraphControl FindZedGraph(Control graphContainer)
+        protected ZedGraphControl FindZedGraph(Control graphContainer)
         {
             var zedGraphControl = graphContainer as ZedGraphControl;
             if (zedGraphControl != null)
@@ -1596,7 +1596,7 @@ namespace pwiz.SkylineTestUtil
         {
         }
 
-        private void PauseForScreenShotInternal(string description, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        private void PauseForScreenShotInternal(string description, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null, Func<Rectangle, Rectangle> preprocessArea = null)
         {
             bool fullScreen = formType == typeof(ScreenForm);
 
@@ -1633,12 +1633,12 @@ namespace pwiz.SkylineTestUtil
                     Thread.Sleep(1000); // Wait for UI to settle down - Necessary?
                     ScreenshotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotFile(ScreenshotCounter);
-                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
+                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot, preprocessArea);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot, preprocessArea);
                 }
             }
             else
@@ -1671,7 +1671,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // Screenshot for the StartPage
                 coverSavePath2 = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
+                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, null,0.20);
             }
             if (coverSavePath == null)
             {

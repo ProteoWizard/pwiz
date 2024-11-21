@@ -115,15 +115,19 @@ namespace pwiz.SkylineTestUtil
             /**
              * Factory method
              */
-            public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false)
+            public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false, Func<Rectangle, Rectangle> preprocessArea = null)
             {
                 if (control is ZedGraphControl zedGraphControl)
                 {
+                    if (preprocessArea != null)
+                    {
+                        throw new ArgumentException("Cannot preprocess area for graph screenshot");
+                    }
                     return new ZedGraphShot(zedGraphControl);
                 }
                 else
                 {
-                    return new ActiveWindowShot(control, fullScreen);
+                    return new ActiveWindowShot(control, fullScreen, preprocessArea);
                 }
             }
             public abstract Bitmap Take();
@@ -133,17 +137,22 @@ namespace pwiz.SkylineTestUtil
         {
             private readonly Control _activeWindow;
             private readonly bool _fullscreen;
-            
-            public ActiveWindowShot(Control activeWindow, bool fullscreen)
+            private readonly Func<Rectangle, Rectangle> _preprocessArea;
+            public ActiveWindowShot(Control activeWindow, bool fullscreen, Func<Rectangle, Rectangle> preprocessArea)
             {
                 _activeWindow = activeWindow;
                 _fullscreen = fullscreen;
+                _preprocessArea = preprocessArea;
             }
 
             [NotNull]
             public override Bitmap Take()
             {
                 Rectangle shotFrame = GetWindowRectangle(_activeWindow, _fullscreen);
+                if (_preprocessArea != null)
+                {
+                    shotFrame = (Rectangle)_activeWindow.Invoke((Func<Rectangle>)(() => _preprocessArea(shotFrame)));
+                }
                 Bitmap bmCapture = new Bitmap(shotFrame.Width, shotFrame.Height, PixelFormat.Format32bppArgb);
                 Graphics graphCapture = Graphics.FromImage(bmCapture);
                 bool captured = false;
@@ -287,12 +296,12 @@ namespace pwiz.SkylineTestUtil
             control.Invoke(action);
         }
 
-        public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
+        public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, Func<Rectangle, Rectangle> preprocessArea = null, double ? scale = null)
         {
             activeWindow ??= _skylineWindow;
 
             //check UI and create a blank shot according to the user selection
-            SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
+            SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen, preprocessArea);
 
             Bitmap shotPic = newShot.Take();
             if (processShot != null)
