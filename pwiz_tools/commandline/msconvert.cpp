@@ -1055,7 +1055,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
     *os_ << endl;
 
     if (failedRuns > 0)
-        throw runtime_error("Conversion failed for " + toString(failedRuns) + " runs in " + bfs::path(filename).leaf().string() + ".");
+        throw runtime_error("Conversion failed for " + toString(failedRuns) + " runs in " + bfs::path(filename).filename().string() + ".");
 }
 
 
