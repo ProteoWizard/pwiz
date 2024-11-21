@@ -388,6 +388,7 @@ project pwiz
         <toolset>gcc:<define>_GLIBCXX_USE_CXX11_ABI=0
 
         # set standard to C++14
+        <toolset>msvc:<cxxflags>"/std:c++14"
         <toolset>gcc:<cxxflags>-std=c++14
         <toolset>darwin:<cxxflags>-std=c++14
         <toolset>clang:<cxxflags>-std=c++14
