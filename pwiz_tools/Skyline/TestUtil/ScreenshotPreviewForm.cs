@@ -93,6 +93,7 @@ namespace pwiz.SkylineTestUtil
             public int TotalToNext { get; }
 
             public int PercentDone => 100 * (CurrentNum - StopNum + TotalToNext) / TotalToNext;
+            public bool IsReadyForScreenshot => StopNum == CurrentNum;
         }
         #endregion
 
@@ -163,10 +164,13 @@ namespace pwiz.SkylineTestUtil
                     _fileLoaded = null;
                 }
 
-                if (_nextScreenshotProgress == null || _nextScreenshotProgress.StopNum == _screenshotNum)
+                // If there is not yet any progress, create a single step progress instance that is complete
+                _nextScreenshotProgress ??= new NextScreenshotProgress(_screenshotNum - 1, _screenshotNum);
+                _nextScreenshotProgress.CurrentNum = _screenshotNum;
+
+                if (_nextScreenshotProgress.IsReadyForScreenshot)
                 {
                     _screenshotTaken = false;
-                    _nextScreenshotProgress = null;    // Done waiting for the next screenshot
                 }
                 else
                 {
@@ -221,7 +225,7 @@ namespace pwiz.SkylineTestUtil
         private bool IsComplete { get { lock (_lock) { return IsLoaded && !IsWaiting && IsScreenshotTaken; } } }
         // CONSIDER: This doesn't really cover the case where the current thing is loaded but not from the current source
         private bool IsLoaded { get { lock (_lock) { return Equals(_fileLoaded, _fileToSave) || Equals(_fileLoaded, _imageUrl); } } }
-        private bool IsWaiting { get { lock (_lock) { return _nextScreenshotProgress != null; } } }
+        private bool IsWaiting { get { lock (_lock) { return _nextScreenshotProgress is { IsReadyForScreenshot: false }; } } }
         private bool IsScreenshotTaken { get { lock (_lock) { return _screenshotTaken; } } }
 
         private void RefreshScreenshots()
@@ -456,10 +460,9 @@ namespace pwiz.SkylineTestUtil
             }
             else
             {
-                if (_nextScreenshotProgress.TotalToNext > 1)
+                if (_nextScreenshotProgress.PercentDone == 100 || _nextScreenshotProgress.TotalToNext > 1)
                 {
                     progressBar.Style = ProgressBarStyle.Continuous;
-                    _nextScreenshotProgress.CurrentNum = _screenshotNum;
                     progressBar.Value = _nextScreenshotProgress.PercentDone;
                 }
                 else
@@ -533,6 +536,8 @@ namespace pwiz.SkylineTestUtil
                 {
                     _newScreenshot = newScreenshot;
                     _screenshotTaken = shotTaken;
+                    if (shotTaken)
+                        _nextScreenshotProgress = null;    // Done waiting for the next screenshot
                 }
             }
 
@@ -563,13 +568,14 @@ namespace pwiz.SkylineTestUtil
             {
                 return Resources.noscreenshot;
             }
+            // TODO: Is this value necessary anymore.
             if (values.Delay)
                 Thread.Sleep(1000);
 
             var control = values.Control;
-            ScreenshotManager.ActivateScreenshotForm(control);
             try
             {
+                ScreenshotManager.ActivateScreenshotForm(control);
                 return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
             }
             catch (Exception e)
@@ -1140,19 +1146,21 @@ namespace pwiz.SkylineTestUtil
                     }
                     else
                     {
-                        if (!IsWaiting)
+                        if (IsComplete)
                             Continue();
                     }
                     e.Handled = true;
                     break;
                 case Keys.F6:
-                    SaveAndContinue();
+                    if (IsComplete)
+                        SaveAndContinue();
                     e.Handled = true;
                     break;
                 case Keys.S:
                     if (e.Control)
                     {
-                        SaveScreenshot();
+                        if (IsComplete)
+                            SaveScreenshot();
                         e.Handled = true;
                     }
                     break;
