@@ -273,24 +273,6 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.WindowState = FormWindowState.Normal);
         }
 
-        private void BeginDragDisplay(Control dockableForm, double xProportion, double yProportion)
-        {
-            if (!IsPauseForScreenShots)
-                return;
-            RunUI(() =>
-            {
-                var rect = SkylineWindow.Bounds;
-                var ptDest = new Point((int)(rect.X + rect.Width * xProportion), (int)(rect.Y + rect.Height * yProportion));
-                SkylineWindow.DockPanel.BeginDragDisplay(FindFloatingWindow(dockableForm), ptDest);
-            });
-        }
-
-        private void EndDragDisplay()
-        {
-            if (IsPauseForScreenShots)
-                RunUI(() => SkylineWindow.DockPanel.EndDragDisplay());
-        }
-
         private void PlaceTargetsAndGraph(Control graphForm)
         {
             if (!IsPauseForScreenShots)

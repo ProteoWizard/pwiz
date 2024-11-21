@@ -1308,6 +1308,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public void BeginDragDisplay(Control dockableForm, double xProportion, double yProportion)
+        {
+            if (!IsPauseForScreenShots)
+                return;
+            RunUI(() =>
+            {
+                var rect = SkylineWindow.Bounds;
+                var ptDest = new Point((int)(rect.X + rect.Width * xProportion), (int)(rect.Y + rect.Height * yProportion));
+                SkylineWindow.DockPanel.BeginDragDisplay(FindFloatingWindow(dockableForm), ptDest);
+            });
+        }
+
+        public void EndDragDisplay()
+        {
+            if (IsPauseForScreenShots)
+                RunUI(() => SkylineWindow.DockPanel.EndDragDisplay());
+        }
+
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
             return ClipBitmap(skylineWindowBmp, ComputeDockableFormInclusiveRectangle(dockableForms));
@@ -1438,16 +1456,25 @@ namespace pwiz.SkylineTestUtil
 
         public static Bitmap DrawLArrowCursorOnBitmap(Bitmap bmp, double xRelative, double yRelative)
         {
+            return DrawCursorOnBitmap(bmp, Properties.Resources.larrow_cur, xRelative, yRelative);
+        }
+
+        public static Bitmap DrawHandCursorOnBitmap(Bitmap bmp, double xRelative, double yRelative)
+        {
+            return DrawCursorOnBitmap(bmp, Properties.Resources.hand_cur, xRelative, yRelative);
+        }
+
+        private static Bitmap DrawCursorOnBitmap(Bitmap bmp, Bitmap cursorBitmap, double xRelative, double yRelative)
+        {
             using Graphics graphics = Graphics.FromImage(bmp);
             int x = (int)(bmp.Width * xRelative);
             int y = (int)(bmp.Height * yRelative);
 
-            var arrowCurBmp = Properties.Resources.larrow_cur;
-            arrowCurBmp.MakeTransparent(Color.Red);
+            cursorBitmap.MakeTransparent(Color.Red);
 
             // TODO: Deal with scaling the cursor bitmap
 
-            graphics.DrawImage(arrowCurBmp, x, y);
+            graphics.DrawImage(cursorBitmap, x, y);
 
             return bmp;
         }
@@ -1532,9 +1559,10 @@ namespace pwiz.SkylineTestUtil
         {
             PauseForScreenShotInternal(description, null, null, timeout, processShot);
         }
-        public void PauseForScreenShot(Control screenshotForm, string description = null, int? pageNum = null, int ? timeout = null)
+
+        public void PauseForScreenShot(Control screenshotForm, string description = null, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForScreenShotInternal(description, null, screenshotForm, timeout);
+            PauseForScreenShotInternal(description, null, screenshotForm, timeout, processShot);
         }
 
         public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)

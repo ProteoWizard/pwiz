@@ -295,6 +295,7 @@
     <None Include="Resources\textbutton.png" />
     <None Include="Resources\websource.png" />
     <None Include="Resources\noscreenshot.png" />
+    <None Include="Resources\hand-cur.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
