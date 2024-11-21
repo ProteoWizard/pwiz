@@ -201,7 +201,7 @@ rule init ( version : location : options * )
                 <define>BOOST_FILESYSTEM_NO_LIB=1
                 <define>BOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
                 <define>BOOST_FILESYSTEM_ALLOW_DEPRECATED
-				#<define>BOOST_FILESYSTEM_NO_DEPRECATED
+                #<define>BOOST_FILESYSTEM_NO_DEPRECATED
                 <conditional>@filesystem-requirements
                 <library>system
             :
@@ -211,8 +211,8 @@ rule init ( version : location : options * )
                 <link>shared:<define>BOOST_ALL_DYN_LINK=1
                 <define>BOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
                 <define>BOOST_FILESYSTEM_ALLOW_DEPRECATED
-				#<define>BOOST_FILESYSTEM_NO_DEPRECATED
-				<toolset>msvc:<define>BOOST_USE_WINAPI_VERSION=0x0501
+                #<define>BOOST_FILESYSTEM_NO_DEPRECATED
+                <toolset>msvc:<define>BOOST_USE_WINAPI_VERSION=0x0501
                 <library>system
             ;
 
