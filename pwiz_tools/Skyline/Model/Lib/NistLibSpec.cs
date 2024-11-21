@@ -906,7 +906,7 @@ namespace pwiz.Skyline.Model.Lib
                             continue; // Line is fully consumed
                         }
 
-                        if (!isPeptide && ParseMolecule(line, accessions, lineCount, ref formula, ref adduct, ref precursorMz, ref molWeight, ref exactMass, ref isPositive))
+                        if (!isPeptide && ParseMolecule(line, accessions, ref formula, ref adduct, ref precursorMz, ref molWeight, ref exactMass, ref isPositive))
                         {
                             continue;  // Line is fully consumed
                         }
@@ -1413,7 +1413,7 @@ namespace pwiz.Skyline.Model.Lib
         /// Parse line for molecule information
         /// </summary>
         /// <returns>true if line was shown to be molecule info, and parser can advance to next line</returns>
-        private bool ParseMolecule(string line, Dictionary<string, string> accessions, long lineCount, ref string formula, ref Adduct adduct, ref double? precursorMz,
+        private bool ParseMolecule(string line, Dictionary<string, string> accessions, ref string formula, ref Adduct adduct, ref double? precursorMz,
             ref double? molWeight, ref double? exactMass, ref bool? isPositive)
         {
             Match match;
