@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -90,9 +89,6 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
-        [DllImport("gdi32.dll")]
-        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-
         private enum DeviceCap
         {
             VERTRES = 10,
@@ -103,8 +99,8 @@ namespace pwiz.SkylineTestUtil
         {
             Graphics g = Graphics.FromHwnd(IntPtr.Zero);
             IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
-            int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
+            int LogicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
+            int PhysicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
 
             float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 

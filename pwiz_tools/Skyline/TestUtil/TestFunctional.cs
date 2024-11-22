@@ -1349,8 +1349,8 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(documentGridBmp, cropRect);
         }
 
-        [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+        // [DllImport("user32.dll")]
+        // private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
         protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
         {
@@ -1362,7 +1362,7 @@ namespace pwiz.SkylineTestUtil
             const int GWL_STYLE = -16;
             const int WS_VSCROLL = 0x00200000;
             const int WS_HSCROLL = 0x00100000;
-            int style = GetWindowLong(sequenceTree.Handle, GWL_STYLE);
+            int style = DllImport.User32.GetWindowLong(sequenceTree.Handle, GWL_STYLE);
             if ((style & WS_VSCROLL) != 0)
                 sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
             if ((style & WS_HSCROLL) != 0)
