@@ -1349,9 +1349,6 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(documentGridBmp, cropRect);
         }
 
-        // [DllImport("user32.dll")]
-        // private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
         protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
         {
             var sequenceTree = SkylineWindow.SequenceTree;
