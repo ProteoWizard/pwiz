@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Util;
 
@@ -79,12 +80,15 @@ namespace pwiz.Skyline.Model.Results
             {
                 return new UnifiUrl(url);
             }
+            if (url.StartsWith(ArdiaUrl.UrlPrefix))
+            {
+                return new ArdiaUrl(url);
+            }
 
             return MsDataFilePath.ParseUri(url);
         }
 
-        public abstract MsDataFileImpl OpenMsDataFile(bool simAsSpectra, bool preferOnlyMs1,
-            bool centroidMs1, bool centroidMs2, bool ignoreZeroIntensityPoints);
+        public abstract MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams);
 
         public int CompareTo(object obj)
         {
@@ -288,13 +292,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override MsDataFileImpl OpenMsDataFile(bool simAsSpectra, bool preferOnlyMs1,
-            bool centroidMs1, bool centroidMs2, bool ignoreZeroIntensityPoints)
+        public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams)
         {
             Assume.IsFalse(LegacyCentroidMs1 || LegacyCentroidMs2 || LegacyCombineIonMobilitySpectra);  // Only for backward compatibility. We are not expecting to use this value to open MsDataFileImpl objects
-            return new MsDataFileImpl(FilePath, Math.Max(SampleIndex, 0), LockMassParameters, simAsSpectra,
-                requireVendorCentroidedMS1: centroidMs1, requireVendorCentroidedMS2: centroidMs2,
-                ignoreZeroIntensityPoints: ignoreZeroIntensityPoints, preferOnlyMsLevel: preferOnlyMs1 ? 1 : 0);
+            return openMsDataFileParams.OpenLocalFile(FilePath, Math.Max(SampleIndex, 0), LockMassParameters);
         }
 
         public override MsDataFileUri RemoveLegacyParameters()
