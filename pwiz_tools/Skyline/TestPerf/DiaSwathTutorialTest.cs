@@ -988,8 +988,10 @@ namespace TestPerf
                 MouseOverChromatogram(firstReplicateName, clickPoint.X, clickPoint.Y);
             }
 
-            PauseForScreenShot(SkylineWindow.GetGraphChrom(firstReplicateName), "Snip just one chromatogram pane",
-                null, null, bmp => DrawHandCursorOnBitmap(bmp, 0.54, 0.41));
+            var graphChrom = SkylineWindow.GetGraphChrom(firstReplicateName);
+            PauseForScreenShot(graphChrom, "Snip just one chromatogram pane",
+                null, null, bmp => DrawHandCursorOnChromBitmap(bmp,
+                    graphChrom, true, clickPoint.X, clickPoint.Y));
 
             try
             {
@@ -1209,16 +1211,22 @@ namespace TestPerf
                 SortByFoldChange(fcGridControlFinal, _resultProperty);  // Re-apply the sort, in case it was lost in restoring views
 
                 RestoreViewOnScreen(31);
-                barGraph = FindOpenForm<FoldChangeBarGraph>();
-                RunUI(() =>
+                barGraph = WaitForOpenForm<FoldChangeBarGraph>();
+                if (IsPauseForScreenShots)
                 {
-                    var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
-                    yScale.Min = -2.5;
-                    yScale.Max = 2.2;
-                    yScale.MinorStep = 0.2;
-
-                });
-                PauseForGraphScreenShot("By Condition:Bar Graph - proteins", FindOpenForm<FoldChangeBarGraph>());
+                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                    RunUI(() =>
+                    {
+                        var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
+                        yScale.MinAuto = yScale.MaxAuto = false;
+                        yScale.Min = -2.4;
+                        yScale.Max = 2.2;
+                        yScale.MajorStep = 1;
+                        yScale.MinorStep = 0.2;
+                        yScale.Format = "0.#";
+                    });
+                }
+                PauseForGraphScreenShot("By Condition:Bar Graph - proteins", barGraph);
 
                 RunQValueSummaryTest();
 

@@ -1265,9 +1265,15 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 return IsTutorial
-                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{CultureInfo.CurrentCulture.TwoLetterISOLanguageName}")
+                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
                     : null;
             }
+        }
+
+        private string GetFolderNameForLanguage(CultureInfo cultureInfo)
+        {
+            var letters = cultureInfo.TwoLetterISOLanguageName;
+            return Equals("zh", letters) ? "zh-CHS" : letters;
         }
 
         private int ScreenshotCounter = 1;
@@ -1461,6 +1467,26 @@ namespace pwiz.SkylineTestUtil
 
         public static Bitmap DrawHandCursorOnBitmap(Bitmap bmp, double xRelative, double yRelative)
         {
+            return DrawCursorOnBitmap(bmp, Properties.Resources.hand_cur, xRelative, yRelative);
+        }
+
+        public static Bitmap DrawHandCursorOnChromBitmap(Bitmap bmp, GraphChromatogram graphChrom, bool fullPane, double xCoordinate, double yCoordinate, PaneKey? paneKey = null)
+        {
+            var screenPoint = graphChrom.TransformCoordinates(xCoordinate, yCoordinate, paneKey);
+            // Adjust the point a bit to put the finger-tip on the hand in the right place.
+            screenPoint.X -= 3;
+            screenPoint.Y += 3;
+            var screenSize = graphChrom.Size;
+            if (fullPane)
+            {
+                screenSize = graphChrom.Pane.Size;
+                var originPane = graphChrom.Pane.PointToScreen(Point.Empty);
+                var originGraph = graphChrom.PointToScreen(Point.Empty);
+                screenPoint.X += originGraph.X - originPane.X;
+                screenPoint.Y += originGraph.Y - originPane.Y;
+            }
+            var xRelative = screenPoint.X / screenSize.Width;
+            var yRelative = screenPoint.Y / screenSize.Height;
             return DrawCursorOnBitmap(bmp, Properties.Resources.hand_cur, xRelative, yRelative);
         }
 
