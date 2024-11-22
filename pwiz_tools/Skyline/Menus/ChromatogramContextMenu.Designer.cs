@@ -42,6 +42,7 @@
             this.legendChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peakBoundariesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.originalPeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.imputedPeakBoundariesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.massErrorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,7 +59,6 @@
             this.idTimesOtherContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.relativeAbundanceFormattingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.productsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -72,6 +72,7 @@
             this.onlyQuantitativeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorSplitGraph = new System.Windows.Forms.ToolStripSeparator();
             this.splitGraphContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.relativeAbundanceFormattingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromInterpolatedContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -107,6 +108,7 @@
             this.legendChromContextMenuItem,
             this.peakBoundariesContextMenuItem,
             this.originalPeakMenuItem,
+            this.imputedPeakBoundariesMenuItem,
             this.massErrorContextMenuItem,
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
@@ -194,6 +196,12 @@
             this.originalPeakMenuItem.Name = "originalPeakMenuItem";
             resources.ApplyResources(this.originalPeakMenuItem, "originalPeakMenuItem");
             this.originalPeakMenuItem.Click += new System.EventHandler(this.originalPeakContextMenuItem_Click);
+            // 
+            // imputedPeakBoundariesMenuItem
+            // 
+            this.imputedPeakBoundariesMenuItem.Name = "imputedPeakBoundariesMenuItem";
+            resources.ApplyResources(this.imputedPeakBoundariesMenuItem, "imputedPeakBoundariesMenuItem");
+            this.imputedPeakBoundariesMenuItem.Click += new System.EventHandler(this.imputedPeakBoundariesMenuItem_Click);
             // 
             // massErrorContextMenuItem
             // 
@@ -320,12 +328,6 @@
             resources.ApplyResources(this.transitionsContextMenuItem, "transitionsContextMenuItem");
             this.transitionsContextMenuItem.DropDownOpening += new System.EventHandler(this.transitionsMenuItem_DropDownOpening);
             // 
-            // relativeAbundanceFormattingMenuItem
-            // 
-            this.relativeAbundanceFormattingMenuItem.Name = "relativeAbundanceFormattingMenuItem";
-            resources.ApplyResources(this.relativeAbundanceFormattingMenuItem, "relativeAbundanceFormattingMenuItem");
-            this.relativeAbundanceFormattingMenuItem.Click += new System.EventHandler(this.relativeAbundanceFormattingMenuItem_Click);
-            // 
             // allTranContextMenuItem
             // 
             this.allTranContextMenuItem.Name = "allTranContextMenuItem";
@@ -399,6 +401,12 @@
             this.splitGraphContextMenuItem.Name = "splitGraphContextMenuItem";
             resources.ApplyResources(this.splitGraphContextMenuItem, "splitGraphContextMenuItem");
             this.splitGraphContextMenuItem.Click += new System.EventHandler(this.splitChromGraphMenuItem_Click);
+            // 
+            // relativeAbundanceFormattingMenuItem
+            // 
+            this.relativeAbundanceFormattingMenuItem.Name = "relativeAbundanceFormattingMenuItem";
+            resources.ApplyResources(this.relativeAbundanceFormattingMenuItem, "relativeAbundanceFormattingMenuItem");
+            this.relativeAbundanceFormattingMenuItem.Click += new System.EventHandler(this.relativeAbundanceFormattingMenuItem_Click);
             // 
             // transformChromContextMenuItem
             // 
@@ -587,5 +595,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator26;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem synchronizeIntegrationContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem imputedPeakBoundariesMenuItem;
     }
 }

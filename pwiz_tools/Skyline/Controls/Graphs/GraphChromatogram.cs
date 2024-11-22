@@ -30,6 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -2286,6 +2287,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodeGroups, lookupSequence, lookupMods);
+            if (Settings.Default.ShowImputedPeakBounds && nodePeps.Length == 1)
+            {
+                var doc = _documentContainer.DocumentUI;
+                var peptideDocNode = nodePeps[0];
+                var peptideGroupDocNode =
+                    doc.MoleculeGroups.FirstOrDefault(node => node.FindNodeIndex(peptideDocNode.Peptide) >= 0);
+                if (peptideGroupDocNode != null)
+                {
+                    var replicateFileId = new ReplicateFileId((ChromatogramSetId)chromatograms.Id, GetChromFileInfoId());
+                    chromGraphPrimary.ExemplaryPeakBounds = PeakImputationForm.GetImputedPeakBounds(
+                        _documentContainer.DocumentUI, peptideGroupDocNode.PeptideGroup, peptideDocNode.Peptide,
+                        replicateFileId);
+                }
+            }
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,

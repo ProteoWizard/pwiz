@@ -1637,6 +1637,12 @@ namespace pwiz.Skyline
             UpdateChromGraphs();
         }
 
+        public void ShowImputedPeakBounds(bool show)
+        {
+            Settings.Default.ShowImputedPeakBounds = show;
+            UpdateChromGraphs();
+        }
+
         public void SetShowRetentionTimes(ShowRTChrom showRTChrom)
         {
             Settings.Default.ShowRetentionTimesEnum = showRTChrom.ToString();

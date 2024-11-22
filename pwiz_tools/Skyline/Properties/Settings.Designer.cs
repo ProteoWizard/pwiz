@@ -3533,5 +3533,17 @@ namespace pwiz.Skyline.Properties {
                 return ((int)(this["KoinaRetryCount"]));
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowImputedPeakBounds {
+            get {
+                return ((bool)(this["ShowImputedPeakBounds"]));
+            }
+            set {
+                this["ShowImputedPeakBounds"] = value;
+            }
+        }
     }
 }

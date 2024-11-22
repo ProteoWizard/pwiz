@@ -10,6 +10,8 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -24,9 +26,11 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Peptide = pwiz.Skyline.Model.Peptide;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -808,6 +812,36 @@ namespace pwiz.Skyline.EditUI
             }
             return lines.Prepend(TextUtil.ColonSeparate(deepProgress.Description,
                 (deepProgress.ProgressValue / 100.0).ToString(Formats.Percent)));
+        }
+
+        public static RatedPeak.PeakBounds GetImputedPeakBounds(SrmDocument document, PeptideGroup peptideGroup,
+            Peptide peptide, ReplicateFileId replicateFileId)
+        {
+            var peakImputationForm = FormUtil.OpenForms.OfType<PeakImputationForm>().FirstOrDefault();
+            if (peakImputationForm == null)
+            {
+                return null;
+            }
+
+            var data = peakImputationForm._data;
+            if (data == null || !ReferenceEquals(document, data.Params.Document))
+            {
+                return null;
+            }
+
+            var identityPath = new IdentityPath(peptideGroup, peptide);
+            var moleculePeaks = data.MoleculePeaks.FirstOrDefault(mp => identityPath.Equals(mp.PeptideIdentityPath));
+            if (moleculePeaks == null)
+            {
+                return null;
+            }
+
+            if (moleculePeaks.ExemplaryPeakBounds == null)
+            {
+                return null;
+            }
+            var alignmentFunction = data.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
+            return moleculePeaks.ExemplaryPeakBounds.ReverseAlignPreservingWidth(alignmentFunction);
         }
     }
 }

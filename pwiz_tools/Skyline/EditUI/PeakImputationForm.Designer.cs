@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.btnImputeBoundaries = new System.Windows.Forms.Button();
             this.lblPercentPeakWidth = new System.Windows.Forms.Label();
             this.lblMinutes = new System.Windows.Forms.Label();
             this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
@@ -60,7 +61,6 @@
             this.lblRejected = new System.Windows.Forms.Label();
             this.tbxAccepted = new System.Windows.Forms.TextBox();
             this.lblAccepted = new System.Windows.Forms.Label();
-            this.btnImputeBoundaries = new System.Windows.Forms.Button();
             this.cbxOverwriteManual = new System.Windows.Forms.CheckBox();
             this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
             this.lblSdCutoff = new System.Windows.Forms.Label();
@@ -81,6 +81,7 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.btnImputeBoundaries);
             this.panel1.Controls.Add(this.lblPercentPeakWidth);
             this.panel1.Controls.Add(this.lblMinutes);
             this.panel1.Controls.Add(this.tbxMaxPeakWidthVariation);
@@ -92,7 +93,6 @@
             this.panel1.Controls.Add(this.lblScoringModel);
             this.panel1.Controls.Add(this.progressBar1);
             this.panel1.Controls.Add(this.groupBoxResults);
-            this.panel1.Controls.Add(this.btnImputeBoundaries);
             this.panel1.Controls.Add(this.cbxOverwriteManual);
             this.panel1.Controls.Add(this.tbxRtDeviationCutoff);
             this.panel1.Controls.Add(this.lblSdCutoff);
@@ -103,6 +103,18 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 223);
             this.panel1.TabIndex = 1;
+            // 
+            // btnImputeBoundaries
+            // 
+            this.btnImputeBoundaries.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnImputeBoundaries.Location = new System.Drawing.Point(656, 12);
+            this.btnImputeBoundaries.Name = "btnImputeBoundaries";
+            this.btnImputeBoundaries.Size = new System.Drawing.Size(132, 23);
+            this.btnImputeBoundaries.TabIndex = 17;
+            this.btnImputeBoundaries.Text = "Impute Boundaries";
+            this.toolTip1.SetToolTip(this.btnImputeBoundaries, "Choose new peak boundaries for the rejected peaks in the displayed rows");
+            this.btnImputeBoundaries.UseVisualStyleBackColor = true;
+            this.btnImputeBoundaries.Click += new System.EventHandler(this.btnImputeBoundaries_Click);
             // 
             // lblPercentPeakWidth
             // 
@@ -230,10 +242,9 @@
             // 
             // groupBoxScope
             // 
-            this.groupBoxScope.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBoxScope.Controls.Add(this.radioScopeDocument);
             this.groupBoxScope.Controls.Add(this.radioScopeSelection);
-            this.groupBoxScope.Location = new System.Drawing.Point(656, 43);
+            this.groupBoxScope.Location = new System.Drawing.Point(170, 88);
             this.groupBoxScope.Name = "groupBoxScope";
             this.groupBoxScope.Size = new System.Drawing.Size(141, 68);
             this.groupBoxScope.TabIndex = 23;
@@ -396,18 +407,6 @@
             this.lblAccepted.Size = new System.Drawing.Size(56, 13);
             this.lblAccepted.TabIndex = 0;
             this.lblAccepted.Text = "Accepted:";
-            // 
-            // btnImputeBoundaries
-            // 
-            this.btnImputeBoundaries.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnImputeBoundaries.Location = new System.Drawing.Point(656, 12);
-            this.btnImputeBoundaries.Name = "btnImputeBoundaries";
-            this.btnImputeBoundaries.Size = new System.Drawing.Size(132, 23);
-            this.btnImputeBoundaries.TabIndex = 17;
-            this.btnImputeBoundaries.Text = "Impute Boundaries";
-            this.toolTip1.SetToolTip(this.btnImputeBoundaries, "Choose new peak boundaries for the rejected peaks in the displayed rows");
-            this.btnImputeBoundaries.UseVisualStyleBackColor = true;
-            this.btnImputeBoundaries.Click += new System.EventHandler(this.btnImputeBoundaries_Click);
             // 
             // cbxOverwriteManual
             // 

@@ -184,6 +184,12 @@
   <data name="originalPeakMenuItem.Text" xml:space="preserve">
     <value>Original Peak</value>
   </data>
+  <data name="imputedPeakBoundariesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>212, 22</value>
+  </data>
+  <data name="imputedPeakBoundariesMenuItem.Text" xml:space="preserve">
+    <value>Imputed Peak Boundaries</value>
+  </data>
   <data name="massErrorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>212, 22</value>
   </data>
@@ -272,7 +278,7 @@
     <value>209, 6</value>
   </data>
   <data name="contextMenuChromatogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>213, 508</value>
+    <value>213, 530</value>
   </data>
   <data name="&gt;&gt;contextMenuChromatogram.Name" xml:space="preserve">
     <value>contextMenuChromatogram</value>
@@ -464,7 +470,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.319, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;applyPeakAllGraphMenuItem.Name" xml:space="preserve">
     <value>applyPeakAllGraphMenuItem</value>
@@ -530,6 +536,12 @@
     <value>originalPeakMenuItem</value>
   </data>
   <data name="&gt;&gt;originalPeakMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;imputedPeakBoundariesMenuItem.Name" xml:space="preserve">
+    <value>imputedPeakBoundariesMenuItem</value>
+  </data>
+  <data name="&gt;&gt;imputedPeakBoundariesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;massErrorContextMenuItem.Name" xml:space="preserve">
@@ -706,6 +718,12 @@
   <data name="&gt;&gt;splitGraphContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;relativeAbundanceFormattingMenuItem.Name" xml:space="preserve">
+    <value>relativeAbundanceFormattingMenuItem</value>
+  </data>
+  <data name="&gt;&gt;relativeAbundanceFormattingMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;transformChromContextMenuItem.Name" xml:space="preserve">
     <value>transformChromContextMenuItem</value>
   </data>
@@ -818,6 +836,6 @@
     <value>ChromatogramContextMenu</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Menus.SkylineControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Menus.SkylineControl, Skyline-daily, Version=24.1.1.319, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
