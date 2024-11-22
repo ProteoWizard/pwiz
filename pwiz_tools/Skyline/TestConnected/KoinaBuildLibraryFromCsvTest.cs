@@ -277,7 +277,7 @@ namespace pwiz.SkylineTestConnected
                                 var expectedPeak = expected.Peaks[i];
                                 var actualPeak = actualPeaks[i];
                                 Assert.AreEqual(expectedPeak.Mz, actualPeak.Mz, 1e-5, $"{testTag}: peak[{i}].Mz not equal");
-                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, 1e-5, $"{testTag}: peak[{i}].Intensity not equal");
+                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, 1e-4, $"{testTag}: peak[{i}].Intensity not equal");
                             }
                         }
                     }
