@@ -356,4 +356,16 @@
   <data name="ToolUpdatesDlg_InstallUpdates_Installing_updates_to__0_" xml:space="preserve">
     <value>Installing updates to {0}</value>
   </data>
+  <data name="EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__no_Ardia_registration_code_for_URL" xml:space="preserve">
+    <value>Error: no Ardia registration code for URL</value>
+  </data>
+  <data name="EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__unable_to_compute_URL_for_logout" xml:space="preserve">
+    <value>Error: unable to compute URL for Ardia logout</value>
+  </data>
+  <data name="EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled" xml:space="preserve">
+    <value>Login was canceled</value>
+  </data>
 </root>

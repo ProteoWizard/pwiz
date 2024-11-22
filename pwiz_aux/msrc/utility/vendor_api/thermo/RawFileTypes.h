@@ -148,6 +148,7 @@ enum MatchType
 {
     Exact,
     Contains,
+    ContainsNoSpaces,
     StartsWith,
     EndsWith,
     ExactNoSpaces
@@ -218,6 +219,8 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"DFS", InstrumentModelType_DFS, Exact},
     {"DSQ II", InstrumentModelType_DSQ_II, Exact},
     {"ISQ SERIES", InstrumentModelType_ISQ, Exact},
+    {"ISQEC", InstrumentModelType_ISQ, ContainsNoSpaces},
+    {"ISQEM", InstrumentModelType_ISQ, ContainsNoSpaces},
     {"MALDI LTQ XL", InstrumentModelType_MALDI_LTQ_XL, Exact},
     {"MALDI LTQ ORBITRAP", InstrumentModelType_MALDI_LTQ_Orbitrap, Exact},
     {"TSQ QUANTUM", InstrumentModelType_TSQ_Quantum, Exact},
@@ -271,6 +274,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
             case Exact: if (mapping.name == type) return mapping.modelType; break;
             case ExactNoSpaces: if (mapping.name == typeNoSpaces) return mapping.modelType; break;
             case Contains: if (bal::contains(type, mapping.name)) return mapping.modelType; break;
+            case ContainsNoSpaces: if (bal::contains(typeNoSpaces, mapping.name)) return mapping.modelType; break;
             case StartsWith: if (bal::starts_with(type, mapping.name)) return mapping.modelType; break;
             case EndsWith: if (bal::ends_with(type, mapping.name)) return mapping.modelType; break;
             default:

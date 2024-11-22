@@ -185,6 +185,7 @@
     <Compile Include="TestFilesDir.cs" />
     <Compile Include="TestFunctional.cs" />
     <Compile Include="TypeInspector.cs" />
+    <Compile Include="ArdiaTestUtil.cs" />
     <Compile Include="UnifiTestUtil.cs" />
   </ItemGroup>
   <ItemGroup>
