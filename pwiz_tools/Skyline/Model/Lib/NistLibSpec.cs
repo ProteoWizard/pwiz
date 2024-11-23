@@ -803,10 +803,13 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_SMILES = new Regex(@"^(?:Synon:.* )?SMILES:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_SMILES_COMMENT = new Regex(@"SMILES\=([^ ""]*)", NOCASE);
         private static readonly Regex REGEX_ADDUCT = new Regex(@"^Precursor_type:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_ADDUCT_COMMENT = new Regex(@"Adduct=([^ ,""]+)", NOCASE);
         // N.B this was formerly "^PrecursorMz: ([^ ]+)" - no comma - I don't understand how double.Parse worked with existing
         // test inputs like "PrecursorMZ: 124.0757, 109.1" but somehow adding NOCASE suddenly made it necessary
         private static readonly Regex REGEX_PRECURSORMZ = new Regex(@"^(?:PrecursorMz|Selected Ion m/z):\s*([^ ,]+)", NOCASE);
+        private static readonly Regex REGEX_PRECURSORMZ_COMMENT = new Regex(@"Precursor Mz=([^ ,""]+)", NOCASE);
         private static readonly Regex REGEX_MOLWEIGHT = new Regex(@"^MW:\s*(.*)", NOCASE);
+        private static readonly Regex REGEX_MOLWEIGHT_COMMENT = new Regex(@"ExactMass=([^ ,""]+)", NOCASE);
         private static readonly Regex REGEX_EXACTMASS = new Regex(@"^ExactMass:\s*(.*)", NOCASE);
         private static readonly Regex REGEX_IONMODE = new Regex(@"^IonMode:\s*(.*)", NOCASE);
         private const double DEFAULT_MZ_MATCH_TOLERANCE = 0.01; // Most .MSP formats we see present precursor m/z values that match at about this tolerance
@@ -912,7 +915,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         // For peptides (and some molecules), a lot of useful info is jammed into the COMMENT line and must be further picked apart
-                        if (ParseComment(line, isPeptide, ref sequence, ref copies, ref tfRatio, ref rt, ref irt, accessions))
+                        if (ParseComment(line, isPeptide, ref sequence, ref copies, ref tfRatio, ref rt, ref irt, ref precursorMz, ref molWeight, ref adduct, accessions))
                         {
                             continue;  // Line is fully consumed
                         }
@@ -959,7 +962,17 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                     // Use molecular weight (if any) as mass cue if no precursor mz given
-                    precursorMz ??= (exactMass ?? molWeight);
+                    var massMol = exactMass ?? molWeight;
+                    if (!precursorMz.HasValue && !Adduct.IsNullOrEmpty(adduct) && massMol.HasValue)
+                    {
+                        // Encode mass as string for library use
+                        precursorMz = adduct.ApplyToMass(new TypedMass(massMol.Value, MassType.Monoisotopic));
+                        if (string.IsNullOrEmpty(formula))
+                        {
+                            formula = MoleculeMassOffset.FormatMassModification(massMol.Value, massMol.Value, BioMassCalc.MassPrecision);
+                        }
+                    }
+                    precursorMz ??= massMol;
 
                     // Try to infer adduct if none given
                     if (charge == 0 && adduct.IsEmpty && !string.IsNullOrEmpty(formula))
@@ -1337,7 +1350,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <returns>true if line was shown to be comment info, and parser can advance to next line</returns>
         private bool ParseComment(string line, bool isPeptide, ref string sequence, ref int? copies, ref float? tfRatio,
-            ref double? rt, ref double? irt, IDictionary<string,string> otherKeys)
+            ref double? rt, ref double? irt, ref double? precursorMz, ref double? mw, ref Adduct adduct, IDictionary<string,string> otherKeys)
         {
             if (line.StartsWith(COMMENT, StringComparison.InvariantCultureIgnoreCase) || // Case insensitive
                 line.StartsWith(COMMENTS, StringComparison.InvariantCultureIgnoreCase))
@@ -1387,6 +1400,52 @@ namespace pwiz.Skyline.Model.Lib
                     match = REGEX_IRT.Match(line);
                     if (match.Success)
                         irt = GetRetentionTime(match.Groups[1].Value, false);
+                }
+
+                if (!precursorMz.HasValue)
+                {
+                    match = REGEX_PRECURSORMZ_COMMENT.Match(line);
+                    if (match.Success)
+                    {
+                        try
+                        {
+                            precursorMz = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                        }
+                        catch
+                        {
+                            ThrowIOException(lineCount,
+                                string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                                    line));
+                        }
+                    }
+                }
+
+                if (!mw.HasValue)
+                {
+                    match = REGEX_MOLWEIGHT_COMMENT.Match(line);
+                    if (match.Success)
+                    {
+                        try
+                        {
+                            mw = double.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
+                        }
+                        catch
+                        {
+                            ThrowIOException(lineCount,
+                                string.Format(LibResources.NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__,
+                                    line));
+                        }
+                    }
+
+                }
+
+                if (Adduct.IsNullOrEmpty(adduct))
+                {
+                    match = REGEX_ADDUCT_COMMENT.Match(line);
+                    if (match.Success)
+                    {
+                        Adduct.TryParse(match.Groups[1].Value, out adduct);
+                    }
                 }
 
                 return true;

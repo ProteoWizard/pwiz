@@ -58,7 +58,12 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, MODS_USING_PARENS + TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT + LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS + LIB_TEXT_NO_ADDUCT + TEXT_RIKEN);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, MODS_USING_PARENS + TEXT_LIB_YEAST_NIST +
+                                                       TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT +
+                                                       TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE +
+                                                       LIB_TEXT_MONA + LIB_TEXT_MZVAULT +
+                                                       LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS +
+                                                       LIB_TEXT_NO_ADDUCT + TEXT_RIKEN + TEXT_USING_EXACTMASS_COMMENT);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -106,6 +111,9 @@ namespace pwiz.SkylineTest
 
             // Check use of "MW:"
             Assert.AreEqual(1, lib2Keys.Count(k => Equals(324.6, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
+
+            // Check use of "ExactMass" in a comment
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals(330.991, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
 
             // Check use of GC not declaring mass at all
             Assert.AreEqual(1, lib2Keys.Count(k => Equals(NistLibraryBase.DUMMY_GC_ESI_MASS, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
@@ -1900,5 +1908,106 @@ namespace pwiz.SkylineTest
             "2299.9441\t65307.3\t\"b18+2i/-9.8ppm\"\r\n" +
             "\r\n";
 
+        private const string TEXT_USING_EXACTMASS_COMMENT = // As in MoNA-export-GNPS.msp
+            "Name: \"1,1-dioxo-6-(trifluoromethyl)-3,4-dihydro-2H-1$l^{6},2,4-benzothiadiazine-7-sulfonamide\"\r\n" +
+            "Synon: $:00in-source\r\n" +
+            "DB#: CCMSLIB00000076973\r\n" +
+            "Spectrum_type: 2\r\n" +
+            "Instrument: qTof\r\n" +
+            "Comments: \"SMILES=NS(=O)(=O)c1cc2c(NCNS2(=O)=O)cc1C(F)(F)F\" \"ion source=LC-ESI\" \"compound source=Commercial\" \"adduct=[M+H]+\" \"exactmass=330.991\" \"charge=1\" \"ion mode=Positive\" \"source file=NCP002928_A2_B11_BA2_01_15696.mzXML\" \"origin=GNPS-NIH-CLINICALCOLLECTION2\" \"authors=Garg_Neha, negarg, Dorrestein\" \"submitter=GNPS Team (University of California, San Diego)\"\r\n" +
+            "Num Peaks: 92\r\n" +
+            "45.035854 144.000000\r\n" +
+            "65.534843 220.000000\r\n" +
+            "84.186409 148.000000\r\n" +
+            "85.804817 176.000000\r\n" +
+            "116.466408 168.000000\r\n" +
+            "126.015266 188.000000\r\n" +
+            "140.034027 168.000000\r\n" +
+            "147.003082 168.000000\r\n" +
+            "147.994156 148.000000\r\n" +
+            "148.045547 160.000000\r\n" +
+            "151.457245 156.000000\r\n" +
+            "158.018539 128.000000\r\n" +
+            "159.025208 312.000000\r\n" +
+            "159.045288 160.000000\r\n" +
+            "160.035797 168.000000\r\n" +
+            "163.002869 188.000000\r\n" +
+            "163.048615 180.000000\r\n" +
+            "167.035721 176.000000\r\n" +
+            "168.034363 176.000000\r\n" +
+            "169.987930 180.000000\r\n" +
+            "170.006088 196.000000\r\n" +
+            "172.031082 200.000000\r\n" +
+            "173.037598 220.000000\r\n" +
+            "174.016815 776.000000\r\n" +
+            "175.015503 140.000000\r\n" +
+            "176.029800 152.000000\r\n" +
+            "181.015976 172.000000\r\n" +
+            "182.682724 200.000000\r\n" +
+            "183.460999 176.000000\r\n" +
+            "185.122681 192.000000\r\n" +
+            "186.036453 880.000000\r\n" +
+            "187.047455 3112.000000\r\n" +
+            "188.032974 220.000000\r\n" +
+            "188.052200 172.000000\r\n" +
+            "189.231659 164.000000\r\n" +
+            "191.040237 236.000000\r\n" +
+            "198.991821 172.000000\r\n" +
+            "199.081680 172.000000\r\n" +
+            "201.057251 140.000000\r\n" +
+            "207.988678 140.000000\r\n" +
+            "214.981384 184.000000\r\n" +
+            "218.024139 160.000000\r\n" +
+            "218.950851 152.000000\r\n" +
+            "219.009552 164.000000\r\n" +
+            "219.398743 180.000000\r\n" +
+            "223.093369 164.000000\r\n" +
+            "237.978195 196.000000\r\n" +
+            "239.003174 308.000000\r\n" +
+            "240.025101 204.000000\r\n" +
+            "240.996201 156.000000\r\n" +
+            "251.009552 784.000000\r\n" +
+            "251.196213 148.000000\r\n" +
+            "253.003830 144.000000\r\n" +
+            "253.494766 148.000000\r\n" +
+            "255.002914 128.000000\r\n" +
+            "256.495026 148.000000\r\n" +
+            "267.003876 1340.000000\r\n" +
+            "268.008209 220.000000\r\n" +
+            "268.995422 116.000000\r\n" +
+            "269.596619 152.000000\r\n" +
+            "270.024902 184.000000\r\n" +
+            "271.974396 172.000000\r\n" +
+            "274.949738 148.000000\r\n" +
+            "275.851471 180.000000\r\n" +
+            "282.998962 280.000000\r\n" +
+            "285.017914 172.000000\r\n" +
+            "289.070160 164.000000\r\n" +
+            "289.940491 216.000000\r\n" +
+            "298.980682 172.000000\r\n" +
+            "302.966553 180.000000\r\n" +
+            "308.495148 148.000000\r\n" +
+            "310.206970 244.000000\r\n" +
+            "311.990326 144.000000\r\n" +
+            "313.038849 144.000000\r\n" +
+            "314.972351 6400.000000\r\n" +
+            "315.119934 192.000000\r\n" +
+            "315.971069 944.000000\r\n" +
+            "316.968140 648.000000\r\n" +
+            "320.982697 924.000000\r\n" +
+            "330.991455 152.000000\r\n" +
+            "331.161652 164.000000\r\n" +
+            "331.875549 148.000000\r\n" +
+            "331.958954 164.000000\r\n" +
+            "331.997070 412.000000\r\n" +
+            "332.220093 156.000000\r\n" +
+            "332.984955 320.000000\r\n" +
+            "333.203949 144.000000\r\n" +
+            "333.989166 200.000000\r\n" +
+            "334.281769 216.000000\r\n" +
+            "335.146851 236.000000\r\n" +
+            "346.204071 164.000000\r\n" +
+            "426.735748 152.000000\r\n" +
+            "\r\n";
     }
 }
