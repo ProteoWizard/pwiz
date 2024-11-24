@@ -45,11 +45,13 @@ namespace pwiz.Skyline.FileUI
 
         private readonly string _documentSavedPath;
         private readonly bool _warnOnMultiInjection;
+        private bool _hasIrt;
 
         public ImportResultsDlg(SrmDocument document, string savedPath)
         {
             _documentSavedPath = savedPath;
             _warnOnMultiInjection = (document.MoleculeTransitionCount < MIN_MULTIPLE_TRANSITIONS);
+            _hasIrt = true == document.Settings.PeptideSettings.Prediction.RetentionTime?.IsAutoCalculated;
 
             InitializeComponent();
 
@@ -93,6 +95,7 @@ namespace pwiz.Skyline.FileUI
             comboSimultaneousFiles.SelectedIndex = Settings.Default.ImportResultsSimultaneousFiles;
             cbShowAllChromatograms.Checked = Settings.Default.AutoShowAllChromatogramsGraph;
             cbAutoRetry.Checked = Settings.Default.ImportResultsDoAutoRetry;
+            UpdateRadioSelection(radioCreateMultiple);
         }
 
         private string DefaultNewName
@@ -503,20 +506,20 @@ namespace pwiz.Skyline.FileUI
         private void radioCreateMultiple_CheckedChanged(object sender, EventArgs e)
         {
             if (radioCreateMultiple.Checked)
-                UpdateRadioSelection();
+                UpdateRadioSelection(radioCreateMultiple);
         }
 
         private void radioCreateMultipleMulti_CheckedChanged(object sender, EventArgs e)
         {
             if (radioCreateMultipleMulti.Checked)
-                UpdateRadioSelection();
+                UpdateRadioSelection(radioCreateMultipleMulti);
         }
 
         private void radioCreateNew_CheckedChanged(object sender, EventArgs e)
         {
             if (radioCreateNew.Checked)
             {
-                UpdateRadioSelection();
+                UpdateRadioSelection(radioCreateNew);
                 textName.Focus();
                 textName.SelectAll();
             }
@@ -525,11 +528,16 @@ namespace pwiz.Skyline.FileUI
         private void radioAddExisting_CheckedChanged(object sender, EventArgs e)
         {
             if (radioAddExisting.Checked)
-                UpdateRadioSelection();
+                UpdateRadioSelection(radioAddExisting);
         }
 
-        private void UpdateRadioSelection()
+        private void UpdateRadioSelection(RadioButton radioChecked)
         {
+            foreach (var radio in new[]
+                         { radioCreateMultiple, radioCreateMultipleMulti, radioCreateNew, radioAddExisting })
+            {
+                radio.Checked = ReferenceEquals(radio, radioChecked);
+            }
             if (radioAddExisting.Checked)
             {
                 textName.Text = string.Empty;
@@ -548,56 +556,29 @@ namespace pwiz.Skyline.FileUI
                 textName.Text = multiple ? string.Empty : DefaultNewName;
             }
 
-            // If comboOptimizing is not supposed to be below radioCreateMulti and it is
-            if (!radioCreateMultiple.Checked && !radioAddExisting.Checked  && comboOptimizing.Top < radioCreateMultipleMulti.Top)
+            var controls = flowLayoutPanelReplicates.Controls.Cast<Control>().ToList();
+            controls.Remove(flowLayoutPanelOptions);
+            if (radioCreateMultiple.Checked)
             {
-                // Move it to below radioCreateMultipleMulti
-                radioCreateMultipleMulti.Top = radioCreateMultiple.Top + (radioCreateNew.Top - radioCreateMultipleMulti.Top);
-                int shiftHeight = radioCreateMultipleMulti.Top - radioCreateMultiple.Top;
-                labelOptimizing.Top += shiftHeight;
-                comboOptimizing.Top += shiftHeight;
-                labelTuning.Top = labelOptimizing.Top;
-                comboTuning.Top = comboOptimizing.Top;
+                controls.Insert(1, flowLayoutPanelOptions);
             }
-            // If comboOptimizing is not supposed to be below radioCreateNew and it is
-            if (!radioCreateNew.Checked && comboOptimizing.Top > radioCreateNew.Top)
+            else if (radioCreateMultipleMulti.Checked)
             {
-                // Move it to below radioCreateMultipleMulti
-                int shiftHeight = radioAddExisting.Top - labelOptimizing.Top;
-                textName.Top += shiftHeight;
-                labelNameNew.Top += shiftHeight;
-                radioCreateNew.Top += shiftHeight;
-                shiftHeight = radioCreateNew.Top - labelOptimizing.Top - shiftHeight;
-                labelOptimizing.Top += shiftHeight;
-                comboOptimizing.Top += shiftHeight;
-                labelTuning.Top = labelOptimizing.Top;
-                comboTuning.Top = comboOptimizing.Top;
+                controls.Insert(2, flowLayoutPanelOptions);
             }
-            // If comboOptimizing is supposed to be below radioCreateNew, but it is not
-            if (radioCreateNew.Checked && comboOptimizing.Top < radioCreateNew.Top)
+            else if (radioCreateNew.Checked)
             {
-                // Move it to below radioCreateNew, starting from being below radioCreateMultipleMulti
-                int shiftHeight = radioCreateNew.Top - labelOptimizing.Top;
-                radioCreateNew.Top -= shiftHeight;
-                labelNameNew.Top -= shiftHeight;
-                textName.Top -= shiftHeight;
-                shiftHeight = radioAddExisting.Top - labelOptimizing.Top - shiftHeight;
-                labelOptimizing.Top += shiftHeight;
-                comboOptimizing.Top += shiftHeight;
-                labelTuning.Top = labelOptimizing.Top;
-                comboTuning.Top = comboOptimizing.Top;
+                controls.Insert(3, flowLayoutPanelOptions);
             }
-            // If comboOptimizing is supposed to be below radioCreateMultiple, but it is not
-            if ((radioCreateMultiple.Checked || radioAddExisting.Checked) &&
-                comboOptimizing.Top > radioCreateMultipleMulti.Top)
+            else if (radioAddExisting.Checked)
             {
-                // Move it to below radioCreateMultiple, starting from being below radioCreateMultipleMulti
-                int shiftHeight = radioCreateMultipleMulti.Top - labelOptimizing.Top;
-                labelOptimizing.Top += shiftHeight;
-                comboOptimizing.Top += shiftHeight;
-                labelTuning.Top = labelOptimizing.Top;
-                comboTuning.Top = comboOptimizing.Top;
-                radioCreateMultipleMulti.Top = radioCreateNew.Top - (radioCreateMultipleMulti.Top - radioCreateMultiple.Top);
+                controls.Insert(4, flowLayoutPanelOptions);
+            }
+            
+            if (!controls.SequenceEqual(flowLayoutPanelReplicates.Controls.Cast<Control>()))
+            {
+                flowLayoutPanelReplicates.Controls.Clear();
+                flowLayoutPanelReplicates.Controls.AddRange(controls.ToArray());
             }
 
             if (radioAddExisting.Checked)
@@ -613,6 +594,8 @@ namespace pwiz.Skyline.FileUI
                     comboOptimizing.SelectedIndex = comboTuning.SelectedIndex = 0;
                 }
             }
+
+            panelMergeIrt.Visible = !radioCreateMultiple.Checked && _hasIrt;
         }
 
         public int ImportSimultaneousIndex
@@ -739,7 +722,7 @@ namespace pwiz.Skyline.FileUI
         private void comboOptimizing_SelectedIndexChanged(object sender, EventArgs e)
         {
             var selected = comboOptimizing.SelectedItem;
-            labelTuning.Visible = comboTuning.Visible = selected != null && selected.ToString().Equals(ExportOptimize.COV);
+            panelTuning.Visible = selected != null && selected.ToString().Equals(ExportOptimize.COV);
         }
 
         public bool CanExportCov { get { return comboOptimizing.Items.Contains(ExportOptimize.COV); } }

@@ -50,7 +50,22 @@
             this.comboSimultaneousFiles = new System.Windows.Forms.ComboBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.cbAutoRetry = new System.Windows.Forms.CheckBox();
+            this.flowLayoutPanelReplicates = new System.Windows.Forms.FlowLayoutPanel();
+            this.flowLayoutPanelOptions = new System.Windows.Forms.FlowLayoutPanel();
+            this.panelOptimizing = new System.Windows.Forms.Panel();
+            this.panelTuning = new System.Windows.Forms.Panel();
+            this.panelMergeIrt = new System.Windows.Forms.Panel();
+            this.checkBoxMergeIrt = new System.Windows.Forms.CheckBox();
+            this.panelAddOneNewReplicate = new System.Windows.Forms.Panel();
+            this.panelAddToExistingReplicate = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
+            this.flowLayoutPanelReplicates.SuspendLayout();
+            this.flowLayoutPanelOptions.SuspendLayout();
+            this.panelOptimizing.SuspendLayout();
+            this.panelTuning.SuspendLayout();
+            this.panelMergeIrt.SuspendLayout();
+            this.panelAddOneNewReplicate.SuspendLayout();
+            this.panelAddToExistingReplicate.SuspendLayout();
             this.SuspendLayout();
             // 
             // helpTip
@@ -194,6 +209,66 @@
             this.cbAutoRetry.Name = "cbAutoRetry";
             this.cbAutoRetry.UseVisualStyleBackColor = true;
             // 
+            // flowLayoutPanelReplicates
+            // 
+            this.flowLayoutPanelReplicates.Controls.Add(this.radioCreateMultiple);
+            this.flowLayoutPanelReplicates.Controls.Add(this.radioCreateMultipleMulti);
+            this.flowLayoutPanelReplicates.Controls.Add(this.flowLayoutPanelOptions);
+            this.flowLayoutPanelReplicates.Controls.Add(this.panelAddOneNewReplicate);
+            this.flowLayoutPanelReplicates.Controls.Add(this.panelAddToExistingReplicate);
+            resources.ApplyResources(this.flowLayoutPanelReplicates, "flowLayoutPanelReplicates");
+            this.flowLayoutPanelReplicates.Name = "flowLayoutPanelReplicates";
+            // 
+            // flowLayoutPanelOptions
+            // 
+            resources.ApplyResources(this.flowLayoutPanelOptions, "flowLayoutPanelOptions");
+            this.flowLayoutPanelOptions.Controls.Add(this.panelOptimizing);
+            this.flowLayoutPanelOptions.Controls.Add(this.panelTuning);
+            this.flowLayoutPanelOptions.Controls.Add(this.panelMergeIrt);
+            this.flowLayoutPanelOptions.Name = "flowLayoutPanelOptions";
+            // 
+            // panelOptimizing
+            // 
+            resources.ApplyResources(this.panelOptimizing, "panelOptimizing");
+            this.panelOptimizing.Controls.Add(this.comboOptimizing);
+            this.panelOptimizing.Controls.Add(this.labelOptimizing);
+            this.panelOptimizing.Name = "panelOptimizing";
+            // 
+            // panelTuning
+            // 
+            resources.ApplyResources(this.panelTuning, "panelTuning");
+            this.panelTuning.Controls.Add(this.comboTuning);
+            this.panelTuning.Controls.Add(this.labelTuning);
+            this.panelTuning.Name = "panelTuning";
+            // 
+            // panelMergeIrt
+            // 
+            resources.ApplyResources(this.panelMergeIrt, "panelMergeIrt");
+            this.panelMergeIrt.Controls.Add(this.checkBoxMergeIrt);
+            this.panelMergeIrt.Name = "panelMergeIrt";
+            // 
+            // checkBoxMergeIrt
+            // 
+            resources.ApplyResources(this.checkBoxMergeIrt, "checkBoxMergeIrt");
+            this.checkBoxMergeIrt.Name = "checkBoxMergeIrt";
+            this.checkBoxMergeIrt.UseVisualStyleBackColor = true;
+            // 
+            // panelAddOneNewReplicate
+            // 
+            resources.ApplyResources(this.panelAddOneNewReplicate, "panelAddOneNewReplicate");
+            this.panelAddOneNewReplicate.Controls.Add(this.textName);
+            this.panelAddOneNewReplicate.Controls.Add(this.radioCreateNew);
+            this.panelAddOneNewReplicate.Controls.Add(this.labelNameNew);
+            this.panelAddOneNewReplicate.Name = "panelAddOneNewReplicate";
+            // 
+            // panelAddToExistingReplicate
+            // 
+            resources.ApplyResources(this.panelAddToExistingReplicate, "panelAddToExistingReplicate");
+            this.panelAddToExistingReplicate.Controls.Add(this.comboName);
+            this.panelAddToExistingReplicate.Controls.Add(this.radioAddExisting);
+            this.panelAddToExistingReplicate.Controls.Add(this.labelNameAdd);
+            this.panelAddToExistingReplicate.Name = "panelAddToExistingReplicate";
+            // 
             // ImportResultsDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -201,20 +276,9 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.labelTuning);
-            this.Controls.Add(this.comboTuning);
-            this.Controls.Add(this.labelOptimizing);
-            this.Controls.Add(this.comboOptimizing);
-            this.Controls.Add(this.radioCreateMultipleMulti);
-            this.Controls.Add(this.radioCreateMultiple);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.comboName);
-            this.Controls.Add(this.labelNameAdd);
-            this.Controls.Add(this.textName);
-            this.Controls.Add(this.labelNameNew);
-            this.Controls.Add(this.radioAddExisting);
-            this.Controls.Add(this.radioCreateNew);
+            this.Controls.Add(this.flowLayoutPanelReplicates);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -222,8 +286,21 @@
             this.ShowInTaskbar = false;
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            this.flowLayoutPanelReplicates.ResumeLayout(false);
+            this.flowLayoutPanelReplicates.PerformLayout();
+            this.flowLayoutPanelOptions.ResumeLayout(false);
+            this.flowLayoutPanelOptions.PerformLayout();
+            this.panelOptimizing.ResumeLayout(false);
+            this.panelOptimizing.PerformLayout();
+            this.panelTuning.ResumeLayout(false);
+            this.panelTuning.PerformLayout();
+            this.panelMergeIrt.ResumeLayout(false);
+            this.panelMergeIrt.PerformLayout();
+            this.panelAddOneNewReplicate.ResumeLayout(false);
+            this.panelAddOneNewReplicate.PerformLayout();
+            this.panelAddToExistingReplicate.ResumeLayout(false);
+            this.panelAddToExistingReplicate.PerformLayout();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
@@ -249,5 +326,13 @@
         private System.Windows.Forms.ComboBox comboSimultaneousFiles;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.CheckBox cbAutoRetry;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelReplicates;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelOptions;
+        private System.Windows.Forms.Panel panelOptimizing;
+        private System.Windows.Forms.Panel panelTuning;
+        private System.Windows.Forms.Panel panelAddOneNewReplicate;
+        private System.Windows.Forms.Panel panelAddToExistingReplicate;
+        private System.Windows.Forms.Panel panelMergeIrt;
+        private System.Windows.Forms.CheckBox checkBoxMergeIrt;
     }
 }
