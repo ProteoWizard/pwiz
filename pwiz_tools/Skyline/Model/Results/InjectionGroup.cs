@@ -61,12 +61,6 @@ namespace pwiz.Skyline.Model.Results
             TryCreateConversion();
         }
 
-        public void UseExistingResults(MsDataFileUri msDataFileUri)
-        {
-            StoreExistingResults(msDataFileUri);
-            CompletedFirstPass(msDataFileUri);
-        }
-
         private void StoreExistingResults(MsDataFileUri msDataFileUri)
         {
             if (!Document.MeasuredResults.TryGetChromatogramSet(ChromatogramSet.Name, out _, out int replicateIndex))
@@ -78,7 +72,9 @@ namespace pwiz.Skyline.Model.Results
             {
                 return;
             }
-            var fileBuildStatus = _fileBuilderStatuses[msDataFileUri];
+
+            var fileBuildStatus = new FileBuilderStatus(null, null);
+            fileBuildStatus.Completed = fileBuildStatus.CompletedFirstPass = true;
             foreach (var molecule in Document.Molecules)
             {
                 if (!IsFirstPassPeptide(molecule))
@@ -99,7 +95,7 @@ namespace pwiz.Skyline.Model.Results
                     fileBuildStatus.PeptideRetentionTimes.Add(new PeptideRetentionTime(molecule, transitionCount, transitionGroupChromInfo.RetentionTime.Value));
                 }
             }
-
+            _fileBuilderStatuses.Add(msDataFileUri, fileBuildStatus);
         }
 
         private void TryCreateConversion()
@@ -207,6 +203,16 @@ namespace pwiz.Skyline.Model.Results
 
         public void Load()
         {
+            if (ChromatogramSet != null)
+            {
+                foreach (var path in ChromatogramSet.MSDataFilePaths)
+                {
+                    if (!_fileBuilderStatuses.ContainsKey(path))
+                    {
+                        StoreExistingResults(path);
+                    }
+                }
+            }
             foreach (var path in _fileBuilderStatuses.Keys)
             {
                 ActionUtil.RunAsync(() => BuildFile(path), @"InjectionGroup Load " + path.GetFileName());

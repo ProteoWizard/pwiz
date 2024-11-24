@@ -206,7 +206,6 @@ namespace pwiz.Skyline.Model
                 var accumulator = new FileLoadCompletionAccumulator(complete, threadCount, uniqueLoadList.Count);
                 var sharedInjectionGroups = new Dictionary<string, InjectionGroup>();
                 var injectionGroups = new List<InjectionGroup>();
-                var loadingFiles = new HashSet<MsDataFileUri>();
 
                 // Add new paths to queue.
                 foreach (var loadItem in uniqueLoadList)
@@ -237,19 +236,6 @@ namespace pwiz.Skyline.Model
                         injectionGroups.Add(injectionGroup);
                     }
                     injectionGroup.AddFileToLoad(loadItem.DataFile, loadItem.PartPath, loadingStatus);
-                    // Queue work item to load the file.
-                    loadingFiles.Add(loadItem.DataFile);
-                }
-
-                foreach (var injectionGroup in sharedInjectionGroups.Values)
-                {
-                    foreach (var path in injectionGroup.ChromatogramSet.MSDataFilePaths)
-                    {
-                        if (!loadingFiles.Contains(path))
-                        {
-                            injectionGroup.UseExistingResults(path);
-                        }
-                    }
                 }
 
                 foreach (var injectionGroup in injectionGroups)
