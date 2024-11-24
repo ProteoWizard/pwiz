@@ -662,6 +662,24 @@ and a specific name.</value>
   <data name="&gt;&gt;comboSimultaneousFiles.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="cbAutoRetry.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAutoRetry.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
+    <value>17, 87</value>
+  </data>
+  <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
+    <value>137, 17</value>
+  </data>
+  <data name="cbAutoRetry.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="cbAutoRetry.Text" xml:space="preserve">
+    <value>&amp;Retry after import failure</value>
+  </data>
   <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
     <value>cbAutoRetry</value>
   </data>
@@ -695,36 +713,6 @@ and a specific name.</value>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="cbAutoRetry.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbAutoRetry.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="cbAutoRetry.Location" type="System.Drawing.Point, System.Drawing">
-    <value>17, 87</value>
-  </data>
-  <data name="cbAutoRetry.Size" type="System.Drawing.Size, System.Drawing">
-    <value>137, 17</value>
-  </data>
-  <data name="cbAutoRetry.TabIndex" type="System.Int32, mscorlib">
-    <value>17</value>
-  </data>
-  <data name="cbAutoRetry.Text" xml:space="preserve">
-    <value>&amp;Retry after import failure</value>
-  </data>
-  <data name="&gt;&gt;cbAutoRetry.Name" xml:space="preserve">
-    <value>cbAutoRetry</value>
-  </data>
-  <data name="&gt;&gt;cbAutoRetry.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbAutoRetry.Parent" xml:space="preserve">
-    <value>panel1</value>
-  </data>
-  <data name="&gt;&gt;cbAutoRetry.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="flowLayoutPanelOptions.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -738,7 +726,7 @@ and a specific name.</value>
     <value>GrowAndShrink</value>
   </data>
   <data name="panelOptimizing.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 11</value>
+    <value>18, 3</value>
   </data>
   <data name="panelOptimizing.Size" type="System.Drawing.Size, System.Drawing">
     <value>134, 40</value>
@@ -765,7 +753,7 @@ and a specific name.</value>
     <value>GrowAndShrink</value>
   </data>
   <data name="panelTuning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>143, 11</value>
+    <value>158, 3</value>
   </data>
   <data name="panelTuning.Size" type="System.Drawing.Size, System.Drawing">
     <value>104, 40</value>
@@ -819,7 +807,7 @@ and a specific name.</value>
     <value>0</value>
   </data>
   <data name="panelMergeIrt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>253, 11</value>
+    <value>268, 3</value>
   </data>
   <data name="panelMergeIrt.Size" type="System.Drawing.Size, System.Drawing">
     <value>84, 36</value>
@@ -846,10 +834,10 @@ and a specific name.</value>
     <value>0, 0, 0, 0</value>
   </data>
   <data name="flowLayoutPanelOptions.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>0, 8, 0, 8</value>
+    <value>15, 0, 0, 16</value>
   </data>
   <data name="flowLayoutPanelOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>340, 62</value>
+    <value>355, 62</value>
   </data>
   <data name="flowLayoutPanelOptions.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -978,7 +966,7 @@ and a specific name.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.313, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.329, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -990,6 +978,6 @@ and a specific name.</value>
     <value>ImportResultsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.313, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.329, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

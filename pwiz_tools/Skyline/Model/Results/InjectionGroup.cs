@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Util;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
-using static pwiz.Skyline.Model.ModificationMatcher;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -232,13 +233,34 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void BuildFile(MsDataFileUri path)
+        private void BuildFile(MsDataFileUri msDataFileUri)
         {
-            var fileBuilderStatus = _fileBuilderStatuses[path];
+            var fileBuilderStatus = _fileBuilderStatuses[msDataFileUri];
             try
             {
-                ChromatogramCache.Build(this, fileBuilderStatus.PartPath, path, fileBuilderStatus.LoadingStatus);
-                fileBuilderStatus.LoadingStatus.Transitions.Flush();
+                var loader = new SingleFileLoadMonitor(MultiFileLoadMonitor, msDataFileUri);
+                var status = fileBuilderStatus.LoadingStatus;
+                try
+                {
+                    if (Program.MultiProcImport && Program.ImportProgressPipe == null && ChromatogramSet == null)
+                    {
+                        // Import using a child process.
+                        ChromatogramCache.BuildInSeparateProcess(msDataFileUri, DocumentFilePath, fileBuilderStatus.PartPath, status, loader);
+                        var cacheNew = ChromatogramCache.Load(fileBuilderStatus.PartPath, status, loader, Document);
+                        CompleteAction(cacheNew, fileBuilderStatus.LoadingStatus);
+                    }
+                    else
+                    {
+                        // Import using threads in this process.
+                        status = status.ChangeFilePath(msDataFileUri);
+                        var builder = new ChromCacheBuilder(this, fileBuilderStatus.PartPath, msDataFileUri, loader, status);
+                        builder.BuildCache();
+                    }
+                }
+                catch (Exception x)
+                {
+                    CompleteAction(null, status.ChangeErrorException(x));
+                }
             }
             finally
             {

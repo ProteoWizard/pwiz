@@ -508,6 +508,8 @@ namespace pwiz.Skyline.Model.Results
 
         public bool ComparableRetentionTimes { get; private set; }
 
+        public bool MergeIrts { get; private set; }
+
         #region Property change methods
 
         public ChromatogramSet ChangeMSDataFileInfos(IList<ChromFileInfo> prop)
@@ -643,7 +645,10 @@ namespace pwiz.Skyline.Model.Results
         {
             return ChangeProp(ImClone(this), im => im.ComparableRetentionTimes = value);
         }
-
+        public ChromatogramSet ChangeMergeIrts(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.MergeIrts = value);
+        }
         #endregion
 
         public static MsDataFileUri GetExistingDataFilePath(string cachePath, MsDataFileUri msDataFileUri)
@@ -753,6 +758,7 @@ namespace pwiz.Skyline.Model.Results
             sample_id,
             instrument_serial_number,
             comparable_retention_times,
+            merge_irts,
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -774,6 +780,7 @@ namespace pwiz.Skyline.Model.Results
             SampleDilutionFactor = reader.GetDoubleAttribute(ATTR.sample_dilution_factor, DEFAULT_DILUTION_FACTOR);
             BatchName = reader.GetAttribute(ATTR.batch_name);
             ComparableRetentionTimes = reader.GetBoolAttribute(ATTR.comparable_retention_times, false);
+            MergeIrts = reader.GetBoolAttribute(ATTR.merge_irts, false);
             // Consume tag
             reader.Read();
 
@@ -850,6 +857,7 @@ namespace pwiz.Skyline.Model.Results
             writer.WriteAttribute(ATTR.sample_dilution_factor, SampleDilutionFactor, DEFAULT_DILUTION_FACTOR);
             writer.WriteAttributeIfString(ATTR.batch_name, BatchName);
             writer.WriteAttribute(ATTR.comparable_retention_times, ComparableRetentionTimes, false);
+            writer.WriteAttribute(ATTR.merge_irts, MergeIrts, false);
             // Write optimization element, if present
             if (OptimizationFunction != null)
             {
@@ -967,6 +975,8 @@ namespace pwiz.Skyline.Model.Results
                 return false;
             if (!Equals(obj.ComparableRetentionTimes, ComparableRetentionTimes))
                 return false;
+            if (obj.MergeIrts != MergeIrts)
+                return false;
             return true;
         }
 
@@ -991,6 +1001,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ SampleType.GetHashCode();
                 result = (result*397) ^ SampleDilutionFactor.GetHashCode();
                 result = (result*397) ^ ComparableRetentionTimes.GetHashCode();
+                result = (result*397) ^ MergeIrts.GetHashCode();
                 return result;
             }
         }

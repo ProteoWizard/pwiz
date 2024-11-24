@@ -220,7 +220,7 @@ namespace pwiz.Skyline.Model
                         document.MeasuredResults.TryGetChromatogramSet(loadItem.ReplicateList[0], out chromatogramSet, out _);
                     }
 
-                    if (chromatogramSet != null)
+                    if (true == chromatogramSet?.MergeIrts)
                     {
                         if (!sharedInjectionGroups.TryGetValue(chromatogramSet.Name, out injectionGroup))
                         {
