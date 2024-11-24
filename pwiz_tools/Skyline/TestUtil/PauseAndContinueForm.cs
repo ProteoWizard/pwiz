@@ -199,7 +199,8 @@ namespace pwiz.SkylineTestUtil
             { 
                 EnsurePreviewForm();
 
-                _screenshotPreviewForm.Show(true);
+                // TODO: This location used to force a 1 second delay. Is that really necessary? If so, why should be commented here
+                _screenshotPreviewForm.Show(false);
             }
 
             if (_showMatchingPage)
