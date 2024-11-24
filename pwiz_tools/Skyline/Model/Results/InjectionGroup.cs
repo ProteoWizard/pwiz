@@ -7,8 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
@@ -20,6 +22,7 @@ namespace pwiz.Skyline.Model.Results
 
         private ChromCacheBuilder.RetentionTimePredictor _retentionTimePredictor;
         private bool? _createConversionResult;
+        private Exception _createConversionException;
         
 
         public InjectionGroup(SrmDocument document, string documentFilePath, ChromatogramCache cacheRecalc, FileLoadCompletionAccumulator fileLoadCompletionAccumulator,
@@ -119,9 +122,9 @@ namespace pwiz.Skyline.Model.Results
                 {
                     _createConversionResult = _retentionTimePredictor.CreateConversion();
                 }
-                catch
+                catch (Exception exception)
                 {
-                    _createConversionResult = false;
+                    _createConversionException = exception;
                 }
                 Monitor.PulseAll(this);
             }
@@ -133,6 +136,18 @@ namespace pwiz.Skyline.Model.Results
             {
                 lock (this)
                 {
+                    if (_createConversionException != null)
+                    {
+                        if (_createConversionException is CalculatorException)
+                        {
+                            throw new CalculatorException(_createConversionException.Message,
+                                _createConversionException);
+                        }
+                        else
+                        {
+                            Helpers.WrapAndThrowException(_createConversionException);
+                        }
+                    }
                     if (_createConversionResult.HasValue)
                     {
                         return _createConversionResult.Value;
