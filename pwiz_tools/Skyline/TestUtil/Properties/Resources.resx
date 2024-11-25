@@ -130,6 +130,9 @@
   <data name="DiskFailure" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\DiskFailure.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="hand_cur" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\hand-cur.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="imagebutton" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\imagebutton.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
