@@ -18,7 +18,7 @@ for /d /r Shared\ProteowizardWrapper %%d in (obj, bin) do @if exist "%%d" rmdir 
 for /d /r Shared\zedgraph %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Skyline %%d in (obj) do @if exist "%%d" rmdir /s/q "%%d"
 REM Skyline has at least one checked in devtools "bin" folder, don't stomp if contents are source controlled
-for /d /r Skyline %%d in (obj, bin) do (
+for /d /r Skyline %%d in (bin) do (
     if exist "%%d" (
         pushd "%%d" >nul
         rem Check if the directory contains files tracked by Git (error 1 if not)
