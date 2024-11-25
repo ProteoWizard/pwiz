@@ -121,7 +121,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public DdaConverterSettings ConverterSettings
         {
-            get { return CurrentProtocol != Protocol.none ? new DdaConverterSettings(this) : null; }
+            get { return DdaConverterSettings.GetSettings(this); }
         }
 
         public class DdaConverterSettings
@@ -129,6 +129,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public static DdaConverterSettings GetDefault()
             {
                 return new DdaConverterSettings();
+            }
+            public static DdaConverterSettings GetSettings(ConverterSettingsControl control)
+            {
+                if (control.CurrentProtocol == Protocol.none)
+                    return null;
+                if (control.CurrentProtocol == Protocol.dia_umpire && !control.UseDiaUmpire)
+                    return null;
+                return new DdaConverterSettings(control);
             }
 
             public DdaConverterSettings()
@@ -149,7 +157,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public Protocol Protocol { get; }
             [Track]
             public DiaUmpire.Config.InstrumentPreset InstrumentPreset { get; }
-            [Track]
+            [Track(defaultValues:typeof(DefaultValuesNullOrEmpty))]
             public IEnumerable<AbstractDdaSearchEngine.Setting> NonDefaultAdditionalSettings { get; }
         }
 
@@ -290,6 +298,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public bool UseDiaUmpire
+        {
+            get => cbDiaUmpire.Checked;
+            set => cbDiaUmpire.Checked = value;
+        }
+
         public DiaUmpire.Config.InstrumentPreset InstrumentPreset
         {
             get { return (DiaUmpire.Config.InstrumentPreset) cbInstrumentPreset.SelectedIndex; }
@@ -314,14 +328,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return new DiaUmpireDdaConverter(ImportPeptideSearch, _fullScanSettingsControlGetter().IsolationScheme, diaUmpireConfig);
         }
 
-        public MsconvertDdaConverter GetMsconvertConverter()
+        public MsconvertDdaConverter GetDdaConverter()
         {
             return new MsconvertDdaConverter(ImportPeptideSearch);
+        }
+
+        public DiaConverter GetDiaConverter()
+        {
+            return new DiaConverter(ImportPeptideSearch);
         }
 
         public HardklorDdaConverter GetHardklorConverter()
         {
             return new HardklorDdaConverter(ImportPeptideSearch);
+        }
+
+        private void cbDiaUmpire_CheckedChanged(object sender, EventArgs e)
+        {
+            diaUmpireSettingsPanel.Enabled = cbDiaUmpire.Checked;
         }
     }
 }

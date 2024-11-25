@@ -129,6 +129,10 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(messageType, lastEntry.AllInfo[0].MessageInfo.Type);
         }
 
+        protected virtual bool IsRecordMode
+        {
+            get { return false; }
+        }
 
         /// <summary>
         /// Returns true if Skyline was compiled with a Koina config file that enables connecting to a real server.

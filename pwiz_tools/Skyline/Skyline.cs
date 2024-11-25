@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -70,6 +71,8 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
+using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -97,7 +100,8 @@ namespace pwiz.Skyline
             ILibraryBuildNotificationContainer,
             IToolMacroProvider,
             IModifyDocumentContainer,
-            IRetentionScoreSource
+            IRetentionScoreSource,
+            IRemoteAccountUserInteraction
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -187,6 +191,7 @@ namespace pwiz.Skyline
             _autoTrainManager.ProgressUpdateEvent += UpdateProgress;
             _autoTrainManager.Register(this);
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
+            RemoteSession.RemoteAccountUserInteraction = this;
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
@@ -1033,7 +1038,10 @@ namespace pwiz.Skyline
         private void SkylineWindow_Activated(object sender, EventArgs e)
         {
             if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating)
-                FocusDocument();
+            {
+                if (!Program.FunctionalTest || Program.PauseSeconds == 0)  // Avoid doing this during screenshots
+                    FocusDocument();
+            }
         }
 
         protected override void OnGotFocus(EventArgs e)
@@ -4161,7 +4169,15 @@ namespace pwiz.Skyline
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
         }
 
-        public int StatusBarHeight { get { return statusGeneral.Height; } }
+        public int StatusBarHeight { get { return statusStrip.Height; } }
+
+        public int StatusSelectionWidth
+        {
+            get
+            {
+                return statusSequences.Width + statusPeptides.Width + statusPrecursors.Width + statusIons.Width + 20;
+            }
+        }
 
         #endregion
 
@@ -4651,6 +4667,29 @@ namespace pwiz.Skyline
                 return null;
             return KoinaRetentionTimeModel.Instance?.PredictSingle(KoinaPredictionClient.Current, Document.Settings,
                 node, CancellationToken.None)[node];
+        }
+
+        public Func<HttpClient> UserLogin(RemoteAccount account)
+        {
+            if (InvokeRequired)
+            {
+                Func<HttpClient> client = null;
+                RunUIAction(() => client = UserLogin(account));
+                return client;
+            }
+
+            switch (account)
+            {
+                case ArdiaAccount ardia:
+                {
+                    using var loginDlg = new ArdiaLoginDlg(ardia);
+                    if (DialogResult.Cancel == loginDlg.ShowDialog(this))
+                        throw new OperationCanceledException();
+                    return loginDlg.AuthenticatedHttpClientFactory;
+                }
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         private void mirrorMenuItem_Click(object sender, EventArgs e)

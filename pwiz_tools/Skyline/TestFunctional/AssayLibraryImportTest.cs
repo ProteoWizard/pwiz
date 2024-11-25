@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
         private static bool _asSmallMolecules;
         private static bool _smallMolDemo; // Set true for a convenient interactive  demo of small mol UI
 
-        private static void DemoPause(string message, Action action = null)
+        private void DemoPause(string message, Action action = null)
         {
             if (_smallMolDemo)
             {
