@@ -1633,7 +1633,7 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShotInternal(description, null, screenshotForm, timeout, processShot);
         }
 
-        public void   PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
             where TView : IFormView
         {
             PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot);
