@@ -36,7 +36,7 @@ echo ##teamcity[progressMessage 'Running quickbuild...']
 call quickbuild.bat -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test %ALL_ARGS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error running quickbuild & goto error
-if %CLEAN_EXIT% NEQ 0 set ERROR_TEXT=Repository was dirty after clean script & goto error
+if %CLEAN_EXIT% NEQ 0 set EXIT=%CLEAN_EXIT% & set ERROR_TEXT=Repository was dirty after clean script & goto error
 
 REM # uncomment this to test that test failures and error output are handled properly
 REM call quickbuild.bat -p1 --teamcity-test-decoration pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest

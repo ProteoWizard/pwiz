@@ -47,7 +47,7 @@ echo quickbuild.bat %ALL_ARGS% -p1 --abbreviate-paths --teamcity-test-decoration
 call quickbuild.bat %ALL_ARGS% -p1 --abbreviate-paths --teamcity-test-decoration --without-compassxtract
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error running quickbuild & goto error
-if %CLEAN_EXIT% NEQ 0 set ERROR_TEXT=Repository was dirty after clean script & goto error
+if %CLEAN_EXIT% NEQ 0 set EXIT=%CLEAN_EXIT% & set ERROR_TEXT=Repository was dirty after clean script & goto error
 
 popd
 
