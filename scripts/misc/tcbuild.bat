@@ -10,6 +10,7 @@ pushd %SCRIPTS_MISC_ROOT%\..\..
 set EXIT=0
 set ALL_ARGS=%*
 set CLEAN=1
+set CLEAN_EXIT=0
 
 if "%ALL_ARGS: no-clean=%" neq "%ALL_ARGS%" (
     set CLEAN=0
@@ -22,6 +23,9 @@ if %CLEAN%==1 (
   call clean.bat
   set EXIT=%ERRORLEVEL%
   if %EXIT% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
+
+  REM # check clean did not dirty repo (but postpone error until after quickbuild)
+  git status --porcelain | findstr . && set CLEAN_EXIT=1
 )
 
 REM # the -p1 argument overrides bjam's default behavior of merging stderr into stdout
@@ -32,6 +36,7 @@ echo ##teamcity[progressMessage 'Running quickbuild...']
 call quickbuild.bat -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test %ALL_ARGS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error running quickbuild & goto error
+if %CLEAN_EXIT% NEQ 0 set ERROR_TEXT=Repository was dirty after clean script & goto error
 
 REM # uncomment this to test that test failures and error output are handled properly
 REM call quickbuild.bat -p1 --teamcity-test-decoration pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
