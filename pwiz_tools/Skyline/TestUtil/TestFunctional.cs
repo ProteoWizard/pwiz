@@ -1310,22 +1310,21 @@ namespace pwiz.SkylineTestUtil
 
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
-            return ClipBitmap(skylineWindowBmp, ComputeDockableFormInclusiveRectangle(dockableForms));
+            return ClipBitmap(skylineWindowBmp, ComputeDockedFormsUnionRectangle(dockableForms));
         }
 
-        private Rectangle ComputeDockableFormInclusiveRectangle(IList<DockableForm> dockableForms)
+        private Rectangle ComputeDockedFormsUnionRectangle(IList<DockableForm> dockableForms)
         {
             return dockableForms
-                .Select(ComputeDockableFormScreenRectangle)
+                .Select(ComputeDockedFormRectangle)
                 .Aggregate(Rectangle.Union);
         }
 
-        private Rectangle ComputeDockableFormScreenRectangle(DockableForm dockableForm)
+        private Rectangle ComputeDockedFormRectangle(DockableForm dockableForm)
         {
             var formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm, false, false);
-            var skylineWindowPoint = new Point(SkylineWindow.Location.X, SkylineWindow.Location.Y);
-            var skylineRelativeOrigin = new Point(formRectangle.X - skylineWindowPoint.X, formRectangle.Y - skylineWindowPoint.Y);
-            return new Rectangle(skylineRelativeOrigin, formRectangle.Size);
+            formRectangle.Offset(new Point(-SkylineWindow.Location.X, -SkylineWindow.Location.Y));
+            return formRectangle;
         }
 
         protected Bitmap ClipSelectionStatus(Bitmap skylineWindowBmp)
@@ -1424,6 +1423,17 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(targetsBmp, sequenceTreeRect);
         }
 
+        protected Bitmap ClipChromatograms(Bitmap bmp)
+        {
+            return ClipChromatograms(bmp, SkylineWindow.DocumentUI.MeasuredResults.Chromatograms.Select(c => c.Name).ToArray());
+        }
+
+        protected Bitmap ClipChromatograms(Bitmap bmp, params string[] replicateNames)
+        {
+            return ClipSkylineWindowShotWithForms(bmp, replicateNames.Select(name => 
+                SkylineWindow.GetGraphChrom(name)).Cast<DockableForm>().ToArray());
+        }
+
         protected static Bitmap ClipBitmap(Image bmp, Rectangle rect)
         {
             var scaledRect = rect * ScreenshotManager.GetScalingFactor();
@@ -1434,6 +1444,38 @@ namespace pwiz.SkylineTestUtil
                 scaledRect, GraphicsUnit.Pixel);
 
             return croppedShot;
+        }
+
+        /// <summary>
+        /// Clips a set of windows and pop-up menus from a full screen screenshot on a specified background.
+        /// </summary>
+        /// <param name="bmp">Full screen screenshot</param>
+        /// <param name="controls">The set of controls to include in the new bitmap</param>
+        /// <param name="menus">The set of pop-up menus to include in the new bitmap</param>
+        /// <param name="color">The background color to user everywhere outside the controls and menus</param>
+        /// <returns>A new bitmap containing only the union rectangle of the given elements</returns>
+        public static Bitmap ClipRegionAndEraseBackground(Bitmap bmp, IList<Control> controls, IList<ToolStripDropDown> menus, Color color)
+        {
+            var rectangles = new List<Rectangle>();
+            rectangles.AddRange(controls.Select(ScreenshotManager.GetFramedWindowBounds));
+            rectangles.AddRange(menus.Select(m => m.Bounds));
+
+            var unionRect = rectangles.Aggregate(Rectangle.Union);
+
+            var newBitmap = new Bitmap(unionRect.Width, unionRect.Height);
+            using var g = Graphics.FromImage(newBitmap);
+
+            g.Clear(color);
+
+            // Copy each rectangle from the source bitmap to the new bitmap
+            foreach (var rect in rectangles)
+            {
+                var destRect = rect;
+                destRect.Offset(new Point(-unionRect.X, -unionRect.Y));
+                g.DrawImage(bmp, destRect, rect, GraphicsUnit.Pixel);
+            }
+
+            return newBitmap;
         }
 
         public static Bitmap DrawLArrowCursorOnBitmap(Bitmap bmp, double xRelative, double yRelative)
@@ -1537,10 +1579,10 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShotInternal(description, null, screenshotForm, timeout);
         }
 
-        public void   PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null, Func<Rectangle, Rectangle> preprocessArea = null)
+        public void   PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
             where TView : IFormView
         {
-            PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot, preprocessArea);
+            PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot);
         }
 
         public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
@@ -1567,6 +1609,16 @@ namespace pwiz.SkylineTestUtil
         public void PauseForMassErrorGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, pageNum, timeout, processShot);
+        }
+
+        public void PauseForFullScanGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphFullScan, pageNum, timeout, processShot);
+        }
+
+        public void PauseForLibrarySpectrumGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphSpectrum, pageNum, timeout, processShot);
         }
 
         public void PauseForChromGraphScreenShot(string description, string replicateName, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
@@ -1596,7 +1648,7 @@ namespace pwiz.SkylineTestUtil
         {
         }
 
-        private void PauseForScreenShotInternal(string description, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null, Func<Rectangle, Rectangle> preprocessArea = null)
+        private void PauseForScreenShotInternal(string description, Type formType = null, Control screenshotForm = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             bool fullScreen = formType == typeof(ScreenForm);
 
@@ -1633,12 +1685,12 @@ namespace pwiz.SkylineTestUtil
                     Thread.Sleep(1000); // Wait for UI to settle down - Necessary?
                     ScreenshotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotFile(ScreenshotCounter);
-                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot, preprocessArea);
+                    _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot, preprocessArea);
+                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
             else
@@ -1671,7 +1723,7 @@ namespace pwiz.SkylineTestUtil
             {
                 // Screenshot for the StartPage
                 coverSavePath2 = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, null,0.20);
+                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
             }
             if (coverSavePath == null)
             {

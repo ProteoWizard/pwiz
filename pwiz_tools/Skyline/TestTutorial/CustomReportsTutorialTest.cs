@@ -167,7 +167,6 @@ namespace pwiz.SkylineTestTutorial
 
             // p. 9-10
             OkDialog(viewEditor, viewEditor.OkDialog);
-            RunUI(() => editReportListDlg.FocusOnChooseViewsControl());
             PauseForScreenShot<ManageViewsForm>("Edit Reports form", 9);
 
             OkDialog(editReportListDlg, editReportListDlg.OkDialog);
@@ -208,7 +207,6 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 editReportListDlg0.SelectView(customReportName);
-                editReportListDlg0.FocusOnChooseViewsControl();
             });
             PauseForScreenShot<ManageViewsForm>("Edit Reports form", 12);
 
@@ -473,17 +471,18 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.ChooseColumnsTab.ActivateColumn(indexCvTotalArea);
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View form", 22);
-            RunUI(()=>viewEditor.TabControl.SelectTab(1));
             RunUI(() =>
             {
+                viewEditor.TabControl.SelectTab(1);
                 viewEditor.FilterTab.AddSelectedColumn();
                 Assert.IsTrue(viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN));
                 viewEditor.FilterTab.SetFilterOperand(0, .2.ToString(CultureInfo.CurrentCulture));
+                viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(Orientation.Horizontal, 45);
             });
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 23);
             OkDialog(viewEditor, viewEditor.OkDialog);
 
-            // TODO: screenshot #20 - 8th column header is slightly chopped but unable to resize the column. So skipping for now.
+            RunUI(() => documentGridForm.DataGridView.Columns[6].Width = 105);
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 24);
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>

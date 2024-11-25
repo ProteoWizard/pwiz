@@ -65,17 +65,30 @@ namespace pwiz.SkylineTestUtil
             }
             else
             {
-                ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
-                ctrl.Invoke((Action)(() =>
-                {
-                    int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
-                    int frameWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
-                    Size imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
-                    Point sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
-                    snapshotBounds = new Rectangle(sourcePoint, imageSize);
-                }));
+                snapshotBounds = GetFramedWindowBounds(ctrl);
             }
             return scale ? snapshotBounds * GetScalingFactor() : snapshotBounds;
+        }
+
+        public static Rectangle GetFramedWindowBounds(Control ctrl)
+        {
+            ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
+            return ctrl.InvokeRequired 
+                ? (Rectangle) ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
+                : GetFramedWindowBoundsInternal(ctrl);
+        }
+
+        private static Rectangle GetFramedWindowBoundsInternal(Control ctrl)
+        {
+            int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
+            // The drop shadow is 1/2 the difference between the window width and the client rect width
+            // A 3D border width is removed from this and then a standard border width (usually 1) removed
+            int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
+            // The snapshot size then removes the shadow width on both sides and from only the bottom
+            Size imageSize = ctrl.Size + new PointAdditive(-2 * dropShadowWidth, -dropShadowWidth);
+            // And the origin is shifted one shadow width to the right
+            Point sourcePoint = ctrl.Location + new PointAdditive(dropShadowWidth, 0);
+            return new Rectangle(sourcePoint, imageSize);
         }
 
         public static TParent FindParent<TParent>(Control ctrl) where TParent : Control
@@ -115,19 +128,15 @@ namespace pwiz.SkylineTestUtil
             /**
              * Factory method
              */
-            public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false, Func<Rectangle, Rectangle> preprocessArea = null)
+            public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false)
             {
                 if (control is ZedGraphControl zedGraphControl)
                 {
-                    if (preprocessArea != null)
-                    {
-                        throw new ArgumentException("Cannot preprocess area for graph screenshot");
-                    }
                     return new ZedGraphShot(zedGraphControl);
                 }
                 else
                 {
-                    return new ActiveWindowShot(control, fullScreen, preprocessArea);
+                    return new ActiveWindowShot(control, fullScreen);
                 }
             }
             public abstract Bitmap Take();
@@ -137,22 +146,17 @@ namespace pwiz.SkylineTestUtil
         {
             private readonly Control _activeWindow;
             private readonly bool _fullscreen;
-            private readonly Func<Rectangle, Rectangle> _preprocessArea;
-            public ActiveWindowShot(Control activeWindow, bool fullscreen, Func<Rectangle, Rectangle> preprocessArea)
+            
+            public ActiveWindowShot(Control activeWindow, bool fullscreen)
             {
                 _activeWindow = activeWindow;
                 _fullscreen = fullscreen;
-                _preprocessArea = preprocessArea;
             }
 
             [NotNull]
             public override Bitmap Take()
             {
                 Rectangle shotFrame = GetWindowRectangle(_activeWindow, _fullscreen);
-                if (_preprocessArea != null)
-                {
-                    shotFrame = (Rectangle)_activeWindow.Invoke((Func<Rectangle>)(() => _preprocessArea(shotFrame)));
-                }
                 Bitmap bmCapture = new Bitmap(shotFrame.Width, shotFrame.Height, PixelFormat.Format32bppArgb);
                 Graphics graphCapture = Graphics.FromImage(bmCapture);
                 bool captured = false;
@@ -296,12 +300,12 @@ namespace pwiz.SkylineTestUtil
             control.Invoke(action);
         }
 
-        public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, Func<Rectangle, Rectangle> preprocessArea = null, double ? scale = null)
+        public Bitmap TakeShot(Control activeWindow, bool fullScreen = false, string pathToSave = null, Func<Bitmap, Bitmap> processShot = null, double? scale = null)
         {
             activeWindow ??= _skylineWindow;
 
             //check UI and create a blank shot according to the user selection
-            SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen, preprocessArea);
+            SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
 
             Bitmap shotPic = newShot.Take();
             if (processShot != null)

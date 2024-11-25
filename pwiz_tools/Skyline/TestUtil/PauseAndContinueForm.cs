@@ -48,7 +48,6 @@ namespace pwiz.SkylineTestUtil
         private Control _screenshotForm;
         private bool _fullScreen;
         private Func<Bitmap, Bitmap> _processShot;
-        private Func<Rectangle, Rectangle> _preprocessArea;
 
         private PauseAndContinueMode _currentMode;
 
@@ -89,14 +88,14 @@ namespace pwiz.SkylineTestUtil
         /// Shows this form. Called from the "Functional test" thread. Blocks until Continue is clicked.
         /// </summary>
         public void Show(string description, int screenshotNum, bool showMatchingPages, int? timeout,
-            Control screenshotForm, bool fullScreen, Func<Bitmap, Bitmap> processShot, Func<Rectangle, Rectangle> preprocessArea = null)
+            Control screenshotForm, bool fullScreen, Func<Bitmap, Bitmap> processShot)
         {
             ShowInternal(_screenshotManager.ScreenshotDescription(screenshotNum, description),
-                screenshotNum, showMatchingPages, timeout, screenshotForm, fullScreen, processShot, preprocessArea);
+                screenshotNum, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
         }
 
         private void ShowInternal(string description, int screenshotNum = 0, bool showMatchingPages = false, int? timeout = null,
-            Control screenshotForm = null, bool fullScreen = false, Func<Bitmap, Bitmap> processShot = null, Func<Rectangle, Rectangle> preprocessArea = null)
+            Control screenshotForm = null, bool fullScreen = false, Func<Bitmap, Bitmap> processShot = null)
         {
             _screenshotNum = screenshotNum;
             _description = description;
@@ -107,7 +106,6 @@ namespace pwiz.SkylineTestUtil
             _screenshotForm = screenshotForm;
             _fullScreen = fullScreen;
             _processShot = processShot;
-            _preprocessArea = preprocessArea;
 
             // TODO: Put this back to allow keyboard to work as expected in paused Skyline
             //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = false); //determine if this is needed
@@ -346,6 +344,5 @@ namespace pwiz.SkylineTestUtil
         public Control ScreenshotControl => _screenshotForm;
         public bool FullScreen => _fullScreen;
         public Func<Bitmap, Bitmap> ProcessShot => _processShot;
-        public Func<Rectangle, Rectangle> PreprocessArea => _preprocessArea;
     }
 }
