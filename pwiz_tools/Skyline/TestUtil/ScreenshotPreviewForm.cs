@@ -576,7 +576,7 @@ namespace pwiz.SkylineTestUtil
             try
             {
                 ScreenshotManager.ActivateScreenshotForm(control);
-                return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot, values.PreprocessArea);
+                return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
             }
             catch (Exception e)
             {
