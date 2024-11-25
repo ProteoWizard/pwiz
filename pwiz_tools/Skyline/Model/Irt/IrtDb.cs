@@ -35,7 +35,6 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using NHibernate.Tool.hbm2ddl;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Irt
