@@ -57,7 +57,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
-    public class CommandLine : IDisposable
+    public class CommandLine : IDisposable/*, IRemoteAccountUserInteraction*/
     {
         private CommandStatusWriter _out;
 
@@ -116,6 +116,8 @@ namespace pwiz.Skyline
 
         private int RunInner(string[] args, bool withoutUsage = false)
         {
+            //RemoteSession.RemoteAccountUserInteraction = this;
+
             _importedResults = false;
 
             var commandArgs = new CommandArgs(_out, _doc != null);
@@ -2176,7 +2178,7 @@ namespace pwiz.Skyline
             // Skip if file write time is after importBefore or before importAfter
             try
             {
-                var fileLastWriteTime = replicateFile.GetFileLastWriteTime();
+                var fileLastWriteTime = CommandArgs.IsRemoteUrl(replicateFile.GetFilePath()) ? DateTime.UtcNow : replicateFile.GetFileLastWriteTime();
                 if (importBefore != null && importBefore < fileLastWriteTime)
                 {
                     _out.WriteLine(SkylineResources.CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___,
@@ -4563,6 +4565,29 @@ namespace pwiz.Skyline
                 return false;
             }
         }
+
+        /*public Func<HttpClient> UserLogin(RemoteAccount account)
+        {
+            if (InvokeRequired)
+            {
+                Func<HttpClient> client = null;
+                Program.Invoke(() => client = UserLogin(account));
+                return client;
+            }
+
+            switch (account)
+            {
+                case ArdiaAccount ardia:
+                {
+                    using var loginDlg = new ArdiaLoginDlg(ardia, true);
+                    if (DialogResult.Cancel == loginDlg.ShowParentlessDialog())
+                        throw new OperationCanceledException();
+                    return loginDlg.AuthenticatedHttpClientFactory;
+                }
+                default:
+                    throw new NotImplementedException();
+            }
+        }*/
     }
 
     public class CommandStatusWriter : TextWriter
