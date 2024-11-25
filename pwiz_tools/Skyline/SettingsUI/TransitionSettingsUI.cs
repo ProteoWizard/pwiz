@@ -1034,6 +1034,11 @@ namespace pwiz.Skyline.SettingsUI
             set { textTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public void FocusIonMatchTolerance()
+        {
+            textTolerance.Focus();
+        }
+
         public MzTolerance.Units IonMatchToleranceUnits
         {
             get { return (MzTolerance.Units)comboToleranceUnits.SelectedIndex; }

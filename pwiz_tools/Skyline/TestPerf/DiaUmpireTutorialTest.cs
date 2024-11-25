@@ -320,8 +320,6 @@ namespace TestPerf
             CoverShotName = "DIA-SWATH with DiaUmpire";
 
             RunFunctionalTest();
-
-            Assert.IsFalse(IsRecordMode, "Set IsRecordMode to false before commit");   // Make sure this doesn't get committed as true
         }
 
         private string DataPath { get { return TestFilesDirs.Last().PersistentFilesDir; } }
@@ -338,7 +336,7 @@ namespace TestPerf
         /// <summary>
         /// Change to true to write coefficient arrays.
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         protected override void DoTest()
         {
@@ -369,14 +367,14 @@ namespace TestPerf
 
             // when in regular test mode, delete -diaumpire files so they get regenerated instead of reused
             // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
-            /* TODO: how can this code work if we aren't running DiaUmpire in the persistent directory?
+            /* TODO: how can this code work if we aren't running DiaUmpire in the persistent directory? */
             if (!IsRecordMode)
             {
                 var diaumpireFiles = Directory.GetFiles(diaDir, "*-diaumpire.*");
                 var filesToRegenerate = diaumpireFiles.Skip(1); // regenerate all but 1 file in order to test file reusability
                 foreach (var file in filesToRegenerate)
                     FileEx.SafeDelete(file);
-            }*/
+            }
 
             string[] searchFiles = DiaFiles.Select(p => Path.Combine(diaDir, p)).Take(_analysisValues.IsWholeProteome ? DiaFiles.Length : 2).ToArray();
             foreach (var searchFile in searchFiles)
@@ -394,18 +392,28 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = searchFiles.Select(f => new MsDataFilePath(f)).ToArray();
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.BIOGNOSYS_11;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
-                importPeptideSearchDlg.BuildPepSearchLibControl.InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
                 // Check default settings shown in the tutorial
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", 4);
 
-            //WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUI(() =>
+            {
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Import Peptide Search - Extract chromatograms page", 4);
 
-            var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton()); // now on remove prefix/suffix dialog
-            PauseForScreenShot<ImportResultsNameDlg>("Import Peptide Search - Remove shared prefix/suffix page", 5);
-            OkDialog(removeSuffix, () => removeSuffix.YesDialog()); // now on modifications
-            WaitForDocumentLoaded();
+            // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
+            if (searchFiles.Length > 1)
+            {
+                var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton()); // now on remove prefix/suffix dialog
+                PauseForScreenShot<ImportResultsNameDlg>("Import Peptide Search - Remove shared prefix/suffix page", 5);
+                OkDialog(removeSuffix, () => removeSuffix.YesDialog()); // now on modifications
+                WaitForDocumentLoaded();
+            }
+            else
+                RunUI(() => importPeptideSearchDlg.ClickNextButton());
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page));
 
@@ -533,6 +541,7 @@ namespace TestPerf
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
+                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
                 //importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;
@@ -792,6 +801,14 @@ namespace TestPerf
                     fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                 });*/
                 TakeCoverShot();
+            }
+
+            // Cleanup output files in persistent dir
+            // (in IsRecordMode, keep these files around so that repeated tests on each language run faster)
+            if (!IsRecordMode)
+            {
+                foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
+                    FileEx.SafeDelete(file);
             }
         }
 

@@ -70,7 +70,7 @@ namespace SkylineTester
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineTesterWindow));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.mainPanel = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -691,11 +691,11 @@ namespace SkylineTester
             // SeenColumn
             // 
             this.SeenColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle2.Format = "N0";
-            dataGridViewCellStyle2.NullValue = null;
-            dataGridViewCellStyle2.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
-            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle1.Format = "N0";
+            dataGridViewCellStyle1.NullValue = null;
+            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
+            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle1;
             this.SeenColumn.HeaderText = "Seen";
             this.SeenColumn.MinimumWidth = 40;
             this.SeenColumn.Name = "SeenColumn";
@@ -851,9 +851,9 @@ namespace SkylineTester
             this.labelPauseStartingPage.AutoSize = true;
             this.labelPauseStartingPage.Location = new System.Drawing.Point(25, 48);
             this.labelPauseStartingPage.Name = "labelPauseStartingPage";
-            this.labelPauseStartingPage.Size = new System.Drawing.Size(73, 13);
+            this.labelPauseStartingPage.Size = new System.Drawing.Size(75, 13);
             this.labelPauseStartingPage.TabIndex = 1;
-            this.labelPauseStartingPage.Text = "Starting page:";
+            this.labelPauseStartingPage.Text = "Starting figure:";
             // 
             // modeTutorialsCoverShots
             // 
@@ -1364,11 +1364,13 @@ namespace SkylineTester
             "Quality",
             "Demo",
             "Screenshots",
+            "Auto-Screenshots",
             "Covershot"});
             this.runMode.Location = new System.Drawing.Point(276, 553);
             this.runMode.Name = "runMode";
             this.runMode.Size = new System.Drawing.Size(121, 21);
             this.runMode.TabIndex = 0;
+            this.runMode.SelectedIndexChanged += new System.EventHandler(this.runMode_SelectedIndexChanged);
             // 
             // label21
             // 
