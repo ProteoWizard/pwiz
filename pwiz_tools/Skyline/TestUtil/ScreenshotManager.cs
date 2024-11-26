@@ -52,16 +52,11 @@ namespace pwiz.SkylineTestUtil
             var dockableForm = ctrl as DockableForm;
             if (dockableForm != null && dockedStates.Any(state => dockableForm.DockState == state))
             {
-                var origin = Point.Empty;
-                dockableForm.Invoke((Action) (() =>
-                {
-                    origin = dockableForm.Pane.PointToScreen(new Point(0, 0));
-                    snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
-                }));
+                snapshotBounds = GetDockedFormBounds(dockableForm);
             }
             else if (fullScreen)
             {
-                ctrl.Invoke((Action) (() => snapshotBounds = Screen.FromControl(ctrl).Bounds));
+                snapshotBounds = (Rectangle)ctrl.Invoke((Func<Rectangle>) (() => Screen.FromControl(ctrl).Bounds));
             }
             else
             {
@@ -70,6 +65,21 @@ namespace pwiz.SkylineTestUtil
             return scale ? snapshotBounds * GetScalingFactor() : snapshotBounds;
         }
 
+        public static Rectangle GetDockedFormBounds(DockableForm ctrl)
+        {
+            return ctrl.InvokeRequired
+                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
+                : GetDockedFormBoundsInternal(ctrl);
+        }
+
+        public static Rectangle GetDockedFormBoundsInternal(DockableForm dockedForm)
+        {
+            var parentRelativeVBounds = dockedForm.Pane.Bounds;
+            // The pane bounds do not include the border
+            parentRelativeVBounds.Inflate(SystemInformation.BorderSize.Width, SystemInformation.BorderSize.Width);
+            return dockedForm.Pane.Parent.RectangleToScreen(parentRelativeVBounds);
+        }
+        
         public static Rectangle GetFramedWindowBounds(Control ctrl)
         {
             ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;

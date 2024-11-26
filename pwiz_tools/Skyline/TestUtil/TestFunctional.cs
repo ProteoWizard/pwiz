@@ -1347,7 +1347,8 @@ namespace pwiz.SkylineTestUtil
         private Rectangle ComputeDockedFormRectangle(DockableForm dockableForm)
         {
             var formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm, false, false);
-            formRectangle.Offset(new Point(-SkylineWindow.Location.X, -SkylineWindow.Location.Y));
+            var skylineWindowRectangle = ScreenshotManager.GetWindowRectangle(SkylineWindow, false, false);
+            formRectangle.Offset(new Point(-skylineWindowRectangle.X, -skylineWindowRectangle.Y));
             return formRectangle;
         }
 

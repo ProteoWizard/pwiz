@@ -326,7 +326,7 @@ namespace pwiz.SkylineTestTutorial
                 allChromGraph.Left = SkylineWindow.Right + 20;
                 allChromGraph.Activate();
             });
-            WaitForConditionUI(() => allChromGraph.ProgressTotalPercent > 20);
+            WaitForConditionUI(() => allChromGraph.ProgressTotalPercent > 24);
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", tutorialPage++);
             WaitForDocumentChangeLoaded(doc, 8 * 60 * 1000); // 10 minutes
 
