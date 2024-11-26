@@ -523,7 +523,10 @@ namespace pwiz.Skyline
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
             // all resizing has occurred
             if (SequenceTree != null)
+            {
                 SequenceTree.UpdateTopNode();
+                SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
+            }
 
             EnsureFloatingWindowsVisible();
         }

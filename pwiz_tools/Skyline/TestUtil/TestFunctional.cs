@@ -1355,22 +1355,22 @@ namespace pwiz.SkylineTestUtil
 
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
-            return ClipBitmap(skylineWindowBmp, ComputeDockableFormInclusiveRectangle(dockableForms));
+            return ClipBitmap(skylineWindowBmp, ComputeDockedFormsUnionRectangle(dockableForms));
         }
 
-        private Rectangle ComputeDockableFormInclusiveRectangle(IList<DockableForm> dockableForms)
+        private Rectangle ComputeDockedFormsUnionRectangle(IList<DockableForm> dockableForms)
         {
             return dockableForms
-                .Select(ComputeDockableFormScreenRectangle)
+                .Select(ComputeDockedFormRectangle)
                 .Aggregate(Rectangle.Union);
         }
 
-        private Rectangle ComputeDockableFormScreenRectangle(DockableForm dockableForm)
+        private Rectangle ComputeDockedFormRectangle(DockableForm dockableForm)
         {
             var formRectangle = ScreenshotManager.GetWindowRectangle(dockableForm, false, false);
-            var skylineWindowPoint = new Point(SkylineWindow.Location.X, SkylineWindow.Location.Y);
-            var skylineRelativeOrigin = new Point(formRectangle.X - skylineWindowPoint.X, formRectangle.Y - skylineWindowPoint.Y);
-            return new Rectangle(skylineRelativeOrigin, formRectangle.Size);
+            var skylineWindowRectangle = ScreenshotManager.GetWindowRectangle(SkylineWindow, false, false);
+            formRectangle.Offset(new Point(-skylineWindowRectangle.X, -skylineWindowRectangle.Y));
+            return formRectangle;
         }
 
         protected Bitmap ClipSelectionStatus(Bitmap skylineWindowBmp)
@@ -1469,6 +1469,17 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(targetsBmp, sequenceTreeRect);
         }
 
+        protected Bitmap ClipChromatograms(Bitmap bmp)
+        {
+            return ClipChromatograms(bmp, SkylineWindow.DocumentUI.MeasuredResults.Chromatograms.Select(c => c.Name).ToArray());
+        }
+
+        protected Bitmap ClipChromatograms(Bitmap bmp, params string[] replicateNames)
+        {
+            return ClipSkylineWindowShotWithForms(bmp, replicateNames.Select(name => 
+                SkylineWindow.GetGraphChrom(name)).Cast<DockableForm>().ToArray());
+        }
+
         protected static Bitmap ClipBitmap(Image bmp, Rectangle rect)
         {
             var scaledRect = rect * ScreenshotManager.GetScalingFactor();
@@ -1479,6 +1490,38 @@ namespace pwiz.SkylineTestUtil
                 scaledRect, GraphicsUnit.Pixel);
 
             return croppedShot;
+        }
+
+        /// <summary>
+        /// Clips a set of windows and pop-up menus from a full screen screenshot on a specified background.
+        /// </summary>
+        /// <param name="bmp">Full screen screenshot</param>
+        /// <param name="controls">The set of controls to include in the new bitmap</param>
+        /// <param name="menus">The set of pop-up menus to include in the new bitmap</param>
+        /// <param name="color">The background color to user everywhere outside the controls and menus</param>
+        /// <returns>A new bitmap containing only the union rectangle of the given elements</returns>
+        public static Bitmap ClipRegionAndEraseBackground(Bitmap bmp, IList<Control> controls, IList<ToolStripDropDown> menus, Color color)
+        {
+            var rectangles = new List<Rectangle>();
+            rectangles.AddRange(controls.Select(ScreenshotManager.GetFramedWindowBounds));
+            rectangles.AddRange(menus.Select(m => m.Bounds));
+
+            var unionRect = rectangles.Aggregate(Rectangle.Union);
+
+            var newBitmap = new Bitmap(unionRect.Width, unionRect.Height);
+            using var g = Graphics.FromImage(newBitmap);
+
+            g.Clear(color);
+
+            // Copy each rectangle from the source bitmap to the new bitmap
+            foreach (var rect in rectangles)
+            {
+                var destRect = rect;
+                destRect.Offset(new Point(-unionRect.X, -unionRect.Y));
+                g.DrawImage(bmp, destRect, rect, GraphicsUnit.Pixel);
+            }
+
+            return newBitmap;
         }
 
         public static Bitmap DrawLArrowCursorOnBitmap(Bitmap bmp, double xRelative, double yRelative)
@@ -1665,6 +1708,16 @@ namespace pwiz.SkylineTestUtil
             PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, pageNum, timeout, processShot);
         }
 
+        public void PauseForFullScanGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphFullScan, pageNum, timeout, processShot);
+        }
+
+        public void PauseForLibrarySpectrumGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        {
+            PauseForGraphScreenShot(description, SkylineWindow.GraphSpectrum, pageNum, timeout, processShot);
+        }
+
         public void PauseForChromGraphScreenShot(string description, string replicateName = null, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             if (replicateName == null)
@@ -1672,7 +1725,7 @@ namespace pwiz.SkylineTestUtil
             PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), pageNum, timeout, processShot);
         }
 
-        private ZedGraphControl FindZedGraph(Control graphContainer)
+        protected ZedGraphControl FindZedGraph(Control graphContainer)
         {
             var zedGraphControl = graphContainer as ZedGraphControl;
             if (zedGraphControl != null)
