@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestTutorial
                       });
 
             // Page 3.
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT graph metafile", 3);   // Peptide RT graph
+            PauseForRetentionTimeGraphScreenShot("RT graph metafile", 3);   // Peptide RT graph
 
             RunUI(() =>
                       {
@@ -224,7 +224,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForRegression();
 
             RestoreViewOnScreen(9);
-            PauseForScreenShot<GraphSummary.RTGraphView>("Retention Times Regression graph metafile", 9);   // RT Regression graph
+            PauseForRetentionTimeGraphScreenShot("Retention Times Regression graph metafile", 9);   // RT Regression graph
 
             RunUI(() =>
                       {
@@ -261,7 +261,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForProteinMetadataBackgroundLoaderCompletedUI(); // let peptide metadata background loader do its work
 
             RestoreViewOnScreen(10);
-            PauseForScreenShot("Targets tree clipped out of main window", 10);   // Target tree
+            PauseForTargetsScreenShot("Targets tree clipped out of main window");   // Target tree
 
             RunUI(() =>
                       {
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestTutorial
                     regressionDlg.SetTimeWindow(5);
                 });
 
-                PauseForScreenShot("Edit Retention Time Predictor form", 11);   // Edit retention time predictor form
+                PauseForScreenShot<EditRTDlg>("Edit Retention Time Predictor form", 11);   // Edit retention time predictor form
 
                 OkDialog(regressionDlg, regressionDlg.OkDialog);
                 OkDialog(peptideSettingsUI1, peptideSettingsUI2.OkDialog);
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 14);
+            PauseForRetentionTimeGraphScreenShot("RT Regression graph metafile", 14);
 
             RunUI(() =>
                       {
@@ -389,11 +389,11 @@ namespace pwiz.SkylineTestTutorial
 
                 if (i == 1)
                 {
-                    PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile (1 of 2)", 16);   // Chromatogram graph
+                    PauseForChromGraphScreenShot("Chromatogram graph metafile (1 of 2)");   // Chromatogram graph
                 }
                 if (i == 2)
                 {
-                    PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile (2 of 2)", 16);
+                    PauseForChromGraphScreenShot("Chromatogram graph metafile (2 of 2)");
                 }
                 if (i == 3)
                 {
@@ -464,7 +464,7 @@ namespace pwiz.SkylineTestTutorial
             // Check the RT regression, p. 19
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 19);
+            PauseForRetentionTimeGraphScreenShot("RT Regression graph metafile", 19);
 
             RunUI(() =>
                       {
@@ -509,7 +509,7 @@ namespace pwiz.SkylineTestTutorial
             // Verify regression graph, p. 19
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForRegression();
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 22);
+            PauseForRetentionTimeGraphScreenShot("RT Regression graph metafile", 22);
             RunUI(() =>
                       {
                           VerifyRTRegression(0.40, 24.77, 0.9998);
@@ -525,7 +525,7 @@ namespace pwiz.SkylineTestTutorial
                     });
             WaitForGraphs();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Scheduling graph metafile", 23);
+            PauseForRetentionTimeGraphScreenShot("RT Scheduling graph metafile", 23);
 
             // Export new 90-minute scheduled transition list, p. 22
             const string scheduledBasename = "iRT Human+Standard"; // Not L10N
@@ -560,7 +560,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 26);
+            PauseForRetentionTimeGraphScreenShot("RT Regression graph metafile", 26);
 
             // Review regression and outliers, p. 24
             RunUI(() =>
@@ -574,8 +574,9 @@ namespace pwiz.SkylineTestTutorial
                         thresholdDlg.Threshold = 0.998;
                         thresholdDlg.OkDialog();
                     });
+            WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 27);
+            PauseForRetentionTimeGraphScreenShot("RT Regression graph metafile", 27);
 
             // Verify 2 outliers highlighted and removed, p. 25
             WaitForConditionUI(() => SkylineWindow.RTGraphController.Outliers.Length == 2);
@@ -588,7 +589,7 @@ namespace pwiz.SkylineTestTutorial
                       });
             WaitForRegression();
 
-            PauseForScreenShot<GraphSummary.RTGraphView>("RT Regression graph metafile", 28);
+            PauseForRetentionTimeGraphScreenShot("RT Regression graph metafile", 28);
 
             if (IsCoverShotMode)
             {
@@ -648,7 +649,7 @@ namespace pwiz.SkylineTestTutorial
                     });
             WaitForGraphs();
 
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile", 29);   // Chromatogram graph
+            PauseForChromGraphScreenShot("Chromatogram graph metafile");   // Chromatogram graph
 
             RunUI(() =>
                       {
