@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -94,10 +95,21 @@ namespace pwiz.SkylineTestUtil
             // The drop shadow is 1/2 the difference between the window width and the client rect width
             // A 3D border width is removed from this and then a standard border width (usually 1) removed
             int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
-            // The snapshot size then removes the shadow width on both sides and from only the bottom
-            Size imageSize = ctrl.Size + new PointAdditive(-2 * dropShadowWidth, -dropShadowWidth);
-            // And the origin is shifted one shadow width to the right
-            Point sourcePoint = ctrl.Location + new PointAdditive(dropShadowWidth, 0);
+            Size imageSize;
+            Point sourcePoint;
+            if (ctrl is Form)
+            {
+                // The snapshot size then removes the shadow width on both sides and from only the bottom
+                imageSize = ctrl.Size + new PointAdditive(-2 * dropShadowWidth, -dropShadowWidth);
+                // And the origin is shifted one shadow width to the right
+                sourcePoint = ctrl.Location + new PointAdditive(dropShadowWidth, 0);
+            }
+            else
+            {
+                // Otherwise, it is just a control on a form without a drop shadow
+                imageSize = ctrl.Size;
+                sourcePoint = ctrl.Parent.PointToScreen(ctrl.Location);
+            }
             return new Rectangle(sourcePoint, imageSize);
         }
 
@@ -133,6 +145,7 @@ namespace pwiz.SkylineTestUtil
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
         }
+
         private abstract class SkylineScreenshot
         {
             /**
@@ -175,7 +188,7 @@ namespace pwiz.SkylineTestUtil
                     try
                     {
                         graphCapture.CopyFromScreen(shotFrame.Location,
-                            new Point(0, 0), shotFrame.Size);
+                            Point.Empty, shotFrame.Size);
                         captured = true;
                     }
                     catch (Exception)
@@ -212,7 +225,21 @@ namespace pwiz.SkylineTestUtil
         public ScreenshotManager([NotNull] SkylineWindow pSkylineWindow, string tutorialPath)
         {
             _skylineWindow = pSkylineWindow;
-            _tutorialPath = tutorialPath;
+            _tutorialPath = GetAvailableTutorialPath(tutorialPath);
+        }
+
+        private string GetAvailableTutorialPath(string tutorialPath)
+        {
+            if (!string.IsNullOrEmpty(tutorialPath) && !Directory.Exists(tutorialPath))
+            {
+                var langLetters = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.CurrentCulture);
+                var langLettersInvariant = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.InvariantCulture);
+                if (!Equals(langLettersInvariant, langLetters) && tutorialPath.EndsWith(langLetters))
+                {
+                    tutorialPath = tutorialPath.Substring(0, tutorialPath.Length - langLetters.Length) + langLettersInvariant;
+                }
+            }
+            return tutorialPath;
         }
 
         private SkylineWindow SkylineWindow => Program.MainWindow;

@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<ImportResultsDlg>("Import Results Files form", 7);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 7);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestTutorial
 
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 9);
+                PauseForScreenShot("Skyline window multi-target graph", 9);
 
                 var docResults = SkylineWindow.Document;
 
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
                 if (!string.IsNullOrEmpty(msg))
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 10);
+                PauseForScreenShot("Skyline window multi-replicate layout", 10);
 
                 if (IsCoverShotMode)
                 {

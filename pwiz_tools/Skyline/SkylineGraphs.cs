@@ -470,7 +470,6 @@ namespace pwiz.Skyline
 
         private void RemoveGraphChromFromList(GraphChromatogram graphChrom)
         {
-            _listGraphChrom.Remove(graphChrom);
             DestroyGraphChrom(graphChrom);
         }
 
@@ -517,9 +516,8 @@ namespace pwiz.Skyline
 
             DestroyImmediateWindow();
             HideFindResults(true);
-            foreach (GraphChromatogram graphChrom in _listGraphChrom)
+            foreach (var graphChrom in _listGraphChrom.ToArray())
                 DestroyGraphChrom(graphChrom);
-            _listGraphChrom.Clear();
             DestroyGraphFullScan();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
             // SequenceTree resizes often prior to display, so we must restore its scrolling after
@@ -1951,6 +1949,8 @@ namespace pwiz.Skyline
 
         private void DestroyGraphChrom(GraphChromatogram graphChrom)
         {
+            _listGraphChrom.Remove(graphChrom);
+
             // Detach event handlers and dispose
             graphChrom.FormClosed -= graphChromatogram_FormClosed;
             graphChrom.PickedPeak -= graphChromatogram_PickedPeak;
