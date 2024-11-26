@@ -708,6 +708,12 @@ namespace pwiz.Skyline.EditUI
             return dataGridView1;
         }
 
+        public int SplitHeight
+        {
+            get { return splitContainer1.SplitterDistance; }
+            set { splitContainer1.SplitterDistance = value; }
+        }
+
         public void SelectUnique(UniquenessType uniquenessType)
         {
             SelectPeptidesWithNumberOfMatchesAtOrBelowThreshold(1, uniquenessType);

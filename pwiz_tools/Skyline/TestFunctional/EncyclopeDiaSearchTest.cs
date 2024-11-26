@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
         private int[] FinalTargetCounts = { 33, 35, 35, 140 };
 
         protected override void DoTest()

@@ -30,6 +30,15 @@ function addFigureAltText()
             anchor.setAttribute('id', anchorId);
             img.parentNode.parentNode.insertBefore(anchor, img.parentNode);
 
+            // If it is a screenshot path add a second bookmark anchor
+            const match = img.src.match(/\/(s-\d+)/);
+            if (match) {
+                anchor = document.createElement('a');
+                anchor.setAttribute('name', match[1]);
+                anchor.setAttribute('id', match[1]);
+                img.parentNode.parentNode.insertBefore(anchor, img.parentNode);
+            }            
+
             figureCounter++
         }
     });

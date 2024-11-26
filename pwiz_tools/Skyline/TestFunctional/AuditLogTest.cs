@@ -358,7 +358,9 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private static bool IsRecordMode { get { return false; } }
+        public static bool IsRecordModeStatic => false; // Necessary for AuditLogEntry to call
+
+        protected override bool IsRecordMode => IsRecordModeStatic;
 
         protected override void DoTest()
         {
@@ -573,7 +575,7 @@ namespace pwiz.SkylineTestFunctional
                 var newestEntry = GetNewestEntry();
                 //PauseTest(newestEntry.UndoRedo.ToString());
 
-                if (IsRecordMode)
+                if (IsRecordModeStatic)
                 {
                     Console.WriteLine(AuditLogUtil.AuditLogEntryToCode(newestEntry));
                     return;
