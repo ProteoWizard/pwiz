@@ -426,8 +426,9 @@ namespace SkylineTester
                     tutorialsTree.Nodes.Clear();
                     tutorialsTree.Nodes.Add(new TreeNode("Tutorial tests", tutorialNodes));
                     tutorialsTree.ExpandAll();
-                    tutorialsTree.Nodes[0].Checked = true;
-                    TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
+                    // More common to choose just one tutorial to run on the tutorials tab
+                    // tutorialsTree.Nodes[0].Checked = true;
+                    // TabTests.CheckAllChildNodes(tutorialsTree.Nodes[0], true);
 
                     // Add forms to forms tree view.
                     _tabForms.CreateFormsGrid();
@@ -1995,5 +1996,19 @@ namespace SkylineTester
         }
 
         #endregion Control events
+
+        private void SkylineTesterWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.F5:
+                    if (e.Shift)
+                        Stop();
+                    else
+                        Run();
+                    e.Handled = true;
+                    break;
+            }
+        }
     }
 }

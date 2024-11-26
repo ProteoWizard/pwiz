@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -263,7 +264,13 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             WaitForClosedForm(importPeptideSearchDlg);
             WaitForConditionUI(() => SkylineWindow.DocumentUI.PeptideGroupCount == 6);
-            RunUI(() => SkylineWindow.ExpandPrecursors());
+            RunUI(() =>
+            {
+                SkylineWindow.ExpandPrecursors();
+                if(IsPauseForScreenShots)
+                    FormUtil.SetScrollPos(SkylineWindow.SequenceTree, Orientation.Horizontal, 0);
+            });
+
             if (IsPauseForScreenShots)
             {
                 var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
@@ -312,6 +319,9 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowChromatogramLegends(false);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ArrangeGraphs(DisplayGraphsType.Row);
+                // TODO: Need to explain this in the tutorial
+                // CONSIDER: SkylineWindow should probably have a function for this
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                 SkylineWindow.Width = 1250;
             });
 
@@ -345,6 +355,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Parent);
             WaitForGraphs();
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
+            WaitForGraphs();
+            SetPeakAreasMaxes(6 * Math.Pow(10, 9), 7 * Math.Pow(10, 8));
             PauseForScreenShot("Skyline window - with manual integration and ID times", 29);
 
             RunUI(() =>
@@ -363,6 +375,8 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Height = 700;
             });
             SelectNode(SrmDocument.Level.TransitionGroups, 1);  // 2nd peptide - first precursor
+            WaitForGraphs();
+            SetPeakAreasMaxes(1 * Math.Pow(10, 9), 6 * Math.Pow(10, 7));
             PauseForScreenShot("Skyline window", 32);
 
             SelectNode(SrmDocument.Level.Transitions, 22);
@@ -466,7 +480,11 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => AssertEx.Contains(SkylineWindow.GraphFullScan.TitleText, "Pit02", (41.67).ToString(CultureInfo.CurrentCulture)));
                 RunUI(() =>
                 {
-                    SkylineWindow.GraphFullScan.SetMzScale(new MzRange(504, 506));
+                    var graphControl = SkylineWindow.GraphFullScan.ZedGraphControl;
+                    var scale = graphControl.GraphPane.XAxis.Scale;
+                    scale.Min = 504;
+                    scale.Max = 506;
+                    graphControl.Invalidate();
                     SkylineWindow.GraphFullScan.Parent.Parent.Height -= 15;    // Not quite as tall to fit 3 into one page
                 });
                 PauseForGraphScreenShot("Full-Scan MS1 spectrum metafile (1/3)", SkylineWindow.GraphFullScan, 39);
@@ -480,6 +498,18 @@ namespace pwiz.SkylineTestTutorial
 
             // Clear all the settings lists that were defined in this tutorial
             ClearSettingsLists();
+        }
+
+        private static void SetPeakAreasMaxes(double precursorMax, double productMax)
+        {
+            RunUI(() =>
+            {
+                var graphControl = SkylineWindow.GraphPeakArea.GraphControl;
+                var panes = graphControl.MasterPane.PaneList;
+                panes[0].YAxis.Scale.Max = precursorMax;
+                panes[1].YAxis.Scale.Max = productMax;
+                graphControl.Invalidate();
+            });
         }
 
         private static void MoveNextScan(double rt)

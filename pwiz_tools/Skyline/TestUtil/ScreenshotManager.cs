@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -51,30 +52,64 @@ namespace pwiz.SkylineTestUtil
             var dockableForm = ctrl as DockableForm;
             if (dockableForm != null && dockedStates.Any(state => dockableForm.DockState == state))
             {
-                var origin = Point.Empty;
-                dockableForm.Invoke((Action) (() =>
-                {
-                    origin = dockableForm.Pane.PointToScreen(new Point(0, 0));
-                    snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
-                }));
+                snapshotBounds = GetDockedFormBounds(dockableForm);
             }
             else if (fullScreen)
             {
-                ctrl.Invoke((Action) (() => snapshotBounds = Screen.FromControl(ctrl).Bounds));
+                snapshotBounds = (Rectangle)ctrl.Invoke((Func<Rectangle>) (() => Screen.FromControl(ctrl).Bounds));
             }
             else
             {
-                ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
-                ctrl.Invoke((Action)(() =>
-                {
-                    int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
-                    int frameWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
-                    Size imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
-                    Point sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
-                    snapshotBounds = new Rectangle(sourcePoint, imageSize);
-                }));
+                snapshotBounds = GetFramedWindowBounds(ctrl);
             }
             return scale ? snapshotBounds * GetScalingFactor() : snapshotBounds;
+        }
+
+        public static Rectangle GetDockedFormBounds(DockableForm ctrl)
+        {
+            return ctrl.InvokeRequired
+                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
+                : GetDockedFormBoundsInternal(ctrl);
+        }
+
+        public static Rectangle GetDockedFormBoundsInternal(DockableForm dockedForm)
+        {
+            var parentRelativeVBounds = dockedForm.Pane.Bounds;
+            // The pane bounds do not include the border
+            parentRelativeVBounds.Inflate(SystemInformation.BorderSize.Width, SystemInformation.BorderSize.Width);
+            return dockedForm.Pane.Parent.RectangleToScreen(parentRelativeVBounds);
+        }
+        
+        public static Rectangle GetFramedWindowBounds(Control ctrl)
+        {
+            ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
+            return ctrl.InvokeRequired 
+                ? (Rectangle) ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
+                : GetFramedWindowBoundsInternal(ctrl);
+        }
+
+        private static Rectangle GetFramedWindowBoundsInternal(Control ctrl)
+        {
+            int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
+            // The drop shadow is 1/2 the difference between the window width and the client rect width
+            // A 3D border width is removed from this and then a standard border width (usually 1) removed
+            int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
+            Size imageSize;
+            Point sourcePoint;
+            if (ctrl is Form)
+            {
+                // The snapshot size then removes the shadow width on both sides and from only the bottom
+                imageSize = ctrl.Size + new PointAdditive(-2 * dropShadowWidth, -dropShadowWidth);
+                // And the origin is shifted one shadow width to the right
+                sourcePoint = ctrl.Location + new PointAdditive(dropShadowWidth, 0);
+            }
+            else
+            {
+                // Otherwise, it is just a control on a form without a drop shadow
+                imageSize = ctrl.Size;
+                sourcePoint = ctrl.Parent.PointToScreen(ctrl.Location);
+            }
+            return new Rectangle(sourcePoint, imageSize);
         }
 
         public static TParent FindParent<TParent>(Control ctrl) where TParent : Control
@@ -106,6 +141,7 @@ namespace pwiz.SkylineTestUtil
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
         }
+
         private abstract class SkylineScreenshot
         {
             /**
@@ -148,7 +184,7 @@ namespace pwiz.SkylineTestUtil
                     try
                     {
                         graphCapture.CopyFromScreen(shotFrame.Location,
-                            new Point(0, 0), shotFrame.Size);
+                            Point.Empty, shotFrame.Size);
                         captured = true;
                     }
                     catch (Exception)
@@ -185,7 +221,21 @@ namespace pwiz.SkylineTestUtil
         public ScreenshotManager([NotNull] SkylineWindow pSkylineWindow, string tutorialPath)
         {
             _skylineWindow = pSkylineWindow;
-            _tutorialPath = tutorialPath;
+            _tutorialPath = GetAvailableTutorialPath(tutorialPath);
+        }
+
+        private string GetAvailableTutorialPath(string tutorialPath)
+        {
+            if (!string.IsNullOrEmpty(tutorialPath) && !Directory.Exists(tutorialPath))
+            {
+                var langLetters = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.CurrentCulture);
+                var langLettersInvariant = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.InvariantCulture);
+                if (!Equals(langLettersInvariant, langLetters) && tutorialPath.EndsWith(langLetters))
+                {
+                    tutorialPath = tutorialPath.Substring(0, tutorialPath.Length - langLetters.Length) + langLettersInvariant;
+                }
+            }
+            return tutorialPath;
         }
 
         private SkylineWindow SkylineWindow => Program.MainWindow;
