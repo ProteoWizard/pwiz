@@ -5539,6 +5539,11 @@ namespace pwiz.Skyline
             return _resultsGridForm;
         }
 
+        public LiveResultsGrid GetLiveResultsGrid()
+        {
+            return _resultsGridForm;
+        }
+
         private void DestroyResultsGrid()
         {
             if (_resultsGridForm != null)

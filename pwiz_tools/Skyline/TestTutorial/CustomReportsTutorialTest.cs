@@ -503,6 +503,15 @@ namespace pwiz.SkylineTestTutorial
         {
             // Results Grid View
             RestoreViewOnScreen(26);
+            RunUI(() =>
+            {
+                var areaGraphFloatingWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
+                areaGraphFloatingWindow.Location = SkylineWindow.Location + new Size(135, 166);
+
+                var resultsGridWindow = FindFloatingWindow(SkylineWindow.GetLiveResultsGrid());
+                resultsGridWindow.Location = areaGraphFloatingWindow.Location + new Size(55, 36);
+            });
+
             PauseForScreenShot(SkylineWindow, "Main window under floating windows", 26);
             RestoreViewOnScreen(27);
             PauseForScreenShot(SkylineWindow, "Main window layout", 27);
