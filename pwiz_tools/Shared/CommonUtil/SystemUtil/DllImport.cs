@@ -30,13 +30,32 @@ namespace pwiz.Common.SystemUtil
         public static class User32
         {
             [DllImport("user32.dll")]
+            public static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
+
+            [DllImport("user32.dll")]
             public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+            [DllImport("user32.dll", CharSet = CharSet.Auto)]
+            public static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+
+            [DllImport("user32.dll")]
+            public static extern bool SetKeyboardState(byte[] lpKeyState);
+
+            [DllImport("user32.dll", SetLastError = true)]
+            [return: MarshalAs(UnmanagedType.Bool)]
+            public static extern bool GetKeyboardState(byte[] lpKeyState);
         }
 
         public static class Gdi32
         {
             [DllImport("gdi32.dll")]
             public static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+        }
+
+        public static class Kernel32
+        {
+            [DllImport("kernel32.dll")]
+            public static extern bool AttachConsole(int dwProcessId);
         }
     }
 }

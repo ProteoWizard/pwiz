@@ -20,9 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Properties;
@@ -169,15 +169,10 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(reportErrorDlg3);
         }
 
-        [DllImport("user32.dll")]
-        static extern bool SetKeyboardState(byte[] lpKeyState);
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetKeyboardState(byte[] lpKeyState);
         private void SetShiftKeyState(bool shiftPressed, bool ctrlPressed)
         {
             var keyStates = new byte[256];
-            Assert.IsTrue(GetKeyboardState(keyStates));
+            Assert.IsTrue(DllImport.User32.GetKeyboardState(keyStates));
             var shiftKeyState = keyStates[(int)Keys.ShiftKey];
             if (shiftPressed)
             {
@@ -199,7 +194,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             keyStates[(int)Keys.ControlKey] = ctrlKeyState;
-            Assert.IsTrue(SetKeyboardState(keyStates));
+            Assert.IsTrue(DllImport.User32.SetKeyboardState(keyStates));
             Assert.AreEqual(shiftPressed, 0 != (Control.ModifierKeys & Keys.Shift));
             Assert.AreEqual(ctrlPressed, 0 != (Control.ModifierKeys & Keys.Control));
         }

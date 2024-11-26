@@ -994,8 +994,6 @@ namespace TestRunnerLib
             }
         }
 
-        [DllImport("User32")]
-        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
 
         private enum HandleType { total = -1, gdi = 0, user = 1 }
 
@@ -1004,7 +1002,7 @@ namespace TestRunnerLib
             if (handleType == HandleType.total)
                 return _process.HandleCount;
 
-            return GetGuiResources(_process.Handle, (int)handleType);
+            return DllImport.User32.GetGuiResources(_process.Handle, (int)handleType);
         }
 
         private static void Try<TEx>(Action action, int loopCount, bool throwOnFailure = true, int milliseconds = 500) 
