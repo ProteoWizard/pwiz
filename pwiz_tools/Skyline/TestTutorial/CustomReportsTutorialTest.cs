@@ -386,6 +386,7 @@ namespace pwiz.SkylineTestTutorial
                     documentGridForm.DataGridView.AutoResizeColumns();
                 });
 
+            // Screenshot #17
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
             {
                 const int lineWidth = 3;
@@ -483,7 +484,29 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 23);
             OkDialog(viewEditor, viewEditor.OkDialog);
 
-            RunUI(() => documentGridForm.DataGridView.Columns[6].Width = 105);
+            RunUI(() =>
+            {
+                // wider than original screenshots to accommodate one
+                // set of column widths for EN, ZH, JP
+                var floatingWindow = FindFloatingWindow(documentGridForm);
+                floatingWindow.Size = new Size(750, 340);
+                
+                documentGridForm.DataGridView.Columns[0].Width = 70; // wider for ZH/JP than EN
+                documentGridForm.DataGridView.Columns[1].Width = 95;
+                documentGridForm.DataGridView.Columns[2].Width = 80;
+                documentGridForm.DataGridView.Columns[3].Width = 79; // wider for ZH
+                documentGridForm.DataGridView.Columns[4].Width = 80;
+                documentGridForm.DataGridView.Columns[5].Width = 92; // wider for ZH than EN
+                documentGridForm.DataGridView.Columns[6].Width = 102; 
+                documentGridForm.DataGridView.Columns[7].Width = 105;
+
+                // last 3 columns not visible in screenshot but need to 
+                // set width to prevent column title from wrapping to 3 lines 
+                documentGridForm.DataGridView.Columns[8].Width = 105;
+                documentGridForm.DataGridView.Columns[9].Width = 105;
+                documentGridForm.DataGridView.Columns[10].Width = 105;
+            });
+            // TODO: activate NavBar => Match Case button
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 24);
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
