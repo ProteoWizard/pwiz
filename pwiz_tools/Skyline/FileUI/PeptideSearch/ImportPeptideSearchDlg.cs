@@ -1375,7 +1375,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 UpdateFullScanSettingsForFeatureDetection(); // Tweak full scan filter values if needed
                 SkylineWindow.ModifyDocument(
                     PeptideSearchResources.ImportResultsControl_GetPeptideSearchChromatograms_Import_results,
-                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE), FormSettings.EntryCreator.Create);
+                    doc => SkylineWindow.ImportResults(Document, namedResults, ExportOptimize.NONE, false), FormSettings.EntryCreator.Create);
                 
                 CloseWizard(DialogResult.OK);
             }

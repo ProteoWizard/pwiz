@@ -783,7 +783,7 @@ and a specific name.</value>
     <value>True</value>
   </data>
   <data name="checkBoxMergeIrt.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 16</value>
+    <value>0, 20</value>
   </data>
   <data name="checkBoxMergeIrt.Size" type="System.Drawing.Size, System.Drawing">
     <value>81, 17</value>
@@ -792,7 +792,7 @@ and a specific name.</value>
     <value>0</value>
   </data>
   <data name="checkBoxMergeIrt.Text" xml:space="preserve">
-    <value>Merge iRTs</value>
+    <value>Mer&amp;ge iRTs</value>
   </data>
   <data name="&gt;&gt;checkBoxMergeIrt.Name" xml:space="preserve">
     <value>checkBoxMergeIrt</value>
@@ -810,7 +810,7 @@ and a specific name.</value>
     <value>268, 3</value>
   </data>
   <data name="panelMergeIrt.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 36</value>
+    <value>84, 40</value>
   </data>
   <data name="panelMergeIrt.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>

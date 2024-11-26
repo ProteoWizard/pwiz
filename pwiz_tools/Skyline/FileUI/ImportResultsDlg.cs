@@ -120,6 +120,12 @@ namespace pwiz.Skyline.FileUI
 
         private bool IsOptimizing { get { return comboOptimizing.SelectedIndex != -1; } }
 
+        public bool IsMergeIrt
+        {
+            get { return checkBoxMergeIrt.Checked; }
+            set { checkBoxMergeIrt.Checked = value; }
+        }
+
         public KeyValuePair<string, MsDataFileUri[]>[] NamedPathSets { get; set; }
 
         public string OptimizationName
