@@ -422,7 +422,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                     {
                         pickList.ApplyFilter(false);
-                        pickList.SetItemChecked(8, true);
+                        pickList.SetItemChecked(8, true, true);
                         pickList.AutoManageChildren = false; // TODO: Because calling SetItemChecked does not do this
                     });
                 PauseForScreenShot<PopupPickList>("(fig. 2) - YBL087C Peptides picklist", 21); // Not L10N
@@ -448,7 +448,7 @@ namespace pwiz.SkylineTestTutorial
                         pickList1.ToggleFind();
                         pickList1.SearchString = "b ++"; // Not L10N
                         pickList1.SetItemChecked(4, true);
-                        pickList1.SetItemChecked(6, true);
+                        pickList1.SetItemChecked(6, true, true);
                     });
                 PauseForScreenShot<PopupPickList>("b ++ filtered picklist", 22); // Not L10N
                 RunUI(pickList1.OnOk);
