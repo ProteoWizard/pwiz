@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -55,7 +56,7 @@ namespace pwiz.SkylineTestUtil
                 var origin = Point.Empty;
                 dockableForm.Invoke((Action) (() =>
                 {
-                    origin = dockableForm.Pane.PointToScreen(new Point(0, 0));
+                    origin = dockableForm.Pane.PointToScreen(Point.Empty);
                     snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
                 }));
             }
@@ -70,8 +71,18 @@ namespace pwiz.SkylineTestUtil
                 {
                     int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
                     int frameWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
-                    Size imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
-                    Point sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
+                    Size imageSize;
+                    Point sourcePoint;
+                    if (ctrl is Form)
+                    {
+                        imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
+                        sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
+                    }
+                    else
+                    {
+                        imageSize = ctrl.Size;
+                        sourcePoint = ctrl.Parent.PointToScreen(ctrl.Location);
+                    }
                     snapshotBounds = new Rectangle(sourcePoint, imageSize);
                 }));
             }
@@ -110,6 +121,7 @@ namespace pwiz.SkylineTestUtil
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
         }
+
         private abstract class SkylineScreenshot
         {
             /**
@@ -152,7 +164,7 @@ namespace pwiz.SkylineTestUtil
                     try
                     {
                         graphCapture.CopyFromScreen(shotFrame.Location,
-                            new Point(0, 0), shotFrame.Size);
+                            Point.Empty, shotFrame.Size);
                         captured = true;
                     }
                     catch (Exception)
@@ -189,7 +201,21 @@ namespace pwiz.SkylineTestUtil
         public ScreenshotManager([NotNull] SkylineWindow pSkylineWindow, string tutorialPath)
         {
             _skylineWindow = pSkylineWindow;
-            _tutorialPath = tutorialPath;
+            _tutorialPath = GetAvailableTutorialPath(tutorialPath);
+        }
+
+        private string GetAvailableTutorialPath(string tutorialPath)
+        {
+            if (!string.IsNullOrEmpty(tutorialPath) && !Directory.Exists(tutorialPath))
+            {
+                var langLetters = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.CurrentCulture);
+                var langLettersInvariant = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.InvariantCulture);
+                if (!Equals(langLettersInvariant, langLetters) && tutorialPath.EndsWith(langLetters))
+                {
+                    tutorialPath = tutorialPath.Substring(0, tutorialPath.Length - langLetters.Length) + langLettersInvariant;
+                }
+            }
+            return tutorialPath;
         }
 
         private SkylineWindow SkylineWindow => Program.MainWindow;

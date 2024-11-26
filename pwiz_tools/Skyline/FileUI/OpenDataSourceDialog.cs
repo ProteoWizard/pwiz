@@ -284,6 +284,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public void EnsureListViewItemVisible(int item)
+        {
+            listView.EnsureVisible(item);
+        }
+
         public View ListView
         {
             get { return listView.View; }
