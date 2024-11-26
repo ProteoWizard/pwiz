@@ -29,6 +29,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Databinding;
@@ -494,7 +495,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
 
-            PauseForPeakAreaGraphScreenShot("Peak Areas view");
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas View");
             return true;    // Continue subsequent tests
         }
 
