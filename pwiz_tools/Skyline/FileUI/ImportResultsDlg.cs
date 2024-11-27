@@ -601,7 +601,7 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            panelMergeIrt.Visible = !radioCreateMultiple.Checked && _hasIrt;
+            panelMergeIrt.Visible = !radioCreateMultiple.Checked && !radioAddExisting.Checked && _hasIrt;
         }
 
         public int ImportSimultaneousIndex

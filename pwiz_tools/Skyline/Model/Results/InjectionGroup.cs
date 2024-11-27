@@ -1,20 +1,38 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
+    /// <summary>
+    /// A group of files (or just one file) that are having chromatograms extracted at the same time.
+    /// These files all have to wait for each other to finish their first pass <see cref="CreateConversion"/> gets called.
+    /// </summary>
     public class InjectionGroup
     {
         private Dictionary<MsDataFileUri, FileBuilderStatus> _fileBuilderStatuses =
@@ -65,43 +83,6 @@ namespace pwiz.Skyline.Model.Results
             TryCreateConversion();
         }
 
-        private void StoreExistingResults(MsDataFileUri msDataFileUri)
-        {
-            if (!Document.MeasuredResults.TryGetChromatogramSet(ChromatogramSet.Name, out _, out int replicateIndex))
-            {
-                return;
-            }
-            var chromFileInfoId = Document.MeasuredResults.Chromatograms[replicateIndex].FindFile(msDataFileUri);
-            if (chromFileInfoId == null)
-            {
-                return;
-            }
-
-            var fileBuildStatus = new FileBuilderStatus(null, null);
-            fileBuildStatus.Completed = fileBuildStatus.CompletedFirstPass = true;
-            foreach (var molecule in Document.Molecules)
-            {
-                if (!IsFirstPassPeptide(molecule))
-                {
-                    continue;
-                }
-
-                var transitionGroupChromInfo = molecule.TransitionGroups
-                    .SelectMany(tg => tg.GetSafeChromInfo(replicateIndex)).FirstOrDefault(chromInfo =>
-                        0 == chromInfo.OptimizationStep && ReferenceEquals(chromFileInfoId, chromInfo.FileId) && chromInfo.RetentionTime.HasValue);
-                if (transitionGroupChromInfo != null)
-                {
-                    var transitionCount = molecule.TransitionGroups
-                        .SelectMany(tg => tg.Transitions.SelectMany(t => t.GetSafeChromInfo(replicateIndex))).Count(
-                            transitionChromInfo => !transitionChromInfo.IsEmpty &&
-                                                   0 == transitionChromInfo.OptimizationStep &&
-                                                   ReferenceEquals(chromFileInfoId, transitionChromInfo.FileId));
-                    fileBuildStatus.PeptideRetentionTimes.Add(new PeptideRetentionTime(molecule, transitionCount, transitionGroupChromInfo.RetentionTime.Value));
-                }
-            }
-            _fileBuilderStatuses.Add(msDataFileUri, fileBuildStatus);
-        }
-
         private void TryCreateConversion()
         {
             lock (this)
@@ -114,8 +95,10 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var group in _fileBuilderStatuses.Values.SelectMany(v => v.PeptideRetentionTimes)
                              .GroupBy(prt => prt.PeptideDocNode.ModifiedTarget))
                 {
-                    var bestPeptideRetentionTime = group.OrderByDescending(prt => prt.TransitionCount).First();
-                    _retentionTimePredictor.AddPeptideTime(bestPeptideRetentionTime.PeptideDocNode, bestPeptideRetentionTime.RetentionTime);
+                    var peptideDocNode = group.First().PeptideDocNode;
+                    var bestGroup = group.GroupBy(prt => prt.TransitionCount).OrderByDescending(g => g.Key).First();
+                    var retentionTime = bestGroup.Average(prt => prt.RetentionTime);
+                    _retentionTimePredictor.AddPeptideTime(peptideDocNode, retentionTime);
                 }
 
                 try
@@ -219,21 +202,19 @@ namespace pwiz.Skyline.Model.Results
 
         public void Load()
         {
-            if (ChromatogramSet != null)
+            var paths = _fileBuilderStatuses.Keys.ToList();
+            if (paths.Count == 0)
             {
-                foreach (var path in ChromatogramSet.MSDataFilePaths)
-                {
-                    if (!_fileBuilderStatuses.ContainsKey(path))
-                    {
-                        StoreExistingResults(path);
-                    }
-                }
+                return;
             }
-            foreach (var path in _fileBuilderStatuses.Keys)
+            // Build everything except the first file on a background thread
+            foreach (var path in paths.Skip(1))
             {
                 ActionUtil.RunAsync(() => BuildFile(path), @"InjectionGroup Load " + path.GetFileName());
             }
-
+            // Build the first file on this thread
+            BuildFile(paths[0]);
+            // Wait for everything to finish.
             lock (this)
             {
                 while (true)
