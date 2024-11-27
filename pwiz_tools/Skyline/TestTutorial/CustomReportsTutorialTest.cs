@@ -23,6 +23,7 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -376,22 +377,20 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => documentGridForm.ChooseView("Summary Statistics"));
             WaitForConditionUI(() => documentGridForm.IsComplete);
             RunUI(() => documentGridForm.ExpandColumns());
-            
-            if (IsPauseForScreenShots)
-                RunUI(() =>
-                {
-                    documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, originalSize));
-                    // nudge data grid to resize columns, especially forcing column 0's header to wrap into 2 lines of text
-                    documentGridForm.DataGridView.Columns[0].Width = 45;
-                    documentGridForm.DataGridView.AutoResizeColumns();
-                });
 
-            // Screenshot #17
+            RunUIForScreenShot(() =>
+            {
+                var floatingWindow = FindFloatingWindow(documentGridForm); 
+                floatingWindow.Location = formLocation;
+
+                ConfigureDataGridColumns(floatingWindow, documentGridForm.DataGridView);
+            });
+
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
             {
                 const int lineWidth = 3;
                 var dataGridView = documentGridForm.DataGridView;
-                var yOffset = documentGridForm.NavBar.Height + dataGridView.ColumnHeadersHeight - 2; // compute top-left corner of data grid's
+                var yOffset = documentGridForm.NavBar.Height + dataGridView.ColumnHeadersHeight - 4; // compute top-left corner of data grid's
                                                                                                          // cells, excluding header row
 
                 // keeping these private for now until they're reviewed and we decide to promte them to shared helpers
@@ -412,7 +411,7 @@ namespace pwiz.SkylineTestTutorial
                     var text = dataGridView.Rows[row].Cells[column].FormattedValue?.ToString();
                     var stringSize = graphics.MeasureString(text, dataGridView.Font);
                     var width = Convert.ToInt16(stringSize.Width * 1.1); // scaling up ellipse size just a bit so shape isn't too tight around text
-                    var y = rect.Y + yOffset - 2;
+                    var y = rect.Y + yOffset;
 
                     graphics.DrawEllipse(new Pen(color, lineWidth), rect.X, y, width, rect.Height);
                 });
@@ -486,24 +485,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUIForScreenShot(() =>
             {
-                // widen the floating window to accommodate one set of column widths for EN, ZH, JP
-                var floatingWindow = FindFloatingWindow(documentGridForm);
-                floatingWindow.Size = new Size(750, 340);
-                
-                documentGridForm.DataGridView.Columns[0].Width = 70; // wider for ZH/JP than EN
-                documentGridForm.DataGridView.Columns[1].Width = 95;
-                documentGridForm.DataGridView.Columns[2].Width = 80;
-                documentGridForm.DataGridView.Columns[3].Width = 79; // wider for ZH
-                documentGridForm.DataGridView.Columns[4].Width = 80;
-                documentGridForm.DataGridView.Columns[5].Width = 92; // wider for ZH than EN
-                documentGridForm.DataGridView.Columns[6].Width = 102; 
-                documentGridForm.DataGridView.Columns[7].Width = 105;
-
-                // last 3 columns not visible in screenshot but need to 
-                // set width to prevent column title from wrapping to 3 lines 
-                documentGridForm.DataGridView.Columns[8].Width = 105;
-                documentGridForm.DataGridView.Columns[9].Width = 105;
-                documentGridForm.DataGridView.Columns[10].Width = 105;
+                ConfigureDataGridColumns(FindFloatingWindow(documentGridForm), documentGridForm.DataGridView);
             });
             // TODO: activate floating window - remove if fixed by upcoming FormUtil change
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 24);
@@ -634,6 +616,27 @@ namespace pwiz.SkylineTestTutorial
         private string GetLocalizedCaption(string caption)
         {
             return SkylineDataSchema.GetLocalizedSchemaLocalizer().LookupColumnCaption(new ColumnCaption(caption));
+        }
+
+        private static void ConfigureDataGridColumns(FloatingWindow floatingWindow, DataGridView dataGridView)
+        {
+            // explicitly size floating window to accommodate one set of column widths for EN, ZH, JP
+            floatingWindow.Size = new Size(750, 340);
+
+            dataGridView.Columns[0].Width = 70; // wider for ZH/JP than EN
+            dataGridView.Columns[1].Width = 95;
+            dataGridView.Columns[2].Width = 80;
+            dataGridView.Columns[3].Width = 79; // wider for ZH
+            dataGridView.Columns[4].Width = 80;
+            dataGridView.Columns[5].Width = 92; // wider for ZH than EN
+            dataGridView.Columns[6].Width = 102;
+            dataGridView.Columns[7].Width = 105;
+
+            // last 3 columns not visible in screenshot but need to 
+            // set width to prevent column title from wrapping to 3 lines 
+            dataGridView.Columns[8].Width = 105;
+            dataGridView.Columns[9].Width = 105;
+            dataGridView.Columns[10].Width = 105;
         }
     }
 }
