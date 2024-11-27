@@ -52,6 +52,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (ImportPeptideSearch.IsFeatureDetection)
             {
                 SearchEngineComboBox_SelectedIndexChanged(null, null); // Initialize
+                _searchEngine = SearchEngine.Hardklor;
                 // Hide all controls other than the logo picture box
                 foreach (Control control in Controls)
                 {
