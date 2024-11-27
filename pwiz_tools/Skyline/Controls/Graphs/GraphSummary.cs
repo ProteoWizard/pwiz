@@ -375,7 +375,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var pane in graphPanes)
             {
                 pane.UpdateGraph(selectionChanged);
-                GraphHelper.FormatGraphPane(pane);
+                // GraphHelper.FormatGraphPane(pane);
                 GraphHelper.FormatFontSize(pane, Settings.Default.AreaFontSize);
             }
             graphControl.Invalidate();
