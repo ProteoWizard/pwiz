@@ -484,7 +484,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 23);
             OkDialog(viewEditor, viewEditor.OkDialog);
 
-            RunUI(() =>
+            RunUIForScreenShot(() =>
             {
                 // widen the floating window to accommodate one set of column widths for EN, ZH, JP
                 var floatingWindow = FindFloatingWindow(documentGridForm);
@@ -525,13 +525,16 @@ namespace pwiz.SkylineTestTutorial
         {
             // Results Grid View
             RestoreViewOnScreen(26);
-            RunUI(() =>
+            RunUIForScreenShot(() =>
             {
-                var areaGraphFloatingWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
-                areaGraphFloatingWindow.Location = SkylineWindow.Location + new Size(135, 166);
+                // position two floating windows relative to Skyline's bottom-right corner
+                var backgroundWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
+                backgroundWindow.Top = SkylineWindow.Bottom - backgroundWindow.Height - 53;
+                backgroundWindow.Left = SkylineWindow.Right - backgroundWindow.Width - 128;
 
-                var resultsGridWindow = FindFloatingWindow(SkylineWindow.LiveResultsGrid);
-                resultsGridWindow.Location = areaGraphFloatingWindow.Location + new Size(55, 36);
+                var foregroundWindow = FindFloatingWindow(SkylineWindow.LiveResultsGrid);
+                foregroundWindow.Top = SkylineWindow.Bottom - foregroundWindow.Height - 26;
+                foregroundWindow.Left = SkylineWindow.Right - foregroundWindow.Width - 34;
             });
 
             PauseForScreenShot(SkylineWindow, "Main window under floating windows", 26);
