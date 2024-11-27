@@ -486,8 +486,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() =>
             {
-                // wider than original screenshots to accommodate one
-                // set of column widths for EN, ZH, JP
+                // widen the floating window to accommodate one set of column widths for EN, ZH, JP
                 var floatingWindow = FindFloatingWindow(documentGridForm);
                 floatingWindow.Size = new Size(750, 340);
                 
@@ -506,7 +505,7 @@ namespace pwiz.SkylineTestTutorial
                 documentGridForm.DataGridView.Columns[9].Width = 105;
                 documentGridForm.DataGridView.Columns[10].Width = 105;
             });
-            // TODO: activate NavBar => Match Case button
+            // TODO: activate floating window - remove if fixed by upcoming FormUtil change
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 24);
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
@@ -518,7 +517,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
 
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas View");
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view");
             return true;    // Continue subsequent tests
         }
 
@@ -531,7 +530,7 @@ namespace pwiz.SkylineTestTutorial
                 var areaGraphFloatingWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
                 areaGraphFloatingWindow.Location = SkylineWindow.Location + new Size(135, 166);
 
-                var resultsGridWindow = FindFloatingWindow(SkylineWindow.GetLiveResultsGrid());
+                var resultsGridWindow = FindFloatingWindow(SkylineWindow.LiveResultsGrid);
                 resultsGridWindow.Location = areaGraphFloatingWindow.Location + new Size(55, 36);
             });
 
