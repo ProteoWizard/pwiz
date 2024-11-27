@@ -390,30 +390,30 @@ namespace pwiz.SkylineTestTutorial
             {
                 const int lineWidth = 3;
                 var dataGridView = documentGridForm.DataGridView;
-                var yOffset = documentGridForm.NavBar.Height + dataGridView.ColumnHeadersHeight - 4; // compute top-left corner of data grid's
-                                                                                                         // cells, excluding header row
 
-                // keeping these private for now until they're reviewed and we decide to promte them to shared helpers
+                // compute top-left corner of data grid's cells, 4px offset puts shapes in the correct place
+                var yOffset = documentGridForm.NavBar.Height + dataGridView.ColumnHeadersHeight - 4;
+
+                // keep these methods private until we decide to promote them to shared helpers
                 var drawBoxOnColumn = new Action<Graphics, int, Color>((graphics, column, color) =>
                 {
-                    const int rowCount = 10;
-
                     var rect = dataGridView.GetCellDisplayRectangle(column, 0, true); // column's top data cell
-                    graphics.DrawRectangle(new Pen(color, lineWidth), rect.X, rect.Y + yOffset, rect.Width, rect.Height * rowCount);
+                    rect.Y += yOffset;
+                    rect.Height *= 10; // draw rectangle around all 10 rows
 
+                    graphics.DrawRectangle(new Pen(color, lineWidth), rect);
                 });
 
-                // keeping private for now until they're reviewed and another tutorial needs them
                 var drawEllipseOnCell = new Action<Graphics, int, int, Color>((graphics, row, column, color) =>
                 {
-                    var rect = dataGridView.GetCellDisplayRectangle(column, row, true);
-
                     var text = dataGridView.Rows[row].Cells[column].FormattedValue?.ToString();
                     var stringSize = graphics.MeasureString(text, dataGridView.Font);
-                    var width = Convert.ToInt16(stringSize.Width * 1.1); // scaling up ellipse size just a bit so shape isn't too tight around text
-                    var y = rect.Y + yOffset;
 
-                    graphics.DrawEllipse(new Pen(color, lineWidth), rect.X, y, width, rect.Height);
+                    var rect = dataGridView.GetCellDisplayRectangle(column, row, true);
+                    rect.Y += yOffset;
+                    rect.Width = Convert.ToInt16(stringSize.Width * 1.1); // scale-up ellipse size so shape isn't too tight around text
+
+                    graphics.DrawEllipse(new Pen(color, lineWidth), rect);
                 });
 
                 var g = Graphics.FromImage(bmp);
