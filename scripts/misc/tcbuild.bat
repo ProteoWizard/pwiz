@@ -26,6 +26,7 @@ if %CLEAN%==1 (
 
   REM # check clean did not dirty repo (but postpone error until after quickbuild)
   git status --porcelain | findstr . && set CLEAN_EXIT=1
+  if %CLEAN_EXIT% NEQ 0 echo Repository is dirty after clean script >&2
 )
 
 REM # the -p1 argument overrides bjam's default behavior of merging stderr into stdout

@@ -37,6 +37,7 @@ if %EXIT% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
 REM # check clean did not dirty repo (but postpone error until after quickbuild)
 set CLEAN_EXIT=0
 git status --porcelain | findstr . && set CLEAN_EXIT=1
+if %CLEAN_EXIT% NEQ 0 echo Repository is dirty after clean script >&2
 
 REM # the -p1 argument overrides bjam's default behavior of merging stderr into stdout
 REM # the --abbreviate-paths argument abbreviates paths like .../ftr1-value/ftr2-value/...
