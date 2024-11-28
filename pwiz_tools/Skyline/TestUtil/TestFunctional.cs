@@ -427,6 +427,17 @@ namespace pwiz.SkylineTestUtil
             RunUI(SkylineWindow.FocusDocument);
         }
 
+        public static void JiggleSelection()
+        {
+            if (!IsPauseForScreenShots)
+                return;
+
+            // Node change apparently required to get x-axis labels in peak areas view the way they should be
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
+            WaitForGraphs();
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
+        }
+
         protected static void SelectNode(SrmDocument.Level level, int iNode)
         {
             var pathSelect = SkylineWindow.Document.GetPathTo((int)level, iNode);

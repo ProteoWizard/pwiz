@@ -170,7 +170,9 @@ namespace pwiz.Skyline.Util
 
         protected override bool ShowWithoutActivation
         {
-            get { return Program.FunctionalTest || Program.SkylineOffscreen; }
+            // Avoid activating forms during test mode or when off-screen, but not when
+            // pausing to show Skyline as it normally functions.
+            get { return (Program.FunctionalTest || Program.SkylineOffscreen) && Program.PauseSeconds == 0; }
         }
 
         [Localizable(false)]
