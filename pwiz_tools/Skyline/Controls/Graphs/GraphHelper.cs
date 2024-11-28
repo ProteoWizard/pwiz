@@ -581,14 +581,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static void ReformatYAxis(GraphPane g, double myMaxY)
         {
-            var _max = MyMod(myMaxY, g.YAxis.Scale.MajorStep) == 0.0
-                ? myMaxY
-                : myMaxY + g.YAxis.Scale.MajorStep - MyMod(myMaxY, g.YAxis.Scale.MajorStep);
-            if (g.YAxis.Scale.Max != _max)
-            {
-                g.YAxis.Scale.Max = _max;
-                g.AxisChange();
-            }
+            var _max = MyMod(myMaxY, g.YAxis.Scale.MajorStep) == 0.0 ? myMaxY :
+                  myMaxY + g.YAxis.Scale.MajorStep - MyMod(myMaxY, g.YAxis.Scale.MajorStep);
+            g.YAxis.Scale.Max = _max;
         }
         protected static double MyMod(double x, double y)
         {
