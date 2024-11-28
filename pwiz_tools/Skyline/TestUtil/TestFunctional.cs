@@ -1697,6 +1697,9 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
+            if (!IsPauseForScreenShots)
+                return;
+
             var graphRt = SkylineWindow.GraphRetentionTime;
             if (graphRt.TryGetGraphPane<RTLinearRegressionGraphPane>(out _)) 
                 WaitForRegression();
