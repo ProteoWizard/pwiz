@@ -248,12 +248,12 @@ namespace pwiz.SkylineTestUtil
         {
             if (string.IsNullOrEmpty(_tutorialPath))
                 return null;
-            return GetTutorialUrl("index.html") + "#s-" + screenshotNum;
+            return GetTutorialUrl("index.html") + "#s-" + PadScreenshotNum(screenshotNum);
         }
 
         public string ScreenshotImgUrl(int screenshotNum)
         {
-            return GetTutorialUrl("s-" + screenshotNum + ".png");
+            return GetTutorialUrl("s-" + PadScreenshotNum(screenshotNum) + ".png");
         }
 
         private const string SCREENSHOT_URL_FOLDER = "24-1";
@@ -270,7 +270,12 @@ namespace pwiz.SkylineTestUtil
 
         public string ScreenshotFile(int screenshotNum)
         {
-            return !string.IsNullOrEmpty(_tutorialPath) ? $"{Path.Combine(_tutorialPath, "s-" + screenshotNum)}.png" : null;
+            return !string.IsNullOrEmpty(_tutorialPath) ? $"{Path.Combine(_tutorialPath, "s-" + PadScreenshotNum(screenshotNum))}.png" : null;
+        }
+
+        private static string PadScreenshotNum(int screenshotNum)
+        {
+            return screenshotNum.ToString("D2");
         }
 
         public string ScreenshotDescription(int i, string description)
