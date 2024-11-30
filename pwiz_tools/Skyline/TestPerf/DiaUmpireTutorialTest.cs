@@ -854,16 +854,6 @@ namespace TestPerf
             }
         }
 
-        private void ApplyFormatting(VolcanoPlotFormattingDlg formattingDlg, string matchText, string rgbText)
-        {
-            RunUI(() =>
-            {
-                var bindingList = formattingDlg.GetCurrentBindingList();
-                var color = RgbHexColor.ParseRgb(rgbText).Value;
-                bindingList.Add(new MatchRgbHexColor("ProteinName: " + matchText, false, color, PointSymbol.Circle, PointSize.normal));
-            });
-        }
-
         private void ValidateTargets(ref int[] targetCounts, int proteinCount, int peptideCount, int precursorCount, int transitionCount, string propName)
         {
             if (IsRecordMode)
