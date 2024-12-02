@@ -427,6 +427,17 @@ namespace pwiz.SkylineTestUtil
             RunUI(SkylineWindow.FocusDocument);
         }
 
+        public static void JiggleSelection()
+        {
+            if (!IsPauseForScreenShots)
+                return;
+
+            // Node change apparently required to get x-axis labels in peak areas view the way they should be
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
+            WaitForGraphs();
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
+        }
+
         protected static void SelectNode(SrmDocument.Level level, int iNode)
         {
             var pathSelect = SkylineWindow.Document.GetPathTo((int)level, iNode);
@@ -1327,14 +1338,6 @@ namespace pwiz.SkylineTestUtil
 
         private PauseAndContinueForm _pauseAndContinueForm;
 
-        private PauseAndContinueForm PauseAndContinueFormInstance
-        {
-            get
-            {
-                return _pauseAndContinueForm ??= new PauseAndContinueForm(ScreenshotManager);
-            }
-        }
-
         public void BeginDragDisplay(Control dockableForm, double xProportion, double yProportion)
         {
             if (!IsPauseForScreenShots)
@@ -1697,6 +1700,9 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
+            if (!IsPauseForScreenShots)
+                return;
+
             var graphRt = SkylineWindow.GraphRetentionTime;
             if (graphRt.TryGetGraphPane<RTLinearRegressionGraphPane>(out _)) 
                 WaitForRegression();
@@ -1741,7 +1747,9 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Type that indicates a full-screen screenshot should be taken
+        /// Type that indicates a full-screen screenshot should be taken.
+        /// A null Type and a null Control were already reserved for a
+        /// screenshot of the Skyline form.
         /// </summary>
         public class ScreenForm : IFormView
         {
@@ -1781,15 +1789,16 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(1000); // Wait for UI to settle down - Necessary?
+                    // Thread.Sleep(500); // Wait for UI to settle down - Necessary?
                     ScreenshotManager.ActivateScreenshotForm(screenshotForm);
-                    var fileToSave = _shotManager.ScreenshotFile(ScreenshotCounter);
+                    var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                    _pauseAndContinueForm ??= new PauseAndContinueForm(ScreenshotManager);
+                    _pauseAndContinueForm.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
             else

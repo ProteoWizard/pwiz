@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void SetSpectra(MsDataSpectrum[] spectra)
         {
-            Invoke(new Action(() => SetSpectraUI(spectra)));
+            BeginInvoke(new Action(() => SetSpectraUI(spectra)));
         }
 
         private void SetSpectraUI(MsDataSpectrum[] spectra)
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void HandleLoadScanException(Exception ex)
         {
-            Invoke(new Action(() => HandleLoadScanExceptionUI(ex)));
+            BeginInvoke(new Action(() => HandleLoadScanExceptionUI(ex)));
         }
 
         private void HandleLoadScanExceptionUI(Exception ex)

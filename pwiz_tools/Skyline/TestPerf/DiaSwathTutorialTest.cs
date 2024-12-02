@@ -90,6 +90,8 @@ namespace TestPerf
             public int[] DiffPeptideCounts;
             public int UnpolishedProteins;
             public int? PolishedProteins;
+            public double? FoldChangeProteinsMax;
+            public double? FoldChangeProteinsMin;
 
             public string FastaPath =>
                 IsWholeProteome
@@ -275,6 +277,7 @@ namespace TestPerf
                     },
                     DiffPeptideCounts = new[] { 139, 47, 29, 52 },
                     UnpolishedProteins = 9,
+                    FoldChangeProteinsMax = 2,
                 };
             }
         }
@@ -1124,10 +1127,7 @@ namespace TestPerf
                 var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
                 ApplyFormatting(formattingDlg, "ECOLI", "128, 0, 255");
                 var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
-                {
-                    var bindingList = formattingDlg.GetCurrentBindingList();
-                    formattingDlg.ClickCreateExpression(bindingList.Count - 1);
-                });
+                    formattingDlg.ClickCreateExpression(formattingDlg.ResultList.Count - 1));
                 PauseForScreenShot<CreateMatchExpressionDlg>("Create Expression form", screenshotPage++);
                 OkDialog(createExprDlg, createExprDlg.OkDialog);
 
@@ -1212,20 +1212,17 @@ namespace TestPerf
 
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                if (IsPauseForScreenShots)
+                WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                RunUIForScreenShot(() =>
                 {
-                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
-                    RunUI(() =>
-                    {
-                        var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
-                        yScale.MinAuto = yScale.MaxAuto = false;
-                        yScale.Min = -2.4;
-                        yScale.Max = 2.2;
-                        yScale.MajorStep = 1;
-                        yScale.MinorStep = 0.2;
-                        yScale.Format = "0.#";
-                    });
-                }
+                    var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
+                    yScale.MinAuto = yScale.MaxAuto = false;
+                    yScale.Max = _analysisValues.FoldChangeProteinsMax ?? 2.2;
+                    yScale.Min = _analysisValues.FoldChangeProteinsMin ?? -2.4;
+                    yScale.MajorStep = 1;
+                    yScale.MinorStep = 0.2;
+                    yScale.Format = "0.#";
+                });
                 PauseForGraphScreenShot("By Condition:Bar Graph - proteins", barGraph);
 
                 RunQValueSummaryTest();
@@ -1370,9 +1367,9 @@ namespace TestPerf
         {
             RunUI(() =>
             {
-                var bindingList = formattingDlg.GetCurrentBindingList();
                 var color = RgbHexColor.ParseRgb(rgbText).Value;
-                bindingList.Add(new MatchRgbHexColor("ProteinName: " + matchText, false, color, PointSymbol.Circle, PointSize.normal));
+                formattingDlg.AddRow(new MatchRgbHexColor("ProteinName: " + matchText, 
+                    false, color, PointSymbol.Circle, PointSize.normal));
             });
         }
 
