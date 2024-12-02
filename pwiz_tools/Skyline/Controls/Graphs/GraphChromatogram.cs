@@ -563,7 +563,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public PointF TransformCoordinates(double x, double y, PaneKey? paneKey, CoordType coordType = CoordType.AxisXYScale)
         {
-            var graphPane = _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
+            var graphPane = GetGraphPane(paneKey);
             return graphPane.GeneralTransform(new PointF((float)x, (float)y), coordType);
         }
 
@@ -1627,7 +1627,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 iColor++;
             }
 
-            var graphPane = _graphHelper.GetGraphPane(graphPaneKey);
+            var graphPane = GetGraphPane(graphPaneKey);
             if (graphPane == null)
                 _enableTrackingDot = false;
             if (_enableTrackingDot)
@@ -3549,7 +3549,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)
         {
-            var graphPane = _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
+            var graphPane = GetGraphPane(paneKey);
             var selectionDot = graphPane.CurveList[FULLSCAN_SELECTED_INDEX];
             var mouse = TransformCoordinates(x, y, paneKey);
             var dot = TransformCoordinates(selectionDot[0].X, selectionDot[0].Y, paneKey);
@@ -3559,6 +3559,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Math.Abs(mouse.X - dot.X) > pixelTolerance || Math.Abs(mouse.Y - dot.Y) > pixelTolerance)
                 return $@"mouse coordinates ({x}->{mouse.X}, {y}->{mouse.Y}) and selection dot coordinates ({selectionDot[0].X}->{dot.X}, {selectionDot[0].Y}->{dot.Y}) are too far apart";
             return string.Empty;
+        }
+
+        public GraphPane GetGraphPane(PaneKey? paneKey)
+        {
+            return _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
         }
 
         #endregion Test support

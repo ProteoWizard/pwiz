@@ -178,6 +178,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 SkylineWindow.Size = new Size(1035, 511);
             });
+            FocusDocument();
             PauseForScreenShot("Main window with transitions added", 10);
 
             FindNode("LWDVAT");
@@ -209,6 +210,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[5];
             });
+            FocusDocument();
             PauseForScreenShot("Main window with data imported", 13);
 
             RunUI(() =>
@@ -456,6 +458,8 @@ namespace pwiz.SkylineTestTutorial
                 FindNode("YEVQGEVFTKPQLWP");
             }
 
+            FocusDocument();
+            JiggleSelection();
             PauseForScreenShot("Main window with peaks and retention times showing", 27);
             RunUI(SkylineWindow.EditDelete);
             FindNode("IVGGWECEK"); // Not L10N
@@ -517,8 +521,8 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
 
-
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL));
+            JiggleSelection();
             PauseForPeakAreaGraphScreenShot("Peak Areas graph normalized metafile");
 
             RunUI(() =>
@@ -613,13 +617,16 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.ShowGraphPeakArea(false);
-                SkylineWindow.Width = 920;
+                SkylineWindow.Width = 970;
                 SkylineWindow.ShowRTReplicateGraph();
             });
+            // JiggleSelection();
             PauseForRetentionTimeGraphScreenShot("Retention Times replicate graph metafile");
 
             FindNode("INDISHTQSVSAK");
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
+            RunUIForScreenShot(() => SkylineWindow.GraphPeakArea.Parent.Parent.Width = 720);
+            JiggleSelection();
             PauseForPeakAreaGraphScreenShot("Peak Areas normalized to heave graph metafile");
 
             if (IsCoverShotMode)
@@ -642,6 +649,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
             WaitForGraphs();
+            JiggleSelection();
             PauseForPeakAreaGraphScreenShot("Peak Areas no normalization graph metafile");
 
             FindNode(hgflprLight);

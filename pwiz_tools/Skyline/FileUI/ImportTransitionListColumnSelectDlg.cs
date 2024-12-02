@@ -1664,7 +1664,14 @@ namespace pwiz.Skyline.FileUI
         }
 
         #region testing support
+
         public bool AssociateProteinsPreviewCompleted => checkBoxAssociateProteins.Checked && isAssociated;
+
+        public void SetColumnWidth(int columnIndex, int width)
+        {
+            dataGrid.Columns[columnIndex].Width = width;
+        }
+
         #endregion
 
     }
