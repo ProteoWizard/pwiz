@@ -273,24 +273,6 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.WindowState = FormWindowState.Normal);
         }
 
-        private void BeginDragDisplay(Control dockableForm, double xProportion, double yProportion)
-        {
-            if (!IsPauseForScreenShots)
-                return;
-            RunUI(() =>
-            {
-                var rect = SkylineWindow.Bounds;
-                var ptDest = new Point((int)(rect.X + rect.Width * xProportion), (int)(rect.Y + rect.Height * yProportion));
-                SkylineWindow.DockPanel.BeginDragDisplay(FindFloatingWindow(dockableForm), ptDest);
-            });
-        }
-
-        private void EndDragDisplay()
-        {
-            if (IsPauseForScreenShots)
-                RunUI(() => SkylineWindow.DockPanel.EndDragDisplay());
-        }
-
         private void PlaceTargetsAndGraph(Control graphForm)
         {
             if (!IsPauseForScreenShots)
@@ -560,17 +542,6 @@ namespace pwiz.SkylineTestTutorial
             PauseForPeakAreaGraphScreenShot("Peak Areas graph - inconsistent ion abundance", _pageNum++);
 
             RunUI(SkylineWindow.EditDelete);
-        }
-
-        private static void JiggleSelection()
-        {
-            if (!IsPauseForScreenShots)
-                return;
-
-            // Node change apparently required to get x-axis labels in peak areas view the way they should be
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
-            WaitForGraphs();
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
         }
 
         private void AddTruncatedPrecursorsView(DocumentGridForm documentGrid, bool initialTestExecution)

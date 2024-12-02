@@ -140,7 +140,7 @@ namespace pwiz.Skyline.FileUI
             // an empty string.
             if (string.IsNullOrEmpty(initialDir))
                 initialDir = null;
-            InitialDirectory = new MsDataFilePath(initialDir);
+            InitialDirectory = MsDataFileUri.Parse(initialDir);
             if (state != null)
             {
                 if (SourceTypeName != null)
@@ -282,6 +282,11 @@ namespace pwiz.Skyline.FileUI
                 foreach (int index in listView.SelectedIndices)
                     yield return listView.Items[index].Text;
             }
+        }
+
+        public void EnsureListViewItemVisible(int item)
+        {
+            listView.EnsureVisible(item);
         }
 
         public View ListView
@@ -1025,6 +1030,20 @@ namespace pwiz.Skyline.FileUI
 
         private void remoteAccountsButton_Click( object sender, EventArgs e )
         {
+            if (Equals(CurrentDirectory, RemoteUrl.EMPTY) ||
+                CurrentDirectory is RemoteUrl && _remoteAccounts.Count == 1)
+            {
+                var list = Settings.Default.RemoteAccountList;
+                var listNew = list.EditList(this, null);
+                if (listNew != null)
+                {
+                    list.Clear();
+                    list.AddRange(listNew);
+                }
+                // clear listView contents if all remote accounts have been removed
+                if (!list.Any())
+                    listView.Clear();
+            }
             CurrentDirectory = RemoteUrl.EMPTY;
         }
 

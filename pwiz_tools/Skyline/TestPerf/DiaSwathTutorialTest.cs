@@ -90,6 +90,8 @@ namespace TestPerf
             public int[] DiffPeptideCounts;
             public int UnpolishedProteins;
             public int? PolishedProteins;
+            public double? FoldChangeProteinsMax;
+            public double? FoldChangeProteinsMin;
 
             public string FastaPath =>
                 IsWholeProteome
@@ -275,6 +277,7 @@ namespace TestPerf
                     },
                     DiffPeptideCounts = new[] { 139, 47, 29, 52 },
                     UnpolishedProteins = 9,
+                    FoldChangeProteinsMax = 2,
                 };
             }
         }
@@ -622,6 +625,7 @@ namespace TestPerf
                 }
 
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
+                addIrtPeptidesDlg.Width = 650;
             });
             PauseForScreenShot<AddIrtPeptidesDlg>("Add iRT peptides form", screenshotPage);
             if (addIrtStandardsDlg != null)
@@ -907,7 +911,6 @@ namespace TestPerf
             SetClipboardText(TextUtil.LineSeparate(replicateAnnotations.Select(TextUtil.ToEscapedTSV)));
 
             RunUI(() => documentGrid.DataGridView.SendPaste());
-
             PauseForScreenShot<DocumentGridForm>("Document Grid - filled", screenshotPage++);
 
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
@@ -926,6 +929,31 @@ namespace TestPerf
 
             RunUI(() => SkylineWindow.SaveDocument());
 
+            if (IsPauseForScreenShots)
+            {
+                RestoreViewOnScreenNoSelChange(17);
+                SelectNode(SrmDocument.Level.MoleculeGroups, 0);
+                Rectangle rectFrame = Rectangle.Empty;
+                RunUI(() =>
+                {
+                    SkylineWindow.Size = new Size(900, 900);
+                    var chromPane1 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Name);
+                    var chromPane2 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[1].Name);
+                    var rtGraphFrame = FindFloatingWindow(SkylineWindow.GraphRetentionTime);
+                    var chromTopLeft = chromPane1.PointToScreen(new Point(0, 0));
+                    var chromTopRight = chromPane2.PointToScreen(new Point(chromPane2.Width, 0));
+                    rtGraphFrame.Location = chromPane1.PointToScreen(new Point(((chromTopRight.X - chromTopLeft.X) - rtGraphFrame.Width) / 2, 50));
+                    rectFrame = rtGraphFrame.Bounds;
+                    rtGraphFrame.Activate();    // TODO: Want the graph activated but a screenshot of screen
+                });
+                PauseForScreenShot<ScreenForm>("Docking floating image with cursor", screenshotPage++, null, bmp =>
+                    DrawLArrowCursorOnBitmap(ClipDockingRect(bmp, rectFrame), 0.5, 0.155));
+                BeginDragDisplay(SkylineWindow.GraphRetentionTime, 0.62, 0.11);
+                PauseForScreenShot<ScreenForm>("Docking image cursor on upper dock indicator", screenshotPage++, null, bmp =>
+                    ClipDockingRect(bmp, rectFrame));
+                EndDragDisplay();
+            }
+
             const string proteinNameToSelect = "sp|P63284|CLPB_ECOLI";
             if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))
                 SelectNode(SrmDocument.Level.MoleculeGroups, 1);
@@ -942,6 +970,7 @@ namespace TestPerf
             });
             RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
+
             screenshotPage++;   // Docking drag-drop image page
             PauseForScreenShot("Manual review window layout with protein selected", screenshotPage++);
 
@@ -954,13 +983,22 @@ namespace TestPerf
             FindNode(_instrumentValues.ExamplePeptide);
             RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
-            PauseForScreenShot("Snip just one chromatogram pane", screenshotPage);
+
+            var firstReplicateName = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.First().Name;
+            var clickPoint = new PointF(_analysisValues.ChromatogramClickPoint.X, _analysisValues.ChromatogramClickPoint.Y);
+            if (IsPauseForScreenShots)
+            {
+                MouseOverChromatogram(firstReplicateName, clickPoint.X, clickPoint.Y);
+            }
+
+            var graphChrom = SkylineWindow.GetGraphChrom(firstReplicateName);
+            PauseForScreenShot(graphChrom, "Snip just one chromatogram pane",
+                null, null, bmp => DrawHandCursorOnChromBitmap(bmp,
+                    graphChrom, true, clickPoint.X, clickPoint.Y));
 
             try
             {
-                ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
-                    _analysisValues.ChromatogramClickPoint.X,
-                    _analysisValues.ChromatogramClickPoint.Y);
+                ClickChromatogram(firstReplicateName, clickPoint.X, clickPoint.Y);
             }
             catch (AssertFailedException e)
             {
@@ -999,8 +1037,7 @@ namespace TestPerf
             }
             ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
 
-            // CONSIDER: No way to specify mass error graph window in PauseForScreenShot or ShowDialog
-            PauseForScreenShot("Mass errors histogram graph window", screenshotPage++);
+            PauseForScreenShot(SkylineWindow.GraphMassError,"Mass errors histogram graph window");
 
             // Review single replicates
             RunUI(SkylineWindow.ShowSingleReplicate);
@@ -1025,13 +1062,13 @@ namespace TestPerf
             RunUI(() => SkylineWindow.ShowGraphMassError(false));
 
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
-            WaitForGraphs();
             RestoreViewOnScreenNoSelChange(24);
-            PauseForScreenShot("Retention time regression graph window - regression", screenshotPage++);
+            WaitForRegression();
+            PauseForScreenShot(SkylineWindow.GraphRetentionTime, "Retention time regression graph window - regression", screenshotPage++);
 
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
             WaitForGraphs();
-            PauseForScreenShot("Retention time regression graph window - residuals", screenshotPage++);
+            PauseForScreenShot(SkylineWindow.GraphRetentionTime, "Retention time regression graph window - residuals", screenshotPage++);
             RunUI(() => SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.score_to_run_regression));
 
             var editGroupComparisonDlg = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
@@ -1050,7 +1087,7 @@ namespace TestPerf
                 editGroupComparisonDlg.ShowAdvanced(true);
                 editGroupComparisonDlg.TextBoxQValueCutoff.Text = (0.01).ToString(CultureInfo.CurrentCulture);
             });
-            PauseForScreenShot("Group comparison", screenshotPage++);
+            PauseForScreenShot<EditGroupComparisonDlg>("Group comparison", screenshotPage++);
 
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
@@ -1090,16 +1127,13 @@ namespace TestPerf
                 var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
                 ApplyFormatting(formattingDlg, "ECOLI", "128, 0, 255");
                 var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
-                {
-                    var bindingList = formattingDlg.GetCurrentBindingList();
-                    formattingDlg.ClickCreateExpression(bindingList.Count - 1);
-                });
-                PauseForScreenShot("Create Expression form", screenshotPage++);
+                    formattingDlg.ClickCreateExpression(formattingDlg.ResultList.Count - 1));
+                PauseForScreenShot<CreateMatchExpressionDlg>("Create Expression form", screenshotPage++);
                 OkDialog(createExprDlg, createExprDlg.OkDialog);
 
                 ApplyFormatting(formattingDlg, "YEAS", "255, 128, 0");
                 ApplyFormatting(formattingDlg, "HUMAN", "0, 128, 0");
-                PauseForScreenShot("Volcano plot formatting form", screenshotPage);
+                PauseForScreenShot<VolcanoPlotFormattingDlg>("Volcano plot formatting form", screenshotPage);
                 OkDialog(formattingDlg, formattingDlg.OkDialog);
                 //PauseTest();
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 &&
@@ -1117,7 +1151,7 @@ namespace TestPerf
                 }
                 if (IsRecordMode)
                     Console.WriteLine(@" },");
-                PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot - fully formatted", screenshotPage++);
+                PauseForGraphScreenShot("By Condition:Volcano Plot - fully formatted", volcanoPlot);
             }
 
             {
@@ -1177,7 +1211,19 @@ namespace TestPerf
                 SortByFoldChange(fcGridControlFinal, _resultProperty);  // Re-apply the sort, in case it was lost in restoring views
 
                 RestoreViewOnScreen(31);
-                PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - proteins", screenshotPage);
+                barGraph = WaitForOpenForm<FoldChangeBarGraph>();
+                WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                RunUIForScreenShot(() =>
+                {
+                    var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
+                    yScale.MinAuto = yScale.MaxAuto = false;
+                    yScale.Max = _analysisValues.FoldChangeProteinsMax ?? 2.2;
+                    yScale.Min = _analysisValues.FoldChangeProteinsMin ?? -2.4;
+                    yScale.MajorStep = 1;
+                    yScale.MinorStep = 0.2;
+                    yScale.Format = "0.#";
+                });
+                PauseForGraphScreenShot("By Condition:Bar Graph - proteins", barGraph);
 
                 RunQValueSummaryTest();
 
@@ -1217,6 +1263,17 @@ namespace TestPerf
                     TakeCoverShot();
                 }
             }
+        }
+
+        private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
+        {
+            const int hBorder = 20;
+            const int topBorder = 100;
+            const int bottomBorder = 10;
+            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
+                rectFrame.Height + topBorder + bottomBorder);
+            bmp = ClipBitmap(bmp, rectClip);
+            return bmp;
         }
 
         private void RunQValueSummaryTest()
@@ -1310,9 +1367,9 @@ namespace TestPerf
         {
             RunUI(() =>
             {
-                var bindingList = formattingDlg.GetCurrentBindingList();
                 var color = RgbHexColor.ParseRgb(rgbText).Value;
-                bindingList.Add(new MatchRgbHexColor("ProteinName: " + matchText, false, color, PointSymbol.Circle, PointSize.normal));
+                formattingDlg.AddRow(new MatchRgbHexColor("ProteinName: " + matchText, 
+                    false, color, PointSymbol.Circle, PointSize.normal));
             });
         }
 

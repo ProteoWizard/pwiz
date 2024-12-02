@@ -20,9 +20,9 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg.FilterString = "Q"; // Not L10N
                 Assert.AreEqual(7, viewLibraryDlg.PeptideDisplayCount);
             });
-            PauseForScreenShot("Library Explorere filtered for peptides beginning with Q", 6);
+            PauseForScreenShot<ViewLibraryDlg>("Library Explorer filtered for peptides beginning with Q", 6);
 
             RunUI(() =>
             {
@@ -174,7 +174,14 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(WaitForCondition(() =>
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Count > 0 &&
                 SkylineWindow.Document.Settings.PeptideSettings.Modifications.AllHeavyModifications.Any()));
-            PauseForScreenShot("Peptide list clipped from Library Explorer", 11);
+            RunUIForScreenShot(() =>
+            {
+                // CONSIDER: Find a way to scroll without changing selection. SetScrollPos does not work on the list
+                int entryCount = viewLibraryDlg.PeptideDisplayCount;
+                viewLibraryDlg.SelectedIndex = entryCount - 1;
+                viewLibraryDlg.SelectedIndex = entryCount - 19;
+            });
+            PauseForScreenShot(viewLibraryDlg.ListControl,"Peptide list clipped from Library Explorer", 11);
 
             if (IsCoverShotMode)
             {
@@ -230,7 +237,15 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Size = new Size(918, 553);
             });
             RestoreViewOnScreen(12);
+            Point locationSaved = Point.Empty;
+            RunUIForScreenShot(() =>
+            {
+                // Move the library explorer out of the way for the screenshot
+                locationSaved = viewLibraryDlg.Location;
+                viewLibraryDlg.Location = new Point(SkylineWindow.Right + 20, SkylineWindow.Top);
+            });
             PauseForScreenShot("Main window", 12);
+            RunUIForScreenShot(() => viewLibraryDlg.Location = locationSaved);
 
             // Adding DNAGAATEEFIKR++ (has ok)
             const string peptideSequence3 = "DNAGAATEEFIKR"; // Not L10N
@@ -321,13 +336,13 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(2, viewLibraryDlg1.PeptideDisplayCount);
                 Assert.AreEqual(countLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
-            PauseForScreenShot<GraphSpectrum>("Spectrum graph metafile", 16);   // p. 16, figure 1a
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 16);   // p. 16, figure 1a
             RunUI(() =>
             {
                 viewLibraryDlg1.SelectedIndex = 1;
                 Assert.AreEqual(countLabels2, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
-            PauseForScreenShot<GraphSpectrum>("Spectrum graph metafile", 16);   // p. 16, figure 1b
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 16);   // p. 16, figure 1b
 
             docInitial = SkylineWindow.Document;
 
@@ -364,7 +379,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText)))); 
                 Assert.AreEqual(countLabels1 + countLossLabels1 + countPrecursors1, labelsPhospho.Count);
             });
-            PauseForScreenShot<GraphSpectrum>("Spectrum graph metafile", 18);   // p. 18, figure 1a.
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 18);   // p. 18, figure 1a.
 
             RunUI(() =>
             {
@@ -374,7 +389,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText))));
                 Assert.AreEqual(countLabels2 + countLossLabels2 + countPrecursors2, labelsPhospho.Count);
             });
-            PauseForScreenShot<GraphSpectrum>("Spectrum graph metafile", 18);   // p. 18, figure 1b.
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 18);   // p. 18, figure 1b.
 
             // Matching Library Peptides to Proteins p. 18
             var peptideSettingsUI3 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -432,7 +447,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var msgDlg = ShowDialog<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog);
-                PauseForScreenShot("Message form", 20);   // p. 20, figure 2
+                PauseForScreenShot<MultiButtonMsgDlg>("Message form", 20);   // p. 20, figure 2
 
                 OkDialog(msgDlg, msgDlg.Btn1Click);
             }
@@ -443,6 +458,7 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(docProteins, null, 250, 346, 347, 1041);
 
             RestoreViewOnScreen(21);
+            RunUIForScreenShot(() => SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0));
             PauseForScreenShot("Main window", 21);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
