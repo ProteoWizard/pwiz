@@ -452,3 +452,16 @@ SkylineTester Results
 # created by WIFF2 SDK in working directory
 /UserSettings.data
 /UserSettings.data-journal
+
+# created by TeamCity for Skyline versions that need PrositConfig.xml
+/pwiz_tools/Skyline/Model/Prosit/
+
+# created by older versions of the code in the working directory
+/Enolase_repeats_AQv1.4.2*
+/PressureTrace1*
+/timstof_prm_scheduler.prmsqlite
+
+# created by tc-perftests.bat
+/perfTestNames.txt
+/tutorialTestNames.txt
+/tests.txt
