@@ -1504,7 +1504,17 @@ namespace pwiz.Skyline.Model.Results
             // This keeps importing and reintegrating from resetting each other's peaks
             // when the specifide boundaries are not different.
             return (userSetPrimary == UserSet.MATCHED || userSetSecondary == UserSet.FALSE);
-        }        
+        }
+
+        public static UserSet ForDocumentFormat(this UserSet userSet, DocumentFormat documentFormat)
+        {
+            if (userSet == UserSet.IMPUTED && documentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                return UserSet.TRUE;
+            }
+
+            return userSet;
+        }
     }
 
     /// <summary>

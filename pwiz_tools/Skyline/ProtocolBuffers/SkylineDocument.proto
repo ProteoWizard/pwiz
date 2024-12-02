@@ -9,6 +9,7 @@ message SkylineDocumentProto {
 		USER_SET_IMPORTED = 2;
 		USER_SET_REINTEGRATED = 3;
 		USER_SET_MATCHED = 4;
+		USER_SET_IMPUTED = 5;
 	}
 	enum OptionalBool {
 		OPTIONAL_BOOL_MISSING = 0;

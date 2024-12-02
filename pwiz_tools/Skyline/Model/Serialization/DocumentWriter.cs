@@ -630,7 +630,7 @@ namespace pwiz.Skyline.Model.Serialization
             {
                 writer.WriteStartElement(EL.transition_data);
                 var transitionData = new SkylineDocumentProto.Types.TransitionData();
-                transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(Settings, nodePep, node)));
+                transitionData.Transitions.AddRange(node.Transitions.Select(transition => transition.ToTransitionProto(DocumentFormat, Settings, nodePep, node)));
                 byte[] bytes = transitionData.ToByteArray();
                 writer.WriteBase64(bytes, 0, bytes.Length);
                 writer.WriteEndElement();
@@ -792,7 +792,7 @@ namespace pwiz.Skyline.Model.Serialization
                 if (UseCompactFormat())
                 {
                     var protoResults = new SkylineDocumentProto.Types.TransitionResults();
-                    protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(Settings.MeasuredResults));
+                    protoResults.Peaks.AddRange(nodeTransition.GetTransitionPeakProtos(DocumentFormat, Settings.MeasuredResults));
                     byte[] bytes = protoResults.ToByteArray();
                     writer.WriteStartElement(EL.results_data);
                     writer.WriteBase64(bytes, 0, bytes.Length);
@@ -914,7 +914,8 @@ namespace pwiz.Skyline.Model.Serialization
                 if (chromInfo.Rank != chromInfo.RankByLevel)
                     writer.WriteAttribute(ATTR.rank_by_level, chromInfo.RankByLevel);
             }
-            writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
+
+            writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet.ForDocumentFormat(DocumentFormat));
             writer.WriteAttribute(ATTR.forced_integration, chromInfo.IsForcedIntegration, false);
             WriteAnnotations(writer, chromInfo.Annotations);
         }

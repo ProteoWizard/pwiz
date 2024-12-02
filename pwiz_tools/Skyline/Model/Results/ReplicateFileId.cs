@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Results
                 var chromFileInfoId = chromatogramSet.FindFile(msDataFileUri);
                 if (chromFileInfoId != null)
                 {
-                    return new ReplicateFileId((ChromatogramSetId) chromatogramSet.Id, chromFileInfoId);
+                    return new ReplicateFileId(chromatogramSet.Id, chromFileInfoId);
                 }
             }
 
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Results
             ReplicateIndex = replicateIndex;
             ReplicateName = chromatogramSet.Name;
             MsDataFileUri = chromFileInfo?.FilePath;
-            ReplicateFileId = new ReplicateFileId((ChromatogramSetId)chromatogramSet.Id, chromFileInfo?.FileId);
+            ReplicateFileId = new ReplicateFileId(chromatogramSet.Id, chromFileInfo?.FileId);
         }
 
         public string Display { get; }
@@ -178,22 +178,6 @@ namespace pwiz.Skyline.Model.Results
 
             return results[ReplicateIndex]
                 .Where(chromInfo => ReferenceEquals(ReplicateFileId.FileId, chromInfo.FileId));
-        }
-
-        public static ReplicateFileInfo Consensus
-        {
-            get
-            {
-                return new ReplicateFileInfo("Consensus", -1, null, null, null);
-            }
-        }
-
-        public static ReplicateFileInfo All
-        {
-            get
-            {
-                return new ReplicateFileInfo("All", -1, null, null, null);
-            }
         }
 
         protected bool Equals(ReplicateFileInfo other)

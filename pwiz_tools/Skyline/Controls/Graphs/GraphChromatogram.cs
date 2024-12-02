@@ -2295,7 +2295,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     doc.MoleculeGroups.FirstOrDefault(node => node.FindNodeIndex(peptideDocNode.Peptide) >= 0);
                 if (peptideGroupDocNode != null)
                 {
-                    var replicateFileId = new ReplicateFileId((ChromatogramSetId)chromatograms.Id, GetChromFileInfoId());
+                    var replicateFileId = new ReplicateFileId(chromatograms.Id, GetChromFileInfoId());
                     chromGraphPrimary.ExemplaryPeakBounds = PeakImputationForm.GetImputedPeakBounds(
                         _documentContainer.DocumentUI, peptideGroupDocNode.PeptideGroup, peptideDocNode.Peptide,
                         replicateFileId);

@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public SkylineDocumentProto.Types.Transition ToTransitionProto(SrmSettings settings, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        public SkylineDocumentProto.Types.Transition ToTransitionProto(DocumentFormat documentFormat, SrmSettings settings, PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
         {
             var transitionProto = new SkylineDocumentProto.Types.Transition
             {
@@ -531,7 +531,7 @@ namespace pwiz.Skyline.Model
             if (Results != null)
             {
                 transitionProto.Results = new SkylineDocumentProto.Types.TransitionResults();
-                transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(settings.MeasuredResults));
+                transitionProto.Results.Peaks.AddRange(GetTransitionPeakProtos(documentFormat, settings.MeasuredResults));
             }
 
             if (!Equals(ExplicitValues, ExplicitTransitionValues.EMPTY))
@@ -791,7 +791,7 @@ namespace pwiz.Skyline.Model
             return transitionDocNode;
         }
 
-        public IEnumerable<SkylineDocumentProto.Types.TransitionPeak> GetTransitionPeakProtos(MeasuredResults measuredResults)
+        public IEnumerable<SkylineDocumentProto.Types.TransitionPeak> GetTransitionPeakProtos(DocumentFormat documentFormat, MeasuredResults measuredResults)
         {
             if (Results == null)
             {
@@ -831,7 +831,7 @@ namespace pwiz.Skyline.Model
                     transitionPeak.Fwhm = transitionChromInfo.Fwhm;
                     transitionPeak.IsFwhmDegenerate = transitionChromInfo.IsFwhmDegenerate;
                     transitionPeak.Truncated = DataValues.ToOptional(transitionChromInfo.IsTruncated);
-                    transitionPeak.UserSet = DataValues.ToUserSet(transitionChromInfo.UserSet);
+                    transitionPeak.UserSet = DataValues.ToUserSet(documentFormat, transitionChromInfo.UserSet);
                     transitionPeak.ForcedIntegration = transitionChromInfo.IsForcedIntegration;
                     switch (transitionChromInfo.Identified)
                     {

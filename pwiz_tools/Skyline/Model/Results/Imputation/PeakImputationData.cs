@@ -511,7 +511,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         if (alignmentResults != null)
                         {
                             alignmentFunction = alignmentResults.GetAlignment(
-                                new ReplicateFileId((ChromatogramSetId)document.MeasuredResults.Chromatograms[i].Id,
+                                new ReplicateFileId(document.MeasuredResults.Chromatograms[i].Id,
                                     fileGroup.Key));
                         }
                         var fileTimes = fileGroup.Select(peptideChromInfo => 

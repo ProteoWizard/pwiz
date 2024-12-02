@@ -43,13 +43,15 @@ namespace pwiz.Skyline.Model.Serialization
                     return UserSet.REINTEGRATED;
                 case SkylineDocumentProto.Types.UserSet.True:
                     return UserSet.TRUE;
+                case SkylineDocumentProto.Types.UserSet.Imputed:
+                    return UserSet.IMPUTED;
             }
             return UserSet.FALSE;
         }
 
-        public static SkylineDocumentProto.Types.UserSet ToUserSet(UserSet userSet)
+        public static SkylineDocumentProto.Types.UserSet ToUserSet(DocumentFormat documentFormat, UserSet userSet)
         {
-            switch (userSet)
+            switch (userSet.ForDocumentFormat(documentFormat))
             {
                 case UserSet.FALSE:
                     return SkylineDocumentProto.Types.UserSet.False;
@@ -61,6 +63,8 @@ namespace pwiz.Skyline.Model.Serialization
                     return SkylineDocumentProto.Types.UserSet.Reintegrated;
                 case UserSet.TRUE:
                     return SkylineDocumentProto.Types.UserSet.True;
+                case UserSet.IMPUTED:
+                    return SkylineDocumentProto.Types.UserSet.Imputed;
             }
             return SkylineDocumentProto.Types.UserSet.False;
         }
