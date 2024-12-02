@@ -190,7 +190,12 @@ namespace pwiz.SkylineTestUtil
 
         protected ScreenshotManager ScreenshotManager
         {
-            get { return _shotManager; }
+            get
+            {
+                Assume.IsNotNull(_shotManager); // This should be available when it is accessed, i.e. IsRecordingScreenshots
+                Assume.IsTrue(IsCoverShotMode); // This should only be necessary in IsCoverShotMode for composing cover shots from multiple screenshots
+                return _shotManager;
+            }
         }
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
@@ -1858,14 +1863,14 @@ namespace pwiz.SkylineTestUtil
                 if (IsAutoScreenShotMode)
                 {
                     // Thread.Sleep(500); // Wait for UI to settle down - Necessary?
-                    ScreenshotManager.ActivateScreenshotForm(screenshotForm);
+                    _shotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    _pauseAndContinueForm ??= new PauseAndContinueForm(ScreenshotManager);
+                    _pauseAndContinueForm ??= new PauseAndContinueForm(_shotManager);
                     _pauseAndContinueForm.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
@@ -1893,13 +1898,13 @@ namespace pwiz.SkylineTestUtil
                     "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
             });
             var coverSavePath = GetCoverShotPath();
-            ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
+            _shotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
             if (coverSavePath != null)
             {
                 // Screenshot for the StartPage
                 coverSavePath2 = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
+                _shotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
             }
             if (coverSavePath == null)
             {
@@ -2368,7 +2373,8 @@ namespace pwiz.SkylineTestUtil
                         @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
 
-                _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
+                if (IsRecordingScreenShots)
+                    _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
 
                 BeginAuditLogging();
                 RunTest();
