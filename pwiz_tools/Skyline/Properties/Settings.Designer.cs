@@ -3541,5 +3541,14 @@ namespace pwiz.Skyline.Properties {
                 this["GroupComparisonSuspendLabelLayout"] = value;
             }
         }
+
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int KoinaRetryCount {
+            get {
+                return ((int)(this["KoinaRetryCount"]));
+            }
+        }
     }
 }

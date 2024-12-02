@@ -125,6 +125,15 @@ namespace pwiz.Skyline.Model.Koina {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: {0} retrying {1}/{2}..
+        /// </summary>
+        internal static string KoinaModel_PredictBatches_Error___0__retrying__1_____2__ {
+            get {
+                return ResourceManager.GetString("KoinaModel_PredictBatches_Error___0__retrying__1_____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide Sequence &apos;{0}&apos; ({1}) is longer than the maximum supported length by Koina ({2}).
         /// </summary>
         internal static string KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Koina___2__ {
