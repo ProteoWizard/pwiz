@@ -339,36 +339,12 @@ namespace pwiz.SkylineTestTutorial
             );
             PauseForScreenShot<ManageViewsForm>("Manage Reports form", 20);
             OkDialog(manageViewsForm, manageViewsForm.Close);
-            Size originalSize = Size.Empty;
-            Point formLocation = Point.Empty;
+            var formRectNext = Rectangle.Empty;
             if (IsPauseForScreenShots)
             {
-                // CONSIDER: The ShowDropDown() use below causes User+GDI handle leaks
-                RunUI(() =>
-                {
-                    documentGridForm.NavBar.ReportsButton.ShowDropDown();   //we need to expand it to determine its full size
-                    int ddHeight = documentGridForm.NavBar.ReportsButton.DropDown.Height;
-                    formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
-                    documentGridForm.NavBar.ReportsButton.HideDropDown();
-                    originalSize = documentGridForm.Size;
-                    //make sure the dropdown fits into the window with some margin.
-                    documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 75)));
-                    documentGridForm.NavBar.ReportsButton.ShowDropDown();
-
-                    var i = 0;      //find and select the Summary Statistics item.
-                    var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
-                    while (i < items.Count && items[i].Text != "Summary Statistics")
-                    {
-                        i++;
-                    }
-                    if (i < items.Count)
-                        items[i].Select();
-                    else
-                    {
-                        Assert.Fail("Summary Statistics not found in Reports menu");
-                    }
-                });
-                PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 21);
+                formRectNext = ShowReportsDropdown("Summary Statistics");
+                PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary Statistics'", 21);
+                HideReportsDropdown();
 
                 RunUI(() => documentGridForm.NavBar.ReportsButton.HideDropDown());
             }
@@ -376,14 +352,13 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => documentGridForm.IsComplete);
             RunUI(() => documentGridForm.ExpandColumns());
             
-            if (IsPauseForScreenShots)
-                RunUI(() =>
-                {
-                    documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, originalSize));
-                    // nudge data grid to resize columns, especially forcing column 0's header to wrap into 2 lines of text
-                    documentGridForm.DataGridView.Columns[0].Width = 45;
-                    documentGridForm.DataGridView.AutoResizeColumns();
-                });
+            RunUIForScreenShot(() =>
+            {
+                documentGridForm.FloatingPane.FloatAt(formRectNext);
+                // nudge data grid to resize columns, especially forcing column 0's header to wrap into 2 lines of text
+                documentGridForm.DataGridView.Columns[0].Width = 45;
+                documentGridForm.DataGridView.AutoResizeColumns();
+            });
 
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
             {
