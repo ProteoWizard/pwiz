@@ -247,5 +247,5 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             return UpdateProgressResponse.normal;
         }
-            }
+    }
 }
