@@ -1356,6 +1356,65 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() => SkylineWindow.DockPanel.EndDragDisplay());
         }
 
+        protected Rectangle ShowReportsDropdown(string selectText)
+        {
+            var rectForm = Rectangle.Empty;
+            if (!IsPauseForScreenShots)
+                return rectForm;
+
+            // CONSIDER: The ShowDropDown() use below causes User+GDI handle leaks
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            RunUI(() =>
+            {
+                documentGridForm.NavBar.ReportsButton.ShowDropDown();   // We need to expand it to determine its full size
+                int ddHeight = documentGridForm.NavBar.ReportsButton.DropDown.Height;
+                var formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
+                documentGridForm.NavBar.ReportsButton.HideDropDown();
+                var originalSize = documentGridForm.Size;
+                rectForm = new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 75));
+                // Make sure the dropdown fits into the window with some margin.
+                documentGridForm.FloatingPane.FloatAt(rectForm);
+                documentGridForm.NavBar.ReportsButton.ShowDropDown(); // TODO: Should deny closing until the screenshot is complete
+                documentGridForm.NavBar.ReportsButton.DropDown.Closing += DenyMenuClosing;
+
+                if (!string.IsNullOrEmpty(selectText))
+                {
+                    var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
+                    int itemIndex = IndexOfItem(items, selectText);
+                    if (itemIndex < 0)
+                        Assert.Fail("Reports menu does not contain an item with the text '{0}'", selectText);
+                    items[itemIndex].Select();
+                }
+
+                rectForm.Size = originalSize;
+            });
+            return rectForm;
+        }
+
+        protected void HideReportsDropdown()
+        {
+            if (!IsPauseForScreenShots)
+                return;
+
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            RunUI(() =>
+            {
+                documentGridForm.NavBar.ReportsButton.DropDown.Closing -= DenyMenuClosing;
+                documentGridForm.NavBar.ReportsButton.HideDropDown();
+            });
+        }
+
+        private static int IndexOfItem(ToolStripItemCollection items, string itemText)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (Equals(items[i].Text, itemText))
+                    return i;
+            }
+
+            return -1;
+        }
+
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
             return ClipBitmap(skylineWindowBmp, ComputeDockedFormsUnionRectangle(dockableForms));
@@ -1747,6 +1806,15 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Useful for keeping a menu on screen. Assign this with += to the menu
+        /// dropdown Closing event.
+        /// </summary>
+        protected void DenyMenuClosing(object sender, ToolStripDropDownClosingEventArgs e)
+        {
+            e.Cancel = true;
+        }
+
+        /// <summary>
         /// Type that indicates a full-screen screenshot should be taken.
         /// A null Type and a null Control were already reserved for a
         /// screenshot of the Skyline form.
@@ -1980,8 +2048,6 @@ namespace pwiz.SkylineTestUtil
             LocalizationHelper.InitThread();
 
             UnzipTestFiles();
-
-            _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
 
             // Run test in new thread (Skyline on main thread).
             Program.Init();
@@ -2301,6 +2367,9 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
                         @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
+
+                _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
+
                 BeginAuditLogging();
                 RunTest();
                 EndAuditLogging();
