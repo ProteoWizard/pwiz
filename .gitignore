@@ -380,7 +380,8 @@ Version.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cpp
 /pwiz_tools/Bumbershoot/**/AssemblyInfo.cs
 /pwiz_tools/Bumbershoot/idpicker/Resources/Resources.*
-/pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
+/pwiz/utility/bindings/CLI/example/binaries
+/artifact_xml
 
 # Vendor reader test data extracted from tarballs (newer data should be committed directly to git)
 /pwiz/data/vendor_readers/*/Reader*Test.data/**/1SRef
@@ -439,6 +440,7 @@ SkylineTester Results
 /pwiz_tools/Skyline/SkylineNightlyShim/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/SkylineTester/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/TestRunner/Properties/AssemblyInfo.cs
+/pwiz_tools/Skyline/Executables/SkylineBatch/SkylineBatch/Properties/AssemblyInfo.cs
 /pwiz_tools/Skyline/Executables/Installer/FileList64.txt
 /pwiz_tools/Skyline/TestSettings_x??.testsettings
 /pwiz_tools/Skyline/SignAfterPublishPW.bat
@@ -459,6 +461,8 @@ SkylineTester Results
 # created by older versions of the code in the working directory
 /Enolase_repeats_AQv1.4.2*
 /PressureTrace1*
+/7600ZenoTOFMSMS*
+/swath.api*
 /timstof_prm_scheduler.prmsqlite
 
 # created by tc-perftests.bat
