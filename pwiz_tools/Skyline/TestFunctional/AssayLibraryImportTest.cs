@@ -757,10 +757,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(Settings.Default.SpectralLibraryList.Contains(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0]));
 
             // 28.  Do exactly the same thing over again, should happen silently, with only a prompt to add library info
+            var docSameList = SkylineWindow.Document;
             ImportTransitionListSkipColumnSelectWithMessage(textConflict,
                 Resources.SkylineWindow_ImportMassList_The_transition_list_appears_to_contain_spectral_library_intensities___Create_a_document_library_from_these_intensities_,
                 libraryDlgRepeat => libraryDlgRepeat.Btn0Click());
-            WaitForDocumentLoaded();
+            docSameList = WaitForDocumentChangeLoaded(docSameList);
             ValidateDocAndIrt(_asSmallMolecules ? 345 : 690 , 355, 10); // N.B. small mol transition list reader recognizes repeated transitions and ignores them
             RunUI(() =>
             {
