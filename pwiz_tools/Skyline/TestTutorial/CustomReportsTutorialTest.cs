@@ -357,7 +357,7 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() =>
             {
                 documentGridForm.FloatingPane.FloatAt(formRectNext);
-                ConfigureDataGridColumns(floatingWindow, documentGridForm.DataGridView);
+                ConfigureDataGridColumns(FindFloatingWindow(documentGridForm), documentGridForm.DataGridView);
             });
 
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
