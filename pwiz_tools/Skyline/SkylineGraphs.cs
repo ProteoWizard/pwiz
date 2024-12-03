@@ -5539,9 +5539,6 @@ namespace pwiz.Skyline
             return _resultsGridForm;
         }
 
-        // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-        public LiveResultsGrid LiveResultsGrid => _resultsGridForm;
-
         private void DestroyResultsGrid()
         {
             if (_resultsGridForm != null)

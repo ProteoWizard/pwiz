@@ -483,7 +483,7 @@ namespace pwiz.SkylineTestTutorial
                 backgroundWindow.Top = SkylineWindow.Bottom - backgroundWindow.Height - 53;
                 backgroundWindow.Left = SkylineWindow.Right - backgroundWindow.Width - 128;
 
-                var foregroundWindow = FindFloatingWindow(SkylineWindow.LiveResultsGrid);
+                var foregroundWindow = FindFloatingWindow(FindOpenForm<LiveResultsGrid>());
                 foregroundWindow.Top = SkylineWindow.Bottom - foregroundWindow.Height - 26;
                 foregroundWindow.Left = SkylineWindow.Right - foregroundWindow.Width - 34;
             });
@@ -494,7 +494,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Not understood: WaitForOpenForm occasionally hangs in nightly test runs. Fixed it by calling
             // ShowDialog when LiveResultsGrid cannot be found.
-            //var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
+            // var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
             var resultsGridForm = FindOpenForm<LiveResultsGrid>() ??
                 ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             BoundDataGridView resultsGrid = null;
