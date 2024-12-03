@@ -196,6 +196,7 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            FocusDocument();
             PauseForScreenShot("Main window with imported data", 13);
 
             // Analyzing SRM Data from FOXN1-GST Sample p. 14
@@ -242,6 +243,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() => SkylineWindow.Size = new Size(1470, 656));
             RestoreViewOnScreen(14);
+            FocusDocument();
             PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light", 14);
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1));
@@ -357,6 +359,7 @@ namespace pwiz.SkylineTestTutorial
                     calibrationFloatingWindow.Top = SkylineWindow.Top;
                     calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
                 });
+                JiggleSelection();  // Otherwise, plot shows two legends
                 PauseForScreenShot<CalibrationForm>("View calibration curve", 18);
             }
 
