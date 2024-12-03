@@ -342,10 +342,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void ZoomXAxis(Axis axis, double xMin, double xMax)
         {
+            axis.Scale.MinAuto = axis.Scale.MinAuto = false;
             axis.Scale.Min = xMin;
-            axis.Scale.MinAuto = false;
             axis.Scale.Max = xMax;
-            axis.Scale.MaxAuto = false;
         }
 
         public void ZoomXAxis(double xMin, double xMax)

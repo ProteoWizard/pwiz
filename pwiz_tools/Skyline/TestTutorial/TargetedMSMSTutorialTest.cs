@@ -221,7 +221,7 @@ namespace pwiz.SkylineTestTutorial
                         var picklist = ShowDialog<PopupPickList>(() => SkylineWindow.SequenceTree.ShowPickList(false));
                         RunUI(() =>
                         {
-                            picklist.SetItemChecked(0, true);
+                            picklist.SetItemChecked(0, true, true);
                             Assert.IsTrue(picklist.GetItemLabel(0).Contains(IonType.precursor.GetLocalizedString()));
                             Assert.IsTrue(picklist.GetItemChecked(0));
                         });

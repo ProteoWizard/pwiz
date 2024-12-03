@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -73,6 +74,7 @@ namespace pwiz.Skyline.Alerts
             var keyToControl = new Dictionary<string, Control>();
             var controlToSetting = new Dictionary<object, TValue>();
             int row = 1;
+            var ctlTextRepresentation = new StringBuilder();
             foreach (var kvp in gridValues.OrderBy(kvp => kvp.Key))
             {
                 var lbl = new Label
@@ -140,13 +142,14 @@ namespace pwiz.Skyline.Alerts
                 layout.Controls.Add(valueControl, 1, row);
                 keyToControl[kvp.Key] = valueControl;
                 controlToSetting[valueControl] = kvp.Value;
+                ctlTextRepresentation.AppendLine($@"{kvp.Key} = {valueToString(kvp.Value)}");
                 row++;
             }
 
             var activeScreen = parent == null ? Screen.PrimaryScreen : Screen.FromHandle(parent.Handle); 
             int defaultHeight = Math.Min(3 * activeScreen.Bounds.Height / 4, layout.GetRowHeights().Sum() + 50);
 
-            using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK))
+            using (var dlg = new MultiButtonMsgDlg(layout, Resources.OK, ctlTextRepresentation.ToString()))
             {
                 dlg.Text = title;
                 dlg.ClientSize = new Size(400, defaultHeight);
