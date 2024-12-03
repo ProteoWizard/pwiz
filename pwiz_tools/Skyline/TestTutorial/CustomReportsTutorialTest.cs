@@ -23,7 +23,6 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -357,7 +356,7 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() =>
             {
                 documentGridForm.FloatingPane.FloatAt(formRectNext);
-                ConfigureDataGridColumns(FindFloatingWindow(documentGridForm), documentGridForm.DataGridView);
+                ConfigureDataGridColumns();
             });
 
             PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
@@ -457,11 +456,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 23);
             OkDialog(viewEditor, viewEditor.OkDialog);
 
-            RunUIForScreenShot(() =>
-            {
-                ConfigureDataGridColumns(FindFloatingWindow(documentGridForm), documentGridForm.DataGridView);
-            });
-            // TODO: activate floating window - remove if fixed by upcoming FormUtil change
+            RunUIForScreenShot(ConfigureDataGridColumns);
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 24);
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
@@ -592,8 +587,12 @@ namespace pwiz.SkylineTestTutorial
             return SkylineDataSchema.GetLocalizedSchemaLocalizer().LookupColumnCaption(new ColumnCaption(caption));
         }
 
-        private static void ConfigureDataGridColumns(FloatingWindow floatingWindow, DataGridView dataGridView)
+        private void ConfigureDataGridColumns()
         {
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            var dataGridView = documentGridForm.DataGridView;
+            var floatingWindow = FindFloatingWindow(documentGridForm);
+
             // explicitly size floating window to accommodate one set of column widths for EN, ZH, JP
             floatingWindow.Size = new Size(750, 340);
 
