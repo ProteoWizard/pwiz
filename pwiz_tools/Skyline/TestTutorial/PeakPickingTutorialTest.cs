@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestTutorial
 
             RestoreViewOnScreen(3);
             RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11]);
-            PauseForScreenShot("Targets view clipped from main window", 3);
+            PauseForTargetsScreenShot("Targets view clipped from main window", false);
 
             // Open the file with decoys
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));
@@ -334,7 +334,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(18.0, chromGroupInfo.RetentionTime.Value, 0.1);
             });
             FindNode(peptideSeqHighlight);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile corrected peak at 18.0", 17);
+            PauseForChromGraphScreenShot("Chromatogram graph metafile corrected peak at 18.0", "006_StC-DosR_B2");
 
             // Reintegrate slightly differently, with a q value cutoff
             var reintegrateDlgQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -345,8 +345,8 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgQ.OverwriteManual = true;
                 });
             OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
-            PauseForScreenShot("Targets view with some null peaks clipped from main window", 17);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile with no picked peak", 18);
+            PauseForTargetsScreenShot("Targets view with some null peaks clipped from main window", true);
+            PauseForChromGraphScreenShot("Chromatogram graph metafile with no picked peak", "006_StC-DosR_B2");
 
             RestoreViewOnScreen(14);
             FindNode((622.3086).ToString(CultureInfo.CurrentCulture) + "++");
