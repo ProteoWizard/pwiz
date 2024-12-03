@@ -50,7 +50,9 @@ namespace SkylineTester
         {
             public int Iterations => _durations.Count;
             public int AppearanceOrder => _firstAppearance;
-            public string DetectedLeak => _detectedLeak ?? string.Empty;
+            public string DeltaHeap => _deltaHeapBytes ?? string.Empty;
+            public string DeltaManaged => _deltaManagedBytes ?? string.Empty;
+            public string DeltaMemory => _deltaMemoryBytes ?? string.Empty;
             public int TotalDuration => _durations.Sum();
             public int MinDuration => _durations.Min();
             public int MaxDuration => _durations.Max();
@@ -78,13 +80,17 @@ namespace SkylineTester
             }
             public List<int> _durations;
             public int _firstAppearance; // Order of first appearance (sorting aid)
-            public string _detectedLeak;
+            public string _deltaManagedBytes;
+            public string _deltaHeapBytes;
+            public string _deltaMemoryBytes;
 
             public TestData()
             {
                 _durations = new List<int>();
                 _firstAppearance = -1;
-                _detectedLeak = null;
+                _deltaManagedBytes = null;
+                _deltaHeapBytes = null;
+                _deltaMemoryBytes = null;
             }
         }
 
@@ -120,6 +126,13 @@ namespace SkylineTester
             columns.Add((leakA - leakB).ToString(CultureInfo.InvariantCulture));
         }
 
+        private string FormatDelta(string delta)
+        {
+            var result = (string.IsNullOrEmpty(delta) ? string.Empty : delta).Trim().Replace(" ", string.Empty);
+            return result.StartsWith("-") ? string.Empty : result;
+        }
+
+
         private void AddColumns(Dictionary<string, TestData> tests, Dictionary<string, TestData> testsCompare, string testName, List<string> columns)
         {
             if (!tests.TryGetValue(testName, out var testData))
@@ -130,7 +143,9 @@ namespace SkylineTester
             if (testsCompare == null)
             {
                 columns.Add(testData?.AppearanceOrder.ToString()); // "AppearanceOrder"
-                columns.Add(testData?.DetectedLeak); // "DetectedLeak"
+                columns.Add(FormatDelta(testData?.DeltaHeap));
+                columns.Add(FormatDelta(testData?.DeltaManaged));
+                columns.Add(FormatDelta(testData?.DeltaMemory));
                 columns.Add(testData?.Iterations.ToString()); // "Iterations"
                 columns.Add(testData?.TotalDuration.ToString()); // "TotalTime"
                 columns.Add(testData?.MinDuration.ToString()); // "MinTime"
@@ -147,7 +162,9 @@ namespace SkylineTester
                 }
 
                 AddColumnPair(testData?.AppearanceOrder, testDataCompare?.AppearanceOrder, columns); // "AppearanceOrder"
-                AddColumnPair(testData?.DetectedLeak, testDataCompare?.DetectedLeak, columns); // "DetectedLeak"
+                AddColumnPair(testData?.DeltaHeap, testDataCompare?.DeltaHeap, columns);
+                AddColumnPair(testData?.DeltaManaged, testDataCompare?.DeltaManaged, columns);
+                AddColumnPair(testData?.DeltaMemory, testDataCompare?.DeltaMemory, columns);
                 AddColumnPair(testData?.Iterations, testDataCompare?.Iterations, columns); // "Iterations"
                 AddColumnPair(testData?.TotalDuration, testDataCompare?.TotalDuration, columns); // "TotalTime"
                 AddColumnPair(testData?.MinDuration, testDataCompare?.MinDuration, columns); // "MinTime"
@@ -175,7 +192,9 @@ namespace SkylineTester
                     var header = new List<string>() { $@"Test ({Path.GetFileNameWithoutExtension(TestLog)}{compared})" };
                     var paired = !string.IsNullOrEmpty(compared);
                     AddHeaderPair(paired, header, $@"AppearanceOrder");
-                    AddHeaderPair(paired, header, $@"DetectedLeak");
+                    AddHeaderPair(paired, header, $@"HeapDelta");
+                    AddHeaderPair(paired, header, $@"ManagedDelta");
+                    AddHeaderPair(paired, header, $@"MemoryDelta");
                     AddHeaderPair(paired, header, $@"Iterations");
                     AddHeaderPair(paired, header, $@"TotalTime");
                     AddHeaderPair(paired, header, $@"MinTime");
@@ -226,7 +245,7 @@ namespace SkylineTester
                 if (TestSummariesCompare == null)
                 {
                     var value = TestSummaries[key];
-                    MainWindow.DataGridRunStats.Rows.Add(key, value.AppearanceOrder, value.DetectedLeak, value.Iterations, value.TotalDuration, value.TotalDuration / value.Iterations, "N/A");
+                    MainWindow.DataGridRunStats.Rows.Add(key, value.AppearanceOrder, FormatDelta(value.DeltaHeap), FormatDelta(value.DeltaManaged), FormatDelta(value.DeltaMemory), value.Iterations, value.TotalDuration, value.TotalDuration / value.Iterations, "N/A");
                 }
                 else
                 {
@@ -240,19 +259,29 @@ namespace SkylineTester
                     var durRightTotal = valRight == null ? 0 : valRight.TotalDuration;
                     var durLeftD = valLeft == null ? 0 : valLeft.TotalDuration / (double)valLeft.Iterations;
                     var durRightD = valRight == null ? 0 : valRight.TotalDuration / (double)valRight.Iterations;
-                    var leakLeft = valLeft?.DetectedLeak ?? string.Empty;
-                    var leakRight = valRight?.DetectedLeak ?? string.Empty;
-                    var leaks = (string.IsNullOrEmpty(leakLeft) && string.IsNullOrEmpty(leakRight))
-                        ? string.Empty
-                        : string.Format("{0}/{1}", string.IsNullOrEmpty(leakLeft) ? "N/A" : leakLeft, string.IsNullOrEmpty(leakRight) ? "N/A" : leakRight);
+                    var heapDeltas = FormatDeltas(valLeft?.DeltaHeap, valRight?.DeltaHeap);
+                    var managedDeltas = FormatDeltas(valLeft?.DeltaManaged, valRight?.DeltaManaged);
+                    var memoryDeltas = FormatDeltas(valLeft?.DeltaMemory, valRight?.DeltaMemory);
                     MainWindow.DataGridRunStats.Rows.Add(key,
                         string.Format("{0}/{1}", valLeft?.AppearanceOrder,valRight?.AppearanceOrder),
-                        leaks,
+                        heapDeltas,
+                        managedDeltas,
+                        memoryDeltas,
                         string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.Iterations, valRight == null ? 0 : valRight.Iterations),
                         string.Format("{0}/{1}", valLeft == null ? 0 : valLeft.TotalDuration, valRight == null ? 0 : valRight.TotalDuration),
                         string.Format("{0}/{1}", durLeftI, durRightI),
                         (valRight == null || valLeft == null) ? "N/A" : string.Format("{0:0.00}", (durRightD == 0 ? 1 : durLeftD / durRightD)),
                         string.Format("{0}",  durLeftTotal - durRightTotal));
+                }
+
+                string FormatDeltas(string valLeft, string  valRight)
+                {
+                    var deltaLeft = FormatDelta(valLeft);
+                    var deltaRight = FormatDelta(valRight);
+                    var deltas = (string.IsNullOrEmpty(deltaLeft) && string.IsNullOrEmpty(deltaRight))
+                        ? string.Empty
+                        : string.Format("{0}/{1}", string.IsNullOrEmpty(deltaLeft) ? "N/A" : deltaLeft, string.IsNullOrEmpty(deltaRight) ? "N/A" : deltaRight);
+                    return deltas;
                 }
             }
         }
@@ -266,7 +295,7 @@ namespace SkylineTester
             var log = File.ReadAllText(logFile);
             var testDictionary = new Dictionary<string, TestData>();
 
-            var startTest = new Regex(@"\r\n\[(\d\d):(\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) |\!\!\! +(\S+) LEAKED (.*)", RegexOptions.Compiled);
+            var startTest = new Regex(@"\r\n\[(\d\d):(\d\d)\] +(\d+).(\d+) +(\S+) +\((\w\w)\) |\!\!\! +(\S+) LEAKED .*\n.* managed = (.*), heap = (.*), memory = (.*), user", RegexOptions.Compiled);
             var endTest = new Regex(@" \d+ failures, .* (\d+) sec\.\r\n", RegexOptions.Compiled);
 
             for (var startMatch = startTest.Match(log); startMatch.Success; startMatch = startMatch.NextMatch())
@@ -292,7 +321,9 @@ namespace SkylineTester
                 {
                     var name = startMatch.Groups[7].Value;
                     var testData = testDictionary[name];
-                    testData._detectedLeak = startMatch.Groups[8].Value.Trim();
+                    testData._deltaManagedBytes = startMatch.Groups[8].Value.Trim();
+                    testData._deltaHeapBytes = startMatch.Groups[9].Value.Trim();
+                    testData._deltaMemoryBytes = startMatch.Groups[10].Value.Trim();
                 }
             }
             return testDictionary;

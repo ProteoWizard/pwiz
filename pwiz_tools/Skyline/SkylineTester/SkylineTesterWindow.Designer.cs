@@ -283,7 +283,9 @@ namespace SkylineTester
             this.AverageDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.RelDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.DeltaTotalDuration = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.DetectedLeak = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DeltaHeap = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DeltaManaged = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.DeltaMemory = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2988,7 +2990,9 @@ namespace SkylineTester
             this.dataGridRunStats.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.TestName,
             this.FirstAppearance,
-            this.DetectedLeak,
+            this.DeltaHeap,
+            this.DeltaManaged,
+            this.DeltaMemory,
             this.Iterations,
             this.Duration,
             this.AverageDuration,
@@ -3045,11 +3049,23 @@ namespace SkylineTester
             this.DeltaTotalDuration.Name = "DeltaTotalDuration";
             this.DeltaTotalDuration.ReadOnly = true;
             // 
-            // DetectedLeak
+            // DeltaHeap
             // 
-            this.DetectedLeak.HeaderText = "Detected Leak";
-            this.DetectedLeak.Name = "DetectedLeak";
-            this.DetectedLeak.ReadOnly = true;
+            this.DeltaHeap.HeaderText = "Delta Heap";
+            this.DeltaHeap.Name = "DeltaHeap";
+            this.DeltaHeap.ReadOnly = true;
+            // 
+            // DeltaManaged
+            // 
+            this.DeltaManaged.HeaderText = "Delta Managed";
+            this.DeltaManaged.Name = "DeltaManaged";
+            this.DeltaManaged.ReadOnly = true;
+            //
+            // DeltaMemory
+            // 
+            this.DeltaMemory.HeaderText = "Delta Memory";
+            this.DeltaMemory.Name = "DeltaMemory";
+            this.DeltaMemory.ReadOnly = true;
             // 
             // menuStrip1
             // 
@@ -3633,7 +3649,9 @@ namespace SkylineTester
         private DataGridViewTextBoxColumn AverageDuration;
         private DataGridViewTextBoxColumn RelDuration;
         private DataGridViewTextBoxColumn DeltaTotalDuration;
-        private DataGridViewTextBoxColumn DetectedLeak;
+        private DataGridViewTextBoxColumn DeltaHeap;
+        private DataGridViewTextBoxColumn DeltaManaged;
+        private DataGridViewTextBoxColumn DeltaMemory;
         private Label label6;
         private Label label3;
         private CheckBox randomize;
