@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -577,7 +578,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if(fullScans.Any(scan => scan.IonMobilities != null))
                         spectrumProperties.IonMobilityCount = fullScans.Where(scan => scan.IonMobilities != null)
                             .Select(scan => scan.IonMobilities.Distinct().Count()).Sum().ToString(@"N0");
-                    
+
                     if(_msDataFileScanHelper.MsDataSpectra.Length > 1)
                         spectrumProperties.ScanId = TextUtil.SpaceSeparate(_msDataFileScanHelper.MsDataSpectra[0].Id, @"-", _msDataFileScanHelper.MsDataSpectra.Last().Id);
                     else
@@ -599,6 +600,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (ionMobility.HasValue)
                         spectrumProperties.IonMobility = ionMobility.ToString();
                 }
+                var injectionTime = _msDataFileScanHelper.MsDataSpectra.Sum(scan => scan.Metadata.InjectionTime);
+                if (injectionTime != 0)
+                {
+                    spectrumProperties.InjectionTime = injectionTime.ToString(CultureInfo.CurrentCulture);
+                }
+
                 if (_documentContainer is SkylineWindow stateProvider)
                 {
                     var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
