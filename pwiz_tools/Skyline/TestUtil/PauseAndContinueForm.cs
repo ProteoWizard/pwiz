@@ -42,6 +42,7 @@ namespace pwiz.SkylineTestUtil
         private string _description;
         private string _linkUrl;
         private string _imageUrl;
+        private string _fileToShow;
         private string _fileToSave;
         private bool _showMatchingPage;
         // Information for taking a screenshot
@@ -69,7 +70,7 @@ namespace pwiz.SkylineTestUtil
             _screenshotManager = screenshotManager;
             _ownerForm = FindOwnerForm();
 
-            _currentMode = TestUtilSettings.Default.ShowPreview
+            _currentMode = screenshotManager != null && TestUtilSettings.Default.ShowPreview
                 ? PauseAndContinueMode.PREVIEW_SCREENSHOT
                 : PauseAndContinueMode.PAUSE_AND_CONTINUE;
         }
@@ -99,7 +100,8 @@ namespace pwiz.SkylineTestUtil
         {
             _screenshotNum = screenshotNum;
             _description = description;
-            _fileToSave = _screenshotManager?.ScreenshotFile(screenshotNum);
+            _fileToShow = _screenshotManager?.ScreenshotSourceFile(screenshotNum);
+            _fileToSave = _screenshotManager?.ScreenshotDestFile(screenshotNum);
             _linkUrl = _screenshotManager?.ScreenshotUrl(screenshotNum);
             _imageUrl = _screenshotManager?.ScreenshotImgUrl(screenshotNum);
             _showMatchingPage = showMatchingPages;
@@ -107,14 +109,20 @@ namespace pwiz.SkylineTestUtil
             _fullScreen = fullScreen;
             _processShot = processShot;
 
-            // TODO: Put this back to allow keyboard to work as expected in paused Skyline
-            //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = false); //determine if this is needed
+            // Allow full manual interaction with Skyline once in pause mode
+            // Testing will have UseKeysOverride set to true to prevent accidental
+            // keyboard interaction with the running test.
+            RunUI(Program.MainWindow, () => Program.MainWindow.UseKeysOverride = false);
             lock (_pauseLock)
             {
                 RunUI(_ownerForm, RefreshAndShow);
                 Monitor.Wait(_pauseLock, timeout ?? -1);
             }
-            //RunUI(SkylineWindow, () => SkylineWindow.UseKeysOverride = true);
+            RunUI(Program.MainWindow, () => Program.MainWindow.UseKeysOverride = true);
+
+            // Record that the screenshot happened in the console output to make
+            // it easier to set a starting screenshot in a subsequent test.
+            Console.WriteLine(_description);
         }
 
         private static Form FindOwnerForm()
@@ -139,7 +147,7 @@ namespace pwiz.SkylineTestUtil
 
             Hide();
 
-            _screenshotPreviewForm.Show(false);
+            _screenshotPreviewForm.ShowOrUpdate();
         }
 
         private void EnsurePreviewForm()
@@ -197,8 +205,7 @@ namespace pwiz.SkylineTestUtil
             { 
                 EnsurePreviewForm();
 
-                // TODO: This location used to force a 1 second delay. Is that really necessary? If so, why should be commented here
-                _screenshotPreviewForm.Show(false);
+                _screenshotPreviewForm.ShowOrUpdate();
             }
 
             if (_showMatchingPage)
@@ -341,6 +348,7 @@ namespace pwiz.SkylineTestUtil
         public string Description => _description;
         public string LinkUrl => _linkUrl;
         public string ImageUrl => _imageUrl;
+        public string FileToShow => _fileToShow;
         public string FileToSave => _fileToSave;
         public Control ScreenshotControl => _screenshotForm;
         public bool FullScreen => _fullScreen;

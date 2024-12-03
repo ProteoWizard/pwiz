@@ -143,11 +143,17 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Width = 1010;
             });
 
-            PauseForScreenShot("Undo list expanded. (manual)", 4);
+            RunUIForScreenShot(() => SkylineWindow.ShowUndo());
+            PauseForScreenShot("Undo list expanded.", 4, null, bmp => 
+                ClipBitmap(bmp, new Rectangle(0, 0, 713, 131)));
+            RunUIForScreenShot(() => SkylineWindow.ShowUndo(false));
 
             RunUI(SkylineWindow.Undo);
 
-            PauseForScreenShot("Redo list expanded. (manual)", 5);
+            RunUIForScreenShot(() => SkylineWindow.ShowRedo());
+            PauseForScreenShot("Redo list expanded.", 5, null, bmp =>
+                ClipBitmap(bmp, new Rectangle(0, 0, 743, 127)));
+            RunUIForScreenShot(() => SkylineWindow.ShowRedo(false));
 
             RunUI(SkylineWindow.Redo);
 
@@ -180,7 +186,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Height = 390;
             });
 
-            PauseForScreenShot("Main window with Targets view", 6);
+            PauseForScreenShot<SequenceTreeForm>("Targets view", 6);
 
             ShowAndPositionAuditLog(true);
             PauseForScreenShot<AuditLogForm>("Audit Log form with inserted peptide.", 7);
@@ -354,6 +360,7 @@ namespace pwiz.SkylineTestTutorial
                 VerifyCalibrationCurve(calibrationForm, 5.4065E-1, -2.9539E-1, 0.999);
             });
 
+            JiggleSelection();
             PauseForScreenShot<CalibrationForm>("Calibration curve zoomed", 15);
             RunUI(() =>
             {
@@ -376,7 +383,11 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<AuditLogForm>("Audit Log with excluded standard records", 16);
 
-            PauseForScreenShot<AuditLogForm>("Audit Log Reports menu (manual)", 16);
+            RunUIForScreenShot(() => SkylineWindow.AuditLogForm.Parent.Parent.Width += 100);    // Wider to remove the horizontal scrollbar
+            ShowReportsDropdown(AuditLogStrings.AuditLogForm_AuditLogForm_All_Info);
+            PauseForScreenShot<AuditLogForm>("Audit Log Reports menu", 16, null, bmp =>
+                ClipBitmap(bmp, new Rectangle(0, 0, 503, bmp.Height)));
+            HideReportsDropdown();
 
             // TODO(nicksh): Audit log reason field does not currently support fill down
 //            RunUI(() =>
@@ -396,7 +407,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.AuditLogForm.ChooseView(AuditLogStrings.AuditLogForm_MakeAuditLogForm_Undo_Redo);
             });
             SetGridFormToFullWidth(SkylineWindow.AuditLogForm);
-            RunUI(() =>
+            RunUIForScreenShot(() =>
             {
                 var floatingWindow = SkylineWindow.AuditLogForm.Parent.Parent;
                 floatingWindow.Height = 334;
@@ -450,7 +461,12 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Custom Columns report template", 17);
             OkDialog(customizeDialog, customizeDialog.OkDialog);
             SetGridFormToFullWidth(SkylineWindow.AuditLogForm);
-            RunUI(() => SkylineWindow.AuditLogForm.Parent.Parent.Height += 10); // Extra for 2-line headers
+            RunUIForScreenShot(() =>
+            {
+                var floatingForm = SkylineWindow.AuditLogForm.Parent.Parent;
+                floatingForm.Width = 1130; // Wider for Skyline Version and User columns
+                floatingForm.Height += 10; // Extra for 2-line headers
+            }); 
             PauseForScreenShot<AuditLogForm>("Audit Log with custom view.", 18);
 
             var registrationDialog = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(null));
@@ -465,7 +481,7 @@ namespace pwiz.SkylineTestTutorial
                 loginDialog.Username = PANORAMA_USER_NAME;
             });
 
-            if (!IsPauseForScreenShots)
+            if (!IsPauseForScreenShots || IsAutoScreenShotMode) // Skip manual screenshots if in auto-screenshot mode
                 OkDialog(loginDialog, loginDialog.CancelButton.PerformClick);
             else
             {

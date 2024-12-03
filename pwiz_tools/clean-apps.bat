@@ -12,12 +12,14 @@ call :CleanBinaries Shared
 call :CleanBinaries Skyline
 call :CleanBinaries SeeMS
 call :CleanBinaries MSConvertGUI
+call :CleanBinaries Bumbershoot
 
 IF EXIST Shared\CommonTest rmdir /s/q Shared\CommonTest
 
 IF EXIST SeeMS\CleanSeeMS.bat call SeeMS\CleanSeeMS.bat
 IF EXIST Skyline\CleanSkyline.bat call Skyline\CleanSkyline.bat
 IF EXIST BiblioSpec\CleanBiblioSpec.bat call BiblioSpec\CleanBiblioSpec.bat
+IF EXIST Bumbershoot\CleanBumbershoot.bat call Bumbershoot\CleanBumbershoot.bat
 
 popd
 rem Exit the script
