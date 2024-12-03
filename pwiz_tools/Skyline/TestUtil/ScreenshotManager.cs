@@ -226,9 +226,11 @@ namespace pwiz.SkylineTestUtil
 
         }
 
-        public ScreenshotManager([NotNull] SkylineWindow pSkylineWindow, string tutorialPath)
+        public ScreenshotManager([NotNull] SkylineWindow skylineWindow, string tutorialPath)
         {
-            _skylineWindow = pSkylineWindow;
+            Assume.IsNotNull(skylineWindow);
+
+            _skylineWindow = skylineWindow;
             _tutorialDestPath = tutorialPath;
             _tutorialSourcePath = GetAvailableTutorialPath(tutorialPath);
         }
@@ -246,8 +248,6 @@ namespace pwiz.SkylineTestUtil
             }
             return tutorialPath;
         }
-
-        private SkylineWindow SkylineWindow => Program.MainWindow;
 
         public string ScreenshotUrl(int screenshotNum)
         {
@@ -310,7 +310,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public Rectangle GetScreenshotBounds()
         {
-            return (Rectangle)SkylineWindow.Invoke((Func<Rectangle>)(() => SkylineWindow.Bounds));
+            return (Rectangle)_skylineWindow.Invoke((Func<Rectangle>)(() => _skylineWindow.Bounds));
         }
 
         public Rectangle GetScreenshotScreenBounds()
@@ -320,23 +320,34 @@ namespace pwiz.SkylineTestUtil
 
         public Screen GetScreenshotScreen()
         {
-            return (Screen)SkylineWindow.Invoke((Func<Screen>)(() => Screen.FromControl(SkylineWindow)));
+            return Screen.FromRectangle(GetScreenshotBounds());
         }
 
-        public static void ActivateScreenshotForm(Control screenshotControl)
+        private void ForceOnScreenshotScreen(Form form)
+        {
+            var location = form.Location;
+            var screen = GetScreenshotScreen();
+            location.X = Math.Max(screen.WorkingArea.Left,
+                Math.Min(location.X, screen.WorkingArea.Right - form.Size.Width));
+            location.Y = Math.Max(screen.WorkingArea.Top,
+                Math.Min(location.Y, screen.WorkingArea.Bottom - form.Size.Height));
+            form.Location = location;
+        }
+
+        public void ActivateScreenshotForm(Control screenshotControl)
         {
             Assume.IsTrue(screenshotControl.InvokeRequired);    // Use ActionUtil.RunAsync() to call this method from the UI thread
 
             // Bring to the front
             RunUI(screenshotControl, screenshotControl.SetForegroundWindow);
 
-            // If it is a form, try not to change the focus within the form.
-            var form = FormUtil.FindParentOfType<Form>(screenshotControl)?.ParentForm;
+            // If there is a form, try not to change the focus within the form.
+            var form = FormUtil.FindParentOfType<Form>(screenshotControl)?.ParentForm ?? screenshotControl as Form;
             if (form != null)
             {
                 RunUI(form, () =>
                 {
-                    FormEx.ForceOnScreen(form); // Make sure the owning form is fully on screen
+                    ForceOnScreenshotScreen(form); // Make sure the owning form is fully on screen
                     form.Activate();
                 });
             }

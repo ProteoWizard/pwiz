@@ -444,8 +444,8 @@ namespace pwiz.SkylineTestTutorial
 
                     menuStrip = peakAreasControl.ContextMenuStrip;
                     subMenuStrip = showDotProductItem.DropDown;
-                    menuStrip.Closing += DenyMenuClose;
-                    subMenuStrip.Closing += DenyMenuClose;
+                    menuStrip.Closing += DenyMenuClosing;
+                    subMenuStrip.Closing += DenyMenuClosing;
                 });
 
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", tutorialPage++, null,
@@ -455,8 +455,8 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
-                    menuStrip.Closing -= DenyMenuClose;
-                    subMenuStrip.Closing -= DenyMenuClose;
+                    menuStrip.Closing -= DenyMenuClosing;
+                    subMenuStrip.Closing -= DenyMenuClosing;
                     menuStrip.Close();
                 });
             }
@@ -771,11 +771,6 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
-        }
-
-        private void DenyMenuClose(object sender, ToolStripDropDownClosingEventArgs e)
-        {
-            e.Cancel = true;
         }
 
         private int GetTotalPointCount(GraphPane msGraphPane)
