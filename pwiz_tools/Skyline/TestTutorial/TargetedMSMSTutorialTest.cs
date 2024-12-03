@@ -598,8 +598,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
                 SkylineWindow.GraphPeakArea.TryGetGraphPane(out AreaReplicateGraphPane pane);
                 pane.GraphSummary.ActiveLibrary = true;
-
-                Assert.IsNotNull(pane, "Expected peak area graph to be one of AreaReplicateGraphPane");
             });
 
             PauseForPeakAreaGraphScreenShot("Peak Areas five point calibration curve");
