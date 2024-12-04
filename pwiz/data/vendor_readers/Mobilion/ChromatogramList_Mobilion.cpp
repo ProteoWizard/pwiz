@@ -98,7 +98,6 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Mobilion::chromatogram(size_t ind
     if (!result.get())
         throw std::runtime_error("[ChromatogramList_Mobilion::chromatogram()] Allocation error.");
 
-    boost::lock_guard<boost::mutex> lock(processWideHdf5Mutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     result->index = index;
     result->id = ie.id;
     result->set(ie.chromatogramType);
