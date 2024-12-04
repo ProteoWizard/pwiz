@@ -544,17 +544,6 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.EditDelete);
         }
 
-        private static void JiggleSelection()
-        {
-            if (!IsPauseForScreenShots)
-                return;
-
-            // Node change apparently required to get x-axis labels in peak areas view the way they should be
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
-            WaitForGraphs();
-            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
-        }
-
         private void AddTruncatedPrecursorsView(DocumentGridForm documentGrid, bool initialTestExecution)
         {
             RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Precursors));
