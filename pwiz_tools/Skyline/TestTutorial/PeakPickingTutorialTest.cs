@@ -124,7 +124,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[12];
             });
-            PauseForTargetsScreenShot("Targets view clipped from main window",false);
+            PauseForTargetsScreenShot("Targets view clipped from main window");
 
             // Open the file with decoys
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));
