@@ -289,10 +289,10 @@ namespace pwiz.SkylineTestUtil
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                var ico = dlg.Icon.Handle;
                 if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    ico == Resources.Skyline_Daily.Handle)
+                    dlg.Icon != null)    // Normally a fixed dialog will not have the Skyline icon handle
                 {
+                    var ico = dlg.Icon.Handle;
                     if (ico != SkylineWindow.Icon.Handle)
                         RunUI(() => dlg.Icon = SkylineWindow.Icon);
                 }
@@ -1470,6 +1470,8 @@ namespace pwiz.SkylineTestUtil
             var sequenceTreeRect = sequenceTree.Bounds;
 
             sequenceTreeRect.Inflate(-1, -1);   // Borders outside parent rect
+            sequenceTreeRect.X += 1;
+            sequenceTreeRect.Y += 1;
 
             const int GWL_STYLE = -16;
             const int WS_VSCROLL = 0x00200000;
