@@ -12,7 +12,6 @@
     <p>
         This tutorial covers how to determine the absolute abundance of a target protein using Selected Reaction Monitoring (SRM) mass spectrometry.
         Specifically, we will demonstrate how to use an external calibration curve with an internal standard heavy labeled peptide for normalization.
-    
     </p>
     <p>
         Peptide absolute abundance measurements can be obtained using either a single-point or a multiple-point calibration. Single-point internal
@@ -43,37 +42,37 @@
     <h1>Experimental Overview</h1>
     <p>
         This tutorial will work with data published in Stergachis et al.<sup>7</sup> where the absolute abundance of GST-tagged proteins were measured
-        using a “proteotypic” peptide present within the GST-tag (<strong>Tutorial Figure 1A</strong>). For any absolute quantification experiment, it
+        using a “proteotypic” peptide present within the GST-tag (<b>Tutorial Figure 1A</b>). For any absolute quantification experiment, it
         is critical to first identify one or more “proteotypic” peptides that will be used to quantify the protein of interest. The peptide IEAIPQIDK
         was identified as “proteotypic” based on its strong signal intensity relative to other tryptic peptides in the GST-tag (unpublished). Also,
         this peptide uniquely identifies this schistosomal GST-tag as opposed to other human glutathione-binding proteins. 
     </p>
     <p>
-        For this experiment, FOXN1 protein containing an in frame GST-tag was generated using <em>in vitro </em>transcription/translation and
-        full-length proteins were purified using glutathione resin (<strong>Tutorial Figure 1B</strong>). Heavy labeled IEAIPQIDK peptide was then
+        For this experiment, FOXN1 protein containing an in frame GST-tag was generated using <i>in vitro</i> transcription/translation and
+        full-length proteins were purified using glutathione resin (<b>Tutorial Figure 1B</b>). Heavy labeled IEAIPQIDK peptide was then
         spiked into the elution buffer and the sample was digested and analyzed using selected reaction monitoring (SRM) on a Thermo TSQ Vantage
         triple-quadrupole mass spectrometer. An external calibration curve was generated using different quantities of a light IEAIPQIDK peptide that
         was purified to &gt;97% purity and the concentration determined by amino acid analysis. Heavy labeled IEAIPQIDK peptide was also spiked into
-        these calibrants at the same concentration as in the FOXN1-GST sample (<strong>Tutorial Figure 1C</strong>). It is important to note that it
+        these calibrants at the same concentration as in the FOXN1-GST sample (<b>Tutorial Figure 1C</b>). It is important to note that it
         does not matter what the concentration of the heavy peptide is in each of the samples, so long as it is the same. However, it is best if the
         amount of heavy peptide in the samples is similar to the amount of light peptide originating from FOXN1-GST. Also, it is best if the
         concentration of the light peptide originating from FOXN1-GST falls somewhere in the middle of the concentration range tested using the
         different calibrants.
     </p>
     <p>
-        <img src="image-0.png" />
+        <img src="s-experimental-overview.png" />
     </p>
     <p>
-        <strong>Tutorial Figure 1. Experimental Overview</strong>
+        <b>Tutorial Figure 1. Experimental Overview</b>
     </p>
     <p>
-        (<strong>A</strong>) Schistosomal GST-tag protein sequence. The tryptic peptide used for quantification purposes is indicated in red.
+        (<b>A</b>) Schistosomal GST-tag protein sequence. The tryptic peptide used for quantification purposes is indicated in red.
     </p>
     <p>
-        (<strong>B</strong>) Schematic of the synthesis, enrichment, digestion and analysis of tagged proteins.
+        (<b>B</b>) Schematic of the synthesis, enrichment, digestion and analysis of tagged proteins.
     </p>
     <p>
-        (<strong>C</strong>) Samples monitored and the abundance of light and heavy IEAIPQIDK peptide in each.
+        (<b>C</b>) Samples monitored and the abundance of light and heavy IEAIPQIDK peptide in each.
     </p>
     <h1>Getting Started</h1>
     <p>
@@ -99,14 +98,14 @@
     </p>
     <ul>
         <li>Start Skyline.</li>
-        <li>On the <strong>Start Page, </strong>click <strong>Blank Document </strong>which looks like this: </li>
+        <li>On the <b>Start Page</b>, click <b>Blank Document</b> which looks like this: </li>
     </ul>
     <p>
         <img src="../../shared/en/skyline-blank-document.png" />
     </p>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Default. </strong></li>
-        <li>Click <strong>No </strong>on the form asking if you want to save the current settings.</li>
+        <li>On the <b>Settings</b> menu, click <b>Default</b>. </li>
+        <li>Click <b>No</b> on the form asking if you want to save the current settings.</li>
     </ul>
     <p>
         The document settings in this instance of Skyline have now been reset to the default.
@@ -115,8 +114,7 @@
         Since this tutorial covers a proteomics topic, you can choose the proteomics interface by doing the following:
     </p>
     <ul class="keep-next">
-        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <strong>Proteomics interface
-            </strong>which looks like this: </li>
+        <li>Click the user interface control in the upper right-hand corner of the Skyline window, and click <b>Proteomics interface</b> which looks like this: </li>
     </ul>
     <p>
         <img src="../../shared/en/proteomics-interface.png" />
@@ -137,23 +135,23 @@
     </p>
     <h2>Configuring transition settings:</h2>
     <ul>
-        <li>On <strong>Settings</strong> menu, click <strong>Transition Settings</strong>.</li>
-        <li>Click the <strong>Prediction</strong> tab. </li>
-        <li>From the <strong>Collision energy</strong> dropdown list choose the instrument that you will be using for your measurements. For this
-            experiment, a <strong>Thermo TSQ Vantage</strong> was used for all measurements. </li>
+        <li>On <b>Settings</b> menu, click <b>Transition Settings</b>.</li>
+        <li>Click the <b>Prediction</b> tab. </li>
+        <li>From the <b>Collision energy</b> dropdown list choose the instrument that you will be using for your measurements. For this
+            experiment, a <b>Thermo TSQ Vantage</b> was used for all measurements. </li>
     </ul>
     <p class="keep-next">
         The form should now look like this:
     </p>
     <p>
-        <img src="image-1.png" />
+        <img src="s-01.png" />
     </p>
     <ul>
-        <li>Click the <strong>Filter</strong> tab. </li>
+        <li>Click the <b>Filter</b> tab. </li>
         <li>Here you can accept the default settings for ion charges and types. </li>
-        <li>In the <strong>Special ions</strong> list, uncheck the choice “N-terminal to Proline”.</li>
-        <li>In the <strong>Product ion selection</strong> – <strong>From</strong> field, choose “ion 3”.</li>
-        <li>In the <strong>Product ion selection</strong> – <strong>To</strong> field, choose “last ion - 1”.</li>
+        <li>In the <b>Special ions</b> list, uncheck the choice “N-terminal to Proline”.</li>
+        <li>In the <b>Product ion selection</b> – <b>From</b> field, choose “ion 3”.</li>
+        <li>In the <b>Product ion selection</b> – <b>To</b> field, choose “last ion - 1”.</li>
     </ul>
     <div style="margin-left : 40px;">
         <table>
@@ -164,70 +162,70 @@
         </table>
     </div>
     <p class="keep-next">
-        The <strong>Transition Settings </strong>form should look like this: 
+        The <b>Transition Settings</b> form should look like this: 
     </p>
     <p>
-         <img src="image-2.png" />
+         <img src="s-02.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <h2>Configuring peptide settings:</h2>
     <ul>
-        <li>On the <strong>Settings</strong> menu, click <strong>Peptide Settings</strong>.</li>
-        <li>Click the <strong>Modifications</strong> tab. </li>
-        <li>Click the <strong>Edit List</strong> button to the right of the <strong>Isotope modifications</strong> list.</li>
-        <li>Click the <strong>Add</strong> button in the <strong>Edit Isotope Modifications</strong> form that appears.</li>
-        <li>In <strong>Name</strong> dropdown list, choose “Label:13C(6)15N(2) (C-term K)”.</li>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Modifications</b> tab. </li>
+        <li>Click the <b>Edit List</b> button to the right of the <b>Isotope modifications</b> list.</li>
+        <li>Click the <b>Add</b> button in the <b>Edit Isotope Modifications</b> form that appears.</li>
+        <li>In <b>Name</b> dropdown list, choose “Label:13C(6)15N(2) (C-term K)”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Edit Isotope Modification</strong> form should now look like this:
+        The <b>Edit Isotope Modification</b> form should now look like this:
     </p>
     <p>
-        <img src="image-3.png" />
+        <img src="s-03.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
-        <li>In the <strong>Isotope modifications</strong> list, check the new “Label:13C(6)15N(2) (C-term K)” modification.</li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>Isotope modifications</b> list, check the new “Label:13C(6)15N(2) (C-term K)” modification.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Peptide Settings </strong>form should now look like this:
+        The <b>Peptide Settings</b> form should now look like this:
     </p>
     <p>
-        <img src="image-4.png" />
+        <img src="s-04.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button. </li>
+        <li>Click the <b>OK</b> button. </li>
     </ul>
     <p>
-        Since the experiment uses a heavy labeled internal standard peptide, the <strong>Internal standard type</strong> drop-list can be left as the
-        default <strong>heavy</strong>.
+        Since the experiment uses a heavy labeled internal standard peptide, the <b>Internal standard type</b> drop-list can be left as the
+        default <b>heavy</b>.
     </p>
     <h2>Inserting a peptide sequence:</h2>
     <ul>
-        <li>On the <strong>Edit</strong> menu, choose <strong>Insert</strong> and click <strong>Peptides</strong>.</li>
-        <li>Paste “IEAIPQIDK” into the <strong>Peptide Sequence</strong> cell and “GST-tag” into the <strong>Protein Name</strong> cell.</li>
+        <li>On the <b>Edit</b> menu, choose <b>Insert</b> and click <b>Peptides</b>.</li>
+        <li>Paste “IEAIPQIDK” into the <b>Peptide Sequence</b> cell and “GST-tag” into the <b>Protein Name</b> cell.</li>
     </ul>
     <p>
-        <img src="image-5.png" />
+        <img src="s-05.png" />
     </p>
     <ul>
-        <li>Click the <strong>Insert</strong> button.</li>
+        <li>Click the <b>Insert</b> button.</li>
     </ul>
     <p class="keep-next">
         After performing the above steps, the main Skyline should now look like this:
     </p>
     <p>
-        <img src="image-6.png" />
+        <img src="s-06.png" />
     </p>
     <p>
         Before exporting your first transition list, first save your document to the AbsoluteQuant folder by doing the following:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, click <strong>Save</strong> (ctrl-S).</li>
+        <li>On the <b>File</b> menu, click <b>Save</b> (ctrl-S).</li>
         <li>Navigate to the AbsoluteQuant folder.</li>
-        <li>In the <strong>File name</strong> field, enter “AbsoluteQuantTutorial”.</li>
-        <li>Click the <strong>Save</strong> button.</li>
+        <li>In the <b>File name</b> field, enter “AbsoluteQuantTutorial”.</li>
+        <li>Click the <b>Save</b> button.</li>
     </ul>
     <h2>Exporting a transition list:</h2>
     <p>
@@ -236,23 +234,23 @@
         method yourself at another time. Do the following to achieve this:
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Export</strong> and click <strong>Transition List</strong>.</li>
+        <li>On the <b>File</b> menu, choose <b>Export</b> and click <b>Transition List</b>.</li>
     </ul>
     <p>
-        The <strong>Export Transition List</strong> form should appear as shown below, with “Thermo” automatically chosen in the <strong>Instrument
-            type</strong> list, based on the “Thermo TSQ Vantage” value you chose from the <strong>Collision energy</strong> dropdown list in the
-        <strong>Transition Settings</strong> – <strong>Prediction</strong> tab.
+        The <b>Export Transition List</b> form should appear as shown below, with “Thermo” automatically chosen in the <b>Instrument
+            type</b> list, based on the “Thermo TSQ Vantage” value you chose from the <b>Collision energy</b> dropdown list in the
+        <b>Transition Settings</b> – <b>Prediction</b> tab.
     </p>
     <p>
-        <img src="image-7.png" />
+        <img src="s-07.png" />
     </p>
     <p>
         You can also see that all of the other settings are appropriate for this very simple target list.
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
-        <li>In the <strong>File name</strong> field, enter “GST-tag”.</li>
-        <li>Click the <strong>Save</strong> button. </li>
+        <li>Click the <b>OK</b> button.</li>
+        <li>In the <b>File name</b> field, enter “GST-tag”.</li>
+        <li>Click the <b>Save</b> button. </li>
     </ul>
     <p>
         The resulting transition list was imported into a Thermo TSQ Vantage triple-quadrupole mass spectrometer template method file. You may now want
@@ -260,7 +258,7 @@
     </p>
     <h1>Analyzing SRM Data from Calibrants</h1>
     <p>
-        In this next section you will work with the nine samples indicated in <strong>Tutorial Figure 1C</strong>. You will import the .RAW files into
+        In this next section you will work with the nine samples indicated in <b>Tutorial Figure 1C</b>. You will import the .RAW files into
         Skyline to view the data. Data will be imported into the saved Skyline document that was generated in the previous section. The files that you
         will import are contained in the AbsoluteQuant folder you created for this tutorial and are named:
     </p>
@@ -277,38 +275,37 @@
     </ul>
     <p>
         These RAW files were collected in a random order and were interspersed among a larger set of runs. The results as fully processed with Skyline
-        can be found in the <strong>Supplemental Data 2</strong> for the original paper (<a
+        can be found in the <b>Supplemental Data 2</b> for the original paper (<a
             href="http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip">http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip</a>).
-    
     </p>
     <p>
         Before you look at the FOXN1-GST sample, you should first become familiar with the standards.
     </p>
     <h2>Importing RAW files into Skyline:</h2>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
-        <li>Accept the default option <strong>Add single-injection replicates in files</strong>.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Accept the default option <b>Add single-injection replicates in files</b>.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Import Results</strong> form should look like this:
+        The <b>Import Results</b> form should look like this:
     </p>
     <p>
-        <img src="image-8.png" />
+        <img src="s-08.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <ul class="keep-next">
-        <li>In the <strong>Import Results Files</strong> form, find and select all eight “Standard” RAW files as shown below.</li>
+        <li>In the <b>Import Results Files</b> form, find and select all eight “Standard” RAW files as shown below.</li>
     </ul>
     <p>
-        <img src="image-9.png" />
+        <img src="s-09.png" />
     </p>
     <ul>
-        <li>Click <strong>Open</strong> to import the files.</li>
-        <li>When presented with the option to remove the “Standard_” prefix in creating replicate names, choose the <strong>Do not remove</strong>
+        <li>Click <b>Open</b> to import the files.</li>
+        <li>When presented with the option to remove the “Standard_” prefix in creating replicate names, choose the <b>Do not remove</b>
             option.</li>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <p>
         It may take a few moments for Skyline to import all of the RAW files.
@@ -318,14 +315,14 @@
         in a tiled view. Do the following to achieve this layout:
     </p>
     <ul>
-        <li>On the <strong>View</strong> menu, choose <strong>Arrange Graphs</strong> and click <strong>Tiled</strong> (Ctrl-T). </li>
-        <li>Select the IEAIPQIDK peptide in the <strong>Targets</strong> view.</li>
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b> and click <b>Tiled</b> (Ctrl-T). </li>
+        <li>Select the IEAIPQIDK peptide in the <b>Targets</b> view.</li>
     </ul>
     <p>
         You will see the heavy (Blue) and light (Red) total chromatograms displayed together in a graph for each standard as shown below:
     </p>
     <p>
-        <img src="image-10.png" />
+        <img src="s-10.png" />
     </p>
     <p>
         What to inspect when looking at the chromatographic traces for the standards:
@@ -342,42 +339,42 @@
         Next you will want to import the FOXN1-GST.RAW file into the current Skyline document using the same instructions as detailed above.
     </p>
     <ul>
-        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>On the <b>File</b> menu, choose <b>Import</b> and click <b>Results</b>.</li>
+        <li>Click the <b>OK</b> button.</li>
         <li>Select the FOXN1-GST.RAW file.</li>
-        <li>Click the <strong>Open</strong> button.</li>
+        <li>Click the <b>Open</b> button.</li>
     </ul>
     <p>
         To ensure that this sample looks good, inspect the chromatographic trace, the fragmentation pattern and the retention time of both the heavy
         and light peak. To help, you will want to show summary plots as follows:
     </p>
     <ul>
-        <li>On the <strong>View</strong> menu, choose <strong>Retention Times</strong> and click <strong>Replicate Comparison</strong> (F8).</li>
-        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Replicate Comparison</strong> (F7).</li>
-        <li>Right-click the <strong>Peak Areas</strong> graph, choose <strong>Normalized To</strong> and click <strong>Total</strong> to view the
+        <li>On the <b>View</b> menu, choose <b>Retention Times</b> and click <b>Replicate Comparison</b> (F8).</li>
+        <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
+        <li>Right-click the <b>Peak Areas</b> graph, choose <b>Normalized To</b> and click <b>Total</b> to view the
             relative contribution of each transition to the total signal intensity.</li>
-        <li>On the <strong>Settings</strong> menu, click <strong>Integrate All</strong> to tell Skyline this is a refined method where all transitions
+        <li>On the <b>Settings</b> menu, click <b>Integrate All</b> to tell Skyline this is a refined method where all transitions
             are expected to have measurable signal.</li>
     </ul>
     <p>
         Arrange the windows as follows for better viewing:
     </p>
     <ul>
-        <li>On the <strong>View</strong> menu, choose <strong>Arrange Graphs</strong> and click <strong>Tabbed</strong> (Ctrl-Shift-T). </li>
-        <li>Click on the title bars of the <strong>Replicate Comparison</strong> graphs and drag them to the right edge of the main Skyline window.
+        <li>On the <b>View</b> menu, choose <b>Arrange Graphs</b> and click <b>Tabbed</b> (Ctrl-Shift-T). </li>
+        <li>Click on the title bars of the <b>Replicate Comparison</b> graphs and drag them to the right edge of the main Skyline window.
         </li>
     </ul>
     <p class="keep-next">
         You can then select either the light precursor:
     </p>
     <p>
-        <img src="image-11.png" />
+        <img src="s-11.png" />
     </p>
     <p class="keep-next">
         Or the heavy precursor:
     </p>
     <p>
-        <img src="image-12.png" />
+        <img src="s-12.png" />
     </p>
     <p>
          Verify the following:
@@ -395,17 +392,17 @@
         Another way to view the data is to follow these steps: 
     </p>
     <ul>
-        <li>Select the IEAIPQIDK peptide in <strong>Targets</strong> view again. </li>
-        <li>Right-click on the <strong>Peak Areas</strong> graph, choose <strong>Normalized To</strong> and click <strong>Heavy</strong> to view the
+        <li>Select the IEAIPQIDK peptide in <b>Targets</b> view again. </li>
+        <li>Right-click on the <b>Peak Areas</b> graph, choose <b>Normalized To</b> and click <b>Heavy</b> to view the
             light-to-heavy ratio for each standard and the FOXN1-GST sample.</li>
     </ul>
     <p>
-        The values displayed in the <strong>Peak Areas</strong> graph will be the ones used later in the calibration curve. It can be easily observed
+        The values displayed in the <b>Peak Areas</b> graph will be the ones used later in the calibration curve. It can be easily observed
         from this graph that the light-to-heavy ratio for the FOXN1-GST sample falls somewhere in the middle of the ratios from the calibration
         points. This is ideal, as this portion of the calibration curve is best for quantification purposes. 
     </p>
     <p>
-        <img src="image-13.png" />
+        <img src="s-13.png" />
     </p>
     <h1>Generating a Calibration Curve</h1>
     <p>
@@ -413,28 +410,28 @@
     </p>
     <h2>Configuring quantification settings:</h2>
     <ul>
-        <li>On the <strong>Settings </strong>menu, click <strong>Peptide Settings</strong>.</li>
-        <li>Click the <strong>Quantification </strong>tab.</li>
-        <li>In the <strong>Regression Fit</strong> dropdown list, choose “Linear”.</li>
-        <li>In the <strong>Normalization Method</strong> dropdown list, choose “Ratio to Heavy”.</li>
-        <li>In the <strong>Units</strong> field, enter “fmol/ul”.</li>
+        <li>On the <b>Settings</b> menu, click <b>Peptide Settings</b>.</li>
+        <li>Click the <b>Quantification</b> tab.</li>
+        <li>In the <b>Regression Fit</b> dropdown list, choose “Linear”.</li>
+        <li>In the <b>Normalization Method</b> dropdown list, choose “Ratio to Heavy”.</li>
+        <li>In the <b>Units</b> field, enter “fmol/ul”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Peptide Settings</strong> form should look like this:
+        The <b>Peptide Settings</b> form should look like this:
     </p>
     <p>
-        <img src="image-14.png" />
+        <img src="s-14.png" />
     </p>
     <ul>
-        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <b>OK</b> button.</li>
     </ul>
     <h2>Specify the analyte concentrations of the external standards:</h2>
     <ul>
-        <li>On the <strong>View</strong> menu, click <strong>Document Grid</strong>.</li>
-        <li>In the top left of the <strong>Document Grid</strong>, click the <strong>Reports</strong> dropdown list and choose
-            <strong>Replicates</strong>.</li>
-        <li>Copy the following data and paste it into the <strong>Document Grid</strong> to set each of the “Standard_#” replicates <strong>Sample
-                Type</strong> to “Standard” and their <strong>Analyte Concentrations</strong> to the values below.</li>
+        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>In the top left of the <b>Document Grid</b>, click the <b>Reports</b> dropdown list and choose
+            <b>Replicates</b>.</li>
+        <li>Copy the following data and paste it into the <b>Document Grid</b> to set each of the “Standard_#” replicates <b>Sample
+                Type</b> to “Standard” and their <b>Analyte Concentrations</b> to the values below.</li>
     </ul>
     <div style="margin-left : 20px;">
         <table>
@@ -473,31 +470,31 @@
         </table>
     </div>
     <ul>
-        <li>In the row for FOXN1-GST, set its <strong>Sample Type</strong> to “Unknown”.</li>
+        <li>In the row for FOXN1-GST, set its <b>Sample Type</b> to “Unknown”.</li>
     </ul>
     <p class="keep-next">
-        The <strong>Document Grid: Replicates </strong>form should look like this:
+        The <b>Document Grid: Replicates</b> form should look like this:
     </p>
     <p>
-        <img src="image-15.png" />
+        <img src="s-15.png" />
     </p>
     <h2>View the calibration curve</h2>
     <ul>
-        <li>On the <strong>View </strong>menu, click <strong>Calibration Curve</strong>.</li>
-        <li>In the <strong>Document Grid</strong>, click the FOXN1-GST link in the <strong>Replicate</strong> column.</li>
+        <li>On the <b>View</b> menu, click <b>Calibration Curve</b>.</li>
+        <li>In the <b>Document Grid</b>, click the FOXN1-GST link in the <b>Replicate</b> column.</li>
     </ul>
     <p class="keep-next">
         You should see a graph that looks like this:
     </p>
     <p>
-        <img src="image-16.png" />
+        <img src="s-16.png" />
     </p>
     <p>
         The slope and intercept are displayed on the calibration curve. They can be used to convert between peak area ratio and concentration with a
-        standard <strong>y = m * x + b</strong> equation 
+        standard <b>y = m * x + b</b> equation 
     </p>
     <p>
-        <em>concentration = (ratio - intercept) / slope</em>
+        <i>concentration = (ratio - intercept) / slope</i>
     </p>
     <p>
         Also, calculated concentration of the currently selected replicate is displayed on the calibration form. Here the concentration of the unknown
@@ -513,19 +510,19 @@
     <h1>Reference List</h1>
     <ol>
         <li>Gerber, S.A., Rush, J., Stemman, O., Kirschner, M.W. &amp; Gygi, S.P. Absolute quantification of proteins and phosphoproteins from cell
-            lysates by tandem MS. <em>Proceedings of the National Academy of Sciences of the United States of America</em> <strong>100</strong>,
+            lysates by tandem MS. <i>Proceedings of the National Academy of Sciences of the United States of America</i> <b>100</b>,
             6940-6945 (2003).</li>
         <li>MacCoss, M.J., Wu, C.C., Matthews, D.E. &amp; Yates, J.R. Measurement of the isotope enrichment of stable isotope-labeled proteins using
-            high-resolution mass spectra of peptides. <em>Analytical Chemistry</em> <strong>77</strong>, 7646-53 (2005).</li>
+            high-resolution mass spectra of peptides. <i>Analytical Chemistry</i> <b>77</b>, 7646-53 (2005).</li>
         <li>Lavagnini, I. &amp; Magno, F. A statistical overview on univariate calibration, inverse regression, and detection limits: Application to
-            gas chromatography/mass spectrometry technique. <em>Mass spectrometry reviews</em> <strong>26</strong>, 1-18 </li>
-        <li>Watson, J.T. Mass Spectrometry. <em>Methods in Enzymology</em> <strong>193</strong>, 86–106 (1990).</li>
+            gas chromatography/mass spectrometry technique. <i>Mass spectrometry reviews</i> <b>26</b>, 1-18 </li>
+        <li>Watson, J.T. Mass Spectrometry. <i>Methods in Enzymology</i> <b>193</b>, 86–106 (1990).</li>
         <li>Patterson, B.W. &amp; Wolfe, R.R. Concentration dependence of methyl palmitate isotope ratios by electron impact ionization gas
-            chromatography/mass spectrometry. <em>Biological mass spectrometry</em> <strong>22</strong>, 481-6 (1993). </li>
+            chromatography/mass spectrometry. <i>Biological mass spectrometry</i> <b>22</b>, 481-6 (1993). </li>
         <li>MacCoss, M.J., Toth, M.J. &amp; Matthews, D.E. Evaluation and optimization of ion-current ratio measurements by selected-ion-monitoring
-            mass spectrometry. <em>Analytical chemistry</em> <strong>73</strong>, 2976-84 (2001).</li>
+            mass spectrometry. <i>Analytical chemistry</i> <b>73</b>, 2976-84 (2001).</li>
         <li>Stergachis, A., MacLean, B., Lee, K., Stamatoyannopoulos, J. A., &amp; MacCoss, M. J., Rapid empirical discovery of optimal peptides for
-            targeted proteomics <em>Nature Methods</em> In press</li>
+            targeted proteomics <i>Nature Methods</i> In press</li>
     </ol>
 </body>
 

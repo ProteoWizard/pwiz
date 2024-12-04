@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = @"TestFunctional\RedundantComboBoxTest.zip";
             RunFunctionalTest();
         }
-        private static bool IsRecordMode { get { return false; } }  // Set to true to get peak counts
+        protected override bool IsRecordMode => false;  // Set to true to get peak counts
 
 
         protected override void DoTest()
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(dlg, () => dlg.Close());
         }
 
-        private static void VerifyRedundant(ViewLibraryDlg dlg, int i, bool visible, int peakCount)
+        private void VerifyRedundant(ViewLibraryDlg dlg, int i, bool visible, int peakCount)
         {
             RunUI(() => dlg.SelectedIndex = i);
             // The peptide at index one does not have redundant spectra

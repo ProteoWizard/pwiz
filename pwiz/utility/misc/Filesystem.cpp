@@ -727,9 +727,9 @@ PWIZ_API_DECL void check_path_length(const string& path)
 }
 
 
-PWIZ_API_DECL TemporaryFile::TemporaryFile(const string& extension)
+PWIZ_API_DECL TemporaryFile::TemporaryFile(const string& filenamePrefix, const string& extension)
 {
-    filepath = bfs::temp_directory_path() / bfs::unique_path("%%%%%%%%%%%%%%%%" + extension);
+    filepath = bfs::temp_directory_path() / bfs::unique_path(filenamePrefix + "%%%%%%%%%%%%%%%%" + extension);
 }
 
 PWIZ_API_DECL TemporaryFile::~TemporaryFile()

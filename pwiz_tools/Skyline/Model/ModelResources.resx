@@ -818,4 +818,7 @@
   <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
     <value>Library Intensity</value>
   </data>
+  <data name="PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_" xml:space="preserve">
+      <value>Failed to interpret modified sequence {0}</value>
+  </data>
 </root>

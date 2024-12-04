@@ -35,6 +35,7 @@
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
     <MascotParserPath>..\..\libraries\msparser_2_8_1_x86_win64</MascotParserPath>
+    <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -211,6 +212,18 @@
     </Compile>
     <Compile Include="Alerts\AlertLinkDlg.Designer.cs">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ArdiaLogoutDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ArdiaLogoutDlg.Designer.cs">
+      <DependentUpon>ArdiaLogoutDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ArdiaLoginDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
+      <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
@@ -557,6 +570,18 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFolderObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaResources.Designer.cs">
+      <DependentUpon>ArdiaResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
@@ -2457,6 +2482,12 @@
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ArdiaLogoutDlg.resx">
+      <DependentUpon>ArdiaLogoutDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\ArdiaLoginDlg.resx">
+      <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.ja.resx">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -3113,6 +3144,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.ja.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
@@ -3684,6 +3716,13 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.ja.resx" />
+    <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>ArdiaResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.zh-CHS.resx" />
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>
     </EmbeddedResource>
@@ -3814,6 +3853,10 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x64\QTFLDebugLog.dll">
       <Link>QTFLDebugLog.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content  Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
+      <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\pwiz\data\common\unimod.xml">
@@ -4812,9 +4855,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.ja.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditRemoteAccountDlg.zh-CHS.resx">
       <DependentUpon>EditRemoteAccountDlg.cs</DependentUpon>
@@ -4833,6 +4878,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
@@ -7108,7 +7154,11 @@
       <FileType>File</FileType>
     </PublishFile>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <Version>1.0.2420.47</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
