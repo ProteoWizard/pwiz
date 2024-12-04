@@ -360,7 +360,7 @@ ASALocalRun/
 # NVidia Nsight GPU debugger configuration file
 *.nvuser
 
-/build-nt-x86
+build-nt-x86
 /src_subset
 /*.log
 /libraries/boost_1_*
