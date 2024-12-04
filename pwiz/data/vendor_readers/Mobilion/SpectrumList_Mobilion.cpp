@@ -76,7 +76,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, bool get
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Mobilion::spectrum(size_t index, DetailLevel detailLevel) const
 {
-    boost::lock_guard<boost::mutex> lock(processWideHdf5Mutex);  // lock_guard will unlock mutex when out of scope or when exception thrown (during destruction)
     if (index >= size_)
         throw runtime_error("[SpectrumList_Mobilion::spectrum()] Bad index: "
                             + lexical_cast<string>(index));

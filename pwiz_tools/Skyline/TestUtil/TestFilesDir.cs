@@ -396,10 +396,11 @@ namespace pwiz.SkylineTestUtil
                 try
                 {
                     Helpers.TryTwice(() => Directory.Delete(path, true));
+                    return; // If this succeeds then the lock was only temporary and we don't have a GUID folder to move back.
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{path}"", ""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
 
@@ -417,7 +418,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{guidName}"", ""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
         }
