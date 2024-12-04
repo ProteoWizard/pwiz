@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using AutoQC;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.PanoramaClient;
 using SharedBatch;
 using SharedBatch.Properties;
 using SharedBatchTest;
@@ -27,7 +29,19 @@ using SharedBatchTest;
 namespace AutoQCTest
 {
     public class TestUtils
-    {
+    { 
+        public const string PANORAMAWEB = "https://panoramaweb.org";
+        // public const string PANORAMAWEB = "http://localhost:8080";
+        public const string PANORAMAWEB_USER = "skyline_tester_admin@proteinms.net";
+        public const string PANORAMAWEB_TEST_FOLDER = "SkylineTest/AutoQcTest";
+
+        /// <summary>
+        /// Set this environment variable on your system to the password for
+        /// the PANORAMAWEB_USER above. Ask Vagisha or someone else with access
+        /// to share this password with you.
+        /// </summary>
+        private const string PASSWORD_ENVT_VAR = "PANORAMAWEB_PASSWORD";
+
         public static string GetTestFilePath(string fileName)
         {
             return Path.Combine(GetTestDataPath(), fileName);
@@ -66,10 +80,10 @@ namespace AutoQCTest
 
         public static PanoramaSettings GetTestPanoramaSettings(bool publishToPanorama = true)
         {
-            var panoramaServerUrl = publishToPanorama ? "https://panoramaweb.org/" : "";
-            var panoramaUserEmail = publishToPanorama ? "skyline_tester@proteinms.net" : "";
-            var panoramaPassword = publishToPanorama ? "lclcmsms" : "";
-            var panoramaProject = publishToPanorama ? "/SkylineTest" : "";
+            var panoramaServerUrl = publishToPanorama ? PANORAMAWEB : "";
+            var panoramaUserEmail = publishToPanorama ? PANORAMAWEB_USER : "";
+            var panoramaPassword = publishToPanorama ? GetPanoramaWebPassword() : "";
+            var panoramaProject = publishToPanorama ? PANORAMAWEB_TEST_FOLDER : "";
 
             return new PanoramaSettings(publishToPanorama, panoramaServerUrl, panoramaUserEmail, panoramaPassword, panoramaProject);
         }
@@ -134,8 +148,8 @@ namespace AutoQCTest
             }
 
             foreach (var config in configs)
-                testConfigManager.SetState(testConfigManager.State,
-                    testConfigManager.State.UserAddConfig(config, null));
+                testConfigManager.SetState(testConfigManager.AutoQcState,
+                    testConfigManager.AutoQcState.UserAddConfig(config, null));
             
             return testConfigManager;
         }
@@ -156,8 +170,61 @@ namespace AutoQCTest
             ConfigList.Importer = AutoQcConfig.ReadXml;
             ConfigList.XmlVersion = AutoQC.Properties.Settings.Default.XmlVersion;
         }
+
+        public static void AssertTextsInThisOrder(string source, params string[] textsInOrder)
+        {
+            var previousIndex = -1;
+            string previousString = null;
+
+            Assert.IsFalse(string.IsNullOrWhiteSpace(source), "Source string cannot be blank");
+            Assert.IsNotNull(textsInOrder, "No texts to compare");
+            foreach (var part in textsInOrder)
+            {
+                var index = source.IndexOf(part, previousIndex == -1 ? 0 : previousIndex, StringComparison.Ordinal);
+
+                if (index == -1)
+                    Assert.Fail("Text '{0}' not found{1} in '{2}'.", part,
+                        previousString == null ? string.Empty : $" after '{previousString}'",
+                        source);
+
+                previousIndex = index;
+                previousString = part;
+            }
+        }
+
+        public static string GetPanoramaWebPassword()
+        {
+            var panoramaWebPassword = Environment.GetEnvironmentVariable(PASSWORD_ENVT_VAR);
+            if (string.IsNullOrWhiteSpace(panoramaWebPassword))
+            {
+                Assert.Fail(
+                    $"Environment variable ({PASSWORD_ENVT_VAR}) with the PanoramaWeb password for {PANORAMAWEB_USER} is not set. Cannot run test.");
+            }
+
+            return panoramaWebPassword;
+        }
+
+        public static string CreatePanoramaWebTestFolder(WebPanoramaClient panoramaClient, string parentFolder, string folderName)
+        {
+            // Create a PanoramaWeb folder for the test
+            var random = new Random();
+            string uniqueFolderName;
+            do
+            {
+                uniqueFolderName = folderName + random.Next(1000, 9999);
+            }
+            while (panoramaClient.FolderExists(parentFolder + @"/" + uniqueFolderName));
+
+            AssertEx.NoExceptionThrown<Exception>(() => panoramaClient.CreateTargetedMsFolder(parentFolder, uniqueFolderName));
+            return $"{parentFolder}/{uniqueFolderName}";
+        }
+
+        public static void DeletePanoramaWebTestFolder(WebPanoramaClient panoramaClient, string folderPath)
+        {
+            AssertEx.NoExceptionThrown<Exception>(() => panoramaClient?.DeleteFolderIfExists(folderPath));
+        }
     }
-    
+
     class TestImportContext : ImportContext
     {
         public DateTime OldestFileDate;

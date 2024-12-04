@@ -1798,7 +1798,7 @@
     <value>フォーマット行</value>
   </data>
   <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
-    <value>最大Q値</value>
+    <value>最大q値</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="DdaSearchSettings_ScoreThreshold" xml:space="preserve">

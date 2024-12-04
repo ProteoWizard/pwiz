@@ -134,17 +134,11 @@
     <Setting Name="LockYChrom" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="SrmResultsDirectory" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
-    </Setting>
     <Setting Name="AutoZoomChromatogram" Type="System.String" Scope="User">
       <Value Profile="(Default)">none</Value>
     </Setting>
     <Setting Name="TransformTypeChromatogram" Type="System.String" Scope="User">
       <Value Profile="(Default)">interpolated</Value>
-    </Setting>
-    <Setting Name="SrmResultsSourceType" Type="System.String" Scope="User">
-      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ShowRetentionTimeGraph" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
@@ -870,10 +864,10 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="FeatureFindingMinIntensityPPM" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">10.0</Value>
+      <Value Profile="(Default)">100.0</Value>
     </Setting>
     <Setting Name="FeatureFindingMinIdotP" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">0.98</Value>
+      <Value Profile="(Default)">0.9</Value>
     </Setting>
     <Setting Name="FeatureFindingSignalToNoise" Type="System.Double" Scope="User">
       <Value Profile="(Default)">3</Value>
@@ -883,6 +877,12 @@
     </Setting>
     <Setting Name="GroupComparisonSuspendLabelLayout" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RelativeAbundanceLogScale" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="KoinaRetryCount" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">10</Value>
     </Setting>
   </Settings>
 </SettingsFile>

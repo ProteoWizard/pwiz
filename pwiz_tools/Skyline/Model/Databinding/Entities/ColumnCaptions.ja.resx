@@ -220,7 +220,7 @@
     <value>計算濃度</value>
   </data>
   <data name="CalculatedConcentrationMessage">
-    <value>計算濃度メッセージ</value>
+    <value>計算濃度（メッセージ）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalculatedConcentrationRaw">
@@ -784,7 +784,7 @@
     <value>分子リスト存在量</value>
   </data>
   <data name="MoleculeListAbundanceMessage">
-    <value>分子リストの存在量に関するメッセージ</value>
+    <value>分子リスト存在量（メッセージ）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceStrict">
@@ -792,11 +792,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>分子リスト存在量トランジション（平均）</value>
+    <value>分子リスト存在量（トランジション平均）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>分子リスト存在量トランジション（合計）</value>
+    <value>分子リスト存在量（トランジション合計）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListLocator">
@@ -869,7 +869,7 @@
     <value>正規化面積</value>
   </data>
   <data name="NormalizedAreaMessage">
-    <value>正規化面積に関するメッセージ</value>
+    <value>正規化面積（メッセージ）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaRaw">
@@ -977,7 +977,7 @@
     <value>ペプチドシーケンス長</value>
   </data>
   <data name="PeptideSpectrumMatchCount">
-    <value>ペプチドスペクトル一致数</value>
+    <value>ペプチドスペクトルマッチ数</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PointCount">
@@ -999,7 +999,7 @@
     <value>プリカーサー計算濃度</value>
   </data>
   <data name="PrecursorCalculatedConcentrationMessage">
-    <value>プリカーサー計算濃度に関するメッセージ</value>
+    <value>プリカーサー計算濃度（メッセージ）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationRaw">
@@ -1041,7 +1041,7 @@
     <value>プリカーサー正規化面積</value>
   </data>
   <data name="PrecursorNormalizedAreaMessage">
-    <value>プリカーサー正規化面積に関するメッセージ</value>
+    <value>プリカーサー正規化面積（メッセージ）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNormalizedAreaRaw">
@@ -1119,7 +1119,7 @@
     <value>タンパク質存在量</value>
   </data>
   <data name="ProteinAbundanceMessage">
-    <value>タンパク質存在量に関するメッセージ</value>
+    <value>タンパク質存在量（メッセージ）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceStrict">
@@ -1127,11 +1127,11 @@
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>タンパク質存在量トランジション（平均）</value>
+    <value>タンパク質存在量（トランジション平均）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>タンパク質存在量トランジション（合計）</value>
+    <value>タンパク質存在量（トランジション合計）</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">

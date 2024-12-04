@@ -666,6 +666,7 @@ int main(int argc, char* argv[])
 
     try
     {
+        bfs::current_path(bfs::path(testArgs[0]).parent_path()); // set working directory to test exe location
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "PrmSchedulerTest\n";
 
