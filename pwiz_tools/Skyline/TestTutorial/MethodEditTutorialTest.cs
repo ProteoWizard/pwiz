@@ -54,6 +54,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestMethodEditTutorial()
         {
+Program.ReportTutorialTestProgress = true; // Write screenshot info to console, trying to figure out where this hangs
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsPauseForAuditLog = true;
