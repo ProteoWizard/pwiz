@@ -104,12 +104,13 @@ namespace pwiz.SkylineTestTutorial
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/PRM-22_2.pdf";
 
             TestFilesZipPaths = new[]
-                {
-                    UseRawFiles
-                        ? @"http://skyline.ms/tutorials/TargetedMSMS_2.zip"
-                        : @"http://skyline.ms/tutorials/TargetedMSMSMzml_2.zip",
-                    @"TestTutorial\TargetedMSMSViews.zip"
-                };
+            {
+                UseRawFiles
+                    ? @"http://skyline.ms/tutorials/TargetedMSMS_2.zip"
+                    : @"http://skyline.ms/tutorials/TargetedMSMSMzml_2.zip",
+                @"TestTutorial\TargetedMSMSViews.zip",
+                @"TestTutorial\TargetedMSMS_2_Extras.zip"
+            };
             RunFunctionalTest();
         }
 
@@ -202,7 +203,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(ArrayUtil.ContainsAll(new[] {IonType.y, IonType.b, IonType.precursor},
                     tranSettingsFullScan.Filter.PeptideIonTypes));
                 Assert.IsTrue(ArrayUtil.ContainsAll(new[] { IonType.custom, IonType.precursor },
-                        tranSettingsFullScan.Filter.SmallMoleculeIonTypes));
+                    tranSettingsFullScan.Filter.SmallMoleculeIonTypes));
             }
 
             RunUI(() => SkylineWindow.ExpandPrecursors());
@@ -383,7 +384,7 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page", 16);
-            
+
             RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg => dlg.OkDialog());
             doc = WaitForDocumentChangeLoaded(doc, WAIT_TIME*2);    // double wait time, becuase of intermittent failures on nightly runs
             if (AsSmallMolecules)
@@ -568,25 +569,41 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(AsSmallMoleculeMasses ? 2 : 3,
                     SkylineWindow.GraphPeakArea.Categories.Count()); // Library and two replicates
                 Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount);
+
+                SkylineWindow.ActivateReplicate("20fmol");
             });
             // Graph p.23
             PauseForPeakAreaGraphScreenShot("Peak Areas Replicate Comparison graph metafile");
             if (!AsSmallMoleculeMasses)
                 VerifyDotProducts(0.99, 0.98);
 
-            // Screenshot of full 5-point dilution curve
-            // TODO: Open saved document with 5-point calibration curve with data not available to this test. Meantime, use a placeholder.
-            PauseForPeakAreaGraphScreenShot(
-                "PLACEHOLDER. Saved screenshot was manually generated. See todo in test for more info",
-                processShot: MarkBitmapAsPlaceholder);
+            // Switch documents for the next screenshot with all 5 runs
+            RunUI(() => SkylineWindow.SaveDocument());
+
+            var fiveRunFile = TestFilesDirs[2].GetTestPath(@"BSA_Protea_label_free_20100323_meth3_long_all.sky");
+            RunUI(() => SkylineWindow.OpenFile(fiveRunFile));
+            FindNode("K.LVNELTEFAK.T [66, 75]");
+
+            RunUI(() =>
+            {
+                SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
+                SkylineWindow.GraphPeakArea.TryGetGraphPane(out AreaReplicateGraphPane pane);
+                pane.GraphSummary.ActiveLibrary = true;
+            });
+
+            PauseForPeakAreaGraphScreenShot("Peak Areas five point calibration curve");
 
             // Check graph p23. (checked)
-            RunUI(() => 
-                {
-                    SkylineWindow.ShowAllTransitions();
-                    if (!IsCoverShotMode)
-                        SkylineWindow.ShowSplitChromatogramGraph(true);                    
-                });
+            RunUI(() =>
+            {
+                // Restore PRM tutorial to its state prior to taking the 5-point calibration curve screenshot
+                SkylineWindow.OpenFile(GetTestPath(@"Low Res\BSA_Protea_label_free_meth3.sky"));
+                WaitForDocumentLoaded();
+
+                SkylineWindow.ShowAllTransitions();
+                if (!IsCoverShotMode)
+                    SkylineWindow.ShowSplitChromatogramGraph(true);
+            });
 
             // Select precursor
             if (!AsSmallMoleculeMasses)
@@ -640,11 +657,13 @@ namespace pwiz.SkylineTestTutorial
 
             // PeakAreaGraph Normalize to total p.27.
             RunUI(() =>
-                {
-                    SkylineWindow.ShowPeakAreaReplicateComparison();
-                    SkylineWindow.ShowProductTransitions();
-                    SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
-                });
+            {
+                SkylineWindow.ShowPeakAreaReplicateComparison();
+                SkylineWindow.ShowProductTransitions();
+                SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.TOTAL);
+
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
+            });
 
             // Ensure graph looks like p27.
             if (!AsSmallMoleculeMasses)
@@ -936,6 +955,8 @@ namespace pwiz.SkylineTestTutorial
                 var graph = SkylineWindow.GraphPeakArea.GraphControl;
                 var scale = graph.GraphPane.YAxis.Scale;
                 scale.Max = 25000000;
+
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
             });
             PauseForPeakAreaGraphScreenShot("Peak Areas Replicate Comparison graph metafile");
             WaitForDotProducts();
