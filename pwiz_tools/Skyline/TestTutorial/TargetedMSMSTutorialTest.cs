@@ -594,7 +594,7 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 PauseForPeakAreaGraphScreenShot("Peak Areas five point calibration curve");
-
+                
                 RunUI(() =>
                 {
                     // Restore PRM tutorial to its state prior to taking the 5-point calibration curve screenshot
