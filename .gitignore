@@ -402,6 +402,7 @@ Version.cpp
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x64/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/x86/
 /pwiz_aux/msrc/utility/vendor_api/Bruker/**/*.h
+/pwiz_aux/msrc/utility/vendor_api/Bruker/**.SxS.manifest
 /pwiz_aux/msrc/utility/vendor_api/Mobilion/*.h
 /pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.xml
 /pwiz_aux/msrc/utility/vendor_api/Shimadzu/*.txt
