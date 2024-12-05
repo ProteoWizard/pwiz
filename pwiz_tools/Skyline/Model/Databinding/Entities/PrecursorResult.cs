@@ -443,8 +443,9 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     intensity += chromatogramInfo.Intensities[i];
                 }
 
-                double ionCount = intensity * spectrumMetadata.InjectionTime;
-                double spectrumIonCount = totalIonCount * spectrumMetadata.InjectionTime;
+                var injectionTimeSeconds = spectrumMetadata.InjectionTime / 1000;
+                double ionCount = intensity * injectionTimeSeconds;
+                double spectrumIonCount = totalIonCount * injectionTimeSeconds;
                 
                 if (apexIntensity == null || intensity > apexIntensity.Value)
                 {

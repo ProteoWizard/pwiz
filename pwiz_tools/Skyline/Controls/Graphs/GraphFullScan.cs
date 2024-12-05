@@ -603,7 +603,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var injectionTime = _msDataFileScanHelper.MsDataSpectra.Sum(scan => scan.Metadata.InjectionTime);
                 if (injectionTime != 0)
                 {
-                    spectrumProperties.InjectionTime = injectionTime.ToString(CultureInfo.CurrentCulture);
+                    spectrumProperties.InjectionTime = injectionTime.ToString(@"0.####", CultureInfo.CurrentCulture);
                 }
 
                 if (_documentContainer is SkylineWindow stateProvider)
