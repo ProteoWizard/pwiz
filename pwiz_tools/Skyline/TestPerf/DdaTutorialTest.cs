@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -267,6 +268,7 @@ namespace TestPerf
             {
 
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
+                WaitForConditionUI(() => importPeptideSearchDlg.SearchControl.PercentComplete > 25);
                 PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", tutorialPage++);
 
                 // Wait for search to finish
@@ -297,6 +299,7 @@ namespace TestPerf
             else
             {
                 var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                RunUIForScreenShot(() => ambiguousDlg.Height = 448);
                 PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
                 RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                     Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
@@ -351,7 +354,7 @@ namespace TestPerf
                     }
                 }
             });
-            PauseForScreenShot("Import Peptide Search - Empty Proteins dialog", tutorialPage++);
+            PauseForScreenShot<AssociateProteinsDlg>("Import Peptide Search - Associate Proteins dialog", tutorialPage++);
 
             using (new WaitDocumentChange(null, true, 600 * 1000))
             {
@@ -376,7 +379,7 @@ namespace TestPerf
 
             RunUI(() => SkylineWindow.ShowPeakAreaReplicateComparison());
             RefreshGraphs();
-            PauseForScreenShot("Peak Areas - Replicate Comparison", tutorialPage++);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas - Replicate Comparison", tutorialPage++);
 
             RunUI(() =>
             {
@@ -406,6 +409,10 @@ namespace TestPerf
             RunUI(() => SkylineWindow.SaveDocument());
 
             DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
+            foreach (var searchFile in SearchFiles)
+            {
+                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"));
+            }
         }
 
         private void RefreshGraphs()
