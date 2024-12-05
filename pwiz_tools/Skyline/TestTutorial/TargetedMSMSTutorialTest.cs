@@ -577,20 +577,11 @@ namespace pwiz.SkylineTestTutorial
             if (!AsSmallMoleculeMasses)
                 VerifyDotProducts(0.99, 0.98);
 
-            // TODO: Dot product values differ between old and new screenshots
+            // Switch documents for the next screenshot with all 5 runs
             RunUI(() => SkylineWindow.SaveDocument());
 
-            var missingFileDlg = ShowDialog<MissingFileDlg>(
-                () =>
-                {
-                    var fivePointCalibrationFile = TestFilesDirs[2].GetTestPath(@"Five Point Calibration Curve\BSA_Protea_label_free_20100323_meth3_long_all.sky");
-                    SkylineWindow.OpenFile(fivePointCalibrationFile);
-                }
-            );
-
-            // Close expected dialog box about missing the NIST Bovine peptide library
-            OkDialog(missingFileDlg, missingFileDlg.OkDialog);
-            
+            var fiveRunFile = TestFilesDirs[2].GetTestPath(@"BSA_Protea_label_free_20100323_meth3_long_all.sky");
+            RunUI(() => SkylineWindow.OpenFile(fiveRunFile));
             FindNode("K.LVNELTEFAK.T [66, 75]");
 
             RunUI(() =>
