@@ -577,33 +577,36 @@ namespace pwiz.SkylineTestTutorial
             if (!AsSmallMoleculeMasses)
                 VerifyDotProducts(0.99, 0.98);
 
-            // Switch documents for the next screenshot with all 5 runs
-            RunUI(() => SkylineWindow.SaveDocument());
-
-            var fiveRunFile = TestFilesDirs[2].GetTestPath(@"BSA_Protea_label_free_20100323_meth3_long_all.sky");
-            RunUI(() => SkylineWindow.OpenFile(fiveRunFile));
-            FindNode("K.LVNELTEFAK.T [66, 75]");
-
-            RunUI(() =>
+            if (!AsSmallMolecules)
             {
-                SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
-                SkylineWindow.GraphPeakArea.TryGetGraphPane(out AreaReplicateGraphPane pane);
-                pane.GraphSummary.ActiveLibrary = true;
-            });
+                // Switch documents for the next screenshot with all 5 runs
+                RunUI(() => SkylineWindow.SaveDocument());
 
-            PauseForPeakAreaGraphScreenShot("Peak Areas five point calibration curve");
+                var fiveRunFile = TestFilesDirs[2].GetTestPath(@"BSA_Protea_label_free_20100323_meth3_long_all.sky");
+                RunUI(() => SkylineWindow.OpenFile(fiveRunFile));
+                FindNode("K.LVNELTEFAK.T [66, 75]");
 
-            // Check graph p23. (checked)
-            RunUI(() =>
-            {
-                // Restore PRM tutorial to its state prior to taking the 5-point calibration curve screenshot
-                SkylineWindow.OpenFile(GetTestPath(@"Low Res\BSA_Protea_label_free_meth3.sky"));
-                WaitForDocumentLoaded();
+                RunUI(() =>
+                {
+                    SkylineWindow.ShowReplicateOrder(SummaryReplicateOrder.time);
+                    SkylineWindow.GraphPeakArea.TryGetGraphPane(out AreaReplicateGraphPane pane);
+                    pane.GraphSummary.ActiveLibrary = true;
+                });
 
-                SkylineWindow.ShowAllTransitions();
-                if (!IsCoverShotMode)
-                    SkylineWindow.ShowSplitChromatogramGraph(true);
-            });
+                PauseForPeakAreaGraphScreenShot("Peak Areas five point calibration curve");
+
+                // Check graph p23. (checked)
+                RunUI(() =>
+                {
+                    // Restore PRM tutorial to its state prior to taking the 5-point calibration curve screenshot
+                    SkylineWindow.OpenFile(GetTestPath(@"Low Res\BSA_Protea_label_free_meth3.sky"));
+                    WaitForDocumentLoaded();
+
+                    SkylineWindow.ShowAllTransitions();
+                    if (!IsCoverShotMode)
+                        SkylineWindow.ShowSplitChromatogramGraph(true);
+                });
+            }
 
             // Select precursor
             if (!AsSmallMoleculeMasses)
