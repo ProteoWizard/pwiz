@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
         private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP);
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
-        private string InputFileName => INPUT + UNDERSCORE +Document.DocumentHash +EXT_TSV;
+        private string InputFileName => INPUT + UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
@@ -206,17 +206,20 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     if (!mod.UnimodId.HasValue)
                     {
                         // TODO(xgwang): update this exception to an Alphapeptdeep specific one
-                        throw new Exception(
-                            @$"Modification {mod} is missing unimod ID, which is required by AlphapeptdeepLibraryBuilder");
+                        //throw new Exception(
+                        Messages.WriteAsyncUserMessage(
+                            @$"[WARN:] Peptide {modifiedSequence} has Modification {mod}, which is missing unimod ID required by AlphapeptdeepLibraryBuilder");
+                        continue;
                     }
 
                     var unimodId = mod.UnimodId.Value;
                     if (!AlphapeptdeepModificationName.TryGetValue(unimodId, out var modName))
                     {
                         // TODO(xgwang): update this exception to an Alphapeptdeep specific one
-                        throw new Exception(
-                            @$"Modification with unimod ID of {unimodId} is not yet supported by Alphapeptdeep. Please remove such modifications and try again.");
-
+                        //throw new Exception(
+                        Messages.WriteAsyncUserMessage(
+                            @$"[WARN:] Peptide {modifiedSequence} has Modification named {modName} with unimod ID of {unimodId}, which is not yet supported by Alphapeptdeep. This peptide will be skipped!");
+                        continue;
                     }
                     modsBuilder.Append(modName);
                     modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
