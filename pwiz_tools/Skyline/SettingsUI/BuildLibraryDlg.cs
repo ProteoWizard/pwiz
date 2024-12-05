@@ -445,18 +445,15 @@ namespace pwiz.Skyline.SettingsUI
                 fileName = string.Empty;
             }
 
-            using (var dlg = new SaveFileDialog())
+            using (var dlg = new FolderBrowserDialog())
             {
-                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
-                dlg.FileName = fileName;
-                dlg.OverwritePrompt = true;
-                dlg.DefaultExt = BiblioSpecLiteSpec.EXT;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB);
+                dlg.SelectedPath = Settings.Default.LibraryDirectory;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
+                    Settings.Default.LibraryDirectory = dlg.SelectedPath;
 
-                    textPath.Text = dlg.FileName;
+                    textPath.Text = dlg.SelectedPath;
+                    textName_TextChanged(sender, e);
                 }
             }
         }
