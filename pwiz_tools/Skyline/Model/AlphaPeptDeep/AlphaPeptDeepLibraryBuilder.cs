@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         // TODO(xgwang): update this exception to an Alphapeptdeep specific one
                         //throw new Exception(
                         Messages.WriteAsyncUserMessage(
-                            @$"[WARN:] Peptide {modifiedSequence} has Modification named {modName} with unimod ID of {unimodId}, which is not yet supported by Alphapeptdeep. This peptide will be skipped!");
+                            @$"[WARN:] Peptide {modifiedSequence} has Modification with unimod ID of {unimodId}, which is not yet supported by Alphapeptdeep. This peptide will be skipped!");
                         continue;
                     }
                     modsBuilder.Append(modName);
