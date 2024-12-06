@@ -170,7 +170,7 @@ void BlibFilter::parseCommandLine(const int argc,
 
             ("best-scoring,b",
              value<bool>()->default_value(false),
-             "Description of option.  Default false.")
+             "Select only the spectrum with the best score for each peptide (spectrum TIC is used as tiebreaker).  Default false.")
 
             ;
 
