@@ -50,8 +50,8 @@ targets['SkylineWithTestConnected'] = \
 {
     'master':
     {
-        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
-        ,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
+        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline code inspection" # depends on "bt209",
+        ,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline master and PRs TestConnected tests" # depends on "bt209",
         ,"bt209": "Skyline master and PRs (Windows x86_64)"
     },
     'release':
