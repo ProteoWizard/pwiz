@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Found 0 or more than one files with _pth extension, this is unexpected.
+        ///   Looks up a localized string similar to Expecting one and only one file with _pth extension.
         /// </summary>
         public static string PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected {
             get {
