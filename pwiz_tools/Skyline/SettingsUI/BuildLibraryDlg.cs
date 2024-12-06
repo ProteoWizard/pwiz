@@ -113,6 +113,10 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private SettingsListBoxDriver<LibrarySpec> _driverLibrary;
 
+        private string _lastUpdatedFileName;
+        private string _lastUpdatedLibName;
+
+
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -297,7 +301,7 @@ namespace pwiz.Skyline.SettingsUI
                         // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
                     }
 
-                    // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
+                    // TODO: Create CarafeLibraryBuilder class with everything necessary to build a library
                     if (!CreateKoinaBuilder(name, outputPath))
                         return false;
                 }
@@ -428,9 +432,17 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
             string id = (name.Length == 0 ? string.Empty : Helpers.MakeId(textName.Text));
-            textPath.Text = id.Length == 0
-                                ? outputPath
-                                : Path.Combine(outputPath, id + BiblioSpecLiteSpec.EXT);
+        
+            if (_lastUpdatedFileName.IsNullOrEmpty() || _lastUpdatedFileName == _lastUpdatedLibName)
+            {
+                textPath.Text = id.Length == 0
+                              ? outputPath
+                              : Path.Combine(outputPath, id + BiblioSpecLiteSpec.EXT);
+                _lastUpdatedFileName = id;
+                _lastUpdatedLibName = id;
+
+            }
+
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -445,15 +457,18 @@ namespace pwiz.Skyline.SettingsUI
                 fileName = string.Empty;
             }
 
-            using (var dlg = new FolderBrowserDialog())
+            using (var dlg = new SaveFileDialog())
             {
-                dlg.SelectedPath = Settings.Default.LibraryDirectory;
+                dlg.InitialDirectory = Settings.Default.LibraryDirectory;
+                dlg.FileName = fileName;
+                dlg.OverwritePrompt = true;
+                dlg.DefaultExt = BiblioSpecLiteSpec.EXT;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    Settings.Default.LibraryDirectory = dlg.SelectedPath;
-
-                    textPath.Text = dlg.SelectedPath;
-                    textName_TextChanged(sender, e);
+                    Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
+                    textPath.Text = dlg.FileName;
+                    _lastUpdatedFileName = Path.GetFileNameWithoutExtension(dlg.FileName);
                 }
             }
         }
