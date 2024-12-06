@@ -1991,6 +1991,8 @@ namespace SkylineTester
                 {
                     runLoops.Checked = true;
                     runLoopsCount.Text = 1.ToString();
+                    Offscreen.Checked = false;  // Can't do screenshots offscreen
+                    Offscreen.Enabled = false;
                 }
             }
         }
