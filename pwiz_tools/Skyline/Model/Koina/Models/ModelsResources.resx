@@ -130,4 +130,13 @@
   <data name="KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge" xml:space="preserve">
     <value>The charge {0} is not supported by Koina. The maximum supported charge is {1}.</value>
   </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification" xml:space="preserve">
+    <value>Warning: Peptide {0} has Modification {1}, which is missing unimod ID and unknown to AlphapeptdeepLibraryBuilder. This peptide will be skipped!</value>
+  </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification" xml:space="preserve">
+    <value>Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by AlphapeptdeepLibraryBuilder. This peptide will be skipped!</value>
+  </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_NonUnique_ModificationAccession" xml:space="preserve">
+    <value>Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case.</value>
+  </data>
 </root>
