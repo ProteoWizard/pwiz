@@ -40,6 +40,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Model.Koina.Models;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -407,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             }
 
-            using var dlg = new PythonInstallerDlg(pythonInstaller);
+            using var dlg = new MultiButtonMsgDlg(string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION), string.Format(Resources.OK));
             if (dlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
