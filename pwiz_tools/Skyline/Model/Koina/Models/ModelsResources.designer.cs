@@ -59,6 +59,7 @@ namespace pwiz.Skyline.Model.Koina.Models {
                 resourceCulture = value;
             }
         }
+        
         /// <summary>
         ///   Looks up a localized string similar to Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case..
         /// </summary>
@@ -67,6 +68,16 @@ namespace pwiz.Skyline.Model.Koina.Models {
                 return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_NonUnique_ModificationAccession", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python {0} installation is required, click &apos;OK&apos; to proceed..
+        /// </summary>
+        public static string AlphaPeptDeep_BuildPrecursorTable_Python_0_installation_is_required {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by AlphapeptdeepLibraryBuilder. This peptide will be skipped!.
         /// </summary>
@@ -75,6 +86,7 @@ namespace pwiz.Skyline.Model.Koina.Models {
                 return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification", resourceCulture);
             }
         }
+        
         /// <summary>
         ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1}, which is missing unimod ID and unknown to AlphapeptdeepLibraryBuilder. This peptide will be skipped!.
         /// </summary>
@@ -83,13 +95,14 @@ namespace pwiz.Skyline.Model.Koina.Models {
                 return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification", resourceCulture);
             }
         }
+        
         /// <summary>
         ///   Looks up a localized string similar to Exporting Koina spectra to BiblioSpec library.
         /// </summary>
         public static string KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library {
             get {
-                return ResourceManager.GetString("KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_li" +
-                        "brary", resourceCulture);
+                return ResourceManager.GetString("KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_libra" +
+                        "ry", resourceCulture);
             }
         }
         
