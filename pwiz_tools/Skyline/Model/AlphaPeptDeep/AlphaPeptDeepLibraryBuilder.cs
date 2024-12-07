@@ -13,6 +13,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
@@ -31,13 +32,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
     public class ModificationType
     {
-        public ModificationType(int accession, string name, string comment)
+        public ModificationType(string accession, string name, string comment)
         {
             Accession = accession;
             Name = name;
             Comment = comment;
         }
-        public int Accession { get; private set; }
+        public string Accession { get; private set; }
         public string Name { get; private set; }
         public string Comment { get; private set; }
 
@@ -76,17 +77,26 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string UNDERSCORE = TextUtil.UNDERSCORE;
 
         /// <summary>
-        /// key: unimod ID, value: modification name supported by Alphapeptdeep
+        /// List of UniMod Modifications available
         /// </summary>
-        private static readonly IList<ModificationType> AlphapeptdeepModificationName = new []
+        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
+        private static IList<ModificationType> populateUniModList()
         {
-            new ModificationType(4, @"Carbamidomethyl@C", ""),
-            new ModificationType(21, @"Phospho@S", ""),
-            new ModificationType(35, @"Oxidation@M", ""),
-        };
+            IList<ModificationType> modList = new List<ModificationType>();
+            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
+            {
+                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
+                    continue;
+                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + ":" + UniModData.UNI_MOD_DATA[m].AAs;
+                var name = UniModData.UNI_MOD_DATA[m].Name;
+                var formula = UniModData.UNI_MOD_DATA[m].Formula;
+                modList.Append(new ModificationType(accession, name, formula));
+            }
+            return modList;
+        }
 
-        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
-
+        private static readonly IEnumerable<string> PrecursorTableColumnNames =
+            new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
         private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP);
@@ -234,11 +244,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         continue;
                     }
 
-                    var unimodId = mod.UnimodId;
-                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodId.Value);
+                    var unimodIdAA = mod.UnimodIdAA;
+                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA);
                     if (modNames.Count() == 0)
                     {
-                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodId);
+                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
                         Messages.WriteAsyncUserMessage(msg);
                         continue;
                     }
