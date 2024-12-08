@@ -906,5 +906,73 @@ namespace pwiz.PanoramaClient
         {
             throw new InvalidOperationException();
         }
+
+        public class PanoramaFolder
+        {
+            private readonly string _name;
+            private readonly bool _writable;
+            private readonly bool _isTargetedMsFolder;
+            private string _parentPath;
+            private IList<PanoramaFolder> _children;
+
+            public PanoramaFolder(string name) : this(name, true, true)
+            {
+            }
+
+            public PanoramaFolder(string name, bool writable, bool isTargetedMsFolder)
+            {
+                _name = name;
+                _writable = writable;
+                _isTargetedMsFolder = isTargetedMsFolder;
+            }
+
+            public void AddChild(PanoramaFolder child)
+            {
+                _children ??= new List<PanoramaFolder>();
+                child._parentPath = GetPath();
+                _children.Add(child);
+            }
+
+            private bool HasChildren()
+            {
+                return _children?.Count > 0;
+            }
+
+            private string GetPath()
+            {
+                return (_parentPath ?? "/") + _name + "/";
+            }
+
+            public JObject ToJson(bool addRoot = false)
+            {
+                var children = new JArray();
+                if (HasChildren())
+                {
+                    foreach (var child in _children)
+                    {
+                        children.Add(child.ToJson());
+                    }
+                }
+
+                var folderJson =  new JObject
+                {
+                    ["name"] = _name,
+                    ["path"] = GetPath(),
+                    ["userPermissions"] = _writable ? 3 : 1,
+                    ["folderType"] = _isTargetedMsFolder ? "Targeted MS" : "Collaboration",
+                    ["activeModules"] = _isTargetedMsFolder ? new JArray("TargetedMS") 
+                        : new JArray("SomethingElse"),
+                    ["children"] = children
+                };
+
+                if (!addRoot) return folderJson;
+                var root = new JObject
+                {
+                    ["name"] = "",
+                    ["children"] = new JArray(folderJson)
+                };
+                return root;
+            }
+        }
     }
 }
