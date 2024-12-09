@@ -1633,7 +1633,7 @@ namespace quameter
                    medianSigNoisMS2 = 0, idRatioQ1 = 0, idRatioQ2 = 0, idRatioQ3 = 0, idRatioQ4 = 0,
                    peakPrecursorIntensity95thPercentile = 0, peakPrecursorIntensity5thPercentile = 0;
             // BEG KEESH MAYO ASYMM METRIC
-            map<double, double> surviving_peaks;  // remaining "good peaks" to cacluate new peak asymmetry ratio metric
+            map<double, double> surviving_peaks;  // was RT => Best Peak Intensity remaining "good peaks" to cacluate new peak asymmetry ratio metric
             // END KEESH MAYO ASYMM METRIC
 
             if (g_rtConfig->MetricsType == "nistms")
@@ -1795,7 +1795,7 @@ namespace quameter
                     // eliminate negative signal
                     BOOST_FOREACH(double& intensity, window.MS1Intensity)
                         intensity = max(0.0, intensity);
-
+  
                     CrawdadPeakFinder crawdadPeakFinder;
                     crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
 
@@ -1830,6 +1830,7 @@ namespace quameter
 
                     // find the peak with the highest sum of (PSM scores * interpolated SIC) within the peak;
                     // if no IDs fall within peaks, find the peak closest to the best scoring id
+                   
                     map<double, map<double, Peak> > peakByIntensityBySumOfProducts;
                     BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks) 
                     {
@@ -1837,6 +1838,8 @@ namespace quameter
                         double endTime = window.MS1RT[crawPeak->getEndIndex()];
                         double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
                         //double peakTime = startTime + (endTime-startTime)/2;
+                        double start01Time = window.MS1RT[crawPeak->getStart01Index()];
+                        double end01Time = window.MS1RT[crawPeak->getEnd01Index()];
 
                         // skip degenerate peaks
                         if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
@@ -1850,7 +1853,8 @@ namespace quameter
 
                         // Crawdad Fwhm is in index units; we have to translate it back to time units
                         double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
-                        Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
+                        Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight(),
+                            start01Time, end01Time);
                         window.peaks.insert(peak);
 
                         if (!window.bestPeak || fabs(window.bestPeak->peakTime - window.maxScoreScanStartTime) >
@@ -1919,8 +1923,9 @@ namespace quameter
                     // eliminate negative signal
                     BOOST_FOREACH(double& intensity, info.chromatogram.MS1Intensity)
                         intensity = max(0.0, intensity);
-
+                    // The second peak finder is for finding peaks for chromatograms of unidentified spectra, grouped by precursor m/z IIRC.
                     CrawdadPeakFinder crawdadPeakFinder;
+                    // keesh NOTE-- the time vector lc.MS1RT is not stored in crawdadPeakFinder, so difficult to convert back to time in here.
                     crawdadPeakFinder.SetChromatogram(lc.MS1RT, lc.MS1Intensity);
                     vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
 
@@ -1933,6 +1938,8 @@ namespace quameter
                         double endTime = lc.MS1RT[crawPeak->getEndIndex()];
                         double peakTime = lc.MS1RT[crawPeak->getTimeIndex()];
                         //double peakTime = startTime + (endTime-startTime)/2;
+                        double start01Time = lc.MS1RT[crawPeak->getStart01Index()];
+                        double end01Time = lc.MS1RT[crawPeak->getEnd01Index()];
 
                         // skip degenerate peaks
                         if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
@@ -1946,7 +1953,8 @@ namespace quameter
 
                         // Crawdad Fwhm is in index units; we have to translate it back to time units
                         double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
-                        Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
+                        Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight(),
+                            start01Time, end01Time);
                         lc.peaks.insert(peak);
 
                         if (!lc.bestPeak || fabs(peakTime - info.spectrum->scanStartTime) < fabs(lc.bestPeak->peakTime - info.spectrum->scanStartTime))
@@ -1968,16 +1976,15 @@ namespace quameter
                             for (size_t i = 0; i < distinctMatch.PSMs.size(); ++i) // the best peak is shared between all PSMs
                             {  
                                 identifiedPeakWidths(distinctMatch.bestPeak->fwhm);
-                                // TODO-- Make sure that we have the right peaks 
-                                double startTime = distinctMatch.bestPeak->startTime / 60.0;  // convert seconds to minutes
                                 double peakTime = distinctMatch.bestPeak->peakTime / 60.0;
-                                double endTime = distinctMatch.bestPeak->endTime / 60.0;
-                                double a = peakTime - startTime;
-                                double b = endTime - peakTime;
+                                double start01Time = distinctMatch.bestPeak->start01Time / 60.0;  // convert seconds to minutes
+                                double end01Time = distinctMatch.bestPeak->end01Time / 60.0;
+                                double a = peakTime - start01Time;
+                                double b = end01Time - peakTime;
                                 double epsilon = boost::math::tools::epsilon<double>();
                                 // Perform the division safely
                                 double As = b / (a + epsilon);
-                                surviving_peaks[peakTime] = As;
+                                surviving_peaks[distinctMatch.bestPeak->intensity] = As;
                             }
                             // END KEESH MAYO ASYMM METRIC
                     identifiedPeakWidthMedian = accs::percentile(identifiedPeakWidths, accs::percentile_number = 50);
@@ -2187,7 +2194,7 @@ namespace quameter
             // BEG KEESH MAYO ASYMM METRIC
             if (needsHeader2)
             {
-                qout2 << "Filename\tStartTimeStamp\tPeakTime min\tAsymmetry Ratio" << endl;    
+                qout2 << "Filename\tStartTimeStamp\tPeakIntensity\tAsymmetryRatio" << endl;
             }
             for (const std::pair<const double, double>& pair : surviving_peaks) 
             {
