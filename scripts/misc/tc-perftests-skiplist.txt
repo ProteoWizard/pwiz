@@ -24,6 +24,7 @@ TestEncyclopeDiaSearchTutorialFullFileset
 TestFeatureDetectionTutorialFuture
 #TestImportHundredsOfReplicates
 #TestMobilIon
+TestOrbiPrmArdia
 TestPeakPerf
 TestPerfTicArea
 zzzNativeVsMz5_AbDiaChromatogramPerformanceTest

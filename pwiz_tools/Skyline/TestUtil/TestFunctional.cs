@@ -2017,73 +2017,74 @@ namespace pwiz.SkylineTestUtil
                 return; // Don't want to run this lengthy test right now
             }
 
-            bool firstTry = true;
-            // Be prepared to re-run test in the event that a previously downloaded data file is damaged or stale
-            for (;;)
+            RunFunctionalTestAttempt(defaultUiMode);
+
+            if (Program.TestExceptions.Count > 0 && RetryDataDownloads)
             {
                 try
                 {
-                    RunFunctionalTestOrThrow(defaultUiMode);
+                    if (FreshenTestDataDownloads())
+                    {
+                        // Clear exceptions and run tests again with the fresh downloads
+                        Program.TestExceptions.Clear();
+
+                        RunFunctionalTestAttempt(defaultUiMode);
+                    }
                 }
                 catch (Exception x)
                 {
-                    Program.AddTestException(x);
+                    Program.AddTestException(x); // Some trouble with data download, make a note of it
                 }
+            }
 
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
-
-                // Delete unzipped test files.
-                if (TestFilesDirs != null)
-                {
-                    foreach (TestFilesDir dir in TestFilesDirs)
-                    {
-                        try
-                        {
-                            dir?.Cleanup();
-                        }
-                        catch (Exception x)
-                        {
-                            Program.AddTestException(x);
-                            FileStreamManager.Default.CloseAllStreams();
-                        }
-                    }
-                }
-
-                if (firstTry && Program.TestExceptions.Count > 0 && RetryDataDownloads)
-                {
-                    try
-                    {
-                        if (FreshenTestDataDownloads())
-                        {
-                            firstTry = false;
-                            Program.TestExceptions.Clear();
-                            continue;
-                        }
-                    }
-                    catch (Exception xx)
-                    {
-                        Program.AddTestException(xx); // Some trouble with data download, make a note of it
-                    }
-                }
-
-
-                if (Program.TestExceptions.Count > 0)
-                {
-                    //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
-                    const string errorSeparator = "------------------------------------------------------";
-                    Assert.Fail("{0}{1}{2}{3}",
-                        Environment.NewLine + Environment.NewLine,
-                        errorSeparator + Environment.NewLine,
-                        Program.TestExceptions[0],
-                        Environment.NewLine + errorSeparator + Environment.NewLine);
-                }
-                break;
+            if (Program.TestExceptions.Count > 0)
+            {
+                //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
+                const string errorSeparator = "------------------------------------------------------";
+                Assert.Fail("{0}{1}{2}{3}",
+                    Environment.NewLine + Environment.NewLine,
+                    errorSeparator + Environment.NewLine,
+                    Program.TestExceptions[0],
+                    Environment.NewLine + errorSeparator + Environment.NewLine);
             }
 
             if (!_testCompleted)
             {
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
+            }
+        }
+
+        private void RunFunctionalTestAttempt(string defaultUiMode)
+        {
+            try
+            {
+                RunFunctionalTestOrThrow(defaultUiMode);
+            }
+            catch (Exception x)
+            {
+                Program.AddTestException(x);
+            }
+
+            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+
+            // Delete unzipped test files.
+            if (TestFilesDirs != null)
+            {
+                CleanupPersistentDir(); // Clean before checking for modifications
+
+                foreach (var dir in TestFilesDirs.Where(d => d != null))
+                {
+                    try
+                    {
+                        dir.Cleanup();
+                    }
+                    catch (Exception x)
+                    {
+                        Program.AddTestException(x);
+                        FileStreamManager.Default.CloseAllStreams();
+                    }
+                }
             }
         }
 
