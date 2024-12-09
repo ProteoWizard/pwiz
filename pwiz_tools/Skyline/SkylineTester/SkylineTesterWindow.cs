@@ -1959,6 +1959,7 @@ namespace SkylineTester
             else
             {
                 coverageCheckbox.Enabled = true;
+                runMode.SelectedItem = "Test";  // Only Test mode supported in parallel testing
             }
         }
 
@@ -1979,6 +1980,7 @@ namespace SkylineTester
         {
             // Adjust settings to match the mode
             var runModeTest = RunTestMode.SelectedItem.ToString();
+            bool offScreenEnabled = true;
             if (!Equals(runModeTest, "Test"))
             {
                 runSerial.Checked = true;
@@ -1991,8 +1993,11 @@ namespace SkylineTester
                 {
                     runLoops.Checked = true;
                     runLoopsCount.Text = 1.ToString();
+                    Offscreen.Checked = false;  // Can't do screenshots offscreen
+                    offScreenEnabled = false;
                 }
             }
+            Offscreen.Enabled = offScreenEnabled;
         }
 
         #endregion Control events
