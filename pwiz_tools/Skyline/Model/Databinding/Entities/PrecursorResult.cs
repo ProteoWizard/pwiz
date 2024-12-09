@@ -445,7 +445,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
                 var injectionTimeSeconds = spectrumMetadata.InjectionTime / 1000;
                 double ionCount = intensity * injectionTimeSeconds;
-                double spectrumIonCount = totalIonCount * injectionTimeSeconds;
+                double spectrumIonCount = totalIonCurrent * injectionTimeSeconds;
                 
                 if (apexIntensity == null || intensity > apexIntensity.Value)
                 {

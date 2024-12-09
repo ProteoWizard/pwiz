@@ -606,6 +606,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     spectrumProperties.InjectionTime = injectionTime.ToString(@"0.####", CultureInfo.CurrentCulture);
                 }
 
+                spectrumProperties.TotalIonCurrent = _msDataFileScanHelper.MsDataSpectra
+                    .Sum(scan => scan.Metadata.TotalIonCurrent).ToString(Formats.PEAK_AREA);
+
                 if (_documentContainer is SkylineWindow stateProvider)
                 {
                     var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
