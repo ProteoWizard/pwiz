@@ -42,8 +42,6 @@ namespace pwiz.Common.Controls
         private static extern bool PostMessageA(IntPtr hWnd, int nBar, int wParam, int lParam);
         [DllImport("user32.dll")]
         private static extern bool GetScrollRange(IntPtr hWnd, int nBar, out int lpMinPos, out int lpMaxPos);
-        [DllImport("user32.dll")]
-        private static extern bool LockWindowUpdate(IntPtr hWndLock);
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
 
