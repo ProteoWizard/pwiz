@@ -29,8 +29,17 @@ namespace pwiz.Common.SystemUtil
     {
         public static class User32
         {
+            public const int WM_SETREDRAW = 11;
+            public const uint PBM_SETSTATE = 0x0410; // 1040
+
             [DllImport("user32.dll")]
             public static extern bool HideCaret(IntPtr hWnd);
+
+            [DllImport("user32.dll", CharSet = CharSet.Auto)]
+            public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
+
+            [DllImport("user32.dll", CharSet = CharSet.Auto)]
+            public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
             [DllImport("user32.dll")]
             public static extern bool SetForegroundWindow(IntPtr hWnd);

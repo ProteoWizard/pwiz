@@ -23,8 +23,8 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 
 namespace CustomProgressCell
@@ -129,10 +129,6 @@ namespace CustomProgressCell
             _animationStopTimer.Tick += (x, y) => { _animationStepTimer.Stop(); _animationStopTimer.Stop(); };
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = false)]
-        static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr w, IntPtr l);
-        const uint PBM_SETSTATE = 0x0410; // 1040
-
         enum ProgressBarState
         {
             Normal = 1, // green
@@ -153,7 +149,7 @@ namespace CustomProgressCell
 
         private void SetProgressBarState(ProgressBarState state)
         {
-            SendMessage(_progressBar.Handle, PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
+            DllImport.User32.SendMessage(_progressBar.Handle, DllImport.User32.PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
         }
 
         protected override void OnDataGridViewChanged()

@@ -19,6 +19,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.Controls
 {
@@ -29,7 +30,6 @@ namespace pwiz.Common.Controls
         private const int SB_VERT = 0x1;
         //private const int WM_HSCROLL = 0x114;
         private const int WM_VSCROLL = 0x115;
-        private const int WM_SETREDRAW = 11;
         private const int SB_THUMBPOSITION = 4;
         //private const int SB_BOTTOM = 7;
         //private const int SB_OFFSET = 13;
@@ -42,20 +42,18 @@ namespace pwiz.Common.Controls
         private static extern bool PostMessageA(IntPtr hWnd, int nBar, int wParam, int lParam);
         [DllImport("user32.dll")]
         private static extern bool GetScrollRange(IntPtr hWnd, int nBar, out int lpMinPos, out int lpMaxPos);
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
 
         /// <summary>
         /// Stop updating control (helps prevent flickering).
         /// </summary>
         public void SuspendDrawing()
         {
-            SendMessage(Handle, WM_SETREDRAW, 0, IntPtr.Zero);
+            DllImport.User32.SendMessage(Handle, DllImport.User32.WM_SETREDRAW, 0, IntPtr.Zero);
         }
 
         public void ResumeDrawing()
         {
-            SendMessage(Handle, WM_SETREDRAW, 1, IntPtr.Zero);
+            DllImport.User32.SendMessage(Handle, DllImport.User32.WM_SETREDRAW, 1, IntPtr.Zero);
             Invalidate(true);
             Update();
         }
