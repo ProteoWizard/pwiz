@@ -26,6 +26,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 using EnvDTE;
+using pwiz.Common.SystemUtil;
 
 namespace SkylineTester
 {
@@ -224,7 +225,7 @@ namespace SkylineTester
                 ((TextSelection)dte.ActiveDocument.Selection).SelectLine();
 
                 // Bring Visual Studio to the foreground.
-                SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
+                DllImport.User32.SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
             }
             catch (COMException)
             {
@@ -233,9 +234,6 @@ namespace SkylineTester
 
             Marshal.ReleaseComObject(dte);
         }
-
-        [DllImport("user32.dll")]
-        static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);

@@ -197,20 +197,14 @@ namespace pwiz.Common.SystemUtil
             RemoveTabPage(tabPage, ImmutableList.Singleton(toolTipControl));
         }
 
-        [DllImport("user32.dll")]
-        static extern bool SetForegroundWindow(IntPtr hWnd);
-
         public static void SetForegroundWindow(this Control control)
         {
-            SetForegroundWindow(control.Handle);
+            DllImport.User32.SetForegroundWindow(control.Handle);
         }
-
-        [DllImport("user32.dll")]
-        private static extern bool HideCaret(IntPtr hWnd);
 
         public static void HideCaret(this Control control)
         {
-            HideCaret(control.Handle);
+            DllImport.User32.HideCaret(control.Handle);
         }
 
         [DllImport("user32.dll", SetLastError = true)]
