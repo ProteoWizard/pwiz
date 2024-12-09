@@ -16,6 +16,8 @@
 
 using System.Runtime.InteropServices;
 using System;
+using System.Drawing;
+using System.Text;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -29,11 +31,54 @@ namespace pwiz.Common.SystemUtil
     {
         public static class User32
         {
+            // TODO: improve typing by wrapping in an enum?
+            // TODO: standardize on exactly one of decimal or hex?
             public const int WM_SETREDRAW = 11;
             public const uint PBM_SETSTATE = 0x0410; // 1040
 
+            [StructLayout(LayoutKind.Sequential)]
+            public struct RECT
+            {
+                // ReSharper disable FieldCanBeMadeReadOnly.Global
+                public int left;
+                public int top;
+                public int right;
+                public int bottom;
+                // ReSharper restore FieldCanBeMadeReadOnly.Global
+
+                public RECT(int left, int top, int right, int bottom)
+                {
+                    this.left = left;
+                    this.top = top;
+                    this.right = right;
+                    this.bottom = bottom;
+                }
+
+                public Rectangle Rectangle
+                {
+                    get
+                    {
+                        return new Rectangle(left, top, right - left, bottom - top);
+                    }
+                }
+
+                public static RECT FromRectangle(Rectangle rect)
+                {
+                    return new RECT(rect.Left, rect.Top, rect.Right, rect.Bottom);
+                }
+            }
+
+            [DllImport("user32.dll")]
+            public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
+
+            [DllImport("user32.dll", CharSet = CharSet.Auto)]
+            public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
+
             [DllImport("user32.dll")]
             public static extern bool HideCaret(IntPtr hWnd);
+
+            [DllImport("user32.dll")]
+            public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
 
             [DllImport("user32.dll", CharSet = CharSet.Auto)]
             public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
@@ -71,7 +116,12 @@ namespace pwiz.Common.SystemUtil
 
             [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
             public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+        }
 
+        public static class Kernel32
+        {
+            [DllImport("kernel32.dll")]
+            public static extern int GetCurrentThreadId();
         }
     }
 }

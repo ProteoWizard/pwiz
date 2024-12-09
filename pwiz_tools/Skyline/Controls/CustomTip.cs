@@ -882,8 +882,8 @@ namespace pwiz.Skyline.Controls
                 if (Handle != IntPtr.Zero)
                 {
                     SetBoundsCore(_location.X, _location.Y, _size.Width, _size.Height);
-                    RECT rect = new RECT();
-                    User32.GetWindowRect(Handle, ref rect);
+                    var rect = new DllImport.User32.RECT();
+                    DllImport.User32.GetWindowRect(Handle, ref rect);
                     Rectangle rectangle = rect.Rectangle;
                     _location = rectangle.Location;
                     _size = rectangle.Size;
@@ -1290,8 +1290,6 @@ namespace pwiz.Skyline.Controls
         internal static extern IntPtr GetDCEx(IntPtr hWnd, IntPtr hRgn, uint dwFlags);
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr GetFocus();
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern bool ReleaseCapture();
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
