@@ -126,21 +126,12 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
-        [DllImport("gdi32.dll")]
-        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-
-        private enum DeviceCap
-        {
-            VERTRES = 10,
-            DESKTOPVERTRES = 117,
-        }
-
         public static PointFactor GetScalingFactor()
         {
             using var g = Graphics.FromHwnd(IntPtr.Zero);
             IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
-            int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
+            int LogicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.DeviceCap.VERTRES);
+            int PhysicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.DeviceCap.DESKTOPVERTRES);
             float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%

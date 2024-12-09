@@ -44,5 +44,34 @@ namespace pwiz.Common.SystemUtil
             [DllImport("user32.dll")]
             public static extern bool SetForegroundWindow(IntPtr hWnd);
         }
+
+        public static class Gdi32
+        { 
+            public enum DeviceCap
+            {
+                // ReSharper disable IdentifierTypo
+                VERTRES = 10,
+                DESKTOPVERTRES = 117,
+                // ReSharper restore IdentifierTypo
+            }
+
+            [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
+            public static extern IntPtr CreateCompatibleDC(IntPtr hDC);
+    
+            [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
+            public static extern bool DeleteDC(IntPtr hDC);
+
+            [DllImport(dllName: "gdi32.dll")]
+            private static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+
+            public static int GetDeviceCaps(IntPtr hdc, DeviceCap value)
+            {
+                return DllImport.Gdi32.GetDeviceCaps(hdc, (int)value);
+            }
+
+            [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
+            public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+
+        }
     }
 }

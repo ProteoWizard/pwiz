@@ -23,6 +23,7 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Controls
 {
@@ -209,9 +210,9 @@ namespace pwiz.Skyline.Controls
                     POINT point2;
 
                     IntPtr ptr1 = User32.GetDC(IntPtr.Zero);
-                    IntPtr ptr2 = Gdi32.CreateCompatibleDC(ptr1);
+                    IntPtr ptr2 = DllImport.Gdi32.CreateCompatibleDC(ptr1);
                     IntPtr ptr3 = bmp.GetHbitmap(Color.FromArgb(0));
-                    IntPtr ptr4 = Gdi32.SelectObject(ptr2, ptr3);
+                    IntPtr ptr4 = DllImport.Gdi32.SelectObject(ptr2, ptr3);
                     size1.cx = size.Width;
                     size1.cy = size.Height;
                     point1.x = point.X;
@@ -226,9 +227,9 @@ namespace pwiz.Skyline.Controls
                         AlphaFormat = 1
                     };
                     User32.UpdateLayeredWindow(Handle, ptr1, ref point1, ref size1, ptr2, ref point2, 0, ref blendfunction1, 2);
-                    Gdi32.SelectObject(ptr2, ptr4);
+                    DllImport.Gdi32.SelectObject(ptr2, ptr4);
                     User32.ReleaseDC(IntPtr.Zero, ptr1);
-                    Gdi32.DeleteDC(ptr2);
+                    DllImport.Gdi32.DeleteDC(ptr2);
                 }
             }
         }
@@ -1372,31 +1373,6 @@ namespace pwiz.Skyline.Controls
         DCX_CACHE = 0x0002,
         DCX_CLIPSIBLINGS = 0x0010,
         DCX_INTERSECTRGN = 0x0080
-    }
-    internal static class Gdi32
-    {
-        // Methods
-
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int flags);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr CreateBrushIndirect(ref LOGBRUSH brush);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr CreateCompatibleDC(IntPtr hDC);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr CreateRectRgnIndirect(ref RECT rect);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool DeleteDC(IntPtr hDC);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr DeleteObject(IntPtr hObject);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern int GetClipBox(IntPtr hDC, ref RECT rectBox);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool PatBlt(IntPtr hDC, int x, int y, int width, int height, uint flags);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern int SelectClipRgn(IntPtr hDC, IntPtr hRgn);
-        [DllImport("gdi32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
     }
     // ReSharper restore InconsistentNaming
 
