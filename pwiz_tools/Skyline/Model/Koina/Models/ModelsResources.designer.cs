@@ -61,6 +61,15 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  Accession: {0}, Name: {1}, Comment: {2}.
+        /// </summary>
+        public static string AlphaPeptDeep_BuildPrecursorTable_ModificationType {
+            get {
+                return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_ModificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case..
         /// </summary>
         public static string AlphaPeptDeep_BuildPrecursorTable_NonUnique_ModificationAccession {

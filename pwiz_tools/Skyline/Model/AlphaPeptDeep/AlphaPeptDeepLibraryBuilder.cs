@@ -4,15 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using EnvDTE;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
@@ -27,7 +24,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public string Name { get; private set; }
         public string Value { get; private set; }
 
-        public override string ToString() { return "--" + Name + TextUtil.SPACE + Value; }
+        public override string ToString() { return @"--" + Name + TextUtil.SPACE + Value; }
     }
 
     public class ModificationType
@@ -42,7 +39,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public string Name { get; private set; }
         public string Comment { get; private set; }
 
-        public override string ToString() { return "Accession: " + Accession + ", Name:" + Name + ", Comment:" + Comment; }
+        public override string ToString() { return string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
     }
 
 
