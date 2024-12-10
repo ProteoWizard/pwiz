@@ -45,11 +45,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public SkylineWindow SkylineWindow { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public Helpers.ModeUIAwareFormHelper ModeUIAwareFormHelper
         {
             get;
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public CalibrationCurveOptions Options
         {
             get
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public Settings DisplaySettings { get; private set; }
 
         public void Update(Settings displaySettings)
@@ -534,8 +534,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
+        [Browsable(false)]
         public CalibrationCurve CalibrationCurve { get; private set; }
+        [Browsable(false)]
         public CalibrationCurveMetrics CalibrationCurveMetrics { get; private set; }
+        [Browsable(false)]
         public FiguresOfMerit FiguresOfMerit { get; private set; }
 
         public class Settings : Immutable
@@ -637,6 +640,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return nearestCurve.Points[iNeareast].Tag as CalibrationPoint?;
         }
 
+        [Browsable(false)]
         public ZedGraphControl ZedGraphControl
         {
             get
