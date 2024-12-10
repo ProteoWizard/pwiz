@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                     var unimodIdAA = mod.UnimodIdAA;
                     var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA).ToArray();
-                    if (modNames.Count() == 0)
+                    if (modNames.Length == 0)
                     {
                         var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
                         Messages.WriteAsyncUserMessage(msg);
