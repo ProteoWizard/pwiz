@@ -213,7 +213,7 @@
             // 
             // R
             // 
-            this.R.FillWeight = 25F;
+            this.R.FillWeight = 20F;
             resources.ApplyResources(this.R, "R");
             this.R.Name = "R";
             this.R.ReadOnly = true;

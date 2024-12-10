@@ -19,6 +19,7 @@
 
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
@@ -204,7 +205,10 @@ namespace pwiz.SkylineTestTutorial
 
             // Managing Report Templates in Skyline, p. 12 & 13
             var editReportListDlg0 = ShowDialog<ManageViewsForm>(exportReportDlg1.EditList);
-            RunUI(() => editReportListDlg0.SelectView(customReportName));
+            RunUI(() =>
+            {
+                editReportListDlg0.SelectView(customReportName);
+            });
             PauseForScreenShot<ManageViewsForm>("Edit Reports form", 12);
 
             RunUI(() => editReportListDlg0.Remove(false));
@@ -336,36 +340,12 @@ namespace pwiz.SkylineTestTutorial
             );
             PauseForScreenShot<ManageViewsForm>("Manage Reports form", 20);
             OkDialog(manageViewsForm, manageViewsForm.Close);
-            Size originalSize = Size.Empty;
-            Point formLocation = Point.Empty;
+            var formRectNext = Rectangle.Empty;
             if (IsPauseForScreenShots)
             {
-                // CONSIDER: The ShowDropDown() use below causes User+GDI handle leaks
-                RunUI(() =>
-                {
-                    documentGridForm.NavBar.ReportsButton.ShowDropDown();   //we need to expand it to determine its full size
-                    int ddHeight = documentGridForm.NavBar.ReportsButton.DropDown.Height;
-                    formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
-                    documentGridForm.NavBar.ReportsButton.HideDropDown();
-                    originalSize = documentGridForm.Size;
-                    //make sure the dropdown fits into the window with some margin.
-                    documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 75)));
-                    documentGridForm.NavBar.ReportsButton.ShowDropDown();
-
-                    var i = 0;      //find and select the Summary Statistics item.
-                    var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
-                    while (i < items.Count && items[i].Text != "Summary Statistics")
-                    {
-                        i++;
-                    }
-                    if (i < items.Count)
-                        items[i].Select();
-                    else
-                    {
-                        Assert.Fail("Summary Statistics not found in Reports menu");
-                    }
-                });
-                PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary_stats'", 21);
+                formRectNext = ShowReportsDropdown("Summary Statistics");
+                PauseForScreenShot<DocumentGridForm>("Click the Reports dropdown and highlight 'Summary Statistics'", 21);
+                HideReportsDropdown();
 
                 RunUI(() => documentGridForm.NavBar.ReportsButton.HideDropDown());
             }
@@ -373,10 +353,58 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => documentGridForm.IsComplete);
             RunUI(() => documentGridForm.ExpandColumns());
             
-            if (IsPauseForScreenShots)
-                RunUI(() => documentGridForm.FloatingPane.FloatAt(new Rectangle(formLocation, originalSize)));
+            RunUIForScreenShot(() =>
+            {
+                documentGridForm.FloatingPane.FloatAt(formRectNext);
+                ConfigureDataGridColumns();
+            });
 
-            PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21);
+            PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
+            {
+                const int lineWidth = 3;
+                var dataGridView = documentGridForm.DataGridView;
+
+                // compute top-left corner of data grid's cells, 4px offset puts shapes in the correct place
+                var yOffset = documentGridForm.NavBar.Height + dataGridView.ColumnHeadersHeight - 4;
+
+                // keep these methods private until we decide to promote them to shared helpers
+                var drawBoxOnColumn = new Action<Graphics, int, Color>((graphics, column, color) =>
+                {
+                    var rect = dataGridView.GetCellDisplayRectangle(column, 0, true); // column's top data cell
+                    rect.Y += yOffset;
+                    rect.Height *= 10; // draw rectangle around all 10 rows
+
+                    graphics.DrawRectangle(new Pen(color, lineWidth), rect);
+                });
+
+                var drawEllipseOnCell = new Action<Graphics, int, int, Color>((graphics, row, column, color) =>
+                {
+                    var text = dataGridView.Rows[row].Cells[column].FormattedValue?.ToString();
+                    var stringSize = graphics.MeasureString(text, dataGridView.Font);
+
+                    var rect = dataGridView.GetCellDisplayRectangle(column, row, true);
+                    rect.Y += yOffset;
+                    rect.Width = Convert.ToInt16(stringSize.Width * 1.1); // scale-up ellipse size so shape isn't too tight around text
+
+                    graphics.DrawEllipse(new Pen(color, lineWidth), rect);
+                });
+
+                var g = Graphics.FromImage(bmp);
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+
+                drawBoxOnColumn(g, 3, Color.Red);
+                drawBoxOnColumn(g, 5, Color.Red);
+                drawBoxOnColumn(g, 6, Color.Red);
+
+                drawEllipseOnCell(g, 1, 3, Color.Red);
+                drawEllipseOnCell(g, 3, 3, Color.Orange);
+                drawEllipseOnCell(g, 1, 5, Color.Orange);
+                drawEllipseOnCell(g, 3, 5, Color.Orange);
+
+                g.Flush();
+
+                return bmp;
+            });
 
             if (IsCoverShotMode)
             {
@@ -417,15 +445,18 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.ChooseColumnsTab.ActivateColumn(indexCvTotalArea);
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize View form", 22);
-            RunUI(()=>viewEditor.TabControl.SelectTab(1));
             RunUI(() =>
             {
+                viewEditor.TabControl.SelectTab(1);
                 viewEditor.FilterTab.AddSelectedColumn();
                 Assert.IsTrue(viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN));
                 viewEditor.FilterTab.SetFilterOperand(0, .2.ToString(CultureInfo.CurrentCulture));
+                viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(Orientation.Horizontal, 45);
             });
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 23);
             OkDialog(viewEditor, viewEditor.OkDialog);
+
+            RunUIForScreenShot(ConfigureDataGridColumns);
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 24);
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
@@ -437,7 +468,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
 
-            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view", 25);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view");
             return true;    // Continue subsequent tests
         }
 
@@ -445,13 +476,25 @@ namespace pwiz.SkylineTestTutorial
         {
             // Results Grid View
             RestoreViewOnScreen(26);
+            RunUIForScreenShot(() =>
+            {
+                // position two floating windows relative to Skyline's bottom-right corner
+                var backgroundWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
+                backgroundWindow.Top = SkylineWindow.Bottom - backgroundWindow.Height - 53;
+                backgroundWindow.Left = SkylineWindow.Right - backgroundWindow.Width - 128;
+
+                var foregroundWindow = FindFloatingWindow(FindOpenForm<LiveResultsGrid>());
+                foregroundWindow.Top = SkylineWindow.Bottom - foregroundWindow.Height - 26;
+                foregroundWindow.Left = SkylineWindow.Right - foregroundWindow.Width - 34;
+            });
+
             PauseForScreenShot(SkylineWindow, "Main window under floating windows", 26);
             RestoreViewOnScreen(27);
             PauseForScreenShot(SkylineWindow, "Main window layout", 27);
 
             // Not understood: WaitForOpenForm occasionally hangs in nightly test runs. Fixed it by calling
             // ShowDialog when LiveResultsGrid cannot be found.
-            //var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
+            // var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
             var resultsGridForm = FindOpenForm<LiveResultsGrid>() ??
                 ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             BoundDataGridView resultsGrid = null;
@@ -536,11 +579,37 @@ namespace pwiz.SkylineTestTutorial
             });
             PauseForScreenShot<ViewEditor.ChooseColumnsView>("Customize Report form showing Tailing annotation checked", 31);
             OkDialog(viewEditor, viewEditor.OkDialog);
+            RunUI(() => SkylineWindow.FocusDocument());
             PauseForScreenShot(SkylineWindow, "Main window with Tailing column added to Results Grid", 32);
         }
         private string GetLocalizedCaption(string caption)
         {
             return SkylineDataSchema.GetLocalizedSchemaLocalizer().LookupColumnCaption(new ColumnCaption(caption));
+        }
+
+        private void ConfigureDataGridColumns()
+        {
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            var dataGridView = documentGridForm.DataGridView;
+            var floatingWindow = FindFloatingWindow(documentGridForm);
+
+            // explicitly size floating window to accommodate one set of column widths for EN, ZH, JP
+            floatingWindow.Size = new Size(750, 340);
+
+            dataGridView.Columns[0].Width = 70; // wider for ZH/JP than EN
+            dataGridView.Columns[1].Width = 95;
+            dataGridView.Columns[2].Width = 80;
+            dataGridView.Columns[3].Width = 79; // wider for ZH
+            dataGridView.Columns[4].Width = 80;
+            dataGridView.Columns[5].Width = 92; // wider for ZH than EN
+            dataGridView.Columns[6].Width = 102;
+            dataGridView.Columns[7].Width = 105;
+
+            // last 3 columns not visible in screenshot but need to 
+            // set width to prevent column title from wrapping to 3 lines 
+            dataGridView.Columns[8].Width = 105;
+            dataGridView.Columns[9].Width = 105;
+            dataGridView.Columns[10].Width = 105;
         }
     }
 }
