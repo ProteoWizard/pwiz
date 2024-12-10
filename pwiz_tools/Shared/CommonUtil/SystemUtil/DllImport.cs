@@ -29,6 +29,7 @@ namespace pwiz.Common.SystemUtil
     /// </summary>
     public static class DllImport
     {
+        // TODO: User32 will be long - move it (and other *32 classes?) to separate files?
         public static class User32
         {
             // TODO: improve typing by wrapping in an enum?
