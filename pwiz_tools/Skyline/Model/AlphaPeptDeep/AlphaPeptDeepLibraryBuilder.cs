@@ -84,10 +84,10 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             {
                 if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
                     continue;
-                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + ":" + UniModData.UNI_MOD_DATA[m].AAs;
+                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].AAs;
                 var name = UniModData.UNI_MOD_DATA[m].Name;
                 var formula = UniModData.UNI_MOD_DATA[m].Formula;
-                modList.Append(new ModificationType(accession, name, formula));
+                modList.Add(new ModificationType(accession, name, formula));
             }
             return modList;
         }
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
 
                     var unimodIdAA = mod.UnimodIdAA;
-                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA);
+                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA).ToArray();
                     if (modNames.Count() == 0)
                     {
                         var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         continue;
                     }
 
-                    var modName = modNames.Cast<ModificationType>().Single().Name;
+                    var modName = modNames.Single().Name;
                     modsBuilder.Append(modName);
                     modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
                     if (i != modifiedSequence.ExplicitMods.Count - 1)
