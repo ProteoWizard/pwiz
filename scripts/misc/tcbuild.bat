@@ -25,8 +25,10 @@ if %CLEAN%==1 (
   if %EXIT% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
 
   REM # check clean did not dirty repo (but postpone error until after quickbuild)
-  git status --porcelain | findstr . && set CLEAN_EXIT=1
-  if %CLEAN_EXIT% NEQ 0 echo Repository is dirty after clean script >&2
+  git ls-files --deleted | findstr . && set CLEAN_EXIT=1
+  if %CLEAN_EXIT% NEQ 0 (
+    echo Clean script deleted some files it should not have. 1>&2
+  )
 )
 
 REM # the -p1 argument overrides bjam's default behavior of merging stderr into stdout
@@ -34,10 +36,27 @@ REM # the --abbreviate-paths argument abbreviates paths like .../ftr1-value/ftr2
 
 REM # call quickbuild to build and run tests
 echo ##teamcity[progressMessage 'Running quickbuild...']
+echo quickbuild.bat -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test %ALL_ARGS%
 call quickbuild.bat -p1 --abbreviate-paths --teamcity-test-decoration --verbose-test %ALL_ARGS%
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error running quickbuild & goto error
-if %CLEAN_EXIT% NEQ 0 set EXIT=%CLEAN_EXIT% & set ERROR_TEXT=Repository was dirty after clean script & goto error
+
+if %CLEAN_EXIT% NEQ 0 (
+  set EXIT=%CLEAN_EXIT%
+  set ERROR_TEXT=Clean script deleted some files it should not have.
+  git ls-files --deleted
+  goto error
+)
+
+REM # check that build did not create any files that are not in .gitignore
+set BUILD_CLEAN_EXIT=0
+git status --porcelain | findstr . && set BUILD_CLEAN_EXIT=1
+if %BUILD_CLEAN_EXIT% NEQ 0 (
+  set EXIT=%BUILD_CLEAN_EXIT%
+  set ERROR_TEXT=The build created or deleted some files that are not in .gitignore.
+  goto error
+)
+
 
 REM # uncomment this to test that test failures and error output are handled properly
 REM call quickbuild.bat -p1 --teamcity-test-decoration pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest

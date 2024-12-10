@@ -183,8 +183,6 @@ void Reader_Mobilion::read(const string& filename,
         throw ReaderFail(string("[Reader_Mobilion::read()] Mobilion API does not support Unicode in filepaths ('") + utf8CharAsString(unicodeCharItr, filename.end()) + "')");
     }
 
-    boost::lock_guard<boost::mutex> lock(processWideHdf5Mutex); // mutex unlocks when out of scope or when exception thrown (during destruction)
-
     MBIFilePtr rawdata(new MBIFileWrapper(filename.c_str()));
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Mobilion(result, rawdata, config));
     result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Mobilion(rawdata, config));
