@@ -1766,19 +1766,16 @@ namespace pwiz.Skyline
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
             deleteContextMenuItem.Enabled = enabled;
+
             if (SequenceTree.SelectedNodes.Count > 0)
             {
                 expandSelectionContextMenuItem.Enabled = true;
                 expandSelectionContextMenuItem.Visible = true;
-                collapseSelectionContextMenuItem.Enabled = true;
-                collapseSelectionContextMenuItem.Visible = true;
             }
             else
             {
                 expandSelectionContextMenuItem.Enabled = false;
                 expandSelectionContextMenuItem.Visible = false;
-                collapseSelectionContextMenuItem.Enabled = false;
-                collapseSelectionContextMenuItem.Visible = false;
             }
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
@@ -1835,32 +1832,22 @@ namespace pwiz.Skyline
         {
             SequenceTree.ShowPickList(okOnDeactivate);
         }
-
+        private void expandSelectionNoneContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(SrmTreeNodeParent));
+        }
         private void expandSelectionProteinsContextMenuItem_Click(object sender, EventArgs e)
         {
-            SequenceTree.ExpandSelection<PeptideGroupTreeNode>();
+            SequenceTree.ExpandSelectionBulk(typeof(PeptideGroupTreeNode));
         }
         private void expandSelectionPeptidesContextMenuItem_Click(object sender, EventArgs e)
         {
-            SequenceTree.ExpandSelection<PeptideTreeNode>();
+            SequenceTree.ExpandSelectionBulk(typeof(PeptideTreeNode));
         }
         private void expandSelectionPrecursorsContextMenuItem_Click(object sender, EventArgs e)
         {
-            SequenceTree.ExpandSelection<TransitionGroupTreeNode>();
+            SequenceTree.ExpandSelectionBulk(typeof(TransitionGroupTreeNode));
         }
-        private void collapseSelectionProteinsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.CollapseSelection<PeptideGroupTreeNode>();
-        }
-        private void collapseSelectionPeptidesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.CollapseSelection<PeptideTreeNode>();
-        }
-        private void collapseSelectionPrecursorsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            SequenceTree.CollapseSelection<TransitionGroupTreeNode>();
-        }
-
         /// <summary>
         /// Shows pop-up pick list for tests, with no automatic OK on deactivation of the pick list,
         /// since this can cause failures, if the test computer is in use during the tests.
