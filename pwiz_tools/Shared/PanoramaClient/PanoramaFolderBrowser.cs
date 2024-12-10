@@ -548,9 +548,7 @@ public class WebDavBrowser : PanoramaFolderBrowser
                     var files = json[@"files"];
                     foreach (var file in files)
                     {
-                        var listItem = new string[5];
                         var fileName = (string)file[@"text"];
-                        listItem[0] = fileName;
                         var isFile = (bool)file[@"leaf"];
                         if (!isFile)
                         {

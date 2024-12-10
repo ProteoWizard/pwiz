@@ -831,7 +831,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
     }
 
-    public struct CalibrationPoint
+    public struct CalibrationPoint : IEquatable<CalibrationPoint>
     {
         public CalibrationPoint(int replicateIndex, IsotopeLabelType labelType) : this()
         {
@@ -840,5 +840,23 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
         }
         public int ReplicateIndex { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
+
+        public bool Equals(CalibrationPoint other)
+        {
+            return ReplicateIndex == other.ReplicateIndex && Equals(LabelType, other.LabelType);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CalibrationPoint other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (ReplicateIndex * 397) ^ (LabelType != null ? LabelType.GetHashCode() : 0);
+            }
+        }
     }
 }

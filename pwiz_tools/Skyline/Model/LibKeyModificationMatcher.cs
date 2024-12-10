@@ -624,7 +624,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private struct AATermKey
+        private struct AATermKey : IEquatable<AATermKey>
         {
             public AATermKey(char? aa, ModTerminus? terminus)
             {
@@ -637,7 +637,7 @@ namespace pwiz.Skyline.Model
 
             #region object overrides
 
-            private bool Equals(AATermKey other)
+            public bool Equals(AATermKey other)
             {
                 return other._aa.Equals(_aa) &&
                     other._terminus.Equals(_terminus);
@@ -658,6 +658,8 @@ namespace pwiz.Skyline.Model
                         (_terminus.HasValue ? _terminus.Value.GetHashCode() : 0);
                 }
             }
+
+
 
             #endregion
         }

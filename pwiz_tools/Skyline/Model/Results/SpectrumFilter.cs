@@ -1077,7 +1077,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private struct IsolationWindowFilter
+        private struct IsolationWindowFilter : IEquatable<IsolationWindowFilter>
         {
             public IsolationWindowFilter(SignedMz? isolationMz, double? isolationWidth) : this()
             {
@@ -1090,7 +1090,7 @@ namespace pwiz.Skyline.Model.Results
 
             #region object overrides
 
-            private bool Equals(IsolationWindowFilter other)
+            public bool Equals(IsolationWindowFilter other)
             {
                 return other.IsolationMz.Equals(IsolationMz) &&
                     other.IsolationWidth.Equals(IsolationWidth);

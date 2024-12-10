@@ -454,7 +454,7 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private struct Point
+        private struct Point : IEquatable<Point>
         {
             private readonly int _x;
             private readonly int _y;
@@ -472,7 +472,7 @@ namespace pwiz.SkylineTestFunctional
 
             #region object overrides
 
-            private bool Equals(Point other)
+            public bool Equals(Point other)
             {
                 return other._x == _x && other._y == _y;
             }

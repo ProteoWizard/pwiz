@@ -777,7 +777,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private readonly struct LossId : IComparable
+        private readonly struct LossId : IComparable, IEquatable<LossId>
         {
             public LossId(IonType ionType, double mass, int charge)
             {
@@ -786,7 +786,7 @@ namespace pwiz.Skyline.Model
                 Charge = charge;
             }
 
-            public IonType IonType { get; }
+            public IonType IonType { get; }  // CONSIDER: why is this not part of equality check?
             public double Mass { get; }
             public int Charge { get; }
 
@@ -818,7 +818,7 @@ namespace pwiz.Skyline.Model
             {
                 unchecked
                 {
-                    return (Mass.GetHashCode() * 397) ^ ComparableCharge;
+                    return (Mass.GetHashCode() * 397) ^ ComparableCharge; // CONSIDER: why is IonType not included here?
                 }
             }
 
