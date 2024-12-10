@@ -158,17 +158,20 @@ namespace pwiz.SkylineTestTutorial
 
             // Importing RAW files into Skyline p. 11, 12
             var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            PauseForScreenShot<ImportResultsDlg>("Import Results - click OK to get shot of Import Results Files and then cancel", 11);
+            PauseForScreenShot<ImportResultsDlg>("Import Results", 11);
 
+            var importResultsFilesDlg = ShowDialog<OpenDataSourceDialog>(importResultsDlg.OkDialog);
             RunUI(() =>
             {
                 var rawFiles = DataSourceUtil.GetDataSources(TestFilesDirs[0].FullPath).First().Value.Skip(1);
-                var namedPathSets = from rawFile in rawFiles
-                                    select new KeyValuePair<string, MsDataFileUri[]>(
-                                        rawFile.GetFileNameWithoutExtension(), new[] { rawFile });
-                importResultsDlg.NamedPathSets = namedPathSets.ToArray();
+                foreach (var rawFile in rawFiles)
+                {
+                    importResultsFilesDlg.SelectFile(rawFile.GetFileName());
+                }
             });
-            RunDlg<ImportResultsNameDlg>(importResultsDlg.OkDialog,
+            PauseForScreenShot<OpenDataSourceDialog>("Import Results Files", 12);
+
+            RunDlg<ImportResultsNameDlg>(importResultsFilesDlg.Open,
                importResultsNameDlg => importResultsNameDlg.NoDialog());
 
             WaitForGraphs();
@@ -193,6 +196,7 @@ namespace pwiz.SkylineTestTutorial
 
             WaitForCondition(10 * 60 * 1000,    // ten minutes
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            FocusDocument();
             PauseForScreenShot("Main window with imported data", 13);
 
             // Analyzing SRM Data from FOXN1-GST Sample p. 14
@@ -239,6 +243,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() => SkylineWindow.Size = new Size(1470, 656));
             RestoreViewOnScreen(14);
+            FocusDocument();
             PauseForScreenShot("Main window with Peak Areas, Retention Times and FOXN1-GST for light", 14);
 
             RunUI(() => SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int)SrmDocument.Level.TransitionGroups, 1));
@@ -265,7 +270,7 @@ namespace pwiz.SkylineTestTutorial
             
             // Peptide Quantitification Settings p. 16
             peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsUi.SelectedTab = (PeptideSettingsUI.TABS)5);
+            RunUI(() => peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification);
             const string quantUnits = "fmol/ul";
             RunUI(() =>
             {
@@ -273,7 +278,7 @@ namespace pwiz.SkylineTestTutorial
                 peptideSettingsUi.QuantNormalizationMethod = new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
                 peptideSettingsUi.QuantUnits = quantUnits;
             });
-            PauseForScreenShot("Peptide Settings Quantification Tab", 16);
+            PauseForScreenShot<PeptideSettingsUI>("Peptide Settings Quantification Tab", 16);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
             // Specify analyte concentrations of external standards
@@ -315,7 +320,7 @@ namespace pwiz.SkylineTestTutorial
                     gridFloatingWindow.Top = SkylineWindow.Top;
                     gridFloatingWindow.Left = SkylineWindow.Right + 20;
                 });
-                PauseForScreenShot("Document grid with concentrations filled in", 17);
+                PauseForScreenShot<DocumentGridForm>("Document grid with concentrations filled in", 17);
             }
 
             // View the calibration curve p. 18
@@ -354,7 +359,8 @@ namespace pwiz.SkylineTestTutorial
                     calibrationFloatingWindow.Top = SkylineWindow.Top;
                     calibrationFloatingWindow.Left = SkylineWindow.Right + 20;
                 });
-                PauseForScreenShot("View calibration curve", 18);
+                JiggleSelection();  // Otherwise, plot shows two legends
+                PauseForScreenShot<CalibrationForm>("View calibration curve", 18);
             }
 
             Assert.AreEqual(CalibrationCurveFitter.AppendUnits(QuantificationStrings.Analyte_Concentration, quantUnits), calibrationForm.ZedGraphControl.GraphPane.XAxis.Title.Text);

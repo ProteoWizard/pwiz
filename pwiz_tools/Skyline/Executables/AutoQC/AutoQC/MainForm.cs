@@ -478,11 +478,6 @@ namespace AutoQC
             _outputLog.Tick += OutputLog;
         }
 
-        private void tabLog_Leave(object sender, EventArgs e)
-        {
-            _scrolling = _configManager.SelectedLog == 0;
-        }
-        
         private void comboConfigs_SelectedIndexChanged(object sender, EventArgs e)
         {
             _configManager.SelectLog(comboConfigs.SelectedIndex);
@@ -854,6 +849,76 @@ namespace AutoQC
             {
                 form.ShowDialog(this);
             });
+        }
+
+        #endregion
+
+        #region Methods used for tests
+        public int ConfigCount()
+        {
+            return _configManager.GetAutoQcState().BaseState.ConfigList.Count;
+        }
+        public void ClickAdd() => btnAdd_Click(new object(), new EventArgs());
+        public void ClickEdit() => HandleEditEvent(new object(), new EventArgs());
+
+        public void SelectLogTab()
+        {
+            tabLog.Select();
+        }
+
+        public void SelectConfigsTab()
+        {
+            tabConfigs.Select();
+        }
+
+        public string GetSelectedLogName()
+        {
+            return comboConfigs.SelectedItem.ToString();
+        }
+
+        public void ClickConfig(int index) => SelectConfig(index);
+
+        private void SelectConfig(int index)
+        {
+            if (index < 0)
+            {
+                _configManager.DeselectConfig();
+                return;
+            }
+            _configManager.SelectConfig(index);
+        }
+
+        public void StartConfig(int index) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, CheckState.Checked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public void StopConfig(int index) => listViewConfigs.SimulateItemCheck(new ItemCheckEventArgs(index, CheckState.Unchecked, listViewConfigs.Items[index].Checked ? CheckState.Checked : CheckState.Unchecked));
+
+        public bool IsConfigEnabled(int index) => listViewConfigs.Items[index].Checked;
+
+        public int GetConfigIndex(string configName)
+        {
+            return _configManager.AutoQcState.BaseState.GetConfigIndex(configName);
+        }
+
+        public AutoQcConfig GetConfig(int configIndex)
+        {
+            return (AutoQcConfig)_configManager.AutoQcState.BaseState.GetConfig(configIndex);
+        }
+
+        public ConfigRunner GetConfigRunner(IConfig config)
+        {
+            return _configManager.AutoQcState.GetConfigRunner(config);
+        }
+
+        public ConfigRunner GetConfigRunner(int configIndex)
+        {
+            var config = GetConfig(configIndex);
+            return config == null ? null : GetConfigRunner(config);
+        }
+
+        public string GetLogFilePath(int configIndex)
+        {
+            var configRunner = GetConfigRunner(configIndex);
+            return configRunner?.GetLogger()?.LogFile;
         }
 
         #endregion

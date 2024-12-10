@@ -82,8 +82,8 @@ namespace pwiz.SkylineTestUtil
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
             if (zipBaseName == null)
                 Assert.Fail("Null zip base name");  // Resharper
-            directoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
-            FullPath = TestContext.GetTestPath(directoryName);
+            DirectoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
+            FullPath = TestContext.GetTestPath(DirectoryName);
             if (Directory.Exists(FullPath))
             {
                 Helpers.TryTwice(() => Directory.Delete(FullPath, true));
@@ -95,9 +95,12 @@ namespace pwiz.SkylineTestUtil
                 PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
+        }
 
+        public void RecordMetrics()
+        {
             // record the size of the persistent directory after extracting
-            var targetDir = isExtractHere ? Path.Combine(PersistentFilesDir ?? "", directoryName) : PersistentFilesDir;
+            var targetDir = IsExtractHere ? Path.Combine(PersistentFilesDir ?? string.Empty, DirectoryName) : PersistentFilesDir;
             var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) ? null : new DirectoryInfo(targetDir);
             if (persistentDirInfo != null && Directory.Exists(PersistentFilesDir))
             {
@@ -118,6 +121,7 @@ namespace pwiz.SkylineTestUtil
             return directoryName;
         }
 
+        public string DirectoryName { get; private set; }
         public string FullPath { get; private set; }
 
         public string PersistentFilesDir { get; private set; }
@@ -197,9 +201,7 @@ namespace pwiz.SkylineTestUtil
             ABI,
             Agilent,
             Bruker,
-/* Waiting for CCS<->DT support in .mbi reader
             Mobilion,
-*/
             Shimadzu,
             Thermo,
             UIMF,
@@ -398,10 +400,11 @@ namespace pwiz.SkylineTestUtil
                 try
                 {
                     Helpers.TryTwice(() => Directory.Delete(path, true));
+                    return; // If this succeeds then the lock was only temporary and we don't have a GUID folder to move back.
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{path}"", ""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
 
@@ -419,7 +422,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{guidName}"", ""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
         }

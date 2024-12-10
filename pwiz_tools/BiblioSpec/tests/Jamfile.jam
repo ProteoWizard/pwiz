@@ -332,6 +332,7 @@ blib-test-build metamorpheus-mzid : --unicode -o : output/metamorpheus.blib : me
 blib-test-build diann-speclib : -o : output/diann-speclib.blib : diann-speclib.check : $(TEST_INPUTS_PATH)/diann-swath.speclib ;
 blib-test-build diann-speclib-diapasef : -o : output/diann-hela-diapasef.blib : diann-hela-diapasef.check : $(TEST_INPUTS_PATH)/diann-hela-diapasef-lib.speclib ;
 blib-test-build-basic diann-mod-test : -o : $(TEST_INPUTS_PATH)/diann-mod-test.tsv.speclib ;
+blib-test-build-basic diann-mass-mod-test : -o : $(TEST_INPUTS_PATH)/diann-mass-mods.tsv.speclib ;
 blib-test-build-basic msfragger-diann : -o : $(TEST_INPUTS_PATH)/library.tsv.speclib ;
 blib-test-build-basic msfragger-diann-predicted : -o : $(TEST_INPUTS_PATH)/diann-predicted/lib.predicted.speclib ;
 

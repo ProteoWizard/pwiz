@@ -137,8 +137,9 @@ This filter adds or replaces spectrum titles according to specified <format_stri
    "<Id>" - prints the spectrum's nativeID
    "<SourcePath>" - prints the path of the spectrum's source data
    "<ScanNumber>" - if the nativeID can be represented as a single number, prints that number, else index+1
+   "<IonMobility>" - for the first scan of a spectrum, prints the "ion mobility drift time" or "inverse reduced ion mobility" value
    "<ActivationType>" - for the first precursor, prints the spectrum's "dissociation method" value
-   "<IsolationMz>" - for the first precursor, prints the the spectrum's "isolation target m/z" value
+   "<IsolationMz>" - for the first precursor, prints the spectrum's "isolation target m/z" value
    "<PrecursorSpectrumId>" - prints the nativeID of the spectrum of the first precursor
    "<SelectedIonMz>" - prints the m/z value of the first selected ion of the first precursor
    "<ChargeState>" - prints the charge state for the first selected ion of the first precursor
@@ -173,6 +174,14 @@ keeps mz/intensity pairs whose m/z values fall within the specified range.
 mzPrecursors <precursor_mz_list> [mzTol=<mzTol (10 ppm)>] [target=<selected|isolated> (selected)] [mode=<include|exclude (include)>]
 Filters spectra based on precursor m/z values found in the <precursor_mz_list>, with <mzTol> m/z tolerance. To retain only spectra with precursor m/z values of 123.4 and 567.8, use --filter "mzPrecursors [123.4,567.8]". Note that this filter will drop MS1 scans unless you include 0.0 in the list of precursor values.   <mzTol> is optional and must be specified as a number and units (PPM or MZ). For example, "5 PPM" or "2.1 MZ".
    <target> is optional and must be either "selected" (the default) or "isolated". It determines whether the isolated m/z or the selected m/z is used for the "precursor m/z"
+   <mode> is optional and must be either "include" (the default) or "exclude".  If "exclude" is used, the filter drops spectra that match the various criteria instead of keeping them.
+
+isolationWindows <isolation_window_list> [mzTol=<mzTol (10 ppm)>] [mode=<include|exclude (include)>]
+Filters spectra based on precursor isolation windows found in the <isolation_window_list>, with <mzTol> m/z tolerance. To retain only spectra with isolation windows [123.4,153.4] and [567.8,617.8], use --filter "isolationWindows [123.4,153.4] [567.8,617.8]". Note that this filter will drop MS1 scans unless you include [0,0] in the list of isolation windows.   <mzTol> is optional and must be specified as a number and units (PPM or MZ). For example, "5 PPM" or "2.1 MZ".
+   <mode> is optional and must be either "include" (the default) or "exclude".  If "exclude" is used, the filter drops spectra that match the various criteria instead of keeping them.
+
+isolationWidth <isolation_width_list> [mzTol=<mzTol (10 ppm)>] [mode=<include|exclude (include)>]
+Filters spectra based on precursor isolation width values found in the <isolation_width_list>, with <mzTol> m/z tolerance. To retain only spectra with isolation width values of 1.5 and 2.3, use --filter "isolationWidth [1.5,2.3]". Note that this filter will drop MS1 scans unless you include 0.0 in the list of isolation width values.   <mzTol> is optional and must be specified as a number and units (PPM or MZ). For example, "5 PPM" or "2.1 MZ".
    <mode> is optional and must be either "include" (the default) or "exclude".  If "exclude" is used, the filter drops spectra that match the various criteria instead of keeping them.
 
 defaultArrayLength <peak_count_range>
@@ -264,9 +273,10 @@ Predicts MSn spectrum precursor charge based on the isotopic distribution associ
   <half-width of isolation window> (default: 1.25): half-width of the isolation window (in Th.) from which precursor is derived. Window is centered at target m/z with a total size of +/- the value entered.
   <defaultMinCharge> (default: 0) and <defaultMaxCharge> (default: 0): in the event that no isotope is found in the isolation window, a range of charges between these two values will be assigned to the spectrum. If both values are left at zero, no charge will be assigned to the spectrum.
 
-activation <precursor_activation_type>
-Keeps only spectra whose precursors have the specifed activation type.  It doesn't affect non-MS spectra, and doesn't affect MS1 spectra. Use it to create output files containing only ETD or CID MSn data where both activation modes have been interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
+activation <precursor_activation_type> [mode=<include|exclude (include)>]
+Keeps only spectra whose precursors have the specified activation type. It doesn't affect non-MS spectra, and doesn't affect MS1 spectra. Use it to create output files containing only ETD or CID MSn data where both activation modes have been interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
    <precursor_activation_type> is any one of: ETD CID SA HCD HECID BIRD ECD IRMPD PD PSD PQD SID or SORI.
+   <mode> is optional and must be either "include" (the default) or "exclude". If "exclude" is used, the filter drops spectra that match the activation type instead of keeping them.
 
 collisionEnergy low=<real> high=<real> [mode=<include|exclude (include)>] [acceptNonCID=<true|false (true)] [acceptMissingCE=<true|false (false)]
 Includes/excludes MSn spectra with CID collision energy within the specified range [<low>, <high>].

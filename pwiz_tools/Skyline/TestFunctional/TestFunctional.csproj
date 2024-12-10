@@ -177,6 +177,7 @@
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
     <Compile Include="CopyProteinGroupTest.cs" />
@@ -196,6 +197,7 @@
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="ImmediateWindowWarningsTest.cs" />
     <Compile Include="ImportPromptToSaveTest.cs" />
+    <Compile Include="ImportResultsFilesRestoreTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
     <Compile Include="InternationalFilenamesTest.cs" />
     <Compile Include="LegacyIgnoreSimTest.cs" />

@@ -68,6 +68,7 @@ namespace pwiz.Skyline.FileUI
                 DataSourceUtil.TYPE_WIFF2,
                 DataSourceUtil.TYPE_AGILENT,
                 DataSourceUtil.TYPE_BRUKER,
+                DataSourceUtil.TYPE_MBI,
                 DataSourceUtil.TYPE_SHIMADZU,
                 DataSourceUtil.TYPE_THERMO_RAW,
                 DataSourceUtil.TYPE_WATERS_RAW,
@@ -117,6 +118,50 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * lookInComboBox.ItemHeight + 2;
 
             _specificDataSourceFilter = specificDataSourceFilter;
+        }
+
+        public void RestoreState(string documentPath, OpenDataSourceState state)
+        {
+            if (state != null)
+                Size = state.WindowSize;
+
+            string initialDir = state?.InitialDirectory;
+            // If the saved initial directory is not for the same document, then start
+            // in the document folder. Always starting in the document folder is painful
+            // to watch, if the user is adding a single file at a time from a different
+            // directory.
+            if (string.IsNullOrEmpty(initialDir) || !Equals(state.DocumentPath, documentPath))
+            {
+                string docDir = Path.GetDirectoryName(documentPath);
+                if (!string.IsNullOrEmpty(docDir))
+                    initialDir = docDir;
+            }
+            // The dialog expects null to mean no directory was supplied, so don't assign
+            // an empty string.
+            if (string.IsNullOrEmpty(initialDir))
+                initialDir = null;
+            InitialDirectory = MsDataFileUri.Parse(initialDir);
+            if (state != null)
+            {
+                if (SourceTypeName != null)
+                    SourceTypeName = state.SourceTypeName;
+                ListView = state.ListView;
+                SetListViewSort(state.ListSortColumnIndex, state.ListSortOrder);
+            }
+        }
+
+        public OpenDataSourceState GetState(string documentPath)
+        {
+            return new OpenDataSourceState
+            {
+                DocumentPath = documentPath,
+                InitialDirectory = CurrentDirectory.ToString(),
+                SourceTypeName = SourceTypeName,
+                ListView = ListView,
+                ListSortColumnIndex = ListSortColumnIndex,
+                ListSortOrder = ListSortOrder,
+                WindowSize = Size
+            };
         }
 
         public new DialogResult ShowDialog(IWin32Window owner)
@@ -238,6 +283,28 @@ namespace pwiz.Skyline.FileUI
                     yield return listView.Items[index].Text;
             }
         }
+
+        public void EnsureListViewItemVisible(int item)
+        {
+            listView.EnsureVisible(item);
+        }
+
+        public View ListView
+        {
+            get { return listView.View; }
+            set { SetListView(value); }
+        }
+
+        public int ListSortColumnIndex
+        {
+            get { return _listViewColumnSorter.SortColumn; }
+        }
+
+        public SortOrder ListSortOrder
+        {
+            get { return _listViewColumnSorter.Order; }
+        }
+
 
         private string _sourceTypeName;
         public string SourceTypeName
@@ -711,23 +778,24 @@ namespace pwiz.Skyline.FileUI
 
         private void listView_ColumnClick( object sender, ColumnClickEventArgs e )
         {
-            // Determine if the clicked column is already the column that is being sorted.
-            if( e.Column == _listViewColumnSorter.SortColumn )
-            {
-                // Reverse the current sort direction for this column.
-                _listViewColumnSorter.Order = _listViewColumnSorter.Order == SortOrder.Ascending
-                                                  ? SortOrder.Descending
-                                                  : SortOrder.Ascending;
-            } 
-            else
-            {
-                // Set the column number that is to be sorted; default to ascending.
-                _listViewColumnSorter.SortColumn = e.Column;
-                _listViewColumnSorter.Order = SortOrder.Ascending;
-            }
+            ToggleListViewSort(e.Column);
+        }
 
-            // Perform the sort with these new sort options.
-            listView.Sort();
+        private void ToggleListViewSort(int columnIndex)
+        {
+            var order = SortOrder.Ascending;
+            if (columnIndex == _listViewColumnSorter.SortColumn && order == _listViewColumnSorter.Order)
+                order = SortOrder.Descending;
+            SetListViewSort(columnIndex, order);
+        }
+
+        public void SetListViewSort(int columnIndex, SortOrder order)
+        {
+            _listViewColumnSorter.SortColumn = columnIndex;
+            _listViewColumnSorter.Order = order;
+
+            if (listView.IsHandleCreated)
+                listView.Sort();
         }
 
         private void openButton_Click( object sender, EventArgs e )
@@ -815,33 +883,53 @@ namespace pwiz.Skyline.FileUI
 
         private void tilesToolStripMenuItem_Click( object sender, EventArgs e )
         {
-            foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
-                ( (ToolStripMenuItem) item ).Checked = false;
-            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[0] ).Checked = true;
-            listView.BeginUpdate();
-            listView.View = View.Tile;
-            listView.EndUpdate();
+            SetListView(View.Tile);
         }
 
         private void listToolStripMenuItem_Click( object sender, EventArgs e )
         {
-            foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
-                ( (ToolStripMenuItem) item ).Checked = false;
-            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[1] ).Checked = true;
-            listView.View = View.List;
-            listView.Columns[0].Width = -1;
+            SetListView(View.List);
         }
 
-        private void detailsToolStripMenuItem_Click( object sender, EventArgs e )
+        private void detailsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if( listView.View != View.Details )
+            SetListView(View.Details);
+        }
+
+        private void SetListView(View view)
+        {
+            if (listView.View != view)
             {
-                foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
-                    ( (ToolStripMenuItem) item ).Checked = false;
-                ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[2] ).Checked = true;
-                listView.View = View.Details;
-                populateListViewFromDirectory( _currentDirectory );
-                listView.Columns[0].Width = 200;
+                int menuIndex = GetMenuIndex(view);
+                var items = viewsDropDownButton.DropDownItems;
+                for (int i = 0; i < items.Count; i++)
+                    ((ToolStripMenuItem)items[i]).Checked = (i == menuIndex);
+
+                listView.BeginUpdate();
+                listView.View = view;
+                if (view == View.Details)
+                {
+                    populateListViewFromDirectory(_currentDirectory);
+                    listView.Columns[0].Width = 200;
+                }
+                else
+                {
+                    listView.Columns[0].Width = -1;
+                }
+                listView.EndUpdate();
+            }
+        }
+
+        private int GetMenuIndex(View view)
+        {
+            switch (view)
+            {
+                case View.Details:
+                    return 2;
+                case View.Tile:
+                    return 0;
+                default:
+                    return 1;
             }
         }
 
@@ -942,6 +1030,20 @@ namespace pwiz.Skyline.FileUI
 
         private void remoteAccountsButton_Click( object sender, EventArgs e )
         {
+            if (Equals(CurrentDirectory, RemoteUrl.EMPTY) ||
+                CurrentDirectory is RemoteUrl && _remoteAccounts.Count == 1)
+            {
+                var list = Settings.Default.RemoteAccountList;
+                var listNew = list.EditList(this, null);
+                if (listNew != null)
+                {
+                    list.Clear();
+                    list.AddRange(listNew);
+                }
+                // clear listView contents if all remote accounts have been removed
+                if (!list.Any())
+                    listView.Clear();
+            }
             CurrentDirectory = RemoteUrl.EMPTY;
         }
 

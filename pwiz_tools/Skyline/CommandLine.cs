@@ -57,7 +57,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
-    public class CommandLine : IDisposable
+    public class CommandLine : IDisposable/*, IRemoteAccountUserInteraction*/
     {
         private CommandStatusWriter _out;
 
@@ -116,6 +116,8 @@ namespace pwiz.Skyline
 
         private int RunInner(string[] args, bool withoutUsage = false)
         {
+            //RemoteSession.RemoteAccountUserInteraction = this;
+
             _importedResults = false;
 
             var commandArgs = new CommandArgs(_out, _doc != null);
@@ -334,25 +336,30 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            if (commandArgs.ImportingFasta && !commandArgs.ImportingSearch)
+            // Because importing a FASTA or peptide list relies a lot on spectral
+            // libraries for transition selection, they only happen this early when
+            // importing a peptide search that will build a new library.
+            if (!commandArgs.ImportingSearch)
             {
-                if (!HandleExceptions(commandArgs,
-                        () => { ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins); },
-                        Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_, 
-                        commandArgs.FastaPath, true))
+                if (commandArgs.ImportingFasta)
                 {
-                    return false;
+                    if (!HandleExceptions(commandArgs,
+                            () => { ImportFasta(commandArgs.FastaPath, commandArgs.KeepEmptyProteins); },
+                            Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                            commandArgs.FastaPath, true))
+                    {
+                        return false;
+                    }
                 }
-            }
-
-            if (commandArgs.ImportingPeptideList)
-            {
-                if (!HandleExceptions(commandArgs,
-                        () => { ImportPeptideList(commandArgs.PeptideListName, commandArgs.PeptideListPath); },
-                        Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
-                        commandArgs.PeptideListPath, true))
+                if (commandArgs.ImportingPeptideList)
                 {
-                    return false;
+                    if (!HandleExceptions(commandArgs,
+                            () => { ImportPeptideList(commandArgs.PeptideListName, commandArgs.PeptideListPath); },
+                            Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                            commandArgs.PeptideListPath, true))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -377,6 +384,17 @@ namespace pwiz.Skyline
             {
                 if (!ImportSearch(commandArgs))
                     return false;
+
+                if (commandArgs.ImportingPeptideList)
+                {
+                    if (!HandleExceptions(commandArgs,
+                            () => { ImportPeptideList(commandArgs.PeptideListName, commandArgs.PeptideListPath); },
+                            Resources.CommandLine_Run_Error__Failed_importing_the_file__0____1_,
+                            commandArgs.PeptideListPath, true))
+                    {
+                        return false;
+                    }
+                }
             }
 
             if (commandArgs.AssociatingProteins)
@@ -2160,7 +2178,7 @@ namespace pwiz.Skyline
             // Skip if file write time is after importBefore or before importAfter
             try
             {
-                var fileLastWriteTime = replicateFile.GetFileLastWriteTime();
+                var fileLastWriteTime = CommandArgs.IsRemoteUrl(replicateFile.GetFilePath()) ? DateTime.UtcNow : replicateFile.GetFileLastWriteTime();
                 if (importBefore != null && importBefore < fileLastWriteTime)
                 {
                     _out.WriteLine(SkylineResources.CommandLine_ImportResultsFile_File_write_date__0__is_after___import_before_date__1___Ignoring___,
@@ -2258,14 +2276,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private IEnumerable<Peptide> DigestProteinToPeptides(FastaSequence sequence)
-        {
-            var peptideSettings = Document.Settings.PeptideSettings;
-            return peptideSettings.Enzyme.Digest(sequence, peptideSettings.DigestSettings);
-            // CONSIDER: should AssociateProteinsDlg use the length filters? The old PeptidePerProteinDlg doesn't seem to.
-            //peptideSettings.Filter.MaxPeptideLength, peptideSettings.Filter.MinPeptideLength);
-        }
-
         private bool AssociateProteins(CommandArgs commandArgs)
         {
             return HandleExceptions(commandArgs, () => 
@@ -2276,7 +2286,7 @@ namespace pwiz.Skyline
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
                 var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
-                proteinAssociation.UseFastaFile(fastaPath, DigestProteinToPeptides, progressMonitor);
+                proteinAssociation.UseFastaFile(fastaPath, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsGeneLevelParsimony.GetValueOrDefault(),
                     commandArgs.AssociateProteinsFindMinimalProteinList.GetValueOrDefault(),
@@ -4555,6 +4565,29 @@ namespace pwiz.Skyline
                 return false;
             }
         }
+
+        /*public Func<HttpClient> UserLogin(RemoteAccount account)
+        {
+            if (InvokeRequired)
+            {
+                Func<HttpClient> client = null;
+                Program.Invoke(() => client = UserLogin(account));
+                return client;
+            }
+
+            switch (account)
+            {
+                case ArdiaAccount ardia:
+                {
+                    using var loginDlg = new ArdiaLoginDlg(ardia, true);
+                    if (DialogResult.Cancel == loginDlg.ShowParentlessDialog())
+                        throw new OperationCanceledException();
+                    return loginDlg.AuthenticatedHttpClientFactory;
+                }
+                default:
+                    throw new NotImplementedException();
+            }
+        }*/
     }
 
     public class CommandStatusWriter : TextWriter
