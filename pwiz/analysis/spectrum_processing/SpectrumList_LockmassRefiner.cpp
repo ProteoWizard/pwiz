@@ -57,12 +57,13 @@ SpectrumList_LockmassRefiner::SpectrumList_LockmassRefiner(const msdata::Spectru
     }
     else
     {
-        cerr << "Warning: lockmass refinement was requested, but is unavailable";
+        cerr << "Warning: lockmass refinement for spectrum data was requested, but is unavailable";
 #ifdef WIN32
         cerr << " for non-Waters input data. ";
 #else
         cerr << " as it depends on Windows DLLs.  ";
 #endif
+        cerr << endl;
     }
 }
 
