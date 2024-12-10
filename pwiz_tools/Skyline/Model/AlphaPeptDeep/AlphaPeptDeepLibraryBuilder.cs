@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             {
                 if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
                     continue;
-                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].AAs;
+                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
                 var name = UniModData.UNI_MOD_DATA[m].Name;
                 var formula = UniModData.UNI_MOD_DATA[m].Formula;
                 modList.Add(new ModificationType(accession, name, formula));
