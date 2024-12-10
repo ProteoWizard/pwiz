@@ -213,6 +213,11 @@ namespace pwiz.Skyline.Controls
             get { return _nodeTip.Visible; }
         }
 
+        public Rectangle TipRect
+        {
+            get { return _nodeTip.Visible ? _nodeTip.Bounds : Rectangle.Empty; }
+        }
+
         [Browsable(true)]
         public event EventHandler<PickedChildrenEventArgs> PickedChildrenEvent;
 
@@ -1248,7 +1253,7 @@ namespace pwiz.Skyline.Controls
                     disableCompletion = false;
                 }
             }
-            _editTextBox = new StatementCompletionTextBox(DocumentContainer)
+            _editTextBox = new StatementCompletionTextBox(DocumentContainer, commitOnLoseFocus)
                 {AutoSizeWidth = true, DisableCompletion = disableCompletion};
             _editTextBox.Attach(textBox);
             textBox.KeyDown += textBox_KeyDown;

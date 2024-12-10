@@ -256,7 +256,20 @@ namespace pwiz.SkylineTestUtil
                     TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName,
                         TestFilesPersistent, IsExtractHere(i));
                 }
+                CleanupPersistentDir(); // Clean up before recording metrics
+                foreach (var dir in TestFilesDirs)
+                {
+                    dir.RecordMetrics();
+                }
             }
+        }
+
+        /// <summary>
+        /// Override this function with any specific file deletions that need to
+        /// happen to avoid leaving files in the PersistentFilesDir.
+        /// </summary>
+        protected virtual void CleanupPersistentDir()
+        {
         }
 
         private static string DownloadZipFile(string targetFolder, string zipPath, string zipFilePath)
@@ -454,6 +467,8 @@ namespace pwiz.SkylineTestUtil
             // mask the original error.
             if (TestFilesDirs != null && TestContext.CurrentTestOutcome == UnitTestOutcome.Passed)
             {
+                CleanupPersistentDir();
+
                 foreach (var dir in TestFilesDirs.Where(d => d != null))
                 {
                     dir.Cleanup();

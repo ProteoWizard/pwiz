@@ -60,11 +60,9 @@ namespace pwiz.SkylineTestFunctional
             TestUseBackgroundProteome();
             TestFastaOverride();
             TestParsimonyOptions();
-
-            Assert.IsFalse(IsRecordMode);
         }
 
-        public bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
 
         private void TestInvalidFasta()
         {
