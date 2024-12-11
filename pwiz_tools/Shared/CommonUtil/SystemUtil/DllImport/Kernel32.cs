@@ -6,6 +6,16 @@ namespace pwiz.Common.SystemUtil.DllImport
 {
     public static class Kernel32
     {
+        private const int ATTACH_PARENT_PROCESS = -1;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool AttachConsole(int dwProcessId);
+
+        public static void AttachConsoleToParentProcess()
+        {
+            AttachConsole(ATTACH_PARENT_PROCESS);
+        }
+
         [DllImport("kernel32.dll")]
         public static extern int GetCurrentThreadId();
 

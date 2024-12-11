@@ -20,15 +20,21 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
-// TODO: solicit feedback on namespace - (1) "DllImport", (2) "Win32", (3) "Pinvoke"
+// TODO: solicit namespace feedback (1) "DllImport", (2) "Win32", (3) "Pinvoke"
 namespace pwiz.Common.SystemUtil.DllImport
 {
+    // Allowed uses of InteropServices
+    //      Common.SystemUtil.DllImport.* - allowed to use InteropServices
+    //      pwiz_tools\Shared\zedgraph\ZedGraph\ZedGraphControl.ContextMenu.cs - avoid changing ZedGraph
+
     public static class User32
     {
         // TODO: add Clipboard extension methods
 
-        // TODO: standardize on decimal or hex for constant values?
+        // TODO: use decimal or hex for constant values?
         public const int WM_SETREDRAW = 11;
+        public const int WM_VSCROLL = 0x0115;
+
         public const uint PBM_SETSTATE = 0x0410; // 1040
 
         public enum AW
@@ -137,12 +143,23 @@ namespace pwiz.Common.SystemUtil.DllImport
 
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         public static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
+
+        // TODO: review delegate example
+        public delegate bool EnumThreadWndProc(IntPtr hWnd, IntPtr lp);
+        [DllImport("user32.dll")]
+        public static extern bool EnumThreadWindows(int tid, EnumThreadWndProc callback, IntPtr lp);
         
         [DllImport("user32.dll")]
         public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr GetFocus();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetScrollPos(IntPtr hWnd, int nBar);
+
+        [DllImport("user32.dll")]
+        public static extern bool GetScrollRange(IntPtr hWnd, int nBar, out int lpMinPos, out int lpMaxPos);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         // TODO: make extension method
@@ -153,6 +170,9 @@ namespace pwiz.Common.SystemUtil.DllImport
 
         [DllImport("user32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
+
+        [DllImport("user32.dll")]
+        public static extern bool PostMessageA(IntPtr hWnd, int nBar, int wParam, int lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
@@ -170,17 +190,8 @@ namespace pwiz.Common.SystemUtil.DllImport
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
 
-        public static bool SetWindowPos(this Form targetWindow, IntPtr referenceWindowHandle, 
-            int X, int Y, int cx, int cy, params SWP[] flags)
-        {
-            int flagsInt = 0;
-            Array.ForEach(flags, delegate(SWP flag) { flagsInt |= (int)flag; });
-    
-            return SetWindowPos(targetWindow.Handle, referenceWindowHandle, X, Y, cx, cy, (uint)flagsInt);
-        }
-
         [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);

@@ -5,10 +5,9 @@ using System;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
 using pwiz.Common.SystemUtil.DllImport;
 
-// TODO (ekoneil): this class is unused and can be removed. Leaving win32 refs here for now.
+// TODO (ekoneil): this class is unused and can be removed?
 namespace pwiz.Common.SystemUtil
 {
     public class CenterWinDialog : IDisposable
@@ -26,8 +25,8 @@ namespace pwiz.Common.SystemUtil
         {
             // Enumerate windows to find the message box
             if (mTries < 0) return;
-            EnumThreadWndProc callback = checkWindow;
-            if (EnumThreadWindows(Kernel32.GetCurrentThreadId(), callback, IntPtr.Zero))
+            User32.EnumThreadWndProc callback = checkWindow;
+            if (User32.EnumThreadWindows(Kernel32.GetCurrentThreadId(), callback, IntPtr.Zero))
             {
                 if (++mTries < 10) mOwner.BeginInvoke(new MethodInvoker(findDialog));
             }
@@ -54,10 +53,5 @@ namespace pwiz.Common.SystemUtil
         {
             mTries = -1;
         }
-
-        // P/Invoke declarations
-        private delegate bool EnumThreadWndProc(IntPtr hWnd, IntPtr lp);
-        [DllImport("user32.dll")]
-        private static extern bool EnumThreadWindows(int tid, EnumThreadWndProc callback, IntPtr lp);
     }
 }

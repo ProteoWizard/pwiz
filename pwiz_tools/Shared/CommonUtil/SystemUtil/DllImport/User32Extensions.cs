@@ -16,24 +16,27 @@
 
 using System;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using ProgressBar = System.Windows.Forms.ProgressBar;
 
 namespace pwiz.Common.SystemUtil.DllImport
 {
     public static class User32Extensions
     {
+        /// <summary>
+        /// Adjust z-order without activating
+        /// </summary>
         public static void BringWindowToSameLevelWithoutActivating(this Form targetWindow, IntPtr referenceWindowHandle)
         {
-            // Use SetWindowPos to adjust z-order without activating
-            targetWindow.SetWindowPos(referenceWindowHandle, 0, 0, 0, 0,
-                User32.SWP.NOMOVE,
-                User32.SWP.NOSIZE,
-                User32.SWP.NOACTIVATE,
-                User32.SWP.SHOWWINDOW);
+            int flags = (int)User32.SWP.NOMOVE | (int)User32.SWP.NOSIZE | (int)User32.SWP.NOACTIVATE | (int)User32.SWP.SHOWWINDOW;
+
+            User32.SetWindowPos(targetWindow.Handle, referenceWindowHandle, 0, 0, 0, 0, (uint)flags);
         }
 
-        public static void HideCaret(this Control control)
+        public static int GetScrollPos(this Control control, Orientation sd)
+        {
+            return User32.GetScrollPos(control.Handle, (int)sd);
+        }
+
+        public static void HideCaret(this TextBox control)
         {
             User32.HideCaret(control.Handle);
         }
