@@ -407,7 +407,10 @@ namespace TestPerf
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
+        }
 
+        protected override void CleanupPersistentDir()
+        {
             DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
             foreach (var searchFile in SearchFiles)
             {
