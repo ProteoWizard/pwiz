@@ -18,7 +18,10 @@ using System.Runtime.InteropServices;
 using System;
 using System.Drawing;
 using System.Text;
+using System.Windows.Forms;
 
+// TODO: make a ClipboardEx class
+// TODO: move to pwiz.Common.SystemUtil.Win32 namespace?
 namespace pwiz.Common.SystemUtil
 {
     /// <summary>
@@ -32,10 +35,32 @@ namespace pwiz.Common.SystemUtil
         // TODO: User32 will be long - move it (and other *32 classes?) to separate files?
         public static class User32
         {
-            // TODO: improve typing by wrapping in an enum?
-            // TODO: standardize on exactly one of decimal or hex?
+            // TODO: improve typing by wrapping in an enum? Even an enum per prefix (WM, PBM, SWP)?
+            // TODO: standardize on either decimal or hex?
             public const int WM_SETREDRAW = 11;
             public const uint PBM_SETSTATE = 0x0410; // 1040
+
+            public enum AW
+            {
+                /// <summary>
+                /// Hide the form
+                /// </summary>
+                HIDE = 0x10000,  
+                /// <summary>
+                /// Activate the form
+                /// </summary>
+                ACTIVATE = 0x20000
+            }
+
+            public enum SWP
+            {
+                // ReSharper disable IdentifierTypo
+                NOMOVE = 0x0002,
+                NOSIZE = 0x0001,
+                NOACTIVATE = 0x0010,
+                SHOWWINDOW = 0x0040
+                // ReSharper disable IdentifierTypo
+            }
 
             [StructLayout(LayoutKind.Sequential)]
             public struct RECT
@@ -69,6 +94,12 @@ namespace pwiz.Common.SystemUtil
                 }
             }
 
+            /// <summary>
+            /// Windows API function to animate a window.
+            /// </summary>
+            [DllImport("user32.dll")]
+            public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, int dwFlags);
+
             [DllImport("user32.dll")]
             public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
 
@@ -81,6 +112,7 @@ namespace pwiz.Common.SystemUtil
             [DllImport("user32.dll")]
             public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
 
+            // TODO: standardize on one sendMessage 
             [DllImport("user32.dll", CharSet = CharSet.Auto)]
             public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
 
@@ -89,15 +121,30 @@ namespace pwiz.Common.SystemUtil
 
             [DllImport("user32.dll")]
             public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+            [DllImport("user32.dll", SetLastError = true)]
+            public static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
+
+            public static bool SetWindowPos(Form targetWindow, IntPtr referenceWindowHandle, 
+                int X, int Y, int cx, int cy, params SWP[] flags)
+            {
+                int flagsInt = 0;
+                Array.ForEach(flags, delegate(SWP flag) { flagsInt |= (int)flag; });
+    
+                return SetWindowPos(targetWindow.Handle, referenceWindowHandle, X, Y, cx, cy, (uint)flagsInt);
+            }
+
+            [DllImport("user32.dll", SetLastError = true)]
+            private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
         }
 
         public static class Gdi32
         { 
-            public enum DeviceCap
+            public enum GDC
             {
                 // ReSharper disable IdentifierTypo
                 VERTRES = 10,
-                DESKTOPVERTRES = 117,
+                DESKTOPVERTRES = 117
                 // ReSharper restore IdentifierTypo
             }
 
@@ -107,13 +154,13 @@ namespace pwiz.Common.SystemUtil
             [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
             public static extern bool DeleteDC(IntPtr hDC);
 
-            [DllImport(dllName: "gdi32.dll")]
-            private static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-
-            public static int GetDeviceCaps(IntPtr hdc, DeviceCap value)
+            public static int GetDeviceCaps(IntPtr hdc, GDC flag)
             {
-                return DllImport.Gdi32.GetDeviceCaps(hdc, (int)value);
+                return GetDeviceCaps(hdc, (int)flag);
             }
+
+            [DllImport("gdi32.dll")]
+            private static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
 
             [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
             public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);

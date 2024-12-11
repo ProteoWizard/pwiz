@@ -19,7 +19,7 @@
 
 using System;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util
 {
@@ -89,15 +89,6 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Hide the form.
-        /// </summary>
-        private const int AW_HIDE = 0x10000;
-        /// <summary>
-        /// Activate the form.
-        /// </summary>
-        private const int AW_ACTIVATE = 0x20000;
-
-        /// <summary>
         /// The number of milliseconds over which the animation occurs if no 
         /// value is specified.
         /// </summary>
@@ -147,14 +138,6 @@ namespace pwiz.Skyline.Util
         /// Gets/sets the parameters to be used for the "hide" animation
         /// </summary>
         public AnimationParams HideParams { get; set; }
-
-        /// <summary>
-        /// Windows API function to animate a window.
-        /// </summary>
-        [DllImport("user32")]
-        private static extern bool AnimateWindow(IntPtr hWnd,
-                                                 int dwTime,
-                                                 int dwFlags);
 
         /// <summary>
         /// Constructor used to specify the form to be animated
@@ -218,17 +201,17 @@ namespace pwiz.Skyline.Util
                 if (Form.Visible)
                 {
                     // Activate the form.
-                    flags = AW_ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
+                    flags = (int)DllImport.User32.AW.ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
                     duration = ShowParams.Duration;
                 }
                 else
                 {
                     // Hide the form.
-                    flags = AW_HIDE | (int)HideParams.Method | (int)HideParams.Direction;
+                    flags = (int)DllImport.User32.AW.HIDE | (int)HideParams.Method | (int)HideParams.Direction;
                     duration = HideParams.Duration;
                 }
 
-                AnimateWindow(Form.Handle, duration, flags);
+                DllImport.User32.AnimateWindow(Form.Handle, duration, flags);
             }
         }
     }

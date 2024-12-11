@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 
@@ -207,12 +206,9 @@ namespace pwiz.Common.SystemUtil
             DllImport.User32.HideCaret(control.Handle);
         }
 
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
-
         public static void SetScrollPos(this Control control, Orientation sd, int pos)
         {
-            SetScrollPos(control.Handle, (int)sd, pos, true);
+            DllImport.User32.SetScrollPos(control.Handle, (int)sd, pos, true);
         }
 
         public static Control GetFocus(this Control control)
@@ -224,21 +220,14 @@ namespace pwiz.Common.SystemUtil
                 select GetFocus(childControl)).FirstOrDefault(focus => focus != null);
         }
 
-        private const int SWP_NOMOVE = 0x0002;
-        private const int SWP_NOSIZE = 0x0001;
-        private const int SWP_NOACTIVATE = 0x0010;
-        private const int SWP_SHOWWINDOW = 0x0040;
-
-        private static readonly IntPtr HWND_TOP = new IntPtr(0);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-
         public static void BringWindowToSameLevelWithoutActivating(this Form targetWindow, IntPtr referenceWindowHandle)
         {
             // Use SetWindowPos to adjust z-order without activating
-            SetWindowPos(targetWindow.Handle, referenceWindowHandle, 0, 0, 0, 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            DllImport.User32.SetWindowPos(targetWindow, referenceWindowHandle, 0, 0, 0, 0, 
+                DllImport.User32.SWP.NOMOVE, 
+                DllImport.User32.SWP.NOSIZE, 
+                DllImport.User32.SWP.NOACTIVATE, 
+                DllImport.User32.SWP.SHOWWINDOW);
         }
     }
 }

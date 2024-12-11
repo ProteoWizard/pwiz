@@ -129,8 +129,8 @@ namespace pwiz.SkylineTestUtil
         {
             using var g = Graphics.FromHwnd(IntPtr.Zero);
             IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.DeviceCap.VERTRES);
-            int PhysicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.DeviceCap.DESKTOPVERTRES);
+            int LogicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.GDC.VERTRES);
+            int PhysicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.GDC.DESKTOPVERTRES);
             float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
