@@ -256,6 +256,9 @@ namespace ZedGraph
             return pt.X >= 0 && pt.X < _densityGridSize.Width && pt.Y >= 0 && pt.Y < _densityGridSize.Height;
         }
 
+        /// <summary>
+        /// We use square of uniformly distributed randoms to get distribution with a peak
+        /// </summary>
         private int GetRandom(float range)
         {
             return (int)((_randGenerator.NextDouble() - 0.5) * (_randGenerator.NextDouble() - 0.5) * range * 1.5);
@@ -265,6 +268,9 @@ namespace ZedGraph
         {
             return new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height);
         }
+
+        public const int SEARCH_COUNT_COARSE = 80;
+        public const int SEARCH_COUNT_FINE = 15;
 
         /**
          * Algorighm overview:
@@ -276,12 +282,13 @@ namespace ZedGraph
          * of the label relative to it's data point.
          *  The algorighm works in screen coordinates (pixels). There is no need to use user coordinates here.
          *  Returns true if the label has been successfully placed, false otherwise.
+         * Note that TextObj location is top-center, not top-left
          */
         public bool PlaceLabel(LabeledPoint labPoint, Graphics g)
         {
             var labelRect = _graph.GetRectScreen(labPoint.Label, g);
             var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
-            var labelLength = (int)Math.Ceiling(1.0 * labelRect.Width / _cellSize);
+            var labelLength = (int)Math.Ceiling(1.0 * labelRect.Width / _cellSize); // label length in grid units
 
             var pointCell = new Point((int)((targetPoint.X - _chartOffset.X) / _cellSize),
                 (int)((targetPoint.Y - _chartOffset.Y) / _cellSize));
@@ -289,9 +296,9 @@ namespace ZedGraph
                 return false;
             var goal = float.MaxValue;
             var goalCell = Point.Empty;
-            var gridRect = new Rectangle(Point.Empty, _densityGridSize);
+            var gridRect = new Rectangle(labelLength / 2, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height);
             var points = new List<Point>();
-            for (var count = 80; count > 0; count--)
+            for (var count = SEARCH_COUNT_COARSE; count > 0; count--)
             {
                 var randomGridPoint = pointCell +
                                       new Size(GetRandom(_densityGridSize.Width), GetRandom(_densityGridSize.Height));
@@ -319,10 +326,13 @@ namespace ZedGraph
             var roughGoal = goal;
             // Search the cell neighborhood for a better position
             var goalPoint = _densityGrid[goalCell.Y][goalCell.X]._location;
-            for (var count = 15; count > 0; count--)
+            var chartRect = _graph.Chart.Rect;
+            var allowedRect = new RectangleF(chartRect.X + labelRect.Width / 2, chartRect.Y,
+                chartRect.Width - labelRect.Width, chartRect.Height - labelRect.Height);
+            for (var count = SEARCH_COUNT_FINE; count > 0; count--)
             {
                 var p = goalPoint + new Size(GetRandom(_cellSize * 2), GetRandom(_cellSize * 2));
-                if (!_graph.Chart.Rect.Contains(p))
+                if (!allowedRect.Contains(p))   // label should not overlap chart's borders
                     continue;
                 var goalEstimate1 = GoalFuncion(p, targetPoint, labelRect.Size);
                 if (goalEstimate1 < goal)

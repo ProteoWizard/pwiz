@@ -158,7 +158,13 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+            {
+                Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
+                Settings.Default.GroupComparisonSuspendLabelLayout = false;
+                _labelsLayout = null;
                 GraphSummary.UpdateUI();
+                Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+            }
             else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
@@ -364,14 +370,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 UpdateAxes();
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                if (Settings.Default.GroupComparisonSuspendLabelLayout)
-                {
-                    AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
-                }
+                AdjustLabelSpacings(_labeledPoints, _labelsLayout);
+                _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
             }
             else
-                DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
+            {
+                EnableLabelLayout = false;
+                DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale,
+                    GraphSummary.GraphControl.GraphPane.Rect.Height);
+            }
         }
 
         private void this_AxisChangeEvent(GraphPane pane)
