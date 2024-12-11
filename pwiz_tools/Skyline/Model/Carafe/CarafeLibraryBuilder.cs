@@ -2,13 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using EnvDTE;
 using Ionic.Zip;
 using JetBrains.Annotations;
-using MSAmanda.Utils;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -16,8 +12,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using Process = System.Diagnostics.Process;
-using Thread = System.Threading.Thread;
 
 namespace pwiz.Skyline.Model.Carafe
 {
@@ -152,9 +146,9 @@ namespace pwiz.Skyline.Model.Carafe
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataDiaSearchResultFilePath = experimentDataDiaSearchResultFilePath;
             Document = document;
-            CreateDirIfNotExist(RootDir);
-            CreateDirIfNotExist(JavaDir);
-            CreateDirIfNotExist(CarafeDir);
+            Directory.CreateDirectory(RootDir);
+            Directory.CreateDirectory(JavaDir);
+            Directory.CreateDirectory(CarafeDir);
         }
 
         public CarafeLibraryBuilder(
@@ -174,18 +168,9 @@ namespace pwiz.Skyline.Model.Carafe
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataDiaSearchResultFilePath = experimentDataDiaSearchResultFilePath;
             Document = document;
-            CreateDirIfNotExist(RootDir);
-            CreateDirIfNotExist(JavaDir);
-            CreateDirIfNotExist(CarafeDir);
-        }
-
-        private static string CreateDirIfNotExist(string dir)
-        {
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            return dir;
+            Directory.CreateDirectory(RootDir);
+            Directory.CreateDirectory(JavaDir);
+            Directory.CreateDirectory(CarafeDir);
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -233,7 +218,7 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 // clean java dir
                 JavaDirInfo.Delete(true);
-                CreateDirIfNotExist(JavaDir);
+                Directory.CreateDirectory(JavaDir);
 
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
@@ -251,7 +236,7 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 // clean carafe dir
                 CarafeDirInfo.Delete(true);
-                CreateDirIfNotExist(CarafeDir);
+                Directory.CreateDirectory(CarafeDir);
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
