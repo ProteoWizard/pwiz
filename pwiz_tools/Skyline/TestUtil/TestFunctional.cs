@@ -290,7 +290,7 @@ namespace pwiz.SkylineTestUtil
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
                 if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    dlg.Icon != null)    // Normally a fixed dialog will not have the Skyline icon handle
+                    dlg.Icon.Handle == Resources.Skyline.Handle)    // Normally a fixed dialog will not have the Skyline icon handle
                 {
                     var ico = dlg.Icon.Handle;
                     if (ico != SkylineWindow.Icon.Handle)
@@ -1882,6 +1882,8 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= ScreenshotCounter)
             {
+                WaitForGraphs();    // Screenshots always need graphs to be fully updated
+
                 if (screenshotForm == null)
                 {
                     if (!fullScreen && formType != null)
