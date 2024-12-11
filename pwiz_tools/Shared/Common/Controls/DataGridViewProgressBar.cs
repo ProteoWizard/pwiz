@@ -24,7 +24,7 @@ using System;
 using System.Windows.Forms;
 using System.Drawing;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.DllImport;
 
 
 namespace CustomProgressCell
@@ -149,7 +149,7 @@ namespace CustomProgressCell
 
         private void SetProgressBarState(ProgressBarState state)
         {
-            DllImport.User32.SendMessage(_progressBar.Handle, DllImport.User32.PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
+            User32.SendMessage(_progressBar.Handle, User32.PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
         }
 
         protected override void OnDataGridViewChanged()

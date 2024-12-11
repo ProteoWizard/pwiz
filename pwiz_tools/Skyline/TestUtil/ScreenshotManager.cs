@@ -11,6 +11,7 @@ using DigitalRune.Windows.Docking;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.DllImport;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -129,8 +130,8 @@ namespace pwiz.SkylineTestUtil
         {
             using var g = Graphics.FromHwnd(IntPtr.Zero);
             IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.GDC.VERTRES);
-            int PhysicalScreenHeight = DllImport.Gdi32.GetDeviceCaps(desktop, DllImport.Gdi32.GDC.DESKTOPVERTRES);
+            int LogicalScreenHeight = Gdi32.GetDeviceCaps(desktop, Gdi32.GDC.VERTRES);
+            int PhysicalScreenHeight = Gdi32.GetDeviceCaps(desktop, Gdi32.GDC.DESKTOPVERTRES);
             float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%

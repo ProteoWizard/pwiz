@@ -19,7 +19,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.DllImport;
 
 namespace pwiz.Common.Controls
 {
@@ -48,12 +48,12 @@ namespace pwiz.Common.Controls
         /// </summary>
         public void SuspendDrawing()
         {
-            DllImport.User32.SendMessage(Handle, DllImport.User32.WM_SETREDRAW, 0, IntPtr.Zero);
+            User32.SendMessage(Handle, User32.WM_SETREDRAW, 0, IntPtr.Zero);
         }
 
         public void ResumeDrawing()
         {
-            DllImport.User32.SendMessage(Handle, DllImport.User32.WM_SETREDRAW, 1, IntPtr.Zero);
+            User32.SendMessage(Handle, User32.WM_SETREDRAW, 1, IntPtr.Zero);
             Invalidate(true);
             Update();
         }

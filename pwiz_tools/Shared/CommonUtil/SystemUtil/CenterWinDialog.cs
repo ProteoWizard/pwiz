@@ -6,6 +6,7 @@ using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using pwiz.Common.SystemUtil.DllImport;
 
 // TODO (ekoneil): this class is unused and can be removed. Leaving win32 refs here for now.
 namespace pwiz.Common.SystemUtil
@@ -26,7 +27,7 @@ namespace pwiz.Common.SystemUtil
             // Enumerate windows to find the message box
             if (mTries < 0) return;
             EnumThreadWndProc callback = checkWindow;
-            if (EnumThreadWindows(DllImport.Kernel32.GetCurrentThreadId(), callback, IntPtr.Zero))
+            if (EnumThreadWindows(Kernel32.GetCurrentThreadId(), callback, IntPtr.Zero))
             {
                 if (++mTries < 10) mOwner.BeginInvoke(new MethodInvoker(findDialog));
             }
@@ -35,14 +36,14 @@ namespace pwiz.Common.SystemUtil
         {
             // Checks if <hWnd> is a dialog
             StringBuilder sb = new StringBuilder(260);
-            DllImport.User32.GetClassName(hWnd, sb, sb.Capacity);
+            User32.GetClassName(hWnd, sb, sb.Capacity);
             if (sb.ToString() != @"#32770") return true;
             // Got it
             Rectangle frmRect = new Rectangle(mOwner.Location, mOwner.Size);
 
-            var dlgRect = new DllImport.User32.RECT();
-            DllImport.User32.GetWindowRect(hWnd, ref dlgRect);
-            DllImport.User32.MoveWindow(hWnd,
+            var dlgRect = new User32.RECT();
+            User32.GetWindowRect(hWnd, ref dlgRect);
+            User32.MoveWindow(hWnd,
                 frmRect.Left + (frmRect.Width - dlgRect.right + dlgRect.left) / 2,
                 frmRect.Top + (frmRect.Height - dlgRect.bottom + dlgRect.top) / 2,
                 dlgRect.right - dlgRect.left,

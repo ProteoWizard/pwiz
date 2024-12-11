@@ -19,7 +19,7 @@
 
 using System;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.DllImport;
 
 namespace pwiz.Skyline.Util
 {
@@ -202,17 +202,17 @@ namespace pwiz.Skyline.Util
                 if (Form.Visible)
                 {
                     // Activate the form.
-                    flags = (int)DllImport.User32.AW.ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
+                    flags = (int)User32.AW.ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
                     duration = ShowParams.Duration;
                 }
                 else
                 {
                     // Hide the form.
-                    flags = (int)DllImport.User32.AW.HIDE | (int)HideParams.Method | (int)HideParams.Direction;
+                    flags = (int)User32.AW.HIDE | (int)HideParams.Method | (int)HideParams.Direction;
                     duration = HideParams.Duration;
                 }
 
-                DllImport.User32.AnimateWindow(Form.Handle, duration, flags);
+                User32.AnimateWindow(Form.Handle, duration, flags);
             }
         }
     }
