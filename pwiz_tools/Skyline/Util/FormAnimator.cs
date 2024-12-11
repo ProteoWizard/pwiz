@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// The methods of animation available.
         /// </summary>
+        // TODO (ekoneil): win32 migration - rationalize with constants in User32 / CustomTip
         public enum AnimationMethod
         {
             /// <summary>

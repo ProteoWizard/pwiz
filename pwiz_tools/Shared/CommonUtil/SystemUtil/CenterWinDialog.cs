@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
+// TODO (ekoneil): this class is unused and can be removed. Leaving win32 refs here for now.
 namespace pwiz.Common.SystemUtil
 {
     public class CenterWinDialog : IDisposable
