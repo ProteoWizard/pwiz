@@ -338,7 +338,6 @@ namespace pwiz.SkylineTestUtil
         /// Convenience function for getting a value on the UI thread
         /// e.g. var value = GetValueUI(() => control.Value);
         /// </summary>
-
         public T GetValueUI<T>([InstantHandle] Func<T> act)
         {
             T result = default;
