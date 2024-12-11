@@ -3312,12 +3312,14 @@ namespace SkylineTester
             this.Controls.Add(this.mainPanel);
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MinimumSize = new System.Drawing.Size(700, 700);
             this.Name = "SkylineTesterWindow";
             this.Text = "Skyline Tester";
             this.Load += new System.EventHandler(this.SkylineTesterWindow_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.SkylineTesterWindow_KeyDown);
             this.Move += new System.EventHandler(this.SkylineTesterWindow_Move);
             this.Resize += new System.EventHandler(this.SkylineTesterWindow_Resize);
             this.mainPanel.ResumeLayout(false);

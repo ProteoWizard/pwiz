@@ -560,6 +560,7 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
     bfs::path::string_type unicodeTestString(boost::locale::conv::utf_to_utf<bfs::path::value_type>(L"-试验"));
     bfs::path rawpathPath(rawpath);
     bfs::path newRawPath = bfs::current_path() / rawpathPath.filename();
+    vector<bfs::path> extraCopiedPaths;
     const auto& oldExtension = newRawPath.extension().native();
     newRawPath = newRawPath.replace_extension().native() + unicodeTestString + newRawPath.extension().native();
     if (bfs::exists(newRawPath))
@@ -571,37 +572,19 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         // special case for wiff files with accompanying .scan files
         if (bal::iends_with(rawpath, ".wiff") || bal::iends_with(rawpath, ".wiff2"))
         {
-            bfs::path wiffscanPath(rawpathPath);
-            wiffscanPath.replace_extension(".wiff.scan");
-            if (bfs::exists(wiffscanPath))
+            for (auto ext : { L".wiff.scan", L".dad.scan", L".dad.sidx" })
             {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan");
-                if (bfs::exists(newWiffscanPath))
-                    bfs::remove(newWiffscanPath);
-                bfs::copy_file(wiffscanPath, newWiffscanPath);
-            }
-
-            wiffscanPath = rawpathPath;
-            wiffscanPath.replace_extension(".dad.scan");
-            if (bfs::exists(wiffscanPath))
-            {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.scan");
-                if (bfs::exists(newWiffscanPath))
-                    bfs::remove(newWiffscanPath);
-                bfs::copy_file(wiffscanPath, newWiffscanPath);
-            }
-
-            wiffscanPath = rawpathPath;
-            wiffscanPath.replace_extension(".dad.sidx");
-            if (bfs::exists(wiffscanPath))
-            {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".dad.sidx");
-                if (bfs::exists(newWiffscanPath))
-                    bfs::remove(newWiffscanPath);
-                bfs::copy_file(wiffscanPath, newWiffscanPath);
+                bfs::path wiffscanPath(rawpathPath);
+                wiffscanPath.replace_extension(ext);
+                if (bfs::exists(wiffscanPath))
+                {
+                    bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
+                    newWiffscanPath = newWiffscanPath.replace_extension().native() + unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(ext);
+                    if (bfs::exists(newWiffscanPath))
+                        bfs::remove(newWiffscanPath);
+                    bfs::copy_file(wiffscanPath, newWiffscanPath);
+                    extraCopiedPaths.emplace_back(newWiffscanPath);
+                }
             }
         }
         bfs::copy_file(rawpathPath, newRawPath);
@@ -682,17 +665,8 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
         bfs::remove_all(newRawPath); // remove the copy of the RAW file with non-ASCII characters
 
         // special case for wiff files with accompanying .scan files
-        if (bal::iequals(rawpathPath.extension().string(), ".wiff"))
-        {
-            bfs::path wiffscanPath(rawpathPath);
-            wiffscanPath.replace_extension(".wiff.scan");
-            if (bfs::exists(wiffscanPath))
-            {
-                bfs::path newWiffscanPath = bfs::current_path() / rawpathPath.filename(); // replace_extension won't work as desired on wiffscanPath
-                newWiffscanPath.replace_extension(unicodeTestString + boost::locale::conv::utf_to_utf<bfs::path::value_type>(L".wiff.scan"));
-                bfs::remove(newWiffscanPath);
-            }
-        }
+        for (auto extraPath : extraCopiedPaths)
+            bfs::remove(extraPath);
     }
     catch (bfs::filesystem_error& e)
     {

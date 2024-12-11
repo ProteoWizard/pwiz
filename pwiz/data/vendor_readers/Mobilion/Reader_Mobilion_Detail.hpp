@@ -36,18 +36,23 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 namespace Mobilion {
+
+extern boost::mutex processWideHdf5Mutex; // HDF5 library isn't thread-safe: allow just one at a time
+
 PWIZ_API_DECL class MBIFileWrapper
 {
     public:
     MBIFileWrapper(const std::string& filepath)
     : file(filepath.c_str())
     {
+        processWideHdf5Mutex.lock(); // HDF5 library isn't thread-safe: allow just one at a time
         file.Init();
     }
 
     ~MBIFileWrapper()
     {
         file.Close();
+        processWideHdf5Mutex.unlock(); // HDF5 library isn't thread-safe: allow just one at a time
     }
 
     MBIFile file;
@@ -65,7 +70,6 @@ PWIZ_API_DECL CVID translatePolarity(const std::string& polarity);
 PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translate(ActivationType activationType);*/
 
-extern boost::mutex processWideHdf5Mutex; // HDF5 library isn't thread-safe
 } // Mobilion
 
 using namespace Mobilion;

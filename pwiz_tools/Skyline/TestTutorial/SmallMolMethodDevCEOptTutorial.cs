@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -45,7 +44,7 @@ using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleT
 namespace pwiz.SkylineTestTutorial
 {
     [TestClass]
-    public class SmallMolMethodDevCEOptTutorialTest : AbstractFunctionalTest
+    public class SmallMolMethodDevCEOptTutorialTest : AbstractFunctionalTestEx
     {
         protected override bool UseRawFiles
         {
@@ -90,6 +89,7 @@ namespace pwiz.SkylineTestTutorial
 
                 SetCsvFileClipboardText(GetTestPath("Energy_TransitionList.csv"));
                 var confirmHeadersDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
+                RunUIForScreenShot(() => ResizeFormOnScreen(confirmHeadersDlg, 1070, null));
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Confirming column headers", 5);
                 OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
 
@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
                     AdjustSequenceTreePanelWidth();
                 });
 
-                PauseForScreenShot<SkylineWindow>("Main window after paste from csv", 5);
+                PauseForScreenShot("Main window after paste from csv", 5);
 
                 var docTargets = WaitForDocumentChange(doc);
 
@@ -181,14 +181,16 @@ namespace pwiz.SkylineTestTutorial
 
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
+                FocusDocument();
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 13);
+                PauseForScreenShot("Skyline window multi-target graph", 13);
 
                 // Renaming replicates
                 {
                     var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                     string[] repNames = new[] { "2 min", "5 min" };
                     RunUI(() => manageResultsDlg.Left = SkylineWindow.Right + 50);
+                    RunUIForScreenShot(() => manageResultsDlg.Width += 40); // Easier to get both forms if this is wider
                     for (var i = 0; i < 2; i++)
                     {
                         doc = SkylineWindow.Document;
@@ -202,13 +204,14 @@ namespace pwiz.SkylineTestTutorial
                         var renameDlg = ShowDialog<RenameResultDlg>(manageResultsDlg.RenameResult);
                         RunUI(() => renameDlg.ReplicateName = repNames[i]);
                         if (i == 0)
-                            PauseForScreenShot<SkylineWindow>("Manage Results and Rename Replicate (PrtScn and select in Paint)", 14);
+                            PauseForScreenShot<ManageResultsDlg>("Manage Results and Rename Replicate (PrtScn and select in Paint)", 14);
                         OkDialog(renameDlg, renameDlg.OkDialog);
                     }
                     OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
                 }
 
-                PauseForScreenShot<SkylineWindow>("Skyline window (renamed)", 15);
+                FocusDocument();
+                PauseForScreenShot("Skyline window (renamed)", 15);
 
                 var docResults = SkylineWindow.Document;
 
@@ -241,7 +244,7 @@ namespace pwiz.SkylineTestTutorial
                     AdjustSequenceTreePanelWidth(true);
                 });
 
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 16);
+                PauseForScreenShot("Skyline window multi-replicate layout", 16);
 
                 // Set zoom to show better peak separation in 5 minute run
                 for (var i = 0; i < 2; i++)
@@ -250,7 +253,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() => SkylineWindow.GraphChromatograms.ToArray()[i].ZoomTo(.8, 1.8, 1.39e+8));
                     WaitForGraphs();
                 }
-                PauseForScreenShot<SkylineWindow>("Skyline window showing relative peak separation", 17);
+                PauseForScreenShot("Skyline window showing relative peak separation", 17);
 
                 // Set time window
                 {
@@ -258,7 +261,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         // ReSharper disable once RedundantCast
-                        peptideSettingsDlg.SelectedTab = (PeptideSettingsUI.TABS)0; //regular enum does not work because of the hidden tabs in the Small Molecule mode.
+                        peptideSettingsDlg.SelectedTab = PeptideSettingsUI.TABS.Prediction; //regular enum does not work because of the hidden tabs in the Small Molecule mode.
                         peptideSettingsDlg.TimeWindow = 1;
                     });
                     PauseForScreenShot<PeptideSettingsUI>("Setting scheduled transition list time window", 18);
@@ -312,7 +315,7 @@ namespace pwiz.SkylineTestTutorial
                     var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                     SelectReplicate(manageResultsDlg, 0);
 
-                    PauseForScreenShot<SkylineWindow>("Manage Results removing 2 min", 21);
+                    PauseForScreenShot<ManageResultsDlg>("Manage Results removing 2 min", 21);
 
                     RunUI(manageResultsDlg.RemoveReplicates);
 
@@ -326,7 +329,7 @@ namespace pwiz.SkylineTestTutorial
                         });
                     }
 
-                    PauseForScreenShot<SkylineWindow>("Manage Results replicate renamed", 22);
+                    PauseForScreenShot<ManageResultsDlg>("Manage Results replicate renamed", 22);
                     OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
                 }
 
@@ -340,7 +343,7 @@ namespace pwiz.SkylineTestTutorial
                     molNode.Nodes[1].Expand();
                     SkylineWindow.ArrangeGraphsTabbed();
                 });
-                PauseForScreenShot<SkylineWindow>("Skyline window with calibration data", 23);
+                PauseForScreenShot("Skyline window with calibration data", 23);
 
                 // Linearity
                 var documentGrid = ShowDialog<DocumentGridForm>(() => SkylineWindow.ShowDocumentGrid(true));
@@ -368,7 +371,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         // ReSharper disable once RedundantCast
-                        peptideSettingsUI.SelectedTab = (PeptideSettingsUI.TABS)3;
+                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification;
                         peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR;
                         peptideSettingsUI.QuantNormalizationMethod =
                             new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
@@ -453,7 +456,7 @@ namespace pwiz.SkylineTestTutorial
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
                 }
 
-                PauseForScreenShot<SkylineWindow>("Skyline shows new replicate \"CE Optimization\"", 32);
+                PauseForScreenShot("Skyline shows new replicate \"CE Optimization\"", 32);
                 RunUI(() =>
                 {
                     SkylineWindow.Size = new Size(1600, 960);
@@ -463,19 +466,19 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.ShowSingleTransition();
                     SkylineWindow.ShowSplitChromatogramGraph(true);
                 });
-                PauseForScreenShot<SkylineWindow>("Split graph", 33);
+                PauseForScreenShot("Split graph", 33);
 
                 RunUI(() =>
                 {
                     SkylineWindow.ShowPeakAreaLegend(false);
                 });
-                PauseForScreenShot<SkylineWindow>("No legend", 34);
+                PauseForScreenShot("No legend", 34);
 
                 TestAsymmetricOptimization();
 
                 // Show Pentose-P
                 SelectNode(SrmDocument.Level.Molecules, 6);
-                PauseForScreenShot<SkylineWindow>("Pentose-P", 35);
+                PauseForScreenShot("Pentose-P", 35);
 
                 if (IsCoverShotMode)
                 {
