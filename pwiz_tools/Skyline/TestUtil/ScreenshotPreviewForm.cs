@@ -43,6 +43,7 @@ namespace pwiz.SkylineTestUtil
         string Description { get; }
         string LinkUrl { get; }
         string ImageUrl { get; }
+        string FileToShow { get; }
         string FileToSave { get; }
         Control ScreenshotControl { get; }
         bool FullScreen { get; }
@@ -71,6 +72,7 @@ namespace pwiz.SkylineTestUtil
         private string _description;
         private string _linkUrl;
         private string _imageUrl;
+        private string _fileToShow;
         private string _fileToSave;
         private ScreenshotValues _screenshotValues;
         private Bitmap _oldScreenshot;
@@ -99,7 +101,6 @@ namespace pwiz.SkylineTestUtil
 
         public ScreenshotPreviewForm(IPauseTestController pauseTestController, ScreenshotManager screenshotManager)
         {
-
             _pauseTestController = pauseTestController;
             _screenshotManager = screenshotManager;
 
@@ -119,13 +120,14 @@ namespace pwiz.SkylineTestUtil
                 splitBar.Visible = false;
 
             // Unfortunately there is not enough information about the image sizes to
-            // the the starting location right here, but this is better than using the Windows default
+            // the starting location right here, but this is better than using the Windows default
             StartPosition = FormStartPosition.Manual;
             var savedLocation = TestUtilSettings.Default.PreviewFormLocation;
             if (!TestUtilSettings.Default.ManualSizePreview)
             {
-                // CONSIDER: Only do this if the stored location is on the same screen as Skyline
-                Location = GetBestLocation();
+                Location = Equals(_screenshotManager.GetScreenshotScreen(), Screen.FromPoint(savedLocation))
+                    ? GetBestLocation()
+                    : savedLocation;
             }
             else
             {
@@ -147,8 +149,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// To be called by the <see cref="IPauseTestController"/> when switching modes or entering new pause.
         /// </summary>
-        /// <param name="delayForScreenshot">True when test UI may need time to stabilize before a screenshot</param>
-        public void Show(bool delayForScreenshot)
+        public void ShowOrUpdate()
         {
             lock (_lock)
             {
@@ -156,11 +157,12 @@ namespace pwiz.SkylineTestUtil
                 _description = _pauseTestController.Description;
                 _linkUrl = _pauseTestController.LinkUrl;
                 _imageUrl = _pauseTestController.ImageUrl;
+                _fileToSave = _pauseTestController.FileToSave;
                 _screenshotValues = new ScreenshotValues(_pauseTestController.ScreenshotControl,
-                    _pauseTestController.FullScreen, _pauseTestController.ProcessShot, delayForScreenshot);
-                if (!Equals(_fileToSave, _pauseTestController.FileToSave))
+                    _pauseTestController.FullScreen, _pauseTestController.ProcessShot);
+                if (!Equals(_fileToShow, _pauseTestController.FileToShow))
                 {
-                    _fileToSave = _pauseTestController.FileToSave;
+                    _fileToShow = _pauseTestController.FileToShow;
                     _fileLoaded = null;
                 }
 
@@ -224,7 +226,7 @@ namespace pwiz.SkylineTestUtil
         private bool HasBackgroundWork { get { lock(_lock) { return !IsLoaded || (!IsWaiting && !IsScreenshotTaken); } } }
         private bool IsComplete { get { lock (_lock) { return IsLoaded && !IsWaiting && IsScreenshotTaken; } } }
         // CONSIDER: This doesn't really cover the case where the current thing is loaded but not from the current source
-        private bool IsLoaded { get { lock (_lock) { return Equals(_fileLoaded, _fileToSave) || Equals(_fileLoaded, _imageUrl); } } }
+        private bool IsLoaded { get { lock (_lock) { return Equals(_fileLoaded, _fileToShow) || Equals(_fileLoaded, _imageUrl); } } }
         private bool IsWaiting { get { lock (_lock) { return _nextScreenshotProgress is { IsReadyForScreenshot: false }; } } }
         private bool IsScreenshotTaken { get { lock (_lock) { return _screenshotTaken; } } }
 
@@ -376,7 +378,7 @@ namespace pwiz.SkylineTestUtil
             else
             {
                 int nextScreenshot = _screenshotNum + 1;
-                bool nextExists = File.Exists(_screenshotManager.ScreenshotFile(nextScreenshot));
+                bool nextExists = File.Exists(_screenshotManager.ScreenshotSourceFile(nextScreenshot));
 
                 textBox.Text = nextExists ? nextScreenshot.ToString() : END_TEST_TEXT;
                 textBox.Enabled = nextExists;
@@ -484,20 +486,20 @@ namespace pwiz.SkylineTestUtil
             Assume.IsTrue(InvokeRequired);  // Expecting this to run on a background thread. Use ActionUtil.RunAsync()
 
             Bitmap oldScreenshot;
-            string fileToSave, imageUrl, fileLoaded;
+            string fileToShow, imageUrl, fileLoaded;
 
             lock (_lock)
             {
-                fileToSave = _fileToSave;
+                fileToShow = _fileToShow;
                 fileLoaded = _fileLoaded;
                 imageUrl = showWebImage ? _imageUrl : null;
                 oldScreenshot = _oldScreenshot;
             }
 
-            string fileToLoad = imageUrl ?? fileToSave;
+            string fileToLoad = imageUrl ?? fileToShow;
             if (!Equals(fileLoaded, fileToLoad))
             {
-                oldScreenshot = LoadScreenshot(fileToSave, imageUrl);
+                oldScreenshot = LoadScreenshot(fileToShow, imageUrl);
                 fileLoaded = fileToLoad;
             }
 
@@ -546,20 +548,18 @@ namespace pwiz.SkylineTestUtil
 
         private struct ScreenshotValues
         {
-            public static readonly ScreenshotValues Empty = new ScreenshotValues(null, false, null, false);
+            public static readonly ScreenshotValues Empty = new ScreenshotValues(null, false, null);
 
-            public ScreenshotValues(Control control, bool fullScreen, Func<Bitmap, Bitmap> processShot, bool delay)
+            public ScreenshotValues(Control control, bool fullScreen, Func<Bitmap, Bitmap> processShot)
             {
                 Control = control;
                 FullScreen = fullScreen;
                 ProcessShot = processShot;
-                Delay = delay;
             }
 
             public Control Control { get; }
             public bool FullScreen { get; }
             public Func<Bitmap, Bitmap> ProcessShot { get; }
-            public bool Delay { get; }
         }
 
         private Bitmap TakeScreenshot(ScreenshotValues values)
@@ -568,14 +568,11 @@ namespace pwiz.SkylineTestUtil
             {
                 return Resources.noscreenshot;
             }
-            // TODO: Is this value necessary anymore.
-            if (values.Delay)
-                Thread.Sleep(1000);
 
             var control = values.Control;
             try
             {
-                ScreenshotManager.ActivateScreenshotForm(control);
+                _screenshotManager.ActivateScreenshotForm(control);
                 return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
             }
             catch (Exception e)
@@ -783,7 +780,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 }
 
-                string nextScreenshotFile = _screenshotManager.ScreenshotFile(nextShot);
+                string nextScreenshotFile = _screenshotManager.ScreenshotSourceFile(nextShot);
                 if (!File.Exists(nextScreenshotFile))
                 {
                     helper.ShowTextBoxError(textBoxNext, "Invalid {0} value {1}. Screenshot file {2} does not exist.", null, nextShot, nextScreenshotFile);
@@ -823,7 +820,7 @@ namespace pwiz.SkylineTestUtil
         /// <returns>The last number found to exist without interruption in the series</returns>
         int FindLastShot(int startFrom)
         {
-            while (File.Exists(_screenshotManager.ScreenshotFile(startFrom + 1)))
+            while (File.Exists(_screenshotManager.ScreenshotSourceFile(startFrom + 1)))
                 startFrom++;
             return startFrom;
         }
@@ -836,7 +833,8 @@ namespace pwiz.SkylineTestUtil
                 // Since it is not yet known what the description will be use ... and the link to the next screenshot
                 // CONSIDER: Make this a ScreenShotInfo class?
                 _description = _screenshotManager.ScreenshotDescription(_screenshotNum, "...");
-                _fileToSave = _screenshotManager.ScreenshotFile(_screenshotNum);
+                _fileToShow = _screenshotManager.ScreenshotSourceFile(_screenshotNum);
+                _fileToSave = _screenshotManager.ScreenshotDestFile(_screenshotNum);
                 _imageUrl = _screenshotManager.ScreenshotImgUrl(_screenshotNum);
                 _linkUrl = _screenshotManager.ScreenshotUrl(_screenshotNum);
                 _screenshotTaken = false;
@@ -849,7 +847,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Hide();
             }
-            else if(File.Exists(_screenshotManager.ScreenshotFile(_screenshotNum)))
+            else if(File.Exists(_screenshotManager.ScreenshotSourceFile(_screenshotNum)))
             {
                 FormStateChanged();
             }
@@ -877,7 +875,7 @@ namespace pwiz.SkylineTestUtil
 
         private bool SaveScreenshot()
         {
-            if (!FileEx.IsWritable(_fileToSave))
+            if (File.Exists(_fileToSave) && !FileEx.IsWritable(_fileToSave))
             {
                 PreviewMessageDlg.Show(this, TextUtil.LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
                     "Check that it is not open in another program such as TortoiseIDiff."));
@@ -885,6 +883,10 @@ namespace pwiz.SkylineTestUtil
             }
             try
             {
+                string screenshotDir = Path.GetDirectoryName(_fileToSave) ?? string.Empty;
+                Assume.IsFalse(string.IsNullOrEmpty(screenshotDir));    // Because ReSharper complains about possible null
+                Directory.CreateDirectory(screenshotDir);
+
                 _newScreenshot.Save(_fileToSave);
                 return true;
             }
@@ -1178,6 +1180,28 @@ namespace pwiz.SkylineTestUtil
                         e.Handled = true;
                     }
                     break;
+                case Keys.C:
+                    if (e.Control)
+                    {
+                        if (e.Shift)
+                            CopyBitmap(_oldScreenshot);
+                        else
+                            CopyBitmap(_newScreenshot);
+                        e.Handled = true;
+                    }
+                    break;
+            }
+        }
+
+        private void CopyBitmap(Bitmap bitmap)
+        {
+            try
+            {
+                Clipboard.SetImage(bitmap);
+            }
+            catch (Exception e)
+            {
+                PreviewMessageDlg.ShowWithException(this, "Failed clipboard operation.", e);
             }
         }
 

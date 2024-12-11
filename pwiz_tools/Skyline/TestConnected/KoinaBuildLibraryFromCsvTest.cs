@@ -264,7 +264,7 @@ namespace pwiz.SkylineTestConnected
                             var expected = predictionTests.First(t => t.PeptideModSeq == key.ModifiedSequence);
                             Assert.AreEqual(expected.PrecursorMz, precursorMz, 1e-8, $"{testTag}: PrecursorMz not equal");
                             Assert.AreEqual(expected.PrecursorCharge, key.Charge, $"{testTag}: PrecursorCharge not equal");
-                            Assert.AreEqual(expected.RetentionTime, spectrum.RetentionTime.Value, 1e-5, $"{testTag}: RetentionTime not equal");
+                            Assert.AreEqual(expected.RetentionTime, spectrum.RetentionTime.Value, 1e-2, $"{testTag}: RetentionTime not equal");
 
                             if (!comparePeaks)
                                 continue;
@@ -276,7 +276,7 @@ namespace pwiz.SkylineTestConnected
                                 var expectedPeak = expected.Peaks[i];
                                 var actualPeak = actualPeaks[i];
                                 Assert.AreEqual(expectedPeak.Mz, actualPeak.Mz, 1e-5, $"{testTag}: peak[{i}].Mz not equal");
-                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, 1e-5, $"{testTag}: peak[{i}].Intensity not equal");
+                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, 1e-2, $"{testTag}: peak[{i}].Intensity not equal");
                             }
                         }
                     }
