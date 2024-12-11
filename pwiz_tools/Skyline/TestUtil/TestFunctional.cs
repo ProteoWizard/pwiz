@@ -335,23 +335,13 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Convenience function for getting a value on the UI thread
-        /// e.g. var value = GetValueUI(() => control.Value);
+        /// Convenience function for getting a value from the UI thread
+        /// e.g. var value = CallUI(() => control.Value);
         /// </summary>
-        public T GetValueUI<T>([InstantHandle] Func<T> act)
+        public T CallUI<T>([InstantHandle] Func<T> func)
         {
             T result = default;
-            SkylineInvoke(() =>
-            {
-                try
-                {
-                    result = act();
-                }
-                catch (Exception e)
-                {
-                    Assert.Fail(e.ToString());
-                }
-            });
+            RunUI(() => result = func());
             return result;
         }
 
