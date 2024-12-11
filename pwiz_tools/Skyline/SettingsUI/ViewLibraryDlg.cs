@@ -137,6 +137,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return msGraphExtension1.Graph; }
         }
 
+        public Control ListControl => listPeptide;
 
         /// <summary>
         /// Constructor for the View Library dialog.

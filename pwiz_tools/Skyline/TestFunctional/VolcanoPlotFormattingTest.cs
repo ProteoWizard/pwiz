@@ -314,13 +314,13 @@ namespace pwiz.SkylineTestFunctional
 
                 var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
                 {
-                    var bindingList = formattingDlg.GetCurrentBindingList();
-                    Assert.AreEqual(initialRowCount + index, bindingList.Count);
+                    int rows = formattingDlg.ResultList.Count;
+                    Assert.AreEqual(initialRowCount + index, rows);
 
-                    bindingList.Add(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
+                    formattingDlg.AddRow(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
                         exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
                         exprInfo.ExpectedPointsInfo.PointSize));
-                    formattingDlg.ClickCreateExpression(bindingList.Count - 1);
+                    formattingDlg.ClickCreateExpression(rows);
                 });
 
                 RunUI(() =>
@@ -456,11 +456,10 @@ namespace pwiz.SkylineTestFunctional
             var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
             var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
             {
-                var bindingList = formattingDlg.GetCurrentBindingList();
-                bindingList.Add(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
+                formattingDlg.AddRow(new MatchRgbHexColor(string.Empty, exprInfo.ExpectedPointsInfo.Labeled,
                     exprInfo.ExpectedPointsInfo.Color, exprInfo.ExpectedPointsInfo.PointSymbol,
                     exprInfo.ExpectedPointsInfo.PointSize));
-                formattingDlg.ClickCreateExpression(bindingList.Count - 1);
+                formattingDlg.ClickCreateExpression(formattingDlg.ResultList.Count - 1);
             });
             var matchExprListDlg = ShowDialog<MatchExpressionListDlg>(createExprDlg.ClickEnterList);
             RunUI(() =>

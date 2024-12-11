@@ -172,6 +172,11 @@ namespace pwiz.SkylineTestFunctional
 
                 var multiButtonMsgDlg = ShowDialog<MultiButtonMsgDlg>(editIrtDlg.OkDialog);
                 OkDialog(multiButtonMsgDlg, multiButtonMsgDlg.ClickYes);
+                // Creating a calculator automatically creates a regression by the same name.
+                // This happens after the form goes away. So, avoid getting tripped up adding
+                // a second custom calculator before this handling is complete.
+                WaitForConditionUI(() => Equals(calcName, peptideSettingsDlg.RetentionTimeRegressionName),
+                    () => string.Format("Expected regression name '{0}' not set. Found '{1}' instead.", calcName, peptideSettingsDlg.RetentionTimeRegressionName));
                 var editRtDlg = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
                 RunUI(() =>
                 {
