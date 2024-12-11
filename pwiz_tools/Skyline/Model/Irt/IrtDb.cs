@@ -610,7 +610,7 @@ namespace pwiz.Skyline.Model.Irt
                     {
                         var oldDoc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);
                         addPeptides = oldDoc.Molecules.Where(pep => minimalPeptides.Contains(pep.ModifiedTarget))
-                            .ToDictionary(pep => pep.ModifiedTarget, pep => pep);
+                            .ToDictionary(pep => pep.ModifiedTarget, pep => pep.RemoveFastaSequence());
                     }
                 }
                 catch
@@ -621,10 +621,10 @@ namespace pwiz.Skyline.Model.Irt
 
             foreach (var nodePep in doc.Molecules.Where(pep => minimalPeptides.Contains(pep.ModifiedTarget)))
             {
-                var addPep = nodePep;
+                var addPep = nodePep.RemoveFastaSequence();
                 if (addPeptides.TryGetValue(nodePep.ModifiedTarget, out var existing))
                     addPep = addPep.Merge(existing);
-                addPeptides[nodePep.ModifiedTarget] = nodePep.Merge(addPep);
+                addPeptides[nodePep.ModifiedTarget] = addPep;
             }
 
             var peptides = new List<PeptideDocNode>();

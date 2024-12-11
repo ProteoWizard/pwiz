@@ -80,15 +80,12 @@ namespace pwiz.Skyline.Model.Irt {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
-        ///
-        ///{3}.
+        ///   Looks up a localized string similar to The calculator {0} requires at least {1} of its {2} standard peptides. The following {3} peptides are missing:.
         /// </summary>
-        public static string IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__ {
+        public static string IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_ {
             get {
-                return ResourceManager.GetString("IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_p" +
-                        "eptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_followi" +
-                        "ng__2__peptides_are_missing___3__", resourceCulture);
+                return ResourceManager.GetString("IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_" +
+                        "least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_", resourceCulture);
             }
         }
         
