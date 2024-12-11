@@ -125,23 +125,23 @@
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="SourceName.Text" xml:space="preserve">
-    <value>名前</value>
+    <value>名称</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="SourceName.Width" type="System.Int32, mscorlib">
     <value>-1</value>
   </data>
   <data name="FileType.Text" xml:space="preserve">
-    <value>タイプ</value>
+    <value>类型</value>
   </data>
   <data name="FileType.Width" type="System.Int32, mscorlib">
     <value>120</value>
   </data>
   <data name="SourceSize.Text" xml:space="preserve">
-    <value>サイズ</value>
+    <value>大小</value>
   </data>
   <data name="DateModified.Text" xml:space="preserve">
-    <value>変更日</value>
+    <value>修改日期</value>
   </data>
   <data name="DateModified.Width" type="System.Int32, mscorlib">
     <value>120</value>
@@ -205,7 +205,7 @@
     <value>2</value>
   </data>
   <data name="labelLookIn.Text" xml:space="preserve">
-    <value>調べる(&amp;I)：</value>
+    <value>调查(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;labelLookIn.Name" xml:space="preserve">
     <value>labelLookIn</value>
@@ -259,7 +259,7 @@
     <value>5</value>
   </data>
   <data name="labelSourcePath.Text" xml:space="preserve">
-    <value>ソース名(&amp;N)：</value>
+    <value>源名称(&amp;N)：</value>
   </data>
   <data name="labelSourcePath.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
@@ -316,7 +316,7 @@
     <value>7</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>ソースの種類(&amp;T)：</value>
+    <value>类型来源(&amp;T)：</value>
   </data>
   <data name="label1.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
     <value>MiddleRight</value>
@@ -333,31 +333,31 @@
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="openButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="actionButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
-  <data name="openButton.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="actionButton.Location" type="System.Drawing.Point, System.Drawing">
     <value>504, 331</value>
   </data>
-  <data name="openButton.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="actionButton.Size" type="System.Drawing.Size, System.Drawing">
     <value>66, 20</value>
   </data>
-  <data name="openButton.TabIndex" type="System.Int32, mscorlib">
+  <data name="actionButton.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
   </data>
-  <data name="openButton.Text" xml:space="preserve">
-    <value>開く(&amp;O)</value>
+  <data name="actionButton.Text" xml:space="preserve">
+    <value>打开(&amp;O)</value>
   </data>
-  <data name="&gt;&gt;openButton.Name" xml:space="preserve">
-    <value>openButton</value>
+  <data name="&gt;&gt;actionButton.Name" xml:space="preserve">
+    <value>actionButton</value>
   </data>
-  <data name="&gt;&gt;openButton.Type" xml:space="preserve">
+  <data name="&gt;&gt;actionButton.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;openButton.Parent" xml:space="preserve">
+  <data name="&gt;&gt;actionButton.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;openButton.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;actionButton.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="cancelButton.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -373,7 +373,7 @@
     <value>9</value>
   </data>
   <data name="cancelButton.Text" xml:space="preserve">
-    <value>キャンセル</value>
+    <value>取消</value>
   </data>
   <data name="&gt;&gt;cancelButton.Name" xml:space="preserve">
     <value>cancelButton</value>
@@ -422,10 +422,10 @@
     <value>23, 22</value>
   </data>
   <data name="backButton.Text" xml:space="preserve">
-    <value>戻る</value>
+    <value>后退</value>
   </data>
   <data name="backButton.ToolTipText" xml:space="preserve">
-    <value>前のディレクトリに戻る</value>
+    <value>返回上一目录</value>
   </data>
   <data name="upOneLevelButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -449,28 +449,28 @@
     <value>23, 22</value>
   </data>
   <data name="upOneLevelButton.Text" xml:space="preserve">
-    <value>上へ</value>
+    <value>向上</value>
   </data>
   <data name="upOneLevelButton.ToolTipText" xml:space="preserve">
-    <value>1つ上のレベルに移動</value>
+    <value>向上一个级别</value>
   </data>
   <data name="tilesToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>109, 22</value>
   </data>
   <data name="tilesToolStripMenuItem.Text" xml:space="preserve">
-    <value>タイル</value>
+    <value>瓷砖式显示</value>
   </data>
   <data name="listToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>109, 22</value>
   </data>
   <data name="listToolStripMenuItem.Text" xml:space="preserve">
-    <value>リスト</value>
+    <value>列表</value>
   </data>
   <data name="detailsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>109, 22</value>
   </data>
   <data name="detailsToolStripMenuItem.Text" xml:space="preserve">
-    <value>詳細</value>
+    <value>细节</value>
   </data>
   <data name="viewsDropDownButton.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
@@ -489,10 +489,10 @@
     <value>29, 22</value>
   </data>
   <data name="viewsDropDownButton.Text" xml:space="preserve">
-    <value>ビュー</value>
+    <value>视图</value>
   </data>
   <data name="viewsDropDownButton.ToolTipText" xml:space="preserve">
-    <value>ビュー</value>
+    <value>视图</value>
   </data>
   <data name="navToolStrip.Location" type="System.Drawing.Point, System.Drawing">
     <value>420, 9</value>
@@ -1458,7 +1458,7 @@
     <value>0</value>
   </data>
   <data name="remoteAccountsButton.Text" xml:space="preserve">
-    <value>リモートアカウント</value>
+    <value>远程账户</value>
   </data>
   <data name="remoteAccountsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>
@@ -1500,7 +1500,7 @@
     <value>4</value>
   </data>
   <data name="recentDocumentsButton.Text" xml:space="preserve">
-    <value>最近開いたドキュメント</value>
+    <value>我的最近文档</value>
   </data>
   <data name="recentDocumentsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>
@@ -1539,7 +1539,7 @@
     <value>1</value>
   </data>
   <data name="desktopButton.Text" xml:space="preserve">
-    <value>デスクトップ</value>
+    <value>桌面</value>
   </data>
   <data name="desktopButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>
@@ -1578,7 +1578,7 @@
     <value>2</value>
   </data>
   <data name="myDocumentsButton.Text" xml:space="preserve">
-    <value>マイドキュメント</value>
+    <value>我的文档</value>
   </data>
   <data name="myDocumentsButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>
@@ -1617,7 +1617,7 @@
     <value>3</value>
   </data>
   <data name="myComputerButton.Text" xml:space="preserve">
-    <value>マイコンピュータ</value>
+    <value>我的电脑</value>
   </data>
   <data name="myComputerButton.TextImageRelation" type="System.Windows.Forms.TextImageRelation, System.Windows.Forms">
     <value>ImageAboveText</value>
@@ -1668,7 +1668,7 @@
     <value>CenterParent</value>
   </data>
   <data name="$this.Text" xml:space="preserve">
-    <value>オープンデータソース</value>
+    <value>打开数据源</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
@@ -1746,6 +1746,6 @@
     <value>OpenDataSourceDialog</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=19.1.1.298, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
