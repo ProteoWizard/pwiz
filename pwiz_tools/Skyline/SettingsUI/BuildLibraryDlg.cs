@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -32,7 +31,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Carafe;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Koina;
