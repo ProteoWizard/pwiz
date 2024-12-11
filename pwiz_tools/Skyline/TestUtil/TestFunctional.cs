@@ -334,6 +334,28 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        /// <summary>
+        /// Convenience function for getting a value on the UI thread
+        /// e.g. var value = GetValueUI(() => control.Value);
+        /// </summary>
+
+        public T GetValueUI<T>([InstantHandle] Func<T> act)
+        {
+            T result = default;
+            SkylineInvoke(() =>
+            {
+                try
+                {
+                    result = act();
+                }
+                catch (Exception e)
+                {
+                    Assert.Fail(e.ToString());
+                }
+            });
+            return result;
+        }
+
         protected virtual bool ShowStartPage {get { return false; }}
         protected virtual List<string> SetMru { get { return new List<string>(); } }
 

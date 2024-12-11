@@ -161,16 +161,16 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(calibrationCurve.Value.Slope, replicateCalibrationCurve.Value.Slope, message);
                 }
 
-                int selectedResultsIndexOld = SkylineWindow.SelectedResultsIndex;
+                int selectedResultsIndexOld = GetValueUI(() => SkylineWindow.SelectedResultsIndex);
                 RunUI(()=>calibrationCurve.ClickEventHandler(new object(), new EventArgs()));
                 var calibrationForm = FindOpenForm<CalibrationForm>();
                 Assert.IsNotNull(calibrationForm);
                 WaitForGraphs();
-                Assert.AreEqual(peptide.IdentityPath, SkylineWindow.SelectedPath);
-                Assert.AreEqual(selectedResultsIndexOld, SkylineWindow.SelectedResultsIndex);
+                Assert.AreEqual(peptide.IdentityPath, GetValueUI(() => SkylineWindow.SelectedPath));
+                Assert.AreEqual(selectedResultsIndexOld, GetValueUI(() => SkylineWindow.SelectedResultsIndex));
                 RunUI(()=>replicateCalibrationCurve.ClickEventHandler(new object(), new EventArgs()));
-                Assert.AreEqual(peptide.IdentityPath, SkylineWindow.SelectedPath);
-                Assert.AreEqual(replicate.ReplicateIndex, SkylineWindow.SelectedResultsIndex);
+                Assert.AreEqual(peptide.IdentityPath, GetValueUI(() => SkylineWindow.SelectedPath));
+                Assert.AreEqual(replicate.ReplicateIndex, GetValueUI(() => SkylineWindow.SelectedResultsIndex));
             }
         }
     }
