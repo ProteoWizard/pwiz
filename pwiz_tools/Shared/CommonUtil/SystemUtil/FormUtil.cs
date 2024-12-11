@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil.DllImport;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -197,21 +196,6 @@ namespace pwiz.Common.SystemUtil
             RemoveTabPage(tabPage, ImmutableList.Singleton(toolTipControl));
         }
 
-        public static void SetForegroundWindow(this Control control)
-        {
-            User32.SetForegroundWindow(control.Handle);
-        }
-
-        public static void HideCaret(this Control control)
-        {
-            User32.HideCaret(control.Handle);
-        }
-
-        public static void SetScrollPos(this Control control, Orientation sd, int pos)
-        {
-            User32.SetScrollPos(control.Handle, (int)sd, pos, true);
-        }
-
         public static Control GetFocus(this Control control)
         {
             if (control.Focused)
@@ -219,16 +203,6 @@ namespace pwiz.Common.SystemUtil
             return (
                 from Control childControl in control.Controls
                 select GetFocus(childControl)).FirstOrDefault(focus => focus != null);
-        }
-
-        public static void BringWindowToSameLevelWithoutActivating(this Form targetWindow, IntPtr referenceWindowHandle)
-        {
-            // Use SetWindowPos to adjust z-order without activating
-            User32.SetWindowPos(targetWindow, referenceWindowHandle, 0, 0, 0, 0, 
-                User32.SWP.NOMOVE, 
-                User32.SWP.NOSIZE, 
-                User32.SWP.NOACTIVATE, 
-                User32.SWP.SHOWWINDOW);
         }
     }
 }

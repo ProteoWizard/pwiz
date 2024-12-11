@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.DllImport;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -268,7 +269,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ExpandPrecursors();
                 if(IsPauseForScreenShots)
-                    FormUtil.SetScrollPos(SkylineWindow.SequenceTree, Orientation.Horizontal, 0);
+                    SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
             });
 
             if (IsPauseForScreenShots)

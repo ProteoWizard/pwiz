@@ -173,6 +173,7 @@
     <Compile Include="SystemUtil\DllImport\Gdi32.cs" />
     <Compile Include="SystemUtil\DllImport\Kernel32.cs" />
     <Compile Include="SystemUtil\DllImport\User32.cs" />
+    <Compile Include="SystemUtil\DllImport\User32Extensions.cs" />
     <Compile Include="SystemUtil\Messages.cs" />
     <Compile Include="SystemUtil\FileSize.cs" />
     <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />

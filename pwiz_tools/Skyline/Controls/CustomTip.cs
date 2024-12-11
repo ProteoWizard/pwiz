@@ -205,11 +205,11 @@ namespace pwiz.Skyline.Controls
                         OnPaint(new PaintEventArgs(g, GetClientRectangle(bounds)));
                     }
 
-                    SIZE size1;
-                    POINT point1;
-                    POINT point2;
+                    User32.SIZE size1;
+                    User32.POINT point1;
+                    User32.POINT point2;
 
-                    IntPtr ptr1 = User32.GetDC(IntPtr.Zero);
+                    IntPtr ptr1 = User32Old.GetDC(IntPtr.Zero);
                     IntPtr ptr2 = Gdi32.CreateCompatibleDC(ptr1);
                     IntPtr ptr3 = bmp.GetHbitmap(Color.FromArgb(0));
                     IntPtr ptr4 = Gdi32.SelectObject(ptr2, ptr3);
@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Controls
                     point1.y = point.Y;
                     point2.x = 0;
                     point2.y = 0;
-                    BLENDFUNCTION blendfunction1 = new BLENDFUNCTION
+                    User32.BLENDFUNCTION blendfunction1 = new User32.BLENDFUNCTION
                     {
                         BlendOp = 0,
                         BlendFlags = 0,
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Controls
                     };
                     User32.UpdateLayeredWindow(Handle, ptr1, ref point1, ref size1, ptr2, ref point2, 0, ref blendfunction1, 2);
                     Gdi32.SelectObject(ptr2, ptr4);
-                    User32.ReleaseDC(IntPtr.Zero, ptr1);
+                    User32Old.ReleaseDC(IntPtr.Zero, ptr1);
                     Gdi32.DeleteDC(ptr2);
                 }
             }
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Controls
             {
                 if (animate)
                 {
-                    User32.ShowWindow(Handle, 4);
+                    User32Old.ShowWindow(Handle, 4);
                     Thread thread1 = new Thread(UpdateLayeredWindowAnimate)
                         {IsBackground = true};
                     thread1.Start();
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Controls
                     UpdateLayeredWindow();
                 }
             }
-            User32.ShowWindow(Handle, 4);
+            User32Old.ShowWindow(Handle, 4);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Controls
                 if (Handle == IntPtr.Zero)
                     CreateHandle(CreateParams);
                 UpdateLayeredWindow();
-                User32.AnimateWindow(Handle, 100, flag);
+                User32Old.AnimateWindow(Handle, 100, flag);
             }
             else
             {
@@ -354,7 +354,7 @@ namespace pwiz.Skyline.Controls
             Capture = false;
             if (Handle != IntPtr.Zero)
             {
-                User32.ShowWindow(Handle, 0);
+                User32Old.ShowWindow(Handle, 0);
                 ReleaseHandle();
             }
         }
@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Controls
             if (_supportsLayered)
             {
                 UpdateLayeredWindow();
-                User32.AnimateWindow(Handle, 100, flag);
+                User32Old.AnimateWindow(Handle, 100, flag);
             }
             Hide();
         }
@@ -426,7 +426,7 @@ namespace pwiz.Skyline.Controls
 
         public Point PointToClient(Point ptScreen)
         {
-            POINT pnt;
+            User32.POINT pnt;
             pnt.x = ptScreen.X;
             pnt.y = ptScreen.Y;
             User32.ScreenToClient(Handle, ref pnt);
@@ -435,7 +435,7 @@ namespace pwiz.Skyline.Controls
 
         public Point PointToScreen(Point ptClient)
         {
-            POINT pnt;
+            User32.POINT pnt;
             pnt.x = ptClient.X;
             pnt.y = ptClient.Y;
             User32.ClientToScreen(Handle, ref pnt);
@@ -530,10 +530,10 @@ namespace pwiz.Skyline.Controls
 
             const uint flags = (uint)(DCX.DCX_WINDOW |
                                       DCX.DCX_INTERSECTRGN);
-            IntPtr hDC = User32.GetDCEx(hWnd, hRgn, flags);
+            IntPtr hDC = User32Old.GetDCEx(hWnd, hRgn, flags);
             if (hDC == IntPtr.Zero)
             {
-                hDC = User32.GetWindowDC(hWnd);
+                hDC = User32Old.GetWindowDC(hWnd);
                 if (hDC == IntPtr.Zero)
                     return;
             }
@@ -552,22 +552,22 @@ namespace pwiz.Skyline.Controls
 
         private void PerformWmNcCalcSize(ref Message m)
         {
-            if (m.WParam == User32.FALSE)
+            if (m.WParam == User32Old.FALSE)
             {
-                RECT rect1 = (RECT) m.GetLParam(typeof(RECT));
+                User32.RECT rect1 = (User32.RECT) m.GetLParam(typeof(User32.RECT));
                 Rectangle rectProposed = rect1.Rectangle;
                 OnNcCalcSize(ref rectProposed);
-                rect1 = RECT.FromRectangle(rectProposed);
+                rect1 = User32.RECT.FromRectangle(rectProposed);
                 Marshal.StructureToPtr(rect1, m.LParam, false);
                 m.Result = IntPtr.Zero;
             }
-            else if (m.WParam == User32.TRUE)
+            else if (m.WParam == User32Old.TRUE)
             {
                 NCCALCSIZE_PARAMS ncParams = (NCCALCSIZE_PARAMS)
                     m.GetLParam(typeof(NCCALCSIZE_PARAMS));
                 Rectangle rectProposed = ncParams.rectProposed.Rectangle;
                 OnNcCalcSize(ref rectProposed);
-                ncParams.rectProposed = RECT.FromRectangle(rectProposed);
+                ncParams.rectProposed = User32.RECT.FromRectangle(rectProposed);
                 Marshal.StructureToPtr(ncParams, m.LParam, false);
                 m.Result = IntPtr.Zero;
             }
@@ -588,7 +588,7 @@ namespace pwiz.Skyline.Controls
         {
             PAINTSTRUCT ps = new PAINTSTRUCT();
             Rectangle rectClient = ClientRectangle;
-            IntPtr hDC = User32.BeginPaint(m.HWnd, ref ps);
+            IntPtr hDC = User32Old.BeginPaint(m.HWnd, ref ps);
             using (Graphics g = Graphics.FromHdc(hDC))
             {
                 using (Bitmap bitmap1 = new Bitmap(rectClient.Width, rectClient.Height))
@@ -600,7 +600,7 @@ namespace pwiz.Skyline.Controls
                     g.DrawImageUnscaled(bitmap1, 0, 0);
                 }
             }
-            User32.EndPaint(m.HWnd, ref ps);
+            User32Old.EndPaint(m.HWnd, ref ps);
         }
 
         protected override void WndProc(ref Message m)
@@ -760,7 +760,7 @@ namespace pwiz.Skyline.Controls
                     {
                         num1 |= 1;
                     }
-                    User32.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, (uint)num1);
+                    User32Old.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, (uint)num1);
                 }
                 else
                 {
@@ -773,10 +773,10 @@ namespace pwiz.Skyline.Controls
         private void UpdateBounds()
         {
             RECT rect1 = new RECT();
-            User32.GetWindowRect(Handle, ref rect1);
-            if (User32.GetParent(Handle)!=IntPtr.Zero)
+            User32Old.GetWindowRect(Handle, ref rect1);
+            if (User32Old.GetParent(Handle)!=IntPtr.Zero)
             {
-                User32.MapWindowPoints(IntPtr.Zero, User32.GetParent(Handle), ref rect1, 2);
+                User32Old.MapWindowPoints(IntPtr.Zero, User32Old.GetParent(Handle), ref rect1, 2);
             }
             UpdateBounds(rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
         }
@@ -784,7 +784,7 @@ namespace pwiz.Skyline.Controls
 
         private void UpdateBounds(int x, int y, int width, int height)
         {
-            RECT rect1 = new RECT();
+            User32.RECT rect1 = new User32.RECT();
             CreateParams params1 = CreateParams;
             User32.AdjustWindowRectEx(ref rect1, params1.Style, false, params1.ExStyle);
 
@@ -882,8 +882,8 @@ namespace pwiz.Skyline.Controls
                 if (Handle != IntPtr.Zero)
                 {
                     SetBoundsCore(_location.X, _location.Y, _size.Width, _size.Height);
-                    var rect = new Common.SystemUtil.DllImport.User32.RECT();
-                    Common.SystemUtil.DllImport.User32.GetWindowRect(Handle, ref rect);
+                    var rect = new User32.RECT();
+                    User32.GetWindowRect(Handle, ref rect);
                     Rectangle rectangle = rect.Rectangle;
                     _location = rectangle.Location;
                     _size = rectangle.Size;
@@ -990,7 +990,7 @@ namespace pwiz.Skyline.Controls
 
         public bool Visible
         {
-            get { return User32.IsWindowVisible(Handle); }
+            get { return User32Old.IsWindowVisible(Handle); }
             set
             {
                 if (value != Visible)
@@ -1036,9 +1036,9 @@ namespace pwiz.Skyline.Controls
                 if (_captured != value)
                 {
                     if (value)
-                        User32.SetCapture(Handle);
+                        User32Old.SetCapture(Handle);
                     else
-                        User32.ReleaseCapture();
+                        User32Old.ReleaseCapture();
                     _captured = value;
                 }
             }
@@ -1126,70 +1126,11 @@ namespace pwiz.Skyline.Controls
 // ReSharper restore UnusedField.Compiler
     }
     [StructLayout(LayoutKind.Sequential)]
-    internal struct POINT
-    {
-        public int x;
-        public int y;
-
-        public Point Point
-        {
-            get
-            {
-                return new Point(x, y);
-            }
-        }
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct RECT
-    {
-// ReSharper disable FieldCanBeMadeReadOnly.Global
-        public int left;
-        public int top;
-        public int right;
-        public int bottom;
-// ReSharper restore FieldCanBeMadeReadOnly.Global
-
-        public RECT(int left, int top, int right, int bottom)
-        {
-            this.left = left;
-            this.top = top;
-            this.right = right;
-            this.bottom = bottom;
-        }
-
-        public Rectangle Rectangle
-        {
-            get
-            {
-                return new Rectangle(left, top, right - left, bottom - top);
-            }
-        }
-
-        public static RECT FromRectangle(Rectangle rect)
-        {
-            return new RECT(rect.Left, rect.Top, rect.Right, rect.Bottom);
-        }
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    internal struct SIZE
-    {
-        public int cx;
-        public int cy;
-
-        public Size Size
-        {
-            get
-            {
-                return new Size(cx, cy);
-            }
-        }
-    }
-    [StructLayout(LayoutKind.Sequential)]
     internal struct NCCALCSIZE_PARAMS
     {
-        public RECT rectProposed;
-        public RECT rectWndBefore;
-        public RECT rectClientBefore;
+        public User32.RECT rectProposed;
+        public User32.RECT rectWndBefore;
+        public User32.RECT rectClientBefore;
         public IntPtr lppos;
     }
     [StructLayout(LayoutKind.Sequential)]
@@ -1202,14 +1143,6 @@ namespace pwiz.Skyline.Controls
         public IntPtr hWnd;
         public uint dwHoverTime;
 // ReSharper restore FieldCanBeMadeReadOnly.Global
-    }
-    [StructLayout(LayoutKind.Sequential, Pack=1)]
-    internal struct BLENDFUNCTION
-    {
-        public byte BlendOp;
-        public byte BlendFlags;
-        public byte SourceConstantAlpha;
-        public byte AlphaFormat;
     }
     [StructLayout(LayoutKind.Sequential)]
     //[CLSCompliant(false)]
@@ -1267,7 +1200,7 @@ namespace pwiz.Skyline.Controls
         WM_LBUTTONUP = 0x0202,
         WM_MOUSELEAVE = 0x02A3
     }
-    internal static class User32
+    internal static class User32Old
     {
         public static IntPtr FALSE = new IntPtr(0);
         public static IntPtr TRUE = new IntPtr(1);
@@ -1279,8 +1212,6 @@ namespace pwiz.Skyline.Controls
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern IntPtr BeginPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern IntPtr GetDC(IntPtr hWnd);
@@ -1288,39 +1219,18 @@ namespace pwiz.Skyline.Controls
         internal static extern IntPtr GetWindowDC(IntPtr hWnd);
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr GetDCEx(IntPtr hWnd, IntPtr hRgn, uint dwFlags);
-        [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        internal static extern IntPtr GetFocus();
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern bool ReleaseCapture();
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndAfter, int X, int Y, int Width, int Height, uint flags);
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern bool SetCapture(IntPtr hWnd);
         [DllImport("User32.dll", CharSet=CharSet.Auto)]
         internal static extern int ShowWindow(IntPtr hWnd, short cmdShow);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
-        [DllImport("user32.dll", CharSet=CharSet.Auto, ExactSpelling=true)]
-        public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         internal static extern bool IsWindowVisible(IntPtr hwnd);
-
-        public static Control GetFocusedControl()
-        {
-            Control focusedControl = null;
-            // To get hold of the focused control:
-            IntPtr focusedHandle = GetFocus();
-            if (focusedHandle != IntPtr.Zero)
-            {
-                // If the focused Control is not a .Net control, then this will return null.
-                focusedControl = Control.FromHandle(focusedHandle);
-            }
-            return focusedControl;
-        }
     }
     [Flags]
     internal enum DCX

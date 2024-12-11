@@ -20,14 +20,14 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
-// TODO: add Clipboard extension methods
-// TODO: move to pwiz.Common.SystemUtil.Win32 namespace?
+// TODO: solicit feedback on namespace - (1) "DllImport", (2) "Win32", (3) "Pinvoke"
 namespace pwiz.Common.SystemUtil.DllImport
 {
     public static class User32
     {
-        // TODO: improve typing by wrapping in an enum? Even an enum per prefix (WM, PBM, SWP)?
-        // TODO: standardize on either decimal or hex?
+        // TODO: add Clipboard extension methods
+
+        // TODO: standardize on decimal or hex for constant values?
         public const int WM_SETREDRAW = 11;
         public const uint PBM_SETSTATE = 0x0410; // 1040
 
@@ -43,6 +43,8 @@ namespace pwiz.Common.SystemUtil.DllImport
             ACTIVATE = 0x20000
         }
 
+        // TODO: should related constants be defined as (1) constant primitives, (2) enum, (3) fields on a static class?
+        // TODO: related to ^^, what is the naming convention for constants?
         public enum SWP
         {
             // ReSharper disable IdentifierTypo
@@ -51,6 +53,30 @@ namespace pwiz.Common.SystemUtil.DllImport
             NOACTIVATE = 0x0010,
             SHOWWINDOW = 0x0040
             // ReSharper disable IdentifierTypo
+        }
+
+        [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        public struct BLENDFUNCTION
+        {
+            public byte BlendOp;
+            public byte BlendFlags;
+            public byte SourceConstantAlpha;
+            public byte AlphaFormat;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int x;
+            public int y;
+
+            public Point Point
+            {
+                get
+                {
+                    return new Point(x, y);
+                }
+            }
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -85,23 +111,51 @@ namespace pwiz.Common.SystemUtil.DllImport
             }
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        public struct SIZE
+        {
+            public int cx;
+            public int cy;
+
+            public Size Size
+            {
+                get
+                {
+                    return new Size(cx, cy);
+                }
+            }
+        }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
+
         /// <summary>
         /// Windows API function to animate a window.
         /// </summary>
         [DllImport("user32.dll")]
         public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, int dwFlags);
 
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        public static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
+        
         [DllImport("user32.dll")]
         public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr GetFocus();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        // TODO: make extension method
         public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
 
         [DllImport("user32.dll")]
-        public static extern bool HideCaret(IntPtr hWnd);
+        internal static extern bool HideCaret(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
 
         // TODO: standardize on one sendMessage 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -114,9 +168,9 @@ namespace pwiz.Common.SystemUtil.DllImport
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
+        internal static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
 
-        public static bool SetWindowPos(Form targetWindow, IntPtr referenceWindowHandle, 
+        public static bool SetWindowPos(this Form targetWindow, IntPtr referenceWindowHandle, 
             int X, int Y, int cx, int cy, params SWP[] flags)
         {
             int flagsInt = 0;
@@ -127,5 +181,21 @@ namespace pwiz.Common.SystemUtil.DllImport
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
+
+        public static Control GetFocusedControl()
+        {
+            Control focusedControl = null;
+            // To get hold of the focused control:
+            IntPtr focusedHandle = GetFocus();
+            if (focusedHandle != IntPtr.Zero)
+            {
+                // If the focused Control is not a .Net control, then this will return null.
+                focusedControl = Control.FromHandle(focusedHandle);
+            }
+            return focusedControl;
+        }
     }
 }

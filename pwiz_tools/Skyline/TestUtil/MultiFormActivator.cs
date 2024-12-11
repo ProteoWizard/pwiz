@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.DllImport;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestUtil

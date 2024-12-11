@@ -21,7 +21,7 @@ using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.DllImport;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
