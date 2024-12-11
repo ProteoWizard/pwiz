@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Mime;
 using System.Runtime.InteropServices;
 using System.Text;
 using Ionic.Zip;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -73,7 +71,7 @@ namespace pwiz.Skyline.Model.Tools
             get
             {
                 var architecture = PythonInstallerUtil.GetPythonPackageArchitectureSubstring(
-                    System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture);
+                    RuntimeInformation.ProcessArchitecture);
                 var fileBaseName = string.Join(HYPHEN, new[] { PYTHON_LOWER_CASE, PythonVersion, EMBED_LOWER_CASE, architecture });
                 return fileBaseName;
             }
@@ -91,8 +89,8 @@ namespace pwiz.Skyline.Model.Tools
             VirtualEnvironmentName = virtualEnvironmentName;
             PythonPackages = packages.ToList();
             PendingTasks = new List<PythonTask>();
-            CreateDirIfNotExist(PythonRootDir);
-            CreateDirIfNotExist(PythonVersionDir);
+            Directory.CreateDirectory(PythonRootDir);
+            Directory.CreateDirectory(PythonVersionDir);
         }
 
         public bool IsPythonVirtualEnvironmentReady()
@@ -304,15 +302,6 @@ namespace pwiz.Skyline.Model.Tools
                 cmdString = cmdString.Replace(specialChar, CMD_ESCAPE_SYMBOL + specialChar);
             }
             return cmdString;
-        }
-
-        private static string CreateDirIfNotExist(string dir)
-        {
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            return dir;
         }
     }
 
