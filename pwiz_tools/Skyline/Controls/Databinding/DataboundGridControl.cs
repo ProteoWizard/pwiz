@@ -681,6 +681,60 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void UpdateDendrograms()
         {
+
+            dataGridViewEx1.Columns.Clear();
+            var itemProperties = bindingListSource.ItemProperties;
+
+            //create property name column
+            dataGridViewEx1.Columns.Add("property", string.Empty);
+
+            for (int i = 0; i < itemProperties.Count; i++)
+            {
+                //duplicated code in BoundDataGridView to check if applicable property. unsure how to move for now
+                var propertyDescriptor = itemProperties[i];
+                if (bindingListSource.ViewInfo != null
+                    && string.IsNullOrEmpty(bindingListSource.ViewInfo.SublistId.Name) //Determines pivot by replicate is defined.
+                    && propertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor
+                    && columnPropertyDescriptor.PropertyPath.Ancestors.Any(pp => pp.Name == @"ResultFile" || pp.Name == @"Replicate"))
+                {
+                    //there must be a better way to get the replicate?
+                    var propertyPathAncestors = new List<PropertyPath>(columnPropertyDescriptor.PropertyPath.Ancestors);
+                    var replicateName = propertyPathAncestors[propertyPathAncestors.Count - 3].Name;
+
+                    //add column for replicate if it does not exist
+                    if (!dataGridViewEx1.Columns.Contains(replicateName))
+                    {
+                        dataGridViewEx1.Columns.Add(replicateName, replicateName);
+                    }
+
+                    //at this point we have the replicate and the duplicated property so we can add a row but only know about this property
+                    // is there a better way to get the property name here? 
+                    var propertyName = propertyPathAncestors[0].Name;
+
+                    //create a new row and use a tag to identify if the row has been created before
+                    var row = dataGridViewEx1.Rows.Cast<DataGridViewRow>().FirstOrDefault(r => r.Tag?.ToString() == propertyName);
+                    if (row == null)
+                    {
+                        row = new DataGridViewRow();
+                        row.Tag = propertyName;
+                        dataGridViewEx1.Rows.Add(row);
+
+                        //create cell that shows property name
+                        row.Cells["property"] = new DataGridViewTextBoxCell { Value = propertyName };
+                    }
+                    else
+                    {
+                        //why is this needed? A little confused here
+                        row.Cells["property"].Value = propertyName;
+                    }
+
+                    //create the appropriate cell for the replicate and property
+                    //use first as these cells are expected to have the same values
+                    row.Cells[replicateName] = new DataGridViewTextBoxCell { Value = bindingListSource.OfType<RowItem>().Select(propertyDescriptor.GetValue).First() };
+
+                }
+            }
+
             var reportResults = BindingListSource.ReportResults as ClusteredReportResults ?? ClusteredReportResults.EMPTY;
             var colorScheme = boundDataGridView.ReportColorScheme;
             UpdateColumnDendrograms(reportResults.ClusteredProperties, colorScheme,

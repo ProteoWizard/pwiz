@@ -51,6 +51,7 @@
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
+            this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
@@ -63,10 +64,12 @@
             this.splitContainerHorizontal.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.SuspendLayout();
             // 
             // contextMenuStrip
             // 
+            this.contextMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.sortAscendingToolStripMenuItem,
             this.sortDescendingToolStripMenuItem,
@@ -180,6 +183,7 @@
             // splitContainerHorizontal.Panel2
             // 
             this.splitContainerHorizontal.Panel2.Controls.Add(this.boundDataGridView);
+            this.splitContainerHorizontal.Panel2.Controls.Add(this.dataGridViewEx1);
             // 
             // columnDendrogram
             // 
@@ -236,6 +240,13 @@
             this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
             this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);
             // 
+            // dataGridViewEx1
+            // 
+            this.dataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            resources.ApplyResources(this.dataGridViewEx1, "dataGridViewEx1");
+            this.dataGridViewEx1.Name = "dataGridViewEx1";
+            this.dataGridViewEx1.RowTemplate.Height = 28;
+            // 
             // navBar
             // 
             resources.ApplyResources(this.navBar, "navBar");
@@ -261,6 +272,7 @@
             this.splitContainerHorizontal.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -287,5 +299,6 @@
         private Common.Controls.Clustering.DendrogramControl rowDendrogram;
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
+        private DataGridViewEx dataGridViewEx1;
     }
 }

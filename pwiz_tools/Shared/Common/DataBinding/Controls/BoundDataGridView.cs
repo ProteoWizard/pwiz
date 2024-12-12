@@ -137,6 +137,14 @@ namespace pwiz.Common.DataBinding.Controls
                             continue;
                         }
 
+                        if (bindingListSource.ViewInfo != null
+                            && string.IsNullOrEmpty(bindingListSource.ViewInfo.SublistId.Name) //Determines pivot by replicate is defined.
+                            && propertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor
+                            && columnPropertyDescriptor.PropertyPath.Ancestors.Any(pp => pp.Name == @"ResultFile" || pp.Name == @"Replicate"))
+                        {
+                            continue;
+                        }
+
                         var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
                         if (null != column)
                         {
