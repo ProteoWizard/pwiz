@@ -209,7 +209,7 @@ namespace pwiz.Skyline.Controls
                     User32.POINT point1;
                     User32.POINT point2;
 
-                    IntPtr ptr1 = User32Old.GetDC(IntPtr.Zero);
+                    IntPtr ptr1 = User32.GetDC(IntPtr.Zero);
                     IntPtr ptr2 = Gdi32.CreateCompatibleDC(ptr1);
                     IntPtr ptr3 = bmp.GetHbitmap(Color.FromArgb(0));
                     IntPtr ptr4 = Gdi32.SelectObject(ptr2, ptr3);
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Controls
                     };
                     User32.UpdateLayeredWindow(Handle, ptr1, ref point1, ref size1, ptr2, ref point2, 0, ref blendfunction1, 2);
                     Gdi32.SelectObject(ptr2, ptr4);
-                    User32Old.ReleaseDC(IntPtr.Zero, ptr1);
+                    User32.ReleaseDC(IntPtr.Zero, ptr1);
                     Gdi32.DeleteDC(ptr2);
                 }
             }
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Controls
             {
                 if (animate)
                 {
-                    User32Old.ShowWindow(Handle, 4);
+                    User32.ShowWindow(Handle, 4);
                     Thread thread1 = new Thread(UpdateLayeredWindowAnimate)
                         {IsBackground = true};
                     thread1.Start();
@@ -288,7 +288,7 @@ namespace pwiz.Skyline.Controls
                     UpdateLayeredWindow();
                 }
             }
-            User32Old.ShowWindow(Handle, 4);
+            User32.ShowWindow(Handle, 4);
         }
 
         /// <summary>
@@ -299,38 +299,38 @@ namespace pwiz.Skyline.Controls
         /// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
         public virtual void ShowAnimate(int x, int y, AnimateMode mode)
         {
-            uint flag = AnimateWindow.AW_CENTER;
+            var flag = User32.AnimateWindowFlags.CENTER;
             switch (mode)
             {
                 case AnimateMode.Blend:
                     Show(x, y, true);
                     return;
                 case AnimateMode.ExpandCollapse:
-                    flag = AnimateWindow.AW_CENTER;
+                    flag = User32.AnimateWindowFlags.CENTER;
                     break;
                 case AnimateMode.SlideLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_POSITIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.SlideRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_NEGATIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.SlideTopToBottom:
-                    flag = (AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_POSITIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.SlideBottomToTop:
-                    flag = (AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_NEGATIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.RollLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_POSITIVE);
                     break;
                 case AnimateMode.RollRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_NEGATIVE);
                     break;
                 case AnimateMode.RollBottomToTop:
-                    flag = (AnimateWindow.AW_VER_POSITIVE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_POSITIVE);
                     break;
                 case AnimateMode.RollTopToBottom:
-                    flag = (AnimateWindow.AW_VER_NEGATIVE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_NEGATIVE);
                     break;
             }
             if (_supportsLayered)
@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Controls
                 if (Handle == IntPtr.Zero)
                     CreateHandle(CreateParams);
                 UpdateLayeredWindow();
-                User32Old.AnimateWindow(Handle, 100, flag);
+                User32.AnimateWindow(Handle, 100, flag);
             }
             else
             {
@@ -354,7 +354,7 @@ namespace pwiz.Skyline.Controls
             Capture = false;
             if (Handle != IntPtr.Zero)
             {
-                User32Old.ShowWindow(Handle, 0);
+                User32.ShowWindow(Handle, 0);
                 ReleaseHandle();
             }
         }
@@ -377,45 +377,45 @@ namespace pwiz.Skyline.Controls
         /// <param name="mode">An <see cref="AnimateMode"/> parameter.</param>
         public virtual void HideAnimate(AnimateMode mode)
         {
-            uint flag = AnimateWindow.AW_CENTER;
+            var flag = User32.AnimateWindowFlags.CENTER;
             switch (mode)
             {
                 case AnimateMode.Blend:
                     HideWindowWithAnimation();
                     return;
                 case AnimateMode.ExpandCollapse:
-                    flag = AnimateWindow.AW_CENTER;
+                    flag = User32.AnimateWindowFlags.CENTER;
                     break;
                 case AnimateMode.SlideLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_POSITIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.SlideRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_NEGATIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.SlideTopToBottom:
-                    flag = (AnimateWindow.AW_VER_POSITIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_POSITIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.SlideBottomToTop:
-                    flag = (AnimateWindow.AW_VER_NEGATIVE | AnimateWindow.AW_SLIDE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_NEGATIVE | User32.AnimateWindowFlags.SLIDE);
                     break;
                 case AnimateMode.RollLeftToRight:
-                    flag = (AnimateWindow.AW_HOR_POSITIVE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_POSITIVE);
                     break;
                 case AnimateMode.RollRightToLeft:
-                    flag = (AnimateWindow.AW_HOR_NEGATIVE);
+                    flag = (User32.AnimateWindowFlags.HORIZONTAL_NEGATIVE);
                     break;
                 case AnimateMode.RollBottomToTop:
-                    flag = (AnimateWindow.AW_VER_POSITIVE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_POSITIVE);
                     break;
                 case AnimateMode.RollTopToBottom:
-                    flag = (AnimateWindow.AW_VER_NEGATIVE);
+                    flag = (User32.AnimateWindowFlags.VERTICAL_NEGATIVE);
                     break;
             }
-            flag |= AnimateWindow.AW_HIDE;
+            flag |= User32.AnimateWindowFlags.HIDE;
             if (_supportsLayered)
             {
                 UpdateLayeredWindow();
-                User32Old.AnimateWindow(Handle, 100, flag);
+                User32.AnimateWindow(Handle, 100, flag);
             }
             Hide();
         }
@@ -530,10 +530,10 @@ namespace pwiz.Skyline.Controls
 
             const uint flags = (uint)(DCX.DCX_WINDOW |
                                       DCX.DCX_INTERSECTRGN);
-            IntPtr hDC = User32Old.GetDCEx(hWnd, hRgn, flags);
+            IntPtr hDC = User32.GetDCEx(hWnd, hRgn, flags);
             if (hDC == IntPtr.Zero)
             {
-                hDC = User32Old.GetWindowDC(hWnd);
+                hDC = User32.GetWindowDC(hWnd);
                 if (hDC == IntPtr.Zero)
                     return;
             }
@@ -552,7 +552,7 @@ namespace pwiz.Skyline.Controls
 
         private void PerformWmNcCalcSize(ref Message m)
         {
-            if (m.WParam == User32Old.FALSE)
+            if (m.WParam == User32.FALSE)
             {
                 User32.RECT rect1 = (User32.RECT) m.GetLParam(typeof(User32.RECT));
                 Rectangle rectProposed = rect1.Rectangle;
@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Controls
                 Marshal.StructureToPtr(rect1, m.LParam, false);
                 m.Result = IntPtr.Zero;
             }
-            else if (m.WParam == User32Old.TRUE)
+            else if (m.WParam == User32.TRUE)
             {
                 NCCALCSIZE_PARAMS ncParams = (NCCALCSIZE_PARAMS)
                     m.GetLParam(typeof(NCCALCSIZE_PARAMS));
@@ -586,9 +586,9 @@ namespace pwiz.Skyline.Controls
 
         private void PerformWmPaint(ref Message m)
         {
-            PAINTSTRUCT ps = new PAINTSTRUCT();
+            var ps = new User32.PAINTSTRUCT();
             Rectangle rectClient = ClientRectangle;
-            IntPtr hDC = User32Old.BeginPaint(m.HWnd, ref ps);
+            IntPtr hDC = User32.BeginPaint(m.HWnd, ref ps);
             using (Graphics g = Graphics.FromHdc(hDC))
             {
                 using (Bitmap bitmap1 = new Bitmap(rectClient.Width, rectClient.Height))
@@ -600,40 +600,41 @@ namespace pwiz.Skyline.Controls
                     g.DrawImageUnscaled(bitmap1, 0, 0);
                 }
             }
-            User32Old.EndPaint(m.HWnd, ref ps);
+            User32.EndPaint(m.HWnd, ref ps);
         }
 
         protected override void WndProc(ref Message m)
         {
-            int num1 = m.Msg;
-            switch (num1)
+            var msgID = (User32.WinMessageFlags)m.Msg;
+
+            switch (msgID)
             {
-                case (int) WinMsg.WM_PAINT:
+                case User32.WinMessageFlags.PAINT:
                 {
                     PerformWmPaint(ref m);
                     return;
                 }
-                case (int) WinMsg.WM_ERASEBKGND:
+                case User32.WinMessageFlags.ERASEBKGND:
                 {
                     m.Result = IntPtr.Zero;
                     return;
                 }
-                case (int) WinMsg.WM_SETCURSOR:
+                case User32.WinMessageFlags.SETCURSOR:
                 {
                     PerformWmSetCursor(ref m);
                     return;
                 }
-                case (int) WinMsg.WM_MOUSEACTIVATE:
+                case User32.WinMessageFlags.MOUSEACTIVATE:
                 {
                     PerformWmMouseActivate(ref m);
                     return;
                 }
-                case (int) WinMsg.WM_CALCSIZE:
+                case User32.WinMessageFlags.CALCSIZE:
                 {
                     PerformWmNcCalcSize(ref m);
                     return;
                 }
-                case (int) WinMsg.WM_NCHITTEST:
+                case User32.WinMessageFlags.NCHITTEST:
                 {
                     if (!PerformWmNcHitTest(ref m))
                     {
@@ -641,13 +642,13 @@ namespace pwiz.Skyline.Controls
                     }
                     return;
                 }
-                case (int) WinMsg.WM_NCPAINT:
+                case User32.WinMessageFlags.NCPAINT:
                 {
                     PerformWmNcPaint(ref m);
                     m.Result = IntPtr.Zero;
                     return;
                 }
-                case (int) WinMsg.WM_MOUSEMOVE:
+                case User32.WinMessageFlags.MOUSEMOVE:
                 {
                     if (!_isMouseIn)
                     {
@@ -663,7 +664,7 @@ namespace pwiz.Skyline.Controls
                     }
                     break;
                 }
-                case (int) WinMsg.WM_LBUTTONDOWN:
+                case User32.WinMessageFlags.LBUTTONDOWN:
                 {
                     _lastMouseDown = new Point(m.LParam.ToInt32());
                     OnMouseDown(new MouseEventArgs(Control.MouseButtons, 1, _lastMouseDown.X, _lastMouseDown.Y, 0));
@@ -675,7 +676,7 @@ namespace pwiz.Skyline.Controls
 
                     return;
                 }
-                case (int) WinMsg.WM_LBUTTONUP:
+                case User32.WinMessageFlags.LBUTTONUP:
                 {
                     Point p = new Point(m.LParam.ToInt32());
                     OnMouseUp(new MouseEventArgs(Control.MouseButtons, 1, p.X, p.Y, 0));
@@ -686,7 +687,7 @@ namespace pwiz.Skyline.Controls
                     }
                     return;
                 }
-                case (int) WinMsg.WM_MOUSELEAVE:
+                case User32.WinMessageFlags.MOUSELEAVE:
                 {
                     if (_isMouseIn)
                     {
@@ -751,6 +752,7 @@ namespace pwiz.Skyline.Controls
             {
                 if (Handle != IntPtr.Zero)
                 {
+                    // TODO (ekoneil): switch to User32.SetWindowPosFlags
                     int num1 = 20;
                     if ((X == x) && (Y == y))
                     {
@@ -760,7 +762,7 @@ namespace pwiz.Skyline.Controls
                     {
                         num1 |= 1;
                     }
-                    User32Old.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, (uint)num1);
+                    User32.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, (uint)num1);
                 }
                 else
                 {
@@ -772,11 +774,11 @@ namespace pwiz.Skyline.Controls
 /*
         private void UpdateBounds()
         {
-            RECT rect1 = new RECT();
-            User32Old.GetWindowRect(Handle, ref rect1);
-            if (User32Old.GetParent(Handle)!=IntPtr.Zero)
+            var rect1 = new User32.RECT();
+            User32.GetWindowRect(Handle, ref rect1);
+            if (User32.GetParent(Handle)!=IntPtr.Zero)
             {
-                User32Old.MapWindowPoints(IntPtr.Zero, User32Old.GetParent(Handle), ref rect1, 2);
+                User32.MapWindowPoints(IntPtr.Zero, User32.GetParent(Handle), ref rect1, 2);
             }
             UpdateBounds(rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
         }
@@ -990,7 +992,7 @@ namespace pwiz.Skyline.Controls
 
         public bool Visible
         {
-            get { return User32Old.IsWindowVisible(Handle); }
+            get { return User32.IsWindowVisible(Handle); }
             set
             {
                 if (value != Visible)
@@ -1036,9 +1038,9 @@ namespace pwiz.Skyline.Controls
                 if (_captured != value)
                 {
                     if (value)
-                        User32Old.SetCapture(Handle);
+                        User32.SetCapture(Handle);
                     else
-                        User32Old.ReleaseCapture();
+                        User32.ReleaseCapture();
                     _captured = value;
                 }
             }
@@ -1103,28 +1105,9 @@ namespace pwiz.Skyline.Controls
     }
 
     #region #  Win32  #
-
     // ReSharper disable InconsistentNaming
-    internal struct PAINTSTRUCT
-    {
-        // ReSharper disable UnusedField.Compiler
-#pragma warning disable 649
-        public IntPtr hdc;
-        public int fErase;
-        public Rectangle rcPaint;
-        public int fRestore;
-        public int fIncUpdate;
-        public int Reserved1;
-        public int Reserved2;
-        public int Reserved3;
-        public int Reserved4;
-        public int Reserved5;
-        public int Reserved6;
-        public int Reserved7;
-        public int Reserved8;
-#pragma warning restore 649
-// ReSharper restore UnusedField.Compiler
-    }
+
+    // ReSharper disable IdentifierTypo
     [StructLayout(LayoutKind.Sequential)]
     internal struct NCCALCSIZE_PARAMS
     {
@@ -1133,26 +1116,10 @@ namespace pwiz.Skyline.Controls
         public User32.RECT rectClientBefore;
         public IntPtr lppos;
     }
-    [StructLayout(LayoutKind.Sequential)]
-    //[CLSCompliant(false)]
-// ReSharper disable once ClassNeverInstantiated.Global
-    internal class AnimateWindow
-    {
-        private AnimateWindow() 
-        {
-        }
+    // ReSharper disable IdentifierTypo
 
-        public const int AW_HOR_POSITIVE = 0x1;
-        public const int AW_HOR_NEGATIVE = 0x2;
-        public const int AW_VER_POSITIVE = 0x4;
-        public const int AW_VER_NEGATIVE = 0x8;
-        public const int AW_CENTER = 0x10;
-        public const int AW_HIDE = 0x10000;
-        public const int AW_ACTIVATE = 0x20000;
-        public const int AW_SLIDE = 0x40000;
-        public const int AW_BLEND = 0x80000;
-    }
-    public enum AnimateMode
+    [Flags]
+    public enum AnimateMode : uint
     {
         SlideRightToLeft,
         SlideLeftToRight,
@@ -1165,54 +1132,7 @@ namespace pwiz.Skyline.Controls
         Blend,
         ExpandCollapse
     }
-    internal enum WinMsg
-    {
-        WM_PAINT = 0x000F,
-        WM_ERASEBKGND = 0x0014,
-        WM_SETCURSOR = 0x0020,
-        WM_MOUSEACTIVATE = 0x0021,
-        WM_CALCSIZE = 0x0083,
-        WM_NCHITTEST = 0x0084,
-        WM_NCPAINT = 0x0085,
-        WM_CHAR = 0x0102,
-        WM_TIMER = 0x0113,
-        WM_MOUSEMOVE = 0x0200, 
-        WM_LBUTTONDOWN = 0x0201,
-        WM_LBUTTONUP = 0x0202,
-        WM_MOUSELEAVE = 0x02A3
-    }
-    internal static class User32Old
-    {
-        public static IntPtr FALSE = new IntPtr(0);
-        public static IntPtr TRUE = new IntPtr(1);
 
-        // Methods
-
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool AnimateWindow(IntPtr hWnd, uint dwTime, uint dwFlags);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr BeginPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern IntPtr GetDC(IntPtr hWnd);
-        [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        internal static extern IntPtr GetWindowDC(IntPtr hWnd);
-        [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        internal static extern IntPtr GetDCEx(IntPtr hWnd, IntPtr hRgn, uint dwFlags);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool ReleaseCapture();
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndAfter, int X, int Y, int Width, int Height, uint flags);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern bool SetCapture(IntPtr hWnd);
-        [DllImport("User32.dll", CharSet=CharSet.Auto)]
-        internal static extern int ShowWindow(IntPtr hWnd, short cmdShow);
-        [DllImport("User32.dll", CharSet = CharSet.Auto)]
-        internal static extern bool IsWindowVisible(IntPtr hwnd);
-    }
     [Flags]
     internal enum DCX
     {

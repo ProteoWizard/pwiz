@@ -30,12 +30,14 @@ namespace pwiz.Common.SystemUtil.PInvoke
     {
         // TODO: add Clipboard extension methods
 
-        // TODO: ideally use hex. minimally be consistent among related constants.
+        // TODO: ideally, use hex. minimally, consistently name related constants
         public const int WM_SETREDRAW = 11;
         public const int WM_VSCROLL = 0x0115;
         public const int SB_THUMBPOSITION = 4;
-
         public const uint PBM_SETSTATE = 0x0410; // 1040
+
+        public static IntPtr FALSE = new IntPtr(0);
+        public static IntPtr TRUE = new IntPtr(1);
 
         [Flags]
         public enum AnimateWindowFlags : uint
@@ -62,6 +64,24 @@ namespace pwiz.Common.SystemUtil.PInvoke
             // ReSharper disable IdentifierTypo
         }
 
+        [Flags]
+        public enum WinMessageFlags : uint
+        {
+            PAINT = 0x000F,
+            ERASEBKGND = 0x0014,
+            SETCURSOR = 0x0020,
+            MOUSEACTIVATE = 0x0021,
+            CALCSIZE = 0x0083,
+            NCHITTEST = 0x0084,
+            NCPAINT = 0x0085,
+            CHAR = 0x0102,
+            TIMER = 0x0113,
+            MOUSEMOVE = 0x0200,
+            LBUTTONDOWN = 0x0201,
+            LBUTTONUP = 0x0202,
+            MOUSELEAVE = 0x02A3
+        }
+
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
         public struct BLENDFUNCTION
         {
@@ -69,6 +89,28 @@ namespace pwiz.Common.SystemUtil.PInvoke
             public byte BlendFlags;
             public byte SourceConstantAlpha;
             public byte AlphaFormat;
+        }
+
+        // ReSharper disable InconsistentNaming
+        public struct PAINTSTRUCT
+        {
+            // ReSharper disable UnusedField.Compiler
+#pragma warning disable 649
+            public IntPtr hdc;
+            public int fErase;
+            public Rectangle rcPaint;
+            public int fRestore;
+            public int fIncUpdate;
+            public int Reserved1;
+            public int Reserved2;
+            public int Reserved3;
+            public int Reserved4;
+            public int Reserved5;
+            public int Reserved6;
+            public int Reserved7;
+            public int Reserved8;
+#pragma warning restore 649
+            // ReSharper restore UnusedField.Compiler
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -133,23 +175,31 @@ namespace pwiz.Common.SystemUtil.PInvoke
             }
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        // TODO: declaring DLL name - use (1) DllImport(nameof(User32)) or (2) DllImport("user32.dll")
+        [DllImport(nameof(User32))]
         public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
 
-        /// <summary>
-        /// Windows API function to animate a window.
-        /// </summary>
+        // TODO (ekoneil): remove
         [DllImport("user32.dll")]
         public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, int dwFlags);
+
+        [DllImport("user32.dll")]
+        public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, AnimateWindowFlags flags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr BeginPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
 
-        // TODO: review delegate example
-        public delegate bool EnumThreadWndProc(IntPtr hWnd, IntPtr lp);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
+
         [DllImport("user32.dll")]
         public static extern bool EnumThreadWindows(int tid, EnumThreadWndProc callback, IntPtr lp);
-        
+
+        public delegate bool EnumThreadWndProc(IntPtr hWnd, IntPtr lp);
+
         [DllImport("user32.dll")]
         public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
 
@@ -157,23 +207,41 @@ namespace pwiz.Common.SystemUtil.PInvoke
         private static extern IntPtr GetFocus();
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetDC(IntPtr hWnd);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetDCEx(IntPtr hWnd, IntPtr hRgn, uint dwFlags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern int GetScrollPos(IntPtr hWnd, int nBar);
 
         [DllImport("user32.dll")]
         public static extern bool GetScrollRange(IntPtr hWnd, int nBar, out int lpMinPos, out int lpMaxPos);
 
-        // TODO: make extension method
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern IntPtr GetWindowDC(IntPtr hWnd);
+
+        // TODO: add extension method?
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
 
         [DllImport("user32.dll")]
         internal static extern bool HideCaret(IntPtr hWnd);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool IsWindowVisible(IntPtr hwnd);
+
         [DllImport("user32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
 
         [DllImport("user32.dll")]
         public static extern bool PostMessageA(IntPtr hWnd, int nBar, int wParam, int lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int ReleaseDC(IntPtr hWnd, IntPtr hDC);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
@@ -185,6 +253,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern bool SetCapture(IntPtr hWnd);
+
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 
@@ -193,6 +264,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
+
+        // TODO (ekoneil): delete
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndAfter, int X, int Y, int Width, int Height, uint flags);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int ShowWindow(IntPtr hWnd, short cmdShow);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
