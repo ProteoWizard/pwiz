@@ -114,16 +114,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
     int networkScanNumber = ie.scan;
     if (unifiData_->hasIonMobilityData() && !config_.combineIonMobilitySpectra)
         networkScanNumber = (int) floor((ie.scan - 1) / 200.0) + 1;
-    bool evenScanNumber = networkScanNumber % 2 == 0;
-    int msLevel = evenScanNumber ? 2 : 1;
-    result->set(MS_ms_level, msLevel);
+
+    int msLevel = unifiData_->getMsLevel(index);
     result->set(msLevel == 1 ? MS_MS1_spectrum : MS_MSn_spectrum);
+    result->set(MS_ms_level, msLevel);
 
     if (detailLevel == DetailLevel_InstantMetadata)
         return result;
 
+    // whether to use Points or Peaks (if possible) to populate data arrays
+    bool doCentroid = msLevelsToCentroid.contains(msLevel);
+
     UnifiSpectrum spectrum;
-    unifiData_->getSpectrum(index, spectrum, detailLevel >= DetailLevel_FullMetadata);
+    unifiData_->getSpectrum(index, spectrum, detailLevel >= DetailLevel_FullMetadata, msLevelsToCentroid.contains(msLevel));
 
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
@@ -136,28 +139,24 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
     if (spectrum.driftTime > 0)
         scan.set(MS_ion_mobility_drift_time, spectrum.driftTime, UO_millisecond);
 
-    scan.set(MS_preset_scan_configuration, spectrum.energyLevel == EnergyLevel::Low ? 1 : 2);
+    if (spectrum.energyLevel != EnergyLevel::Unknown)
+        scan.set(MS_preset_scan_configuration, spectrum.energyLevel == EnergyLevel::Low ? 1 : 2);
 
     if (spectrum.energyLevel == EnergyLevel::Low && msLevel != 1)
         throw runtime_error("BUG: mismatch between MSe energy level and scan number");
 
-    result->set(translate(spectrum.scanPolarity));
+    if (spectrum.scanPolarity != Polarity::Unknown)
+        result->set(translate(spectrum.scanPolarity));
 
     scan.scanWindows.push_back(ScanWindow(spectrum.scanRange.first, spectrum.scanRange.second, MS_m_z));
 
-    result->set(MS_profile_spectrum);
-
-    // decide whether to use Points or Peaks to populate data arrays
-    /*bool doCentroid = msLevelsToCentroid.contains(msLevel);
-
-    bool continuousData = spectrum->getDataIsContinuous();
-    if (continuousData && !doCentroid)
+    if (spectrum.dataIsContinuous && !doCentroid)
         result->set(MS_profile_spectrum);
     else
     {
         result->set(MS_centroid_spectrum);
-        doCentroid = continuousData;
-    }*/
+        doCentroid = spectrum.dataIsContinuous;
+    }
 
     {
         if (msLevel > 1)
@@ -211,8 +210,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel
                 mobility->data.swap(spectrum.driftTimeArray);
             }
 
-            //if (doCentroid)
-            //    result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
+            if (doCentroid)
+                result->set(MS_profile_spectrum); // let SpectrumList_PeakPicker know this was a profile spectrum
         }
         else
         {
@@ -229,23 +228,46 @@ PWIZ_API_DECL void SpectrumList_UNIFI::createIndex() const
 {
     using namespace boost::spirit::karma;
 
-    const char* idKey = unifiData_->hasIonMobilityData() && config_.combineIonMobilitySpectra ? "merged=" : "scan=";
-
-    for (size_t i = 0; i < unifiData_->numberOfSpectra(); ++i)
+    if (isWatersConnect())
     {
-        index_.push_back(IndexEntry());
-        IndexEntry& ie = index_.back();
-        ie.scan = index_.size();
-        ie.index = index_.size() - 1;
+        const char* scanKey = unifiData_->hasIonMobilityData() && config_.combineIonMobilitySpectra ? "merged=" : " scanIndex=";
 
-        std::back_insert_iterator<std::string> sink(ie.id);
-        generate(sink, idKey << int_, ie.scan);
-        idToIndexMap_[ie.id] = ie.index;
+        for (size_t i = 0; i < unifiData_->numberOfSpectra(); ++i)
+        {
+            index_.push_back(IndexEntry());
+            IndexEntry& ie = index_.back();
+            ie.index = index_.size() - 1;
+            unifiData_->getChannelAndScanIndex(i, ie.channelIndex, ie.scan);
+
+            std::back_insert_iterator<std::string> sink(ie.id);
+            generate(sink, "channelIndex=" << int_ << scanKey << int_, ie.channelIndex, ie.scan);
+            idToIndexMap_[ie.id] = ie.index;
+        }
+    }
+    else
+    {
+        const char* idKey = unifiData_->hasIonMobilityData() && config_.combineIonMobilitySpectra ? "merged=" : "scan=";
+
+        for (size_t i = 0; i < unifiData_->numberOfSpectra(); ++i)
+        {
+            index_.push_back(IndexEntry());
+            IndexEntry& ie = index_.back();
+            ie.scan = index_.size();
+            ie.index = index_.size() - 1;
+
+            std::back_insert_iterator<std::string> sink(ie.id);
+            generate(sink, idKey << int_, ie.scan);
+            idToIndexMap_[ie.id] = ie.index;
+        }
     }
 
     size_ = index_.size();
 }
 
+PWIZ_API_DECL bool SpectrumList_UNIFI::isWatersConnect() const
+{
+    return unifiData_->getRemoteApiType() == UnifiData::RemoteApi::Waters_Connect;
+}
 
 } // detail
 } // msdata
@@ -271,6 +293,7 @@ SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, bool getBinaryData) const
 SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_UNIFI::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+bool SpectrumList_UNIFI::isWatersConnect() const {return false;}
 
 } // detail
 } // msdata

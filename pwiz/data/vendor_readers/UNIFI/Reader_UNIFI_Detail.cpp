@@ -149,8 +149,9 @@ PWIZ_API_DECL CVID translate(Polarity polarity)
         case Polarity::Negative:
             return MS_negative_scan;
         case Polarity::Unknown:
-        default:
             return CVID_Unknown;
+        default:
+            throw std::runtime_error("invalid polarity value");
     }
 }
 

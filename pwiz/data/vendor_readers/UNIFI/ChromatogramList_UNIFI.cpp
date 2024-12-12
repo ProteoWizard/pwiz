@@ -95,12 +95,12 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::makeFullFileChromatogram(pwiz::msdata
 
     for (const auto& info : unifiData_->chromatogramInfo())
     {
-        if (!bal::contains(info.id, chromatogramTag) || bal::contains(info.id, "Integrated"))
+        if (!bal::contains(info.name, chromatogramTag) || bal::contains(info.name, "Integrated"))
             continue;
 
-        if (!bxp::regex_match(info.id, what, functionNumberRegex))
+        if (!bxp::regex_match(info.name, what, functionNumberRegex))
         {
-            warn_once(("unable to parse function number from chromatogram name: " + info.id).c_str());
+            warn_once(("unable to parse function number from chromatogram name: " + info.name).c_str());
             continue;
         }
 
@@ -161,33 +161,49 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_UNIFI::chromatogram(size_t index,
     result->id = ie.id;
     result->set(ie.chromatogramType);
 
+    if (detailLevel < DetailLevel_FullMetadata)
+        return result;
+
     bool getBinaryData = detailLevel == DetailLevel_FullData;
 
     switch (ie.chromatogramType)
     {
         case MS_TIC_chromatogram:
         {
-            if (detailLevel < DetailLevel_FullMetadata)
-                return result;
-
             makeFullFileChromatogram(result, "(TIC)", getBinaryData);
         }
         break;
 
         case MS_basepeak_chromatogram:
         {
-            if (detailLevel < DetailLevel_FullMetadata)
-                return result;
-
             makeFullFileChromatogram(result, "(BPC)", getBinaryData);
+        }
+        break;
+
+        case MS_SRM_chromatogram:
+        {
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
+
+            UnifiChromatogram chromatogram;
+            unifiData_->getChromatogram(ie.chromatogramInfoIndex, chromatogram, getBinaryData);
+            result->defaultArrayLength = chromatogram.arrayLength;
+            result->set(translate(chromatogram.polarity));
+
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, chromatogram.Q1, MS_m_z);
+            //result->precursor.activation.set(MS_collision_energy, );
+
+            result->product.isolationWindow.set(MS_isolation_window_target_m_z, chromatogram.Q3, MS_m_z);
+
+            if (getBinaryData)
+            {
+                swap(chromatogram.timeArray, result->getTimeArray()->data);
+                swap(chromatogram.intensityArray, result->getIntensityArray()->data);
+            }
         }
         break;
 
         case MS_emission_chromatogram:
         {
-            if (detailLevel < DetailLevel_FullMetadata)
-                return result;
-
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_detector_counts);
 
             UnifiChromatogram chromatogram;
@@ -204,9 +220,6 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_UNIFI::chromatogram(size_t index,
 
         case MS_absorption_chromatogram:
         {
-            if (detailLevel < DetailLevel_FullMetadata)
-                return result;
-
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, UO_absorbance_unit);
 
             UnifiChromatogram chromatogram;
@@ -220,6 +233,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_UNIFI::chromatogram(size_t index,
             }
         }
         break;
+
+        default:
+            throw std::runtime_error("unhandled chromatogram type");
     }
 
     return result;
@@ -231,12 +247,12 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::createIndex() const
     for (size_t i=0; i < unifiData_->chromatogramInfo().size(); ++i)
     {
         const auto& chromatogramInfo = unifiData_->chromatogramInfo()[i];
-        switch (chromatogramInfo.detectorType)
+        switch (chromatogramInfo.type)
         {
-            case DetectorType::MS:
+            case UnifiChromatogramInfo::TIC:
             {
                 // we only make 1 TIC and BPI chromatogram, not one per function like UNIFI provides
-                if (!hasTIC && bal::contains(chromatogramInfo.id, "(TIC)"))
+                if (!hasTIC && bal::contains(chromatogramInfo.name, "(TIC)"))
                 {
                     hasTIC = true;
                     index_.push_back(IndexEntry());
@@ -256,21 +272,35 @@ PWIZ_API_DECL void ChromatogramList_UNIFI::createIndex() const
             }
             break;
 
-            case DetectorType::FLR:
+            case UnifiChromatogramInfo::MRM:
             {
                 index_.push_back(IndexEntry());
                 IndexEntry& ie = index_.back();
-                ie.id = chromatogramInfo.id;
+                ie.id = "SRM SIC " + chromatogramInfo.name;
+                if (bal::ends_with(chromatogramInfo.name, "+"))
+                    ie.id = "+ " + ie.id;
+                else if (bal::ends_with(chromatogramInfo.name, "-"))
+                        ie.id = "- " + ie.id;
+                ie.chromatogramInfoIndex = i;
+                ie.chromatogramType = MS_SRM_chromatogram;
+            }
+            break;
+
+            case UnifiChromatogramInfo::FLR:
+            {
+                index_.push_back(IndexEntry());
+                IndexEntry& ie = index_.back();
+                ie.id = chromatogramInfo.name;
                 ie.chromatogramInfoIndex = i;
                 ie.chromatogramType = MS_emission_chromatogram;
             }
             break;
 
-            case DetectorType::UV:
+            case UnifiChromatogramInfo::UV:
             {
                 index_.push_back(IndexEntry());
                 IndexEntry& ie = index_.back();
-                ie.id = chromatogramInfo.id;
+                ie.id = chromatogramInfo.name;
                 ie.chromatogramInfoIndex = i;
                 ie.chromatogramType = MS_absorption_chromatogram;
             }
