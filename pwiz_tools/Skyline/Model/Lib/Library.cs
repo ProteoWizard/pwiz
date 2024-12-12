@@ -2829,7 +2829,7 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class LibraryDetails
     {
         private readonly IList<LibraryLink> _libLinks;
-        private IEnumerable<SpectrumSourceFileDetails> _dataFiles;
+        private ImmutableList<SpectrumSourceFileDetails> _dataFiles = ImmutableList<SpectrumSourceFileDetails>.EMPTY;
         
         public LibraryDetails()
         {
@@ -2856,8 +2856,8 @@ namespace pwiz.Skyline.Model.Lib
         public int TotalPsmCount { get; set; }
         public IEnumerable<SpectrumSourceFileDetails> DataFiles
         { 
-            get { return _dataFiles ?? (_dataFiles = new List<SpectrumSourceFileDetails>()); }
-            set { _dataFiles = value; }
+            get { return _dataFiles; }
+            set { _dataFiles = ImmutableList.ValueOfOrEmpty(value); }
         }
 
         public IEnumerable<LibraryLink> LibLinks
@@ -3100,6 +3100,27 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(FilePath))
                 result.Add($@"FilePath: {FilePath}");
             return TextUtil.LineSeparate(result);
+        }
+
+        public double? GetScoreTypeCutoff(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Value;
+        }
+
+        public ScoreType GetScoreType(string scoreTypeName)
+        {
+            var scoreTypeKvp = GetScoreTypeKvp(scoreTypeName);
+            return scoreTypeKvp.Equals(default(KeyValuePair<ScoreType, double?>)) ? null : scoreTypeKvp.Key;
+        }
+
+        private KeyValuePair<ScoreType, double?> GetScoreTypeKvp(string scoreTypeName)
+        {
+            if (string.IsNullOrWhiteSpace(scoreTypeName) || ScoreThresholds == null)
+                return default(KeyValuePair<ScoreType, double?>);
+
+            return ScoreThresholds.FirstOrDefault(
+                s => s.Key.NameInvariant.Equals(scoreTypeName, StringComparison.Ordinal));
         }
     }
 }

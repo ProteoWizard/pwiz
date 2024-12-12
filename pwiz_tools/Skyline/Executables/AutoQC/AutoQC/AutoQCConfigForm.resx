@@ -134,6 +134,109 @@
   <data name="groupBoxMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="btnAnnotationsFile.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnAnnotationsFile.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="btnAnnotationsFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>391, 342</value>
+  </data>
+  <data name="btnAnnotationsFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="btnAnnotationsFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>32, 23</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnAnnotationsFile.TabIndex" type="System.Int32, mscorlib">
+    <value>70</value>
+  </data>
+  <data name="btnAnnotationsFile.Text" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.Name" xml:space="preserve">
+    <value>btnAnnotationsFile</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.Parent" xml:space="preserve">
+    <value>groupBoxMain</value>
+  </data>
+  <data name="&gt;&gt;btnAnnotationsFile.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="labelAnnotationsFile.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelAnnotationsFile.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 9pt</value>
+  </data>
+  <data name="labelAnnotationsFile.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelAnnotationsFile.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 327</value>
+  </data>
+  <data name="labelAnnotationsFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 0, 2, 0</value>
+  </data>
+  <data name="labelAnnotationsFile.Size" type="System.Drawing.Size, System.Drawing">
+    <value>148, 15</value>
+  </data>
+  <data name="labelAnnotationsFile.TabIndex" type="System.Int32, mscorlib">
+    <value>71</value>
+  </data>
+  <data name="labelAnnotationsFile.Text" xml:space="preserve">
+    <value>&amp;Annotations file (optional):</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotationsFile.Name" xml:space="preserve">
+    <value>labelAnnotationsFile</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotationsFile.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotationsFile.Parent" xml:space="preserve">
+    <value>groupBoxMain</value>
+  </data>
+  <data name="&gt;&gt;labelAnnotationsFile.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textAnnotationsFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textAnnotationsFilePath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 344</value>
+  </data>
+  <data name="textAnnotationsFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="textAnnotationsFilePath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>375, 20</value>
+  </data>
+  <data name="textAnnotationsFilePath.TabIndex" type="System.Int32, mscorlib">
+    <value>69</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="textAnnotationsFilePath.ToolTip" xml:space="preserve">
+    <value>Path to a CSV file with Skyline annotations that will be imported when a change is detected in the file.</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFilePath.Name" xml:space="preserve">
+    <value>textAnnotationsFilePath</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFilePath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFilePath.Parent" xml:space="preserve">
+    <value>groupBoxMain</value>
+  </data>
+  <data name="&gt;&gt;textAnnotationsFilePath.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="textConfigName.Location" type="System.Drawing.Point, System.Drawing">
     <value>10, 30</value>
   </data>
@@ -143,7 +246,6 @@
   <data name="textConfigName.Size" type="System.Drawing.Size, System.Drawing">
     <value>324, 20</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textConfigName.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
@@ -157,7 +259,7 @@
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;textConfigName.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="labelConfigName.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -190,13 +292,13 @@
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;labelConfigName.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="checkBoxRemoveResults.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="checkBoxRemoveResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 269</value>
+    <value>10, 240</value>
   </data>
   <data name="checkBoxRemoveResults.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -210,9 +312,6 @@
   <data name="checkBoxRemoveResults.Text" xml:space="preserve">
     <value>&amp;Remove Results</value>
   </data>
-  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="checkBoxRemoveResults.ToolTip" xml:space="preserve">
     <value>If checked, results imported into the Skyline document that are older than theResults time window will be removed. This is done to keep the document size small. 
 Results time window is a rolling window and only results acquired within the last ‘n’ days, where ‘n’ is the width of this window in days, will be retained in the document</value>
@@ -227,13 +326,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;checkBoxRemoveResults.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="labelQcFilePattern.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelQcFilePattern.Location" type="System.Drawing.Point, System.Drawing">
-    <value>157, 195</value>
+    <value>157, 178</value>
   </data>
   <data name="labelQcFilePattern.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -257,10 +356,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;labelQcFilePattern.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="comboBoxFileFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 211</value>
+    <value>10, 194</value>
   </data>
   <data name="comboBoxFileFilter.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -281,13 +380,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;comboBoxFileFilter.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 195</value>
+    <value>10, 178</value>
   </data>
   <data name="label5.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -311,7 +410,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="includeSubfoldersCb.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -341,10 +440,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;includeSubfoldersCb.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="textQCFilePattern.Location" type="System.Drawing.Point, System.Drawing">
-    <value>158, 211</value>
+    <value>158, 194</value>
   </data>
   <data name="textQCFilePattern.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -368,13 +467,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;textQCFilePattern.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="labelMinutes.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelMinutes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>299, 336</value>
+    <value>299, 296</value>
   </data>
   <data name="labelMinutes.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -398,13 +497,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;labelMinutes.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="labelAquisitionTime.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelAquisitionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>216, 313</value>
+    <value>216, 273</value>
   </data>
   <data name="labelAquisitionTime.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -431,10 +530,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;labelAquisitionTime.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>12</value>
   </data>
   <data name="textAquisitionTime.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 328</value>
+    <value>218, 288</value>
   </data>
   <data name="textAquisitionTime.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -458,13 +557,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;textAquisitionTime.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="labelDays.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelDays.Location" type="System.Drawing.Point, System.Drawing">
-    <value>299, 275</value>
+    <value>299, 246</value>
   </data>
   <data name="labelDays.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -488,10 +587,10 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;labelDays.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>14</value>
   </data>
   <data name="textResultsTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>218, 271</value>
+    <value>218, 242</value>
   </data>
   <data name="textResultsTimeWindow.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -515,13 +614,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;textResultsTimeWindow.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>15</value>
   </data>
   <data name="labelAccumulationTimeWindow.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelAccumulationTimeWindow.Location" type="System.Drawing.Point, System.Drawing">
-    <value>216, 254</value>
+    <value>216, 225</value>
   </data>
   <data name="labelAccumulationTimeWindow.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -545,13 +644,13 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;labelAccumulationTimeWindow.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>16</value>
   </data>
   <data name="labelInstrumentType.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="labelInstrumentType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 313</value>
+    <value>10, 273</value>
   </data>
   <data name="labelInstrumentType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 0, 2, 0</value>
@@ -575,7 +674,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;labelInstrumentType.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>17</value>
   </data>
   <data name="comboBoxInstrumentType.Items" xml:space="preserve">
     <value>Thermo</value>
@@ -587,16 +686,19 @@ Results time window is a rolling window and only results acquired within the las
     <value>SCIEX</value>
   </data>
   <data name="comboBoxInstrumentType.Items3" xml:space="preserve">
-    <value>Agilent</value>
+    <value>SCIEX WIFF2</value>
   </data>
   <data name="comboBoxInstrumentType.Items4" xml:space="preserve">
-    <value>Bruker</value>
+    <value>Agilent</value>
   </data>
   <data name="comboBoxInstrumentType.Items5" xml:space="preserve">
+    <value>Bruker</value>
+  </data>
+  <data name="comboBoxInstrumentType.Items6" xml:space="preserve">
     <value>Shimadzu</value>
   </data>
   <data name="comboBoxInstrumentType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 331</value>
+    <value>10, 291</value>
   </data>
   <data name="comboBoxInstrumentType.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>2, 2, 2, 2</value>
@@ -617,7 +719,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;comboBoxInstrumentType.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>18</value>
   </data>
   <data name="btnFolderToWatch.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -647,7 +749,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;btnFolderToWatch.ZOrder" xml:space="preserve">
-    <value>16</value>
+    <value>19</value>
   </data>
   <data name="label2.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -680,7 +782,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
-    <value>17</value>
+    <value>20</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -713,7 +815,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>18</value>
+    <value>21</value>
   </data>
   <data name="textFolderToWatchPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -743,7 +845,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;textFolderToWatchPath.ZOrder" xml:space="preserve">
-    <value>19</value>
+    <value>22</value>
   </data>
   <data name="btnSkylineFilePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -776,7 +878,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;btnSkylineFilePath.ZOrder" xml:space="preserve">
-    <value>20</value>
+    <value>23</value>
   </data>
   <data name="textSkylinePath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -806,7 +908,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>groupBoxMain</value>
   </data>
   <data name="&gt;&gt;textSkylinePath.ZOrder" xml:space="preserve">
-    <value>21</value>
+    <value>24</value>
   </data>
   <data name="groupBoxMain.Location" type="System.Drawing.Point, System.Drawing">
     <value>7, 5</value>
@@ -938,7 +1040,7 @@ Results time window is a rolling window and only results acquired within the las
     <value>Vertical</value>
   </data>
   <data name="textPanoramaFolder.Size" type="System.Drawing.Size, System.Drawing">
-    <value>202, 20</value>
+    <value>345, 20</value>
   </data>
   <data name="textPanoramaFolder.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1912,5 +2014,8 @@ Results time window is a rolling window and only results acquired within the las
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
     <value>System.Windows.Forms.Form, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="MainSettings_ValidateSkylineFile__0__is_not_a_valid_Skyline_file__Skyline_files_have_a__sky_extension_" xml:space="preserve">
+	  <value>{0} is not a valid Skyline file. Skyline files have a .sky extension.</value>
   </data>
 </root>

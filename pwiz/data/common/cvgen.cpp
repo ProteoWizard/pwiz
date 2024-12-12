@@ -235,7 +235,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    std::vector<std::string> exactSynonyms;\n"
           "    std::multimap<std::string, std::string> propertyValues;\n"
           "\n"
-          "    CVTermInfo() : cvid((CVID)-1) {}\n"
+          "    CVTermInfo() : cvid((CVID)-1), isObsolete(false) {}\n"
           "    const std::string& shortName() const;\n"
           "    std::string prefix() const;\n"
           "};\n\n\n";

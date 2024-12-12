@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -84,24 +85,23 @@ namespace TestPerf
         protected override void DoTest()
         {
             TestMsFraggerSearch();
-
-            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
 
         /// <summary>
         /// Change to true to write new Assert statements instead of testing them.
         /// </summary>
-        private bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
 
         private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials && IsPass0;
         private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchSettingsControl.SearchEngine.MSFragger);
 
         private Image _searchLogImage;
 
-        protected override void ProcessCoverShot(Bitmap bmp)
+        protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
             var graph = Graphics.FromImage(bmp);
             graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
+            return bmp;
         }
 
         /// <summary>
@@ -215,11 +215,34 @@ namespace TestPerf
             bool? searchSucceeded = null;
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page));
 
-            // switch SearchEngine and handle download dialogs if necessary
             bool useMsFragger = !IsPauseForScreenShots; // Tutorial still uses MSAmanda
+
+            // Switch search engine
+            if (useMsFragger)
+                SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
+
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
+                // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
+                // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
+                if (useMsFragger)
+                {
+                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
+                    //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
+                }
+
+                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page", tutorialPage++);
+
+            // Run the search
+            SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
+
+            // Handle download dialogs if necessary
             if (useMsFragger)
             {
-                SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
                 if (RedownloadTools || HasMissingDependencies)
                 {
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
@@ -241,29 +264,11 @@ namespace TestPerf
                 }
             }
 
-            RunUI(() =>
-            {
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
-                // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
-                // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
-                if (useMsFragger)
-                {
-                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
-                    //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
-                }
-
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-            });
-            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - DDA Search Settings page", tutorialPage++);
-
-
-            // Run the search
             try
             {
-                RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
+                WaitForConditionUI(() => importPeptideSearchDlg.SearchControl.PercentComplete > 25);
                 PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", tutorialPage++);
 
                 // Wait for search to finish
@@ -278,7 +283,7 @@ namespace TestPerf
             if (IsCoverShotMode)
             {
                 RunUI(() => importPeptideSearchDlg.Width = 404);
-                _searchLogImage = ScreenshotManager.TakeNextShot(importPeptideSearchDlg);
+                _searchLogImage = ScreenshotManager.TakeShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
             }
 
@@ -294,6 +299,7 @@ namespace TestPerf
             else
             {
                 var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
+                RunUIForScreenShot(() => ambiguousDlg.Height = 448);
                 PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
                 RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                     Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
@@ -348,7 +354,7 @@ namespace TestPerf
                     }
                 }
             });
-            PauseForScreenShot("Import Peptide Search - Empty Proteins dialog", tutorialPage++);
+            PauseForScreenShot<AssociateProteinsDlg>("Import Peptide Search - Associate Proteins dialog", tutorialPage++);
 
             using (new WaitDocumentChange(null, true, 600 * 1000))
             {
@@ -373,7 +379,7 @@ namespace TestPerf
 
             RunUI(() => SkylineWindow.ShowPeakAreaReplicateComparison());
             RefreshGraphs();
-            PauseForScreenShot("Peak Areas - Replicate Comparison", tutorialPage++);
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas - Replicate Comparison", tutorialPage++);
 
             RunUI(() =>
             {
@@ -401,8 +407,15 @@ namespace TestPerf
             }
 
             RunUI(() => SkylineWindow.SaveDocument());
+        }
 
+        protected override void CleanupPersistentDir()
+        {
             DirectoryEx.SafeDelete(Path.Combine(Path.GetDirectoryName(SearchFiles.First())!, "converted"));
+            foreach (var searchFile in SearchFiles)
+            {
+                FileEx.SafeDelete(Path.ChangeExtension(searchFile, ".mzid.gz"));
+            }
         }
 
         private void RefreshGraphs()

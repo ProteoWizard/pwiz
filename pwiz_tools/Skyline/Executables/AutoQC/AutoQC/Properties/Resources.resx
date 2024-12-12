@@ -613,4 +613,16 @@ with:
   <data name="AutoQcConfig_ReadXml_The_version_of_the_imported_file__0__was_not_recognized__No_configurations_will_be_imported_" xml:space="preserve">
     <value>The version of the imported file {0} was not recognized. No configurations will be imported.</value>
   </data>
+  <data name="MainSettings_ValidateSkylineFile__0__is_not_a_valid_Skyline_file__Skyline_files_have_a__sky_extension_" xml:space="preserve">
+	  <value>{0} is not a valid Skyline file. Skyline files have a .sky extension.</value>
+  </data>
+  <data name="ConfigRunner_ImportAnnotationsFileIfWatching_Importing_annotations_file_" xml:space="preserve">
+	  <value>Importing annotations file.</value>
+  </data>
+  <data name="ConfigRunner_ImportAnnotationsFile_Annotations_file_was_imported_" xml:space="preserve">
+	  <value>Annotations file was imported.</value>
+  </data>
+  <data name="ConfigRunner_ImportAnnotationsFile_Annotations_file_could_not_be_imported_" xml:space="preserve">
+	  <value>Annotations file could not be imported.</value>
+  </data>
 </root>

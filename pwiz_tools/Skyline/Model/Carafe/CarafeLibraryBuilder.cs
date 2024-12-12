@@ -12,6 +12,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 
 namespace pwiz.Skyline.Model.Carafe
 {
@@ -88,48 +89,49 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME);
         private string CarafeJarFileDir => Path.Combine(CarafeDir, CarafeFileBaseName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
-        private Dictionary<string, string> CarafeArguments =>
-            new Dictionary<string, string>()
+        private IList<ArgumentAndValue> CmdFlowCommandArguments =>
+            new[]
             {
-                {@"-jar", CarafeJarFilePath},
-                // TODO(xgwang): when BuildLibraryForCurrentSkylineDocument is true, output a tsv file from Skyline document and use that as the -db param for carafe 
-                {@"-db", ProteinDatabaseFilePath},
-                {@"-i", @"C:\Users\Jason\workspaces\test_carafe\report.tsv"},
-                {@"-ms", @"C:\Users\Jason\workspaces\test_carafe\LFQ_Orbitrap_AIF_Human_01.mzML"},
-                {@"-o", CarafeOutputLibraryDir},
-                {@"-c_ion_min", @"2"},
-                {@"-cor", @"0.8"},
-                {@"-device", @"cpu"},
-                {@"-enzyme", @"2"},
-                {@"-ez", string.Empty},
-                {@"-fast", string.Empty},
-                {@"-fixMod", @"1"},
-                {@"-itol", @"20"},
-                {@"-itolu", @"ppm"},
-                {@"-lf_frag_n_min", @"2"},
-                {@"-lf_top_n_frag", @"20"},
-                {@"-lf_type", @"skyline"},
-                {@"-max_pep_mz", @"1000"},
-                {@"-maxLength", @"35"},
-                {@"-maxVar", @"1"},
-                {@"-min_mz", @"200"},
-                {@"-min_pep_mz", @"400"},
-                {@"-minLength", @"7"},
-                {@"-miss_c", @"1"},
-                {@"-mode", @"general"},
-                {@"-n_ion_min", @"2"},
-                {@"-na", @"0"},
-                {@"-nf", @"4"},
-                {@"-nm", string.Empty},
-                {@"-rf_rt_win", @"1"},
-                {@"-rf", string.Empty},
-                {@"-se", @"DIA-NN"},
-                {@"-seed", @"2000"},
-                {@"-skyline", string.Empty},
-                {@"-tf", @"all"},
-                {@"-valid", string.Empty},
-                {@"-varMod", @"0"}
-            };
+                new ArgumentAndValue(@"-jar", CarafeJarFilePath),
+
+                new ArgumentAndValue(@"-db", ProteinDatabaseFilePath),
+                new ArgumentAndValue(@"-i", @"C:\Users\Jason\workspaces\test_carafe\report.tsv"),
+                new ArgumentAndValue(@"-ms", @"C:\Users\Jason\workspaces\test_carafe\LFQ_Orbitrap_AIF_Human_01.mzML"),
+                new ArgumentAndValue(@"-o", CarafeOutputLibraryDir),
+                new ArgumentAndValue(@"-c_ion_min", @"2"),
+                new ArgumentAndValue(@"-cor", @"0.8"),
+                new ArgumentAndValue(@"-device", @"cpu"),
+                new ArgumentAndValue(@"-enzyme", @"2"),
+                new ArgumentAndValue(@"-ez", string.Empty),
+                new ArgumentAndValue(@"-fast", string.Empty),
+                new ArgumentAndValue(@"-fixMod", @"1"),
+                new ArgumentAndValue(@"-itol", @"20"),
+                new ArgumentAndValue(@"-itolu", @"ppm"),
+                new ArgumentAndValue(@"-lf_frag_n_min", @"2"),
+                new ArgumentAndValue(@"-lf_top_n_frag", @"20"),
+                new ArgumentAndValue(@"-lf_type", @"skyline"),
+                new ArgumentAndValue(@"-max_pep_mz", @"1000"),
+                new ArgumentAndValue(@"-maxLength", @"35"),
+                new ArgumentAndValue(@"-maxVar", @"1"),
+                new ArgumentAndValue(@"-min_mz", @"200"),
+                new ArgumentAndValue(@"-min_pep_mz", @"400"),
+                new ArgumentAndValue(@"-minLength", @"7"),
+                new ArgumentAndValue(@"-miss_c", @"1"),
+                new ArgumentAndValue(@"-mode", @"general"),
+                new ArgumentAndValue(@"-n_ion_min", @"2"),
+                new ArgumentAndValue(@"-na", @"0"),
+                new ArgumentAndValue(@"-nf", @"4"),
+                new ArgumentAndValue(@"-nm", string.Empty),
+                new ArgumentAndValue(@"-rf_rt_win", @"1"),
+                new ArgumentAndValue(@"-rf", string.Empty),
+                new ArgumentAndValue(@"-se", @"DIA-NN"),
+                new ArgumentAndValue(@"-seed", @"2000"),
+                new ArgumentAndValue(@"-skyline", string.Empty),
+                new ArgumentAndValue(@"-tf", @"all"),
+                new ArgumentAndValue(@"-valid", string.Empty),
+                new ArgumentAndValue(@"-varMod", @"0")
+            }; 
+        
 
         public CarafeLibraryBuilder(
             string libName,

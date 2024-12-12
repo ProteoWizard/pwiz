@@ -170,6 +170,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="SystemUtil\CommonTextUtil.cs" />
+    <Compile Include="SystemUtil\Messages.cs" />
     <Compile Include="SystemUtil\FileSize.cs" />
     <Compile Include="SystemUtil\FileSizeFormatProvider.cs" />
     <Compile Include="SystemUtil\IFormView.cs" />
@@ -270,7 +271,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-	<EmbeddedResource Include="CommonResources\GeneralTerms.ja.resx">
+    <EmbeddedResource Include="CommonResources\GeneralTerms.ja.resx">
       <DependentUpon>GeneralTerms.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -278,12 +279,12 @@
       <DependentUpon>GeneralTerms.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-	<EmbeddedResource Include="CommonResources\GeneralTerms.resx">
+    <EmbeddedResource Include="CommonResources\GeneralTerms.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>GeneralTerms.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-	<EmbeddedResource Include="CommonResources\Images.ja.resx">
+    <EmbeddedResource Include="CommonResources\Images.ja.resx">
       <DependentUpon>Images.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>

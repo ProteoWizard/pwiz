@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -158,62 +157,36 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                var detailsByFileName = new Dictionary<string, SpectrumSourceFileDetails>();
-
-                try
-                {
-                    lock (_pooledSqliteConnection)
-                    {
-                        using (var select = new SQLiteCommand(_pooledSqliteConnection.Connection))
-                        {
-                            // ReSharper disable LocalizableElement
-
-                            // Query for the source files detail information.
-                            select.CommandText = @"select one.SourceFile, BestSpectra, MatchedSpectra
-from (
-  select SourceFile, count(*) as MatchedSpectra
-  from entries as s
-  group by SourceFile) as one
-inner join (
-  select SourceFile, count(*) as BestSpectra
-  from entries as e
-  where Score = (select min(Score) from entries where e.PeptideModSeq = PeptideModSeq AND e.PrecursorCharge = PrecursorCharge)
-  group by SourceFile) as two
-on one.SourceFile = two.SourceFile";
-
-                            // ReSharper restore LocalizableElement
-                            using (SQLiteDataReader reader = select.ExecuteReader())
-                            {
-                                while (reader.Read())
-                                {
-                                    string filename = reader.GetString(0);
-                                    var fileDetails = new SpectrumSourceFileDetails(filename);
-                                    fileDetails.ScoreThresholds.Add(ScoreType.GenericQValue, null);
-                                    fileDetails.BestSpectrum = Convert.ToInt32(reader.GetValue(1));
-                                    fileDetails.MatchedSpectrum = Convert.ToInt32(reader.GetValue(2));
-                                    detailsByFileName.Add(filename, fileDetails);
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception)
-                {
-                    // Do nothing more. Simply return any details collected or minimum information.
-                }
-
                 return new LibraryDetails
                 {
-                    DataFiles = _sourceFiles.Select(file =>
-                    {
-                        if (!detailsByFileName.TryGetValue(file, out var fileDetails))
-                        {
-                            fileDetails = new SpectrumSourceFileDetails(file);
-                            fileDetails.ScoreThresholds.Add(ScoreType.GenericQValue, null);
-                        }
-                        return fileDetails;
-                    })
+                    DataFiles = EnumerateSpectrumSourceFileDetails().ToList()
+                    // Consider: UniquePeptideCount, SpectrumCount
                 };
+            }
+        }
+
+        private IEnumerable<SpectrumSourceFileDetails> EnumerateSpectrumSourceFileDetails()
+        {
+            var bestSpectrumCounts = new int[LibraryFiles.Count];
+            var matchedSpectrumCounts = new int[LibraryFiles.Count];
+            foreach (var entry in _libraryEntries)
+            {
+                bestSpectrumCounts[entry.BestFileId]++;
+                foreach (var fileData in entry.FileDatas)
+                {
+                    matchedSpectrumCounts[fileData.Key]++;
+                }
+            }
+
+            for (int iFile = 0; iFile < LibraryFiles.Count; iFile++)
+            {
+                var details = new SpectrumSourceFileDetails(LibraryFiles[iFile])
+                {
+                    BestSpectrum = bestSpectrumCounts[iFile],
+                    MatchedSpectrum = matchedSpectrumCounts[iFile],
+                };
+                details.ScoreThresholds.Add(ScoreType.GenericQValue, null);
+                yield return details;
             }
         }
 
@@ -466,7 +439,7 @@ on one.SourceFile = two.SourceFile";
             }
             catch (Exception exception)
             {
-                Trace.TraceWarning(@"Exception loading cache: {0}", exception);
+                Messages.WriteAsyncDebugMessage(@"Exception loading cache: {0}", exception);
                 return false;
             }
         }

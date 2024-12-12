@@ -209,7 +209,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool DotProductLabelsVisible
         {
-            get{return CanShowDotProduct && DotProductDisplayOption.label.IsSet(Settings.Default);}
+            get { return CanShowDotProduct && DotProductDisplayOption.label.IsSet(Settings.Default); }
+        }
+
+        public bool DotProductLineVisible
+        {
+            get { return CanShowDotProduct && DotProductDisplayOption.line.IsSet(Settings.Default); }
         }
 
         public bool IsLineGraph
@@ -658,7 +663,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
 
             _dotpData = null;
-            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y))) 
+            if (graphData.DotpData != null && graphData.DotpData.Any(data => !double.IsNaN(data.Y)) && CanShowDotProduct) 
                 _dotpData = ImmutableList.ValueOf(graphData.DotpData.Select(point => (float)point.Y));
 
             if (ExpectedVisible != AreaExpectedValue.none &&
@@ -668,6 +673,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 Y2Axis.Scale.Min = 0;
                 Y2Axis.Scale.Max = 1.1;
                 Y2Axis.Title.Text = DotpLabelText;
+                Y2Axis.MajorTic.IsOpposite = false;
+                Y2Axis.MinorTic.IsOpposite = false;
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
@@ -682,49 +689,58 @@ namespace pwiz.Skyline.Controls.Graphs
                 Y2Axis.IsVisible = false;
             }
 
+            AddDotProductLine(graphData);
+
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
+        }
 
-            if (Settings.Default.PeakAreaDotpCutoffShow && DotProductDisplayOption.line.IsSet(Settings.Default) && _dotpData != null)
+        private void AddDotProductLine(AreaGraphData graphData)
+        {
+            if (!Settings.Default.PeakAreaDotpCutoffShow || !DotProductDisplayOption.line.IsSet(Settings.Default) ||
+                _dotpData == null)
+                return;
+
+            var cutoff = ExpectedVisible.GetDotpValueCutoff(Settings.Default);
+            var highlightValues = new PointPairList(graphData.DotpData
+                .Select(point => point.Y < cutoff ? point : new PointPair() { X = point.X, Y = float.NaN }).ToList());
+            var cutoffHighlightLine = new LineItem("", highlightValues, Color.DimGray, SymbolType.Circle)
             {
-                var cutoff = ExpectedVisible.GetDotpValueCutoff(Settings.Default);
-                var highlightValues = new PointPairList(graphData.DotpData.Select(point => point.Y < cutoff ? point : new PointPair(){X = point.X, Y = float.NaN}).ToList());
-                var cutoffHighlightLine = new LineItem("", highlightValues, Color.DimGray, SymbolType.Circle)
-                {
-                    IsY2Axis = true,
-                    Line = new Line() { Color = Color.Transparent},
-                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
-                };
-                cutoffHighlightLine.Label.IsVisible = false;
-                CurveList.Insert(Math.Min(CurveList.Count, 1), cutoffHighlightLine); // Add below cutoff highlight markers
-                ToolTip.TargetCurves.Add(cutoffHighlightLine);
+                IsY2Axis = true,
+                Line = new Line() { Color = Color.Transparent },
+                Symbol = new Symbol()
+                    { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
+            };
+            cutoffHighlightLine.Label.IsVisible = false;
+            CurveList.Insert(Math.Min(CurveList.Count, 1), cutoffHighlightLine); // Add below cutoff highlight markers
+            ToolTip.TargetCurves.Add(cutoffHighlightLine);
 
-
-                var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
-                var labelText = string.Format(GraphsResources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
-                    _dotpData.Count - belowCutoffCount, belowCutoffCount, DotpLabelText);
-                var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.E_BehindCurves,
-                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
-                };
-                labelObject.FontSpec.Fill = new Fill(Color.Transparent);
-                GraphObjList.Add(labelObject);
-                var cutoffLine = new LineObj()
-                {
-                    IsClippedToChartRect = true,
-                    Location = new Location(0, cutoff, CoordType.XChartFractionY2Scale){Rect = new RectangleF(0, cutoff, 1, 0)},
-                    Line = new LineBase(Color.Red)
-                };
-                GraphObjList.Add(cutoffLine);                          // Add  cutoff line
-                //This is a placeholder to make sure the line shows in the legend.
-                CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
-                    GraphsResources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
-                {
-                    Points = new PointPairList(new[] { new PointPair(0, 0) }),
-                    Symbol = new Symbol(SymbolType.None, Color.Transparent)
-                });
-            }
+            var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
+            var labelText = string.Format(GraphsResources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
+                _dotpData.Count - belowCutoffCount, belowCutoffCount, DotpLabelText);
+            var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
+            {
+                IsClippedToChartRect = true,
+                ZOrder = ZOrder.E_BehindCurves,
+                FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+            };
+            labelObject.FontSpec.Fill = new Fill(Color.Transparent);
+            GraphObjList.Add(labelObject);
+            _labelHeight = (int)labelObject.FontSpec.GetHeight(CalcScaleFactor());
+            var cutoffLine = new LineObj()
+            {
+                IsClippedToChartRect = true,
+                Location = new Location(0, cutoff, CoordType.XChartFractionY2Scale)
+                    { Rect = new RectangleF(0, cutoff, 1, 0) },
+                Line = new LineBase(Color.Red)
+            };
+            GraphObjList.Add(cutoffLine); // Add  cutoff line
+            //This is a placeholder to make sure the line shows in the legend.
+            CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
+                GraphsResources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
+            {
+                Points = new PointPairList(new[] { new PointPair(0, 0) }),
+                Symbol = new Symbol(SymbolType.None, Color.Transparent)
+            });
         }
 
         public override void PopulateTooltip(int index, CurveItem targetCurve)
@@ -952,9 +968,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Reformat Y-Axis for labels and whiskers
             var maxY = GraphHelper.GetMaxY(CurveList,this);
-            if (DotProductLabelsVisible)
+            if (DotProductLabelsVisible || DotProductLineVisible)
             {
-                var extraSpace = _labelHeight*(maxY/(Chart.Rect.Height - _labelHeight*2))*2;
+                var reservedSpace = _labelHeight * 2;
+                var unitsPerPixel = maxY / (Chart.Rect.Height - reservedSpace);
+                var extraSpace = reservedSpace*unitsPerPixel;
                 maxY += extraSpace;
             }
        
@@ -1019,6 +1037,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (GraphObj pa in _dotpLabels)
                 GraphObjList.Remove(pa);
             _dotpLabels.Clear();
+            _labelHeight = 0;
 
             if (visible)
             {
@@ -1042,7 +1061,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = pointSize.Value;
                     textObj.FontSpec.Fill = new Fill(Color.Transparent);
-                    _labelHeight =(int) textObj.FontSpec.GetHeight(CalcScaleFactor());
+                    var labelHeight = (int) textObj.FontSpec.GetHeight(CalcScaleFactor());
+                    if (labelHeight > _labelHeight)
+                        _labelHeight = labelHeight;
                     GraphObjList.Add(textObj);
                     _dotpLabels.Add(textObj);
                 }
@@ -1068,7 +1089,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_dotpData?.Count > 0 && indexResult < _dotpData.Count && !float.IsNaN(_dotpData[indexResult]))
             {
-                var separator = DotProductDisplayOption.line.IsSet(Settings.Default) ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate : TextUtil.LineSeparate;
+                var separator = DotProductDisplayOption.line.IsSet(Settings.Default)
+                    ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate
+                    : TextUtil.LineSeparate;
                 return separator(new [] { DotpLabelText , string.Format(@"{0:F02}", _dotpData[indexResult]) } ) ;
             }
             else
@@ -1198,19 +1221,34 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                         }
                     }
+                }
 
-                    if (_expectedVisible != AreaExpectedValue.none)
+                if (_expectedVisible != AreaExpectedValue.none)
+                {
+                    var dotpData = new PointPairList();
+                    for (var replicateGroupIndex = 0;
+                         replicateGroupIndex < ReplicateGroups.Count;
+                         replicateGroupIndex++)
+                    {
+                        var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
+                        if (_docNode is TransitionGroupDocNode transitionGroupDocNode)
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(transitionGroupDocNode, replicateGroupIndex)));
+                        // Show dotp for a selected peptide only if it has only one precursor for which dotp can be calculated.
+                        else if (_docNode is PeptideDocNode pepDocNode && pepDocNode.TransitionGroups.Count(CanGetDotProductResults) == 1)
+                        {
+                            var replicate = replicateGroupIndex;
+                            dotpData.Add(new PointPair(xValue,
+                                GetDotProductResults(pepDocNode.TransitionGroups.First(CanGetDotProductResults), replicate)));
+                        }
+                    }
+
+                    if (dotpData.Count(pp => !double.IsNaN(pp.Y)) > 0)
                     {
                         _dotpData = new PointPairList();
-                        if(_expectedVisible.IsVisible())
+                        if (_expectedVisible.IsVisible())
                             _dotpData.Insert(0, 0, double.NaN);
-                        for (var replicateGroupIndex = 0;
-                            replicateGroupIndex < ReplicateGroups.Count;
-                            replicateGroupIndex++)
-                        {
-                            var xValue = replicateGroupIndex + (_expectedVisible.IsVisible() ? 1 : 0);
-                            _dotpData.Insert(xValue, xValue, GetDotProductResults(nodeGroup, replicateGroupIndex));
-                        }
+                        _dotpData.Add(dotpData);
                     }
                 }
 
@@ -1234,6 +1272,38 @@ namespace pwiz.Skyline.Controls.Graphs
                         FixupForTotals();
                         break;
                 }
+            }
+            // this method is used to find the first node under a peptide for which the dotp line
+            // can be drawn.
+            private bool CanGetDotProductResults(TransitionGroupDocNode nodeGroup)
+            {
+                if (_expectedVisible == AreaExpectedValue.none)
+                    return false;
+                if (_expectedVisible == AreaExpectedValue.ratio_to_label)
+                {
+                    // if this is ratio to label normalization then we check if this precursor is not the label and it has a matching label precursor
+                    if (_normalizeOption.NormalizationMethod is NormalizationMethod.RatioToLabel ratioToLabel)
+                    {
+                        var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
+                        if (precursorNodePath.Peptide != null &&
+                            !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType) &&
+                            NormalizedValueCalculator.FindMatchingTransitionGroup(ratioToLabel, precursorNodePath.Peptide, nodeGroup) != null)
+                        {
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    // if this is a library dot product we see if it can be calculated for the first replicate (or if it has average)
+                    if (_expectedVisible == AreaExpectedValue.library &&
+                        nodeGroup.GetLibraryDotProduct(-1).HasValue)
+                        return true;
+                    if (_expectedVisible == AreaExpectedValue.isotope_dist &&
+                        nodeGroup.GetIsotopeDotProduct(-1).HasValue)
+                        return true;
+                }
+                return false;
             }
 
             private float GetDotProductResults(TransitionGroupDocNode nodeGroup, int indexResult)

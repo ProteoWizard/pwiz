@@ -70,11 +70,11 @@ namespace pwiz.Skyline.Util
     {
         private Molecule Composition { get; set; } // The chemical makeup of the adduct - the "2H" part in 4M3Cl37+2H
         private string Description { get; set; } // The text description (will be empty for protonation, we just use charge)
-        private TypedMass AverageMassAdduct { get; set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
-        private TypedMass MonoMassAdduct { get; set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass AverageMassAdduct { get; private set; } // Average mass of the adduct itself - the "2H" in 4M3Cl37+2H
+        public TypedMass MonoMassAdduct { get; private set; } // Monoisotopic mass of the adduct itself - the "2H" in 4M3Cl37+2H
         private int MassMultiplier { get; set; } // Returns, for example, the 2 in "[2M+Na]", which means the ion is two molecules + the adduct mass. 
-        private TypedMass IsotopesIncrementalAverageMass { get; set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
-        private TypedMass IsotopesIncrementalMonoMass { get; set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
+        public TypedMass IsotopesIncrementalAverageMass { get; private set; } // The incremental average mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H 
+        public TypedMass IsotopesIncrementalMonoMass { get; private set; } // The incremental mono mass due to (4*3) (Cl37 - Cl) in 4M3Cl37+2H
 
         private int _hashCode; // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts
 
@@ -545,6 +545,16 @@ namespace pwiz.Skyline.Util
                         string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                 }
             }
+
+            if (!declaredCharge.HasValue)
+            {
+                // Don't override declared charge, e.g. "[M-Br+O]+" as positive wins even if we've seen it claimed as negative in CCS Compendium
+                if (EXOTIC_CHARGE_ADDUCTS != null && EXOTIC_CHARGE_ADDUCTS.TryGetValue(input.Trim(), out var z))
+                {
+                    AdductCharge = z; // We've seen this in the field, and hardcoded it
+                }
+            }
+
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
                 // Only complain if this is an obvious error, like "[M+H]-"
@@ -1158,7 +1168,7 @@ namespace pwiz.Skyline.Util
                 // ReSharper restore LocalizableElement
             };
 
-        // Ion charges seen in XCMS public and ESI-MS-adducts.xls
+        // Ion charges seen in XCMS public and ESI-MS-adducts.xls and CCS Compendium
         public static readonly IDictionary<string, int> DICT_ADDUCT_ION_CHARGES =
             new Dictionary<string, int>
             {
@@ -1169,10 +1179,20 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.Br,-1},
                 {BioMassCalc.Cl,-1},
                 {BioMassCalc.F, -1},
+                {BioMassCalc.Cu, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Mg, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Ca, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Zn, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Ag, 1}, // Metal adducts are useful in PFAS analysis
                 {@"CH3COO", -1}, // Deprotonated Hac
+                {@"CH­3CO2", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
+                {@"COOH", -1}, // Formate (deprotonated FA)  
+                {@"HCO2", -1}, // Formate (deprotonated FA)  
                 {@"NH4", 1},
-                {@"CH3", 1} // Methyl
+                {@"CH3", 1}, // Methyl
+                {@"CH3O", -1}, // Methoxide 
+                {@"CF3COO",-1}, // Trifluoroacetate
             };
 
         // Popular adducts (declared way down here because it has to follow some other statics)
@@ -1289,6 +1309,13 @@ namespace pwiz.Skyline.Util
             "[3M-H]"        
         };
 
+        // Adducts with weird charges
+        private static readonly Dictionary<string, int> EXOTIC_CHARGE_ADDUCTS = new Dictionary<string, int>
+        {
+            {@"[M-Br+O]", -1}, // Per CCS Compendium
+            {@"[M-Cl+O]", -1}, // Per CCS Compendium
+        };
+
         /// <summary>
         /// Generate a tooltip string that look something like this:
         ///
@@ -1368,43 +1395,41 @@ namespace pwiz.Skyline.Util
 
             var resultDict = new Dictionary<string, int>(molecule.Molecule);
 
-            if (!molecule.IsMassOnly)
+            // Deal with any mass multiplier (the 2 in "[2M+Na]")
+            if (MassMultiplier != 1)
             {
-                // Deal with any mass multiplier (the 2 in "[2M+Na]")
-                if (MassMultiplier != 1)
+                foreach (var element in resultDict.Keys.ToArray())
                 {
-                    foreach (var element in resultDict.Keys.ToArray())
+                    resultDict[element] *= MassMultiplier;
+                }
+            }
+
+            // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
+            foreach (var pair in Composition)
+            {
+                if (resultDict.TryGetValue(pair.Key, out var count))
+                {
+                    count += pair.Value;
+                    if (count == 0)
                     {
-                        resultDict[element] *= MassMultiplier;
+                        resultDict.Remove(pair.Key);
+                    }
+                    else
+                    {
+                        resultDict[pair.Key] = count;
                     }
                 }
-
-                // Add in the "Na" of [M+Na] (or remove the 4H in [M-4H])
-                foreach (var pair in Composition)
+                else if (pair.Value != 0)
                 {
-                    if (resultDict.TryGetValue(pair.Key, out var count))
-                    {
-                        count += pair.Value;
-                        if (count == 0)
-                        {
-                            resultDict.Remove(pair.Key);
-                        }
-                        else
-                        {
-                            resultDict[pair.Key] = count;
-                        }
-                    }
-                    else if (pair.Value != 0)
-                    {
-                        resultDict.Add(pair.Key, pair.Value);
-                        count = pair.Value;
-                    }
-                    if (count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
-                    {
-                        throw new InvalidDataException(
-                            string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
-                                this, pair.Key, molecule.ToString()));
-                    }
+                    resultDict.Add(pair.Key, pair.Value);
+                    count = pair.Value;
+                }
+                if (!molecule.IsMassOnly &&
+                    count < 0 && !Equals(pair.Key, BioMassCalc.H)) // Treat H loss as a general proton loss
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.Adduct_ApplyToMolecule_Adduct___0___calls_for_removing_more__1__atoms_than_are_found_in_the_molecule__2_,
+                            this, pair.Key, molecule.ToString()));
                 }
             }
 

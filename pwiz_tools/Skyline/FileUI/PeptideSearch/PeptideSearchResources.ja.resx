@@ -359,7 +359,7 @@
     <value>スペクトルライブラリを追加</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
-    <value>検出したフィーチャーのライブラリを構築中</value>
+    <value>検出したフィーチャーライブラリを構築中</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">

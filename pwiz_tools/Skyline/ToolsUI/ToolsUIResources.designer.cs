@@ -388,6 +388,43 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: no Ardia registration code for URL.
+        /// </summary>
+        public static string EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__no_Ardia_registration_code_for_URL {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__no_Ardia_registration_code_for_UR" +
+                        "L", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: unable to compute URL for Ardia logout.
+        /// </summary>
+        public static string EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__unable_to_compute_URL_for_logout {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_GetBrowserLogoutUrl_Error__unable_to_compute_URL_for_logout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Login was canceled.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestArdiaAccount_Login_was_canceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connect.
+        /// </summary>
+        public static string EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect {
+            get {
+                return ResourceManager.GetString("EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings are correct.
         /// </summary>
         public static string EditRemoteAccountDlg_TestSettings_Settings_are_correct {
