@@ -898,7 +898,7 @@ namespace pwiz.Skyline.Model
             return result.UpdateResults(settings);
         }
 
-        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
+        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, FilterReasonsSet whyNot, bool recurse = true)
         {
             if (diff.Monitor != null)
                 diff.Monitor.ProcessMolecule(this);
@@ -980,7 +980,7 @@ namespace pwiz.Skyline.Model
 
                 ILookup<TransitionGroup, TransitionGroupDocNode> mapIdToChild =
                     TransitionGroups.ToLookup(nodeGroup => nodeGroup.TransitionGroup, transitionGroupEqualityComparer);
-                foreach (TransitionGroup tranGroup in GetTransitionGroups(settingsNew, explicitMods, true)
+                foreach (TransitionGroup tranGroup in GetTransitionGroups(settingsNew, explicitMods, true, whyNot)
                     .Distinct(transitionGroupEqualityComparer))
                 {
                     IList<TransitionGroupDocNode> nodeGroups;
@@ -1015,13 +1015,18 @@ namespace pwiz.Skyline.Model
                         if (recurse)
                         {
                             nodeGroups = nodeGroups.Select(nodeGroup =>
-                                nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode)).ToList();
+                                nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diffNode, whyNot)).ToList();
                         }
                         foreach (var nodeGroup in nodeGroups)
                         {
-                            if (settingsNew.TransitionSettings.Libraries.HasMinIonCount(nodeGroup) && transitionSettings.IsMeasurablePrecursor(nodeGroup.PrecursorMz))
+                            string reasonWhyNot;
+                            if (settingsNew.TransitionSettings.Libraries.HasMinIonCount(nodeGroup, out reasonWhyNot) && transitionSettings.IsMeasurablePrecursor(nodeGroup.PrecursorMz, out reasonWhyNot))
                             {
                                 childrenNew.Add(nodeGroup);
+                            }
+                            else
+                            {
+                                whyNot?.AddReason(reasonWhyNot);
                             }
                         }
                     }
@@ -1043,7 +1048,7 @@ namespace pwiz.Skyline.Model
                             if (existing.Count == 1)
                             {
                                 childrenNew[i] = existing.First()
-                                    .ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                                    .ChangeSettings(settingsNew, nodeResult, explicitMods, diff, whyNot);
                             }
                         }
                     }
@@ -1060,9 +1065,13 @@ namespace pwiz.Skyline.Model
                     IList<DocNode> childrenNew = new List<DocNode>();
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        if (settingsNew.SupportsPrecursor(nodeGroup, explicitMods))
+                        if (settingsNew.SupportsPrecursor(nodeGroup, explicitMods, out var reasonWhyNot))
                         {
                             childrenNew.Add(nodeGroup);
+                        }
+                        else
+                        {
+                            whyNot?.AddReason(reasonWhyNot);
                         }
                     }
 
@@ -1079,10 +1088,13 @@ namespace pwiz.Skyline.Model
                     // Enumerate the nodes making necessary changes.
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff);
+                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, nodeResult, explicitMods, diff, whyNot);
                         // Skip if the node can no longer be measured on the target instrument
-                        if (!transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz))
+                        if (!transitionSettings.IsMeasurablePrecursor(nodeChanged.PrecursorMz, out var reasonWhyNot))
+                        {
+                            whyNot?.AddReason(reasonWhyNot);
                             continue;
+                        }
                         // Skip this node, if it is heavy and the update caused it to have the
                         // same m/z value as the light value.
                         if (!nodeChanged.TransitionGroup.LabelType.IsLight &&
@@ -1109,9 +1121,9 @@ namespace pwiz.Skyline.Model
             return nodeResult;
         }
 
-        public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods explicitMods, bool useFilter)
+        public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods explicitMods, bool useFilter, FilterReasonsSet whyNot = null)
         {
-            return Peptide.GetTransitionGroups(settings, this, explicitMods, useFilter);
+            return Peptide.GetTransitionGroups(settings, this, explicitMods, useFilter, whyNot);
         }
 
         /// <summary>
@@ -1125,14 +1137,14 @@ namespace pwiz.Skyline.Model
 
             // Make a first attempt at changing to the new settings to figure out
             // whether this will change the children.
-            var changed = result.ChangeSettings(settings, SrmSettingsDiff.ALL);
+            var changed = result.ChangeSettings(settings, SrmSettingsDiff.ALL, null);
             // If the children are auto-managed, and they changed, figure out whether turning off
             // auto-manage will allow the children to be preserved better.
             if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
             {
                 // Turn off auto-manage and change again.
                 var resultAutoManageFalse = (PeptideDocNode)result.ChangeAutoManageChildren(false);
-                var changedAutoManageFalse = resultAutoManageFalse.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                var changedAutoManageFalse = resultAutoManageFalse.ChangeSettings(settings, SrmSettingsDiff.ALL, null);
                 // If the children are not the same as they were with auto-manage on, then use
                 // a the version of this node with auto-manage turned off.
                 if (!AreEquivalentChildren(changed.Children, changedAutoManageFalse.Children))

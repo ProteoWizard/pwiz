@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
@@ -245,17 +246,21 @@ namespace pwiz.Skyline.Model.DocSettings
             return TryGetPrecursorCalc(labelType, mods) != null;
         }
 
-        public bool SupportsPrecursor(TransitionGroupDocNode transitionGroup, ExplicitMods mods)
+        public bool SupportsPrecursor(TransitionGroupDocNode transitionGroup, ExplicitMods mods, out string whyNot)
         {
+            whyNot = null;
             if (transitionGroup.IsLight)
             {
                 return true;
             }
-            if (transitionGroup.IsCustomIon)
+            var result = transitionGroup.IsCustomIon ?
+                PeptideSettings.Modifications.GetHeavyModificationTypes().Contains(transitionGroup.LabelType) :
+                HasPrecursorCalc(transitionGroup.LabelType, mods);
+            if (!result)
             {
-                return PeptideSettings.Modifications.GetHeavyModificationTypes().Contains(transitionGroup.LabelType);
+                whyNot = FilterReason.PEPTIDE_SETTINGS_MODIFICATIONS;
             }
-            return HasPrecursorCalc(transitionGroup.LabelType, mods);
+            return result;
         }
 
         public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
@@ -669,7 +674,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         cachedPeptideStandards.Add(standardType, listPeptideAndGroup);
                     }
                     // Update the PeptideChromInfo before adding it to the list
-                    var nodeWithUpdatedResults = nodePep.ChangeSettings(this, new SrmSettingsDiff(this, true));
+                    var nodeWithUpdatedResults = nodePep.ChangeSettings(this, new SrmSettingsDiff(this, true), null);
                     if (nodePep.Equals(nodeWithUpdatedResults))
                     {
                         listPeptideAndGroup.Add(new IdPeptideDocNode(nodePepGroup.PeptideGroup, nodePep));
@@ -865,24 +870,26 @@ namespace pwiz.Skyline.Model.DocSettings
             return globalStandardArea;
         }
 
-        public bool LibrariesContainMeasurablePeptide(Peptide peptide, IList<Adduct> precursorCharges, ExplicitMods mods)
+        public bool LibrariesContainMeasurablePeptide(Peptide peptide, IList<Adduct> precursorCharges, ExplicitMods mods, out string whyNot)
         {
-            if (LibrariesContainMeasurablePeptide(peptide, IsotopeLabelType.light, precursorCharges, mods))
+            if (LibrariesContainMeasurablePeptide(peptide, IsotopeLabelType.light, precursorCharges, mods, out whyNot))
                 return true;
 
             // If light version not found, try heavy
             foreach (var labelType in GetHeavyLabelTypes(mods))
             {
-                if (LibrariesContainMeasurablePeptide(peptide, labelType, precursorCharges, mods))
+                if (LibrariesContainMeasurablePeptide(peptide, labelType, precursorCharges, mods, out whyNot))
                     return true;
             }
+
             return false;
         }
 
         private bool LibrariesContainMeasurablePeptide(Peptide peptide, IsotopeLabelType labelType,
-            IEnumerable<Adduct> precursorAdducts, ExplicitMods mods)
+            IEnumerable<Adduct> precursorAdducts, ExplicitMods mods, out string whyNot)
         {
             var key = GetModifiedSequence(peptide.Target, labelType, mods);
+            whyNot = null;
             foreach (var precursorAdduct in precursorAdducts)
             {
                 var adduct = peptide.IsCustomMolecule ? GetModifiedAdduct(precursorAdduct, peptide.CustomMolecule.UnlabeledFormula, labelType, mods) : precursorAdduct;
@@ -893,17 +900,17 @@ namespace pwiz.Skyline.Model.DocSettings
                     var precursorMass =  peptide.IsCustomMolecule ?
                         peptide.CustomMolecule.MonoisotopicMass : // Label information is in the adduct
                         GetPrecursorMass(labelType, peptide.Target, mods);
-                    if (IsMeasurable(precursorMass, adduct))
+                    if (IsMeasurable(precursorMass, adduct, out whyNot))
                         return true;
                 }
             }
             return false;
         }
 
-        private bool IsMeasurable(TypedMass precursorMass, Adduct adduct)
+        private bool IsMeasurable(TypedMass precursorMass, Adduct adduct, out string whyNot)
         {
             double precursorMz = SequenceMassCalc.GetMZ(precursorMass, adduct);
-            return TransitionSettings.IsMeasurablePrecursor(precursorMz);
+            return TransitionSettings.IsMeasurablePrecursor(precursorMz, out whyNot);
         }
 
         public bool LibrariesContain(Target sequenceMod, Adduct charge)
@@ -1491,11 +1498,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Implementation of IPeptideFilter
 
-        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
+        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out string whyNot, out bool allowVariableMods)
         {
             return Accept(settings,
                           peptide,
                           explicitMods,
+                          out whyNot,
                           peptide.IsCustomMolecule ? TransitionSettings.Filter.SmallMoleculePrecursorAdducts : TransitionSettings.Filter.PeptidePrecursorCharges,
                           PeptideFilterType.fasta,
                           out allowVariableMods);
@@ -1505,18 +1513,22 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Returns true if a peptide sequence would yield any usable <see cref="PeptideDocNode"/>
         /// elements with the current filter settings, taking into account variable modifications.
         /// </summary>
-        public bool Accept(string peptideSequence, int missedCleavages)
+        public bool Accept(string peptideSequence, int missedCleavages, FilterReasonsSet whyNot)
         {
             var peptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
-            var enumDocNodes = peptide.CreateDocNodes(this, this);
+            var enumDocNodes = peptide.CreateDocNodes(this, this, whyNot);
             return enumDocNodes.Any();
         }
 
-        public bool Accept(string peptideSequence)
+        public bool Accept(string peptideSequence, FilterReasonsSet whyNot)
         {
             int missedCleavages = PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence);
-            return missedCleavages <= PeptideSettings.DigestSettings.MaxMissedCleavages
-                   && Accept(peptideSequence, missedCleavages);
+            if (!( missedCleavages <= PeptideSettings.DigestSettings.MaxMissedCleavages))
+            {
+                whyNot?.AddReason(FilterReason.PEPTIDE_SETTINGS_DIGEST_MAX_MISSED_CLEAVAGES);
+                return false;
+            }
+            return Accept(peptideSequence, missedCleavages, whyNot);
         }
 
         /// <summary>
@@ -1524,9 +1536,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// itself has already been screened.  For this reason, it only applies library
         /// filtering.
         /// </summary>
-        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods mods, Adduct charge)
+        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods mods, out string whyNot, Adduct charge)
         {
-            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out _);
+            return Accept(settings, peptide, mods, out whyNot, new[] { charge }, PeptideFilterType.library, out _);
         }
 
         private enum PeptideFilterType
@@ -1539,6 +1551,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private bool Accept(SrmSettings settings,
                             Peptide peptide,
                             ExplicitMods mods,
+                            out string whyNot,
                             IList<Adduct> precursorCharges,
                             PeptideFilterType filterType,
                             out bool allowVariableMods)
@@ -1557,9 +1570,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!useFilter)
                 {
                     allowVariableMods = true;
+                    whyNot = null;
                     return true;
                 }
-                return PeptideSettings.Filter.Accept(settings, peptide, mods, out allowVariableMods);
+                return PeptideSettings.Filter.Accept(settings, peptide, mods, out whyNot, out allowVariableMods);
             }
 
             // Check if the peptide is in the library for one of the
@@ -1580,17 +1594,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 // the library.  Failing to do this check profiled as a performance bottleneck.
                 allowVariableMods = mods == null || mods.IsVariableStaticMods;
 
-                inLibrary = LibrariesContainMeasurablePeptide(peptide, precursorCharges, mods);
+                inLibrary = LibrariesContainMeasurablePeptide(peptide, precursorCharges, mods, out whyNot);
             }
 
+            whyNot = null;
             switch (libraries.Pick)
             {
                 case PeptidePick.library:
                     return inLibrary;
                 case PeptidePick.both:
-                    return inLibrary && (!useFilter || PeptideSettings.Filter.Accept(settings, peptide, mods, out allowVariableMods));
+                    return inLibrary && (!useFilter || PeptideSettings.Filter.Accept(settings, peptide, mods, out whyNot, out allowVariableMods));
                 default:
-                    return inLibrary || (!useFilter || PeptideSettings.Filter.Accept(settings, peptide, mods, out allowVariableMods));
+                    return inLibrary || (!useFilter || PeptideSettings.Filter.Accept(settings, peptide, mods, out whyNot, out allowVariableMods));
             }
         }
 
@@ -2527,7 +2542,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 { DiffPeptideProps = true, DiffTransitionGroupProps = true, DiffTransitionProps = true };
             }
         }
-// ReSharper restore InconsistentNaming
+
+        public static SrmSettingsDiff PRECURSORS
+        {
+            get
+            {
+                return new SrmSettingsDiff(false)
+                    { DiffTransitionGroups = true, DiffTransitionGroupProps = true, DiffTransitions = true, DiffTransitionProps = true };
+            }
+        }
+        // ReSharper restore InconsistentNaming
 
         private readonly bool _isUnexplainedExplicitModificationAllowed;
 

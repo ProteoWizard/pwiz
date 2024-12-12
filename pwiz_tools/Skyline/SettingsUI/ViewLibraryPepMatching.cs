@@ -59,6 +59,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public SrmSettings Settings { get { return _document.Settings; } }
 
+        public FilterReasonsSet FilterReasons { get; private set; }
+
         public SrmDocument DocAllPeptides { get; set; }
         public IdentityPath AddAllPeptidesSelectedPath { get; set; }
 
@@ -74,6 +76,7 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = matcher;
             _libraryPepInfos = peptides;
             _chargeSettingsMap = new  AdductMap<SrmSettings>();
+            FilterReasons = new FilterReasonsSet();
         }
 
         public void SetBackgroundProteome(BackgroundProteome backgroundProteome)
@@ -125,7 +128,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var hasSmallMolecules = PeptideMatches.Any(p => !p.Key.IsProteomic);
                 using (var peptideProteinsDlg =
-                    new FilterMatchedPeptidesDlg(multipleProteinsPerPeptideCount, unmatchedPeptidesCount, filteredPeptidesCount, single, hasSmallMolecules))
+                    new FilterMatchedPeptidesDlg(multipleProteinsPerPeptideCount, unmatchedPeptidesCount, filteredPeptidesCount, single, FilterReasons, hasSmallMolecules))
                 {
                     result = peptideProteinsDlg.ShowDialog(parent);
                     if (entryCreators != null)
@@ -206,10 +209,15 @@ namespace pwiz.Skyline.SettingsUI
                                 }
 
                             }
-                            dictNewNodePeps.Add(nodePepMatched.SequenceKey,
-                                new PeptideMatch(nodePepMatched, matchedProteins,
-                                    pepInfo.LibInfo,
-                                    MatchesFilter(nodePepMatched, charge)));
+
+                            var peptideMatch = new PeptideMatch(nodePepMatched, matchedProteins,
+                                pepInfo.LibInfo,
+                                MatchesFilter(nodePepMatched, charge));
+                            dictNewNodePeps.Add(nodePepMatched.SequenceKey, peptideMatch);
+                            if (!peptideMatch.MatchesFilterSettings)
+                            {
+                                FilterReasons?.AddReason(peptideMatch.FilterMatchFailureReason);
+                            }
                         }
                         else
                         {
@@ -225,7 +233,7 @@ namespace pwiz.Skyline.SettingsUI
                                     new PeptideMatch((PeptideDocNode) nodePepInDictionary.ChangeChildren(newChildren),
                                         peptideMatchInDict.Proteins, 
                                         pepInfo.LibInfo,
-                                        peptideMatchInDict.MatchesFilterSettings));
+                                        peptideMatchInDict.FilterMatchFailureReason));
                             }
                         }
                     }
@@ -245,27 +253,38 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public bool MatchesFilter(PeptideDocNode nodePep, Adduct charge)
+        public string MatchesFilter(PeptideDocNode nodePep, Adduct charge)
         {
             if (nodePep.IsProteomic)
             {
                 if (!Settings.TransitionSettings.Filter.PeptidePrecursorCharges.Contains(charge))
-                    return false;
+                {
+                    return FilterReason.TRANSITION_SETTINGS_FILTER_PEPTIDE_PRECURSOR_CHARGES;
+                }
                 int missedCleavages = Settings.PeptideSettings.Enzyme.CountCleavagePoints(nodePep.Peptide.Sequence);
                 if (missedCleavages > Settings.PeptideSettings.DigestSettings.MaxMissedCleavages)
-                    return false;
+                {
+                    return FilterReason.PEPTIDE_SETTINGS_DIGEST_MAX_MISSED_CLEAVAGES;
+                }
                 if (Settings.PeptideSettings.Libraries.Pick == PeptidePick.filter ||
                     Settings.PeptideSettings.Libraries.Pick == PeptidePick.both)
                 {
-                    if (!Settings.PeptideSettings.Filter.Accept(Settings, nodePep.Peptide, nodePep.ExplicitMods, out _))
-                        return false;
+                    if (!Settings.PeptideSettings.Filter.Accept(Settings, nodePep.Peptide, nodePep.ExplicitMods, out var result, out _))
+                    {
+                        return result;
+                    }
                 }
-                return true;
+                return null;
             }
-            return Settings.TransitionSettings.Filter.SmallMoleculePrecursorAdducts.Contains(charge);
+
+            if (!Settings.TransitionSettings.Filter.SmallMoleculePrecursorAdducts.Contains(charge))
+            {
+                return FilterReason.TRANSITION_SETTINGS_FILTER_SMALL_MOL_PRECURSOR_ADDUCTS;
+            }
+            return null;
         }
 
-        public PeptideDocNode MatchSinglePeptide(ViewLibraryPepInfo pepInfo)
+        public PeptideDocNode MatchSinglePeptide(ViewLibraryPepInfo pepInfo, FilterReasonsSet whyNot)
         {
             _chargeSettingsMap = new AdductMap<SrmSettings>();
             var nodePep = AssociateMatchingPeptide(pepInfo, pepInfo.Key.Adduct).PeptideNode;
@@ -290,11 +309,11 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
                 }
-            }            
-            PeptideMatches = new Dictionary<PeptideSequenceModKey, PeptideMatch>
-                                 {{nodePep.SequenceKey, new PeptideMatch(nodePep, matchedProteins, 
-                                     pepInfo.LibInfo,
-                                     MatchesFilter(nodePep, pepInfo.Key.Adduct))}};
+            }
+
+            var peptideMatch = new PeptideMatch(nodePep, matchedProteins, pepInfo.LibInfo, MatchesFilter(nodePep, pepInfo.Key.Adduct));
+            PeptideMatches = new Dictionary<PeptideSequenceModKey, PeptideMatch> {{nodePep.SequenceKey, peptideMatch}};
+            whyNot?.AddReason(peptideMatch.FilterMatchFailureReason);
             return nodePep;
         }
 
@@ -346,7 +365,7 @@ namespace pwiz.Skyline.SettingsUI
                 _chargeSettingsMap[charge] = settings;
             }
 
-            var nodePep = _matcher.GetModifiedNode(key, settings, settingsDiff);
+            var nodePep = _matcher.GetModifiedNode(key, settings, settingsDiff, FilterReasons);
             if (nodePep != null)
             {
                 pepInfo = pepInfo.ChangePeptideNode(nodePep);
@@ -397,7 +416,7 @@ namespace pwiz.Skyline.SettingsUI
                     dictCopy.Add(nodePepDocSet.SequenceKey, 
                         new PeptideMatch(nodePepDocSet, match.Proteins, 
                         match.LibInfo,
-                        match.MatchesFilterSettings));
+                        match.FilterMatchFailureReason));
             }
 
             if (!Properties.Settings.Default.LibraryPeptidesKeepFiltered)
@@ -428,7 +447,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (listPeptidesToAdd.Count > 0)
                 {
                     newDocument = AddPeptidesToLibraryGroup(newDocument, listPeptidesToAdd, broker,
-                                                            toPath, out selectedPath);
+                                                            toPath, FilterReasons, out selectedPath);
                     if (listPeptidesToAdd.Count > 1000)
                         selectedPath = selectedPath.Parent; // Don't force Skyline to open a massive peptide list, if it wouldn't otherwise
                 }
@@ -472,7 +491,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         nodePeps.Add(nodePep);
                         if (keysAddedWithoutMatch.ContainsKey(key))
-                            keysAddedWithoutMatch.Add(key, new PeptideMatch(null, null, null, false));
+                            keysAddedWithoutMatch.Add(key, new PeptideMatch(null, null, null, null));
                     }
                     else
                     {
@@ -514,7 +533,7 @@ namespace pwiz.Skyline.SettingsUI
                             else
                             {
                                 if (nodePepSettings == null)
-                                    nodePepSettings = nodePepMatch.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                                    nodePepSettings = nodePepMatch.ChangeSettings(document.Settings, SrmSettingsDiff.ALL, null);
                                 TransitionGroupDocNode nodeGroupCharge = (TransitionGroupDocNode) nodePepSettings.FindNode(nodeGroup.TransitionGroup);
                                 if (nodeGroupCharge == null)
                                 {
@@ -670,7 +689,7 @@ namespace pwiz.Skyline.SettingsUI
                                             nodeTranGroup.Children.ToList().ConvertAll(nodeTran => nodeTran.CopyId()));
                                     }
                                     return (DocNode) nodeTranGroup;
-                                })).ChangeAutoManageChildren(false)).ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                                })).ChangeAutoManageChildren(false)).ChangeSettings(document.Settings, SrmSettingsDiff.ALL, null);
                     // If this PeptideDocNode is already a child of the PeptideGroupDocNode,
                     // ignore it.
                     if (peptideGroupDocNode.Children.Contains(nodePep => Equals(((PeptideDocNode) nodePep).Key, newNodePep.Key)))
@@ -735,6 +754,7 @@ namespace pwiz.Skyline.SettingsUI
                                                              ICollection<PeptideMatch> listMatches,
                                                              ILongWaitBroker broker,
                                                              IdentityPath toPath,
+                                                             FilterReasonsSet whyNot,
                                                              out IdentityPath selectedPath)
         {
             // Get starting progress values
@@ -770,7 +790,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
 
-                    listPeptides.Add(match.NodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL));
+                    listPeptides.Add(match.NodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL, whyNot));
                     hasSmallMolecules |= !match.NodePep.IsProteomic;
                 }
 
@@ -842,18 +862,19 @@ namespace pwiz.Skyline.SettingsUI
 
         public struct PeptideMatch
         {
-            public PeptideMatch(PeptideDocNode nodePep, IEnumerable<ProteinInfo> proteins, SpectrumHeaderInfo libInfo, bool matchesFilterSettings) : this()
+            public PeptideMatch(PeptideDocNode nodePep, IEnumerable<ProteinInfo> proteins, SpectrumHeaderInfo libInfo, string filterMatchFailureReason) : this()
             {
                 NodePep = nodePep;
                 Proteins = proteins == null ? null : proteins.ToList();
-                MatchesFilterSettings = matchesFilterSettings;
+                FilterMatchFailureReason = filterMatchFailureReason;
                 LibInfo = libInfo;
             }
 
             public PeptideDocNode NodePep { get; set; }
 
             public List<ProteinInfo> Proteins { get; set; }
-            public bool MatchesFilterSettings { get; private set; }
+            public string FilterMatchFailureReason { get; private set; }
+            public readonly bool MatchesFilterSettings => string.IsNullOrEmpty(FilterMatchFailureReason);
 
             public SpectrumHeaderInfo LibInfo { get; private set; } // The library info used in establishing the match
 

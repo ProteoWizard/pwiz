@@ -54,6 +54,7 @@ using Array = System.Array;
 using Label = System.Windows.Forms.Label;
 using Transition = pwiz.Skyline.Model.Transition;
 using static pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
+using static pwiz.Skyline.Util.Helpers;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -578,11 +579,13 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
+                    var proteomic = !_peptides.Any(p => p.Key.IsSmallMoleculeKey);
                     int start = _pageInfo.StartIndex;
                     int end = _pageInfo.EndIndex;
                     new LongOperationRunner
                     {
-                        JobTitle = SettingsUIResources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides
+                        JobTitle = PeptideToMoleculeTextMapper.Translate(SettingsUIResources.ViewLibraryDlg_UpdateListPeptide_Updating_list_of_peptides, 
+                            proteomic ? SrmDocument.DOCUMENT_TYPE.proteomic : SrmDocument.DOCUMENT_TYPE.small_molecules)
                     }.Run(longWaitBroker =>
                     {
                         for (int i = start; i < end; i++)
@@ -1765,10 +1768,11 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
-            var nodePepMatched = pepMatcher.MatchSinglePeptide(pepInfo);
+            var whyNot = new FilterReasonsSet();
+            var nodePepMatched = pepMatcher.MatchSinglePeptide(pepInfo, whyNot);
             if (nodePepMatched == null || nodePepMatched.Children.Count == 0)
             {
-                MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings);
+                MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings + whyNot.DisplayString());
                 return;
             }
             double precursorMz = nodePepMatched.TransitionGroups.First().PrecursorMz;
@@ -2024,6 +2028,7 @@ namespace pwiz.Skyline.SettingsUI
                 return;
 
             SrmDocument startingDocumentImplicitMods = startingDocument;
+
             if(_matcher.HasMatches)
                 startingDocumentImplicitMods = startingDocumentImplicitMods.ChangeSettings(
                     startingDocument.Settings.ChangePeptideModifications(
@@ -2057,7 +2062,8 @@ namespace pwiz.Skyline.SettingsUI
             var numMatchedPeptides = pepMatcher.MatchedPeptideCount;
             if (numMatchedPeptides == 0)
             {
-                MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_No_peptides_match_the_current_document_settings);
+                MessageDlg.Show(this, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_No_peptides_match_the_current_document_settings + 
+                                      pepMatcher.FilterReasons?.DisplayString());
                 return;
             }
 
@@ -2099,6 +2105,14 @@ namespace pwiz.Skyline.SettingsUI
                                         ? SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__and__1__library__2__will_be_ignored
                                         : SettingsUIResources.ViewLibraryDlg_AddAllPeptides__0__1__library__2__will_be_ignored,
                                     duplicatePeptides, unmatchedPeptides, entrySuffix));
+            }
+
+            // If we were filtering on precursor charges, we aren't now
+            pepMatcher.FilterReasons?.RemoveReason(FilterReason.TRANSITION_SETTINGS_FILTER_PEPTIDE_PRECURSOR_CHARGES);
+            pepMatcher.FilterReasons?.RemoveReason(FilterReason.TRANSITION_SETTINGS_FILTER_SMALL_MOL_PRECURSOR_ADDUCTS);
+            if (pepMatcher.FilterReasons?.Count > 0)
+            {
+                msg += pepMatcher.FilterReasons.DisplayString();
             }
             var dlg = new MultiButtonMsgDlg(msg, SettingsUIResources.ViewLibraryDlg_AddAllPeptides_Add_All)
             {

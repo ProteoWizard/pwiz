@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -44,11 +46,11 @@ namespace pwiz.SkylineTestFunctional
         {
             var docPath = TestFilesDir.GetTestPath(@"AgilentGCEITest.sky");
             OpenDocument(docPath);
+            ChangeSmallMoleculePrecursorAdducts(new[] { Adduct.M_MINUS, Adduct.M_PLUS });
 
             // Read in a small .MSP file describing GC EI data as MS1
             AddToDocumentFromSpectralLibrary("GC EI test", TestFilesDir.GetTestPath(@"test.MSP"));
             WaitForDocumentLoaded();
-
             // Extract chromatograms from an Agilent file describing GC EI data as MS1
             ImportResults(new[] { TestFilesDir.GetTestPath(@"cmsptc_00000_20230106_SCFA_1.mzML") });
 
@@ -80,5 +82,15 @@ namespace pwiz.SkylineTestFunctional
             }
             AssertEx.AreEqual(23, nPeaksFound);
         }
+
+        private void ChangeSmallMoleculePrecursorAdducts(IList<Adduct> adducts)
+        {
+            var docOrig = SkylineWindow.Document;
+            var filter = docOrig.Settings.TransitionSettings.Filter.ChangeSmallMoleculePrecursorAdducts(adducts);
+            var settings = docOrig.Settings.ChangeTransitionSettings(docOrig.Settings.TransitionSettings.ChangeFilter(filter));
+            RunUI(() => SkylineWindow.ChangeSettings(settings, true));
+            WaitForDocumentChange(docOrig);
+        }
+
     }
 }

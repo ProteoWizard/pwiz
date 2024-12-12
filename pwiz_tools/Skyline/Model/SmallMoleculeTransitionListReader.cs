@@ -1333,6 +1333,18 @@ namespace pwiz.Skyline.Model
                     return null;
                 }
 
+                // Check for in-range fragment mz
+                if (precursorInfo != null && mz != 0 && precursorInfo.Mz != 0 && !document.Settings.TransitionSettings.Instrument.IsMeasurable(mz, precursorInfo.Mz))
+                {
+                    ShowTransitionError(new PasteError
+                    {
+                        Column = INDEX_PRODUCT_MZ,
+                        Line = row.Index,
+                        Message = string.Format(ModelResources.PasteDlg_GetMoleculeTransitionGroup_The_fragment_m_z__0__is_not_measureable_with_your_current_instrument_settings_, mz)
+                    });
+                    return null;
+                }
+
                 return new ParsedIonInfo(name, formula, adduct, mz, monoMass, averageMass, isotopeLabelType,
                     retentionTimeInfo, explicitTransitionGroupValues, explicitTransitionValues, libraryIntensity, iRT,
                     transitionNote, precursorNote, moleculeNote, moleculeListNote,
@@ -2132,7 +2144,7 @@ namespace pwiz.Skyline.Model
 
         private TransitionGroupDocNode GetMoleculeTransitionGroup(SrmDocument document, ParsedIonInfo moleculeInfo, Row row, Peptide pep)
         {
-            if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz))
+            if (!document.Settings.TransitionSettings.IsMeasurablePrecursor(moleculeInfo.Mz, out _))
             {
                 ShowTransitionError(new PasteError
                 {

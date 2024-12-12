@@ -191,7 +191,8 @@ namespace pwiz.Skyline.Model
                                                              SpectrumHeaderInfo libInfo,
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
                                                              bool useFilter,
-                                                             bool ensureMassesAreMeasurable)
+                                                             bool ensureMassesAreMeasurable,
+                                                             FilterReasonsSet whyNot)
         {
             Assume.IsTrue(ReferenceEquals(groupDocNode.TransitionGroup, this));
             // Get necessary mass calculators and masses
@@ -260,6 +261,7 @@ namespace pwiz.Skyline.Model
             // If filtering without library picking
             if (potentialLosses != null && IsProteomic)
             {
+                var count = potentialLosses.Count;
                 if (pick == TransitionLibraryPick.none)
                 {
                     // Only include loss combinations where all losses are included always
@@ -272,6 +274,10 @@ namespace pwiz.Skyline.Model
                     potentialLosses = potentialLosses.Where(losses =>
                         losses.All(loss => loss.TransitionLoss.Loss.Inclusion != LossInclusion.Never)).ToArray();
                 }
+                if (count != potentialLosses.Count)
+                {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_LIBRARY_PICK);
+                }
                 if (!potentialLosses.Any())
                     potentialLosses = null;
             }
@@ -281,10 +287,14 @@ namespace pwiz.Skyline.Model
             {
                 bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
                 foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcPredictPre, calcPredict ?? calcFilter,
-                    precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter, ensureMassesAreMeasurable))
+                             precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter, ensureMassesAreMeasurable, whyNot))
                 {
                     if (!ensureMassesAreMeasurable || minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
                         yield return nodeTran;
+                    else
+                    {
+                        whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_INSTRUMENT_MZ_RANGE);
+                    }
                 }
             }
 
@@ -304,11 +314,25 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            // For small molecules we can't generate new nodes, so just mz filter those we have
+            // For small molecules we can't generate new nodes, so just filter those we have TODO(bspratt) or pull from spectral library?
             foreach (var nodeTran in groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()))
             {
-                if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
+                if (!types.Contains(IonType.custom))
+                {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FILTER_SMALL_MOL_ION_TYPES);
+                }
+                else if (!tranSettings.Accept(sequence, precursorMz, nodeTran.Transition.IonType, 0, nodeTran.Mz, 0, 0, nodeTran.Mz, out var reasonWhyNot))
+                {
+                    whyNot?.AddReason(reasonWhyNot);
+                }
+                else if (tranSettings.Filter.SmallMoleculeFragmentAdducts.Any(adduct => adduct.SameEffectIgnoringIsotopeLabels(nodeTran.Transition.Adduct)))
+                {
                     yield return nodeTran;
+                }
+                else
+                {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FILTER_SMALL_MOL_FRAGMENT_ADDUCTS);
+                }
             }
 
             if (!sequence.IsProteomic) // Completely custom CONSIDER(bspratt) can this be further extended for small mol libs?
@@ -391,7 +415,10 @@ namespace pwiz.Skyline.Model
 
                             // Precursor charge can never be lower than product ion charge.
                             if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
+                            {
+                                whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FILTER_PEPTIDE_FRAGMENT_CHARGES);
                                 continue;
+                            }
 
                             double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(massH, losses), adduct);
 
@@ -400,7 +427,10 @@ namespace pwiz.Skyline.Model
                             //           range where a light one is accepted, leading to a disparity
                             //           between heavy and light transtions picked.
                             if (minMz > ionMz || ionMz > maxMz)
+                            {
+                                whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_INSTRUMENT_MZ_RANGE);
                                 continue;
+                            }
 
                             TransitionDocNode nodeTranReturn = null;
                             bool accept = true;
@@ -419,14 +449,20 @@ namespace pwiz.Skyline.Model
                                         accept = false;
                                     }
                                     // If allowing library or filter, check the filter to decide whether to accept
-                                    else if (pick == TransitionLibraryPick.all_plus &&
-                                                tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
+                                    else if (pick == TransitionLibraryPick.all_plus)
                                     {
-                                        nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
+                                        if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, out var reasonWhyNot))
+                                        {
+                                            nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
+                                        }
+                                        else
+                                        {
+                                            whyNot?.AddReason(reasonWhyNot);
+                                        }
                                     }
                                 }
                             }
-                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz))
+                            else if (tranSettings.Accept(sequence, precursorMzAccept, type, i, ionMz, start, end, startMz, out var reasonWhyNot))
                             {
                                 if (pick == TransitionLibraryPick.none)
                                     nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
@@ -436,12 +472,17 @@ namespace pwiz.Skyline.Model
                                         nodeTranReturn = CreateTransitionNode(type, i, adduct, massH, losses, transitionRanks);
                                 }
                             }
+                            else
+                            {
+                                whyNot?.AddReason(reasonWhyNot);
+                            }
                             if (nodeTranReturn != null)
                             {
                                 if (IsAvoidMismatchedIsotopeTransitions &&
                                     !OtherLabelTypesAllowed(settings, minMz, maxMz, start, end, startMz, accept,
-                                        groupDocNode, nodeTranReturn, listOtherTypes))
+                                        groupDocNode, nodeTranReturn, listOtherTypes, out var reasonWhyNot))
                                 {
+                                    whyNot?.AddReason(reasonWhyNot);
                                     continue;
                                 }
                                 Assume.IsTrue(minMz <= nodeTranReturn.Mz && nodeTranReturn.Mz <= maxMz);
@@ -456,7 +497,7 @@ namespace pwiz.Skyline.Model
         private bool OtherLabelTypesAllowed(SrmSettings settings, double minMz, double maxMz, int start, int end, double startMz, bool accept,
                                             TransitionGroupDocNode nodeGroupMatching,
                                             TransitionDocNode nodeTran,
-                                            IEnumerable<Tuple<TransitionGroupDocNode, IFragmentMassCalc>> listOtherTypes)
+                                            IEnumerable<Tuple<TransitionGroupDocNode, IFragmentMassCalc>> listOtherTypes, out string whyNot)
         {
             foreach (var otherType in listOtherTypes)
             {
@@ -465,7 +506,10 @@ namespace pwiz.Skyline.Model
                 var nodeTranMatching = tranGroupOther.GetMatchingTransition(settings,
                     nodeGroupMatching, nodeTran, otherType.Item2);
                 if (minMz > nodeTranMatching.Mz || nodeTranMatching.Mz > maxMz)
+                {
+                    whyNot = FilterReason.TRANSITION_SETTINGS_INSTRUMENT_MZ_RANGE;
                     return false;
+                }
                 if (accept && !settings.TransitionSettings.Accept(Peptide.Target,
                     nodeGroupOther.PrecursorMz,
                     nodeTranMatching.Transition.IonType,
@@ -473,11 +517,13 @@ namespace pwiz.Skyline.Model
                     nodeTranMatching.Mz,
                     start,
                     end,
-                    startMz))
+                    startMz, out whyNot))
                 {
                     return false;
                 }
             }
+
+            whyNot = null;
             return true;
         }
 
@@ -491,7 +537,8 @@ namespace pwiz.Skyline.Model
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
                                                              bool libraryFilter,
                                                              bool useFilter,
-                                                             bool ensureMassesAreMeasurable)
+                                                             bool ensureMassesAreMeasurable,
+                                                             FilterReasonsSet whyNot)
         {
             var tranSettings = settings.TransitionSettings;
             var fullScan = tranSettings.FullScan;
@@ -533,12 +580,15 @@ namespace pwiz.Skyline.Model
                 {
                     if (precursorMS1 && isotopeDist != null && ensureMassesAreMeasurable)
                     {
-                        foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
+                        foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter, whyNot))
                         {
                             var precursorMS1Mass = isotopeDist.GetMassI(i, DecoyMassShift);
                             ionMz = SequenceMassCalc.GetMZ(precursorMS1Mass, PrecursorAdduct);
                             if (minMz > ionMz || ionMz > maxMz)
+                            {
+                                whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_INSTRUMENT_MZ_RANGE);
                                 continue;
+                            }
                             var isotopeDistInfo = new TransitionIsotopeDistInfo(
                                 isotopeDist.GetRankI(i), isotopeDist.GetProportionI(i));
                             yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks, productAdduct);
@@ -550,6 +600,7 @@ namespace pwiz.Skyline.Model
                 // will now fall below the minimum measurable value for the instrument
                 else if (ensureMassesAreMeasurable && minMz > ionMz)
                 {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_INSTRUMENT_MZ_RANGE);
                     continue;
                 }
 
@@ -557,7 +608,10 @@ namespace pwiz.Skyline.Model
                 bool precursorIsProduct = !precursorMS1 || losses != null;
                 // Skip product ion precursors, if the should not be included
                 if (useFilter && precursorIsProduct && precursorNoProducts)
+                {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FULL_SCAN);
                     continue;
+                }
                 if (!useFilter || !precursorIsProduct ||
                         !libraryFilter || IsMatched(transitionRanks, ionMz, IonType.precursor,
                                                     PrecursorAdduct, losses))
@@ -574,7 +628,7 @@ namespace pwiz.Skyline.Model
             LibraryRankedSpectrumInfo.RankedMI rmi;
             return (transitionRanks != null &&
                     transitionRanks.TryGetValue(ionMz, out rmi) &&
-                    rmi.MatchedIons.Contains(mfi => mfi.IonType == type && mfi.Charge.Unlabeled == charge.Unlabeled && Equals(mfi.Losses, losses)));
+                    rmi.MatchedIons.Contains(mfi => mfi.IonType == type && mfi.Charge.SameEffectIgnoringIsotopeLabels(charge) && Equals(mfi.Losses, losses)));
         }
 
         public static IList<IList<ExplicitLoss>> CalcPotentialLosses(Target target,

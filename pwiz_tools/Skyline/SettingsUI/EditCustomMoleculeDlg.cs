@@ -706,8 +706,8 @@ namespace pwiz.Skyline.SettingsUI
 
             if ((_transitionSettings != null) &&
                 (!_transitionSettings.IsMeasurablePrecursor(
-                     adduct.MzFromNeutralMass(monoMass, MassType.Monoisotopic)) ||
-                 !_transitionSettings.IsMeasurablePrecursor(adduct.MzFromNeutralMass(averageMass, MassType.Average))))
+                     adduct.MzFromNeutralMass(monoMass, MassType.Monoisotopic), out _) ||
+                 !_transitionSettings.IsMeasurablePrecursor(adduct.MzFromNeutralMass(averageMass, MassType.Average), out _)))
             {
                 _formulaBox.ShowTextBoxErrorFormula(helper,
                     Resources

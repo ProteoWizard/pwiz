@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             // like ratios get updated.
             nodePep = (PeptideDocNode)nodePep.ReplaceChild(nodeGroup);
             diff = new SrmSettingsDiff(diff, SrmSettingsDiff.PROPS);
-            nodePep = nodePep.ChangeSettings(DocSettings, diff);
+            nodePep = nodePep.ChangeSettings(DocSettings, diff, null);
             var id = nodeGroup.Id;
             int iGroup = nodePep.Children.IndexOf(n => ReferenceEquals(n.Id, id));
             if (iGroup != -1)

@@ -21,6 +21,7 @@ using System;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -31,7 +32,7 @@ namespace pwiz.Skyline.Alerts
     public sealed partial class FilterMatchedPeptidesDlg : ModeUIInvariantFormEx,  // This dialog is inherently proteomic, never needs to be adapted for small mol or mixed UI mode
               IAuditLogModifier<FilterMatchedPeptidesDlg.FilterMatchedPeptidesSettings>
     {
-        public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single, bool hasSmallMolecules)
+        public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single, FilterReasonsSet whyNot, bool hasSmallMolecules)
         {
             InitializeComponent();
 
@@ -78,12 +79,12 @@ namespace pwiz.Skyline.Alerts
             }
             if (numUnmatched != 0)
             {
-                msgUnmatchedPeptides.Text = single
+                msgUnmatchedPeptides.Text = (single
                                                 ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_have_a_matching_protein
                                                 : (numUnmatched == 1
                                                        ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_without_a_matching_protein
                                                        : string.Format(AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_without_matching_proteins,
-                                                           numUnmatched));
+                                                           numUnmatched)));
             }
             else
             {
@@ -106,12 +107,20 @@ namespace pwiz.Skyline.Alerts
                     hasSmallMolecules
                         ? AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__molecules_not_matching_the_current_filter_settings
                     : AlertsResources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_not_matching_the_current_filter_settings;
-                msgFilteredPeptides.Text = single
+                msgFilteredPeptides.Text = (single
                                                ? filterMatchedPeptidesDlgFilterMatchedPeptidesDlgThisPeptideDoesNotMatchTheCurrentFilterSettings
                                                : (numFiltered == 1
                                                       ? filterMatchedPeptidesDlgFilterMatchedPeptidesDlg1PeptideNotMatchingTheCurrentFilterSettings
                                                       : string.Format(filterMatchedPeptidesDlgFilterMatchedPeptidesDlg0PeptidesNotMatchingTheCurrentFilterSettings,
-                                                          numFiltered));
+                                                          numFiltered)))
+                    + whyNot.DisplayString();
+                if (whyNot.Count > 0)
+                {
+                    var delta = (whyNot.DisplayString().Split('\n').Length * panelFiltered.Font.Height * 3) / 2;
+                    msgFilteredPeptides.Height += delta;
+                    panelFiltered.Height += delta;
+                    Height += delta;
+                }
             }
             else
             {

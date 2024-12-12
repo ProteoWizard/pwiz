@@ -495,7 +495,7 @@ namespace pwiz.Skyline.Model
                     if (!settings.TransitionSettings.Filter.AutoSelect && !AutoPickChildrenOff)
                         settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(!AutoPickChildrenOff));
                     nodePepRefined = nodePepRefined.ChangeSettings(settings,
-                        new SrmSettingsDiff(false, false, true, false, AutoPickTransitionsAll, false));
+                        new SrmSettingsDiff(false, false, true, false, AutoPickTransitionsAll, false), null);
                 }
 
                 nodePepRefined = Refine(nodePepRefined, document, bestResultIndex, acceptedCharges);
@@ -583,7 +583,8 @@ namespace pwiz.Skyline.Model
         private PeptideDocNode Refine(PeptideDocNode nodePep,
                                       SrmDocument document,
                                       int bestResultIndex,
-                                      List<Adduct> acceptedCharges)
+                                      List<Adduct> acceptedCharges,
+                                      FilterReasonsSet whyNot = null)
         {
             int minTrans = MinTransitionsPepPrecursor ?? 0;
 
@@ -625,7 +626,7 @@ namespace pwiz.Skyline.Model
                     if (!settings.TransitionSettings.Filter.AutoSelect && !AutoPickChildrenOff)
                         settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(!AutoPickChildrenOff));
                     nodeGroupRefined = nodeGroupRefined.ChangeSettings(settings, nodePep, nodePep.ExplicitMods,
-                        new SrmSettingsDiff(false, false, false, false, true, false));
+                        new SrmSettingsDiff(false, false, false, false, true, false), whyNot);
                 }
                 nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex, document.Settings.TransitionSettings.Integration.IsIntegrateAll);
                 // Avoid removing a standard precursor because it lacks the minimum number of transitions
@@ -676,13 +677,17 @@ namespace pwiz.Skyline.Model
                                                                     transitions,
                                                                     transitions == null);
 
-                    nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, nodePep, explicitMods, SrmSettingsDiff.ALL);
+                    nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, nodePep, explicitMods, SrmSettingsDiff.ALL, whyNot);
 
                     // Make sure it is measurable before adding it
-                    if (settings.TransitionSettings.IsMeasurablePrecursor(nodeGroupMatch.PrecursorMz))
+                    if (settings.TransitionSettings.IsMeasurablePrecursor(nodeGroupMatch.PrecursorMz, out var reasonWhyNot))
                     {
                         listGroups.Add(nodeGroupMatch);
                         addedGroups = true;
+                    }
+                    else
+                    {
+                        whyNot?.AddReason(reasonWhyNot);
                     }
                 }
 
@@ -1473,11 +1478,11 @@ namespace pwiz.Skyline.Model
                                 null, nodePep.ExplicitRetentionTime, decoyNodeTranGroupList.ToArray(), false);
 
                             // Avoid adding empty peptide nodes
-                            nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                            nodePepNew = nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL, null);
                             if (nodePepNew.Children.Count == 0)
                                 continue;
 
-                            if (multiCycle && nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL).TransitionCount != nodePep.TransitionCount)
+                            if (multiCycle && nodePepNew.ChangeSettings(settings, SrmSettingsDiff.ALL, null).TransitionCount != nodePep.TransitionCount)
                             {
                                 // Try to generate a new decoy if multi-cycle and the generated decoy has a different number of transitions than the target
                                 retry = true;

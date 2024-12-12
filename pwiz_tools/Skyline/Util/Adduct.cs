@@ -1642,7 +1642,7 @@ namespace pwiz.Skyline.Util
         }
 
         // Used for checking that different descriptions (ie "[M+H]" vs "[M+H]+") have same ion effect
-        public bool SameEffect(Adduct obj)
+        public bool SameEffect(Adduct obj, bool ignoreIsotopeLabels = false)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -1651,9 +1651,25 @@ namespace pwiz.Skyline.Util
             if (!Equals(obj.AdductCharge, AdductCharge) || 
                 !Equals(obj.Composition, Composition) || 
                 !Equals(obj.MassMultiplier, MassMultiplier) ||
-                !Equals(obj.IsotopeLabels, IsotopeLabels))
+                (!ignoreIsotopeLabels && !Equals(obj.IsotopeLabels, IsotopeLabels)))
                 return false;
             return true;
+        }
+
+        public bool SameEffectIgnoringIsotopeLabels(Adduct obj) => SameEffect(obj, true);
+
+        // Compare two sets of adducts for similarity
+        public static bool SameEffect(IEnumerable<Adduct> setA, IEnumerable<Adduct> setB, bool ignoreIsotopeLabels)
+        {
+            var hashA = setA.ToHashSet();
+            var hashB = setB.ToHashSet();
+            return hashA.All(adductA => hashB.Any(adductB => adductA.SameEffect(adductB, ignoreIsotopeLabels))) &&
+                   hashB.All(adductB => hashA.Any(adductA => adductB.SameEffect(adductA, ignoreIsotopeLabels)));
+        }
+
+        public static bool SameEffectIgnoringIsotopeLabels(IEnumerable<Adduct> setA, IEnumerable<Adduct> setB)
+        {
+            return SameEffect(setA, setB, true);
         }
 
         // We want comparisons to be on the same order as comparing ints, as when we used to just use integer charge instead of proper adducts

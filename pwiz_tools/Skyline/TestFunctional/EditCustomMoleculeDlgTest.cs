@@ -1018,23 +1018,18 @@ namespace pwiz.SkylineTestFunctional
                 "Cer,Cer 12:0;2/12:0,C24H49NO3,[M2C13-H]1-,,-1,V',,[M-H]1-,186.1863380499,-1,";
             var doc =    PasteSmallMoleculeList(transitionList); // Paste the text
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
-
-            // Now turn on auto manage children, so settings change has an effect on doc structure
-            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
-            {
-                refineDlg.AutoPrecursors = true;
-                refineDlg.AutoTransitions = true;
-                refineDlg.OkDialog();
-            });
+            doc = RefineAddAutoManage(doc); // Now turn on auto manage children, so settings change has an effect on doc structure
+            AssertEx.AreEqual(0, doc.MoleculeTransitionCount); // No adduct matches, wipes out the document
+            RunUI(()=>SkylineWindow.Undo());
             doc = WaitForDocumentChange(doc);
-            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4); // No changes yet, though
-
+            AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
             // Use transition filter settings to add isotope distribution
             var fullScanDlg = ShowTransitionSettings(TransitionSettingsUI.TABS.Filter);
             // Switch isolation scheme.
             RunUI(() =>
             {
                 fullScanDlg.SmallMoleculePrecursorAdducts = "[M+H],[M-H]";
+                fullScanDlg.SmallMoleculeFragmentAdducts = "[M+H],[M-H]";
                 // Intentionally omit "f,p" to check that it gets added for us due to full scan being enabled
                 fullScanDlg.SmallMoleculeFragmentTypes = "";
                 fullScanDlg.SetAutoSelect = true;
@@ -1047,6 +1042,7 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChange(doc);
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom));
             Assert.IsTrue(SkylineWindow.Document.Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor));
+            doc = RefineAddAutoManage(doc); // Now turn on auto manage children, so settings change has an effect on doc structure
             using (new CheckDocumentState(1, 1, 2, 10))
             {
                 RunUI(() => SkylineWindow.ExpandPrecursors());
@@ -1120,6 +1116,19 @@ namespace pwiz.SkylineTestFunctional
 
         }
 
+        private static SrmDocument RefineAddAutoManage(SrmDocument doc)
+        {
+            // Turn on auto manage children, so settings change has an effect on doc structure
+            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
+            {
+                refineDlg.AutoPrecursors = true;
+                refineDlg.AutoTransitions = true;
+                refineDlg.OkDialog();
+            });
+            doc = WaitForDocumentChange(doc);
+            return doc;
+        }
+
 
         /// <summary>
         /// Test the fix for updating non-auto-managed precursor transitions
@@ -1137,7 +1146,7 @@ namespace pwiz.SkylineTestFunctional
                 "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,,,,,,\n" + // Precursor transition
                 "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,-1,F,C12H22O,[M-H]1-,181.1597889449,-1,\n" +
                 "Cer,Cer 12:0;2/12:0,,[M2C13-H]1-,400.370678,-1,V',,[M-H]1-,186.1863380499,-1,";
-            var doc = PasteSmallMoleculeListNoAutoManage(transitionList); // Paste the text
+            var doc = PasteSmallMoleculeList(transitionList); // Paste the text, don't expect auto-manage offer (automanage would yield any empty doc, the adducts don't match the filters)
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 6);
 
             // Position ourselves on the molecule, then edit its mass

@@ -539,7 +539,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     if (docNode.AutoManageChildren)
                     {
                         var srmSettingsDiff = new SrmSettingsDiff(false, false, true, false, false, false);
-                        docNode = docNode.ChangeSettings(SrmDocument.Settings, srmSettingsDiff);
+                        docNode = docNode.ChangeSettings(SrmDocument.Settings, srmSettingsDiff, null);
                     }
                     return docNode;
                 });

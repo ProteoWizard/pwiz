@@ -202,17 +202,17 @@ namespace pwiz.Skyline.EditUI
         public void ValidateCells()
         {
             IdentityPath selectedPath = null;
-            var document = GetNewDocument(DocumentUiContainer.Document, true, ref selectedPath);
+            var document = GetNewDocument(DocumentUiContainer.Document, true, null, ref selectedPath);
             if (document != null)
                 ShowNoErrors();
         }
 
-        private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath)
+        private SrmDocument GetNewDocument(SrmDocument document, bool validating, FilterReasonsSet whyNot, ref IdentityPath selectedPath)
         {
-            return GetNewDocument(document, validating, ref selectedPath, out _);
+            return GetNewDocument(document, validating, whyNot, ref selectedPath, out _);
         }
 
-        private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
+        private SrmDocument GetNewDocument(SrmDocument document, bool validating, FilterReasonsSet whyNot, ref IdentityPath selectedPath, out List<PeptideGroupDocNode> newPeptideGroups)
         {
             var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError, toolTip1);
             if ((document = fastaHelper.AddFasta(document, null, null, ref selectedPath, out newPeptideGroups, out var error)) == null)
@@ -221,11 +221,11 @@ namespace pwiz.Skyline.EditUI
                 tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
                 return null;
             }
-            if ((document = AddProteins(document, ref selectedPath)) == null)
+            if ((document = AddProteins(document, whyNot, ref selectedPath)) == null)
             {
                 return null;
             }
-            if ((document = AddPeptides(document, validating, ref selectedPath)) == null)
+            if ((document = AddPeptides(document, validating, whyNot, ref selectedPath)) == null)
             {
                 return null;
             }
@@ -266,7 +266,7 @@ namespace pwiz.Skyline.EditUI
             SetCurrentCellForPasteError(gridViewPeptides, pasteError);
         }
 
-        private SrmDocument AddPeptides(SrmDocument document, bool validating, ref IdentityPath selectedPath)
+        private SrmDocument AddPeptides(SrmDocument document, bool validating, FilterReasonsSet whyNot, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPagePeptideList)
                 return document;
@@ -381,7 +381,7 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
                 // Create node using ModificationMatcher.
-                nodePepNew = matcher.GetModifiedNode(pepModSequence, fastaSequence);
+                nodePepNew = matcher.GetModifiedNode(pepModSequence, fastaSequence, whyNot);
                 if (nodePepNew == null)
                 {
                     ShowPeptideError(new PasteError
@@ -392,7 +392,7 @@ namespace pwiz.Skyline.EditUI
                     });
                     return null;
                 }
-                nodePepNew = nodePepNew.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                nodePepNew = nodePepNew.ChangeSettings(document.Settings, SrmSettingsDiff.ALL, whyNot);
                 // Avoid adding an existing peptide a second time.
                 if (!peptides.Contains(nodePep => Equals(nodePep.Key, nodePepNew.Key)))
                 {
@@ -488,7 +488,7 @@ namespace pwiz.Skyline.EditUI
             return peptideGroupDocNode != null && peptideGroupDocNode.IsPeptideList;
         }
 
-        private SrmDocument AddProteins(SrmDocument document, ref IdentityPath selectedPath)
+        private SrmDocument AddProteins(SrmDocument document, FilterReasonsSet whyNot, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageProteinList)
                 return document;
@@ -566,7 +566,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 pastedMetadata = pastedMetadata.ChangeName(fastaSequence.Name).ChangeDescription(fastaSequence.Description);  // Make sure these agree
                 var nodeGroupPep = new PeptideGroupDocNode(fastaSequence, pastedMetadata, new PeptideDocNode[0]);
-                nodeGroupPep = nodeGroupPep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                nodeGroupPep = nodeGroupPep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL, whyNot);
                 var to = selectedPath;
                 if (to == null || to.Depth < (int)SrmDocument.Level.MoleculeGroups)
                     document = (SrmDocument)document.Add(nodeGroupPep);
@@ -769,7 +769,7 @@ namespace pwiz.Skyline.EditUI
         /// This can't be done on gridViewPeptides_CellValueChanged because we are creating new cells.
         /// </summary>
         private void EnumerateProteins(DataGridView dataGridView, int rowIndex, bool keepAllPeptides, 
-            ref int numUnmatched, ref int numMultipleMatches, ref int numFiltered, HashSet<string> seenPepSeq, AssociateProteinsHelper associateHelper)
+            ref int numUnmatched, ref int numMultipleMatches, ref int numFiltered, HashSet<string> seenPepSeq, AssociateProteinsHelper associateHelper, FilterReasonsSet whyNot)
         {
 
             HideNoErrors();      
@@ -782,7 +782,7 @@ namespace pwiz.Skyline.EditUI
             var proteinName = Convert.ToString(row.Cells[proteinIndex].Value);
             var pepModSequence = Convert.ToString(row.Cells[sequenceIndex].Value);
 
-            var associateAction = associateHelper.DetermineAssociateAction(proteinName, pepModSequence, seenPepSeq, keepAllPeptides);
+            var associateAction = associateHelper.DetermineAssociateAction(proteinName, pepModSequence, seenPepSeq, keepAllPeptides, whyNot);
             numUnmatched = associateHelper.numUnmatched;
             numMultipleMatches = associateHelper.numMultipleMatches;
             numFiltered = associateHelper.numFiltered;
@@ -854,12 +854,12 @@ namespace pwiz.Skyline.EditUI
             /// <param name="pepModSequence">Modified sequence of the peptide to be associated</param>
             /// <param name="seenPepSeq">Peptide sequences we have already seen in the data</param>
             /// <param name="keepAllPeptides">Keep peptides that have multiple matches or no matches</param>
+            /// <param name="whyNot">User-readable details on filters invoked</param>
             /// <param name="dictSequenceProteins">Optional prefetched mapping of stripped peptides to proteins</param>
             /// <returns></returns>
             public AssociateAction DetermineAssociateAction(string proteinName, string pepModSequence, HashSet<string> seenPepSeq, 
-                bool keepAllPeptides, IDictionary<string, List<Protein>> dictSequenceProteins = null)
+                bool keepAllPeptides, FilterReasonsSet whyNot, IDictionary<string, List<Protein>> dictSequenceProteins = null)
             {
-
                 // Only enumerate the proteins if the user has not specified a protein.
                 if (!string.IsNullOrEmpty(proteinName))
                     return AssociateAction.do_not_associate;
@@ -898,7 +898,7 @@ namespace pwiz.Skyline.EditUI
 
                 bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
                 bool hasMultipleMatches = proteinNames != null && proteinNames.Count > 1;
-                bool isFiltered = !_docCurrent.Settings.Accept(peptideSequence);
+                bool isFiltered = !_docCurrent.Settings.Accept(peptideSequence, whyNot);
 
                 if (newSequence)
                 {
@@ -987,7 +987,7 @@ namespace pwiz.Skyline.EditUI
                 document =>
                 {
                     newSelectedPath = SelectedPath;                 
-                    var newDocument = GetNewDocument(document, false, ref newSelectedPath, out newPeptideGroups);
+                    var newDocument = GetNewDocument(document, false, null,  ref newSelectedPath, out newPeptideGroups);
 
                     if (newDocument == null)
                     {
@@ -1172,10 +1172,11 @@ namespace pwiz.Skyline.EditUI
             int numMultipleMatches;
             int numFiltered;
             int prevRowCount = dataGridView.RowCount;
+            FilterReasonsSet whyNot = null;
             try
             {
                 Paste(dataGridView, text, enumerateProteins, enumerateProteins, out numUnmatched, 
-                    out numMultipleMatches, out numFiltered);
+                    out numMultipleMatches, out numFiltered, out whyNot);
             }
             // User pasted invalid text.
             catch(InvalidDataException e)
@@ -1192,7 +1193,7 @@ namespace pwiz.Skyline.EditUI
                 return;
             using (var filterPeptidesDlg =
                 new FilterMatchedPeptidesDlg(numMultipleMatches, numUnmatched, numFiltered,
-                                             dataGridView.RowCount - prevRowCount == 1, false))
+                                             dataGridView.RowCount - prevRowCount == 1, whyNot, false))
             {
                 var result = filterPeptidesDlg.ShowDialog(this);
                 // If the user is keeping all peptide matches, we don't need to redo the paste.
@@ -1208,7 +1209,7 @@ namespace pwiz.Skyline.EditUI
                 if (result != DialogResult.Cancel && !keepAllPeptides)
                 {
                     Paste(dataGridView, text, enumerateProteins, !enumerateProteins, out numUnmatched,
-                        out numMultipleMatches, out numFiltered);
+                        out numMultipleMatches, out numFiltered, out whyNot);
                     _entryCreators.Add(filterPeptidesDlg.FormSettings.EntryCreator);
                 }
             }
@@ -1220,9 +1221,10 @@ namespace pwiz.Skyline.EditUI
         /// The values are matched up to the columns in the order they are displayed.
         /// </summary>
         private void Paste(DataGridView dataGridView, string text, bool enumerateProteins, bool keepAllPeptides,
-            out int numUnmatched, out int numMulitpleMatches, out int numFiltered)
+            out int numUnmatched, out int numMulitpleMatches, out int numFiltered, out FilterReasonsSet whyNot)
         {
             numUnmatched = numMulitpleMatches = numFiltered = 0;
+            whyNot = new FilterReasonsSet();
             var columns = new DataGridViewColumn[dataGridView.Columns.Count];
             dataGridView.Columns.CopyTo(columns, 0);
             Array.Sort(columns, (a,b)=>a.DisplayIndex - b.DisplayIndex);
@@ -1253,7 +1255,7 @@ namespace pwiz.Skyline.EditUI
                 if (enumerateProteins)
                 {
                     EnumerateProteins(dataGridView, row.Index, keepAllPeptides, ref numUnmatched, ref numMulitpleMatches,
-                        ref numFiltered, listPepSeqs, associateHelper);
+                        ref numFiltered, listPepSeqs, associateHelper, whyNot);
                 }
             }
         }

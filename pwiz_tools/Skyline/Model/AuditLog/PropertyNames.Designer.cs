@@ -4489,6 +4489,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Small Molecule Ion types.
+        /// </summary>
+        public static string TransitionFilterAndLibrariesSettings_SmallMoleculeIonTypes {
+            get {
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_SmallMoleculeIonTypes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquisition method.
         /// </summary>
         public static string TransitionFullScan_AcquisitionMethod {

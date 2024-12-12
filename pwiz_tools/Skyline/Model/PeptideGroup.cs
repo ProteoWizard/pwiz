@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Model
             IsDecoy = isDecoy;
         }
 
-        public static IList<DocNode> RankPeptides(IList<DocNode> listPeptides, SrmSettings settings, bool useLimit)
+        public static IList<DocNode> RankPeptides(IList<DocNode> listPeptides, SrmSettings settings, bool useLimit, FilterReasonsSet whyNot)
         {
             // If no rank ID is set, just return the input list
             PeptideRankId rankId = settings.PeptideSettings.Libraries.RankId;
@@ -101,12 +101,18 @@ namespace pwiz.Skyline.Model
             int numPeptides = useLimit && peptideCount.HasValue && peptideCount.Value < listPeptides.Count
                               ? peptideCount.Value
                               : listPeptides.Count;
+            if (numPeptides != listPeptides.Count)
+            {
+                whyNot?.AddReason(FilterReason.PEPTIDE_SETTINGS_LIBRARY_PEPTIDE_COUNT);
+            }
             var peptidesNew = new List<PeptideDocNode>();
             for (int i = 0; i < numPeptides; i++)
             {
                 // TODO: Remove any peptide groups without the correct rank value
                 if (useLimit && listRanks[i].Value == float.MinValue)
+                {
                     break;
+                }
                 peptidesNew.Add(listRanks[i].Key);
             }
 
@@ -233,26 +239,26 @@ namespace pwiz.Skyline.Model
                 {
                     continue;
                 }
-                foreach (var nodePep in peptide.CreateDocNodes(settings, filter))
+                foreach (var nodePep in peptide.CreateDocNodes(settings, filter, null))
                     yield return nodePep;
             }
         }
 
-        public IEnumerable<PeptideDocNode> CreateFullPeptideDocNodes(SrmSettings settings, bool useFilter, Target peptideSequence)
+        public IEnumerable<PeptideDocNode> CreateFullPeptideDocNodes(SrmSettings settings, bool useFilter, Target peptideSequence, FilterReasonsSet whyNot = null)
         {
             if (settings.PeptideSettings.Libraries.RankId == null)
             {
                 foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter, peptideSequence))
-                    yield return nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                    yield return nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL, whyNot);
             }
             else
             {
                 var listDocNodes = new List<DocNode>();
                 foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter, peptideSequence))
-                    listDocNodes.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
+                    listDocNodes.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL, whyNot));
 
                 // Rank and filter peptides by rank.
-                foreach (PeptideDocNode nodePep in RankPeptides(listDocNodes, settings, useFilter))
+                foreach (PeptideDocNode nodePep in RankPeptides(listDocNodes, settings, useFilter, whyNot))
                     yield return nodePep;
             }
         }
@@ -278,7 +284,7 @@ namespace pwiz.Skyline.Model
                 settings.PeptideSettings.Enzyme.CountCleavagePoints(sequence));
 
             return new PeptideDocNode(peptide)
-                .ChangeSettings(settings, SrmSettingsDiff.ALL);
+                .ChangeSettings(settings, SrmSettingsDiff.ALL, null);
         }
 
         public static void ValidateSequence(string seq)

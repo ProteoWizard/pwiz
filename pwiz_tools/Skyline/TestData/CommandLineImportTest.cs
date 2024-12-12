@@ -172,6 +172,7 @@ namespace pwiz.SkylineTestData
             var outPath = TestFilesDir.GetTestPath("import-smallmol.sky");
             var output = RunCommand("--in=" + docPath,
                 "--out=" + outPath,
+                "--instrument-min-mz=42", // Blank.sky sets this at 50, but the transition list has smaller fragments than that
                 "--import-transition-list=" + smallmolPath);
             AssertEx.Contains(output, string.Format(Resources.CommandLine_ImportTransitionList_Importing_transiton_list__0____,
                 Path.GetFileName(smallmolPath))); 

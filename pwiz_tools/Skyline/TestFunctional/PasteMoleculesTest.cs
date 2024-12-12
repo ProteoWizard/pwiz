@@ -416,6 +416,8 @@ namespace pwiz.SkylineTestFunctional
             TestLegitimatePaste(line2start, fullColumnOrder);
 
             // Provoke some errors
+            TestError(line1.Replace(caffeineFormula, caffeineFormula+"+"), // Bad formula
+                string.Format(Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula, caffeineFormula + "+"), fullColumnOrder);
             TestError(
                 line1.Replace("\t-2\t-2", "\t-2\t2")
                     .Replace(productMzAtZNeg2.ToString(CultureInfo.CurrentCulture),

@@ -845,12 +845,17 @@ namespace pwiz.SkylineTestUtil
             var editListUI =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
 
-            RunDlg<EditLibraryDlg>(editListUI.AddItem, addLibUI =>
+            var exists = false;
+            RunUI(() => exists = editListUI.GetAll().Any(item => item.Name == libName));
+            if (!exists)
             {
-                addLibUI.LibraryName = libName;
-                addLibUI.LibraryPath = libFullPath;
-                addLibUI.OkDialog();
-            });
+                RunDlg<EditLibraryDlg>(editListUI.AddItem, addLibUI =>
+                {
+                    addLibUI.LibraryName = libName;
+                    addLibUI.LibraryPath = libFullPath;
+                    addLibUI.OkDialog();
+                });
+            }
             OkDialog(editListUI, editListUI.OkDialog);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.

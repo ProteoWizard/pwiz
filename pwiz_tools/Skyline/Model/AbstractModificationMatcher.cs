@@ -455,9 +455,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public abstract PeptideDocNode GetModifiedNode(string sequence);
+        public abstract PeptideDocNode GetModifiedNode(string sequence, FilterReasonsSet whyNot = null);
 
-        public PeptideDocNode CreateDocNodeFromSettings(LibKey key, Peptide peptide, SrmSettingsDiff diff, out TransitionGroupDocNode nodeGroupMatched)
+        public PeptideDocNode CreateDocNodeFromSettings(LibKey key, Peptide peptide, SrmSettingsDiff diff, out TransitionGroupDocNode nodeGroupMatched, FilterReasonsSet whyNot = null)
         {
             if (key.LibraryKey is CrosslinkLibraryKey)
             {
@@ -468,40 +468,44 @@ namespace pwiz.Skyline.Model
             {
                 // Scan the spectral lib entry for top N ranked (for now, that's just by intensity with high mz as tie breaker) fragments, 
                 // add those as mass-only fragments, or with more detail if peak annotations are present.
-                foreach (var nodePep in peptide.CreateDocNodes(Settings, new MaxModFilter(0)))
+                foreach (var nodePep in peptide.CreateDocNodes(Settings, new MaxModFilter(0), whyNot))
                 {
                     SpectrumHeaderInfo libInfo;
                     if (nodePep != null && Settings.PeptideSettings.Libraries.TryGetLibInfo(key, out libInfo))
                     {
                         var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
                         var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
-                        nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                        nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, true);
                         SpectrumPeaksInfo spectrum;
                         if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
                         {
                             // Add fragment and precursor transitions as needed
                             var transitionDocNodes =
                                 Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.precursor)
-                                    ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true) // Gives list of precursors
+                                    ? nodeGroupMatched.GetPrecursorChoices(Settings, null, true, whyNot) // Gives list of precursors
                                     : new List<DocNode>();
 
                             if (Settings.TransitionSettings.Filter.SmallMoleculeIonTypes.Contains(IonType.custom))
                             {
-                                GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes);
+                                GetSmallMoleculeFragments(key, nodeGroupMatched, spectrum, transitionDocNodes, whyNot);
                             }
-                            nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeChildren(transitionDocNodes);
-                            return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched });
+
+                            var automanage = nodeGroupMatched.AutoManageChildren;
+                            nodeGroupMatched = (TransitionGroupDocNode)nodeGroupMatched.ChangeAutoManageChildren(true).ChangeChildren(transitionDocNodes);
+                            // Use ChangeSettings() to filter the transitions based on the settings.
+                            nodeGroupMatched = nodeGroupMatched.ChangeSettings(Settings, nodePep, null, SrmSettingsDiff.PRECURSORS, whyNot);
+                            return (PeptideDocNode)nodePep.ChangeChildren(new List<DocNode>() { nodeGroupMatched.ChangeAutoManageChildren(automanage) });
                         }
                     }
                 }
                 nodeGroupMatched = null;
                 return null;
             }
-            return CreateDocNodeFromSettings(key.Target, peptide, diff, out nodeGroupMatched);
+            return CreateDocNodeFromSettings(key.Target, peptide, diff, whyNot, out nodeGroupMatched);
         }
 
         private void GetSmallMoleculeFragments(LibKey key, TransitionGroupDocNode nodeGroupMatched, SpectrumPeaksInfo spectrum,
-            IList<DocNode> transitionDocNodes)
+            IList<DocNode> transitionDocNodes, FilterReasonsSet whyNot)
         {
             // We usually don't know actual charge of fragments in the library, so just note + or - if
             // there are no peak annotations containing that info
@@ -517,12 +521,6 @@ namespace pwiz.Skyline.Model
                 catch (InvalidDataException)
                 {
                     // Some kind of garbage in peaklist, e.g fragment mass is absurdly small or large - ignore
-                    // TODO(bspratt) - address Brendan's comment from pull request:
-                    // "This call should be paying attention to settings and the minimum value that causes the exception reported to initiate this fix.For peptide fragment
-                    // annotation, we definitely consider the settings, and since we do not rank fragments outside the instrument range. This code also strikes me as odd that you wouldn't just create the precursor
-                    // and then use a precursor.ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL) to materialize all of the transitions based on the settings. That way you only write the code once to materialize
-                    // transitions based on settings."
-                    // In particular not ranking things outside the machine range makes sense.
                 } 
             }
             var nodeGroupUnranked = (TransitionGroupDocNode) nodeGroupMatched.ChangeChildren(transitionsUnranked);
@@ -612,6 +610,7 @@ namespace pwiz.Skyline.Model
         }
 
         public PeptideDocNode CreateDocNodeFromSettings(Target target, Peptide peptide, SrmSettingsDiff diff,
+                FilterReasonsSet whyNot,
                 out TransitionGroupDocNode nodeGroupMatched)
         {
             if (!target.IsProteomic)
@@ -650,9 +649,9 @@ namespace pwiz.Skyline.Model
                 Settings.PeptideSettings.Modifications.MaxVariableMods));
             var filterMod = new VariableModLocationFilter(seq);
             var newTarget = new Target(seq);
-            foreach (var nodePep in peptide.CreateDocNodes(Settings, filterMaxMod, filterMod))
+            foreach (var nodePep in peptide.CreateDocNodes(Settings, filterMaxMod, whyNot, filterMod))
             {
-                var nodePepMod = CreateDocNodeFromSettings(newTarget, nodePep, diff, out nodeGroupMatched);
+                var nodePepMod = CreateDocNodeFromSettings(newTarget, nodePep, diff, whyNot, out nodeGroupMatched);
                 if (nodePepMod != null)
                     return nodePepMod;
             }
@@ -690,7 +689,7 @@ namespace pwiz.Skyline.Model
 
             var newMods = new ExplicitMods(mainPeptide.Peptide, staticMods,
                 mainPeptide.ExplicitMods?.GetHeavyModifications()).ChangeCrosslinkStructure(crosslinkStructure);
-            var crosslinkedPeptide = mainPeptide.ChangeExplicitMods(newMods).ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL);
+            var crosslinkedPeptide = mainPeptide.ChangeExplicitMods(newMods).ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL, null);
             if (!crosslinkLibraryKey.Adduct.IsEmpty)
             {
                 nodeGroupMatched = new TransitionGroupDocNode(
@@ -911,9 +910,9 @@ namespace pwiz.Skyline.Model
                 MaxVariableMods = max;
             }
 
-            public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
+            public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out string whyNot, out bool allowVariableMods)
             {
-                return PeptideFilter.UNFILTERED.Accept(settings, peptide, explicitMods, out allowVariableMods);
+                return PeptideFilter.UNFILTERED.Accept(settings, peptide, explicitMods, out whyNot, out allowVariableMods);
             }
 
             public int? MaxVariableMods { get; private set; }
@@ -1055,9 +1054,10 @@ namespace pwiz.Skyline.Model
         }
 
         private PeptideDocNode CreateDocNodeFromSettings(Target seq, PeptideDocNode nodePep, SrmSettingsDiff diff,
+            FilterReasonsSet whyNot,
             out TransitionGroupDocNode nodeGroupMatched)
         {
-            PeptideDocNode nodePepMod = nodePep.ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL, false);
+            PeptideDocNode nodePepMod = nodePep.ChangeSettings(Settings, diff ?? SrmSettingsDiff.ALL, whyNot, false);
             TransitionGroupDocNode nodeGroupMatchedFound;
             if (IsMatch(seq, nodePepMod, out nodeGroupMatchedFound))
             {
@@ -1140,7 +1140,7 @@ namespace pwiz.Skyline.Model
                     listLightMods != null && listLightMods.Contains(mod => mod.Modification.IsVariable))
                 : null;
             hasHeavy = dictHeavyMods.Keys.Count > 0;
-            return nodePep.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.PROPS);
+            return nodePep.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.PROPS, null);
         }
 
         public virtual PeptideModifications GetDocModifications(SrmDocument document)

@@ -1074,6 +1074,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public override string ToString() // Not user facing, for debug convenience only
+        {
+            return AuditLogText;
+        }
+
         #endregion
 
         public struct TransitionQuantInfo

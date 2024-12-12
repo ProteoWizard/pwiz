@@ -158,6 +158,8 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M1.234-2Na"), Adduct.FromStringAssumeProtonated("M1.234+3Na").ChangeCharge(-2));
             Assert.AreEqual(Adduct.FromStringAssumeProtonated("M(-1.234)-2Na"), Adduct.FromStringAssumeProtonated("M(-1.234)+3Na").ChangeCharge(-2));
 
+            AssertEx.IsTrue(Adduct.SameEffect(new []{ Adduct.M_PLUS_H }, new[] { Adduct.SINGLY_PROTONATED }, true));
+
             Assert.IsFalse(Adduct.M_PLUS_H.IsProteomic);
             Assert.IsTrue(Adduct.M_PLUS_H.IsProtonated);
             Assert.IsTrue(Adduct.SINGLY_PROTONATED.IsProteomic);
@@ -180,6 +182,9 @@ namespace pwiz.SkylineTest
             adductCH3 = Adduct.FromString(mCh3Cl, Adduct.ADDUCT_TYPE.non_proteomic, null);
             Assert.AreEqual(2, adductCH3.AdductCharge);
             Assert.AreEqual(mCh3Cl, adductCH3.ToString()); // We kept the charge declaration since it's weird
+            var adductCH3other = Adduct.FromString(mCh3Cl.Replace("++", "2+"), Adduct.ADDUCT_TYPE.non_proteomic, null);
+            Assert.AreNotEqual(mCh3Cl, adductCH3other.ToString()); // We kept the charge declaration since it's weird
+            AssertEx.IsTrue(adductCH3.SameEffect(adductCH3other));
 
             AssertEx.ThrowsException<InvalidDataException>(() => Adduct.FromStringAssumeProtonated("[M+2H]-")); // Try to declare wrong charge on common adduct
 
@@ -187,7 +192,12 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(ReferenceEquals(Adduct.SINGLY_PROTONATED, Adduct.SINGLY_PROTONATED.Unlabeled));
             var nolabel = Adduct.FromStringAssumeProtonated("M-2Na");
             var label = Adduct.FromStringAssumeProtonated("M2Cl37-2Na");
+            AssertEx.IsTrue(nolabel.SameEffect(label, true));
+            AssertEx.IsFalse(nolabel.SameEffect(label));
             Assert.AreEqual(nolabel, label.Unlabeled);
+            var nolabelFancy = Adduct.FromStringAssumeProtonated("[M-2Na]2-");
+            AssertEx.IsTrue(nolabel.SameEffect(nolabelFancy, true));
+            AssertEx.IsTrue(nolabelFancy.SameEffect(nolabel));
             Assert.IsTrue(ReferenceEquals(nolabel, nolabel.Unlabeled));
             Assert.IsFalse(nolabel.MassFromMz(300.0, MassType.Monoisotopic).IsHeavy());
             Assert.IsFalse(label.MassFromMz(300.0, MassType.Monoisotopic).IsHeavy());

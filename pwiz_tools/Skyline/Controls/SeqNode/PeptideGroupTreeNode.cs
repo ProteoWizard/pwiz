@@ -183,14 +183,14 @@ namespace pwiz.Skyline.Controls.SeqNode
             List<DocNode> listPeptides = new List<DocNode>();
             foreach (var nodePep in DocNode.GetPeptideNodes(settings, useFilter))
             {
-                var nodePepMaterialized = nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                var nodePepMaterialized = nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL, null);
                 if (!useFilter || settings.TransitionSettings.Libraries.MinIonCount == 0 || nodePepMaterialized.Children.Count != 0)
                     listPeptides.Add(nodePepMaterialized);
             }
 
             PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
             if (rankId != null && !DocNode.IsPeptideList)
-                listPeptides = PeptideGroup.RankPeptides(listPeptides, settings, useFilter).ToList();
+                listPeptides = PeptideGroup.RankPeptides(listPeptides, settings, useFilter, null).ToList();
 
             MergeChosen(listPeptides, useFilter, node => ((PeptideDocNode)node).Key);
 

@@ -123,7 +123,7 @@ namespace pwiz.SkylineTest
                 {
                     TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(tranGroup, settings, mods);
                     var nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
-                    nodeGroup = nodeGroup.ChangeSettings(settings, nodePep, mods, SrmSettingsDiff.ALL);
+                    nodeGroup = nodeGroup.ChangeSettings(settings, nodePep, mods, SrmSettingsDiff.ALL, null);
                     docStudy7 = (SrmDocument) docStudy7.Add(pepPath, nodeGroup);
                     break;
                 }

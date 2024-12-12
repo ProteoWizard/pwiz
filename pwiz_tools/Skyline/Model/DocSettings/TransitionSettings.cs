@@ -83,22 +83,33 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren(true)]
         public TransitionIonMobilityFiltering IonMobilityFiltering { get; private set; }
 
-        public bool IsMeasurablePrecursor(double mz)
+        public bool IsMeasurablePrecursor(double mz, out string whyNot)
         {
             if (!Instrument.IsMeasurable(mz))
+            {
+                whyNot = FilterReason.TRANSITION_SETTINGS_INSTRUMENT_MZ_RANGE;
                 return false;
-            return FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz);
+            }
+
+            if (FullScan.IsolationScheme == null || FullScan.IsolationScheme.IsInRangeMz(mz))
+            {
+                whyNot = null;
+                return true;
+            }
+            whyNot = FilterReason.TRANSITION_SETTINGS_FULL_SCAN_ISOLATION_SCHEME;
+            return false;
         }
 
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, out string whyNot)
         {
             if (Filter.ExclusionUseDIAWindow && FullScan.IsolationScheme != null &&
                 FullScan.IsolationScheme.MayFallIntoSameWindow(ionMz, precursorMz))
             {
+                whyNot = FilterReason.TRANSITION_SETTINGS_FULL_SCAN_ISOLATION_SCHEME;
                 return false;
             }
 
-            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz);
+            return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz, out whyNot);
         }
 
         #region Property change methods
@@ -857,13 +868,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return PrecursorMzWindow != 0 && Math.Abs(ionMz - precursorMz)*2 < PrecursorMzWindow;
         }
 
-        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        public bool Accept(Target sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz, out string whyNot)
         {
-            if (IsExcluded(ionMz, precursorMz))
+            if (type != IonType.precursor && IsExcluded(ionMz, precursorMz)) // Watch for unfragmented precursors in MS2
+            {
+                whyNot = FilterReason.TRANSITION_SETTINGS_INSTRUMENT_PRECURSOR_WINDOW;
                 return false;
-            if (start <= cleavageOffset && cleavageOffset <= end && startMz <= ionMz)
-                return true;            
-            return IsSpecialFragment(sequence, type, cleavageOffset);
+            }
+
+            whyNot = null;
+            return (start <= cleavageOffset && cleavageOffset <= end && startMz <= ionMz);
         }
 
         [Track]
@@ -1180,6 +1194,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    ArrayUtil.EqualsDeep(obj._peptideProductCharges, _peptideProductCharges) &&
                    ArrayUtil.EqualsDeep(obj._peptideIonTypes, _peptideIonTypes) &&
                    ArrayUtil.EqualsDeep(obj._smallMoleculePrecursorAdducts, _smallMoleculePrecursorAdducts) &&
+                   ArrayUtil.EqualsDeep(obj._smallMoleculeFragmentAdducts, _smallMoleculeFragmentAdducts) &&
                    ArrayUtil.EqualsDeep(obj._smallMoleculeIonTypes, _smallMoleculeIonTypes) &&
                    Equals(obj.FragmentRangeFirst, FragmentRangeFirst) &&
                    Equals(obj.FragmentRangeLast, FragmentRangeLast) &&
@@ -1205,6 +1220,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ _peptideProductCharges.GetHashCodeDeep();
                 result = (result * 397) ^ _peptideIonTypes.GetHashCodeDeep();
                 result = (result * 397) ^ _smallMoleculePrecursorAdducts.GetHashCodeDeep();
+                result = (result * 397) ^ _smallMoleculeFragmentAdducts.GetHashCodeDeep();
                 result = (result * 397) ^ _smallMoleculeIonTypes.GetHashCodeDeep();
                 result = (result * 397) ^ FragmentRangeFirst.GetHashCode();
                 result = (result*397) ^ FragmentRangeLast.GetHashCode();
@@ -1675,8 +1691,9 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return Pick != TransitionLibraryPick.none; }
         }
 
-        public bool HasMinIonCount(TransitionGroupDocNode nodeGroup)
+        public bool HasMinIonCount(TransitionGroupDocNode nodeGroup, out string whyNot)
         {
+            whyNot = null;
             if (!nodeGroup.HasLibInfo || Pick == TransitionLibraryPick.none)
                 return true;
             // Slight problem with nodeTran.IsMs1, not being entirely deterministic. So for now we check for library
@@ -1684,7 +1701,10 @@ namespace pwiz.Skyline.Model.DocSettings
             // CONSIDER: Maybe we should be storing a ChromSource on the transition at the time it is created, which
             // seems to be the only time we really know that a precursor ion is being created for MS1 filtering
             // or not.
-            return nodeGroup.Transitions.Count(nodeTran => !nodeTran.IsMs1 || nodeTran.HasLibInfo) >= MinIonCount;
+            if (nodeGroup.Transitions.Count(nodeTran => !nodeTran.IsMs1 || nodeTran.HasLibInfo) >= MinIonCount)
+                return true;
+            whyNot = FilterReason.TRANSITION_SETTINGS_LIBRARY_MIN_ION_COUNT;
+            return false;
         }
 
         #region Property change methods
@@ -2603,7 +2623,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
-        public IEnumerable<int> SelectMassIndices(IsotopeDistInfo isotopeDists, bool useFilter)
+        public IEnumerable<int> SelectMassIndices(IsotopeDistInfo isotopeDists, bool useFilter, FilterReasonsSet whyNot)
         {
             if (isotopeDists == null)
             {
@@ -2620,6 +2640,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 else if (PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
                 {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FULL_SCAN_ISOLATION_SCHEME);
                     int maxMassIndex = isotopeDists.PeakIndexToMassIndex(countPeaks);
                     countPeaks = Math.Min((int)(PrecursorIsotopeFilter ?? 1), maxMassIndex);
 
@@ -2628,6 +2649,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 else if (PrecursorIsotopes == FullScanPrecursorIsotopes.Percent)
                 {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FULL_SCAN_ISOLATION_SCHEME);
                     double minAbundancePercent = (PrecursorIsotopeFilter ?? 0)/100;
                     double baseMassPercent = isotopeDists.BaseMassPercent;
                     for (int i = 0; i < countPeaks; i++)

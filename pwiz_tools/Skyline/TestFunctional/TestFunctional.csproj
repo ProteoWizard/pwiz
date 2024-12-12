@@ -231,6 +231,7 @@
     <Compile Include="SelectSpectrumTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="SkipZoomScansTest.cs" />
+    <Compile Include="SmallMoleculeLibraryFilterTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
@@ -671,6 +672,7 @@
     <None Include="SkylineCmdTest.zip" />
     <None Include="SkypTest.zip" />
     <None Include="SmallMoleculeIrtTest.zip" />
+    <None Include="SmallMoleculeLibraryFilterTest.zip" />
     <None Include="SmallMoleculesDocumentGrid.zip" />
     <None Include="SplitGraphTest.zip" />
     <None Include="SrmCourseScenarioTest.zip" />

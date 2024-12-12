@@ -391,7 +391,7 @@ namespace pwiz.Skyline.Model
                                     new List<string> { modifiedPeptideString },
                                     Settings.Default.StaticModList,
                                     Settings.Default.HeavyModList);
-                                nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString);
+                                nodeForModPep = modMatcher.GetModifiedNode(modifiedPeptideString, null);
                             }
                             catch (Exception e)
                             {
@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Model
                                         modifiedPeptideString, linesRead);
                                 throw new IOException(message, modificationException);
                             }
-                            nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL);
+                            nodeForModPep = nodeForModPep.ChangeSettings(Document.Settings, SrmSettingsDiff.ALL, null);
                             // Convert the modified peptide string into a standardized form that 
                             // converts unimod, names, etc, into masses, eg [+57.0]
                             canonicalSequence = nodeForModPep.ModifiedTarget.Sequence;

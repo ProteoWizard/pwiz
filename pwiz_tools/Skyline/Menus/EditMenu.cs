@@ -554,6 +554,7 @@ namespace pwiz.Skyline.Menus
             var listAllPeptides = new List<string>();
             var listAcceptPeptides = new List<string>();
             var listFilterPeptides = new List<string>();
+            var whyNot = new FilterReasonsSet();
             for (int i = 0; i < pepSequences.Length; i++)
             {
                 var charge = Transition.GetChargeFromIndicator(pepSequences[i].Trim(), TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
@@ -577,7 +578,7 @@ namespace pwiz.Skyline.Menus
                 setAdded.Add(pepSeqMod);
                 listAllPeptides.Add(pepSeqMod);
 
-                if (settings.Accept(pepSeqClean))
+                if (settings.Accept(pepSeqClean, whyNot))
                     listAcceptPeptides.Add(pepSeqMod);
                 else
                     listFilterPeptides.Add(pepSeqMod);
@@ -1904,7 +1905,7 @@ namespace pwiz.Skyline.Menus
 
                     transitionGroupToAdd = transitionGroupToAdd.ChangeSpectrumClassFilter(spectrumClassFilter);
                     transitionGroupToAdd = transitionGroupToAdd.ChangeSettings(document.Settings, peptideDocNode,
-                        peptideDocNode.ExplicitMods, SrmSettingsDiff.ALL);
+                        peptideDocNode.ExplicitMods, SrmSettingsDiff.ALL, null);
                     newTransitionGroups.Add(transitionGroupToAdd);
                     changed = true;
                     changeCount++;

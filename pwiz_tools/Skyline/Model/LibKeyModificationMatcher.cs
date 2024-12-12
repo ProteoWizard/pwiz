@@ -311,7 +311,7 @@ namespace pwiz.Skyline.Model
                        : i;
         }
 
-        public PeptideDocNode GetModifiedNode(LibKey key, SrmSettings settings, SrmSettingsDiff diff)
+        public PeptideDocNode GetModifiedNode(LibKey key, SrmSettings settings, SrmSettingsDiff diff, FilterReasonsSet whyNot)
         {
             var smallMoleculeKey = key.LibraryKey as MoleculeLibraryKey;
             var peptideKey = key.LibraryKey as PeptideLibraryKey;
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model
                 ? settings.ChangePeptideModifications(mods => MatcherPepMods)
                 : settings;
             TransitionGroupDocNode nodeGroup;
-            var nodePep = CreateDocNodeFromSettings(key, peptide, diff, out nodeGroup);
+            var nodePep = CreateDocNodeFromSettings(key, peptide, diff, out nodeGroup, whyNot);
             if (nodePep != null)
             {
                 if (diff == null)
@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model
 
             // Call change settings with the matched modification settings to enumerate the children.
             nodePep = nodePep.ChangeSettings(settings.ChangePeptideModifications(mods =>
-                !HasMatches ? settings.PeptideSettings.Modifications : MatcherPepMods), diff ?? SrmSettingsDiff.ALL);
+                !HasMatches ? settings.PeptideSettings.Modifications : MatcherPepMods), diff ?? SrmSettingsDiff.ALL, null);
             if (nodePep.Children.Count == 0)
                 return null;
             // Select the correct child, only for use with the library explorer.
@@ -385,9 +385,9 @@ namespace pwiz.Skyline.Model
             return nodePep;
         }
 
-        public override PeptideDocNode GetModifiedNode(string sequence)
+        public override PeptideDocNode GetModifiedNode(string sequence, FilterReasonsSet whyNot = null)
         {
-            return GetModifiedNode(new LibKey(new PeptideLibraryKey(sequence, 1)), Settings, SrmSettingsDiff.ALL);
+            return GetModifiedNode(new LibKey(new PeptideLibraryKey(sequence, 1)), Settings, SrmSettingsDiff.ALL, whyNot);
         }
 
         protected override bool IsMatch(Target seqMod, PeptideDocNode nodePepMod, out TransitionGroupDocNode nodeGroup)

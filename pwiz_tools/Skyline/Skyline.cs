@@ -3317,7 +3317,7 @@ namespace pwiz.Skyline
                                     }
                                 }
                                 var peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.EMPTY, peptideGroupName, null,
-                                    new[] {matcher.GetModifiedNode(labelText)}, peptideSequence == null);
+                                    new[] {matcher.GetModifiedNode(labelText, null)}, peptideSequence == null);
                                 peptideDocNodes.AddRange(peptideGroupDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL).Molecules);
                             }
                             catch (FormatException)

@@ -512,12 +512,12 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (Math.Abs(group.PrecursorAdduct.AdductCharge) <= TransitionGroup.MAX_PRECURSOR_CHARGE_PICK || charges.Contains(group.PrecursorAdduct))
                 {
                     var nodeChoice = CreateChoice(group, mods);
-                    if (!useFilter || DocSettings.TransitionSettings.Libraries.HasMinIonCount(nodeChoice))
+                    if (!useFilter || DocSettings.TransitionSettings.Libraries.HasMinIonCount(nodeChoice, out var _))
                         listChildrenNew.Add(nodeChoice);
                 }
             }
             var nodePep = (PeptideDocNode)DocNode.ChangeChildren(listChildrenNew);
-            nodePep.ChangeSettings(DocSettings, SrmSettingsDiff.PROPS);
+            nodePep.ChangeSettings(DocSettings, SrmSettingsDiff.PROPS, null);
             listChildrenNew = new List<DocNode>(nodePep.Children);
             MergeChosen(listChildrenNew, useFilter);
             return listChildrenNew;
@@ -530,7 +530,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 tranGroup, DocSettings, mods);
 
             var nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
-            return nodeGroup.ChangeSettings(DocSettings, DocNode, mods, SrmSettingsDiff.ALL);
+            return nodeGroup.ChangeSettings(DocSettings, DocNode, mods, SrmSettingsDiff.ALL, null);
         }
 
         public override bool ShowAutoManageChildren

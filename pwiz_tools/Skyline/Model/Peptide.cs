@@ -137,7 +137,7 @@ namespace pwiz.Skyline.Model
             return group1.LabelType.CompareTo(group2.LabelType);
         }
 
-        public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, PeptideDocNode nodePep, ExplicitMods mods, bool useFilter)
+        public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, PeptideDocNode nodePep, ExplicitMods mods, bool useFilter, FilterReasonsSet whyNot)
         {
             if (IsCustomMolecule)
             {
@@ -148,12 +148,15 @@ namespace pwiz.Skyline.Model
                 // CONSIDER(bspratt) could we reasonably reuse fragments with proposed precursors of suitable charge and polarity (say, add an M+Na node that mimics an existing M+H node and children)
                 foreach (var group in nodePep.TransitionGroups.Where(tranGroup => tranGroup.TransitionGroup.IsCustomIon))
                 {
-                    if (!settings.SupportsPrecursor(group, mods))
+                    if (!settings.SupportsPrecursor(group, mods, out var reasonWhyNot))
                     {
+                        whyNot?.AddReason(reasonWhyNot);
                         continue;
                     }
-                    if (!useFilter || settings.TransitionSettings.IsMeasurablePrecursor(group.PrecursorMz))
+                    if (!useFilter || settings.TransitionSettings.IsMeasurablePrecursor(group.PrecursorMz, out reasonWhyNot))
                         yield return group.TransitionGroup;
+                    else
+                        whyNot?.AddReason(reasonWhyNot);
                 }
             }
             else
@@ -184,8 +187,11 @@ namespace pwiz.Skyline.Model
 
                 foreach (var adduct in precursorCharges)
                 {
-                    if (useFilter && !settings.Accept(settings, this, mods, adduct))
+                    if (useFilter && !settings.Accept(settings, this, mods, out var reasonWhyNot, adduct))
+                    {
+                        whyNot?.AddReason(reasonWhyNot);
                         continue;
+                    }
 
                     for (int i = 0; i < listPrecursorMasses.Count; i++)
                     {
@@ -196,23 +202,27 @@ namespace pwiz.Skyline.Model
                         // between the light and heavy calculators
                         if (i == 0 || precursorMass != precursorMassLight)
                         {
-                            if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass, adduct)))
+                            if (settings.TransitionSettings.IsMeasurablePrecursor(SequenceMassCalc.GetMZ(precursorMass, adduct), out reasonWhyNot))
                                 yield return new TransitionGroup(this, adduct, labelType);
+                            else
+                                whyNot?.AddReason(reasonWhyNot);
                         }
                     }
                 }
             }
         }
 
-        public IEnumerable<PeptideDocNode> CreateDocNodes(SrmSettings settings, IPeptideFilter filter, IVariableModFilter filterVariableMod = null)
+        public IEnumerable<PeptideDocNode> CreateDocNodes(SrmSettings settings, IPeptideFilter filter, FilterReasonsSet whyNot, IVariableModFilter filterVariableMod = null)
         {
             int maxModCount = filter.MaxVariableMods ?? settings.PeptideSettings.Modifications.MaxVariableMods;
 
             // Always return the unmodified peptide doc node first
             var nodePepUnmod = new PeptideDocNode(this);
             bool allowVariableMods;
-            if (filter.Accept(settings, this, null, out allowVariableMods))
+            if (filter.Accept(settings, this, null, out var reasonWhyNot, out allowVariableMods))
                 yield return nodePepUnmod;
+            else
+                whyNot?.AddReason(reasonWhyNot);
 
             // Stop if no variable modifications are allowed for this peptide.
             if (!allowVariableMods || maxModCount == 0)
@@ -233,8 +243,10 @@ namespace pwiz.Skyline.Model
                 var modStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
                 foreach (var nodePep in modStateMachine.GetStates())
                 {
-                    if (filter.Accept(settings, nodePep.Peptide, nodePep.ExplicitMods, out allowVariableMods))
+                    if (filter.Accept(settings, nodePep.Peptide, nodePep.ExplicitMods, out reasonWhyNot, out allowVariableMods))
                         yield return nodePep;
+                    else
+                        whyNot?.AddReason(reasonWhyNot);
                 }
             }
         }
@@ -297,16 +309,16 @@ namespace pwiz.Skyline.Model
         /// Returns all possible variably modified <see cref="PeptideDocNode"/> objects
         /// for a peptide sequence under specific settings.
         /// </summary>
-        public static IEnumerable<PeptideDocNode> CreateAllDocNodes(SrmSettings settings, string sequence)
+        public static IEnumerable<PeptideDocNode> CreateAllDocNodes(SrmSettings settings, string sequence, FilterReasonsSet whyNot)
         {
             var peptide = new Peptide(null, sequence, null, null,
                 settings.PeptideSettings.Enzyme.CountCleavagePoints(sequence));
-            return CreateAllDocNodes(settings, peptide);
+            return CreateAllDocNodes(settings, peptide, whyNot);
         }
 
-        public static IEnumerable<PeptideDocNode> CreateAllDocNodes(SrmSettings settings, Peptide peptide)
+        public static IEnumerable<PeptideDocNode> CreateAllDocNodes(SrmSettings settings, Peptide peptide, FilterReasonsSet whyNot)
         {
-            return peptide.CreateDocNodes(settings, PeptideFilter.UNFILTERED);
+            return peptide.CreateDocNodes(settings, PeptideFilter.UNFILTERED, whyNot);
         }
 
         /// <summary>

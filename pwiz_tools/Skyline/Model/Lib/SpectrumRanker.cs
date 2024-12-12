@@ -859,7 +859,7 @@ namespace pwiz.Skyline.Model.Lib
                     if (TargetInfoObj.LookupMods == null || !TargetInfoObj.LookupMods.HasCrosslinks)
                     {
                         if (!TransitionSettings.Accept(Sequence, MoleculeMassesObj.precursorMz, type, offset, ionMz, start,
-                            end, startMz))
+                            end, startMz, out _))
                         {
                             return false;
                         }

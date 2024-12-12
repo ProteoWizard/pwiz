@@ -230,11 +230,11 @@ namespace pwiz.Skyline.FileUI
         /// In the event where there are multiple matches for a single peptide, or no matches
         /// for a peptide, let the user decide how to proceed
         /// </summary>
-        private string[] ResolveMatchedProteins(int numWithDuplicates, int numUnmatched, int numFiltered, out bool canceled)
+        private string[] ResolveMatchedProteins(int numWithDuplicates, int numUnmatched, int numFiltered, FilterReasonsSet whyNot, out bool canceled)
         {
             // Show a dialog asking the user how to proceed
             using (var filterDlg = new FilterMatchedPeptidesDlg(numWithDuplicates, numUnmatched, numFiltered, 
-                       Importer.RowReader.Lines.Count == 1,  
+                       Importer.RowReader.Lines.Count == 1,  whyNot,
                        false)) // We do not support mixed transition lists, so there will never be small molecules
             {
                 canceled = false;
@@ -322,6 +322,8 @@ namespace pwiz.Skyline.FileUI
                 return _originalLines;
             }
 
+            var whyNot = new FilterReasonsSet();
+
             // Go through each line of the import
             var associateHelper = new PasteDlg.AssociateProteinsHelper(_docCurrent);
             foreach (var line in _originalLines.Take(count))
@@ -329,7 +331,7 @@ namespace pwiz.Skyline.FileUI
                 var fields = line.ParseDsvFields(Importer.Separator);
                 var seenPepSeq = new HashSet<string>(); // Peptide sequences we have already seen, for FilterMatchedPepSeq
                 var action = associateHelper.DetermineAssociateAction(null,
-                    fields[_originalPeptideIndex], seenPepSeq, false, dictSequenceProteins);
+                    fields[_originalPeptideIndex], seenPepSeq, false, whyNot, dictSequenceProteins);
 
                 if (action == PasteDlg.AssociateProteinsHelper.AssociateAction.all_occurrences)
                 {
@@ -358,7 +360,7 @@ namespace pwiz.Skyline.FileUI
             if (associateHelper.numFiltered + associateHelper.numUnmatched + associateHelper.numMultipleMatches > 0 && Equals(_associateProteinsMode, AssociateProteinsMode.all_interactive))
             {
                 var resolved = ResolveMatchedProteins(associateHelper.numMultipleMatches,
-                    associateHelper.numUnmatched, associateHelper.numFiltered, out canceled);
+                    associateHelper.numUnmatched, associateHelper.numFiltered, whyNot, out canceled);
                 if (canceled)
                 {
                     checkBoxAssociateProteins.Checked = false;

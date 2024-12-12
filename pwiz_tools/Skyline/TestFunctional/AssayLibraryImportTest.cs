@@ -251,6 +251,10 @@ namespace pwiz.SkylineTestFunctional
             ImportTransitionListSkipColumnSelectWithMessage(textIrtGroupConflictAccept,
                 string.Format(Resources.PeptideGroupBuilder_FinalizeTransitionGroups_Two_transitions_of_the_same_precursor___0___m_z__1_____have_different_iRT_values___2__and__3___iRT_values_must_be_assigned_consistently_in_an_imported_transition_list_,
                     smDecorate + "AAAAAAAAAAAAAAAGAAGK", _asSmallMolecules ? 490.6015 : 492.9385, 53, 54), inconsistentIRTsCount, true);
+            if (_asSmallMolecules)
+            {
+                DismissAutoManageDialog(); // Say no to the offer to set new nodes to automanage
+            }
             var confirmIrtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(confirmIrtDlg, confirmIrtDlg.Btn0Click);
             var libraryAcceptDlg = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -1106,6 +1110,10 @@ importIrt => importIrt.Btn1Click());
             string textNoError = TestFilesDir.GetTestPath("Interleaved.csv");
             var expectedErrorCount = _asSmallMolecules ? 0 : 30; // Modifications issues don't apply to small molecule test
             ImportTransitionListSkipColumnSelectWithMessage(textNoError, null, expectedErrorCount, true);
+            if (_asSmallMolecules)
+            {
+                DismissAutoManageDialog(); // Say no to the offer to set new nodes to automanage
+            }
             var irtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
             OkDialog(irtDlg, irtDlg.Btn1Click);
             var libraryAcceptDlg = WaitForOpenForm<MultiButtonMsgDlg>();
@@ -1304,7 +1312,9 @@ importIrt => importIrt.Btn1Click());
                 doc = SkylineWindow.Document;
                 var columnSelectDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.ImportAssayLibrary(cirtsPath));  // Expect a confirmation of column selections
                 DemoPause("confirm columns");
-                var chooseIrt4 = ShowDialog<ChooseIrtStandardPeptidesDlg>(columnSelectDlg2.OkDialog);
+                OkDialog(columnSelectDlg2, columnSelectDlg2.OkDialog);
+                DismissAutoManageDialog(); // Say no to the offer to set new nodes to automanage
+                var chooseIrt4 = WaitForOpenForm<ChooseIrtStandardPeptidesDlg>();
                 DemoPause("choose standards", () => chooseIrt4.SetDialogStandard(chooseStandard));
                 OkDialog(chooseIrt4, () => chooseIrt4.OkDialogStandard(chooseStandard));
             }

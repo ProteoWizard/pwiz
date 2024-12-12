@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -63,6 +64,16 @@ namespace pwiz.SkylineTestFunctional
             const string libName = "Mixed";
 
             RunUI(() => SkylineWindow.NewDocument(true));
+
+            // Set transition filter to match library
+            RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.mixed));
+            var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            RunUI(() =>
+            {
+                transitionSettingsUI.Filter.SmallMoleculeFragmentAdducts = new [] {Adduct.M_PLUS, Adduct.M_PLUS_H};
+            });
+            OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
+
             var peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var libListDlg =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUi.EditLibraryList);
@@ -85,7 +96,6 @@ namespace pwiz.SkylineTestFunctional
             {
                 messageDlg.DialogResult = DialogResult.Yes; // Agree to add lib to document
             });
-
             // Verify that library imported properly
             using (new CheckDocumentState(4, 186, 230, 482))
             {

@@ -2042,45 +2042,123 @@ namespace pwiz.Skyline
             }
         }
 
-        private SrmDocument HandleSmallMoleculeAutomanage(MassListImporter massListImporter, SrmDocument doc, SrmDocument srmDocument)
+        private SrmDocument HandleSmallMoleculeAutomanage(MassListImporter massListImporter, SrmDocument docNewUnmanaged, SrmDocument docCurrent)
         {
             if (massListImporter.InputType == SrmDocument.DOCUMENT_TYPE.small_molecules)
             {
                 // We create new nodes with automanage turned off, but it might be interesting to user to have that on for isotopes etc
                 // Try applying auto-pick refinement to see if that changes anything 
                 var refine = new RefinementSettings
-                { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
-                var docManaged = refine.Refine(doc);
-                if (docManaged.MoleculeTransitionCount != 0 && // Automanage would turn everything off, not interesting
-                    !Equals(docManaged.MoleculeTransitionCount, doc.MoleculeTransitionCount))
+                    { AutoPickChildrenAll = PickLevel.precursors | PickLevel.transitions, AutoPickChildrenOff = false };
+                var docNewManaged = refine.Refine(docNewUnmanaged);
+                if (docNewManaged.MoleculeTransitionCount == 0)
                 {
-                    var existingPrecursorCount = srmDocument.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                    var existingFragmentCount = srmDocument.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                    var managedPrecursorCount = docManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                    var managedFragmentCount = docManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                    var docPrecursorCount = doc.MoleculeTransitions?.Where(t => t.IsMs1).Count();
-                    var docFragmentCount = doc.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
-                    var prompt = string.Format(
-                        Resources
-                            .SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
-                        managedPrecursorCount - existingPrecursorCount,
-                        managedFragmentCount - existingFragmentCount,
-                        docPrecursorCount - existingPrecursorCount,
-                        docFragmentCount - existingFragmentCount);
-                    var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable,
-                        SkylineResources.SkylineWindow_ImportMassList_Disable, true);
-                    if (result == DialogResult.Cancel)
-                    {
-                        doc = srmDocument;
-                    }
-                    else if (result != DialogResult.No)
-                    {
-                        doc = docManaged;
-                    }
+                    return docNewUnmanaged; // Automanage would turn everything off, not interesting
+                }
+
+                var managedPrecursorCount = docNewManaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                var managedFragmentCount = docNewManaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+                var unmanagedPrecursorCount = docNewUnmanaged.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                var unmanagedFragmentCount = docNewUnmanaged.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+
+                if (Equals(docNewManaged, docNewUnmanaged))
+                {
+                    return docNewUnmanaged; // Automanage would not change anything
+                }
+
+                var existingPrecursorCount = docCurrent.MoleculeTransitions?.Where(t => t.IsMs1).Count();
+                var existingFragmentCount = docCurrent.MoleculeTransitions?.Where(t => !t.IsMs1).Count();
+
+                var prompt = string.Format(
+                    Resources
+                        .SkylineWindow_ImportMassList_Do_you_want_to_use_the_document_settings_to_automanage_these_new_transitions,
+                    managedPrecursorCount - existingPrecursorCount,
+                    managedFragmentCount - existingFragmentCount,
+                    unmanagedPrecursorCount - existingPrecursorCount,
+                    unmanagedFragmentCount - existingFragmentCount);
+
+                var whyNot = ExplainSmallMoleculeFilterEffects(docNewUnmanaged, docNewManaged);
+
+                if (!string.IsNullOrEmpty(whyNot))
+                {
+                    prompt += whyNot;
+                }
+
+                var result = MultiButtonMsgDlg.Show(this, prompt, SkylineResources.SkylineWindow_ImportMassList_Enable,
+                    SkylineResources.SkylineWindow_ImportMassList_Disable, true);
+                if (result == DialogResult.Cancel)
+                {
+                    return docCurrent;
+                }
+                else if (result != DialogResult.No)
+                {
+                    return docNewManaged;
                 }
             }
 
-            return doc;
+            return docNewUnmanaged;
+        }
+
+        /// <summary>
+        /// Returns a multiline string offering Settings details that explain the differences between documents
+        /// </summary>
+        /// <param name="docUnFiltered"></param>
+        /// <param name="docFiltered"></param>
+        /// <returns>Multiline string offering Settings details that explain the differences between documents</returns>
+        public static string ExplainSmallMoleculeFilterEffects(SrmDocument docUnFiltered, SrmDocument docFiltered)
+        {
+            var filteredTransitions =
+                (docFiltered.MoleculeTransitions ?? Array.Empty<TransitionDocNode>()).Where(t => t.Transition.Group.IsCustomIon).ToArray();
+            var unfilteredTransitions =
+                (docUnFiltered.MoleculeTransitions ?? Array.Empty<TransitionDocNode>()).Where(t => t.Transition.Group.IsCustomIon).ToArray();
+            var managedPrecursorCount = filteredTransitions.Count(t => t.IsMs1);
+            var managedFragmentCount = filteredTransitions.Count(t => !t.IsMs1);
+            var unmanagedPrecursorCount = unfilteredTransitions.Count(t => t.IsMs1);
+            var unmanagedFragmentCount = unfilteredTransitions.Count(t => !t.IsMs1);
+
+            var managedTransitionGroups =
+                docFiltered.MoleculeTransitionGroups.Where(tg => tg.IsCustomIon).ToArray();
+            var unmanagedTransitionGroups =
+                docUnFiltered.MoleculeTransitionGroups.Where(tg => tg.IsCustomIon).ToArray();
+
+            var whyNot = new FilterReasonsSet();
+            if (unmanagedPrecursorCount != managedPrecursorCount)
+            {
+                if (filteredTransitions.Any(t => t.IsMs1 && t.Transition.CustomIon.HasChemicalFormula) || 
+                    unfilteredTransitions.Any(t => t.IsMs1 && t.Transition.CustomIon.HasChemicalFormula))
+                {
+                    // Interaction of chemical formula and isotope peaks setting
+                    whyNot.AddReason(FilterReason.TRANSITION_SETTINGS_FULL_SCAN_PRECURSOR_ISOTOPES);
+                }
+
+                if (!Adduct.SameEffectIgnoringIsotopeLabels(
+                        managedTransitionGroups.Select(p => p.PrecursorAdduct),
+                        unmanagedTransitionGroups.Select(p => p.PrecursorAdduct)))
+                {
+                    // Precursor adduct filtering
+                    whyNot.AddReason(FilterReason.TRANSITION_SETTINGS_FILTER_SMALL_MOL_PRECURSOR_ADDUCTS);
+                }
+            }
+
+            if (unmanagedFragmentCount != managedFragmentCount)
+            {
+                if (!Adduct.SameEffectIgnoringIsotopeLabels(
+                        filteredTransitions.Where(t => !t.IsMs1).Select(p => p.Transition.Adduct),
+                        unfilteredTransitions.Where(t => !t.IsMs1).Select(p => p.Transition.Adduct)))
+                {
+                    // Fragment adduct filtering
+                    whyNot.AddReason(FilterReason.TRANSITION_SETTINGS_FILTER_SMALL_MOL_FRAGMENT_ADDUCTS);
+                }
+
+                if (unmanagedTransitionGroups.Any(tg => tg.Transitions.Any(t =>
+                        !docFiltered.Settings.TransitionSettings.Instrument.IsMeasurable(t.Mz, tg.PrecursorMz))))
+                {
+                    // Instrument m/z range
+                    whyNot.AddReason(FilterReason.TRANSITION_SETTINGS_INSTRUMENT_MZ_RANGE);
+                }
+            }
+
+            return whyNot.DisplayString();
         }
 
         /// <summary>

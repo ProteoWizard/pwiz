@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
                     // PeptideGroupDocNode.GenerateColors is slow, so it's faster to just tell the peptide what
                     // color it should be
                     peptideDocNode = peptideDocNode.ChangeColor(Color.Black);
-                    peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                    peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL, null);
                     peptideDocNodes.Add(peptideDocNode);
                 }
             }

@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Model
             // Skip sequences that can be created from the current settings.
             // Check first if the sequence has any modifications, because creating doc nodes is expensive
             while (!HasModsChecked(_sequences.Current) ||
-                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, out _) != null)
+                   CreateDocNodeFromSettings(new Target(_sequences.Current), null, DIFF_GROUPS, null, out _) != null)
             {
                 if (!MoveNextSingleSequence())
                     return false;
@@ -563,12 +563,12 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public override PeptideDocNode GetModifiedNode(string seq)
+        public override PeptideDocNode GetModifiedNode(string seq, FilterReasonsSet whyNot = null)
         {
-            return GetModifiedNode(seq, null);
+            return GetModifiedNode(seq, null, whyNot);
         }
 
-        public PeptideDocNode GetModifiedNode(string seq, FastaSequence fastaSequence)
+        public PeptideDocNode GetModifiedNode(string seq, FastaSequence fastaSequence, FilterReasonsSet whyNot = null)
         {
             var seqUnmod = FastaSequence.StripModifications(seq);
             var peptide = fastaSequence != null
@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Model
                             Settings.PeptideSettings.Enzyme.CountCleavagePoints(seqUnmod));
             // First, try to create the peptide using the current settings.
             PeptideDocNode nodePep = 
-                CreateDocNodeFromSettings(new Target(seq), peptide, SrmSettingsDiff.ALL, out _);
+                CreateDocNodeFromSettings(new Target(seq), peptide, SrmSettingsDiff.ALL, whyNot, out _);
             if (nodePep != null)
                 return nodePep;
             // Create the peptideDocNode.

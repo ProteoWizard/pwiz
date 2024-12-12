@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model
                     TransitionDocNode[] transitions = peptideDocNode.GetMatchingTransitions(tranGroup, smallDocument.Settings, newExplicitMods);
 
                     var nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
-                    nodeGroup = nodeGroup.ChangeSettings(smallDocument.Settings, peptideDocNode, newExplicitMods, SrmSettingsDiff.ALL);
+                    nodeGroup = nodeGroup.ChangeSettings(smallDocument.Settings, peptideDocNode, newExplicitMods, SrmSettingsDiff.ALL, null);
                     transitionGroupsToAdd.Add(nodeGroup);
                 }
             }

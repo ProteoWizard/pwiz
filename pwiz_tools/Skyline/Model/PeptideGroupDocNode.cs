@@ -174,7 +174,7 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), im => im.ProportionDecoysMatch = proportion);
         }
 
-        public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff,
+        public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, FilterReasonsSet whyNot = null,
             DocumentSettingsContext context = null)
         {
             if (diff.Monitor != null)
@@ -255,7 +255,7 @@ namespace pwiz.Skyline.Model
                     if (nodePepResult != null)
                     {
                         // Materialize children of the peptide.
-                        nodePepResult = nodePepResult.ChangeSettings(settingsNew, diffNode);
+                        nodePepResult = nodePepResult.ChangeSettings(settingsNew, diffNode, whyNot);
                         if (settingsNew.TransitionSettings.Libraries.MinIonCount > 0 && nodePepResult.TransitionGroupCount == 0)
                             continue;
 
@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 if (PeptideGroup.Sequence != null)
-                    childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, true);
+                    childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, true, whyNot);
 
                 return (PeptideGroupDocNode) ChangeChildrenChecked(childrenNew);
             }
@@ -316,7 +316,7 @@ namespace pwiz.Skyline.Model
 
                     // Enumerate the nodes making necessary changes.
                     foreach (PeptideDocNode nodePeptide in nodeResult.Children)
-                        childrenNew.Add(nodePeptide.ChangeSettings(settingsNew, diff));
+                        childrenNew.Add(nodePeptide.ChangeSettings(settingsNew, diff, whyNot));
 
                     childrenNew = RankChildren(settingsNew, childrenNew);
 
@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model
         public IList<DocNode> RankChildren(SrmSettings settingsNew, IList<DocNode> childrenNew)
         {
             if (PeptideGroup.Sequence != null)
-                childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, false);
+                childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, false, null);
             return childrenNew;
         }
 
@@ -441,7 +441,7 @@ namespace pwiz.Skyline.Model
                         // two nodes in the tree to have the same Id.  So, use a copy instead.
                         if (nodePep.HasExplicitMods)
                             peptide = (Peptide) peptide.Copy();
-                        foreach (PeptideDocNode nodePepResult in peptide.CreateDocNodes(settings, filter))
+                        foreach (PeptideDocNode nodePepResult in peptide.CreateDocNodes(settings, filter, null))
                         {
                             if (!explicitKeys.Contains(nodePepResult.Key))
                             {

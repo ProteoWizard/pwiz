@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// // Gives list of precursors - formerly in TransitionGroupTreeNode.GetChoices
         /// </summary>
-        public IList<DocNode> GetPrecursorChoices(SrmSettings settings, ExplicitMods mods, bool useFilter)
+        public IList<DocNode> GetPrecursorChoices(SrmSettings settings, ExplicitMods mods, bool useFilter, FilterReasonsSet whyNot = null)
         {
             SpectrumHeaderInfo libInfo = null;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model
 
             var listChoices = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in GetTransitions(settings, mods,
-                PrecursorMz, IsotopeDist, libInfo, transitionRanks, useFilter))
+                PrecursorMz, IsotopeDist, libInfo, transitionRanks, useFilter, whyNot))
             {
                 listChoices.Add(nodeTran);
             }
@@ -937,7 +937,7 @@ namespace pwiz.Skyline.Model
             return node;
         }
 
-        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff)
+        public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, PeptideDocNode nodePep, ExplicitMods mods, SrmSettingsDiff diff, FilterReasonsSet whyNot)
         {
             double precursorMz = PrecursorMz;
             IsotopeDistInfo isotopeDist = IsotopeDist;
@@ -978,7 +978,7 @@ namespace pwiz.Skyline.Model
                 // TODO: Use TransitionLossKey
                 Dictionary<TransitionLossKey, DocNode> mapIdToChild = CreateTransitionLossToChildMap();
                 foreach (TransitionDocNode nodeTran in GetTransitions(settingsNew, mods,
-                        precursorMz, isotopeDist, libInfo, transitionRanks, true))
+                        precursorMz, isotopeDist, libInfo, transitionRanks, true, whyNot))
                 {
                     TransitionDocNode nodeTranResult;
 
@@ -1125,7 +1125,9 @@ namespace pwiz.Skyline.Model
                         }
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
-                        if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz))
+                        if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz) &&
+                            (nodeNew.Transition.IonType == IonType.precursor || 
+                             !settingsNew.TransitionSettings.Filter.IsExcluded(nodeNew.Mz, precursorMz))) // Watch for unfragmented precursors in MS2
                             childrenNew.Add(nodeNew);
                     }
 
@@ -1161,27 +1163,28 @@ namespace pwiz.Skyline.Model
         }
 
         public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
-            IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks, bool useFilter)
+            IsotopeDistInfo isotopeDist, SpectrumHeaderInfo libInfo, Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
+            bool useFilter, FilterReasonsSet whyNot = null)
         {
             if (mods == null || !mods.HasCrosslinks)
             {
                 return TransitionGroup.GetTransitions(settings, this, mods, precursorMz, isotopeDist, libInfo, transitionRanks,
-                    useFilter, true);
+                    useFilter, true, whyNot);
             }
             var crosslinkBuilder = new CrosslinkBuilder(settings, TransitionGroup.Peptide, mods, LabelType);
             return crosslinkBuilder.GetTransitionDocNodes(TransitionGroup, precursorMz, isotopeDist, transitionRanks,
-                useFilter);
+                useFilter, whyNot);
         }
 
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)
         {
             var result = this;
             // Check if children will change as a result of ChangeSettings.
-            var changed = result.ChangeSettings(settings, parent, mods, SrmSettingsDiff.ALL);
+            var changed = result.ChangeSettings(settings, parent, mods, SrmSettingsDiff.ALL, null);
             if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
             {
                 changed = result = (TransitionGroupDocNode)result.ChangeAutoManageChildren(false);
-                changed = changed.ChangeSettings(settings, parent, mods, SrmSettingsDiff.ALL);
+                changed = changed.ChangeSettings(settings, parent, mods, SrmSettingsDiff.ALL, null);
             }
             // Make sure node points to correct parent.
             if (!ReferenceEquals(parent.Peptide, TransitionGroup.Peptide))
@@ -3026,7 +3029,7 @@ namespace pwiz.Skyline.Model
             }
             nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
             // Update properties so that the next settings change will update results correctly
-            nodeResult = nodeResult.ChangeSettings(settings, nodePep, nodePep.ExplicitMods, SrmSettingsDiff.PROPS);
+            nodeResult = nodeResult.ChangeSettings(settings, nodePep, nodePep.ExplicitMods, SrmSettingsDiff.PROPS, null);
             var diff = new SrmSettingsDiff(settings, true);
             return nodeResult.UpdateResults(settings, diff, nodePep, this);
         }

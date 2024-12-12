@@ -1155,7 +1155,7 @@ namespace pwiz.Skyline.Model
                 }
                 var nodesToConsider = nodeForModPep != null ? 
                                       new List<PeptideDocNode> {nodeForModPep} :
-                                      Peptide.CreateAllDocNodes(Settings, info.PeptideSequence);
+                                      Peptide.CreateAllDocNodes(Settings, info.PeptideSequence, null);
                 foreach (var nodePep in nodesToConsider)
                 {
                     var variableMods = nodePep.ExplicitMods;
@@ -1223,7 +1223,7 @@ namespace pwiz.Skyline.Model
                                                               lineNum, lineText);
                 }
                 // If it's within the instrument settings but not measurable, problem must be in the isolation scheme
-                else if (!Settings.TransitionSettings.IsMeasurablePrecursor(precursorMz))
+                else if (!Settings.TransitionSettings.IsMeasurablePrecursor(precursorMz, out _))
                 {
                     precursorMz = Math.Round(SequenceMassCalc.PersistentMZ(precursorMz), MZ_ROUND_DIGITS);
                     errorInfo = new TransitionImportErrorInfo(TextUtil.SpaceSeparate(string.Format(ModelResources.MassListRowReader_CalcPrecursorExplanations_The_precursor_m_z__0__of_the_peptide__1__is_outside_the_range_covered_by_the_DIA_isolation_scheme_,
@@ -1454,7 +1454,7 @@ namespace pwiz.Skyline.Model
                     var modMatcher = CreateModificationMatcher(settings, new[] {modifiedSequence});
                     nodeForModPep = modMatcher.GetModifiedNode(modifiedSequence, null);
                 }
-                var nodesToConsider = Peptide.CreateAllDocNodes(settings, sequence).ToList();
+                var nodesToConsider = Peptide.CreateAllDocNodes(settings, sequence, null).ToList();
                 if (nodeForModPep != null)
                     nodesToConsider.Insert(0, nodeForModPep);
 
@@ -3019,7 +3019,7 @@ namespace pwiz.Skyline.Model
                 // If there is a ModificationMatcher, use it to create the DocNode.
                 PeptideDocNode nodePep;
                 if (_modMatcher != null)
-                    nodePep = _modMatcher.GetModifiedNode(seqMod);
+                    nodePep = _modMatcher.GetModifiedNode(seqMod, null);
                 else
                 {
                     Peptide peptide = new Peptide(null, seq, null, null, _enzyme.CountCleavagePoints(seq));
@@ -3469,7 +3469,7 @@ namespace pwiz.Skyline.Model
                 if (_charges.TryGetValue(nodePep.Id.GlobalIndex, out var charge))
                 {
                     var settingsCharge = _settings.ChangeTransitionFilter(f => f.ChangePeptidePrecursorCharges(new[] {charge}));
-                    nodePepAdd = (PeptideDocNode) nodePep.ChangeSettings(settingsCharge, diff)
+                    nodePepAdd = (PeptideDocNode) nodePep.ChangeSettings(settingsCharge, diff, null)
                                                          .ChangeAutoManageChildren(false);
                 }
                 newChildren.Add(nodePepAdd);

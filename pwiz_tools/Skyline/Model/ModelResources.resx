@@ -466,8 +466,11 @@
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
     <value>Adjusting peak boundaries</value>
   </data>
-  <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
+    <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>The precursor m/z {0} is not measureable with your current instrument settings.</value>
+  </data>
+  <data name="PasteDlg_GetMoleculeTransitionGroup_The_fragment_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
+    <value>The fragment m/z {0} is not measureable with your current instrument settings.</value>
   </data>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_drift_time_high_energy_offset_value__0_" xml:space="preserve">
     <value>Invalid drift time high energy offset value {0}</value>

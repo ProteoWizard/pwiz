@@ -827,7 +827,7 @@ namespace pwiz.Skyline.Model
                         ReferenceEquals(nodeExisting, nodePep))
                     moleculeNodes[i] = nodePep;
                 else
-                    moleculeNodes[i] = nodePep.ChangeSettings(Settings, diffResults);
+                    moleculeNodes[i] = nodePep.ChangeSettings(Settings, diffResults, null);
             });
 
             return RegroupMolecules(children, moleculeNodes);
@@ -990,7 +990,7 @@ namespace pwiz.Skyline.Model
                 throw;
             }
         }
-        private SrmDocument ChangeSettingsInternalOrThrow(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor)
+        private SrmDocument ChangeSettingsInternalOrThrow(SrmSettings settingsNew, SrmSettingsChangeMonitor progressMonitor, FilterReasonsSet whyNot = null)
         {
             settingsNew = UpdateHasHeavyModifications(settingsNew);
             // First figure out what changed.
@@ -1067,7 +1067,7 @@ namespace pwiz.Skyline.Model
                             progressMonitor.ChangeProgress(status => status.ChangePercentComplete(percentComplete.Value));
                     }
                     var nodeGroup = (PeptideGroupDocNode)Children[i];
-                    childrenParallel[i] = nodeGroup.ChangeSettings(settingsParallel, diff,
+                    childrenParallel[i] = nodeGroup.ChangeSettings(settingsParallel, diff, null,
                        new DocumentSettingsContext(uniquenessPrecheckChildren[i], uniquenessDict)); 
                 });
                 childrenNew = childrenParallel;
@@ -1103,7 +1103,7 @@ namespace pwiz.Skyline.Model
                     }
 
                     var nodePep = moleculeGroupPairs[i].ReleaseMolecule();
-                    moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff);
+                    moleculeNodes[i] = nodePep.ChangeSettings(settingsParallel, diff, whyNot);
                 });
 
                 childrenNew = RegroupMolecules(Children, moleculeNodes,
@@ -1940,13 +1940,13 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ChangePeptideMods(IdentityPath peptidePath, ExplicitMods mods,
-            IList<StaticMod> listGlobalStaticMods, IList<StaticMod> listGlobalHeavyMods)
+            IList<StaticMod> listGlobalStaticMods, IList<StaticMod> listGlobalHeavyMods, FilterReasonsSet whyNot = null)
         {
-            return ChangePeptideMods(peptidePath, mods, false, listGlobalStaticMods, listGlobalHeavyMods);
+            return ChangePeptideMods(peptidePath, mods, false, listGlobalStaticMods, listGlobalHeavyMods, whyNot);
         }
 
         public SrmDocument ChangePeptideMods(IdentityPath peptidePath, ExplicitMods mods, bool createCopy,
-            IList<StaticMod> listGlobalStaticMods, IList<StaticMod> listGlobalHeavyMods)
+            IList<StaticMod> listGlobalStaticMods, IList<StaticMod> listGlobalHeavyMods, FilterReasonsSet whyNot = null)
         {
             var docResult = this;
             var pepMods = docResult.Settings.PeptideSettings.Modifications;
@@ -1984,12 +1984,12 @@ namespace pwiz.Skyline.Model
                                                         null,   // Results
                                                         nodePeptide.Children.ToList().ConvertAll(node => (TransitionGroupDocNode)node).ToArray(),
                                                         nodePeptide.AutoManageChildren);
-                    nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL);
+                    nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL, whyNot);
                     docResult = (SrmDocument)docResult.Insert(peptidePath, nodePeptide, true);
                 }
                 else
                 {
-                    nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL);
+                    nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL, whyNot);
                     docResult = (SrmDocument)docResult.ReplaceChild(peptidePath.Parent, nodePeptide);
                 }
 
@@ -2000,7 +2000,7 @@ namespace pwiz.Skyline.Model
                 if (!nodePepGroup.IsPeptideList)
                 {
                     // Make sure peptides are ranked correctly
-                    var childrenNew = PeptideGroup.RankPeptides(nodePepGroup.Children, docResult.Settings, false);
+                    var childrenNew = PeptideGroup.RankPeptides(nodePepGroup.Children, docResult.Settings, false, null);
                     docResult = (SrmDocument)docResult.ReplaceChild(nodePepGroup
                         .ChangeAutoManageChildren(false)
                         .ChangeChildrenChecked(childrenNew));

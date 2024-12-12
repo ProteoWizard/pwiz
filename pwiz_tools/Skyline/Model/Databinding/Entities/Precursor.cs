@@ -532,7 +532,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                         {
                             var srmSettingsDiff = new SrmSettingsDiff(false, false, false, false, true, false);
                             docNode = docNode.ChangeSettings(SrmDocument.Settings, Peptide.DocNode, Peptide.DocNode.ExplicitMods,
-                                srmSettingsDiff);
+                                srmSettingsDiff, null);
                         }
 
                         return docNode;

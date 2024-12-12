@@ -231,7 +231,7 @@ namespace pwiz.SkylineTest
                 explicitModsWithCrosslink, null, ExplicitTransitionGroupValues.EMPTY, null, null, true);
             
             var peptideDocNode = new PeptideDocNode(mainPeptide, settings, explicitModsWithCrosslink, null, ExplicitRetentionTimeInfo.EMPTY, new []{transitionGroupDocNode}, false);
-            peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL);
+            peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL, null);
             Assert.AreNotEqual(0, peptideDocNode.TransitionCount);
             var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY, "Peptides", null, new []{peptideDocNode});
             var srmDocument = (SrmDocument) new SrmDocument(settings).ChangeChildren(new[] {peptideGroupDocNode});

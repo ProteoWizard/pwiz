@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
                 PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, false);
                 Assert.AreEqual(9, insertPeptidesDlg.PeptideRowCount);
                 Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainPeptide(peptide =>
-                    !SkylineWindow.Document.Settings.Accept(peptide)));
+                    !SkylineWindow.Document.Settings.Accept(peptide, null)));
                 RunUI(insertPeptidesDlg.ClearRows);
                 // Pasting garbage should throw an error then disallow the paste.
                 SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT_GARBAGE);

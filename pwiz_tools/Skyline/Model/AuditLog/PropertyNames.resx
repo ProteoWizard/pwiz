@@ -1241,6 +1241,9 @@
   <data name="TransitionFilterAndLibrariesSettings_PeptideIonTypes" xml:space="preserve">
     <value>Ion types</value>
   </data>
+  <data name="TransitionFilterAndLibrariesSettings_SmallMoleculeIonTypes" xml:space="preserve">
+    <value>Small Molecule Ion types</value>
+  </data>
   <data name="TransitionFilterAndLibrariesSettings_PeptidePrecursorCharges" xml:space="preserve">
     <value>Precursor charges</value>
   </data>

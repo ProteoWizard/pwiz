@@ -79,13 +79,13 @@ namespace pwiz.Skyline.Model.Crosslinking
             return _precursorMolecule;
         }
 
-        public IEnumerable<SingleFragmentIon> GetSingleFragmentIons(TransitionGroup transitionGroup, bool useFilter)
+        public IEnumerable<SingleFragmentIon> GetSingleFragmentIons(TransitionGroup transitionGroup, bool useFilter, FilterReasonsSet whyNot)
         {
             yield return SingleFragmentIon.EMPTY;
             var transitionGroupDocNode = MakeTransitionGroupDocNode(transitionGroup);
             foreach (var transitionDocNode in transitionGroupDocNode.TransitionGroup.GetTransitions(Settings,
                 transitionGroupDocNode, ExplicitMods, transitionGroupDocNode.PrecursorMz,
-                transitionGroupDocNode.IsotopeDist, null, null, useFilter, false))
+                transitionGroupDocNode.IsotopeDist, null, null, useFilter, false, whyNot))
             {
                 if (transitionDocNode.Transition.MassIndex != 0)
                 {

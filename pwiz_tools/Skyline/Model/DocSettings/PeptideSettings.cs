@@ -28,6 +28,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
@@ -779,10 +780,11 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="settings">Settings under which filtering is requested</param>
         /// <param name="peptide">The peptide being considered</param>
         /// <param name="explicitMods">Any modifications which will be applied to the peptide, or null for none</param>
+        /// <param name="whyNot">Human readable explanation of filter rejection if any</param>
         /// <param name="allowVariableMods">True if variable modifications of this peptide may produce
         /// acceptable variants of this peptide</param>
         /// <returns>True if the peptide should be included</returns>
-        bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods);
+        bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out string whyNot, out bool allowVariableMods);
 
         /// <summary>
         /// Returns a potential override to the maximum number of variable modifcations in the SrmSettings.
@@ -911,28 +913,47 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         #endregion
 
-        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
+        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out string whyNot, out bool allowVariableMods)
         {
             allowVariableMods = false;
+            whyNot = null;
 
             if (peptide.IsCustomMolecule)
                 return false;
 
             // Must begin after excluded C-terminal AAs
             if (peptide.Begin.HasValue && peptide.Begin.Value < ExcludeNTermAAs)
+            {
+                whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_EXCLUDE_NTERM_AAS;
                 return false;
+            }
 
             // Must be within acceptable length range
             string sequence = peptide.Target.Sequence;
             int len = sequence.Length;
-            if (MinPeptideLength > len || len > MaxPeptideLength)
+            if (MinPeptideLength > len)
+            {
+                whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_MIN_PEPTIDE_LENGTH;
                 return false;
+            }
+
+            if (MinPeptideLength > len || len > MaxPeptideLength)
+            {
+                whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_MAX_PEPTIDE_LENGTH;
+                return false;
+            }
 
             // No exclusion matches allowed
             if (_regexExclude != null && _regexExclude.Match(sequence).Success)
+            {
+                whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_EXCLUSIONS;
                 return false;
+            }
             if (_regexInclude != null && !_regexInclude.Match(sequence).Success)
+            {
+                whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_EXCLUSIONS;
                 return false;
+            }
 
             // Allow variable mods beyond this point, since filtering occurs based
             // on the modification state of the peptide.
@@ -945,15 +966,24 @@ namespace pwiz.Skyline.Model.DocSettings
                 // the user creating the exclusion expressions.
                 var sequenceMod = calcMod.GetModifiedSequenceDisplay(peptide.Target).ToString();
                 if (_regexExcludeMod != null && _regexExcludeMod.Match(sequenceMod).Success)
+                {
+                    whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_EXCLUSIONS;
                     return false;
+                }
                 if (_regexIncludeMod != null && !_regexIncludeMod.Match(sequenceMod).Success)
+                {
+                    whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_EXCLUSIONS;
                     return false;
+                }
             }
 
             // Peptide uniqueness checks can be expensive, so do this last
             if ((settings.PeptideSettings.Filter.PeptideUniqueness != PeptideUniquenessConstraint.none)
-                && !CheckPeptideUniqueness(settings, peptide.Target)) 
+                && !CheckPeptideUniqueness(settings, peptide.Target))
+            {
+                whyNot = FilterReason.PEPTIDE_SETTINGS_FILTER_PEPTIDE_UNIQUENESS;
                 return false;
+            }
 
             return true;
         }
@@ -1202,9 +1232,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             #region Implementation of IPeptideFilter
 
-            public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
+            public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out string whyNot, out bool allowVariableMods)
             {
                 allowVariableMods = true;
+                whyNot = null;
                 return true;
             }
 

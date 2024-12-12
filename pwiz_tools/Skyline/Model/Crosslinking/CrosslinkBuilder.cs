@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -193,7 +194,7 @@ namespace pwiz.Skyline.Model.Crosslinking
         }
 
         public IEnumerable<NeutralFragmentIon> GetComplexFragmentIons(TransitionGroup transitionGroup,
-            bool useFilter)
+            bool useFilter, FilterReasonsSet whyNot)
         {
             var simpleTransitions = new List<IList<SingleFragmentIon>>();
             for (int i = 0; i < _peptideBuilders.Count; i++)
@@ -208,7 +209,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     peptideTransitionGroup = builder.MakeTransitionGroup(transitionGroup.LabelType, Adduct.SINGLY_PROTONATED);
                 }
-                simpleTransitions.Add(_peptideBuilders[i].GetSingleFragmentIons(peptideTransitionGroup, useFilter).ToList());
+                simpleTransitions.Add(_peptideBuilders[i].GetSingleFragmentIons(peptideTransitionGroup, useFilter, whyNot).ToList());
             }
 
             int maxNeutralLosses = Settings.PeptideSettings.Modifications.MaxNeutralLosses;
@@ -220,14 +221,14 @@ namespace pwiz.Skyline.Model.Crosslinking
             double precursorMz,
             IsotopeDistInfo isotopeDist,
             Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
-            bool useFilter)
+            bool useFilter, FilterReasonsSet whyNot)
         {
-            var complexFragmentIons = GetComplexFragmentIons(transitionGroup, useFilter);
+            var complexFragmentIons = GetComplexFragmentIons(transitionGroup, useFilter, whyNot);
             
             var allTransitions =
                 RemoveUnmeasurable(precursorMz,
                         RemoveDuplicates(
-                            MakeTransitionDocNodes(transitionGroup, isotopeDist, complexFragmentIons, useFilter)))
+                            MakeTransitionDocNodes(transitionGroup, isotopeDist, complexFragmentIons, useFilter, whyNot)))
                     .OrderBy(tran => tran.ComplexFragmentIon)
                     .ToList();
             
@@ -240,7 +241,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 if (Settings.TransitionSettings.FullScan.IsHighResPrecursor)
                 {
                     ms1transitions = ms1transitions.SelectMany(tran =>
-                        RemoveUnmeasurable(precursorMz, ExpandPrecursorIsotopes(tran, isotopeDist, useFilter))).ToList();
+                        RemoveUnmeasurable(precursorMz, ExpandPrecursorIsotopes(tran, isotopeDist, useFilter, whyNot))).ToList();
                 }
             }
             else
@@ -253,6 +254,7 @@ namespace pwiz.Skyline.Model.Crosslinking
             {
                 if (!Settings.TransitionSettings.Filter.PeptideIonTypes.Contains(IonType.precursor))
                 {
+                    whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FILTER_PEPTIDE_ION_TYPES);
                     ms1transitions = new TransitionDocNode[0];
                 }
 
@@ -359,7 +361,8 @@ namespace pwiz.Skyline.Model.Crosslinking
             TransitionGroup transitionGroup,
             IsotopeDistInfo isotopeDist,
             IEnumerable<NeutralFragmentIon> complexFragmentIons,
-            bool useFilter)
+            bool useFilter,
+            FilterReasonsSet whyNot)
         {
             bool excludePrecursors = false;
             HashSet<Adduct> productAdducts = new HashSet<Adduct>(Settings.TransitionSettings.Filter.PeptideProductCharges);
@@ -384,6 +387,7 @@ namespace pwiz.Skyline.Model.Crosslinking
                 {
                     if (excludePrecursors)
                     {
+                        whyNot?.AddReason(FilterReason.TRANSITION_SETTINGS_FILTER_PEPTIDE_ION_TYPES );
                         continue;
                     }
                     var expectedCharge = transitionGroup.PrecursorAdduct.AdductCharge;
@@ -410,10 +414,10 @@ namespace pwiz.Skyline.Model.Crosslinking
             }
         }
 
-        public IEnumerable<TransitionDocNode> ExpandPrecursorIsotopes(TransitionDocNode transitionNode, IsotopeDistInfo isotopeDist, bool useFilter)
+        public IEnumerable<TransitionDocNode> ExpandPrecursorIsotopes(TransitionDocNode transitionNode, IsotopeDistInfo isotopeDist, bool useFilter, FilterReasonsSet whyNot)
         {
             var fullScan = Settings.TransitionSettings.FullScan;
-            foreach (int massIndex in fullScan.SelectMassIndices(isotopeDist, useFilter))
+            foreach (int massIndex in fullScan.SelectMassIndices(isotopeDist, useFilter, whyNot))
             {
                 var complexFragmentIon = transitionNode.ComplexFragmentIon.ChangeMassIndex(massIndex);
                 yield return MakeTransitionDocNode(complexFragmentIon, isotopeDist);
