@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.PInvoke
@@ -32,6 +33,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
                                                    User32.SetWindowPosFlags.SHOWWINDOW;
 
             User32.SetWindowPos(targetWindow.Handle, referenceWindowHandle, 0, 0, 0, 0, flags);
+        }
+
+        public static int GetGuiResources(this Process process, User32.HandleType type)
+        {
+            return User32.GetGuiResources(process.Handle, (int)type);
         }
 
         public static int GetScrollPos(this Control control, Orientation sd)

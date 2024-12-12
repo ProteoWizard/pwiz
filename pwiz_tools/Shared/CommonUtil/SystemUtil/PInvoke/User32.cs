@@ -22,20 +22,31 @@ using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
-    // TODO: add static check for InteropServices - list of allowed uses
-    //      pwiz_tools\Shared\CommonUtil\SystemUtil\PInvoke\*
+    // TODO: add static check preventing use of InteropServics. Except for allowed uses:
+    //      pwiz_tools\Shared\CommonUtil\SystemUtil\PInvoke\* - win32 interop
     //      pwiz_tools\Shared\zedgraph\ZedGraph\ZedGraphControl.ContextMenu.cs - avoid changing ZedGraph
+    //      pwiz_tools\Skyline\TestUtil\TestFunctional.cs - uses ExternalException to catch Clipboard errors
+    //      pwiz_tools\Skyline\Util\UtilUIExtra.cs - uses ExternalException to catch Clipboard errors
+    //      pwiz_tools\Skyline\Util\MemoryInfo.cs - most of this class is a win32 struct only used therein
+    //      pwiz_tools\Skyline\TestUtil\FileLockingProcessFinder.cs - 100 LOC used only locally to debug file locking problems
+    //      pwiz_tools\Skyline\TestRunnerLib\RunTests.cs - 62 LOC related to heap management
+    //      pwiz_tools\Skyline\TestRunner\UnusedPortFinder.cs - > 150 LOC related to marshaling info for TCP port management
 
     public static class User32
     {
-        // TODO: add Clipboard extension methods
-
         // TODO: standardize constant values on hex (ideal). Minimally, be consistent for related constants.
         // ReSharper disable InconsistentNaming IdentifierTypo
         public const int WM_SETREDRAW = 11;
         public const int WM_VSCROLL = 0x0115;
         public const int SB_THUMBPOSITION = 4;
+        public const int GWL_STYLE = -16;
         public const uint PBM_SETSTATE = 0x0410; // 1040
+        public const int WS_VSCROLL = 0x00200000;
+        public const int WS_HSCROLL = 0x00100000;
+        public const ulong WS_VISIBLE = 0x10000000L;
+        public const ulong WS_BORDER = 0x00800000L;
+        public const ulong TARGETWINDOW = WS_BORDER | WS_VISIBLE;
+        public const int CF_ENHMETAFILE = 14;
         // ReSharper restore InconsistentNaming IdentifierTypo
 
         public static IntPtr FALSE = new IntPtr(0);
@@ -58,6 +69,14 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
 
         [Flags]
+        public enum HandleType : int
+        {
+            total = -1,
+            gdi = 0,
+            user = 1
+        }
+
+        [Flags]
         public enum SetWindowPosFlags : uint
         {
             // ReSharper disable InconsistentNaming IdentifierTypo
@@ -69,7 +88,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
 
         [Flags]
-        public enum WinMessageFlags : uint
+        public enum WindowsMessageType : uint
         {
             // ReSharper disable InconsistentNaming IdentifierTypo
             PAINT = 0x000F,
@@ -158,16 +177,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             }
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        // ReSharper disable once InconsistentNaming
-        public struct SIZE
-        {
-            public int cx;
-            public int cy;
-
-            public Size Size => new Size(cx, cy);
-        }
-
         // TODO: declaring DLL name - use (1) DllImport(nameof(User32)) or (2) DllImport("user32.dll")
         [DllImport(nameof(User32))]
         public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
@@ -185,13 +194,22 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool CloseClipboard();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool EmptyClipboard();
+        
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
 
         [DllImport("user32.dll")]
         public static extern bool EnumThreadWindows(int tid, EnumThreadWndProc callback, IntPtr lp);
-
         public delegate bool EnumThreadWndProc(IntPtr hWnd, IntPtr lp);
+
+        [DllImport("user32.dll")]
+        public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
         public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
@@ -202,6 +220,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDCEx(IntPtr hWnd, IntPtr hRgn, uint dwFlags);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetOpenClipboardWindow();
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern int GetScrollPos(IntPtr hWnd, int nBar);
 
@@ -211,15 +236,27 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetWindowDC(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll")]
+        public static extern ulong GetWindowLongA(IntPtr hWnd, int nIndex);
+
         // TODO: add extension method?
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
+
+        [DllImport("user32.dll")]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool IsWindowVisible(IntPtr hwnd);
 
         [DllImport("user32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
+
+        [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]
+        public static extern bool OpenClipboard(IntPtr hWndNewOwner);
 
         [DllImport("user32.dll")]
         public static extern bool PostMessageA(IntPtr hWnd, int nBar, int wParam, int lParam);
@@ -244,7 +281,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool SetCapture(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+        
+        [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetKeyboardState(byte[] lpKeyState);
 
         // TODO (ekoneil): delete
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -254,7 +297,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern int ShowWindow(IntPtr hWnd, short cmdShow);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
+        public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref PInvokeCommon.SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
 
         public static Control GetFocusedControl()
         {
@@ -271,7 +314,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         internal static extern IntPtr GetFocus();
-        
+
+        [DllImport("user32.dll")]
+        internal static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
+
         [DllImport("user32.dll")]
         internal static extern bool HideCaret(IntPtr hWnd);
 

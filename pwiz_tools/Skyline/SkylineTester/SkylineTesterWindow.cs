@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -35,6 +34,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
+using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTester.Properties;
 using TestRunnerLib;
 using ZedGraph;
@@ -222,7 +222,7 @@ namespace SkylineTester
 
             // Refresh shell if association changed.
             if (checkRegistry == null)
-                SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+                Shell32.SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 
             _runButtons = new[]
             {
@@ -345,9 +345,6 @@ namespace SkylineTester
             loader.DoWork += BackgroundLoad;
             loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
-
-        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
 
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
         {

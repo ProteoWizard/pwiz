@@ -235,9 +235,6 @@ namespace SkylineTester
             Marshal.ReleaseComObject(dte);
         }
 
-        [DllImport("ole32.dll")]
-        private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
-
         // from http://blogs.msdn.com/b/kirillosenkov/archive/2011/08/10/how-to-get-dte-from-visual-studio-process-id.aspx
         public static DTE GetDTE(string file, string lineNumberText)
         {
@@ -274,7 +271,7 @@ namespace SkylineTester
 
             try
             {
-                Marshal.ThrowExceptionForHR(CreateBindCtx(0, out bindCtx));
+                Marshal.ThrowExceptionForHR(Ole32.CreateBindCtx(0, out bindCtx));
                 bindCtx.GetRunningObjectTable(out rot);
                 rot.EnumRunning(out enumMonikers);
 

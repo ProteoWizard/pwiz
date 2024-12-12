@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Controls
                         OnPaint(new PaintEventArgs(g, GetClientRectangle(bounds)));
                     }
 
-                    User32.SIZE size1;
+                    PInvokeCommon.SIZE size1;
                     User32.POINT point1;
                     User32.POINT point2;
 
@@ -605,36 +605,36 @@ namespace pwiz.Skyline.Controls
 
         protected override void WndProc(ref Message m)
         {
-            var msgID = (User32.WinMessageFlags)m.Msg;
+            var msgID = (User32.WindowsMessageType)m.Msg;
 
             switch (msgID)
             {
-                case User32.WinMessageFlags.PAINT:
+                case User32.WindowsMessageType.PAINT:
                 {
                     PerformWmPaint(ref m);
                     return;
                 }
-                case User32.WinMessageFlags.ERASEBKGND:
+                case User32.WindowsMessageType.ERASEBKGND:
                 {
                     m.Result = IntPtr.Zero;
                     return;
                 }
-                case User32.WinMessageFlags.SETCURSOR:
+                case User32.WindowsMessageType.SETCURSOR:
                 {
                     PerformWmSetCursor(ref m);
                     return;
                 }
-                case User32.WinMessageFlags.MOUSEACTIVATE:
+                case User32.WindowsMessageType.MOUSEACTIVATE:
                 {
                     PerformWmMouseActivate(ref m);
                     return;
                 }
-                case User32.WinMessageFlags.CALCSIZE:
+                case User32.WindowsMessageType.CALCSIZE:
                 {
                     PerformWmNcCalcSize(ref m);
                     return;
                 }
-                case User32.WinMessageFlags.NCHITTEST:
+                case User32.WindowsMessageType.NCHITTEST:
                 {
                     if (!PerformWmNcHitTest(ref m))
                     {
@@ -642,13 +642,13 @@ namespace pwiz.Skyline.Controls
                     }
                     return;
                 }
-                case User32.WinMessageFlags.NCPAINT:
+                case User32.WindowsMessageType.NCPAINT:
                 {
                     PerformWmNcPaint(ref m);
                     m.Result = IntPtr.Zero;
                     return;
                 }
-                case User32.WinMessageFlags.MOUSEMOVE:
+                case User32.WindowsMessageType.MOUSEMOVE:
                 {
                     if (!_isMouseIn)
                     {
@@ -664,7 +664,7 @@ namespace pwiz.Skyline.Controls
                     }
                     break;
                 }
-                case User32.WinMessageFlags.LBUTTONDOWN:
+                case User32.WindowsMessageType.LBUTTONDOWN:
                 {
                     _lastMouseDown = new Point(m.LParam.ToInt32());
                     OnMouseDown(new MouseEventArgs(Control.MouseButtons, 1, _lastMouseDown.X, _lastMouseDown.Y, 0));
@@ -676,7 +676,7 @@ namespace pwiz.Skyline.Controls
 
                     return;
                 }
-                case User32.WinMessageFlags.LBUTTONUP:
+                case User32.WindowsMessageType.LBUTTONUP:
                 {
                     Point p = new Point(m.LParam.ToInt32());
                     OnMouseUp(new MouseEventArgs(Control.MouseButtons, 1, p.X, p.Y, 0));
@@ -687,7 +687,7 @@ namespace pwiz.Skyline.Controls
                     }
                     return;
                 }
-                case User32.WinMessageFlags.MOUSELEAVE:
+                case User32.WindowsMessageType.MOUSELEAVE:
                 {
                     if (_isMouseIn)
                     {
