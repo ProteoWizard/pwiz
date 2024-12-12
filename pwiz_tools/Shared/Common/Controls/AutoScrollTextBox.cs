@@ -24,10 +24,6 @@ namespace pwiz.Common.Controls
 {
     public class AutoScrollTextBox : TextBox
     {
-        // Constants for extern calls to various scrollbar functions
-        private const int WM_VSCROLL = 0x115;
-        private const int SB_THUMBPOSITION = 4;
-
         /// <summary>
         /// Stop updating control (helps prevent flickering).
         /// </summary>
@@ -68,7 +64,10 @@ namespace pwiz.Common.Controls
                 savedVpos = VSmax - sbOffset;
             }
             this.SetScrollPos(Orientation.Vertical, savedVpos);
-            User32.PostMessageA(Handle, WM_VSCROLL, SB_THUMBPOSITION + 0x10000 * savedVpos, 0);
+            User32.PostMessageA(Handle,
+                User32.WM_VSCROLL,
+                User32.SB_THUMBPOSITION + 0x10000 * savedVpos,
+                0);
             ResumeDrawing();
         }
     }

@@ -26,9 +26,13 @@ namespace pwiz.Common.SystemUtil.DllImport
         /// </summary>
         public static void BringWindowToSameLevelWithoutActivating(this Form targetWindow, IntPtr referenceWindowHandle)
         {
-            int flags = (int)User32.SWP.NOMOVE | (int)User32.SWP.NOSIZE | (int)User32.SWP.NOACTIVATE | (int)User32.SWP.SHOWWINDOW;
+            var flags = 
+                User32.SetWindowPosFlags.NOMOVE | 
+                User32.SetWindowPosFlags.NOSIZE | 
+                User32.SetWindowPosFlags.NOACTIVATE | 
+                User32.SetWindowPosFlags.SHOWWINDOW;
 
-            User32.SetWindowPos(targetWindow.Handle, referenceWindowHandle, 0, 0, 0, 0, (uint)flags);
+            User32.SetWindowPos(targetWindow.Handle, referenceWindowHandle, 0, 0, 0, 0, flags);
         }
 
         public static int GetScrollPos(this Control control, Orientation sd)

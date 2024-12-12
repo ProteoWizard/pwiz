@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// The methods of animation available.
         /// </summary>
-        // TODO (ekoneil): pinvoke consolidation - rationalize with constants in User32Old / CustomTip
+        // TODO (ekoneil): pinvoke - Skyline implements this again in CustomTip. Consolidate?
         public enum AnimationMethod
         {
             /// <summary>
@@ -202,13 +202,13 @@ namespace pwiz.Skyline.Util
                 if (Form.Visible)
                 {
                     // Activate the form.
-                    flags = (int)User32.AW.ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
+                    flags = (int)User32.AnimateWindowFlags.ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
                     duration = ShowParams.Duration;
                 }
                 else
                 {
                     // Hide the form.
-                    flags = (int)User32.AW.HIDE | (int)HideParams.Method | (int)HideParams.Direction;
+                    flags = (int)User32.AnimateWindowFlags.HIDE | (int)HideParams.Method | (int)HideParams.Direction;
                     duration = HideParams.Duration;
                 }
 

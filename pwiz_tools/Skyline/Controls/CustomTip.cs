@@ -1135,25 +1135,6 @@ namespace pwiz.Skyline.Controls
     }
     [StructLayout(LayoutKind.Sequential)]
     //[CLSCompliant(false)]
-    internal struct TRACKMOUSEEVENTS
-    {
-// ReSharper disable FieldCanBeMadeReadOnly.Global
-        public uint cbSize;
-        public uint dwFlags;
-        public IntPtr hWnd;
-        public uint dwHoverTime;
-// ReSharper restore FieldCanBeMadeReadOnly.Global
-    }
-    [StructLayout(LayoutKind.Sequential)]
-    //[CLSCompliant(false)]
-    public struct LOGBRUSH
-    {
-// ReSharper disable FieldCanBeMadeReadOnly.Global
-        public uint lbStyle;
-        public uint lbColor;
-        public uint lbHatch;
-// ReSharper restore FieldCanBeMadeReadOnly.Global
-    }
 // ReSharper disable once ClassNeverInstantiated.Global
     internal class AnimateWindow
     {

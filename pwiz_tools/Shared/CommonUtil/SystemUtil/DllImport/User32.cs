@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
-// TODO: solicit namespace feedback (1) "DllImport", (2) "Win32", (3) "Pinvoke"
+// TODO: namespace - (1) SystemUtil.DllImport, (2) SystemUtil.Win32, or (3) SystemUtil.PInvoke?
 namespace pwiz.Common.SystemUtil.DllImport
 {
     // Allowed uses of InteropServices
@@ -31,14 +31,21 @@ namespace pwiz.Common.SystemUtil.DllImport
     {
         // TODO: add Clipboard extension methods
 
-        // TODO: use decimal or hex for constant values?
+        // TODO: setting constant values - use (1) decimal or (2) hex?
         public const int WM_SETREDRAW = 11;
         public const int WM_VSCROLL = 0x0115;
+        public const int SB_THUMBPOSITION = 4;
 
         public const uint PBM_SETSTATE = 0x0410; // 1040
 
-        public enum AW
+        [Flags]
+        public enum AnimateWindowFlags : uint
         {
+            HORIZONTAL_POSITIVE = 0x1,
+            HORIZONTAL_NEGATIVE = 0x2,
+            VERTICAL_POSITIVE = 0x4,
+            VERTICAL_NEGATIVE = 0x8,
+            CENTER = 0x10,
             /// <summary>
             /// Hide the form
             /// </summary>
@@ -46,12 +53,15 @@ namespace pwiz.Common.SystemUtil.DllImport
             /// <summary>
             /// Activate the form
             /// </summary>
-            ACTIVATE = 0x20000
-        }
+            ACTIVATE = 0x20000,
+            SLIDE = 0x40000,
+            BLEND = 0x80000
+    }
 
-        // TODO: should related constants be defined as (1) constant primitives, (2) enum, (3) fields on a static class?
-        // TODO: related to ^^, what is the naming convention for constants?
-        public enum SWP
+        // TODO: declaring constants - use (1) constant primitives, (2) enum, (3) fields on a static class?
+        // TODO: constant naming convention - (1) win32 style (example: SWP) or (2) readable (example: SetWindowPosFlags)?
+        [Flags]
+        public enum SetWindowPosFlags : uint
         {
             // ReSharper disable IdentifierTypo
             NOMOVE = 0x0002,
@@ -161,8 +171,8 @@ namespace pwiz.Common.SystemUtil.DllImport
         [DllImport("user32.dll")]
         public static extern bool GetScrollRange(IntPtr hWnd, int nBar, out int lpMinPos, out int lpMaxPos);
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         // TODO: make extension method
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
 
         [DllImport("user32.dll")]
@@ -191,7 +201,7 @@ namespace pwiz.Common.SystemUtil.DllImport
         internal static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
 
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
