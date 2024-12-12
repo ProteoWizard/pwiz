@@ -668,6 +668,17 @@ namespace pwiz.Skyline.Model.Irt
             }
             if (peptides.Count == 0)
                 return null;
+            if (peptides.Count < minimalPeptides.Count)
+            {
+                // If this document does not contain the full set of standard peptides, but there is a built-in IrtStandard that does have them all
+                // then return null so that the built-in standard will be used instead of the incomplete document xml.
+                var matchingStandard = IrtStandard.WhichStandard(minimalPeptides);
+                if (matchingStandard != null)
+                {
+                    return null;
+                }
+            }
+
 
             // Empty peptide list with iRT standards name
             var nodePepGroup = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
