@@ -26,11 +26,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// </summary>
         public static void BringWindowToSameLevelWithoutActivating(this Form targetWindow, IntPtr referenceWindowHandle)
         {
-            var flags = 
-                User32.SetWindowPosFlags.NOMOVE | 
-                User32.SetWindowPosFlags.NOSIZE | 
-                User32.SetWindowPosFlags.NOACTIVATE | 
-                User32.SetWindowPosFlags.SHOWWINDOW;
+            const User32.SetWindowPosFlags flags = User32.SetWindowPosFlags.NOMOVE | 
+                                                   User32.SetWindowPosFlags.NOSIZE | 
+                                                   User32.SetWindowPosFlags.NOACTIVATE | 
+                                                   User32.SetWindowPosFlags.SHOWWINDOW;
 
             User32.SetWindowPos(targetWindow.Handle, referenceWindowHandle, 0, 0, 0, 0, flags);
         }

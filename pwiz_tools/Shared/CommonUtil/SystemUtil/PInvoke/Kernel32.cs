@@ -22,31 +22,34 @@ namespace pwiz.Common.SystemUtil.PInvoke
 {
     public static class Kernel32
     {
-        private const int ATTACH_PARENT_PROCESS = -1;
-
-        [DllImport("kernel32.dll", SetLastError = true)]
-        internal static extern bool AttachConsole(int dwProcessId);
-
         public static void AttachConsoleToParentProcess()
         {
-            AttachConsole(ATTACH_PARENT_PROCESS);
+            const int parentProcessId = -1;
+
+            AttachConsole(parentProcessId);
         }
 
-        [DllImport("kernel32.dll")]
+        [DllImport(nameof(Kernel32))]
         public static extern int GetCurrentThreadId();
 
-        [DllImport("kernel32.dll")]
+        [DllImport(nameof(Kernel32))]
+        // ReSharper disable once IdentifierTypo
         public static extern SafeWaitHandle CreateWaitableTimer(IntPtr lpTimerAttributes,
             bool bManualReset,
             string lpTimerName);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
+        [DllImport(nameof(Kernel32), SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
+        // ReSharper disable once IdentifierTypo
         public static extern bool SetWaitableTimer(SafeWaitHandle hTimer,
             [In] ref long pDueTime,
             int lPeriod,
             IntPtr pfnCompletionRoutine,
             IntPtr lpArgToCompletionRoutine,
             bool fResume);
+
+        [DllImport(nameof(Kernel32), SetLastError = true)]
+        private static extern bool AttachConsole(int dwProcessId);
+
     }
 }

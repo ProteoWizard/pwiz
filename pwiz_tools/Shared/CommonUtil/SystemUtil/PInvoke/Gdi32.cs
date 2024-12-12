@@ -21,12 +21,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
 {
     public static class Gdi32
     { 
-        public enum GDC
+        // ReSharper disable once InconsistentNaming
+        public enum GDCFlags : uint
         {
-            // ReSharper disable IdentifierTypo
+            // ReSharper disable InconsistentNaming IdentifierTypo
             VERTRES = 10,
             DESKTOPVERTRES = 117
-            // ReSharper restore IdentifierTypo
+            // ReSharper restore InconsistentNaming IdentifierTypo
         }
 
         [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
@@ -35,13 +36,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
         public static extern bool DeleteDC(IntPtr hDC);
 
-        public static int GetDeviceCaps(IntPtr hdc, GDC flag)
-        {
-            return GetDeviceCaps(hdc, (int)flag);
-        }
-
         [DllImport("gdi32.dll")]
-        private static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
+        public static extern int GetDeviceCaps(IntPtr hdc, GDCFlags flag);
 
         [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);

@@ -30,11 +30,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
     {
         // TODO: add Clipboard extension methods
 
-        // TODO: ideally, use hex. minimally, consistently name related constants
+        // TODO: standardize constant values on hex (ideal). Minimally, be consistent for related constants.
+        // ReSharper disable InconsistentNaming IdentifierTypo
         public const int WM_SETREDRAW = 11;
         public const int WM_VSCROLL = 0x0115;
         public const int SB_THUMBPOSITION = 4;
         public const uint PBM_SETSTATE = 0x0410; // 1040
+        // ReSharper restore InconsistentNaming IdentifierTypo
 
         public static IntPtr FALSE = new IntPtr(0);
         public static IntPtr TRUE = new IntPtr(1);
@@ -42,6 +44,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [Flags]
         public enum AnimateWindowFlags : uint
         {
+            // ReSharper disable InconsistentNaming
             HORIZONTAL_POSITIVE = 0x1,
             HORIZONTAL_NEGATIVE = 0x2,
             VERTICAL_POSITIVE = 0x4,
@@ -51,22 +54,24 @@ namespace pwiz.Common.SystemUtil.PInvoke
             ACTIVATE = 0x20000, // Activate the form
             SLIDE = 0x40000,
             BLEND = 0x80000
+            // ReSharper restore InconsistentNaming
         }
 
         [Flags]
         public enum SetWindowPosFlags : uint
         {
-            // ReSharper disable IdentifierTypo
+            // ReSharper disable InconsistentNaming IdentifierTypo
             NOMOVE = 0x0002,
             NOSIZE = 0x0001,
             NOACTIVATE = 0x0010,
             SHOWWINDOW = 0x0040
-            // ReSharper disable IdentifierTypo
+            // ReSharper restore InconsistentNaming IdentifierTypo
         }
 
         [Flags]
         public enum WinMessageFlags : uint
         {
+            // ReSharper disable InconsistentNaming IdentifierTypo
             PAINT = 0x000F,
             ERASEBKGND = 0x0014,
             SETCURSOR = 0x0020,
@@ -80,9 +85,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
             LBUTTONDOWN = 0x0201,
             LBUTTONUP = 0x0202,
             MOUSELEAVE = 0x02A3
+            // ReSharper restore InconsistentNaming IdentifierTypo
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
+        // ReSharper disable once InconsistentNaming IdentifierTypo
         public struct BLENDFUNCTION
         {
             public byte BlendOp;
@@ -91,7 +98,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             public byte AlphaFormat;
         }
 
-        // ReSharper disable InconsistentNaming
+        // ReSharper disable InconsistentNaming IdentifierTypo
         public struct PAINTSTRUCT
         {
             // ReSharper disable UnusedField.Compiler
@@ -112,23 +119,20 @@ namespace pwiz.Common.SystemUtil.PInvoke
 #pragma warning restore 649
             // ReSharper restore UnusedField.Compiler
         }
+        // ReSharper restore InconsistentNaming IdentifierTypo
 
         [StructLayout(LayoutKind.Sequential)]
+        // ReSharper disable once InconsistentNaming
         public struct POINT
         {
             public int x;
             public int y;
 
-            public Point Point
-            {
-                get
-                {
-                    return new Point(x, y);
-                }
-            }
+            public Point Point => new Point(x, y);
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        // ReSharper disable once InconsistentNaming
         public struct RECT
         {
             // ReSharper disable FieldCanBeMadeReadOnly.Global
@@ -146,13 +150,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
                 this.bottom = bottom;
             }
 
-            public Rectangle Rectangle
-            {
-                get
-                {
-                    return new Rectangle(left, top, right - left, bottom - top);
-                }
-            }
+            public Rectangle Rectangle => new Rectangle(left, top, right - left, bottom - top);
 
             public static RECT FromRectangle(Rectangle rect)
             {
@@ -161,18 +159,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
 
         [StructLayout(LayoutKind.Sequential)]
+        // ReSharper disable once InconsistentNaming
         public struct SIZE
         {
             public int cx;
             public int cy;
 
-            public Size Size
-            {
-                get
-                {
-                    return new Size(cx, cy);
-                }
-            }
+            public Size Size => new Size(cx, cy);
         }
 
         // TODO: declaring DLL name - use (1) DllImport(nameof(User32)) or (2) DllImport("user32.dll")
@@ -204,9 +197,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr GetFocus();
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDC(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -224,9 +214,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         // TODO: add extension method?
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
-
-        [DllImport("user32.dll")]
-        internal static extern bool HideCaret(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool IsWindowVisible(IntPtr hwnd);
@@ -259,12 +246,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
-
         // TODO (ekoneil): delete
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndAfter, int X, int Y, int Width, int Height, uint flags);
@@ -279,7 +260,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         {
             Control focusedControl = null;
             // To get hold of the focused control:
-            IntPtr focusedHandle = GetFocus();
+            var focusedHandle = GetFocus();
             if (focusedHandle != IntPtr.Zero)
             {
                 // If the focused Control is not a .Net control, then this will return null.
@@ -287,5 +268,18 @@ namespace pwiz.Common.SystemUtil.PInvoke
             }
             return focusedControl;
         }
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        internal static extern IntPtr GetFocus();
+        
+        [DllImport("user32.dll")]
+        internal static extern bool HideCaret(IntPtr hWnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
+
     }
 }
