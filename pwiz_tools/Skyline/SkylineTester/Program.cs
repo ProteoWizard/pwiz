@@ -23,7 +23,7 @@ using System.Net;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTester.Properties;
 
 namespace SkylineTester

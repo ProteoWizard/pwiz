@@ -24,7 +24,7 @@ using System;
 using System.Windows.Forms;
 using System.Drawing;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 
 
 namespace CustomProgressCell

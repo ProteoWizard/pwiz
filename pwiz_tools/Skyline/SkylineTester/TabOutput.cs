@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 using EnvDTE;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace SkylineTester
 {

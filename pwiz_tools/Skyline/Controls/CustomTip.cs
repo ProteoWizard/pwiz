@@ -23,7 +23,7 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Skyline.Controls
 {

@@ -20,18 +20,17 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
-// TODO: namespace - (1) SystemUtil.DllImport, (2) SystemUtil.Win32, or (3) SystemUtil.PInvoke?
-namespace pwiz.Common.SystemUtil.DllImport
+namespace pwiz.Common.SystemUtil.PInvoke
 {
-    // Allowed uses of InteropServices
-    //      Common.SystemUtil.DllImport.* - allowed to use InteropServices
+    // TODO: add static check for InteropServices - list of allowed uses
+    //      pwiz_tools\Shared\CommonUtil\SystemUtil\PInvoke\*
     //      pwiz_tools\Shared\zedgraph\ZedGraph\ZedGraphControl.ContextMenu.cs - avoid changing ZedGraph
 
     public static class User32
     {
         // TODO: add Clipboard extension methods
 
-        // TODO: setting constant values - use (1) decimal or (2) hex?
+        // TODO: ideally use hex. minimally be consistent among related constants.
         public const int WM_SETREDRAW = 11;
         public const int WM_VSCROLL = 0x0115;
         public const int SB_THUMBPOSITION = 4;
@@ -46,20 +45,12 @@ namespace pwiz.Common.SystemUtil.DllImport
             VERTICAL_POSITIVE = 0x4,
             VERTICAL_NEGATIVE = 0x8,
             CENTER = 0x10,
-            /// <summary>
-            /// Hide the form
-            /// </summary>
-            HIDE = 0x10000,  
-            /// <summary>
-            /// Activate the form
-            /// </summary>
-            ACTIVATE = 0x20000,
+            HIDE = 0x10000, // Hide the form
+            ACTIVATE = 0x20000, // Activate the form
             SLIDE = 0x40000,
             BLEND = 0x80000
-    }
+        }
 
-        // TODO: declaring constants - use (1) constant primitives, (2) enum, (3) fields on a static class?
-        // TODO: constant naming convention - (1) win32 style (example: SWP) or (2) readable (example: SetWindowPosFlags)?
         [Flags]
         public enum SetWindowPosFlags : uint
         {
@@ -151,7 +142,7 @@ namespace pwiz.Common.SystemUtil.DllImport
         [DllImport("user32.dll")]
         public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, int dwFlags);
 
-        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool ClientToScreen(IntPtr hWnd, ref POINT pt);
 
         // TODO: review delegate example

@@ -18,7 +18,7 @@
 
 using System;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.Controls
 {

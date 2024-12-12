@@ -20,7 +20,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 

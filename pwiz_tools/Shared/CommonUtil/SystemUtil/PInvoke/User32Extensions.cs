@@ -17,7 +17,7 @@
 using System;
 using System.Windows.Forms;
 
-namespace pwiz.Common.SystemUtil.DllImport
+namespace pwiz.Common.SystemUtil.PInvoke
 {
     public static class User32Extensions
     {

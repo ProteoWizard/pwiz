@@ -5,7 +5,7 @@ using System;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 
 // TODO (ekoneil): this class is unused and can be removed?
 namespace pwiz.Common.SystemUtil

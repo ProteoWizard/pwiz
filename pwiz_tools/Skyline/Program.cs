@@ -169,7 +169,7 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        Common.SystemUtil.DllImport.Kernel32.AttachConsoleToParentProcess();
+                        Common.SystemUtil.PInvoke.Kernel32.AttachConsoleToParentProcess();
                         textWriter = Console.Out;
                     }
                     var writer = new CommandStatusWriter(textWriter);

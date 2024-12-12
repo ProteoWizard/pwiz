@@ -29,7 +29,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
-using pwiz.Common.SystemUtil.DllImport;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -55,7 +55,7 @@ using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
-using User32 = pwiz.Common.SystemUtil.DllImport.User32;
+using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
 
 namespace pwiz.Skyline
 {
