@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using log4net.Util;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -212,20 +211,6 @@ namespace pwiz.Skyline.Model
             return result.ToString();
         }
 
-        // TODO:
-        // 1. create mapper in AlphapeptdeepLibraryBuilder to map from unimode to hardcoded text
-        // 2. do the formatting in AlphapeptdeepLibraryBuilder instead of here
-        public string FormatFullNamesByPattern(string pattern)
-        {
-            return Format(mods => string.Concat(Enumerable.Select(mods, mod => Bracket(FormatFullNameByPattern(mod, pattern)))));
-        }
-
-        private string FormatFullNameByPattern(Modification mod, string pattern)
-        {
-            Assume.IsTrue(!string.IsNullOrEmpty(mod.Name), @"The full modification name [mod.Name] is required but does not exist.");
-            return mod.Name; // TODO(xgwang): modify
-        }
-
         public override string ToString()
         {
             return FormatDefault();
@@ -382,6 +367,7 @@ namespace pwiz.Skyline.Model
             public string ShortName { get { return StaticMod.ShortName; } }
             public ParsedMolecule Formula { get; private set; }
             public int? UnimodId { get { return StaticMod.UnimodId; } }
+            public string UnimodIdAA { get { return StaticMod.UnimodId + @":" + StaticMod.AAs; }}
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }
 

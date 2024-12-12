@@ -6,12 +6,43 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
+    public class ArgumentAndValue
+    {
+        public ArgumentAndValue(string name, string value)
+        {
+            Name = name;
+            Value = value;
+        }
+        public string Name { get; private set; }
+        public string Value { get; private set; }
+
+        public override string ToString() { return @"--" + Name + TextUtil.SPACE + Value; }
+    }
+
+    public class ModificationType
+    {
+        public ModificationType(string accession, string name, string comment)
+        {
+            Accession = accession;
+            Name = name;
+            Comment = comment;
+        }
+        public string Accession { get; private set; }
+        public string Name { get; private set; }
+        public string Comment { get; private set; }
+
+        public override string ToString() { return string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
+    }
+
+
     public class AlphapeptdeepLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
@@ -43,15 +74,23 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string UNDERSCORE = TextUtil.UNDERSCORE;
 
         /// <summary>
-        /// key: unimod ID, value: modification name supported by Alphapeptdeep
+        /// List of UniMod Modifications available
         /// </summary>
-        private static readonly Dictionary<int, string> AlphapeptdeepModificationName = new Dictionary<int, string>()
+        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
+        private static IList<ModificationType> populateUniModList()
         {
-            {4, @"Carbamidomethyl@C"},
-            {21, @"Phospho@S"},
-            {35, @"Oxidation@M"},
-        };
-        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+            IList<ModificationType> modList = new List<ModificationType>();
+            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
+            {
+                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
+                    continue;
+                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
+                var name = UniModData.UNI_MOD_DATA[m].Name;
+                var formula = UniModData.UNI_MOD_DATA[m].Formula;
+                modList.Add(new ModificationType(accession, name, formula));
+            }
+            return modList;
+        }
 
         public string AmbiguousMatchesMessage
         {
@@ -74,11 +113,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             get { return null; }
         }
         public LibrarySpec LibrarySpec { get; private set; }
+        private static readonly IEnumerable<string> PrecursorTableColumnNames =
+            new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
         private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP);
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
-        private string InputFileName => INPUT + UNDERSCORE +Document.DocumentHash +EXT_TSV;
+        private string InputFileName => INPUT + UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
@@ -89,19 +130,19 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
         /// This is how the peptdeep CLI supports command line arguments.
         /// </summary>
-        private Dictionary<string, string> CmdFlowCommandArguments =>
-            new Dictionary<string, string>()
+        private IList<ArgumentAndValue> CmdFlowCommandArguments =>
+            new []
             {
-                {@"--task_workflow", @"library"},
-                {@"--settings_yaml", SettingsFilePath},
-                {@"--PEPTDEEP_HOME", RootDir},
-                {@"--transfer--model_output_folder", OutputModelsDir},
-                {@"--library--infile_type", @"precursor_table"},
-                {@"--library--infiles", InputFilePath},
-                {@"--library--output_folder", OutputSpectralLibsDir},
-                {@"--library--output_tsv--enabled", @"True"},
-                {@"--library--output_tsv--translate_mod_to_unimod_id", @"True"},
-                {@"--library--decoy", @"diann"}
+                new ArgumentAndValue(@"task_workflow", @"library"),
+                new ArgumentAndValue(@"settings_yaml", SettingsFilePath),
+                new ArgumentAndValue(@"PEPTDEEP_HOME", RootDir),
+                new ArgumentAndValue(@"transfer--model_output_folder", OutputModelsDir),
+                new ArgumentAndValue(@"library--infile_type", @"precursor_table"),
+                new ArgumentAndValue(@"library--infiles", InputFilePath),
+                new ArgumentAndValue(@"library--output_folder", OutputSpectralLibsDir),
+                new ArgumentAndValue(@"library--output_tsv--enabled", @"True"),
+                new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
+                new ArgumentAndValue(@"library--decoy", @"diann")
             };
 
         private Dictionary<string, string> OpenSwathAssayColName =>
@@ -119,7 +160,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             Document = document;
-            CreateDirIfNotExist(RootDir);
+            Directory.CreateDirectory(RootDir);
         }
         private static string CreateDirIfNotExist(string dir)
         {
@@ -198,19 +239,21 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     var mod = modifiedSequence.ExplicitMods[i];
                     if (!mod.UnimodId.HasValue)
                     {
-                        // TODO(xgwang): update this exception to an Alphapeptdeep specific one
-                        throw new Exception(
-                            @$"Modification {mod} is missing unimod ID, which is required by AlphapeptdeepLibraryBuilder");
+                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name);
+                        Messages.WriteAsyncUserMessage(msg);
+                        continue;
                     }
 
-                    var unimodId = mod.UnimodId.Value;
-                    if (!AlphapeptdeepModificationName.TryGetValue(unimodId, out var modName))
+                    var unimodIdAA = mod.UnimodIdAA;
+                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA).ToArray();
+                    if (modNames.Length == 0)
                     {
-                        // TODO(xgwang): update this exception to an Alphapeptdeep specific one
-                        throw new Exception(
-                            @$"Modification with unimod ID of {unimodId} is not yet supported by Alphapeptdeep. Please remove such modifications and try again.");
-
+                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
+                        Messages.WriteAsyncUserMessage(msg);
+                        continue;
                     }
+
+                    var modName = modNames.Single().Name;
                     modsBuilder.Append(modName);
                     modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
                     if (i != modifiedSequence.ExplicitMods.Count - 1)
@@ -274,10 +317,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             var args = new StringBuilder();
             foreach (var arg in CmdFlowCommandArguments)
             {
-                args.Append(arg.Key);
-                args.Append(SPACE);
-                args.Append(arg.Value);
-                args.Append(SPACE);
+                args.Append(arg).Append(SPACE);
             }
 
             // execute command

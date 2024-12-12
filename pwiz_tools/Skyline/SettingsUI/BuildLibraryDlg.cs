@@ -39,6 +39,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.EditUI;
 
 namespace pwiz.Skyline.SettingsUI
@@ -126,6 +127,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private SettingsListBoxDriver<LibrarySpec> _driverLibrary;
+
+        private string _lastUpdatedFileName;
+        private string _lastUpdatedLibName;
+
 
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
@@ -386,6 +391,10 @@ namespace pwiz.Skyline.SettingsUI
                             trainingDataFilePath,
                             _documentUiContainer.DocumentUI);
                     }
+
+                    // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
+                    if (!CreateKoinaBuilder(name, outputPath))
+                        return false;
                 }
                 else
                 {
@@ -489,7 +498,7 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             }
 
-            using var dlg = new PythonInstallerDlg(pythonInstaller);
+            using var dlg = new MultiButtonMsgDlg(string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION), string.Format(Resources.OK));
             if (dlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
@@ -538,9 +547,17 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
             string id = (name.Length == 0 ? string.Empty : Helpers.MakeId(textName.Text));
-            textPath.Text = id.Length == 0
-                                ? outputPath
-                                : Path.Combine(outputPath, id + BiblioSpecLiteSpec.EXT);
+        
+            if (_lastUpdatedFileName.IsNullOrEmpty() || _lastUpdatedFileName == _lastUpdatedLibName)
+            {
+                textPath.Text = id.Length == 0
+                              ? outputPath
+                              : Path.Combine(outputPath, id + BiblioSpecLiteSpec.EXT);
+                _lastUpdatedFileName = id;
+                _lastUpdatedLibName = id;
+
+            }
+
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -565,8 +582,8 @@ namespace pwiz.Skyline.SettingsUI
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
-
                     textPath.Text = dlg.FileName;
+                    _lastUpdatedFileName = Path.GetFileNameWithoutExtension(dlg.FileName);
                 }
             }
         }

@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME);
         private string CarafeJarFileDir => Path.Combine(CarafeDir, CarafeFileBaseName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
-        private IList<ArgumentAndValue> CmdFlowCommandArguments =>
+        private IList<ArgumentAndValue> CommandArguments =>
             new[]
             {
                 new ArgumentAndValue(@"-jar", CarafeJarFilePath),
@@ -297,26 +297,24 @@ namespace pwiz.Skyline.Model.Carafe
                 .ChangeMessage(@"Executing carafe")
                 .ChangePercentComplete(0));
 
-            var cmd = new StringBuilder();
-
+         
+            // compose carafe cmd command arguments to build library
+            var args = new StringBuilder();
+        
             // add activate python virtual env command
-            cmd.Append(PythonVirtualEnvironmentActivateScriptPath);
-            cmd.Append(SPACE);
-            cmd.Append(CONDITIONAL_CMD_PROCEEDING_SYMBOL);
-            cmd.Append(SPACE);
+            args.Append(PythonVirtualEnvironmentActivateScriptPath);
+            args.Append(SPACE);
+            args.Append(CONDITIONAL_CMD_PROCEEDING_SYMBOL);
+            args.Append(SPACE);
 
             // add java carafe command
-            cmd.Append(JavaExecutablePath);
-            cmd.Append(SPACE);
+            args.Append(JavaExecutablePath);
+            args.Append(SPACE);
 
             // add carafe args
-            foreach (var arg in CarafeArguments)
+            foreach (var arg in CommandArguments)
             {
-                cmd.Append(arg.Key);
-                cmd.Append(SPACE);
-                if (arg.Value.IsNullOrEmpty()) { continue; }
-                cmd.Append(arg.Value);
-                cmd.Append(SPACE);
+                args.Append(arg).Append(SPACE);
             }
 
             // execute command
@@ -331,7 +329,7 @@ namespace pwiz.Skyline.Model.Carafe
             };
             try
             {
-                pr.Run(psi, cmd.ToString(), progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+                pr.Run(psi, args.ToString(), progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {

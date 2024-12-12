@@ -117,7 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="KoinaHelpers_ExportKoinaSpectraToBlib_Exporting_Koina_spectra_to_BiblioSpec_library" xml:space="preserve">
     <value>Exporting Koina spectra to BiblioSpec library</value>
   </data>
@@ -129,5 +128,20 @@
   </data>
   <data name="KoinaIntensityModel_CreateKoinaInputRow_UnsupportedCharge" xml:space="preserve">
     <value>The charge {0} is not supported by Koina. The maximum supported charge is {1}.</value>
+  </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification" xml:space="preserve">
+    <value>Warning: Peptide {0} has Modification {1}, which is missing unimod ID and unknown to AlphapeptdeepLibraryBuilder. This peptide will be skipped!</value>
+  </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification" xml:space="preserve">
+    <value>Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by AlphapeptdeepLibraryBuilder. This peptide will be skipped!</value>
+  </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_NonUnique_ModificationAccession" xml:space="preserve">
+    <value>Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case.</value>
+  </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_Python_0_installation_is_required" xml:space="preserve">
+    <value>Python {0} installation is required, click 'OK' to proceed.</value>
+  </data>
+  <data name="AlphaPeptDeep_BuildPrecursorTable_ModificationType" xml:space="preserve">
+    <value> Accession: {0}, Name: {1}, Comment: {2}</value>
   </data>
 </root>
