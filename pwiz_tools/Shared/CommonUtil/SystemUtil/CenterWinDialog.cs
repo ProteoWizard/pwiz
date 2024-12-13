@@ -7,7 +7,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
 
-// TODO (ekoneil): this class is unused and can be removed?
+// TODO (ekoneil): this class is unused. Ok to remove?
 namespace pwiz.Common.SystemUtil
 {
     public class CenterWinDialog : IDisposable
@@ -25,7 +25,7 @@ namespace pwiz.Common.SystemUtil
         {
             // Enumerate windows to find the message box
             if (mTries < 0) return;
-            User32.EnumThreadWndProc callback = checkWindow;
+            User32.EnumThreadWindowsProc callback = checkWindow;
             if (User32.EnumThreadWindows(Kernel32.GetCurrentThreadId(), callback, IntPtr.Zero))
             {
                 if (++mTries < 10) mOwner.BeginInvoke(new MethodInvoker(findDialog));

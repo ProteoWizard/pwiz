@@ -36,17 +36,19 @@ namespace pwiz.Common.SystemUtil.PInvoke
     {
         // TODO: standardize constant values on hex (ideal). Minimally, be consistent for related constants.
         // ReSharper disable InconsistentNaming IdentifierTypo
+        public const int CF_ENHMETAFILE = 14;
+        public const int GWL_STYLE = -16;
+        public const int SB_THUMBPOSITION = 4;
         public const int WM_SETREDRAW = 11;
         public const int WM_VSCROLL = 0x0115;
-        public const int SB_THUMBPOSITION = 4;
-        public const int GWL_STYLE = -16;
-        public const uint PBM_SETSTATE = 0x0410; // 1040
-        public const int WS_VSCROLL = 0x00200000;
         public const int WS_HSCROLL = 0x00100000;
-        public const ulong WS_VISIBLE = 0x10000000L;
-        public const ulong WS_BORDER = 0x00800000L;
+        public const int WS_VSCROLL = 0x00200000;
+
+        public const uint PBM_SETSTATE = 0x0410; // 1040
+
         public const ulong TARGETWINDOW = WS_BORDER | WS_VISIBLE;
-        public const int CF_ENHMETAFILE = 14;
+        public const ulong WS_BORDER = 0x00800000L;
+        public const ulong WS_VISIBLE = 0x10000000L;
         // ReSharper restore InconsistentNaming IdentifierTypo
 
         public static IntPtr FALSE = new IntPtr(0);
@@ -68,8 +70,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             // ReSharper restore InconsistentNaming
         }
 
-        [Flags]
-        public enum HandleType : int
+        public enum HandleType
         {
             total = -1,
             gdi = 0,
@@ -87,7 +88,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
 
-        [Flags]
         public enum WindowsMessageType : uint
         {
             // ReSharper disable InconsistentNaming IdentifierTypo
@@ -204,8 +204,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
 
         [DllImport("user32.dll")]
-        public static extern bool EnumThreadWindows(int tid, EnumThreadWndProc callback, IntPtr lp);
-        public delegate bool EnumThreadWndProc(IntPtr hWnd, IntPtr lp);
+        public static extern bool EnumThreadWindows(int tid, EnumThreadWindowsProc callback, IntPtr lp);
+        public delegate bool EnumThreadWindowsProc(IntPtr hWnd, IntPtr lp);
 
         [DllImport("user32.dll")]
         public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
@@ -326,6 +326,5 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
-
     }
 }
