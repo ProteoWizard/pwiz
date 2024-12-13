@@ -303,7 +303,7 @@ namespace pwiz.Skyline.SettingsUI
                     string proteinDatabaseFilePath = string.Empty;
                     if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
                     {
-                        throw new NotImplementedException(@"Need to implement skyline document support.");
+                     //TODO   throw new NotImplementedException(@"Need to implement skyline document support.");
                     }
                     else if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.proteinDatabase)
                     {
@@ -393,8 +393,8 @@ namespace pwiz.Skyline.SettingsUI
                     }
 
                     // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
-                    if (!CreateKoinaBuilder(name, outputPath))
-                        return false;
+                    // TODO: if (!CreateKoinaBuilder(name, outputPath))
+                    // TODO:  return false;
                 }
                 else
                 {
@@ -512,7 +512,10 @@ namespace pwiz.Skyline.SettingsUI
             var packages = new List<PythonPackage>()
             {
                 // TODO: update to git+ssh after setting up ssh permission to the remote repo
-                new PythonPackage {Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}"},
+                new PythonPackage { Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}" },
+                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
+                new PythonPackage { Name = @"torch", Version = @"2.5.1" },
+                new PythonPackage { Name = @"sympy", Version = @"1.13.3" }
             };
             var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), CARAFE);
@@ -521,8 +524,8 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             }
             
-	    using var dlg = new MultiButtonMsgDlg(string.Format(ModelsResources.Carafe_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION), string.Format(Resources.OK));
-	    if (dlg.ShowDialog(this) == DialogResult.Cancel)
+            using var dlg = new MultiButtonMsgDlg(string.Format(ModelsResources.Carafe_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION), string.Format(Resources.OK));
+            if (dlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
             }

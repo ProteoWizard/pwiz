@@ -16,15 +16,17 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
     public class ArgumentAndValue
     {
-        public ArgumentAndValue(string name, string value)
+        public ArgumentAndValue(string name, string value, string dash = @"--")
         {
             Name = name;
             Value = value;
+            Dash = dash;
         }
         public string Name { get; private set; }
         public string Value { get; private set; }
+        public string Dash { get; set; }
 
-        public override string ToString() { return @"--" + Name + TextUtil.SPACE + Value; }
+        public override string ToString() { return Dash + Name + TextUtil.SPACE + Value; }
     }
 
     public class ModificationType

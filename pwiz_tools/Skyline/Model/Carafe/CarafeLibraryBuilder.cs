@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeFileBaseName => CARAFE + HYPHEN + CARAFE_VERSION;
         private string CarafeJarZipFileName => CarafeFileBaseName + DOT_ZIP;
         private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
-        private string CarafeJarZipDownloadUrl = @$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/";
+        private Uri CarafeJarZipDownloadUrl = new Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
         private Uri CarafeJarZipUri => new Uri(CarafeJarZipDownloadUrl + CarafeJarZipFileName);
         private string CarafeJarZipLocalPath => Path.Combine(UserDir, DOWNLOADS, CarafeJarZipFileName);
         private Uri CarafeJarZipLocalUri => new Uri(@$"file:///{CarafeJarZipLocalPath}");
@@ -92,44 +92,44 @@ namespace pwiz.Skyline.Model.Carafe
         private IList<ArgumentAndValue> CommandArguments =>
             new[]
             {
-                new ArgumentAndValue(@"-jar", CarafeJarFilePath),
+                new ArgumentAndValue(@"jar", CarafeJarFilePath, @"-"),
 
-                new ArgumentAndValue(@"-db", ProteinDatabaseFilePath),
-                new ArgumentAndValue(@"-i", @"C:\Users\Jason\workspaces\test_carafe\report.tsv"),
-                new ArgumentAndValue(@"-ms", @"C:\Users\Jason\workspaces\test_carafe\LFQ_Orbitrap_AIF_Human_01.mzML"),
-                new ArgumentAndValue(@"-o", CarafeOutputLibraryDir),
-                new ArgumentAndValue(@"-c_ion_min", @"2"),
-                new ArgumentAndValue(@"-cor", @"0.8"),
-                new ArgumentAndValue(@"-device", @"cpu"),
-                new ArgumentAndValue(@"-enzyme", @"2"),
-                new ArgumentAndValue(@"-ez", string.Empty),
-                new ArgumentAndValue(@"-fast", string.Empty),
-                new ArgumentAndValue(@"-fixMod", @"1"),
-                new ArgumentAndValue(@"-itol", @"20"),
-                new ArgumentAndValue(@"-itolu", @"ppm"),
-                new ArgumentAndValue(@"-lf_frag_n_min", @"2"),
-                new ArgumentAndValue(@"-lf_top_n_frag", @"20"),
-                new ArgumentAndValue(@"-lf_type", @"skyline"),
-                new ArgumentAndValue(@"-max_pep_mz", @"1000"),
-                new ArgumentAndValue(@"-maxLength", @"35"),
-                new ArgumentAndValue(@"-maxVar", @"1"),
-                new ArgumentAndValue(@"-min_mz", @"200"),
-                new ArgumentAndValue(@"-min_pep_mz", @"400"),
-                new ArgumentAndValue(@"-minLength", @"7"),
-                new ArgumentAndValue(@"-miss_c", @"1"),
-                new ArgumentAndValue(@"-mode", @"general"),
-                new ArgumentAndValue(@"-n_ion_min", @"2"),
-                new ArgumentAndValue(@"-na", @"0"),
-                new ArgumentAndValue(@"-nf", @"4"),
-                new ArgumentAndValue(@"-nm", string.Empty),
-                new ArgumentAndValue(@"-rf_rt_win", @"1"),
-                new ArgumentAndValue(@"-rf", string.Empty),
-                new ArgumentAndValue(@"-se", @"DIA-NN"),
-                new ArgumentAndValue(@"-seed", @"2000"),
-                new ArgumentAndValue(@"-skyline", string.Empty),
-                new ArgumentAndValue(@"-tf", @"all"),
-                new ArgumentAndValue(@"-valid", string.Empty),
-                new ArgumentAndValue(@"-varMod", @"0")
+                new ArgumentAndValue(@"db", ProteinDatabaseFilePath, @"-"),
+                new ArgumentAndValue(@"i", ExperimentDataDiaSearchResultFilePath, @"-"),
+                new ArgumentAndValue(@"ms", ExperimentDataFilePath, @"-"),
+                new ArgumentAndValue(@"o", CarafeOutputLibraryDir, @"-"),
+                new ArgumentAndValue(@"c_ion_min", @"2", @"-"),
+                new ArgumentAndValue(@"cor", @"0.8", @"-"),
+                new ArgumentAndValue(@"device", @"cpu", @"-"),
+                new ArgumentAndValue(@"enzyme", @"2", @"-"),
+                new ArgumentAndValue(@"ez", string.Empty, @"-"),
+                new ArgumentAndValue(@"fast", string.Empty, @"-"),
+                new ArgumentAndValue(@"fixMod", @"1", @"-"),
+                new ArgumentAndValue(@"itol", @"20", @"-"),
+                new ArgumentAndValue(@"itolu", @"ppm", @"-"),
+                new ArgumentAndValue(@"lf_frag_n_min", @"2", @"-"),
+                new ArgumentAndValue(@"lf_top_n_frag", @"20", @"-"),
+                new ArgumentAndValue(@"lf_type", @"skyline", @"-"),
+                new ArgumentAndValue(@"max_pep_mz", @"1000", @"-"),
+                new ArgumentAndValue(@"maxLength", @"35", @"-"),
+                new ArgumentAndValue(@"maxVar", @"1", @"-"),
+                new ArgumentAndValue(@"min_mz", @"200", @"-"),
+                new ArgumentAndValue(@"min_pep_mz", @"400", @"-"),
+                new ArgumentAndValue(@"minLength", @"7", @"-"),
+                new ArgumentAndValue(@"miss_c", @"1", @"-"),
+                new ArgumentAndValue(@"mode", @"general", @"-"),
+                new ArgumentAndValue(@"n_ion_min", @"2", @"-"),
+                new ArgumentAndValue(@"na", @"0", @"-"),
+                new ArgumentAndValue(@"nf", @"4", @"-"),
+                new ArgumentAndValue(@"nm", string.Empty, @"-"),
+                new ArgumentAndValue(@"rf_rt_win", @"1", @"-"),
+                new ArgumentAndValue(@"rf", string.Empty, @"-"),
+                new ArgumentAndValue(@"se", @"DIA-NN", @"-"),
+                new ArgumentAndValue(@"seed", @"2000", @"-"),
+                new ArgumentAndValue(@"skyline", string.Empty, @"-"),
+                new ArgumentAndValue(@"tf", @"all", @"-"),
+                new ArgumentAndValue(@"valid", string.Empty, @"-"),
+                new ArgumentAndValue(@"varMod", @"0", @"-")
             }; 
         
 
@@ -242,8 +242,7 @@ namespace pwiz.Skyline.Model.Carafe
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                // TODO(xgwang): update to CarafeJarZipUri after carafe repo goes public
-                if (!webClient.DownloadFileAsync(CarafeJarZipLocalUri, CarafeJarZipDownloadPath, out var exception))
+                if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath, out var exception))
                     throw new Exception(
                         @"Failed to download carafe jar package", exception);
 
