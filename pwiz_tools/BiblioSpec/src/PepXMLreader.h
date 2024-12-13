@@ -71,6 +71,7 @@ class PepXMLreader : public BuildParser{
                   XTANDEM_ANALYSIS,
                   CRUX_ANALYSIS,
                   COMET_ANALYSIS,
+                  PERCOLATOR_ANALYSIS,
                   MSFRAGGER_ANALYSIS};
 
   vector<SeqMod> mods;      ///< mods for the current spectrum being parsed
