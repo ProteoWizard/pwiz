@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected bool RunPerfTests
         {
-            get { return TestContext.GetBoolValue("RunPerfTests", false); }  // Return false if unspecified
+            get { return TestContext.GetBoolValue("RunPerfTests", true); }  // Return true if unspecified
             set { TestContext.Properties["RunPerfTests"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestUtil
         private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", false) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
+            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", true) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
