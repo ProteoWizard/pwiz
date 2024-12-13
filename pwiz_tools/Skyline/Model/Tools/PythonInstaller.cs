@@ -5,12 +5,17 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Windows.Forms;
 using Ionic.Zip;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static alglib;
 
 namespace pwiz.Skyline.Model.Tools
 {
@@ -48,7 +53,7 @@ namespace pwiz.Skyline.Model.Tools
         public string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
         public string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
         public Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
-        public string GetPipScriptDownloadPath => Path.Combine(PythonRootDir, GET_PIP_SCRIPT_FILE_NAME);
+        public string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
         public string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
         public string VirtualEnvironmentName { get; }
         public string VirtualEnvironmentDir => Path.Combine(PythonVersionDir, VirtualEnvironmentName);
@@ -98,6 +103,56 @@ namespace pwiz.Skyline.Model.Tools
             // TODO(xgwang): make sure terminal window does not show when validating
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
             return tasks.Count == 0;
+        }
+
+        public DialogResult InstallPythonVirtualEnvironment(Control parent)
+        {
+            DialogResult result;
+            var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
+            NumTotalTasks = tasks.Count;
+            NumCompletedTasks = 0;
+            foreach (var task in tasks)
+            {
+                try
+                {
+                    if (task.IsActionWithNoArg)
+                    {
+                        using var waitDlg = new LongWaitDlg();
+                        waitDlg.Message = task.InProgressMessage;
+                        waitDlg.PerformWork(parent, 50, task.AsActionWithNoArg);
+                    }
+                    else if (task.IsActionWithProgressMonitor)
+                    {
+                        using var waitDlg = new LongWaitDlg();
+                        waitDlg.ProgressValue = 0;
+                        waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+                    }
+                    else
+                    {
+                        throw new PythonInstallerUnsupportedTaskException(task);
+                    }
+                    NumCompletedTasks++;
+                }
+                catch (Exception ex)
+                {
+                    //MessageDlg.Show(parent, task.FailureMessage);
+                    MessageDlg.ShowWithException(parent, (ex.InnerException ?? ex).Message, ex);
+                    break;
+                }
+            }
+            Debug.WriteLine($@"total: {NumTotalTasks}, completed: {NumCompletedTasks}");
+            if (NumCompletedTasks == NumTotalTasks)
+            {
+                PendingTasks.Clear();
+                MessageDlg.Show(parent, ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment);
+                result = DialogResult.OK;
+            }
+            else
+            {
+                MessageDlg.Show(parent, ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment);
+                result = DialogResult.Cancel;
+            }
+            return result;
         }
 
         public List<PythonTask> ValidatePythonVirtualEnvironment()

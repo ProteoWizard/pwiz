@@ -90,7 +90,7 @@ namespace pwiz.Skyline.SettingsUI
         public class LearningPage : IFormView { }
 
         private const string PYTHON = @"Python";
-        private const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.12.4";
+        private const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.2";
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
         private const string CARAFE_PYTHON_VERSION = @"3.9.2";
@@ -489,7 +489,9 @@ namespace pwiz.Skyline.SettingsUI
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
-                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" },
+                new PythonPackage { Name = @"torch", Version = @"2.5.1" },
+                new PythonPackage { Name = @"sympy", Version = @"1.13.3" }
             };
             var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
@@ -503,6 +505,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return false;
             }
+            else
+            {
+                // Install python when user clicks 'OK' here
+                pythonInstaller.InstallPythonVirtualEnvironment(this);
+
+            }
             return true;
         }
 
@@ -511,8 +519,7 @@ namespace pwiz.Skyline.SettingsUI
             var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
             var packages = new List<PythonPackage>()
             {
-                // TODO: update to git+ssh after setting up ssh permission to the remote repo
-                new PythonPackage { Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}" },
+                new PythonPackage {Name = @"peptdeep", Version = null },
                 new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
                 new PythonPackage { Name = @"torch", Version = @"2.5.1" },
                 new PythonPackage { Name = @"sympy", Version = @"1.13.3" }
@@ -523,13 +530,20 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return true;
             }
-            
+
             using var dlg = new MultiButtonMsgDlg(string.Format(ModelsResources.Carafe_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION), string.Format(Resources.OK));
             if (dlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
             }
+            else
+            {
+                // Install python when user clicks 'OK' here
+                pythonInstaller.InstallPythonVirtualEnvironment(this);
+
+            }
             return true;
+       
         }
 
 
