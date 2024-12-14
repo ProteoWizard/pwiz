@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Expensive]
         [ChildDisplayName("{0}MS1")]
         [Format(Formats.PEAK_AREA)]
-        public PeakIonMetrics PeakIonMetricsMS1
+        public LcPeakIonMetrics LcPeakIonMetricsMS1
         {
             get
             {
@@ -225,7 +225,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         [Expensive]
         [ChildDisplayName("{0}Fragment")]
         [Format(Formats.PEAK_AREA)]
-        public PeakIonMetrics PeakIonMetricsFragment
+        public LcPeakIonMetrics LcPeakIonMetricsFragment
         {
             get
             {
@@ -313,7 +313,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         private class CachedValues 
-            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<PeakIonMetrics, PeakIonMetrics>>
+            : CachedValues<PrecursorResult, TransitionGroupChromInfo, PrecursorQuantificationResult, Tuple<LcPeakIonMetrics, LcPeakIonMetrics>>
         {
             protected override SrmDocument GetDocument(PrecursorResult owner)
             {
@@ -332,13 +332,13 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     owner.Precursor.DocNode);
             }
 
-            protected override Tuple<PeakIonMetrics,PeakIonMetrics> CalculateValue2(PrecursorResult owner)
+            protected override Tuple<LcPeakIonMetrics,LcPeakIonMetrics> CalculateValue2(PrecursorResult owner)
             {
                 return owner.CalculatePeakIonMetrics();
             }
         }
 
-        private Tuple<PeakIonMetrics, PeakIonMetrics> CalculatePeakIonMetrics()
+        private Tuple<LcPeakIonMetrics, LcPeakIonMetrics> CalculatePeakIonMetrics()
         {
             if (IsEmpty())
             {
@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 GetIonMetrics(resultFileMetadata, fragmentChromatograms));
         }
 
-        private PeakIonMetrics GetIonMetrics(ResultFileMetaData resultFileMetadata, IList<TimeIntensities> chromatograms)
+        private LcPeakIonMetrics GetIonMetrics(ResultFileMetaData resultFileMetadata, IList<TimeIntensities> chromatograms)
         {
             var scanIndexes = chromatograms.FirstOrDefault()?.ScanIds;
             if (scanIndexes == null)
@@ -416,8 +416,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             List<float> ticIntensities = new List<float>();
             double apexSpectrumIonCount = 0;
             double totalSpectrumIonCount = 0;
-            double apexIonCount = 0;
-            double totalIonCount = 0;
+            double apexAnalyteIonCount = 0;
+            double lcPeakIonCount = 0;
             double? apexIntensity = null;
             for (int i = iStart; i < times.Count; i++)
             {
@@ -449,11 +449,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 
                 if (apexIntensity == null || intensity > apexIntensity.Value)
                 {
-                    apexIonCount = ionCount;
+                    apexAnalyteIonCount = ionCount;
                     apexSpectrumIonCount = spectrumIonCount;
                     apexIntensity = intensity;
                 }
-                totalIonCount += ionCount;
+                lcPeakIonCount += ionCount;
                 totalSpectrumIonCount += spectrumIonCount;
             }
 
@@ -465,7 +465,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             var ticTimeIntensities = new TimeIntensities(ticTimes, ticIntensities);
             var chromPeak = ChromPeak.IntegrateWithoutBackground(ticTimeIntensities, (float) MinStartTime, (float) MaxEndTime, 0, null);
             Assume.AreEqual(0f, chromPeak.BackgroundArea);
-            return new PeakIonMetrics(chromPeak.Area, apexSpectrumIonCount, totalSpectrumIonCount, apexIonCount, totalIonCount);
+            return new LcPeakIonMetrics(chromPeak.Area, apexSpectrumIonCount, totalSpectrumIonCount, apexAnalyteIonCount, lcPeakIonCount);
         }
     }
 }

@@ -589,7 +589,7 @@
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
-    <Compile Include="Model\Results\PeakIonMetrics.cs" />
+    <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
@@ -3862,7 +3862,7 @@
       <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content  Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
       <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
