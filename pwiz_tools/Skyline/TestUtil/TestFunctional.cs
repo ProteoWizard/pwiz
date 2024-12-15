@@ -290,7 +290,7 @@ namespace pwiz.SkylineTestUtil
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
                 if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    dlg.Icon != null)    // Normally a fixed dialog will not have the Skyline icon handle
+                    dlg.Icon.Handle == Resources.Skyline.Handle)    // Normally a fixed dialog will not have the Skyline icon handle
                 {
                     var ico = dlg.Icon.Handle;
                     if (ico != SkylineWindow.Icon.Handle)
@@ -332,6 +332,17 @@ namespace pwiz.SkylineTestUtil
                     Assert.Fail(e.ToString());
                 }
             });
+        }
+
+        /// <summary>
+        /// Convenience function for getting a value from the UI thread
+        /// e.g. var value = CallUI(() => control.Value);
+        /// </summary>
+        public T CallUI<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            RunUI(() => result = func());
+            return result;
         }
 
         protected virtual bool ShowStartPage {get { return false; }}
@@ -1888,6 +1899,8 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= ScreenshotCounter)
             {
+                WaitForGraphs();    // Screenshots always need graphs to be fully updated
+
                 if (screenshotForm == null)
                 {
                     if (!fullScreen && formType != null)
