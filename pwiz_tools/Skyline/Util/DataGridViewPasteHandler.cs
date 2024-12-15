@@ -157,6 +157,9 @@ namespace pwiz.Skyline.Util
                 }
                 Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
                 skylineDataSchema.RollbackBatchModifyDocument();
+
+                // Call "PerformLayout" so that the scrollbar displays the correct scroll position
+                DataGridView.PerformLayout();
             }
         }
 
