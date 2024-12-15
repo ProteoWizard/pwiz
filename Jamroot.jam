@@ -362,8 +362,8 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4456                 # warning: declaration of 'type' hides previous local declaration
         <toolset>msvc:<cxxflags>/wd4459                 # warning: declaration of 'type' hides global declaration
         <toolset>msvc:<cxxflags>/wd4458                 # warning: declaration of 'type' hides class member
-        <toolset>msvc,<debug-symbols>on:<cxxflags>-fsanitize=address      # address sanitizer
-        <toolset>msvc,<debug-symbols>on:<cxxflags>/bigobj      # address sanitizer makes for big object files: "fatal error C1128: number of sections exceeded object file format limit"
+        #<toolset>msvc,<debug-symbols>on:<cxxflags>-fsanitize=address      # address sanitizer
+        #<toolset>msvc,<debug-symbols>on:<cxxflags>/bigobj      # address sanitizer makes for big object files: "fatal error C1128: number of sections exceeded object file format limit"
         <toolset>msvc,<debug-symbols>off:<linkflags>"/OPT:REF,ICF"
         <toolset>msvc,<toolset-msvc:version>12.0:<define>_HAS_TR1
         <toolset>msvc,<toolset-msvc:version>14.0:<define>_HAS_TR1
