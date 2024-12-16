@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Util
         /// The methods of animation available.
         /// </summary>
         // TODO (ekoneil): pinvoke - Skyline implements this again in CustomTip. Consolidate?
-        public enum AnimationMethod
+        public enum AnimationMethod : uint
         {
             /// <summary>
             /// Rolls out from edge when showing and into edge when hiding.
@@ -44,22 +44,22 @@ namespace pwiz.Skyline.Util
             /// <remarks>
             /// This is the default animation method and requires a direction.
             /// </remarks>
-            roll = 0x0,
+            roll = User32.AnimateWindowFlags.ROLL,
             /// <summary>
             /// Expands out from centre when showing and collapses into centre when hiding.
             /// </summary>
-            centre = 0x10,
+            centre = User32.AnimateWindowFlags.CENTER,
             /// <summary>
             /// Slides out from edge when showing and slides into edge when hiding.
             /// </summary>
             /// <remarks>
             /// Requires a direction.
             /// </remarks>
-            slide = 0x40000,
+            slide = User32.AnimateWindowFlags.SLIDE,
             /// <summary>
             /// Fades from transaprent to opaque when showing and from opaque to transparent when hiding.
             /// </summary>
-            blend = 0x80000
+            blend = User32.AnimateWindowFlags.BLEND
         }
 
         /// <summary>
@@ -69,24 +69,24 @@ namespace pwiz.Skyline.Util
         /// Horizontal and vertical directions can be combined to create diagonal animations.
         /// </remarks>
         [Flags]
-        public enum AnimationDirection
+        public enum AnimationDirection : uint
         {
             /// <summary>
             /// From left to right.
             /// </summary>
-            right = 0x1,
+            right = User32.AnimateWindowFlags.HORIZONTAL_POSITIVE,
             /// <summary>
             /// From right to left.
             /// </summary>
-            left = 0x2,
+            left = User32.AnimateWindowFlags.HORIZONTAL_NEGATIVE,
             /// <summary>
             /// From top to bottom.
             /// </summary>
-            down = 0x4,
+            down = User32.AnimateWindowFlags.VERTICAL_POSITIVE,
             /// <summary>
             /// From bottom to top.
             /// </summary>
-            up = 0x8
+            up = User32.AnimateWindowFlags.VERTICAL_NEGATIVE
         }
 
         /// <summary>

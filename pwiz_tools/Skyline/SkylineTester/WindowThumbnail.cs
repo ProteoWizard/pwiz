@@ -109,6 +109,8 @@ namespace SkylineTester
 
         private IntPtr FindWindow(int processId)
         {
+            const ulong targetWindow = User32.WS_BORDER | User32.WS_VISIBLE;
+
             IntPtr window = IntPtr.Zero;
 
             User32.EnumWindows(
@@ -118,7 +120,7 @@ namespace SkylineTester
                     User32.GetWindowThreadProcessId(wnd, out id);
 
                     if ((int)id == processId &&
-                        (User32.GetWindowLongA(wnd, User32.GWL_STYLE) & User32.TARGETWINDOW) == User32.TARGETWINDOW)
+                        (User32.GetWindowLongA(wnd, User32.GWL_STYLE) & targetWindow) == targetWindow)
                     {
                         window = wnd;
                         return false;

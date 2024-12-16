@@ -200,17 +200,12 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         class ListBoxEx : ListBox
         {
-            private const int SB_VERT = 1;
-
-            // [DllImport("user32.dll")]
-            // private static extern int GetScrollPos(IntPtr hWnd, int nBar);
-
             protected override void WndProc(ref Message m)
             {
                 base.WndProc(ref m);
-                if (m.Msg == User32.WM_VSCROLL)
+                if (m.Msg == (int)User32.WinMessageType.WM_VSCROLL)
                 {
-                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = User32.GetScrollPos(m.HWnd, SB_VERT)};
+                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = User32.GetScrollPos(m.HWnd, User32.SB_VERT)};
                     if (Scroll != null) // For ReSharper
                         Scroll.Invoke(this, scrollEventArgs);
                 }

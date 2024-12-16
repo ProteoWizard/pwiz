@@ -29,12 +29,12 @@ namespace pwiz.Common.Controls
         /// </summary>
         public void SuspendDrawing()
         {
-            User32.SendMessage(Handle, User32.WM_SETREDRAW, 0, IntPtr.Zero);
+            User32.SendMessage(Handle, User32.WinMessageType.WM_SETREDRAW, User32.False, IntPtr.Zero);
         }
 
         public void ResumeDrawing()
         {
-            User32.SendMessage(Handle, User32.WM_SETREDRAW, 1, IntPtr.Zero);
+            User32.SendMessage(Handle, User32.WinMessageType.WM_SETREDRAW, User32.True, IntPtr.Zero);
             Invalidate(true);
             Update();
         }
@@ -65,7 +65,7 @@ namespace pwiz.Common.Controls
             }
             this.SetScrollPos(Orientation.Vertical, savedVpos);
             User32.PostMessageA(Handle,
-                User32.WM_VSCROLL,
+                (int)User32.WinMessageType.WM_VSCROLL,
                 User32.SB_THUMBPOSITION + 0x10000 * savedVpos,
                 0);
             ResumeDrawing();

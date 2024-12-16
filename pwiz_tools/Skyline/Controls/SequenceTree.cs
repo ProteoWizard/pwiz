@@ -1196,9 +1196,9 @@ namespace pwiz.Skyline.Controls
         protected override void OnNotifyMessage(Message m)
         {
             // No erasebackground to reduce flicker
-            //if (m.Msg == (int)User32.WindowsMessageType.ERASEBKGND)
+            //if (m.Msg == (int)User32.WinMessageType.WM_ERASEBKGND)
             //    return;
-            if (m.Msg == (int) User32.WindowsMessageType.TIMER)
+            if (m.Msg == (int) User32.WinMessageType.WM_TIMER)
             {
                 if (_triggerLabelEdit != null && !ReferenceEquals(_triggerLabelEdit, SelectedNode))
                 {

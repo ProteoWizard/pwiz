@@ -149,7 +149,7 @@ namespace CustomProgressCell
 
         private void SetProgressBarState(ProgressBarState state)
         {
-            User32.SendMessage(_progressBar.Handle, User32.PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
+            User32.SendMessage(_progressBar.Handle, User32.WinMessageType.PBM_SETSTATE, (IntPtr)state, IntPtr.Zero);
         }
 
         protected override void OnDataGridViewChanged()

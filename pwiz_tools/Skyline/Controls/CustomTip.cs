@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Controls
                 if (Handle == IntPtr.Zero)
                     CreateHandle(CreateParams);
                 UpdateLayeredWindow();
-                User32.AnimateWindow(Handle, 100, flag);
+                User32.AnimateWindow(Handle, 100, (int)flag);
             }
             else
             {
@@ -415,7 +415,7 @@ namespace pwiz.Skyline.Controls
             if (_supportsLayered)
             {
                 UpdateLayeredWindow();
-                User32.AnimateWindow(Handle, 100, flag);
+                User32.AnimateWindow(Handle, 100, (int)flag);
             }
             Hide();
         }
@@ -528,9 +528,8 @@ namespace pwiz.Skyline.Controls
             Rectangle bounds = Bounds;
             bounds.Offset(-bounds.Left, -bounds.Top);
 
-            const uint flags = (uint)(DCX.DCX_WINDOW |
-                                      DCX.DCX_INTERSECTRGN);
-            IntPtr hDC = User32.GetDCEx(hWnd, hRgn, flags);
+            const DCX flags = DCX.DCX_WINDOW | DCX.DCX_INTERSECTRGN;
+            IntPtr hDC = User32.GetDCEx(hWnd, hRgn, (uint)flags);
             if (hDC == IntPtr.Zero)
             {
                 hDC = User32.GetWindowDC(hWnd);
@@ -552,20 +551,20 @@ namespace pwiz.Skyline.Controls
 
         private void PerformWmNcCalcSize(ref Message m)
         {
-            if (m.WParam == User32.FALSE)
+            if (m.WParam == User32.False)
             {
-                User32.RECT rect1 = (User32.RECT) m.GetLParam(typeof(User32.RECT));
-                Rectangle rectProposed = rect1.Rectangle;
+                var rect1 = (User32.RECT) m.GetLParam(typeof(User32.RECT));
+                var rectProposed = rect1.Rectangle;
                 OnNcCalcSize(ref rectProposed);
                 rect1 = User32.RECT.FromRectangle(rectProposed);
                 Marshal.StructureToPtr(rect1, m.LParam, false);
                 m.Result = IntPtr.Zero;
             }
-            else if (m.WParam == User32.TRUE)
+            else if (m.WParam == User32.True)
             {
-                NCCALCSIZE_PARAMS ncParams = (NCCALCSIZE_PARAMS)
+                var ncParams = (NCCALCSIZE_PARAMS)
                     m.GetLParam(typeof(NCCALCSIZE_PARAMS));
-                Rectangle rectProposed = ncParams.rectProposed.Rectangle;
+                var rectProposed = ncParams.rectProposed.Rectangle;
                 OnNcCalcSize(ref rectProposed);
                 ncParams.rectProposed = User32.RECT.FromRectangle(rectProposed);
                 Marshal.StructureToPtr(ncParams, m.LParam, false);
@@ -605,36 +604,36 @@ namespace pwiz.Skyline.Controls
 
         protected override void WndProc(ref Message m)
         {
-            var msgID = (User32.WindowsMessageType)m.Msg;
+            var msgID = (User32.WinMessageType)m.Msg;
 
             switch (msgID)
             {
-                case User32.WindowsMessageType.PAINT:
+                case User32.WinMessageType.WM_PAINT:
                 {
                     PerformWmPaint(ref m);
                     return;
                 }
-                case User32.WindowsMessageType.ERASEBKGND:
+                case User32.WinMessageType.WM_ERASEBKGND:
                 {
                     m.Result = IntPtr.Zero;
                     return;
                 }
-                case User32.WindowsMessageType.SETCURSOR:
+                case User32.WinMessageType.WM_SETCURSOR:
                 {
                     PerformWmSetCursor(ref m);
                     return;
                 }
-                case User32.WindowsMessageType.MOUSEACTIVATE:
+                case User32.WinMessageType.WM_MOUSEACTIVATE:
                 {
                     PerformWmMouseActivate(ref m);
                     return;
                 }
-                case User32.WindowsMessageType.CALCSIZE:
+                case User32.WinMessageType.WM_CALCSIZE:
                 {
                     PerformWmNcCalcSize(ref m);
                     return;
                 }
-                case User32.WindowsMessageType.NCHITTEST:
+                case User32.WinMessageType.WM_NCHITTEST:
                 {
                     if (!PerformWmNcHitTest(ref m))
                     {
@@ -642,13 +641,13 @@ namespace pwiz.Skyline.Controls
                     }
                     return;
                 }
-                case User32.WindowsMessageType.NCPAINT:
+                case User32.WinMessageType.WM_NCPAINT:
                 {
                     PerformWmNcPaint(ref m);
                     m.Result = IntPtr.Zero;
                     return;
                 }
-                case User32.WindowsMessageType.MOUSEMOVE:
+                case User32.WinMessageType.WM_MOUSEMOVE:
                 {
                     if (!_isMouseIn)
                     {
@@ -664,7 +663,7 @@ namespace pwiz.Skyline.Controls
                     }
                     break;
                 }
-                case User32.WindowsMessageType.LBUTTONDOWN:
+                case User32.WinMessageType.WM_LBUTTONDOWN:
                 {
                     _lastMouseDown = new Point(m.LParam.ToInt32());
                     OnMouseDown(new MouseEventArgs(Control.MouseButtons, 1, _lastMouseDown.X, _lastMouseDown.Y, 0));
@@ -676,7 +675,7 @@ namespace pwiz.Skyline.Controls
 
                     return;
                 }
-                case User32.WindowsMessageType.LBUTTONUP:
+                case User32.WinMessageType.WM_LBUTTONUP:
                 {
                     Point p = new Point(m.LParam.ToInt32());
                     OnMouseUp(new MouseEventArgs(Control.MouseButtons, 1, p.X, p.Y, 0));
@@ -687,7 +686,7 @@ namespace pwiz.Skyline.Controls
                     }
                     return;
                 }
-                case User32.WindowsMessageType.MOUSELEAVE:
+                case User32.WinMessageType.WM_MOUSELEAVE:
                 {
                     if (_isMouseIn)
                     {
@@ -752,17 +751,16 @@ namespace pwiz.Skyline.Controls
             {
                 if (Handle != IntPtr.Zero)
                 {
-                    // TODO (ekoneil): switch to User32.SetWindowPosFlags
-                    int num1 = 20;
+                    var flags = User32.SetWindowPosFlags.NOACTIVATE | User32.SetWindowPosFlags.NOZORDER;
                     if ((X == x) && (Y == y))
                     {
-                        num1 |= 2;
+                        flags |= User32.SetWindowPosFlags.NOMOVE;
                     }
                     if ((Width == width) && (Height == height))
                     {
-                        num1 |= 1;
+                        flags |= User32.SetWindowPosFlags.NOSIZE;
                     }
-                    User32.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, (uint)num1);
+                    User32.SetWindowPos(Handle, IntPtr.Zero, x, y, width, height, flags);
                 }
                 else
                 {
@@ -786,7 +784,7 @@ namespace pwiz.Skyline.Controls
 
         private void UpdateBounds(int x, int y, int width, int height)
         {
-            User32.RECT rect1 = new User32.RECT();
+            var rect1 = new User32.RECT();
             CreateParams params1 = CreateParams;
             User32.AdjustWindowRectEx(ref rect1, params1.Style, false, params1.ExStyle);
 
@@ -1104,10 +1102,9 @@ namespace pwiz.Skyline.Controls
         public Rectangle Bounds { get; private set; }
     }
 
-    #region #  Win32  #
-    // ReSharper disable InconsistentNaming
+    #region Win32
 
-    // ReSharper disable IdentifierTypo
+    // ReSharper disable once InconsistentNaming IdentifierTypo
     [StructLayout(LayoutKind.Sequential)]
     internal struct NCCALCSIZE_PARAMS
     {
@@ -1116,11 +1113,11 @@ namespace pwiz.Skyline.Controls
         public User32.RECT rectClientBefore;
         public IntPtr lppos;
     }
-    // ReSharper disable IdentifierTypo
 
     [Flags]
     public enum AnimateMode : uint
     {
+        // ReSharper disable InconsistentNaming
         SlideRightToLeft,
         SlideLeftToRight,
         SlideTopToBottom,
@@ -1131,17 +1128,19 @@ namespace pwiz.Skyline.Controls
         RollBottomToTop,
         Blend,
         ExpandCollapse
+        // ReSharper restore InconsistentNaming
     }
 
     [Flags]
-    internal enum DCX
+    internal enum DCX : uint
     {
         DCX_WINDOW = 0x0001,
         DCX_CACHE = 0x0002,
+        // ReSharper disable IdentifierTypo
         DCX_CLIPSIBLINGS = 0x0010,
         DCX_INTERSECTRGN = 0x0080
+        // ReSharper restore IdentifierTypo
     }
-    // ReSharper restore InconsistentNaming
 
     #endregion
 }

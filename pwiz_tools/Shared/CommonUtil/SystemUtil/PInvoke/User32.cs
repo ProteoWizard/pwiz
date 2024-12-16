@@ -22,46 +22,48 @@ using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
-    // TODO: add static check preventing use of InteropServics. Except for allowed uses:
-    //      pwiz_tools\Shared\CommonUtil\SystemUtil\PInvoke\* - win32 interop
+    // TODO (ekoneil): add static check limiting use of InteropServics to allowlisted uses including:
+    //      pwiz_tools\Shared\CommonUtil\SystemUtil\PInvoke\*
     //      pwiz_tools\Shared\zedgraph\ZedGraph\ZedGraphControl.ContextMenu.cs - avoid changing ZedGraph
     //      pwiz_tools\Skyline\TestUtil\TestFunctional.cs - uses ExternalException to catch Clipboard errors
     //      pwiz_tools\Skyline\Util\UtilUIExtra.cs - uses ExternalException to catch Clipboard errors
-    //      pwiz_tools\Skyline\Util\MemoryInfo.cs - most of this class is a win32 struct only used therein
+    //      pwiz_tools\Skyline\Util\MemoryInfo.cs - most of this class is a win32 struct only used here
     //      pwiz_tools\Skyline\TestUtil\FileLockingProcessFinder.cs - 100 LOC used only locally to debug file locking problems
     //      pwiz_tools\Skyline\TestRunnerLib\RunTests.cs - 62 LOC related to heap management
     //      pwiz_tools\Skyline\TestRunner\UnusedPortFinder.cs - > 150 LOC related to marshaling info for TCP port management
+    // Add static code inspection in:
+    //      pwiz_tools\Skyline\Test\CodeInspectionTest.cs
+    //   Modeled on AddTextInspection
 
     public static class User32
     {
-        // TODO: standardize constant values on hex (ideal). Minimally, be consistent for related constants.
         // ReSharper disable InconsistentNaming IdentifierTypo
         public const int CF_ENHMETAFILE = 14;
+        
         public const int GWL_STYLE = -16;
+
+        public const int SB_VERT = 1;
         public const int SB_THUMBPOSITION = 4;
-        public const int WM_SETREDRAW = 11;
-        public const int WM_VSCROLL = 0x0115;
+        
         public const int WS_HSCROLL = 0x00100000;
         public const int WS_VSCROLL = 0x00200000;
-
-        public const uint PBM_SETSTATE = 0x0410; // 1040
-
-        public const ulong TARGETWINDOW = WS_BORDER | WS_VISIBLE;
+        
         public const ulong WS_BORDER = 0x00800000L;
         public const ulong WS_VISIBLE = 0x10000000L;
         // ReSharper restore InconsistentNaming IdentifierTypo
 
-        public static IntPtr FALSE = new IntPtr(0);
-        public static IntPtr TRUE = new IntPtr(1);
+        public static IntPtr False = new IntPtr(0);
+        public static IntPtr True = new IntPtr(1);
 
         [Flags]
         public enum AnimateWindowFlags : uint
         {
             // ReSharper disable InconsistentNaming
-            HORIZONTAL_POSITIVE = 0x1,
-            HORIZONTAL_NEGATIVE = 0x2,
-            VERTICAL_POSITIVE = 0x4,
-            VERTICAL_NEGATIVE = 0x8,
+            ROLL = 0x0, // Default, rolls out from edge when showing and into edge when hiding
+            HORIZONTAL_POSITIVE = 0x1, // Right
+            HORIZONTAL_NEGATIVE = 0x2, // Left
+            VERTICAL_POSITIVE = 0x4, // Down
+            VERTICAL_NEGATIVE = 0x8, // Up
             CENTER = 0x10,
             HIDE = 0x10000, // Hide the form
             ACTIVATE = 0x20000, // Activate the form
@@ -83,27 +85,31 @@ namespace pwiz.Common.SystemUtil.PInvoke
             // ReSharper disable InconsistentNaming IdentifierTypo
             NOMOVE = 0x0002,
             NOSIZE = 0x0001,
+            NOZORDER = 0x0004,
             NOACTIVATE = 0x0010,
             SHOWWINDOW = 0x0040
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
 
-        public enum WindowsMessageType : uint
+        public enum WinMessageType : uint
         {
             // ReSharper disable InconsistentNaming IdentifierTypo
-            PAINT = 0x000F,
-            ERASEBKGND = 0x0014,
-            SETCURSOR = 0x0020,
-            MOUSEACTIVATE = 0x0021,
-            CALCSIZE = 0x0083,
-            NCHITTEST = 0x0084,
-            NCPAINT = 0x0085,
-            CHAR = 0x0102,
-            TIMER = 0x0113,
-            MOUSEMOVE = 0x0200,
-            LBUTTONDOWN = 0x0201,
-            LBUTTONUP = 0x0202,
-            MOUSELEAVE = 0x02A3
+            PBM_SETSTATE = 0x0410,
+            WM_SETREDRAW = 0x000B,
+            WM_PAINT = 0x000F,
+            WM_ERASEBKGND = 0x0014,
+            WM_SETCURSOR = 0x0020,
+            WM_MOUSEACTIVATE = 0x0021,
+            WM_CALCSIZE = 0x0083,
+            WM_NCHITTEST = 0x0084,
+            WM_NCPAINT = 0x0085,
+            WM_CHAR = 0x0102,
+            WM_TIMER = 0x0113,
+            WM_VSCROLL = 0x0115,
+            WM_MOUSEMOVE = 0x0200,
+            WM_LBUTTONDOWN = 0x0201,
+            WM_LBUTTONUP = 0x0202,
+            WM_MOUSELEAVE = 0x02A3
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
 
@@ -181,12 +187,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport(nameof(User32))]
         public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
 
-        // TODO (ekoneil): remove
+        // TODO (ekoneil): change dwFlags type from int to AnimateWindowFlags after reconciling differing approaches to window animation in CustomTip vs FormAnimator
         [DllImport("user32.dll")]
         public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, int dwFlags);
-
-        [DllImport("user32.dll")]
-        public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, AnimateWindowFlags flags);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr BeginPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
@@ -242,14 +245,15 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         public static extern ulong GetWindowLongA(IntPtr hWnd, int nIndex);
 
-        // TODO: add extension method?
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
 
         [DllImport("user32.dll")]
+        // ReSharper disable once IdentifierTypo
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        // ReSharper disable once IdentifierTypo
         public static extern bool IsWindowVisible(IntPtr hwnd);
 
         [DllImport("user32.dll")]
@@ -270,12 +274,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool ScreenToClient(IntPtr hWnd, ref POINT pt);
 
-        // TODO: standardize on one sendMessage 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, IntPtr lParam);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SendMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+        public static extern IntPtr SendMessage(IntPtr hWnd, WinMessageType msgType, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool SetCapture(IntPtr hWnd);
@@ -289,15 +289,16 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         public static extern bool SetKeyboardState(byte[] lpKeyState);
 
-        // TODO (ekoneil): delete
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern int SetWindowPos(IntPtr hWnd, IntPtr hWndAfter, int X, int Y, int Width, int Height, uint flags);
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int width, int height, SetWindowPosFlags uFlags);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern int ShowWindow(IntPtr hWnd, short cmdShow);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        // ReSharper disable IdentifierTypo
         public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref PInvokeCommon.SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
+        // ReSharper restore IdentifierTypo
 
         public static Control GetFocusedControl()
         {
@@ -312,9 +313,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             return focusedControl;
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        internal static extern IntPtr GetFocus();
-
         [DllImport("user32.dll")]
         internal static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
 
@@ -324,7 +322,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        internal static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, SetWindowPosFlags uFlags);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern IntPtr GetFocus();
     }
 }
