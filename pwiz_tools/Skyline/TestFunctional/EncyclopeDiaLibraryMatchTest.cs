@@ -51,9 +51,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 foreach (PeptideDocNode peptide in protein.Children)
                 {
-                    SkylineWindow.SelectedPath = new IdentityPath(protein.PeptideGroup, peptide.Peptide);
+                    RunUI(() => SkylineWindow.SelectedPath = new IdentityPath(protein.PeptideGroup, peptide.Peptide));
                     WaitForGraphs();
-                    var availableSpectra = graphSpectrum.AvailableSpectra.ToList();
+                    var availableSpectra = CallUI(() => graphSpectrum.AvailableSpectra.ToList());
                     var bestSpectrum = availableSpectra.First();
                     Assert.IsTrue(bestSpectrum.IsBest);
 

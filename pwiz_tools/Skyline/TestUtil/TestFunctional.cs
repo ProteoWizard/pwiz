@@ -334,6 +334,17 @@ namespace pwiz.SkylineTestUtil
             });
         }
 
+        /// <summary>
+        /// Convenience function for getting a value from the UI thread
+        /// e.g. var value = CallUI(() => control.Value);
+        /// </summary>
+        public T CallUI<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            RunUI(() => result = func());
+            return result;
+        }
+
         protected virtual bool ShowStartPage {get { return false; }}
         protected virtual List<string> SetMru { get { return new List<string>(); } }
 

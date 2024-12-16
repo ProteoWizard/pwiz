@@ -1,6 +1,6 @@
 namespace pwiz.Skyline.FileUI
 {
-    partial class OpenDataSourceDialog
+    partial class BaseFileDialogNE
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@ namespace pwiz.Skyline.FileUI
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OpenDataSourceDialog));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseFileDialogNE));
             this.listView = new System.Windows.Forms.ListView();
             this.SourceName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.FileType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.FileUI
             this.labelSourcePath = new System.Windows.Forms.Label();
             this.sourceTypeComboBox = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
-            this.openButton = new System.Windows.Forms.Button();
+            this.actionButton = new System.Windows.Forms.Button();
             this.cancelButton = new System.Windows.Forms.Button();
             this.navToolStrip = new System.Windows.Forms.ToolStrip();
             this.backButton = new System.Windows.Forms.ToolStripButton();
@@ -70,6 +70,7 @@ namespace pwiz.Skyline.FileUI
             this.FileType,
             this.SourceSize,
             this.DateModified});
+            this.listView.HideSelection = false;
             this.listView.Name = "listView";
             this.listView.TileSize = new System.Drawing.Size(150, 35);
             this.listView.UseCompatibleStateImageBehavior = false;
@@ -138,12 +139,12 @@ namespace pwiz.Skyline.FileUI
             resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
             // 
-            // openButton
+            // actionButton
             // 
-            resources.ApplyResources(this.openButton, "openButton");
-            this.openButton.Name = "openButton";
-            this.openButton.UseVisualStyleBackColor = true;
-            this.openButton.Click += new System.EventHandler(this.openButton_Click);
+            resources.ApplyResources(this.actionButton, "actionButton");
+            this.actionButton.Name = "actionButton";
+            this.actionButton.UseVisualStyleBackColor = true;
+            this.actionButton.Click += new System.EventHandler(this.openButton_Click);
             // 
             // cancelButton
             // 
@@ -283,16 +284,16 @@ namespace pwiz.Skyline.FileUI
             this.myComputerButton.UseVisualStyleBackColor = false;
             this.myComputerButton.Click += new System.EventHandler(this.myComputerButton_Click);
             // 
-            // OpenDataSourceDialog
+            // BaseFileDialogNE
             // 
-            this.AcceptButton = this.openButton;
+            this.AcceptButton = this.actionButton;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
             this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.navToolStrip);
             this.Controls.Add(this.cancelButton);
-            this.Controls.Add(this.openButton);
+            this.Controls.Add(this.actionButton);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.sourceTypeComboBox);
             this.Controls.Add(this.labelSourcePath);
@@ -304,7 +305,7 @@ namespace pwiz.Skyline.FileUI
             this.HelpButton = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "OpenDataSourceDialog";
+            this.Name = "BaseFileDialogNE";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.navToolStrip.ResumeLayout(false);
@@ -316,15 +317,11 @@ namespace pwiz.Skyline.FileUI
         }
 
         #endregion
-
-        private System.Windows.Forms.ListView listView;
         private System.Windows.Forms.ComboBox lookInComboBox;
         private System.Windows.Forms.Label labelLookIn;
-        private System.Windows.Forms.TextBox sourcePathTextBox;
         private System.Windows.Forms.Label labelSourcePath;
         private System.Windows.Forms.ComboBox sourceTypeComboBox;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button openButton;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.ColumnHeader SourceName;
         private System.Windows.Forms.ColumnHeader SourceSize;
@@ -344,5 +341,8 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.ImageList lookInImageList;
         private System.Windows.Forms.ColumnHeader FileType;
         private System.Windows.Forms.Button recentDocumentsButton;
+        protected System.Windows.Forms.ListView listView;
+        protected System.Windows.Forms.TextBox sourcePathTextBox;
+        protected System.Windows.Forms.Button actionButton;
     }
 }
