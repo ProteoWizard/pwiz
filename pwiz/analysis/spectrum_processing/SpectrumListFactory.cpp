@@ -341,7 +341,7 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
         }
 
         // give the user some feedback
-        if ( preferCwt & preferVendor )
+        if ( preferCwt && preferVendor )
         {
             throw user_error("[SpectrumList_PeakPicker] Cannot request both cwt and vendor peak-picking.");
         }

@@ -196,7 +196,7 @@ int test()
 
         auto mobilityArray = boost::make_shared<BinaryDataArray>();
         mobilityArray->data.resize(inputMZArray.size(), 0);
-        mobilityArray->set(MS_raw_ion_mobility_array);
+        mobilityArray->set(MS_raw_ion_mobility_array, "", UO_millisecond);
         s->binaryDataArrayPtrs.push_back(mobilityArray);
 
         scanRef.scanWindows.push_back(ScanWindow());

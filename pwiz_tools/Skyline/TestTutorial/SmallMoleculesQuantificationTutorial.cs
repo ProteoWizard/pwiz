@@ -92,9 +92,8 @@ namespace pwiz.SkylineTestTutorial
                 var doc = SkylineWindow.Document;
                 
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() => importDialog.Size = new Size(600, 300));
+                RunUIForScreenShot(() => ResizeFormOnScreen(importDialog, 600, 300));
                 PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 4);
-
 
                 var text = "DrugX,Drug,light,283.04,1,129.96,1,26,16,2.7\r\nDrugX,Drug,heavy,286.04,1,133.00,1,26,16,2.7\r\n";
                 text = text.Replace(',', TextUtil.CsvSeparator).Replace(".", LocalizationHelper.CurrentCulture.NumberFormat.NumberDecimalSeparator);
@@ -326,6 +325,8 @@ namespace pwiz.SkylineTestTutorial
 
                     documentGrid.DataGridView.SendPaste();
                 });
+                RunUIForScreenShot(() => ResizeFloatingFrame(documentGrid, null, 857));
+
                 //SetDocumentGridSampleTypesAndConcentrations(sampleTypes);
                 PauseForScreenShot<DocumentGridForm>("Document Grid - sample types - enlarge for screenshot so rows 95_0_1_1_00_1021523636 to end can be seen", 22);
                 foreach (var chromatogramSet in SkylineWindow.Document.MeasuredResults.Chromatograms)
@@ -365,7 +366,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<DocumentGridForm>("Custom document grid -scroll to end so same rows are in screenshot", 23);
 
                 SetDocumentGridExcludeFromCalibration();
-                PauseForScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 24);
+                PauseForGraphScreenShot<CalibrationForm>("Calibration Curve - outliers disabled", 24);
 
                 if (IsCoverShotMode)
                 {
@@ -401,7 +402,8 @@ namespace pwiz.SkylineTestTutorial
                     documentGrid.DataGridView.Sort(colReplicate, ListSortDirection.Ascending);
                 });
 
-                PauseForScreenShot<DocumentGridForm>("Document Grid - Molecule Ratio Results - manually widen to show all columns", 25);
+                RunUIForScreenShot(() => ResizeFloatingFrame(documentGrid, 780, null));
+                PauseForScreenShot<DocumentGridForm>("Document Grid - Molecule Ratio Results", 25);
                 RunUI(() =>
                 {
                     Settings.Default.CalibrationCurveOptions = Settings.Default.CalibrationCurveOptions
@@ -410,7 +412,7 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 var calibrationForm = FindOpenForm<CalibrationForm>();
-                RunUI(()=>calibrationForm.UpdateUI(false));
+                RunUI(() => calibrationForm.UpdateUI(false));
                 PauseForScreenShot<CalibrationForm>("Calibration Curve: Log", 26);
             }
 
@@ -436,8 +438,16 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() =>
                 {
                     openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
-                    openDataSourceDialog1.SelectAllFileType(ExtWatersRaw,
-                            path => isFirstPass ? firstPassMatches.Any(path.Contains) : !firstPassMatches.Any(path.Contains));
+                    openDataSourceDialog1.SelectAllFileType(ExtWatersRaw, path => isFirstPass
+                        ? firstPassMatches.Any(path.Contains)
+                        : !firstPassMatches.Any(path.Contains));
+                });
+                RunUIForScreenShot(() =>
+                {
+                    openDataSourceDialog1.Size = new Size(800, 430);
+                    int lastIndex = openDataSourceDialog1.ListItemNames.Count() - 1;
+                    openDataSourceDialog1.EnsureListViewItemVisible(lastIndex);
+                    openDataSourceDialog1.EnsureListViewItemVisible(lastIndex - 46);
                 });
                 if (isFirstPass)
                 {

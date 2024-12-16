@@ -19,10 +19,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -41,6 +39,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs.Calibration;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
@@ -121,16 +120,20 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
 
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
-                RunUI(() => importDialog.Size = new Size(600, 300));
+                RunUIForScreenShot(() => ResizeFormOnScreen(importDialog, 600, 300));
                 PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list", 6);
 
                 var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
                 var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
 
-                RunUI(() => {
-                    col4Dlg.radioMolecule.PerformClick();
+                RunUI(col4Dlg.radioMolecule.PerformClick);
+                RunUIForScreenShot(() =>
+                {
+                    col4Dlg.SetColumnWidth(0, 120); // To show "Molecule List Name" fully
+                    col4Dlg.SetColumnWidth(1, 125); // To show the precursor names fully
+                    col4Dlg.SetColumnWidth(2, 120); // To show "Molecule Formula" fully
+                    col4Dlg.SetColumnWidth(5, 135); // To reduce wrapping to just 2 rows
                 });
-
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 6);
 
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
@@ -144,7 +147,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
 
                 var autoSelectDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                PauseForScreenShot("Auto-select query", 8);
+                PauseForScreenShot<MultiButtonMsgDlg>("Auto-select query", 8);
                 OkDialog(autoSelectDlg, autoSelectDlg.OkDialog);
 
                 docTargets = WaitForDocumentChange(docTargets);
@@ -160,21 +163,14 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 });
                 RestoreViewOnScreen(5);
 
-                PauseForScreenShot<SkylineWindow>("Skyline with 14 transition - show the right-click menu for setting DHA to be a surrogate standard", 9);
+                PauseForScreenShot("Skyline with 14 transition - show the right-click menu for setting DHA to be a surrogate standard", 9);
 
                 // Set the standard type of the surrogate standards to StandardType.SURROGATE_STANDARD
-                RunUI(() =>
-                {
-                    List<IdentityPath> pathsToSelect = SkylineWindow.SequenceTree.Nodes.OfType<PeptideGroupTreeNode>()
-                        .SelectMany(peptideGroup => peptideGroup.Nodes.OfType<PeptideTreeNode>())
-                        .Where(peptideTreeNode => peptideTreeNode.DocNode.RawTextId.Contains("(DHA)"))
-                        .Select(treeNode => treeNode.Path)
-                        .ToList();
-                    SkylineWindow.SequenceTree.SelectedPaths = pathsToSelect;
-                    SkylineWindow.SetStandardType(StandardType.SURROGATE_STANDARD);
-                });
+                SelectNode(SrmDocument.Level.Molecules, 3);
 
-
+                // TODO: Show right-click menu with "Surrogate Standard" selected
+                RunUI(() => SkylineWindow.SetStandardType(StandardType.SURROGATE_STANDARD));
+                PauseForScreenShot("Skyline with 4 molecules and one set as surrogate standard");
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("FattyAcids_demo.sky")));
 
                 using (new WaitDocumentChange(1, true))
@@ -189,14 +185,13 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     });
                     PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 10);
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
-
                     OkDialog(importResultsDlg1,importResultsDlg1.OkDialog);
                 }
 
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
-
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-target graph", 11);
+                RunUI(SkylineWindow.CollapsePrecursors);
+                PauseForScreenShot("Skyline window multi-target graph", 11);
 
                 var docResults = SkylineWindow.Document;
 
@@ -239,7 +234,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(ViewGroup.BUILT_IN.Id,
                         Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules)));
                 }
-                PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 12);
+                PauseForScreenShot("Skyline window multi-replicate layout", 12);
 
                 if (IsCoverShotMode)
                 {
@@ -277,7 +272,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                     RunUI(() =>
                     {
-                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification - 2;
+                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification;
                         peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR_THROUGH_ZERO;
                         peptideSettingsUI.QuantNormalizationMethod =
                             new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
@@ -348,9 +343,8 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 WaitForGraphs();
-                PauseForScreenShot<DocumentGridForm>("Calibration curve", 15);
+                PauseForScreenShot<CalibrationForm>("Calibration curve", 15);
             }
-
         }
     }
 }

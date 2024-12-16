@@ -27,10 +27,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using DigitalRune.Windows.Docking;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
@@ -45,6 +47,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.SkylineTestUtil
@@ -174,7 +177,7 @@ namespace pwiz.SkylineTestUtil
         {
             var doc = SkylineWindow.Document;
             ImportResultsDlg importResultsDlg;
-            if (!Skyline.SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
+            if (!SkylineWindow.ShouldPromptForDecoys(SkylineWindow.Document))
             {
                 importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
             }
@@ -227,13 +230,6 @@ namespace pwiz.SkylineTestUtil
             }
             if (expectedErrorMessage == null)
                 WaitForDocumentChange(doc);
-        }
-
-        public void WaitForRegression()
-        {
-            WaitForGraphs();
-            WaitForConditionUI(() => SkylineWindow.RTGraphController != null);
-            WaitForPaneCondition<RTLinearRegressionGraphPane>(SkylineWindow.RTGraphController.GraphSummary, pane => !pane.IsCalculating);
         }
 
         /// <summary>
@@ -486,7 +482,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Settings.Default.ToolList.Clear();
 
-                _movedDirectory = new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Skyline.Program.StressTest);
+                _movedDirectory = new MovedDirectory(ToolDescriptionHelpers.GetToolsDirectory(), Program.StressTest);
                 _toolPath = toolPath;
                 RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
@@ -533,6 +529,26 @@ namespace pwiz.SkylineTestUtil
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
+            MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
+            RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
+            WaitForGraphs();
+            CheckFullScanSelection(graphName, x, y, paneKey);
+        }
+
+        public static void MouseOverChromatogram(double x, double y, PaneKey? paneKey = null)
+        {
+            MouseOverChromatogram(null, x, y, paneKey);
+        }
+
+        public static void MouseOverChromatogram(string graphName, double x, double y, PaneKey? paneKey = null)
+        {
+            WaitForGraphs();
+            var graphChromatogram = GetGraphChrom(graphName);
+            MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
+        }
+
+        private static void MouseOverChromatogramInternal(GraphChromatogram graphChromatogram, double x, double y, PaneKey? paneKey)
+        {
             // Wait as long as 2 seconds for mouse move to produce a highlight point
             bool overHighlight = false;
             const int sleepCycles = 20;
@@ -545,11 +561,10 @@ namespace pwiz.SkylineTestUtil
                     break;
                 Thread.Sleep(sleepInterval);
             }
+
             RunUI(() => AssertEx.IsTrue(graphChromatogram.IsOverHighlightPoint(x, y, paneKey),
-                string.Format("Full-scan dot not present after {0} tries in {1} seconds", sleepCycles, sleepInterval*sleepCycles/1000.0)));
-            RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
-            WaitForGraphs();
-            CheckFullScanSelection(graphName, x, y, paneKey);
+                string.Format("Full-scan dot not present after {0} tries in {1} seconds", sleepCycles,
+                    sleepInterval * sleepCycles / 1000.0)));
         }
 
         public static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null)
@@ -597,6 +612,26 @@ namespace pwiz.SkylineTestUtil
                 }
             }
             graphControl.Refresh();
+        }
+
+        protected static void ResizeFloatingFrame(DockableForm dockableForm, int? width, int? height)
+        {
+            Assert.AreEqual(DockState.Floating, dockableForm.DockState);
+            var parentForm = dockableForm.ParentForm;
+            Assert.IsNotNull(parentForm);
+            ResizeFormOnScreen(parentForm, width, height);
+        }
+
+        protected static void ResizeFormOnScreen(Form parentForm, int? width, int? height)
+        {
+            if (Program.SkylineOffscreen)
+                return;
+
+            if (width.HasValue)
+                parentForm.Width = width.Value;
+            if (height.HasValue)
+                parentForm.Height = height.Value;
+            FormEx.ForceOnScreen(parentForm);
         }
 
         public void AddFastaToBackgroundProteome(BuildBackgroundProteomeDlg proteomeDlg, string fastaFile, int repeats)
