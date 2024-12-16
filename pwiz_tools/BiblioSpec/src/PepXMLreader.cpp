@@ -426,7 +426,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && scoreType_ == MASCOT_IONS_SCORE && score_name == "exp-value") ||
            (analysisType_ == MORPHEUS_ANALYSIS && score_name == "psm q-value") ||
            (analysisType_ == MSGF_ANALYSIS && score_name == "qvalue") ||
-           (analysisType_ == CRUX_ANALYSIS && score_name == "percolator_qvalue")
+           (analysisType_ == CRUX_ANALYSIS && score_name == "percolator_qvalue") ||
            (analysisType_ == PERCOLATOR_ANALYSIS)) {
            pepProb = getDoubleRequiredAttrValue("value", attr);
        } else if (analysisType_ == PEAKS_ANALYSIS && score_name == "-10lgp") {
