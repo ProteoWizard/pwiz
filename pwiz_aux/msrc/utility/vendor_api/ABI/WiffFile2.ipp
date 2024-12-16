@@ -37,6 +37,7 @@ using namespace System::Collections::Generic;
 
 using namespace SCIEX::Apis::Data::v1;
 using namespace SCIEX::Apis::Data::v1::Contracts;
+using namespace SCIEX::Apis::Data::v1::Types;
 
 namespace pwiz {
 namespace vendor_api {
@@ -93,6 +94,8 @@ class WiffFile2Impl : public WiffFile
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const;
+    
+    virtual void close() const;
 
     virtual int getADCTraceCount(int sampleIndex) const { return 0; }
     virtual std::string getADCTraceName(int sampleIndex, int traceIndex) const { throw std::out_of_range("WIFF2 does not support ADC traces"); }
@@ -249,6 +252,7 @@ struct Spectrum2Impl : public Spectrum
             spectrumRequest->Range->Start = scanTime;
             spectrumRequest->Range->End = scanTime;
             spectrumRequest->ConvertToCentroid = doCentroid;
+        	spectrumRequest->CentroidOption = CentroidOptions::IntensitySumAbove50Percent;
             spectrumRequest->AddFramingZeros = addZeros;
 
             auto spectraReader = experiment->wiffFile_->DataReader()->GetSpectra(spectrumRequest);
@@ -829,6 +833,18 @@ SpectrumPtr WiffFile2Impl::getSpectrum(ExperimentPtr experiment, int cycle) cons
     return spectrum;
 }
 
+void WiffFile2Impl::close() const
+{
+    try
+    {
+        auto dataReader = DataReader();
+        if (dataReader != nullptr)
+            dataReader->CloseFile(((IList<ISample^>^) allSamples)[0]->Sources[0]);
+
+        System::GC::Collect();
+    }
+    CATCH_AND_FORWARD
+}
 
 void WiffFile2Impl::setSample(int sample) const
 {

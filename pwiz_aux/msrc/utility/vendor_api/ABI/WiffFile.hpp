@@ -256,6 +256,8 @@ class PWIZ_API_DECL WiffFile
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const = 0;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const = 0;
 
+    virtual void close() const = 0;
+    
     virtual ~WiffFile() {}
 };
 

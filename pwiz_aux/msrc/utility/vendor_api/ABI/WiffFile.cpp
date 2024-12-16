@@ -94,6 +94,8 @@ class WiffFileImpl : public WiffFile
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
     virtual SpectrumPtr getSpectrum(ExperimentPtr experiment, int cycle) const;
 
+    virtual void close() const;
+
     virtual int getADCTraceCount(int sample) const;
     virtual std::string getADCTraceName(int sample, int traceIndex) const;
     virtual void getADCTrace(int sample, int traceIndex, ADCTrace& trace) const;
@@ -915,6 +917,15 @@ SpectrumPtr WiffFileImpl::getSpectrum(ExperimentPtr experiment, int cycle) const
 {
     SpectrumImplPtr spectrum(new SpectrumImpl(boost::static_pointer_cast<ExperimentImpl>(experiment), cycle));
     return spectrum;
+}
+
+void WiffFileImpl::close() const
+{
+    try
+    {
+        provider->Close();
+    }
+    CATCH_AND_FORWARD
 }
 
 

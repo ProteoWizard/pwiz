@@ -216,6 +216,8 @@ void Reader_ABI::read(const string& filename,
         result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
         fillInMetadata(filename, result, wifffile, experimentsMap, runIndex, config);
+        
+        wifffile->close();
     }
     catch (std::exception& e)
     {
@@ -264,6 +266,7 @@ void Reader_ABI::read(const string& filename,
                 cerr << "[Reader_ABI::read] Error opening run " << i << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
             }
         }
+        wifffile->close();
     }
     catch (std::exception& e)
     {
