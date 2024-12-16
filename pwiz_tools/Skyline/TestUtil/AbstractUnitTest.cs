@@ -107,17 +107,9 @@ namespace pwiz.SkylineTestUtil
             set { TestContext.Properties["RecordAuditLogs"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
-        /// <summary>
-        /// This controls whether we run the various tests that are small molecule versions of our standard tests,
-        /// for example DocumentExportImportTestAsSmallMolecules().  Such tests convert the entire document to small
-        /// molecule representations before proceeding.
-        /// Developers that want to see such tests execute within the IDE can add their machine name to the SmallMoleculeDevelopers
-        /// list below (partial matches suffice, so name carefully!)
-        /// </summary>
-        private static string[] SmallMoleculeDevelopers = {"BSPRATT"}; 
         protected bool RunSmallMoleculeTestVersions
         {
-            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", true) || SmallMoleculeDevelopers.Any(smd => Environment.MachineName.Contains(smd)); }
+            get { return TestContext.GetBoolValue("RunSmallMoleculeTestVersions", true); }
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
