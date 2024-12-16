@@ -661,4 +661,7 @@ Old Localized:选定的文件夹无 Agilent QQQ 方法模板。文件夹预计�
   <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
     <value>从 {1} 下载 Skyline 文档 {0} 时出错。</value>
   </data>
+  <data name="OpenFileDialogNE_OpenFileDialogNE_Open" xml:space="preserve">
+    <value>打开(&amp;O)</value>
+  </data>
 </root>
