@@ -351,13 +351,11 @@ namespace pwiz.SkylineTestFunctional
             void VerifyContents(string s)
             {
                 using var zipFile = ZipFile.Read(s);
-                {
-                    // Confirm files have been correctly found
-                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW),
-                        $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
-                    Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW),
-                        $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
-                }
+                // Confirm files have been correctly found
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(S1_RAW),
+                    $@"expected to find (fake!) raw data file {S1_RAW} in zip file");
+                Assert.IsTrue(zipFile.EntryFileNames.Contains(S5_RAW),
+                    $@"expected to find (fake!) raw data file {S5_RAW} in zip file");
             }
 
             var shareCompletePath = DoShareWithRawFiles(TestFilesDirs[1], null, S1_RAW);
@@ -395,13 +393,11 @@ namespace pwiz.SkylineTestFunctional
 
             var shareCompletePathWiff = DoShareWithRawFiles(TestFilesDirs[4]);
             using var zipFile = ZipFile.Read(shareCompletePathWiff);
-            {
-                // Confirm files have been correctly found
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiff),
-                    $@"expected to find data file {dataNameWiff} in zip file");
-                Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiffScan),
-                    $@"expected to find data file {dataNameWiffScan} in zip file");
-            }
+            // Confirm files have been correctly found
+            Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiff),
+                $@"expected to find data file {dataNameWiff} in zip file");
+            Assert.IsTrue(zipFile.EntryFileNames.Contains(dataNameWiffScan),
+                $@"expected to find data file {dataNameWiffScan} in zip file");
         }
 
         private void SafeFileCopy(string sourceFileName, string destFileName)
