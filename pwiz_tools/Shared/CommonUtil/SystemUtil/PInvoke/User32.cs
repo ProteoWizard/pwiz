@@ -22,22 +22,6 @@ using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
-    // TODO (ekoneil): add static check limiting use of DllImport.
-    //    Allowed uses:
-    //      pwiz_tools\Shared\CommonUtil\SystemUtil\PInvoke\*
-    //      pwiz_tools\Skyline\Test\CodeInspectionTest.cs - implements static check for DllImport
-    //    Except for uses in these files:
-    //      pwiz_tools\Shared\zedgraph\ZedGraph\ZedGraphControl.ContextMenu.cs - avoid changing ZedGraph
-    //      pwiz_tools\Skyline\Util\MemoryInfo.cs - 50 LOC is a win32 struct only used here
-    //      pwiz_tools\Skyline\TestUtil\FileLockingProcessFinder.cs - 100 LOC used only locally to debug file locking problems
-    //      pwiz_tools\Skyline\TestRunnerLib\RunTests.cs - 62 LOC related to heap management
-    //      pwiz_tools\Skyline\TestRunner\UnusedPortFinder.cs - 150+ LOC related to marshaling info for TCP port management
-    //      pwiz_tools\Skyline\Util\UtilIO.cs - uses unsafe code, which is currently disallowed in CommonUtil
-    //      pwiz_tools\Skyline\TestRunnerLib\MiniDump.cs - 60 LOC for dumping info about a process
-    //
-    // TODO: Add static code inspection modeled on AddTextInspection:
-    //      pwiz_tools\Skyline\Test\CodeInspectionTest.cs
-
     public static class User32
     {
         // ReSharper disable InconsistentNaming IdentifierTypo
@@ -218,6 +202,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
+        // ReSharper disable once IdentifierTypo
         public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
