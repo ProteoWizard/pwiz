@@ -925,9 +925,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else if (Settings.Default.AreaLogScale)
                 {
-                    // If currently not log scale, reset the y-axis max
-                    if (YAxis.Type != AxisType.Log)
-                        YAxis.Scale.MaxAuto = true;
+                    YAxis.Scale.MaxAuto = true;
                     if (Settings.Default.PeakAreaMaxArea != 0)
                     {
                         YAxis.Scale.MaxAuto = false;
@@ -936,8 +934,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     YAxis.Type = AxisType.Log;
                     YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(GetYAxisTitle(aggregateOp, normalizeOption));
-                    YAxis.Scale.MinAuto = false;
-                    FixedYMin = YAxis.Scale.Min = 1;
+                    YAxis.Scale.MinAuto = true;
+                    FixedYMin = null;
                 }
                 else
                 {

@@ -170,8 +170,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
-                YAxis.Scale.MinAuto = false;
-                FixedYMin = YAxis.Scale.Min = 1;
+                YAxis.Scale.MinAuto = true;
+                FixedYMin = null;
                 YAxis.Scale.Max = _graphData.MaxY * 10;
             }
             else
