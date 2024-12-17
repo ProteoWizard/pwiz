@@ -157,15 +157,21 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+            if (e.PropertyName == nameof(Settings.Default.GroupComparisonAvoidLabelOverlap))
             {
-                Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
-                Settings.Default.GroupComparisonSuspendLabelLayout = false;
+                try
+                {
+                    Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
+                    Settings.Default.GroupComparisonSuspendLabelLayout = false;
+                }
+                finally
+                {
+                    Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+                }
                 _labelsLayout = null;
                 GraphSummary.UpdateUI();
-                Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
             }
-            else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
+            else if (e.PropertyName == nameof(Settings.Default.GroupComparisonSuspendLabelLayout))
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {

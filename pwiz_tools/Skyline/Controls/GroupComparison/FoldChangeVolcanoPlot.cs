@@ -388,10 +388,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine = CreateAndInsert(index, 0.0, 0.0, Settings.Default.PValueCutoff, Settings.Default.PValueCutoff);
             }
 
-            zedGraphControl.GraphPane.YAxis.Scale.Min = 0.0;
-            zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;       
-            zedGraphControl.GraphPane.AxisChange();
-            zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
+            if (_dataChanged)
+            {
+                zedGraphControl.GraphPane.YAxis.Scale.Min = 0.0;
+                zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;
+                zedGraphControl.GraphPane.AxisChange();
+                zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
+                _dataChanged = false;
+            }
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
@@ -722,9 +726,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
         /// </summary>
         private void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+            if (e.PropertyName == nameof(Settings.Default.GroupComparisonAvoidLabelOverlap))
+            {
+                Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
+                Settings.Default.GroupComparisonSuspendLabelLayout = false;
+                Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+                _labelsLayouts.Clear();
                 UpdateGraph();
-            else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
+            }
+            else if (e.PropertyName == nameof(Settings.Default.GroupComparisonSuspendLabelLayout))
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {

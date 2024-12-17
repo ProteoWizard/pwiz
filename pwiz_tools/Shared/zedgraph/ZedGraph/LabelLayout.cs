@@ -78,6 +78,7 @@ namespace ZedGraph
             public float _density;
             // public PointF _gradient;
             public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
+            public Point _indices;
         }
 
         // First index row, second index line
@@ -100,6 +101,7 @@ namespace ZedGraph
                     {
                         _location = location,
                         _bounds = new RectangleF(location, new SizeF(_cellSize, _cellSize)),
+                        _indices = new Point(j, i)
                     };
                 }
             }
@@ -134,7 +136,7 @@ namespace ZedGraph
         /// All coordinates are in screen pixels.
         /// </summary>
         /// <param name="pt">Center of the label box, in pixels</param>
-        /// <param name="targetPoint">point being labeled.</param>
+        /// <param name="targetPoint">data point being labeled.</param>
         /// <param name="labelSize"> in pixels </param>
         /// <returns>goal function value.</returns>
         private float GoalFuncion(PointF pt, PointF targetPoint, SizeF labelSize)
@@ -296,7 +298,7 @@ namespace ZedGraph
                 return false;
             var goal = float.MaxValue;
             var goalCell = Point.Empty;
-            var gridRect = new Rectangle(labelLength / 2, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height);
+            var gridRect = new Rectangle(labelLength / 2, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height - 1);
             var points = new List<Point>();
             for (var count = SEARCH_COUNT_COARSE; count > 0; count--)
             {
