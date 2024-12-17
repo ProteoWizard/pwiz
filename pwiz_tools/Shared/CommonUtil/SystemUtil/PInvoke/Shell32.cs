@@ -21,7 +21,34 @@ namespace pwiz.Common.SystemUtil.PInvoke
 {
     public static class Shell32
     {
+        private static Guid _folderDownloads = new Guid(@"374DE290-123F-4565-9164-39C4925E467B");
+
+        public static string GetDownloadsFolder()
+        {
+            string path = null;
+            IntPtr pathPtr = default;
+            try
+            {
+                int hr = SHGetKnownFolderPath(ref _folderDownloads, 0, IntPtr.Zero, out pathPtr);
+                if (hr == 0) // successful call, so attempt to read result
+                {
+                    path = Marshal.PtrToStringUni(pathPtr);
+                }
+            }
+            finally
+            {
+                Marshal.FreeCoTaskMem(pathPtr);
+            }
+
+            return path;
+        }
+
         [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
+
+        // From: https://www.pinvoke.net/default.aspx/shell32.SHGetKnownFolderPath
+        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+        private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
+
     }
 }

@@ -19,10 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -119,12 +119,9 @@ namespace pwiz.Common.SystemUtil
             }
             else if (Environment.OSVersion.Version.Major >= 6)
             {
-                IntPtr pathPtr;
-                int hr = SHGetKnownFolderPath(ref FolderDownloads, 0, IntPtr.Zero, out pathPtr);
-                if (hr == 0)
+                path = Shell32.GetDownloadsFolder();
+                if (path != null)
                 {
-                    path = Marshal.PtrToStringUni(pathPtr);
-                    Marshal.FreeCoTaskMem(pathPtr);
                     return path;
                 }
             }
@@ -147,10 +144,6 @@ namespace pwiz.Common.SystemUtil
             return null != Environment.GetEnvironmentVariable(SKYLINE_DOWNLOAD_PATH)
                    && null == Environment.GetEnvironmentVariable(SKYLINE_DOWNLOAD_PATH, EnvironmentVariableTarget.User);
         }
-
-        private static Guid FolderDownloads = new Guid(@"374DE290-123F-4565-9164-39C4925E467B");
-        [DllImport(@"shell32.dll", CharSet = CharSet.Auto)]
-        private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
 
         /// <summary>
         /// Wrapper around <see cref="Path.GetDirectoryName"/> which, if an error occurs, adds
