@@ -109,7 +109,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
                 SetThreadExecutionState(_previousState);
             }
 
-            [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            [DllImport(nameof(Kernel32), CharSet = CharSet.Auto, SetLastError = true)]
             private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 
             [Flags]

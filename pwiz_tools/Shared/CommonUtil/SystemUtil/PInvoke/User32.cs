@@ -184,7 +184,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
 
         // TODO: declaring DLL name - use (1) DllImport(nameof(User32)) or (2) DllImport("user32.dll")
-        [DllImport(nameof(User32))]
+        [DllImport("user32.dll")]
         public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
 
         // TODO (ekoneil): change dwFlags type from int to AnimateWindowFlags after reconciling differing approaches to window animation in CustomTip vs FormAnimator
