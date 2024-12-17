@@ -82,6 +82,10 @@ PWIZ_API_DECL size_t SpectrumList_ABI::find(const string& id) const
     return scanItr->second;
 }
 
+PWIZ_API_DECL void SpectrumList_ABI::close()
+{
+    wifffile_->close();
+}
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData) const
 {
