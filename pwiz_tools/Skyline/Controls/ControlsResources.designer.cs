@@ -189,7 +189,7 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot expand because the number of nodes in the expansion is {0} and it exceeds {1}..
+        ///   Looks up a localized string similar to Cannot expand because the number of nodes in the expansion is {0} and it exceeds the limit of {1}.
         /// </summary>
         public static string SequenceTree_ExpansionTooLargeMessage {
             get {
