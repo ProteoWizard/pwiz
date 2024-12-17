@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.Controls.Databinding
             viewEditor.SetViewTransformer(new DocumentViewTransformer());
             viewEditor.AddViewEditorWidget(new PivotReplicateAndIsotopeLabelWidget {Dock = DockStyle.Left});
 #if DEBUG
-            viewEditor.ShowSourceTab = true;
+            viewEditor.ShowSourceTab = CommonApplicationSettings.PauseSeconds == 0; // not when taking screenshots
 #else
             viewEditor.ShowSourceTab = false;
 #endif
