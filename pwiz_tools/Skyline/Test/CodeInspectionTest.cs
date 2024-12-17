@@ -166,6 +166,16 @@ namespace pwiz.SkylineTest
                 false, // Pattern is not a regular expression
                 @"nonstandard {0} found instead"); // Explanation for requirement, appears in report
 
+            // Looking for non-accepted uses of P/Invoke by searching for the [DllImport] attribute
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                DllImportAllowedUsageFilesAndDirectories(), // Skip this check for specific files where DllImport use is explicitly allowed
+                "DllImport", // Only files containing this string get inspected for this
+                @"DllImport", // Forbidden pattern - match [DllImport
+                false, // Pattern is a regular expression
+                @"Use of P/Invoke is not allowed. Instead, use the interop library in pwiz.Common.SystemUtil.PInvoke."); // Explanation for prohibition, appears in report
+
             // Looking for Model code depending on UI code
             void AddForbiddenUIInspection(string fileMask, string cue, string why, int numberToleratedAsWarnings = 0)
             {
@@ -192,7 +202,7 @@ namespace pwiz.SkylineTest
                 "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
             AddTextInspection("*.cs", Inspection.Forbidden, Level.Error,
-                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs"}, 
+                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs", "CommonAlertDlg.cs"}, 
                 null, "Clipboard(Ex)?\\.SetText", true, 
                 "Use ClipboardHelper.SetClipboardText instead since it handles exceptions");
 
@@ -739,6 +749,7 @@ namespace pwiz.SkylineTest
             {
                 var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"Common"), fileMask, SearchOption.AllDirectories));
+                filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUtil"), fileMask, SearchOption.AllDirectories));
 
                 foreach (var filename in filenames)
                 {
@@ -1007,6 +1018,36 @@ namespace pwiz.SkylineTest
         private string[] NonSkylineDirectories()
         {
             return new[] {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
+        }
+        
+        // Return a list of files and directories allowed to use PInvoke
+        private string[] DllImportAllowedUsageFilesAndDirectories()
+        {
+            // Paths start in pwiz_tools\Skyline, pwiz_tools\Skyline\..\Shared\Common, or pwiz_tools\Skyline\..\Shared\CommonUtil
+            return new[] {
+                // PInvoke API and associated check are allowed to use [DllImport]
+                @"SystemUtil\PInvoke",
+                @"Test\CodeInspectionTest.cs",
+                
+                // Classes allowed limited use of the [DllImport] attribute outside the PInvoke API.
+                // To be added to this list, a class must:
+                //   (1) Use methods marked with [DllImport] not already implemented in PInvoke
+                //   (2) Be the only use of those methods
+                //   (3) Have circumstances where adding new functions to PInvoke (even if only used once)
+                //       is difficult for one or more reasons including:
+                //        * Includes > 20 LOC modeling Win32 types
+                //        * Uses unsafe methods
+                @"Util\MemoryInfo.cs", 
+                @"Util\UtilIO.cs",
+                @"TestRunner\UnusedPortFinder.cs",
+                @"TestRunnerLib\RunTests.cs",
+                @"TestRunnerLib\MiniDump.cs",
+                @"TestUtil\FileLockingProcessFinder.cs",
+
+                // Ignore 3rd party libraries
+                @"Executables"
+                // ZedGraph would also be excluded, but it lives in a directory not covered by static analysis
+            };
         }
 
         // Prepare a list of files that we never need to deal with for L10N
