@@ -576,7 +576,6 @@ struct PWIZ_API_DECL RawData
             catch(MassLynxRawException const& ex)
             {
                 // Likely just an empty channel - if there's a real problem the folllowing calls will probably throw too
-                std::cout << ex.what() << std::endl;
             }
             analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
             analogChannelUnits[ch] = AnalogChromatogramReader.GetChannelUnits(ch);
