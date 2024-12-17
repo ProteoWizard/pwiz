@@ -190,6 +190,16 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Enabling Windows Long Paths for python packages installation in virtual environment [{0}].
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_en" +
+                        "vironment__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Enabling search path in Python embeddable package.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package {
@@ -222,6 +232,16 @@ namespace pwiz.Skyline.Model.Tools {
         public static string PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script {
             get {
                 return ResourceManager.GetString("PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to enable Windows Long Paths for python installation in virtual environment [{0}].
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virt" +
+                        "ual_environment__0_", resourceCulture);
             }
         }
         

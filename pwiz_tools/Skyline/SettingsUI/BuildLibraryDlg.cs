@@ -489,9 +489,7 @@ namespace pwiz.Skyline.SettingsUI
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
-                new PythonPackage {Name = @"numpy", Version = @"1.26.4" },
-                new PythonPackage { Name = @"torch", Version = @"2.5.1" },
-                new PythonPackage { Name = @"sympy", Version = @"1.13.3" }
+                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
             };
             var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
@@ -520,9 +518,9 @@ namespace pwiz.Skyline.SettingsUI
             var packages = new List<PythonPackage>()
             {
                 new PythonPackage {Name = @"peptdeep", Version = null },
-                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
-                new PythonPackage { Name = @"torch", Version = @"2.5.1" },
-                new PythonPackage { Name = @"sympy", Version = @"1.13.3" }
+                new PythonPackage { Name = @"numpy", Version = null },
+                new PythonPackage { Name = @"torch", Version = null },
+                new PythonPackage { Name = @"sympy", Version = null }
             };
             var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), CARAFE);

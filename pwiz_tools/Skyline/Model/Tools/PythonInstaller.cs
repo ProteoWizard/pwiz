@@ -43,6 +43,17 @@ namespace pwiz.Skyline.Model.Tools
         private const string SPACE = TextUtil.SPACE;
         private const string VIRTUALENV = @"virtualenv";
         private const string GIT = @"git";
+        private const string CMD_NEW_ITEM_PROPERTY = @"New-ItemProperty";
+        private const string CMD_NEW_ITEM_PROPERTY_PATH_OPTION = @"-Path";
+        private const string CMD_NEW_ITEM_PROPERTY_PATH = @"HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem";
+        private const string BACKTICK = @"`";
+        private const string CMD_NEW_ITEM_PROPERTY_NAME_OPTION = @"-Name";
+        private const string CMD_NEW_ITEM_PROPERTY_NAME = @"LongPathsEnabled";
+        private const string CMD_NEW_ITEM_PROPERTY_VALUE_OPTION = @"-Value";
+        private const string CMD_NEW_ITEM_PROPERTY_VALUE = @"1";
+        private const string CMD_NEW_ITEM_PROPERTY_TYPE_OPTION = @"-PropertyType";
+        private const string CMD_NEW_ITEM_PROPERTY_TYPE = @"DWORD";
+        private const string CMD_NEW_ITEM_PROPERTY_FORCE_OPTION = @"-Force";
 
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
@@ -228,14 +239,53 @@ namespace pwiz.Skyline.Model.Tools
                     task7.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, VirtualEnvironmentName);
                     task7.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, VirtualEnvironmentName);
                     return task7;
-                case PythonTaskName.pip_install_packages:
-                    var task8 = new PythonTask(() => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages));
-                    task8.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
-                    task8.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                case PythonTaskName.pip_enable_longpaths:
+                    var task8 = new PythonTask(() => EnableWindowsLongPaths());
+                    task8.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                    task8.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     return task8;
+                case PythonTaskName.pip_install_packages:
+                    var task9= new PythonTask(() => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages));
+                    task9.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                    task9.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                    return task9;
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
             }
+        }
+
+        private void EnableWindowsLongPaths()
+        {
+            var cmdBuilder = new StringBuilder();
+
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_PATH_OPTION);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(TextUtil.Quote(CMD_NEW_ITEM_PROPERTY_PATH));
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(BACKTICK);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_NAME_OPTION);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(TextUtil.Quote(CMD_NEW_ITEM_PROPERTY_NAME));
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_VALUE_OPTION);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_VALUE);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_TYPE_OPTION);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_TYPE);
+            cmdBuilder.Append(SPACE);
+            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_FORCE_OPTION);
+            cmdBuilder.Append(SPACE);
+         
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
+            cmd += cmdBuilder;
+            var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
+            if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
 
         private void DownloadPythonEmbeddablePackage(IProgressMonitor progressMonitor)
@@ -300,7 +350,8 @@ namespace pwiz.Skyline.Model.Tools
                 if (package.Version.IsNullOrEmpty())
                 {
                     arg = package.Name;
-                } else if (package.Version.StartsWith(GIT))
+                } 
+                else if (package.Version.StartsWith(GIT))
                 {
                     arg = package.Version;
                 }
@@ -308,8 +359,8 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     arg = package.Name + EQUALS + package.Version;
                 }
-                cmdBuilder.Append(arg)
-                    .Append(SPACE);
+                arg = TextUtil.Quote(arg);
+                cmdBuilder.Append(arg).Append(SPACE);
             }
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
             cmd += string.Format(ToolsResources.PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__, ECHO, CMD_PROCEEDING_SYMBOL);
@@ -471,6 +522,7 @@ namespace pwiz.Skyline.Model.Tools
         run_getpip_script,
         pip_install_virtualenv,
         create_virtual_environment,
+        pip_enable_longpaths,
         pip_install_packages
     }
 

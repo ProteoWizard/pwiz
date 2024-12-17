@@ -41,6 +41,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public string Name { get; private set; }
         public string Comment { get; private set; }
 
+        public string AlphapeptDeepName()
+        {
+            return Name.Replace(@"(", "").Replace(@")", @"").Replace(@" ", @"@").Replace(@"Acetyl@N-term",@"Acetyl@Protein_N-term");
+        }
+
         public override string ToString() { return string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
     }
 
@@ -255,7 +260,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         continue;
                     }
 
-                    var modName = modNames.Single().Name;
+                    var modName = modNames.Single().AlphapeptDeepName();
+
                     modsBuilder.Append(modName);
                     modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
                     if (i != modifiedSequence.ExplicitMods.Count - 1)
