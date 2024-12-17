@@ -201,9 +201,14 @@ namespace pwiz.SkylineTest
                 "new System.Windows.Forms.DataGridView()", false,
                 "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
-            AddTextInspection("*.cs", Inspection.Forbidden, Level.Error,
+            // TODO (ekoneil): remove CommonAlertDlg from the exclusion list, possibly by implementing exception handling in CommonAlertDlg.CopyMessage()
+            AddTextInspection("*.cs", 
+                Inspection.Forbidden, 
+                Level.Error,
                 new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs", "CommonAlertDlg.cs"}, 
-                null, "Clipboard(Ex)?\\.SetText", true, 
+                null,
+                "Clipboard(Ex)?\\.SetText", 
+                true, 
                 "Use ClipboardHelper.SetClipboardText instead since it handles exceptions");
 
             // A few lines of fake tests that can be useful in development of this mechanism
