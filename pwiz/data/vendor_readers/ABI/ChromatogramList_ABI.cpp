@@ -52,6 +52,11 @@ PWIZ_API_DECL ChromatogramList_ABI::ChromatogramList_ABI(const MSData& msd, Wiff
 {
 }
 
+PWIZ_API_DECL ChromatogramList_ABI::~ChromatogramList_ABI()
+{
+    wifffile_->close();
+}
+
 
 PWIZ_API_DECL size_t ChromatogramList_ABI::size() const
 {

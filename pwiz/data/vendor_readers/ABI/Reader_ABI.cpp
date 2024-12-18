@@ -290,8 +290,6 @@ void Reader_ABI::readIds(const string& filename,
         vector<string> sampleNames = wifffile->getSampleNames();
         for (vector<string>::iterator it = sampleNames.begin(); it != sampleNames.end(); it++)
             results.push_back(*it);
-
-        wifffile->close();
     }
     catch (std::exception& e)
     {

@@ -746,8 +746,6 @@ class PWIZ_API_DECL SpectrumList
     virtual bool calibrationSpectraAreOmitted() const;
 
     virtual ~SpectrumList(){}
-
-    virtual void close(){}
 };
 
 

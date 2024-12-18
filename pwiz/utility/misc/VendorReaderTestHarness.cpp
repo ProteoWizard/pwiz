@@ -549,8 +549,6 @@ void testRead(const Reader& reader, const string& rawpath, const bfs::path& pare
             if (msd_reverse.run.chromatogramListPtr.get())
                 for (size_t j = 0, end = msd_reverse.run.chromatogramListPtr->size(); j < end; ++j)
                     msd_reverse.run.chromatogramListPtr->chromatogram(end - j - 1);
-
-            msd_reverse.run.spectrumListPtr->close();
         }
 
     // no unicode test for HTTP paths

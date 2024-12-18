@@ -48,6 +48,7 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
     
 #ifdef PWIZ_READER_ABI
     ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, const ExperimentsMap& experimentsMap, int sample, const Reader::Config& config);
+	ChromatogramList_ABI::~ChromatogramList_ABI() override;
 
     private:
 
