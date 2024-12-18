@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Ionic.Zip;
+using Microsoft.Win32;
+using NHibernate.Impl;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -23,10 +25,10 @@ namespace pwiz.Skyline.Model.Tools
         private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/";
         private const string CD = @"cd";
         private const string CMD_ESCAPE_SYMBOL = TextUtil.CARET;
-        private const string CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND;
+        internal const string CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND;
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
         private const string DOT_ZIP = @".zip";
-        private const string ECHO = @"echo";
+        internal const string ECHO = @"echo";
         private const string EMBED_LOWER_CASE = @"embed";
         private const string EQUALS = TextUtil.EQUAL + TextUtil.EQUAL;
         private const string FORWARD_SLASH = TextUtil.FORWARD_SLASH;
@@ -42,17 +44,11 @@ namespace pwiz.Skyline.Model.Tools
         private const string SPACE = TextUtil.SPACE;
         private const string VIRTUALENV = @"virtualenv";
         private const string GIT = @"git";
-        private const string CMD_NEW_ITEM_PROPERTY = @"New-ItemProperty";
-        private const string CMD_NEW_ITEM_PROPERTY_PATH_OPTION = @"-Path";
-        private const string CMD_NEW_ITEM_PROPERTY_PATH = @"HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem";
-        private const string BACKTICK = @"`";
-        private const string CMD_NEW_ITEM_PROPERTY_NAME_OPTION = @"-Name";
-        private const string CMD_NEW_ITEM_PROPERTY_NAME = @"LongPathsEnabled";
-        private const string CMD_NEW_ITEM_PROPERTY_VALUE_OPTION = @"-Value";
-        private const string CMD_NEW_ITEM_PROPERTY_VALUE = @"1";
-        private const string CMD_NEW_ITEM_PROPERTY_TYPE_OPTION = @"-PropertyType";
-        private const string CMD_NEW_ITEM_PROPERTY_TYPE = @"DWORD";
-        private const string CMD_NEW_ITEM_PROPERTY_FORCE_OPTION = @"-Force";
+        internal const string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
+        internal const string REG_LONGPATH_NAME = @"/v LongPathsEnabled";
+        internal const string REG_LONGPATH_TYPE = @"/t DWORD";
+        internal const string REG_LONGPATH_VALUE = @"/d 0x00000001";
+        internal const string REG_LONGPATH_FORCE = @"/f";
 
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
@@ -92,7 +88,7 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
         private string PythonRootDir { get; } = PythonInstallerUtil.PythonRootDir;
-        private TextWriter Writer { get; }
+        internal TextWriter Writer { get; }
         private IPythonInstallerTaskValidator TaskValidator { get; }
 
         public PythonInstaller(ProgramPathContainer pythonPathContainer, IEnumerable<PythonPackage> packages,
@@ -238,7 +234,7 @@ namespace pwiz.Skyline.Model.Tools
                     task7.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, VirtualEnvironmentName);
                     task7.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, VirtualEnvironmentName);
                     return task7;
-                case PythonTaskName.pip_enable_longpaths:
+                case PythonTaskName.enable_longpaths:
                     var task8 = new PythonTask(() => EnableWindowsLongPaths());
                     task8.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task8.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
@@ -255,36 +251,10 @@ namespace pwiz.Skyline.Model.Tools
 
         private void EnableWindowsLongPaths()
         {
-            var cmdBuilder = new StringBuilder();
 
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_PATH_OPTION);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(TextUtil.Quote(CMD_NEW_ITEM_PROPERTY_PATH));
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(BACKTICK);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_NAME_OPTION);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(TextUtil.Quote(CMD_NEW_ITEM_PROPERTY_NAME));
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_VALUE_OPTION);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_VALUE);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_TYPE_OPTION);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_TYPE);
-            cmdBuilder.Append(SPACE);
-            cmdBuilder.Append(CMD_NEW_ITEM_PROPERTY_FORCE_OPTION);
-            cmdBuilder.Append(SPACE);
-         
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
-            var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+            var key = Microsoft.Win32.Registry.Users.OpenSubKey(REG_FILESYSTEM_KEY, RegistryKeyPermissionCheck.ReadWriteSubTree);
+            if (key != null)
+                key.SetValue(REG_LONGPATH_NAME, 1, RegistryValueKind.DWord);
         }
 
         private void DownloadPythonEmbeddablePackage(IProgressMonitor progressMonitor)
@@ -502,8 +472,9 @@ namespace pwiz.Skyline.Model.Tools
             var node5 = new PythonTaskNode { PythonTaskName = PythonTaskName.run_getpip_script, ParentNodes = new List<PythonTaskNode> { node3, node4 } };
             var node6 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_virtualenv, ParentNodes = new List<PythonTaskNode> { node5 } };
             var node7 = new PythonTaskNode { PythonTaskName = PythonTaskName.create_virtual_environment, ParentNodes = new List<PythonTaskNode> { node6 } };
-            var node8 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node7 } };
-            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8 };
+            var node8 = new PythonTaskNode { PythonTaskName = PythonTaskName.enable_longpaths, ParentNodes = new List<PythonTaskNode> { node7 } };
+            var node9 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node8 } };
+            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 };
         }
     }
 
@@ -521,7 +492,7 @@ namespace pwiz.Skyline.Model.Tools
         run_getpip_script,
         pip_install_virtualenv,
         create_virtual_environment,
-        pip_enable_longpaths,
+        enable_longpaths,
         pip_install_packages
     }
 
@@ -543,7 +514,8 @@ namespace pwiz.Skyline.Model.Tools
             { PythonTaskName.run_getpip_script, false },
             { PythonTaskName.pip_install_virtualenv, false },
             { PythonTaskName.create_virtual_environment, false },
-            { PythonTaskName.pip_install_packages, false },
+            { PythonTaskName.enable_longpaths, false },
+            { PythonTaskName.pip_install_packages, false }
         };
 
         public bool Validate(PythonTaskName pythonTaskName, PythonInstaller pythonInstaller)
@@ -564,6 +536,8 @@ namespace pwiz.Skyline.Model.Tools
                     return ValidatePipInstallVirtualenv();
                 case PythonTaskName.create_virtual_environment:
                     return ValidateCreateVirtualEnvironment();
+                case PythonTaskName.enable_longpaths:
+                    return ValidateEnableLongpaths();
                 case PythonTaskName.pip_install_packages:
                     return ValidatePipInstallPackages();
                 default:
@@ -625,7 +599,10 @@ namespace pwiz.Skyline.Model.Tools
         {
             return GetTaskValidationResult(PythonTaskName.create_virtual_environment);
         }
-
+        private bool ValidateEnableLongpaths()
+        {
+            return GetTaskValidationResult(PythonTaskName.enable_longpaths);
+        }
         private bool ValidatePipInstallPackages()
         {
             return GetTaskValidationResult(PythonTaskName.pip_install_packages);
@@ -672,6 +649,8 @@ namespace pwiz.Skyline.Model.Tools
                 case PythonTaskName.create_virtual_environment:
                     return ValidateCreateVirtualEnvironment();
                 case PythonTaskName.pip_install_packages:
+                    return ValidateEnableLongpaths();
+                case PythonTaskName.enable_longpaths:
                     return ValidatePipInstallPackages();
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
@@ -720,7 +699,10 @@ namespace pwiz.Skyline.Model.Tools
         {
             return Directory.Exists(PythonInstaller.VirtualEnvironmentDir);
         }
-
+        private bool ValidateEnableLongpaths()
+        {
+            return (int) Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATH_NAME, 0) == 1;
+        }
         private bool ValidatePipInstallPackages()
         {
             if (!File.Exists(PythonInstaller.VirtualEnvironmentPythonExecutablePath))
