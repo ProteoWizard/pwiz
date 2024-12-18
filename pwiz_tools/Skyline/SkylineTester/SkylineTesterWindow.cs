@@ -87,9 +87,9 @@ namespace SkylineTester
 
         private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
         {
-            {"en", "English"},
-            {"fr", "French"},
-            {"tr", "Turkish"},
+            {"en-US", "English"},
+            {"fr-FR", "French"},
+            {"tr-TR", "Turkish"},
             {"ja", "Japanese"},
             {"zh-CHS", "Chinese"}
         };
@@ -387,6 +387,9 @@ namespace SkylineTester
 
                 RunUI(() =>
                 {
+                    if (!Equals(testSet.SelectedItem, testSetValue))
+                        return;
+
                     testsTree.Nodes.Clear();
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
