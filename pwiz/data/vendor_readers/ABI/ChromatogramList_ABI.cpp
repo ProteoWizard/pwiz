@@ -515,6 +515,7 @@ const ChromatogramIdentity& ChromatogramList_ABI::chromatogramIdentity(size_t in
 size_t ChromatogramList_ABI::find(const std::string& id) const {return 0;}
 ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, bool getBinaryData) const {return ChromatogramPtr();}
 ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, DetailLevel detailLevel) const {return ChromatogramPtr();}
+ChromatogramList_ABI::~ChromatogramList_ABI() {}
 
 } // detail
 } // msdata

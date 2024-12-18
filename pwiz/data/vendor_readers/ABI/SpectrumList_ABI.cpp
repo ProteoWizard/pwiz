@@ -364,7 +364,7 @@ size_t SpectrumList_ABI::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_ABI::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_ABI::find(const std::string& id) const {return 0;}
 
-void SpectrumList_ABI::~SpectrumList_ABI() {}
+SpectrumList_ABI::~SpectrumList_ABI() {}
 
 SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
 SpectrumPtr SpectrumList_ABI::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
