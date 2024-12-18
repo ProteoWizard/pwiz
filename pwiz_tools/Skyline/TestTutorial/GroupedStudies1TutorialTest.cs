@@ -578,7 +578,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.FilterTab.AddSelectedColumn();
                 viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_GREATER_THAN);
                 viewEditor.FilterTab.SetFilterOperand(iFilter, 0.ToString());
-                viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(Orientation.Horizontal, 60);
+                viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(User32.ScrollOrientation.horizontal, 60);
             });
 
             if (initialTestExecution)
@@ -1217,7 +1217,7 @@ namespace pwiz.SkylineTestTutorial
                     int iFilter = viewEditor.ViewInfo.Filters.Count;
                     viewEditor.FilterTab.AddSelectedColumn();
                     viewEditor.FilterTab.SetFilterOperation(iFilter, FilterOperations.OP_IS_BLANK);
-                    viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(Orientation.Horizontal, 60);
+                    viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(User32.ScrollOrientation.horizontal, 60);
                 });
 
                 PauseForScreenShot<ViewEditor.FilterView>("Filter tab of column editor", _pageNum);

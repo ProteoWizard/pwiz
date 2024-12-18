@@ -45,7 +45,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             return User32.GetScrollPos(control.Handle, orientation);
         }
 
-        public static void HideCaret(this TextBox control)
+        public static void HideCaret(this Control control)
         {
             User32.HideCaret(control.Handle);
         }

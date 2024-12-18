@@ -67,8 +67,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         public enum ScrollOrientation
         {
-            Horizontal,
-            Vertical            
+            horizontal,
+            vertical            
         }
 
         [Flags]

@@ -88,7 +88,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             StringBuilder lpData,
             ref uint lpcbData);
 
-        [DllImport(nameof(Advapi32), SetLastError = true)]
+        // ReSharper disable once StringLiteralTypo
+        [DllImport("advapi32.dll", SetLastError = true)]
         private static extern int RegCloseKey(UIntPtr hKey);
     }
 }

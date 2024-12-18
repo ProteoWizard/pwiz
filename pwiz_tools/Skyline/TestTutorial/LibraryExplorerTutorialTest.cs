@@ -459,7 +459,7 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(docProteins, null, 250, 346, 347, 1041);
 
             RestoreViewOnScreen(21);
-            RunUIForScreenShot(() => SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0));
+            RunUIForScreenShot(() => SkylineWindow.SequenceTree.SetScrollPos(User32.ScrollOrientation.horizontal, 0));
             PauseForScreenShot("Main window", 21);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);

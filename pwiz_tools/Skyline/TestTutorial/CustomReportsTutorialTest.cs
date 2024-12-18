@@ -425,7 +425,7 @@ namespace pwiz.SkylineTestTutorial
                 viewEditor.FilterTab.AddSelectedColumn();
                 Assert.IsTrue(viewEditor.FilterTab.SetFilterOperation(0, FilterOperations.OP_IS_GREATER_THAN));
                 viewEditor.FilterTab.SetFilterOperand(0, .2.ToString(CultureInfo.CurrentCulture));
-                viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(Orientation.Horizontal, 45);
+                viewEditor.FilterTab.AvailableFieldsTree.SetScrollPos(User32.ScrollOrientation.horizontal, 45);
             });
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 23);
             OkDialog(viewEditor, viewEditor.OkDialog);

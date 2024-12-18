@@ -527,7 +527,7 @@ namespace pwiz.Skyline
             if (SequenceTree != null)
             {
                 SequenceTree.UpdateTopNode();
-                SequenceTree.SetScrollPos(Orientation.Horizontal, 0);
+                SequenceTree.SetScrollPos(User32.ScrollOrientation.horizontal, 0);
             }
 
             EnsureFloatingWindowsVisible();
