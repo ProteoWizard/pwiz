@@ -580,8 +580,7 @@
             this.comboBuildLibraryTarget.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBuildLibraryTarget.FormattingEnabled = true;
             this.comboBuildLibraryTarget.Items.AddRange(new object[] {
-            resources.GetString("comboBuildLibraryTarget.Items"),
-            resources.GetString("comboBuildLibraryTarget.Items1")});
+            resources.GetString("comboBuildLibraryTarget.Items")});
             resources.ApplyResources(this.comboBuildLibraryTarget, "comboBuildLibraryTarget");
             this.comboBuildLibraryTarget.Name = "comboBuildLibraryTarget";
             this.comboBuildLibraryTarget.SelectedIndexChanged += new System.EventHandler(this.comboBuildLibraryTarget_SelectedIndexChanged);

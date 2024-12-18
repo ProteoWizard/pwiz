@@ -13,12 +13,20 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.AlphaPeptDeep;
+using static Inference.ModelWarmup.Types;
+using pwiz.Skyline.Model.Koina.Models;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Linq;
+using pwiz.Skyline.Model.DocSettings;
+using System.Runtime.InteropServices;
+using ZedGraph;
 
 namespace pwiz.Skyline.Model.Carafe
 {
     public class CarafeLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private const string BIN = @"bin";
+        private const string INPUT = @"input";
         private const string CARAFE = @"carafe";
         private const string CARAFE_VERSION = @"0.0.1";
         private const string CMD_ARG_C = @"/C";
@@ -34,7 +42,8 @@ namespace pwiz.Skyline.Model.Carafe
         private const string OUTPUT_LIBRARY = @"output_library";
         private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
         private const string SPACE = TextUtil.SPACE;
-
+        private const string TAB = "\t";
+        private LibraryHelper LibraryHelper { get; set; }
         public string AmbiguousMatchesMessage
         {
             //TODO(xgwang): implement
@@ -61,7 +70,7 @@ namespace pwiz.Skyline.Model.Carafe
         private SrmDocument Document { get; }
         [CanBeNull] private string ProteinDatabaseFilePath { get;  }
         private string ExperimentDataFilePath { get; }
-        private string ExperimentDataDiaSearchResultFilePath { get; }
+        private string ExperimentDataTuningFilePath { get; }
 
         private bool BuildLibraryForCurrentSkylineDocument => ProteinDatabaseFilePath.IsNullOrEmpty();
         private string PythonVirtualEnvironmentActivateScriptPath =>
@@ -89,49 +98,70 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME);
         private string CarafeJarFileDir => Path.Combine(CarafeDir, CarafeFileBaseName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
-        private IList<ArgumentAndValue> CommandArguments =>
-            new[]
-            {
-                new ArgumentAndValue(@"jar", CarafeJarFilePath, @"-"),
+        private string InputFileName => INPUT + TextUtil.UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
+        private string InputFilePath => Path.Combine(RootDir, InputFileName);
 
-                new ArgumentAndValue(@"db", ProteinDatabaseFilePath, @"-"),
-                new ArgumentAndValue(@"i", ExperimentDataDiaSearchResultFilePath, @"-"),
-                new ArgumentAndValue(@"ms", ExperimentDataFilePath, @"-"),
-                new ArgumentAndValue(@"o", CarafeOutputLibraryDir, @"-"),
-                new ArgumentAndValue(@"c_ion_min", @"2", @"-"),
-                new ArgumentAndValue(@"cor", @"0.8", @"-"),
-                new ArgumentAndValue(@"device", @"cpu", @"-"),
-                new ArgumentAndValue(@"enzyme", @"2", @"-"),
-                new ArgumentAndValue(@"ez", string.Empty, @"-"),
-                new ArgumentAndValue(@"fast", string.Empty, @"-"),
-                new ArgumentAndValue(@"fixMod", @"1", @"-"),
-                new ArgumentAndValue(@"itol", @"20", @"-"),
-                new ArgumentAndValue(@"itolu", @"ppm", @"-"),
-                new ArgumentAndValue(@"lf_frag_n_min", @"2", @"-"),
-                new ArgumentAndValue(@"lf_top_n_frag", @"20", @"-"),
-                new ArgumentAndValue(@"lf_type", @"skyline", @"-"),
-                new ArgumentAndValue(@"max_pep_mz", @"1000", @"-"),
-                new ArgumentAndValue(@"maxLength", @"35", @"-"),
-                new ArgumentAndValue(@"maxVar", @"1", @"-"),
-                new ArgumentAndValue(@"min_mz", @"200", @"-"),
-                new ArgumentAndValue(@"min_pep_mz", @"400", @"-"),
-                new ArgumentAndValue(@"minLength", @"7", @"-"),
-                new ArgumentAndValue(@"miss_c", @"1", @"-"),
-                new ArgumentAndValue(@"mode", @"general", @"-"),
-                new ArgumentAndValue(@"n_ion_min", @"2", @"-"),
-                new ArgumentAndValue(@"na", @"0", @"-"),
-                new ArgumentAndValue(@"nf", @"4", @"-"),
-                new ArgumentAndValue(@"nm", string.Empty, @"-"),
-                new ArgumentAndValue(@"rf_rt_win", @"1", @"-"),
-                new ArgumentAndValue(@"rf", string.Empty, @"-"),
-                new ArgumentAndValue(@"se", @"DIA-NN", @"-"),
-                new ArgumentAndValue(@"seed", @"2000", @"-"),
-                new ArgumentAndValue(@"skyline", string.Empty, @"-"),
-                new ArgumentAndValue(@"tf", @"all", @"-"),
-                new ArgumentAndValue(@"valid", string.Empty, @"-"),
-                new ArgumentAndValue(@"varMod", @"0", @"-")
-            }; 
-        
+        private IList<ArgumentAndValue> CommandArguments =>
+            new []
+            {
+                new ArgumentAndValue(@"jar", CarafeJarFilePath, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"db", InputFilePath , TextUtil.HYPHEN),
+                new ArgumentAndValue(@"i", ExperimentDataTuningFilePath, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"ms", ExperimentDataFilePath, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"o", CarafeOutputLibraryDir, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"cor", @"0.8", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"device", @"cpu", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"enzyme", @"2", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"fixMod", @"1", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"itol", @"20", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"itolu", @"ppm", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"lf_frag_n_min", @"2", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"lf_top_n_frag", @"20", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"lf_type", @"skyline", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"max_pep_mz", @"1000", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"maxLength", @"35", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"maxVar", @"1", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"min_mz", @"200", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"min_pep_mz", @"400", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"minLength", @"7", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"miss_c", @"1", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"mode", @"general", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"n_ion_min", @"2", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"na", @"0", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"nf", @"4", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"nm", string.Empty, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"rf_rt_win", @"1", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"rf", string.Empty, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"seed", @"2000", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"skyline", string.Empty, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"tf", @"all", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"valid", string.Empty, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"varMod", @"0", TextUtil.HYPHEN)
+            };
+
+
+        /// <summary>
+        /// List of UniMod Modifications available
+        /// </summary>
+        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
+        private static IList<ModificationType> populateUniModList()
+        {
+            IList<ModificationType> modList = new List<ModificationType>();
+            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
+            {
+                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
+                    continue;
+                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
+                var name = UniModData.UNI_MOD_DATA[m].Name;
+                var formula = UniModData.UNI_MOD_DATA[m].Formula;
+                modList.Add(new ModificationType(accession, name, formula));
+            }
+            return modList;
+        }
 
         public CarafeLibraryBuilder(
             string libName,
@@ -139,18 +169,19 @@ namespace pwiz.Skyline.Model.Carafe
             string pythonVersion,
             string pythonVirtualEnvironmentName,
             string experimentDataFilePath,
-            string experimentDataDiaSearchResultFilePath,
+            string experimentDataTuningFilePath,
             SrmDocument document)
         {
-            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            PythonVersion = pythonVersion;
-            PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
-            ExperimentDataFilePath = experimentDataFilePath;
-            ExperimentDataDiaSearchResultFilePath = experimentDataDiaSearchResultFilePath;
             Document = document;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeDir);
+            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+            LibraryHelper = new LibraryHelper(InputFilePath);
+            PythonVersion = pythonVersion;
+            PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
+            ExperimentDataFilePath = experimentDataFilePath;
+            ExperimentDataTuningFilePath = experimentDataTuningFilePath;            
         }
 
         public CarafeLibraryBuilder(
@@ -160,7 +191,7 @@ namespace pwiz.Skyline.Model.Carafe
             string pythonVirtualEnvironmentName,
             string proteinDatabaseFilePath,
             string experimentDataFilePath,
-            string experimentDataDiaSearchResultFilePath,
+            string experimentDataTuningFilePath,
             SrmDocument document)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
@@ -168,7 +199,7 @@ namespace pwiz.Skyline.Model.Carafe
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             ProteinDatabaseFilePath = proteinDatabaseFilePath;
             ExperimentDataFilePath = experimentDataFilePath;
-            ExperimentDataDiaSearchResultFilePath = experimentDataDiaSearchResultFilePath;
+            ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             Document = document;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
@@ -194,10 +225,15 @@ namespace pwiz.Skyline.Model.Carafe
         private void RunCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progressStatus = progressStatus.ChangeSegments(0, 3);
+            bool alphaModFormat = false;
 
             SetupJavaEnvironment(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-
+            if (BuildLibraryForCurrentSkylineDocument)
+            {
+                LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, alphaModFormat);
+                
+            }
             ExecuteCarafe(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
 
@@ -362,6 +398,7 @@ namespace pwiz.Skyline.Model.Carafe
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
         }
+ 
     }
 }
 

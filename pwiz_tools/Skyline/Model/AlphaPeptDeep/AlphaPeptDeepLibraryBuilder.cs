@@ -11,9 +11,199 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.DocSettings;
+using EnvDTE;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using OneOf.Types;
+using static Grpc.Core.Metadata;
+using System.Xml.Linq;
+using static alglib;
+using pwiz.Skyline.Controls.SeqNode;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
+
+    public class LibraryHelper 
+    {
+        private const string SEQUENCE = @"sequence";
+        private const string MODS = @"mods";
+        private const string MOD_SITES = @"mod_sites";
+        private const string CHARGE = @"charge";
+        private const string TAB = "\t";
+        private const string PRECURSOR = @"Precursor";
+        private const string PEPTIDE = @"Peptide";
+        private const string PRECURSOR_CHARGE = @"Precursor Charge";
+        private const string ISOTOPE_LABEL_TYPE = @"Isotope Label Type";
+        private const string PRECURSOR_MZ = @"Precursor Mz";
+        private const string MODIFIED_SEQUENCE = @"Modified Sequence";
+        private const string PRECURSOR_EXPLICIT_COLLISION_ENERGY = @"Precursor Explicit Collision Energy";
+        private const string PRECURSOR_NOTE = @"Precursor Note";
+        private const string LIBRARY_NAME = @"Library Name";
+        private const string LIBRARY_TYPE = @"Library Type";
+        private const string LIBRARY_PROBABILITY_SCORE = @"Library Probability Score";
+        private const string PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS = @"Peptide Modified Sequence Unimod Ids";
+        public string InputFilePath { get; private set; }
+        private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+        private static readonly IEnumerable<string> PrecursorTableColumnNamesCarafe = 
+            new[] 
+            { 
+                PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
+                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS
+            };
+
+        /// <summary>
+        /// List of UniMod Modifications available
+        /// </summary>
+        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
+        private static IList<ModificationType> populateUniModList()
+        {
+            IList<ModificationType> modList = new List<ModificationType>();
+            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
+            {
+                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
+                    continue;
+                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
+                var name = UniModData.UNI_MOD_DATA[m].Name;
+                var formula = UniModData.UNI_MOD_DATA[m].Formula;
+                modList.Add(new ModificationType(accession, name, formula));
+            }
+            return modList;
+        }
+        public LibraryHelper(string inputFilePath)
+        {
+            InputFilePath = inputFilePath;
+
+        }
+        public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, bool AlphapeptDeepModFormat)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Preparing input file")
+                .ChangePercentComplete(0));
+
+            var precursorTable = GetPrecursorTable(Document, AlphapeptDeepModFormat);
+            File.WriteAllLines(InputFilePath, precursorTable);
+
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+        }
+
+        public void PrepareInputFileForCarafe(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, bool AlphapeptDeepModFormat)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Preparing input file")
+                .ChangePercentComplete(0));
+
+            var precursorTable = GetPrecursorTable(Document, AlphapeptDeepModFormat);
+            File.WriteAllLines(InputFilePath, precursorTable);
+
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+        }
+
+        public static IEnumerable<Tuple<ModifiedSequence, int>> GetPrecursors(SrmDocument document)
+        {
+            foreach (var peptideDocNode in document.Peptides)
+            {
+                var modifiedSequence =
+                    ModifiedSequence.GetModifiedSequence(document.Settings, peptideDocNode, IsotopeLabelType.light);
+                foreach (var charge in peptideDocNode.TransitionGroups
+                             .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
+                {
+                    yield return Tuple.Create(modifiedSequence, charge);
+                }
+            }
+        }
+
+        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, bool AlphapeptDeepFormat)
+        {
+            var result = new List<string>();
+            string header;
+            
+            if (AlphapeptDeepFormat)
+                header = string.Join(TAB, PrecursorTableColumnNames);
+            else
+                header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
+
+            result.Add(header);
+
+            // Build precursor table row by row
+            foreach (var peptide in Document.Peptides)
+            {
+                var unmodifiedSequence = peptide.Peptide.Sequence;
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
+                var modsBuilder = new StringBuilder();
+                var modSitesBuilder = new StringBuilder();
+
+                for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
+                {
+                    var mod = modifiedSequence.ExplicitMods[i];
+                    if (!mod.UnimodId.HasValue)
+                    {
+                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name);
+                        Messages.WriteAsyncUserMessage(msg);
+                        continue;
+                    }
+
+                    var unimodIdAA = mod.UnimodIdAA;
+                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA).ToArray();
+                    if (modNames.Length == 0)
+                    {
+                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
+                        Messages.WriteAsyncUserMessage(msg);
+                        continue;
+                    }
+
+                    string modName = "";
+
+                    if (AlphapeptDeepFormat)
+                        modName = modNames.Single().AlphapeptDeepName();
+                    else
+                        modName = modNames.Single().Name;
+
+                    modsBuilder.Append(modName);
+                    modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
+                    if (i != modifiedSequence.ExplicitMods.Count - 1)
+                    {
+                        modsBuilder.Append(TextUtil.SEMICOLON);
+                        modSitesBuilder.Append(TextUtil.SEMICOLON);
+                    }
+                }
+
+                foreach (var charge in peptide.TransitionGroups
+                             .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
+                {
+                    if (AlphapeptDeepFormat)
+                    {
+                        result.Add(string.Join(TAB, new[]
+                            {
+                                unmodifiedSequence, modsBuilder.ToString(), modSitesBuilder.ToString(), charge.ToString()
+                            })
+                        );
+                    }
+                    else
+                    {
+                        var docNode = peptide.TransitionGroups.Where(group => group.PrecursorCharge == charge).SingleOrDefault();                        
+                        var precursor = TransitionGroupTreeNode.GetLabel(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
+                        var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
+                        var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
+                        var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
+                        var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
+                        var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";
+                        var unimodSequence = modifiedSequence != null ? modifiedSequence.ToString() : @"";
+
+                        result.Add(string.Join(TAB, new[]
+                            {
+                                precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
+                                docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
+                                note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds
+                            })
+                        );
+                    }
+                }
+            }
+
+            return result;
+        }
+    }
     public class ArgumentAndValue
     {
         public ArgumentAndValue(string name, string value, string dash = @"--")
@@ -54,7 +244,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
     {
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
         private const string BLIB_BUILD = "BlibBuild";
-        private const string CHARGE = @"charge";
         private const string CMD_FLOW_COMMAND = @"cmd-flow";
         private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
         private const string EXT_TSV = TextUtil.EXT_TSV;
@@ -62,7 +251,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string LEFT_PARENTHESIS = TextUtil.LEFT_PARENTHESIS;
         private const string LEFT_SQUARE_BRACKET = TextUtil.LEFT_SQUARE_BRACKET;
         private const string LIBRARY_COMMAND = @"library";
-        private const string MOD_SITES = @"mod_sites";
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
         private const string MODS = @"mods";
         private const string OUTPUT = @"output";
@@ -73,31 +261,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string RIGHT_PARENTHESIS = TextUtil.RIGHT_PARENTHESIS;
         private const string RIGHT_SQUARE_BRACKET = TextUtil.RIGHT_SQUARE_BRACKET;
         private const string SEMICOLON = TextUtil.SEMICOLON;
-        private const string SEQUENCE = @"sequence";
         private const string SETTINGS_FILE_NAME = @"settings.yaml";
         private const string SPACE = TextUtil.SPACE;
         private const string TAB = "\t";
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
         private const string UNDERSCORE = TextUtil.UNDERSCORE;
 
-        /// <summary>
-        /// List of UniMod Modifications available
-        /// </summary>
-        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
-        private static IList<ModificationType> populateUniModList()
-        {
-            IList<ModificationType> modList = new List<ModificationType>();
-            for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
-            {
-                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
-                    continue;
-                var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
-                var name = UniModData.UNI_MOD_DATA[m].Name;
-                var formula = UniModData.UNI_MOD_DATA[m].Formula;
-                modList.Add(new ModificationType(accession, name, formula));
-            }
-            return modList;
-        }
+
 
         public string AmbiguousMatchesMessage
         {
@@ -120,8 +290,9 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             get { return null; }
         }
         public LibrarySpec LibrarySpec { get; private set; }
-        private static readonly IEnumerable<string> PrecursorTableColumnNames =
-            new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+
+        private LibraryHelper LibraryHelper { get; set; }
+
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
         private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP);
@@ -163,11 +334,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
-        { 
-            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
+        {
             Document = document;
             Directory.CreateDirectory(RootDir);
+            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+            LibraryHelper = new LibraryHelper(InputFilePath);
+            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
+
         }
         private static string CreateDirIfNotExist(string dir)
         {
@@ -197,8 +370,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progressStatus = progressStatus.ChangeSegments(0, 5);
-
-            PrepareInputFile(progress, ref progressStatus);
+            bool alphaModFormat = true;
+            LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, alphaModFormat);
             progressStatus = progressStatus.NextSegment();
 
             PrepareSettingsFile(progress, ref progressStatus);
@@ -211,78 +384,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             progressStatus = progressStatus.NextSegment();
 
             ImportSpectralLibrary(progress, ref progressStatus);
-        }
-
-        private void PrepareInputFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
-        {
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Preparing input file")
-                .ChangePercentComplete(0));
-            
-            var precursorTable = GetPrecursorTable();
-            File.WriteAllLines(InputFilePath, precursorTable);
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
-        }
-
-        private IEnumerable<string> GetPrecursorTable()
-        {
-            var result = new List<string>();
-            var header = string.Join(TAB, PrecursorTableColumnNames);
-            result.Add(header);
-
-            // Build precursor table row by row
-            foreach (var peptide in Document.Peptides)
-            {
-                var unmodifiedSequence = peptide.Peptide.Sequence;
-                var modifiedSequence = ModifiedSequence
-                    .GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
-                var modsBuilder = new StringBuilder();
-                var modSitesBuilder = new StringBuilder();
-
-                for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
-                {
-                    var mod = modifiedSequence.ExplicitMods[i];
-                    if (!mod.UnimodId.HasValue)
-                    {
-                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name);
-                        Messages.WriteAsyncUserMessage(msg);
-                        continue;
-                    }
-
-                    var unimodIdAA = mod.UnimodIdAA;
-                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA).ToArray();
-                    if (modNames.Length == 0)
-                    {
-                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
-                        Messages.WriteAsyncUserMessage(msg);
-                        continue;
-                    }
-
-                    var modName = modNames.Single().AlphapeptDeepName();
-
-                    modsBuilder.Append(modName);
-                    modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
-                    if (i != modifiedSequence.ExplicitMods.Count - 1)
-                    {
-                        modsBuilder.Append(SEMICOLON);
-                        modSitesBuilder.Append(SEMICOLON);
-                    }
-                }
-
-                foreach (var charge in peptide.TransitionGroups
-                             .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
-                {
-                    result.Add(string.Join(TAB, new[]
-                        {
-                            unmodifiedSequence, modsBuilder.ToString(), modSitesBuilder.ToString(), charge.ToString()
-                        })
-                    );
-                }
-            }
-
-            return result;
         }
 
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)

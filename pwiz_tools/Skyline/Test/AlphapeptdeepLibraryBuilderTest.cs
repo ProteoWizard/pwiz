@@ -11,7 +11,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestModificationInfo()
         {
-            var groupedByAccession = AlphapeptdeepLibraryBuilder.AlphapeptdeepModificationName.GroupBy(item => item.Accession);
+            var groupedByAccession = LibraryHelper.AlphapeptdeepModificationName.GroupBy(item => item.Accession);
             foreach (var group in groupedByAccession)
             {
                 Assert.AreEqual(1, group.Count(), "Duplicate accession {0}", group.Key);

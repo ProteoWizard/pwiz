@@ -103,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
         public enum DataSourcePages { files, alpha, carafe, koina }
-        public enum BuildLibraryTargetOptions { currentSkylineDocument, proteinDatabase }
+        public enum BuildLibraryTargetOptions { currentSkylineDocument }
         // TODO: After supporting LearningOptions.document, add "Skyline Document" option to the comboLearnFrom dropdown
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
         public enum LearningOptions { files, libraries, document }
@@ -300,19 +300,13 @@ namespace pwiz.Skyline.SettingsUI
                 else if (radioCarafeSource.Checked)
                 {
                     // handle options for comboBuildLibraryTarget dropdown 
-                    string proteinDatabaseFilePath = string.Empty;
                     if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
                     {
                      //TODO   throw new NotImplementedException(@"Need to implement skyline document support.");
                     }
-                    else if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.proteinDatabase)
+                    else if (comboBuildLibraryTarget.SelectedIndex != (int)BuildLibraryTargetOptions.currentSkylineDocument)
                     {
-                        proteinDatabaseFilePath = textBoxProteinDatabase.Text;
-                        if (!File.Exists(proteinDatabaseFilePath))
-                        {
-                            _helper.ShowTextBoxError(textBoxProteinDatabase, @$"{proteinDatabaseFilePath} does not exist.");
-                            return false;
-                        }
+                        throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
                     }
                     else
                     {
@@ -368,29 +362,10 @@ namespace pwiz.Skyline.SettingsUI
                         return false;
                     }
 
-                    if (proteinDatabaseFilePath.IsNullOrEmpty())
-                    {
-                        Builder = new CarafeLibraryBuilder(
-                            name,
-                            outputPath,
-                            CARAFE_PYTHON_VERSION,
-                            CARAFE,
-                            msMsDataFilePath,
-                            trainingDataFilePath,
-                            _documentUiContainer.DocumentUI);
-                    }
-                    else
-                    {
-                        Builder = new CarafeLibraryBuilder(
-                            name,
-                            outputPath,
-                            CARAFE_PYTHON_VERSION,
-                            CARAFE,
-                            proteinDatabaseFilePath,
-                            msMsDataFilePath,
-                            trainingDataFilePath,
-                            _documentUiContainer.DocumentUI);
-                    }
+        
+                    Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION,CARAFE, msMsDataFilePath,
+                                                        trainingDataFilePath, _documentUiContainer.DocumentUI);
+        
 
                     // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
                     // TODO: if (!CreateKoinaBuilder(name, outputPath))
