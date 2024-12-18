@@ -637,10 +637,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (BarSettings.Type == BarType.Cluster)
                         aggregateFunc = Math.Max;   
                     AddAreasToSums(pointPairList, sumAreas, aggregateFunc);
-                    if (!curveItem.IsY2Axis && Settings.Default.AreaLogScale && BarSettings.Type == BarType.Cluster)
-                    {
-                        curveItem.Points = NonNegativeToMissing(curveItem.Points);
-                    }
                     var lineItem = curveItem as LineItem;
                     if (lineItem != null)
                     {
@@ -970,6 +966,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MaxAuto = true;
             }
             Legend.IsVisible = !IsMultiSelect && Settings.Default.ShowPeakAreaLegend;
+            RemoveInvalidPointValues();
             AxisChange();
 
             // Reformat Y-Axis for labels and whiskers
@@ -1727,31 +1724,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             base.OnClose(e);
             _calcListener.Dispose();
-        }
-
-        private static IPointList NonNegativeToMissing(IPointList pointList)
-        {
-            int nPts = pointList.Count;
-            if (!Enumerable.Range(0, nPts).Any(i => pointList[i].Y <= 0))
-            {
-                return pointList;
-            }
-
-            var newPoints = new List<PointPair>(pointList.Count);
-            for (int i = 0; i < nPts; i++)
-            {
-                var pt = pointList[i];
-                if (pt.Y <= 0)
-                {
-                    newPoints.Add(new PointPair(pt.X, PointPairBase.Missing));
-                }
-                else
-                {
-                    newPoints.Add(pt);
-                }
-            }
-
-            return new PointPairList(newPoints);
         }
     }
 }

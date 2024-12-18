@@ -145,9 +145,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 double yValue = _graphData.SelectedMaxY;
                 double yMin = _graphData.SelectedMinY;
-                double height = yValue - yMin;
                 GraphObjList.Add(new BoxObj(SelectedIndex + .5, yValue, 0.99,
-                                            height, Color.Black, Color.Empty)
+                                            -yValue, Color.Black, Color.Empty)
                 {
                     IsClippedToChartRect = true,
                 });
@@ -227,7 +226,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             XAxis.Scale.TextLabels = _graphData.Labels;
             ScaleAxisLabels();
-
+            RemoveInvalidPointValues();
             AxisChange();            
         }
 

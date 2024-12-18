@@ -410,6 +410,50 @@ namespace pwiz.Skyline.Controls.Graphs
             set { _axisLabelScaler.IsRepeatRemovalAllowed = value; }
         }
 
+        protected void RemoveInvalidPointValues()
+        {
+            if (!YAxis.Scale.IsLog)
+            {
+                return;
+            }
+
+            foreach (var curve in CurveList)
+            {
+                if (curve.IsY2Axis)
+                {
+                    continue;
+                }
+
+                curve.Points = NonPositiveToMissing(curve.Points);
+            }
+        }
+
+        protected static IPointList NonPositiveToMissing(IPointList pointList)
+        {
+            int nPts = pointList.Count;
+            if (!Enumerable.Range(0, nPts).Any(i => pointList[i].Y <= 0))
+            {
+                return pointList;
+            }
+
+            var newPoints = new List<PointPair>(pointList.Count);
+            for (int i = 0; i < nPts; i++)
+            {
+                var pt = pointList[i];
+                if (pt.Y <= 0)
+                {
+                    newPoints.Add(new PointPair(pt.X, PointPairBase.Missing));
+                }
+                else
+                {
+                    newPoints.Add(pt);
+                }
+            }
+
+            return new PointPairList(newPoints);
+        }
+
+
         #region Test Support Methods
         public string[] GetOriginalXAxisLabels()
         {
