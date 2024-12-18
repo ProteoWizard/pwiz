@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -682,57 +683,14 @@ namespace pwiz.Skyline.Controls.Databinding
         public void UpdateDendrograms()
         {
 
-            dataGridViewEx1.Columns.Clear();
-            var itemProperties = bindingListSource.ItemProperties;
-
-            //create property name column
-            dataGridViewEx1.Columns.Add("property", string.Empty);
-
-            for (int i = 0; i < itemProperties.Count; i++)
+            if (bindingListSource.isPivotedByReplicate())
             {
-                //duplicated code in BoundDataGridView to check if applicable property. unsure how to move for now
-                var propertyDescriptor = itemProperties[i];
-                if (bindingListSource.ViewInfo != null
-                    && string.IsNullOrEmpty(bindingListSource.ViewInfo.SublistId.Name) //Determines pivot by replicate is defined.
-                    && propertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor
-                    && columnPropertyDescriptor.PropertyPath.Ancestors.Any(pp => pp.Name == @"ResultFile" || pp.Name == @"Replicate"))
-                {
-                    //there must be a better way to get the replicate?
-                    var propertyPathAncestors = new List<PropertyPath>(columnPropertyDescriptor.PropertyPath.Ancestors);
-                    var replicateName = propertyPathAncestors[propertyPathAncestors.Count - 3].Name;
-
-                    //add column for replicate if it does not exist
-                    if (!dataGridViewEx1.Columns.Contains(replicateName))
-                    {
-                        dataGridViewEx1.Columns.Add(replicateName, replicateName);
-                    }
-
-                    //at this point we have the replicate and the duplicated property so we can add a row but only know about this property
-                    // is there a better way to get the property name here? 
-                    var propertyName = propertyPathAncestors[0].Name;
-
-                    //create a new row and use a tag to identify if the row has been created before
-                    var row = dataGridViewEx1.Rows.Cast<DataGridViewRow>().FirstOrDefault(r => r.Tag?.ToString() == propertyName);
-                    if (row == null)
-                    {
-                        row = new DataGridViewRow();
-                        row.Tag = propertyName;
-                        dataGridViewEx1.Rows.Add(row);
-
-                        //create cell that shows property name
-                        row.Cells["property"] = new DataGridViewTextBoxCell { Value = propertyName };
-                    }
-                    else
-                    {
-                        //why is this needed? A little confused here
-                        row.Cells["property"].Value = propertyName;
-                    }
-
-                    //create the appropriate cell for the replicate and property
-                    //use first as these cells are expected to have the same values
-                    row.Cells[replicateName] = new DataGridViewTextBoxCell { Value = bindingListSource.OfType<RowItem>().Select(propertyDescriptor.GetValue).First() };
-
-                }
+                dataGridViewEx1.Show();
+                dataGridViewEx1.DataSource = buildPivotByReplicateDataSet();
+            }
+            else if(dataGridViewEx1.Visible)
+            {
+                dataGridViewEx1.Hide();
             }
 
             var reportResults = BindingListSource.ReportResults as ClusteredReportResults ?? ClusteredReportResults.EMPTY;
@@ -859,6 +817,52 @@ namespace pwiz.Skyline.Controls.Databinding
             splitContainerHorizontal.Panel1Collapsed = false;
         }
 
+        private DataTable buildPivotByReplicateDataSet()
+        {
+            var dataTable = new DataTable();
+
+            // Add a column for property names
+            var propertyColumnName = @"Property";
+            dataTable.Columns.Add(propertyColumnName, typeof(string));
+
+            // Iterate through item properties to create correct columns
+            var itemProperties = bindingListSource.ItemProperties;
+            foreach (var propertyDescriptor in itemProperties)
+            {
+                if (bindingListSource.isPropertyPivotedByReplicate(propertyDescriptor))
+                {
+                    // Determine the replicate name
+                    var locator = CellLocator.ForColumn(new List<DataPropertyDescriptor> { propertyDescriptor }, new List<DataPropertyDescriptor>());
+                    var replicate = bindingListSource.OfType<RowItem>().Select(locator.GetReplicate).FirstOrDefault(r => r != null);
+
+                    // Create a new column
+                    if (replicate != null)
+                    {
+                        if (!dataTable.Columns.Contains(replicate.Name))
+                        {
+                            dataTable.Columns.Add(replicate.Name, typeof(object));
+                        }
+
+                        var propertyName = ((ColumnPropertyDescriptor)propertyDescriptor).PropertyPath.Name;
+
+                        // Create a new row or find an existing one
+                        var row = dataTable.AsEnumerable().FirstOrDefault(r => r.Field<string>(propertyColumnName) == propertyName);
+                        if (row == null)
+                        {
+                            row = dataTable.NewRow();
+                            row[propertyColumnName] = propertyName;
+                            dataTable.Rows.Add(row);
+                        }
+
+                        // Populate replicate columns
+                        var value = bindingListSource.OfType<RowItem>().Select(propertyDescriptor.GetValue).FirstOrDefault();
+                        row[replicate.Name] = value;
+                    }
+                }
+            }
+
+            return dataTable;
+        }
         private void boundDataGridView_Resize(object sender, EventArgs e)
         {
             UpdateDendrograms();

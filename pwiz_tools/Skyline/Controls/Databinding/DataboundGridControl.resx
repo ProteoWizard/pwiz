@@ -192,16 +192,22 @@
     <value>Fill</value>
   </data>
   <data name="splitContainerVertical.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 35</value>
+    <value>0, 34</value>
+  </data>
+  <data name="splitContainerVertical.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="rowDendrogram.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="rowDendrogram.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 180</value>
+    <value>0, 277</value>
+  </data>
+  <data name="rowDendrogram.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="rowDendrogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 166</value>
+    <value>100, 275</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="rowDendrogram.TabIndex" type="System.Int32, mscorlib">
@@ -249,8 +255,11 @@
   <data name="columnDendrogram.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
+  <data name="columnDendrogram.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
+  </data>
   <data name="columnDendrogram.Size" type="System.Drawing.Size, System.Drawing">
-    <value>670, 100</value>
+    <value>1055, 100</value>
   </data>
   <data name="columnDendrogram.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -286,13 +295,16 @@
     <value>Fill</value>
   </data>
   <data name="boundDataGridView.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 98</value>
+    <value>0, 151</value>
+  </data>
+  <data name="boundDataGridView.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="boundDataGridView.RowHeadersWidth" type="System.Int32, mscorlib">
     <value>62</value>
   </data>
   <data name="boundDataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>670, 146</value>
+    <value>1055, 298</value>
   </data>
   <data name="boundDataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -301,7 +313,7 @@
     <value>boundDataGridView</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=24.1.1.331, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=24.1.1.339, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
     <value>splitContainerHorizontal.Panel2</value>
@@ -315,23 +327,23 @@
   <data name="dataGridViewEx1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="dataGridViewEx1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
-  </data>
   <data name="dataGridViewEx1.RowHeadersWidth" type="System.Int32, mscorlib">
     <value>62</value>
   </data>
   <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>670, 98</value>
+    <value>1055, 151</value>
   </data>
   <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
+  </data>
+  <data name="dataGridViewEx1.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Name" xml:space="preserve">
     <value>dataGridViewEx1</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=24.1.1.331, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=24.1.1.339, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
     <value>splitContainerHorizontal.Panel2</value>
@@ -352,13 +364,13 @@
     <value>1</value>
   </data>
   <data name="splitContainerHorizontal.Size" type="System.Drawing.Size, System.Drawing">
-    <value>670, 346</value>
+    <value>1055, 552</value>
   </data>
   <data name="splitContainerHorizontal.SplitterDistance" type="System.Int32, mscorlib">
     <value>100</value>
   </data>
   <data name="splitContainerHorizontal.SplitterWidth" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="splitContainerHorizontal.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -388,13 +400,13 @@
     <value>1</value>
   </data>
   <data name="splitContainerVertical.Size" type="System.Drawing.Size, System.Drawing">
-    <value>772, 346</value>
+    <value>1158, 552</value>
   </data>
   <data name="splitContainerVertical.SplitterDistance" type="System.Int32, mscorlib">
     <value>100</value>
   </data>
   <data name="splitContainerVertical.SplitterWidth" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="splitContainerVertical.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -421,10 +433,10 @@
     <value>0, 0</value>
   </data>
   <data name="navBar.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 8, 6, 8</value>
   </data>
   <data name="navBar.Size" type="System.Drawing.Size, System.Drawing">
-    <value>772, 35</value>
+    <value>1158, 34</value>
   </data>
   <data name="navBar.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -445,10 +457,13 @@
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>6, 13</value>
+    <value>9, 20</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 5, 4, 5</value>
   </data>
   <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
-    <value>772, 381</value>
+    <value>1158, 586</value>
   </data>
   <data name="&gt;&gt;sortAscendingToolStripMenuItem.Name" xml:space="preserve">
     <value>sortAscendingToolStripMenuItem</value>
