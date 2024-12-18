@@ -15,7 +15,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using static alglib;
 
 namespace pwiz.Skyline.Model.Tools
 {

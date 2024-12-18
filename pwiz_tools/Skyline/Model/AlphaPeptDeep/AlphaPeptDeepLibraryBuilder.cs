@@ -11,12 +11,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.DocSettings;
-using EnvDTE;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using OneOf.Types;
-using static Grpc.Core.Metadata;
-using System.Xml.Linq;
-using static alglib;
 using pwiz.Skyline.Controls.SeqNode;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
@@ -370,8 +364,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progressStatus = progressStatus.ChangeSegments(0, 5);
-            bool alphaModFormat = true;
-            LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, alphaModFormat);
+
+            LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, true);
             progressStatus = progressStatus.NextSegment();
 
             PrepareSettingsFile(progress, ref progressStatus);

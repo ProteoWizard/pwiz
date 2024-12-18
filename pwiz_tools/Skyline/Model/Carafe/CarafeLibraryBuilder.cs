@@ -13,13 +13,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.AlphaPeptDeep;
-using static Inference.ModelWarmup.Types;
-using pwiz.Skyline.Model.Koina.Models;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
-using System.Runtime.InteropServices;
-using ZedGraph;
 
 namespace pwiz.Skyline.Model.Carafe
 {
@@ -225,13 +219,12 @@ namespace pwiz.Skyline.Model.Carafe
         private void RunCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progressStatus = progressStatus.ChangeSegments(0, 3);
-            bool alphaModFormat = false;
 
             SetupJavaEnvironment(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             if (BuildLibraryForCurrentSkylineDocument)
             {
-                LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, alphaModFormat);
+                LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, false);
                 
             }
             ExecuteCarafe(progress, ref progressStatus);
