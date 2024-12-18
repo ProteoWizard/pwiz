@@ -474,8 +474,16 @@ namespace pwiz.Skyline.Model
                     if (nodePep != null && Settings.PeptideSettings.Libraries.TryGetLibInfo(key, out libInfo))
                     {
                         var isotopeLabelType = key.Adduct.HasIsotopeLabels ? IsotopeLabelType.heavy : IsotopeLabelType.light;
-                        var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
-                        nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                        try
+                        {
+                            // Not all combinations of molecule and adduct that users provide are valid
+                            var group = new TransitionGroup(peptide, key.Adduct, isotopeLabelType);
+                            nodeGroupMatched = new TransitionGroupDocNode(group, Annotations.EMPTY, Settings, null, libInfo, ExplicitTransitionGroupValues.EMPTY, null, null, false);
+                        }
+                        catch (InvalidDataException)
+                        {
+                            continue;  // Probably something like "Adduct [M-2H2O+Na] calls for removing more O atoms than are found in the molecule C16H22ClN3O"
+                        }
                         SpectrumPeaksInfo spectrum;
                         if (Settings.PeptideSettings.Libraries.TryLoadSpectrum(key, out spectrum))
                         {
