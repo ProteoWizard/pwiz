@@ -312,7 +312,7 @@ namespace pwiz.SkylineTestUtil
             icon1.Save(ms1);
             icon2.Save(ms2);
 
-            return StructuralComparisons.StructuralEqualityComparer.Equals(ms1.ToArray(), ms2.ToArray());
+            return ms1.ToArray().SequenceEqual(ms2.ToArray());
         }
 
         /// <summary>

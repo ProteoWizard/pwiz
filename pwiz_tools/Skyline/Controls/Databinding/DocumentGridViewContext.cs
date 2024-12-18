@@ -47,10 +47,13 @@ namespace pwiz.Skyline.Controls.Databinding
             viewEditor.SetViewTransformer(new DocumentViewTransformer());
             viewEditor.AddViewEditorWidget(new PivotReplicateAndIsotopeLabelWidget {Dock = DockStyle.Left});
 #if DEBUG
-            viewEditor.ShowSourceTab = CommonApplicationSettings.PauseSeconds == 0; // not when taking screenshots
+            viewEditor.ShowSourceTab = true;
 #else
             viewEditor.ShowSourceTab = false;
 #endif
+            if (CommonApplicationSettings.PauseSeconds != 0)
+                viewEditor.ShowSourceTab = false; // not when taking screenshots
+
             if (EnablePreview)
             {
                 viewEditor.PreviewButtonVisible = true;
