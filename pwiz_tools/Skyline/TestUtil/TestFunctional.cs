@@ -286,18 +286,32 @@ namespace pwiz.SkylineTestUtil
                 dlg = WaitForOpenForm<TDlg>(millis);
             Assert.IsNotNull(dlg);
 
+            return dlg;
+        }
+
+        private static void EnsureScreenshotIcon(Form dlg)
+        {
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
                 if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    dlg.Icon != null)    // Normally a fixed dialog will not have the Skyline icon handle
+                    AreIconsEqual(dlg.Icon, Resources.Skyline))    // Normally a fixed dialog will not have the Skyline icon
                 {
-                    var ico = dlg.Icon.Handle;
-                    if (ico != SkylineWindow.Icon.Handle)
+                    if (!AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
                         RunUI(() => dlg.Icon = SkylineWindow.Icon);
                 }
             }
-            return dlg;
+        }
+
+        private static bool AreIconsEqual(Icon icon1, Icon icon2)
+        {
+            using var ms1 = new MemoryStream();
+            using var ms2 = new MemoryStream();
+
+            icon1.Save(ms1);
+            icon2.Save(ms2);
+
+            return ms1.ToArray().SequenceEqual(ms2.ToArray());
         }
 
         /// <summary>
@@ -332,6 +346,17 @@ namespace pwiz.SkylineTestUtil
                     Assert.Fail(e.ToString());
                 }
             });
+        }
+
+        /// <summary>
+        /// Convenience function for getting a value from the UI thread
+        /// e.g. var value = CallUI(() => control.Value);
+        /// </summary>
+        public T CallUI<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            RunUI(() => result = func());
+            return result;
         }
 
         protected virtual bool ShowStartPage {get { return false; }}
@@ -779,6 +804,8 @@ namespace pwiz.SkylineTestUtil
                         formSeen.Saw(formType);
                         PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
                     }
+
+                    EnsureScreenshotIcon(tForm);
 
                     return tForm;
                 }
@@ -1456,7 +1483,7 @@ namespace pwiz.SkylineTestUtil
 
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
-            return ClipBitmap(skylineWindowBmp, ComputeDockedFormsUnionRectangle(dockableForms));
+            return ClipBitmap(skylineWindowBmp.CleanupBorder(), ComputeDockedFormsUnionRectangle(dockableForms));
         }
 
         private Rectangle ComputeDockedFormsUnionRectangle(IList<DockableForm> dockableForms)
@@ -1479,7 +1506,7 @@ namespace pwiz.SkylineTestUtil
             int clipWidth = SkylineWindow.StatusSelectionWidth;
             int clipHeight = SkylineWindow.StatusBarHeight + 1;
             var cropRect = new Rectangle(skylineWindowBmp.Width - clipWidth, skylineWindowBmp.Height - clipHeight, clipWidth, clipHeight);
-            return ClipBitmap(skylineWindowBmp, cropRect);
+            return ClipBitmap(skylineWindowBmp.CleanupBorder(), cropRect);
         }
 
         protected Bitmap ClipGridToolbarSelection(Bitmap documentGridBmp)
@@ -1882,6 +1909,8 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= ScreenshotCounter)
             {
+                WaitForGraphs();    // Screenshots always need graphs to be fully updated
+
                 if (screenshotForm == null)
                 {
                     if (!fullScreen && formType != null)
@@ -1898,7 +1927,7 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    // Thread.Sleep(500); // Wait for UI to settle down - Necessary?
+                    Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
