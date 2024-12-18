@@ -1374,6 +1374,15 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Log {0}.
+        /// </summary>
+        public static string GraphValues_Log_AxisTitle {
+            get {
+                return ResourceManager.GetString("GraphValues_Log_AxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
         public static string MassErrorHistogram2DGraphPane_Graph_Mz {

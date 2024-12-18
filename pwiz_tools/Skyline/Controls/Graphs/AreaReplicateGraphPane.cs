@@ -637,6 +637,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (BarSettings.Type == BarType.Cluster)
                         aggregateFunc = Math.Max;   
                     AddAreasToSums(pointPairList, sumAreas, aggregateFunc);
+
                     var lineItem = curveItem as LineItem;
                     if (lineItem != null)
                     {
@@ -937,7 +938,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
 
                     YAxis.Type = AxisType.Log;
-                    YAxis.Title.Text = GetYAxisTitle(aggregateOp, normalizeOption);
+                    YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(GetYAxisTitle(aggregateOp, normalizeOption));
                     YAxis.Scale.MinAuto = true;
                     FixedYMin = null;
                 }

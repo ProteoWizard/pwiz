@@ -544,6 +544,9 @@ Here are the last 3 errors:
   <data name="GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted" xml:space="preserve">
     <value>Failure loading spectrum. Library may be corrupted.</value>
   </data>
+  <data name="GraphValues_Log_AxisTitle" xml:space="preserve">
+    <value>Log {0}</value>
+  </data>
   <data name="MassErrorHistogram2DGraphPane_Graph_Mz" xml:space="preserve">
     <value>m/z</value>
   </data>
