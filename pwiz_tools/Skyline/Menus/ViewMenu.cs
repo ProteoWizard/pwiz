@@ -555,15 +555,9 @@ namespace pwiz.Skyline.Menus
                 if (qcTraceNames.Count > 0)
                 {
                     var qcTraceItems = new ToolStripItem[qcTraceNames.Count];
-                    var qcContextTraceItems = new ToolStripItem[qcTraceNames.Count];
                     for (int i = 0; i < qcTraceNames.Count; i++)
                     {
                         qcTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
-                        {
-                            Checked = displayType == DisplayTypeChrom.qc &&
-                                      Settings.Default.ShowQcTraceName == qcTraceNames[i]
-                        };
-                        qcContextTraceItems[i] = new ToolStripMenuItem(qcTraceNames[i], null, qcMenuItem_Click)
                         {
                             Checked = displayType == DisplayTypeChrom.qc &&
                                       Settings.Default.ShowQcTraceName == qcTraceNames[i]

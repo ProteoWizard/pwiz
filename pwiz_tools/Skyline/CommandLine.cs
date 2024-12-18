@@ -5080,6 +5080,7 @@ namespace pwiz.Skyline
         {
             // Show progress at least every 2 seconds and at 100%, if any other percentage
             // output has been shown.
+            // ReSharper disable once InconsistentlySynchronizedField
             return (currentTime - _lastOutput).TotalSeconds < SecondsBetweenStatusUpdates && !status.IsError &&
                    (status.PercentComplete != 100 || _lastOutput == _waitStart);
         }
