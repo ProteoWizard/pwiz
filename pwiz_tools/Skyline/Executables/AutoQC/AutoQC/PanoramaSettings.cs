@@ -83,8 +83,12 @@ namespace AutoQC
             }
             try
             {
-                // User should have admin permissions in the folder, and the folder should be of type TargetedMS
-                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.admin);
+                // User should have at least Editor role in the folder, and the folder should be of type TargetedMS
+                // Editor role has Insert, Update and Delete permissions
+                // Insert permission is required to upload documents.
+                // Update is required for AutoQCPingAction.
+                // Delete is required for deleting redundant results and documents in the folder.
+                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.EDITOR);
             }
             catch (Exception ex)
             {

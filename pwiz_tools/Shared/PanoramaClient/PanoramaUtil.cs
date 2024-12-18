@@ -146,14 +146,14 @@ namespace pwiz.PanoramaClient
             return modules != null && modules.Any(module => string.Equals(module.ToString(), @"TargetedMS"));
         }
 
-        public static bool CheckReadPermissions(JToken folderJson)
+        public static bool HasReadPermissions(JToken folderJson)
         {
-            return CheckFolderPermissions(folderJson, FolderPermission.read);
+            return CheckFolderPermissions(folderJson, FolderPermission.READER);
         }
 
-        public static bool CheckInsertPermissions(JToken folderJson)
+        public static bool HasUploadPermissions(JToken folderJson)
         {
-            return CheckFolderPermissions(folderJson, FolderPermission.insert);
+            return CheckFolderPermissions(folderJson, FolderPermission.AUTHOR);
         }
 
         /// <summary>
@@ -162,13 +162,11 @@ namespace pwiz.PanoramaClient
         /// <returns>True if the user has the given permission type.</returns>
         public static bool CheckFolderPermissions(JToken folderJson, FolderPermission permissionType)
         {
-            if (folderJson != null)
-            {
-                var userPermissions = folderJson.Value<int?>(@"userPermissions");
-                return userPermissions != null && Equals(userPermissions & (int)permissionType, (int)permissionType);
-            }
+            var effectivePermissions = folderJson?[@"effectivePermissions"]?
+                .Select(token => token.ToString())
+                .ToArray();
 
-            return false;
+            return effectivePermissions != null && permissionType.MatchesPermissions(effectivePermissions);
         }
 
         public static Uri Call(Uri serverUri, string controller, string folderPath, string method, bool isApi = false)
@@ -308,13 +306,45 @@ namespace pwiz.PanoramaClient
     public enum UserStateEnum { valid, nonvalid, unknown }
     public enum FolderState { valid, notpanorama, nopermission, notfound }
 
-    public enum FolderPermission
+    public class FolderPermission
     {
-        read = 1,   // Defined in org.labkey.api.security.ACL.java: public static final int PERM_READ = 0x00000001;
-        insert = 2, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_INSERT = 0x00000002;
-        delete = 8, // Defined in org.labkey.api.security.ACL.java: public static final int PERM_DELETE = 0x00000008;
-        admin = 32768  // Defined in org.labkey.api.security.ACL.java: public static final int PERM_ADMIN = 0x00008000;
+        public static readonly FolderPermission READER = new FolderPermission(
+            new[] { "org.labkey.api.security.permissions.ReadPermission" });
+
+        public static readonly FolderPermission AUTHOR = new FolderPermission(
+            new[]
+            {
+                "org.labkey.api.security.permissions.ReadPermission",
+                "org.labkey.api.security.permissions.InsertPermission"
+            });
+
+        public static readonly FolderPermission EDITOR = new FolderPermission(
+            new[]
+            {
+                "org.labkey.api.security.permissions.ReadPermission",
+                "org.labkey.api.security.permissions.InsertPermission",
+                "org.labkey.api.security.permissions.UpdatePermission",
+                "org.labkey.api.security.permissions.DeletePermission"
+            });
+
+        public static readonly FolderPermission ADMIN = new FolderPermission(
+            new[] { "org.labkey.api.security.permissions.AdminPermission" });
+
+        public string[] RequiredPermissions { get; }
+
+        private FolderPermission(string[] requiredPermissions)
+        {
+            RequiredPermissions = requiredPermissions;
+        }
+
+        // Check if effective permissions match required permissions
+        public bool MatchesPermissions(string[] effectivePermissions)
+        {
+            return RequiredPermissions.All(perm =>
+                effectivePermissions?.Contains(perm, StringComparer.OrdinalIgnoreCase) == true);
+        }
     }
+
 
     public static class ServerStateErrors
     {

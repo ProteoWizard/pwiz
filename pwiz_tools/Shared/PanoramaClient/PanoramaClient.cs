@@ -520,7 +520,7 @@ namespace pwiz.PanoramaClient
                     folderToCreate));
             }
 
-            ValidateFolder(parentFolderPath, FolderPermission.admin, false); // Parent folder should exist and have admin permissions.
+            ValidateFolder(parentFolderPath, FolderPermission.ADMIN, false); // Parent folder should exist and have admin permissions.
 
 
             //Create JSON body for the request
