@@ -165,19 +165,6 @@ namespace pwiz.Common.DataBinding.Controls
             }
             SetViewContext(viewContext, viewInfo);
         }
-
-        public bool isPivotedByReplicate()
-        {
-            return ViewInfo != null && string.IsNullOrEmpty(ViewInfo.SublistId.Name);
-        }
-
-        public bool isPropertyPivotedByReplicate(DataPropertyDescriptor dataPropertyDescriptor)
-        {
-            return isPivotedByReplicate()
-                   && dataPropertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor
-                   && columnPropertyDescriptor.PropertyPath.Ancestors.Any(pp => pp.Name == @"ResultFile" || pp.Name == @"Replicate");
-        }
-
         public ViewInfo ViewInfo
         {
             get { return BindingListView.ViewInfo; }

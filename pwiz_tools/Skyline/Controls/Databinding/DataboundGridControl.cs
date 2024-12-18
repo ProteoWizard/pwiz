@@ -36,8 +36,11 @@ using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.Results.ChromCacheMinimizer.MinStatistics;
+using Newtonsoft.Json.Linq;
 
 // This code is associated with the DocumentGrid.
 
@@ -682,11 +685,11 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void UpdateDendrograms()
         {
-
-            if (bindingListSource.isPivotedByReplicate())
+            var replicatePivotColumns = new ReplicatePivotColumns(bindingListSource.ItemProperties);
+            if (replicatePivotColumns.IsPivoted())
             {
                 dataGridViewEx1.Show();
-                dataGridViewEx1.DataSource = buildPivotByReplicateDataSet();
+                dataGridViewEx1.DataSource = buildPivotByReplicateDataSet(replicatePivotColumns);
             }
             else if(dataGridViewEx1.Visible)
             {
@@ -817,52 +820,56 @@ namespace pwiz.Skyline.Controls.Databinding
             splitContainerHorizontal.Panel1Collapsed = false;
         }
 
-        private DataTable buildPivotByReplicateDataSet()
+        private DataTable buildPivotByReplicateDataSet(ReplicatePivotColumns replicatePivotColumns)
         {
             var dataTable = new DataTable();
 
             // Add a column for property names
             var propertyColumnName = @"Property";
             dataTable.Columns.Add(propertyColumnName, typeof(string));
+            var rowPropertyPaths = new List<PropertyPath>();
 
             // Iterate through item properties to create correct columns
-            var itemProperties = bindingListSource.ItemProperties;
-            foreach (var propertyDescriptor in itemProperties)
+            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
             {
-                if (bindingListSource.isPropertyPivotedByReplicate(propertyDescriptor))
+                var resultKey = group.Key;
+                var replicateName = resultKey.ReplicateName;
+                if (!dataTable.Columns.Contains(replicateName))
                 {
-                    // Determine the replicate name
-                    var locator = CellLocator.ForColumn(new List<DataPropertyDescriptor> { propertyDescriptor }, new List<DataPropertyDescriptor>());
-                    var replicate = bindingListSource.OfType<RowItem>().Select(locator.GetReplicate).FirstOrDefault(r => r != null);
+                    dataTable.Columns.Add(replicateName, typeof(object));
+                }
 
-                    // Create a new column
-                    if (replicate != null)
+                foreach (var column in group)
+                {
+                    var propertyPath = column.DisplayColumn.PropertyPath;
+                    if (!propertyPath.StartsWith(replicatePivotColumns.ReplicatePropertyPath) &&
+                        !propertyPath.StartsWith(replicatePivotColumns.ResultFilePropertyPath))
                     {
-                        if (!dataTable.Columns.Contains(replicate.Name))
-                        {
-                            dataTable.Columns.Add(replicate.Name, typeof(object));
-                        }
-
-                        var propertyName = ((ColumnPropertyDescriptor)propertyDescriptor).PropertyPath.Name;
-
-                        // Create a new row or find an existing one
-                        var row = dataTable.AsEnumerable().FirstOrDefault(r => r.Field<string>(propertyColumnName) == propertyName);
-                        if (row == null)
-                        {
-                            row = dataTable.NewRow();
-                            row[propertyColumnName] = propertyName;
-                            dataTable.Rows.Add(row);
-                        }
-
-                        // Populate replicate columns
-                        var value = bindingListSource.OfType<RowItem>().Select(propertyDescriptor.GetValue).FirstOrDefault();
-                        row[replicate.Name] = value;
+                        continue;
                     }
+
+                    int iRow = rowPropertyPaths.IndexOf(propertyPath);
+                    DataRow row;
+                    if (iRow < 0)
+                    {
+                        row = dataTable.NewRow();
+                        row[propertyColumnName] = propertyPath.Name;
+                        rowPropertyPaths.Add(propertyPath);
+                        dataTable.Rows.Add(row);
+                    }
+                    else
+                    {
+                        row = dataTable.Rows[iRow];
+                    }
+
+                    var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
+                        .FirstOrDefault(v => v != null);
+                    row[replicateName] = value;
                 }
             }
-
             return dataTable;
         }
+
         private void boundDataGridView_Resize(object sender, EventArgs e)
         {
             UpdateDendrograms();

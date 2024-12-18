@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -117,14 +118,7 @@ namespace pwiz.Common.DataBinding.Controls
                     return;
                 }
 
-                var columnsToHide = new HashSet<string>();
-                var clusteredProperties =
-                    (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
-                if (clusteredProperties != null)
-                {
-                    columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p => p.Name));
-                }
-
+                var columnsToHide = new HashSet<string>(GetColumnsToHide(bindingListSource.ReportResults).Select(pd=>pd.Name));
                 var newItemProperties = bindingListSource.ItemProperties;
                 if (!Equals(newItemProperties, _itemProperties))
                 {
@@ -133,11 +127,6 @@ namespace pwiz.Common.DataBinding.Controls
                     {
                         var propertyDescriptor = newItemProperties[i];
                         if (columnsToHide.Contains(propertyDescriptor.Name))
-                        {
-                            continue;
-                        }
-
-                        if (bindingListSource.isPropertyPivotedByReplicate(propertyDescriptor))
                         {
                             continue;
                         }
@@ -166,7 +155,16 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 _inUpdateColumns = false;
             }
+        }
 
+        protected virtual IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
+        {
+            if (reportResults is ClusteredReportResults clusteredReportResults)
+            {
+                return clusteredReportResults.ClusteredProperties.GetAllColumnHeaderProperties();
+            }
+
+            return Array.Empty<PropertyDescriptor>();
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)

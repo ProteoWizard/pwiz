@@ -16,8 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -38,6 +44,14 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             OnKeyDown(keyEventArgs);
             OnKeyUp(keyEventArgs);
+        }
+
+        protected override IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
+        {
+            var columns = base.GetColumnsToHide(reportResults);
+            var replicatePivotColumns = new ReplicatePivotColumns(reportResults.ItemProperties);
+            return columns.Concat(replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Where(replicatePivotColumns.IsReplicateColumn)));
         }
     }
 }
