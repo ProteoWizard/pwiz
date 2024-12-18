@@ -304,5 +304,15 @@ namespace pwiz.Skyline.Model.Databinding
         {
             return new KeyValuePair<T1, T2>(key, value);
         }
+
+        public static PropertyPath GetReplicatePropertyPath(Type rowType)
+        {
+            return GetMappingForRowType(rowType)?.FirstOrDefault(kvp => Replicates.Equals(kvp.Value)).Key;
+        }
+
+        public static PropertyPath GetResultFilePropertyPath(Type rowType)
+        {
+            return GetMappingForRowType(rowType)?.FirstOrDefault(kvp => ResultFiles.Equals(kvp.Value)).Key;
+        }
     }
 }

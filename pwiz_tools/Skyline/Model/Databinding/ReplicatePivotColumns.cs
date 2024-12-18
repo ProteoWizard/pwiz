@@ -15,7 +15,7 @@ namespace pwiz.Skyline.Model.Databinding
             RowType = GetRowType(itemProperties);
             ItemProperties = itemProperties;
             ReplicatePropertyPath = DocumentViewTransformer.GetReplicatePropertyPath(RowType);
-            ResultFilePropertyPath = DocumentViewTransformer.GetResultFilesPropertyPath(RowType);
+            ResultFilePropertyPath = DocumentViewTransformer.GetResultFilePropertyPath(RowType);
         }
 
         public Type RowType { get; }
