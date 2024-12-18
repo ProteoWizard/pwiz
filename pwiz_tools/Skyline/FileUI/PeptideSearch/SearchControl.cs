@@ -174,6 +174,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        public int PercentComplete => progressBar.Value;
+
         protected CancellationTokenSource _cancelToken;
 
         public abstract void RunSearch();

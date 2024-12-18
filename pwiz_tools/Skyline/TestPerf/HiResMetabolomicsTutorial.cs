@@ -163,14 +163,48 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 });
                 RestoreViewOnScreen(5);
 
-                PauseForScreenShot("Skyline with 14 transition - show the right-click menu for setting DHA to be a surrogate standard", 9);
+                PauseForScreenShot("Skyline with 14 transition", 9);
 
                 // Set the standard type of the surrogate standards to StandardType.SURROGATE_STANDARD
                 SelectNode(SrmDocument.Level.Molecules, 3);
 
-                // TODO: Show right-click menu with "Surrogate Standard" selected
+                if (IsPauseForScreenShots)
+                {
+                    RunUI(() => SkylineWindow.Height = 720);    // Taller for context menu
+
+                    var sequenceTree = SkylineWindow.SequenceTree;
+                    ToolStripDropDown menuStrip = null, subMenuStrip = null;
+
+                    RunUI(() =>
+                    {
+                        var rectSelectedItem = sequenceTree.SelectedNode.Bounds;
+                        SkylineWindow.ContextMenuTreeNode.Show(sequenceTree.PointToScreen(
+                            new Point(rectSelectedItem.X + rectSelectedItem.Width / 2,
+                                rectSelectedItem.Y + rectSelectedItem.Height / 2)));
+                        var setStandardTypeMenu = SkylineWindow.ContextMenuTreeNode.Items.OfType<ToolStripMenuItem>()
+                            .First(i => Equals(i.Name, @"setStandardTypeContextMenuItem"));
+                        setStandardTypeMenu.ShowDropDown();
+                        setStandardTypeMenu.DropDownItems.OfType<ToolStripMenuItem>()
+                            .First(i => Equals(i.Name, @"surrogateStandardContextMenuItem")).Select();
+
+                        menuStrip = SkylineWindow.ContextMenuTreeNode;
+                        subMenuStrip = setStandardTypeMenu.DropDown;
+                        menuStrip.Closing += DenyMenuClosing;
+                        subMenuStrip.Closing += DenyMenuClosing;
+                    });
+
+                    // Should all land on the SkylineWindow, so just screenshot the whole window
+                    PauseForScreenShot("Skyline with 4 molecules with menu and submenu showing for surrogate standard setting");
+
+                    RunUI(() =>
+                    {
+                        menuStrip.Closing -= DenyMenuClosing;
+                        subMenuStrip.Closing -= DenyMenuClosing;
+                        menuStrip.Close();
+                    });
+                }
+
                 RunUI(() => SkylineWindow.SetStandardType(StandardType.SURROGATE_STANDARD));
-                PauseForScreenShot("Skyline with 4 molecules and one set as surrogate standard");
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("FattyAcids_demo.sky")));
 
                 using (new WaitDocumentChange(1, true))

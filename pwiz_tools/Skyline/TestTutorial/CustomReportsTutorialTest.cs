@@ -29,6 +29,7 @@ using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Databinding;
@@ -355,54 +356,25 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() =>
             {
                 documentGridForm.FloatingPane.FloatAt(formRectNext);
-                // nudge data grid to resize columns, especially forcing column 0's header to wrap into 2 lines of text
-                documentGridForm.DataGridView.Columns[0].Width = 45;
-                documentGridForm.DataGridView.AutoResizeColumns();
+                ConfigureDataGridColumns();
             });
 
-            PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
+            PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: bmp =>
             {
-                const int lineWidth = 3;
-                var dataGridView = documentGridForm.DataGridView;
-                var yOffset = documentGridForm.NavBar.Height + dataGridView.ColumnHeadersHeight - 2; // compute top-left corner of data grid's
-                                                                                                         // cells, excluding header row
+                // Clean-up the border in the normal way
+                bmp = bmp.CleanupBorder(true);
 
-                // keeping these private for now until they're reviewed and we decide to promte them to shared helpers
-                var drawBoxOnColumn = new Action<Graphics, int, Color>((graphics, column, color) =>
-                {
-                    const int rowCount = 10;
-
-                    var rect = dataGridView.GetCellDisplayRectangle(column, 0, true); // column's top data cell
-                    graphics.DrawRectangle(new Pen(color, lineWidth), rect.X, rect.Y + yOffset, rect.Width, rect.Height * rowCount);
-
-                });
-
-                // keeping private for now until they're reviewed and another tutorial needs them
-                var drawEllipseOnCell = new Action<Graphics, int, int, Color>((graphics, row, column, color) =>
-                {
-                    var rect = dataGridView.GetCellDisplayRectangle(column, row, true);
-
-                    var text = dataGridView.Rows[row].Cells[column].FormattedValue?.ToString();
-                    var stringSize = graphics.MeasureString(text, dataGridView.Font);
-                    var width = Convert.ToInt16(stringSize.Width * 1.1); // scaling up ellipse size just a bit so shape isn't too tight around text
-                    var y = rect.Y + yOffset - 2;
-
-                    graphics.DrawEllipse(new Pen(color, lineWidth), rect.X, y, width, rect.Height);
-                });
-
-                var g = Graphics.FromImage(bmp);
+                using var g = Graphics.FromImage(bmp);
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                drawBoxOnColumn(g, 3, Color.Red);
-                drawBoxOnColumn(g, 5, Color.Red);
-                drawBoxOnColumn(g, 6, Color.Red);
+                g.DrawBoxOnColumn(documentGridForm, 3, 10, Color.Red);
+                g.DrawBoxOnColumn(documentGridForm, 5, 10, Color.Red);
+                g.DrawBoxOnColumn(documentGridForm, 6, 10, Color.Red);
 
-                drawEllipseOnCell(g, 1, 3, Color.Red);
-                drawEllipseOnCell(g, 3, 3, Color.Orange);
-                drawEllipseOnCell(g, 1, 5, Color.Orange);
-                drawEllipseOnCell(g, 3, 5, Color.Orange);
-
-                g.Flush();
+                g.DrawEllipseOnCell(documentGridForm, 1, 3, Color.Red);
+                g.DrawEllipseOnCell(documentGridForm, 3, 3, Color.Orange);
+                g.DrawEllipseOnCell(documentGridForm, 1, 5, Color.Orange);
+                g.DrawEllipseOnCell(documentGridForm, 3, 5, Color.Orange);
 
                 return bmp;
             });
@@ -457,7 +429,7 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<ViewEditor.FilterView>("Customize View - Filter tab", 23);
             OkDialog(viewEditor, viewEditor.OkDialog);
 
-            RunUI(() => documentGridForm.DataGridView.Columns[6].Width = 105);
+            RunUIForScreenShot(ConfigureDataGridColumns);
             PauseForScreenShot<DocumentGridForm>("Document Grid filtered", 24);
             RunUI(documentGridForm.Close);
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
@@ -469,7 +441,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();
 
-            PauseForPeakAreaGraphScreenShot("Peak Areas view");
+            PauseForScreenShot<GraphSummary.AreaGraphView>("Peak Areas view");
             return true;    // Continue subsequent tests
         }
 
@@ -477,13 +449,25 @@ namespace pwiz.SkylineTestTutorial
         {
             // Results Grid View
             RestoreViewOnScreen(26);
+            RunUIForScreenShot(() =>
+            {
+                // position two floating windows relative to Skyline's bottom-right corner
+                var backgroundWindow = FindFloatingWindow(SkylineWindow.GraphPeakArea);
+                backgroundWindow.Top = SkylineWindow.Bottom - backgroundWindow.Height - 53;
+                backgroundWindow.Left = SkylineWindow.Right - backgroundWindow.Width - 128;
+
+                var foregroundWindow = FindFloatingWindow(FindOpenForm<LiveResultsGrid>());
+                foregroundWindow.Top = SkylineWindow.Bottom - foregroundWindow.Height - 26;
+                foregroundWindow.Left = SkylineWindow.Right - foregroundWindow.Width - 34;
+            });
+
             PauseForScreenShot(SkylineWindow, "Main window under floating windows", 26);
             RestoreViewOnScreen(27);
             PauseForScreenShot(SkylineWindow, "Main window layout", 27);
 
             // Not understood: WaitForOpenForm occasionally hangs in nightly test runs. Fixed it by calling
             // ShowDialog when LiveResultsGrid cannot be found.
-            //var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
+            // var resultsGridForm = WaitForOpenForm<LiveResultsGrid>();
             var resultsGridForm = FindOpenForm<LiveResultsGrid>() ??
                 ShowDialog<LiveResultsGrid>(() => SkylineWindow.ShowResultsGrid(true));
             BoundDataGridView resultsGrid = null;
@@ -574,6 +558,31 @@ namespace pwiz.SkylineTestTutorial
         private string GetLocalizedCaption(string caption)
         {
             return SkylineDataSchema.GetLocalizedSchemaLocalizer().LookupColumnCaption(new ColumnCaption(caption));
+        }
+
+        private void ConfigureDataGridColumns()
+        {
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            var dataGridView = documentGridForm.DataGridView;
+            var floatingWindow = FindFloatingWindow(documentGridForm);
+
+            // explicitly size floating window to accommodate one set of column widths for EN, ZH, JP
+            floatingWindow.Size = new Size(750, 340);
+
+            dataGridView.Columns[0].Width = 70; // wider for ZH/JP than EN
+            dataGridView.Columns[1].Width = 95;
+            dataGridView.Columns[2].Width = 80;
+            dataGridView.Columns[3].Width = 79; // wider for ZH
+            dataGridView.Columns[4].Width = 80;
+            dataGridView.Columns[5].Width = 92; // wider for ZH than EN
+            dataGridView.Columns[6].Width = 102;
+            dataGridView.Columns[7].Width = 105;
+
+            // last 3 columns not visible in screenshot but need to 
+            // set width to prevent column title from wrapping to 3 lines 
+            dataGridView.Columns[8].Width = 105;
+            dataGridView.Columns[9].Width = 105;
+            dataGridView.Columns[10].Width = 105;
         }
     }
 }

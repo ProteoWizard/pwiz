@@ -32,6 +32,7 @@ namespace pwiz.SkylineTest
             TestFilesZip = "https://skyline.ms/tutorials/OptimizeCEMzml.zip";
             TestFilesPersistent = new[] { "CE_Vantage" };
             TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, TestContext.TestName, TestFilesPersistent);
+            TestFilesDir.RecordMetrics();
             string persistentFile = TestFilesDir.GetTestPath("OptimizeCEMzml/CE_Vantage_15mTorr_0001.mzML");
             string persistentFileCopy = persistentFile + ".copy";
             try

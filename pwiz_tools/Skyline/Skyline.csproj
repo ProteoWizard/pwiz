@@ -491,6 +491,12 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\OpenFileDialogNE.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\OpenDataSourceDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\ExportAnnotationsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2414,11 +2420,11 @@
     <Compile Include="FileUI\ExportMethodDlg.Designer.cs">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\OpenDataSourceDialog.cs">
+    <Compile Include="FileUI\BaseFileDialogNE.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FileUI\OpenDataSourceDialog.designer.cs">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <Compile Include="FileUI\BaseFileDialogNE.designer.cs">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\DocSettings\Modification.cs" />
     <Compile Include="Model\V01\XmlSrmDocument.cs" />
@@ -3637,12 +3643,12 @@
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.zh-CHS.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.ja.resx">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\BaseFileDialogNE.ja.resx">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.zh-CHS.resx">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\BaseFileDialogNE.zh-CHS.resx">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.ja.resx">
@@ -4746,8 +4752,8 @@
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\OpenDataSourceDialog.resx">
-      <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
+    <EmbeddedResource Include="FileUI\BaseFileDialogNE.resx">
+      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.resx">
