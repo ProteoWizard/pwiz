@@ -141,18 +141,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 CurveList.Add(curveItem);
             }
 
+            UpdateAxes();
             if (ShowSelection && SelectedIndex != -1)
             {
-                double yValue = _graphData.SelectedMaxY;
-                double yMin = _graphData.SelectedMinY;
-                GraphObjList.Add(new BoxObj(SelectedIndex + .5, yValue, 0.99,
-                                            -yValue, Color.Black, Color.Empty)
-                {
-                    IsClippedToChartRect = true,
-                });
+                DrawSelectionBox(SelectedIndex, _graphData.SelectedMaxY, _graphData.SelectedMinY);
             }
-
-            UpdateAxes();
         }
 
         protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,

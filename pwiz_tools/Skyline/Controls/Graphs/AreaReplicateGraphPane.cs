@@ -658,11 +658,6 @@ namespace pwiz.Skyline.Controls.Graphs
             ParentGroupNode = parentGroupNode;
             SumAreas = sumAreas;
 
-            // Draw a box around the currently selected replicate
-            if (ShowSelection && maxArea >  -double.MaxValue)
-            {
-                AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
-            }
             // Reset the scale when the parent node changes
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
@@ -697,6 +692,11 @@ namespace pwiz.Skyline.Controls.Graphs
             AddDotProductLine(graphData);
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
+            // Draw a box around the currently selected replicate
+            if (ShowSelection && maxArea > -double.MaxValue)
+            {
+                AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
+            }
         }
 
         private void AddDotProductLine(AreaGraphData graphData)
@@ -837,12 +837,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
-                        -yValue, Color.Black, Color.Empty)
-                // Just passing in yValue here doesn't work when log scale is enabled, -yValue works with and without log scale enabled
-                {
-                    IsClippedToChartRect = true,
-                });
+                DrawSelectionBox(selectedReplicateIndex, yValue, 0);
             }
         }
 
