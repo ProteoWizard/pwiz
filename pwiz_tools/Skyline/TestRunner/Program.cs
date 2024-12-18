@@ -61,8 +61,8 @@ namespace TestRunner
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestData.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
 
         private static readonly string executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en", "fr", "tr").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
-        private static readonly string[] qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
+        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en-US", "fr-FR", "tr-TR").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
+        private static readonly string[] qualityLanguages = allLanguages.Where(l => !l.StartsWith("tr")).ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
 
         private const int LeakTrailingDeltas = 7;   // Number of trailing deltas to average and check against thresholds below
         // CONSIDER: Ideally these thresholds would be zero, but memory and handle retention are not stable enough to support that
@@ -896,7 +896,7 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("buildcheck"))
             {
                 loop = 1;
-                languages = new[] { "en" };
+                languages = new[] { "en-US" };
             }
 
             Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, pass) =>
@@ -1285,7 +1285,19 @@ namespace TestRunner
             string value = args.ArgAsString("language");
             if (value == "all")
                 return allLanguages;
-            return value.Split(',');
+            return value.Split(',').Select(GetCanonicalLanguage).ToArray();
+        }
+
+        private static string GetCanonicalLanguage(string rawLanguage)
+        {
+            // If the raw language is a prefix of something from allLanguages, use
+            // the full name.
+            foreach (var language in allLanguages)
+            {
+                if (language.StartsWith(rawLanguage))
+                    return language;
+            }
+            return rawLanguage;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
@@ -1512,7 +1524,7 @@ namespace TestRunner
 
                 // Get list of languages
                 var languages = buildMode
-                    ? new[] { "en" }
+                    ? new[] { "en-US" }
                     : GetLanguages(commandLineArgs);
 
                 if (showFormNames)

@@ -44,6 +44,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             listResultsFiles.DisplayMember = @"Name";
             SimultaneousFiles = Settings.Default.ImportResultsSimultaneousFiles;
             DoAutoRetry = Settings.Default.ImportResultsDoAutoRetry;
+
+            // Hide the GPF checkbox during screenshots until we branch for 24.1 docs
+            if (Program.PauseSeconds != 0)
+            {
+                btnBrowse.Top = cbGpf.Top;
+                btnRemove.Top = cbGpf.Top;
+                cbGpf.Visible = false;
+            }
         }
 
         private BindingList<ImportPeptideSearch.FoundResultsFile> _foundResultsFiles;

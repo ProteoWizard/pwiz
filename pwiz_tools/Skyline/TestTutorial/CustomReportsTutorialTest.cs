@@ -359,49 +359,22 @@ namespace pwiz.SkylineTestTutorial
                 ConfigureDataGridColumns();
             });
 
-            PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: (bmp) =>
+            PauseForScreenShot<DocumentGridForm>("Document Grid with summary statistics", 21, processShot: bmp =>
             {
-                const int lineWidth = 3;
-                var dataGridView = documentGridForm.DataGridView;
+                // Clean-up the border in the normal way
+                bmp = bmp.CleanupBorder(true);
 
-                // compute top-left corner of data grid's cells, 4px offset puts shapes in the correct place
-                var yOffset = documentGridForm.NavBar.Height + dataGridView.ColumnHeadersHeight - 4;
-
-                // keep these methods private until we decide to promote them to shared helpers
-                var drawBoxOnColumn = new Action<Graphics, int, Color>((graphics, column, color) =>
-                {
-                    var rect = dataGridView.GetCellDisplayRectangle(column, 0, true); // column's top data cell
-                    rect.Y += yOffset;
-                    rect.Height *= 10; // draw rectangle around all 10 rows
-
-                    graphics.DrawRectangle(new Pen(color, lineWidth), rect);
-                });
-
-                var drawEllipseOnCell = new Action<Graphics, int, int, Color>((graphics, row, column, color) =>
-                {
-                    var text = dataGridView.Rows[row].Cells[column].FormattedValue?.ToString();
-                    var stringSize = graphics.MeasureString(text, dataGridView.Font);
-
-                    var rect = dataGridView.GetCellDisplayRectangle(column, row, true);
-                    rect.Y += yOffset;
-                    rect.Width = Convert.ToInt16(stringSize.Width * 1.1); // scale-up ellipse size so shape isn't too tight around text
-
-                    graphics.DrawEllipse(new Pen(color, lineWidth), rect);
-                });
-
-                var g = Graphics.FromImage(bmp);
+                using var g = Graphics.FromImage(bmp);
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                drawBoxOnColumn(g, 3, Color.Red);
-                drawBoxOnColumn(g, 5, Color.Red);
-                drawBoxOnColumn(g, 6, Color.Red);
+                g.DrawBoxOnColumn(documentGridForm, 3, 10, Color.Red);
+                g.DrawBoxOnColumn(documentGridForm, 5, 10, Color.Red);
+                g.DrawBoxOnColumn(documentGridForm, 6, 10, Color.Red);
 
-                drawEllipseOnCell(g, 1, 3, Color.Red);
-                drawEllipseOnCell(g, 3, 3, Color.Orange);
-                drawEllipseOnCell(g, 1, 5, Color.Orange);
-                drawEllipseOnCell(g, 3, 5, Color.Orange);
-
-                g.Flush();
+                g.DrawEllipseOnCell(documentGridForm, 1, 3, Color.Red);
+                g.DrawEllipseOnCell(documentGridForm, 3, 3, Color.Orange);
+                g.DrawEllipseOnCell(documentGridForm, 1, 5, Color.Orange);
+                g.DrawEllipseOnCell(documentGridForm, 3, 5, Color.Orange);
 
                 return bmp;
             });
