@@ -36,15 +36,6 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public static class GraphValues
     {
-        /// <summary>
-        /// Prepend the string "Log " to an axis title.
-        /// </summary>
-        [Localizable(true)]
-        public static string AnnotateLogAxisTitle(string title)
-        {
-            return string.Format(GraphsResources.GraphValues_Log_AxisTitle, title);
-        }
-        
         [Localizable(true)]
         public static string ToLocalizedString(RTPeptideValue rtPeptideValue)
         {

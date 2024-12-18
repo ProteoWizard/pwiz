@@ -194,6 +194,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     return BarType.PercentStack;
                 }
 
+                if (Settings.Default.AreaLogScale && AreaGraphController.AreaNormalizeOption.AllowLogScale)
+                {
+                    return BarType.Cluster;
+                }
+
                 return BarType.Stack;
             }
         }
@@ -632,7 +637,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (BarSettings.Type == BarType.Cluster)
                         aggregateFunc = Math.Max;   
                     AddAreasToSums(pointPairList, sumAreas, aggregateFunc);
-
+                    if (!curveItem.IsY2Axis && Settings.Default.AreaLogScale && BarSettings.Type == BarType.Cluster)
+                    {
+                        curveItem.Points = NonNegativeToMissing(curveItem.Points);
+                    }
                     var lineItem = curveItem as LineItem;
                     if (lineItem != null)
                     {
@@ -923,7 +931,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
                 }
-                else if (Settings.Default.AreaLogScale)
+                else if (Settings.Default.AreaLogScale && BarSettings.Type == BarType.Cluster)
                 {
                     YAxis.Scale.MaxAuto = true;
                     if (Settings.Default.PeakAreaMaxArea != 0)
@@ -933,7 +941,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
 
                     YAxis.Type = AxisType.Log;
-                    YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(GetYAxisTitle(aggregateOp, normalizeOption));
+                    YAxis.Title.Text = GetYAxisTitle(aggregateOp, normalizeOption);
                     YAxis.Scale.MinAuto = true;
                     FixedYMin = null;
                 }
@@ -1719,6 +1727,31 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             base.OnClose(e);
             _calcListener.Dispose();
+        }
+
+        private static IPointList NonNegativeToMissing(IPointList pointList)
+        {
+            int nPts = pointList.Count;
+            if (!Enumerable.Range(0, nPts).Any(i => pointList[i].Y <= 0))
+            {
+                return pointList;
+            }
+
+            var newPoints = new List<PointPair>(pointList.Count);
+            for (int i = 0; i < nPts; i++)
+            {
+                var pt = pointList[i];
+                if (pt.Y <= 0)
+                {
+                    newPoints.Add(new PointPair(pt.X, PointPairBase.Missing));
+                }
+                else
+                {
+                    newPoints.Add(pt);
+                }
+            }
+
+            return new PointPairList(newPoints);
         }
     }
 }
