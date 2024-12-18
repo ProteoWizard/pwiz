@@ -52,20 +52,20 @@ namespace pwiz.Common.Controls
             // Win32 magic to keep the textbox scrolling to the newest append to the textbox unless
             // the user has moved the scrollbox up
             sbOffset = (ClientSize.Height - SystemInformation.HorizontalScrollBarHeight) / Font.Height;
-            savedVpos = this.GetScrollPos(Orientation.Vertical);
-            User32.GetScrollRange(Handle, (int)Orientation.Vertical, out _, out VSmax);
+            savedVpos = this.GetScrollPos(User32.ScrollOrientation.Vertical);
+            User32.GetScrollRange(Handle, User32.ScrollOrientation.Vertical, out _, out VSmax);
             if (savedVpos >= (VSmax - sbOffset - 1))
                 bottomFlag = true;
             SuspendDrawing();
             AppendText(line);
             if (bottomFlag)
             {
-                User32.GetScrollRange(Handle, (int)Orientation.Vertical, out _, out VSmax);
+                User32.GetScrollRange(Handle, User32.ScrollOrientation.Vertical, out _, out VSmax);
                 savedVpos = VSmax - sbOffset;
             }
-            this.SetScrollPos(Orientation.Vertical, savedVpos);
+            this.SetScrollPos(User32.ScrollOrientation.Vertical, savedVpos);
             User32.PostMessageA(Handle,
-                (int)User32.WinMessageType.WM_VSCROLL,
+                User32.WinMessageType.WM_VSCROLL,
                 User32.SB_THUMBPOSITION + 0x10000 * savedVpos,
                 0);
             ResumeDrawing();

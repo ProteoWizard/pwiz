@@ -21,7 +21,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
 {
     public static class Ole32
     {
-        [DllImport(nameof(Ole32))]
+        [DllImport("ole32.dll")]
         // ReSharper disable once IdentifierTypo
         public static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
     }

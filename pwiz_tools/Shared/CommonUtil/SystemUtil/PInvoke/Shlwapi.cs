@@ -21,7 +21,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
     // Resharper disable once IdentifierTypo
     public static class Shlwapi
     {
-        [DllImport(nameof(Shlwapi), CharSet = CharSet.Unicode, ExactSpelling = true)]
+        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
         public static extern int StrCmpLogicalW(string x, string y);
     }
 }

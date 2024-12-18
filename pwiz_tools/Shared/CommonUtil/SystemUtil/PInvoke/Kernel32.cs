@@ -55,22 +55,19 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport(nameof(Kernel32), SetLastError = true, ExactSpelling = true)]
         public static extern bool CheckRemoteDebuggerPresent(IntPtr hProcess, ref bool isDebuggerPresent);
 
-        [DllImport(nameof(Kernel32))]
+        [DllImport("kernel32.dll")]
         // ReSharper disable once IdentifierTypo
         public static extern SafeWaitHandle CreateWaitableTimer(IntPtr lpTimerAttributes,
             bool bManualReset,
             string lpTimerName);
 
-        [DllImport(nameof(Kernel32))]
-        public static extern int GetCurrentThreadId();
-
-        [DllImport(nameof(Kernel32), CharSet = CharSet.Unicode, SetLastError = true)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
 
-        [DllImport(nameof(Kernel32), CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
         public static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
 
-        [DllImport(nameof(Kernel32), SetLastError = true, CharSet = CharSet.Auto)]
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern uint GetTempFileName(string lpPathName, string lpPrefixString,
             uint uUnique, [Out] StringBuilder lpTempFileName);
 
@@ -78,7 +75,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool SetConsoleCtrlHandler(ConsoleCtrlEventHandler handler, bool add);
         public delegate bool ConsoleCtrlEventHandler(CtrlType sig);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         // ReSharper disable once IdentifierTypo
         public static extern bool SetWaitableTimer(SafeWaitHandle hTimer,
@@ -109,7 +106,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
                 SetThreadExecutionState(_previousState);
             }
 
-            [DllImport(nameof(Kernel32), CharSet = CharSet.Auto, SetLastError = true)]
+            [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
             private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 
             [Flags]
@@ -123,6 +120,5 @@ namespace pwiz.Common.SystemUtil.PInvoke
             }
             // ReSharper restore InconsistentNaming
         }
-
     }
 }

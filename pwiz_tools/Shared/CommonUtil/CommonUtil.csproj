@@ -192,7 +192,6 @@
     <Compile Include="Spectra\SpectrumPrecursor.cs" />
     <Compile Include="SystemUtil\SubstringFinder.cs" />
     <Compile Include="Collections\UniqueList.cs" />
-    <Compile Include="SystemUtil\CenterWinDialog.cs" />
     <Compile Include="SystemUtil\CommonException.cs" />
     <Compile Include="SystemUtil\ProgressHandler.cs" />
     <Compile Include="SystemUtil\MemoryBlockingCollection.cs" />

@@ -1697,7 +1697,6 @@ namespace pwiz.Skyline.Util
         }
     }
 
-    // TODO (ekoneil): leaving here for now. Unsafe code not currently allowed in CommonUtil project where PInvoke lives.
     internal static class Kernel32Unsafe
     {
         [DllImport("kernel32.dll", SetLastError = true)]

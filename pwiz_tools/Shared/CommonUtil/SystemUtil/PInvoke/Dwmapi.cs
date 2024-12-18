@@ -34,6 +34,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         // ReSharper restore InconsistentNaming
 
         [StructLayout(LayoutKind.Sequential)]
+        // ReSharper disable once InconsistentNaming
         public struct THUMBNAIL_PROPERTIES
         {
             public int dwFlags;
@@ -44,15 +45,19 @@ namespace pwiz.Common.SystemUtil.PInvoke
             public readonly bool fSourceClientAreaOnly;
         }
 
+        // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
         public static extern int RegisterThumbnail(IntPtr dest, IntPtr src, out IntPtr thumb);
 
+        // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
         public static extern int UnregisterThumbnail(IntPtr thumb);
 
+        // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
         public static extern int QueryThumbnailSourceSize(IntPtr thumb, out PInvokeCommon.SIZE size);
 
+        // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
         public static extern int UpdateThumbnailProperties(IntPtr hThumb, ref THUMBNAIL_PROPERTIES props);
     }

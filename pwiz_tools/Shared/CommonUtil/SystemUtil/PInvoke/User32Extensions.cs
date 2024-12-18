@@ -40,9 +40,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
             return User32.GetGuiResources(process.Handle, (int)type);
         }
 
-        public static int GetScrollPos(this Control control, Orientation orientation)
+        public static int GetScrollPos(this Control control, User32.ScrollOrientation orientation)
         {
-            return User32.GetScrollPos(control.Handle, (int)orientation);
+            return User32.GetScrollPos(control.Handle, orientation);
         }
 
         public static void HideCaret(this TextBox control)
@@ -55,9 +55,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
             User32.SetForegroundWindow(control.Handle);
         }
 
-        public static void SetScrollPos(this Control control, Orientation orientation, int pos)
+        public static void SetScrollPos(this Control control, User32.ScrollOrientation orientation, int pos)
         {
-            User32.SetScrollPos(control.Handle, (int)orientation, pos, true);
+            User32.SetScrollPos(control.Handle, orientation, pos, true);
         }
     }
 }

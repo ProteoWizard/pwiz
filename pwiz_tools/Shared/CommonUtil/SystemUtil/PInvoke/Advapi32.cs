@@ -20,6 +20,8 @@ using System;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
+    // CONSIDER: can this whole class be replaced with .NET's built-in Registry API?
+    //
     // ReSharper disable once IdentifierTypo
     public static class Advapi32
     {
@@ -30,7 +32,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         private const int KEY_WOW64_32KEY = 0x0200;
         // ReSharper restore InconsistentNaming IdentifierTypo
 
-        // TODO (ekoneil): why not use the built-in Registry type? Example in SkylineTesterWindow.
         public static string GetPathFromProgId(string progId)
         {
             var clsid = RegQueryKeyValue(@"SOFTWARE\Classes\" + progId + @"\CLSID", string.Empty);
@@ -68,7 +69,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             return sb.ToString();
         }
 
-        [DllImport(nameof(Advapi32), CharSet = CharSet.Auto)]
+        // ReSharper disable once StringLiteralTypo
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto)]
         private static extern int RegOpenKeyEx(
             UIntPtr hKey,
             string subKey,
@@ -76,8 +78,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             int samDesired,
             out UIntPtr hkResult);
 
-        // ReSharper disable once IdentifierTypo
-        [DllImport(nameof(Advapi32), CharSet = CharSet.Unicode, EntryPoint = @"RegQueryValueExW", SetLastError = true)]
+        // ReSharper disable once StringLiteralTypo
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, EntryPoint = @"RegQueryValueExW", SetLastError = true)]
         private static extern int RegQueryValueEx(
             UIntPtr hKey,
             string lpValueName,

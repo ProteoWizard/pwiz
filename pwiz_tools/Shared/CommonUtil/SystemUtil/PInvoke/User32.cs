@@ -17,11 +17,11 @@
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
+    // CONSIDER: replace all out params with .NET types
     public static class User32
     {
         // ReSharper disable InconsistentNaming IdentifierTypo
@@ -29,7 +29,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         
         public const int GWL_STYLE = -16;
 
-        public const int SB_VERT = 1;
         public const int SB_THUMBPOSITION = 4;
         
         public const int WS_HSCROLL = 0x00100000;
@@ -64,6 +63,12 @@ namespace pwiz.Common.SystemUtil.PInvoke
             total = -1,
             gdi = 0,
             user = 1
+        }
+
+        public enum ScrollOrientation
+        {
+            Horizontal,
+            Vertical            
         }
 
         [Flags]
@@ -170,11 +175,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
             }
         }
 
-        // TODO: declaring DLL name - use (1) DllImport(nameof(User32)) or (2) DllImport("user32.dll")
         [DllImport("user32.dll")]
         public static extern bool AdjustWindowRectEx(ref RECT lpRect, int dwStyle, bool bMenu, int dwExStyle);
 
-        // TODO (ekoneil): change dwFlags type from int to AnimateWindowFlags after reconciling differing approaches to window animation in CustomTip vs FormAnimator
+        // CONSIDER (ekoneil): make dwFlags type AnimateWindowFlags after reconciling differing approaches to window animation in CustomTip vs FormAnimator
         [DllImport("user32.dll")]
         public static extern bool AnimateWindow(IntPtr hWnd, int dwTime, int dwFlags);
 
@@ -194,16 +198,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
 
         [DllImport("user32.dll")]
-        public static extern bool EnumThreadWindows(int tid, EnumThreadWindowsProc callback, IntPtr lp);
-        public delegate bool EnumThreadWindowsProc(IntPtr hWnd, IntPtr lp);
-
-        [DllImport("user32.dll")]
         public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        // ReSharper disable once IdentifierTypo
-        public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDC(IntPtr hWnd);
@@ -219,10 +215,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern IntPtr GetOpenClipboardWindow();
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern int GetScrollPos(IntPtr hWnd, int nBar);
+        public static extern int GetScrollPos(IntPtr hWnd, ScrollOrientation orientation);
 
         [DllImport("user32.dll")]
-        public static extern bool GetScrollRange(IntPtr hWnd, int nBar, out int lpMinPos, out int lpMaxPos);
+        public static extern bool GetScrollRange(IntPtr hWnd, ScrollOrientation orientation, out int lpMinPos, out int lpMaxPos);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetWindowDC(IntPtr hWnd);
@@ -244,14 +240,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
         // ReSharper disable once IdentifierTypo
         public static extern bool IsWindowVisible(IntPtr hwnd);
 
-        [DllImport("user32.dll")]
-        public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int w, int h, bool repaint);
-
         [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]
         public static extern bool OpenClipboard(IntPtr hWndNewOwner);
 
         [DllImport("user32.dll")]
-        public static extern bool PostMessageA(IntPtr hWnd, int nBar, int wParam, int lParam);
+        public static extern bool PostMessageA(IntPtr hWnd, WinMessageType msgType, int wParam, int lParam);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool ReleaseCapture();
@@ -308,7 +301,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         internal static extern bool HideCaret(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
+        internal static extern int SetScrollPos(IntPtr hWnd, ScrollOrientation orientation, int nPos, bool bRedraw);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr GetFocus();

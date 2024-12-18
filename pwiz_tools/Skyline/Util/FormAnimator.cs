@@ -35,7 +35,6 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// The methods of animation available.
         /// </summary>
-        // TODO (ekoneil): pinvoke - Skyline implements this again in CustomTip. Consolidate?
         public enum AnimationMethod : uint
         {
             /// <summary>
@@ -193,6 +192,10 @@ namespace pwiz.Skyline.Util
         /// </summary>
         private void Form_VisibleChanged(object sender, EventArgs e)
         {
+            // CONSIDER: pinvoke - Skyline has two distinct ways of specifying form animations - here and
+            //           in CustomTip. Consider consolidating these into one set of flags compatible with
+            //           User32.AnimateWindowFlags and updating User32.AnimateWindow to be more strongly typed.
+
             // Do not attempt to animate MDI child forms while showing or hiding as they do not behave as expected.
             if (Form.MdiParent == null)
             {
