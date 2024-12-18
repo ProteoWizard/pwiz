@@ -160,6 +160,7 @@ namespace pwiz.SkylineTestUtil
 
         private void Continue()
         {
+            TestUtilSettings.Default.Save();
             Hide();
 
             // Start the tests again
