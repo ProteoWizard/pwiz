@@ -79,6 +79,7 @@ namespace pwiz.SkylineTestUtil
         private string _fileLoaded;
         private Bitmap _newScreenshot;
         private bool _screenshotTaken;
+        private bool? _oldAndNewMatch;
         private NextScreenshotProgress _nextScreenshotProgress;
 
         private class NextScreenshotProgress
@@ -121,6 +122,7 @@ namespace pwiz.SkylineTestUtil
 
             // Unfortunately there is not enough information about the image sizes to
             // the starting location right here, but this is better than using the Windows default
+            labelOldSize.Text = labelNewSize.Text = string.Empty;
             StartPosition = FormStartPosition.Manual;
             var savedLocation = TestUtilSettings.Default.PreviewFormLocation;
             if (!TestUtilSettings.Default.ManualSizePreview)
@@ -285,9 +287,40 @@ namespace pwiz.SkylineTestUtil
             lock (_lock)
             {
                 helpTip.SetToolTip(oldScreenshotLabel, _fileLoaded);
-                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot);
+                bool isPlaceholder = string.IsNullOrEmpty(_fileLoaded);
+                SetPreviewSize(labelOldSize, !isPlaceholder ? _oldScreenshot : null);
+                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot, isPlaceholder);
                 helpTip.SetToolTip(newScreenshotLabel, _screenshotTaken ? _description : null);
-                SetPreviewImage(newScreenshotPictureBox, _newScreenshot);
+                SetPreviewSize(labelNewSize, _screenshotTaken ? _newScreenshot : null);
+                SetPreviewImage(newScreenshotPictureBox, _newScreenshot, !_screenshotTaken);
+                if (!_oldAndNewMatch.HasValue)
+                {
+                    pictureMatching.Visible = false;
+                    labelOldSize.Left = pictureMatching.Left;
+                }
+                else
+                {
+                    pictureMatching.Visible = true;
+                    labelOldSize.Left = pictureMatching.Right;
+                    var bmpDiff = _oldAndNewMatch.Value
+                        ? Skyline.Properties.Resources.Peak
+                        : Skyline.Properties.Resources.NoPeak;
+                    bmpDiff.MakeTransparent(Color.White);
+                    pictureMatching.Image = bmpDiff;
+                }
+            }
+        }
+
+        private static void SetPreviewSize(Label labelSize, Bitmap screenshot)
+        {
+            if (screenshot == null)
+                labelSize.Text = string.Empty;
+            else
+            {
+                lock (screenshot)
+                {
+                    labelSize.Text = $@"{screenshot.Width} x {screenshot.Height}px";
+                }
             }
         }
 
@@ -513,6 +546,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Bitmap newScreenshot;
                 bool shotTaken, waitingForScreenshot;
+                bool? oldAndNewMatch = null;
                 ScreenshotValues screenshotValues;
 
                 lock (_lock)
@@ -528,15 +562,42 @@ namespace pwiz.SkylineTestUtil
                 {
                     newScreenshot = Resources.progress;
                 }
-                else if (!shotTaken)
+                else
                 {
-                    newScreenshot = TakeScreenshot(screenshotValues);
-                    shotTaken = true;
+                    if (!shotTaken)
+                    {
+                        newScreenshot = TakeScreenshot(screenshotValues);
+                        shotTaken = true;
+                    }
+
+                    Bitmap diffImage;
+                    lock (oldScreenshot)
+                    {
+                        lock (newScreenshot)
+                        {
+                            diffImage = DiffScreenshots(oldScreenshot, newScreenshot);
+                        }
+                    }
+                    if (!ReferenceEquals(diffImage, _oldScreenshot))
+                    {
+                        oldAndNewMatch = false;
+                    }
+                    else if (oldScreenshot == null || oldScreenshot.Size != newScreenshot.Size)
+                    {
+                        oldAndNewMatch = false;
+                    }
+                    else if (!ReferenceEquals(newScreenshot, Resources.noscreenshot))
+                    {
+                        oldAndNewMatch = true;
+                    }
+                    oldScreenshot = diffImage;
                 }
 
                 lock (_lock)
                 {
                     _newScreenshot = newScreenshot;
+                    _oldScreenshot = oldScreenshot;
+                    _oldAndNewMatch = oldAndNewMatch;
                     _screenshotTaken = shotTaken;
                     if (shotTaken)
                         _nextScreenshotProgress = null;    // Done waiting for the next screenshot
@@ -544,6 +605,56 @@ namespace pwiz.SkylineTestUtil
             }
 
             FormStateChangedBackground();
+        }
+
+        private Bitmap DiffScreenshots(Bitmap bmpOld, Bitmap bmpNew)
+        {
+            if (bmpNew == null || bmpOld == null || bmpNew.Size != bmpOld.Size)
+                return bmpOld;
+
+            try
+            {
+                return HighlightDifferences(bmpOld, bmpNew, Color.Red);
+            }
+            catch (Exception e)
+            {
+                this.BeginInvoke((Action)(() => PreviewMessageDlg.ShowWithException(this,
+                    "Failed to diff bitmaps.", e)));
+                return bmpOld;
+            }
+        }
+
+        public static Bitmap HighlightDifferences(Bitmap bmpOld, Bitmap bmpNew, Color highlightColor, int alpha = 128)
+        {
+            var result = new Bitmap(bmpOld.Width, bmpOld.Height);
+
+            bool diffFound = false;
+            for (int y = 0; y < bmpOld.Height; y++)
+            {
+                for (int x = 0; x < bmpOld.Width; x++)
+                {
+                    var pixel1 = bmpOld.GetPixel(x, y);
+                    var pixel2 = bmpNew.GetPixel(x, y);
+
+                    if (pixel1 != pixel2)
+                    {
+                        var blendedColor = Color.FromArgb(
+                            alpha,
+                            highlightColor.R * alpha / 255 + pixel1.R * (255 - alpha) / 255,
+                            highlightColor.G * alpha / 255 + pixel1.G * (255 - alpha) / 255,
+                            highlightColor.B * alpha / 255 + pixel1.B * (255 - alpha) / 255
+                        );
+                        result.SetPixel(x, y, blendedColor);
+                        diffFound = true;
+                    }
+                    else
+                    {
+                        result.SetPixel(x, y, pixel1);
+                    }
+                }
+            }
+
+            return diffFound ? result : bmpOld;
         }
 
         private struct ScreenshotValues
@@ -610,15 +721,19 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private void SetPreviewImage(PictureBox previewBox, Bitmap screenshot)
+        private void SetPreviewImage(PictureBox previewBox, Bitmap screenshot, bool isPlaceHolder)
         {
             var newImage = screenshot;
-            if (screenshot != null)
+            if (screenshot != null && !isPlaceHolder)
             {
-                var containerSize = !autoSizeWindowCheckbox.Checked ? previewBox.Size : Size.Empty;
-                var screenshotSize = CalcBitmapSize(screenshot, containerSize);
-                if (screenshotSize != screenshot.Size)
+                lock (screenshot)
+                {
+                    var containerSize = !autoSizeWindowCheckbox.Checked ? previewBox.Size : Size.Empty;
+                    var screenshotSize = CalcBitmapSize(screenshot, containerSize);
+                    // Always make a copy to avoid having PictureBox lock the bitmap
+                    // which can cause issues with future image diffs
                     newImage = new Bitmap(screenshot, screenshotSize);
+                }
             }
 
             previewBox.Image = newImage;
@@ -847,7 +962,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Hide();
             }
-            else if(File.Exists(_screenshotManager.ScreenshotSourceFile(_screenshotNum)))
+            else if (File.Exists(_screenshotManager.ScreenshotSourceFile(_screenshotNum)))
             {
                 FormStateChanged();
             }
