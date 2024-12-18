@@ -492,10 +492,7 @@ namespace pwiz.Skyline.SettingsUI
             var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
             var packages = new List<PythonPackage>()
             {
-                new PythonPackage {Name = @"peptdeep", Version = null },
-                new PythonPackage { Name = @"numpy", Version = null },
-                new PythonPackage { Name = @"torch", Version = null },
-                new PythonPackage { Name = @"sympy", Version = null }
+                new PythonPackage {Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}"}
             };
             var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), CARAFE);

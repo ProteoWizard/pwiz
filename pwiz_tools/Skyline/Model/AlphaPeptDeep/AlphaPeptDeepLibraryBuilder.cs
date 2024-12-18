@@ -132,6 +132,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
                 var modsBuilder = new StringBuilder();
                 var modSitesBuilder = new StringBuilder();
+                bool unsupportedModification = false;
 
                 for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
                 {
@@ -140,6 +141,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     {
                         var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name);
                         Messages.WriteAsyncUserMessage(msg);
+                        unsupportedModification = true;
                         continue;
                     }
 
@@ -149,6 +151,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     {
                         var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
                         Messages.WriteAsyncUserMessage(msg);
+                        unsupportedModification = true;
+
                         continue;
                     }
 
@@ -167,7 +171,9 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         modSitesBuilder.Append(TextUtil.SEMICOLON);
                     }
                 }
-
+                if (unsupportedModification) 
+                    continue;
+                
                 foreach (var charge in peptide.TransitionGroups
                              .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
                 {
