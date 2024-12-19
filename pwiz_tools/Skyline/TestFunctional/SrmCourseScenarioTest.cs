@@ -86,7 +86,8 @@ namespace pwiz.SkylineTestFunctional
             // Check changed result state
             const int pepStandardCount = 13, tranStandardCount = 34;
             document = WaitForDocumentChange(document);
-            AssertEx.IsDocumentState(document, null, protCount, pepCount, pepCount*2-pepStandardCount, tranCount*2-tranStandardCount);
+            const int nPrecursorWindowExclusions = 1; // There's a single precursor mz exclusion window hit
+            AssertEx.IsDocumentState(document, null, protCount, pepCount, pepCount*2-pepStandardCount, (tranCount*2-tranStandardCount)- nPrecursorWindowExclusions); 
             int[] missingHeavy = {1, 1, 2, 2};
             for (int i = 0; i < EXPECTED_REPLICATES.Length; i++)
             {
@@ -94,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertResult.IsDocumentResultsState(document, replicateName,
                     pepCount, pepCount, pepCount-pepStandardCount,
                     tranCount - missing[i],
-                    tranCount-tranStandardCount - missingHeavy[i]);
+                    tranCount-tranStandardCount - missingHeavy[i] - nPrecursorWindowExclusions);
             }
             const int pepRandomCount = 8;   // Randomly need no changes from default to match
             // TODO: Figure out what is up with the 6
@@ -106,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             var matchedUserSetTrans = new[]
             {
                 new UserSetCount(UserSet.FALSE, countRep*tranStandardCount + countRep*pepRandomCount + 6),
-                new UserSetCount(UserSet.MATCHED, 2*countRep*(tranCount - tranStandardCount) - countRep*pepRandomCount - 6),
+                new UserSetCount(UserSet.MATCHED, 2*countRep*(tranCount - tranStandardCount) - countRep*pepRandomCount - 6 - countRep*nPrecursorWindowExclusions),
             };
 
             VerifyUserSets(document, matchedUserSetGroups, matchedUserSetTrans);
@@ -170,13 +171,13 @@ namespace pwiz.SkylineTestFunctional
 
             matchedUserSetGroups = new[]
             {
-                new UserSetCount(UserSet.FALSE, 272),
-                new UserSetCount(UserSet.REINTEGRATED, 12),
+                new UserSetCount(UserSet.FALSE, 272 - 2*nPrecursorWindowExclusions),
+                new UserSetCount(UserSet.REINTEGRATED, 12 + 2*nPrecursorWindowExclusions),
             };
             matchedUserSetTrans = new[]
             {
-                new UserSetCount(UserSet.FALSE, 1192),
-                new UserSetCount(UserSet.REINTEGRATED, 56),
+                new UserSetCount(UserSet.FALSE, 1192 - 10*nPrecursorWindowExclusions),
+                new UserSetCount(UserSet.REINTEGRATED, 56 + 10*nPrecursorWindowExclusions),
             };
 
             VerifyUserSets(documentRescore, matchedUserSetGroups, matchedUserSetTrans, true);

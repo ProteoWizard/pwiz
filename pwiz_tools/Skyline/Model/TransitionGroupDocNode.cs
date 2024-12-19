@@ -1125,7 +1125,9 @@ namespace pwiz.Skyline.Model
                         }
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
-                        if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz))
+                        if (settingsNew.TransitionSettings.Instrument.IsMeasurable(nodeNew.Mz, precursorMz) &&
+                            (nodeNew.Transition.IonType == IonType.precursor || 
+                             !settingsNew.TransitionSettings.Filter.IsExcluded(nodeNew.Mz, precursorMz))) // Watch for unfragmented precursors in MS2
                             childrenNew.Add(nodeNew);
                     }
 
