@@ -32,18 +32,20 @@ namespace pwiz.Common.SystemUtil.PInvoke
     /// using Win32.
     ///
     /// Classes in this namespace represent Win32 DLLs. Rules:
-    ///     (1) Every DLL must have its own class
-    ///     (2) Every class must represent exactly 1 Win32 DLL
-    ///     (3) Class names and file names must match the DLL name (minus ".dll").
-    ///         Example: "user32.dll" and User32 and User32.cs
-    ///     (4) DLLs with more than 3 extension methods may have an extra "Extensions" class
+    ///     (1) Any DLL referenced from PInvoke must have its own class - even if it's just a single function
+    ///     (2) Class name and DLL name must match, ignoring case
+    ///         Example: user32.dll is represented in User32.cs
+    ///     (3) Functions using [DllImport] must be all lower case and end in ".dll"
+    ///         Example: [DllImport("user32.dll")]
+    ///     (4) Functions must be declared in a class's outer scope and not in nested or helper classes.
+    ///         Functions can be public or private.
+    ///     (5) DLLs with extension methods should have an extra Extensions class matching the DLL name
     ///         Example: User32Extensions.cs
     ///
-    /// Some of these rules are enforced with static analysis implemented in tests.
+    /// PInvoke naming rules are checked during code inspection.
     /// </summary>
     public static class PInvokeCommon
     {
-        // Note, using an all caps struct name to indicate this is a Win32 type
         [StructLayout(LayoutKind.Sequential)]
         // ReSharper disable once InconsistentNaming
         public struct SIZE

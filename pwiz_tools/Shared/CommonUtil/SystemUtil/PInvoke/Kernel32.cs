@@ -35,6 +35,17 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
         // ReSharper restore InconsistentNaming IdentifierTypo
 
+        [Flags]
+        // ReSharper disable InconsistentNaming
+        private enum EXECUTION_STATE : uint
+        {
+            // ReSharper disable once IdentifierTypo
+            awaymode_required = 0x00000040,
+            continuous = 0x80000000,
+            system_required = 0x00000001
+        }
+        // ReSharper restore InconsistentNaming
+
         public static void AttachConsoleToParentProcess()
         {
             const int parentProcessId = -1;
@@ -42,7 +53,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             AttachConsole(parentProcessId);
         }
 
-        [DllImport(nameof(Kernel32), CharSet = CharSet.Unicode)]
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
         public static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 
         /// <summary>Checks whether our child process is being debugged.</summary>
@@ -52,7 +63,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         /// debugger resides in a separate and parallel process.
         /// Use the IsDebuggerPresent function to detect whether the calling process 
         /// is running under the debugger.
-        [DllImport(nameof(Kernel32), SetLastError = true, ExactSpelling = true)]
+        [DllImport("kernel32.dll", SetLastError = true, ExactSpelling = true)]
         public static extern bool CheckRemoteDebuggerPresent(IntPtr hProcess, ref bool isDebuggerPresent);
 
         [DllImport("kernel32.dll")]
@@ -71,7 +82,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern uint GetTempFileName(string lpPathName, string lpPrefixString,
             uint uUnique, [Out] StringBuilder lpTempFileName);
 
-        [DllImport(nameof(Kernel32))]
+        [DllImport("kernel32.dll")]
         public static extern bool SetConsoleCtrlHandler(ConsoleCtrlEventHandler handler, bool add);
         public delegate bool ConsoleCtrlEventHandler(CtrlType sig);
 
@@ -85,8 +96,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
             IntPtr lpArgToCompletionRoutine,
             bool fResume);
 
-        [DllImport(nameof(Kernel32), SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         private static extern bool AttachConsole(int dwProcessId);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
 
         public class SystemSleep : IDisposable
         {
@@ -105,20 +119,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             {
                 SetThreadExecutionState(_previousState);
             }
-
-            [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-            private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
-
-            [Flags]
-            // ReSharper disable InconsistentNaming
-            private enum EXECUTION_STATE : uint
-            {
-                // ReSharper disable once IdentifierTypo
-                awaymode_required = 0x00000040,
-                continuous = 0x80000000,
-                system_required = 0x00000001
-            }
-            // ReSharper restore InconsistentNaming
         }
     }
 }
