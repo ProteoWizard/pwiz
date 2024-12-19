@@ -247,8 +247,8 @@ namespace pwiz.SkylineTestFunctional
         {
 if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSAmanda)
 {
-Console.Write("skipping MSAmanda runs, to see if that's the memory corruption issue");
-return;
+Console.Write("no longer skipping MSAmanda DDA runs, to see if that's the memory corruption issue");
+
 }
 
             TestSearch();
