@@ -198,11 +198,19 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
             const int narrowWidth = 1350;
             RunUI(() => SkylineWindow.Width = narrowWidth);
             PauseForScreenShot("Yeast chromatograms and RT only - prtsc-paste-edit", 11, null, bmp =>
-                ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
+            {
+                bmp = ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
                 {
                     SkylineWindow.GetGraphChrom(YeastName),
                     SkylineWindow.GraphRetentionTime
-                }));
+                });
+                bmp = bmp.DrawAnnotationTextOnBitmap(new PointF(0.15F, 0.1F), "no\nmonoisotopic\nprecursor");
+                bmp = bmp.DrawArrowOnBitmap(new PointF(0.29F, 0.22F), new PointF(0.312F, 0.32F),3, 10);
+                bmp = bmp.Expand(right: 0.15F);
+                bmp = bmp.DrawAnnotationTextOnBitmap(new PointF(0.875F, 0.488F), "yeast\nbefore\nwater");
+                bmp = bmp.DrawVerticalBackwardBracket(new PointF(0.855F, 0.488F), 0.12F, 0.008F, 3);
+                return bmp;
+            });
             const double clickTime1 = 41.06;
             const double clickIntensity = 1.62E+6;
             if (IsPauseForScreenShots)
