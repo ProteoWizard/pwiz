@@ -24,7 +24,7 @@ namespace pwiz.PanoramaClient
 
         PanoramaServer ValidateServer();
 
-        void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true);
+        void ValidateFolder(string folderPath, FolderPermission permission, bool checkTargetedMs = true);
 
         JToken GetInfoForFolders(string folder);
 
@@ -74,13 +74,13 @@ namespace pwiz.PanoramaClient
             return validatedServer;
         }
 
-        public void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+        public void ValidateFolder(string folderPath, FolderPermission permission, bool checkTargetedMs = true)
         {
             var requestUri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
             ValidateFolder(requestUri, folderPath, permission, checkTargetedMs);
         }
 
-        public virtual void ValidateFolder(Uri requestUri, string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+        public virtual void ValidateFolder(Uri requestUri, string folderPath, FolderPermission permission, bool checkTargetedMs = true)
         {
             using (var requestHelper = GetRequestHelper())
             {
@@ -88,7 +88,7 @@ namespace pwiz.PanoramaClient
                     string.Format(Resources.AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__,
                         folderPath));
 
-                if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, (FolderPermission)permission))
+                if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, permission))
                 {
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(FolderState.nopermission.Error(ServerUri, folderPath, Username))
@@ -886,7 +886,7 @@ namespace pwiz.PanoramaClient
             throw new InvalidOperationException();
         }
 
-        public virtual void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+        public virtual void ValidateFolder(string folderPath, FolderPermission permission, bool checkTargetedMs = true)
         {
             throw new InvalidOperationException();
         }
