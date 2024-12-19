@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Skyline.Model.Databinding;
 
@@ -48,10 +49,19 @@ namespace pwiz.Skyline.Controls.Databinding
 
         protected override IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
         {
-            var columns = base.GetColumnsToHide(reportResults);
-            var replicatePivotColumns = new ReplicatePivotColumns(reportResults.ItemProperties);
-            return columns.Concat(replicatePivotColumns.GetReplicateColumnGroups()
-                .SelectMany(group => group.Where(replicatePivotColumns.IsReplicateColumn)));
+            var baseColumns = base.GetColumnsToHide(reportResults);
+            if (reportResults is ClusteredReportResults)
+            {
+                return baseColumns;
+            }
+
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(reportResults.ItemProperties);
+            if (replicatePivotColumns == null)
+            {
+                return baseColumns;
+            }
+            return baseColumns.Concat(replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Where(replicatePivotColumns.IsConstantColumn)));
         }
     }
 }

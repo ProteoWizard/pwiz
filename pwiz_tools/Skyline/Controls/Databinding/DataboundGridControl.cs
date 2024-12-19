@@ -685,8 +685,8 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void UpdateDendrograms()
         {
-            var replicatePivotColumns = new ReplicatePivotColumns(bindingListSource.ItemProperties);
-            if (replicatePivotColumns.IsPivoted())
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            if (true == replicatePivotColumns?.IsPivoted())
             {
                 dataGridViewEx1.Show();
                 dataGridViewEx1.DataSource = buildPivotByReplicateDataSet(replicatePivotColumns);
@@ -841,13 +841,12 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 foreach (var column in group)
                 {
-                    var propertyPath = column.DisplayColumn.PropertyPath;
-                    if (!propertyPath.StartsWith(replicatePivotColumns.ReplicatePropertyPath) &&
-                        !propertyPath.StartsWith(replicatePivotColumns.ResultFilePropertyPath))
+                    if (!replicatePivotColumns.IsConstantColumn(column))
                     {
                         continue;
                     }
 
+                    var propertyPath = column.DisplayColumn.PropertyPath;
                     int iRow = rowPropertyPaths.IndexOf(propertyPath);
                     DataRow row;
                     if (iRow < 0)
