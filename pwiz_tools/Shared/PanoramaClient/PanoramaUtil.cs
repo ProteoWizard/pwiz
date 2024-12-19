@@ -41,6 +41,7 @@ namespace pwiz.PanoramaClient
         public const string WEBDAV_W_SLASH = WEBDAV + @"/";
         public const string FILES = @"@files";
         public const string FILES_W_SLASH = @"/" + FILES;
+        public const string PERMS_JSON_PROP = @"effectivePermissions";
 
         public static Uri ServerNameToUri(string serverName)
         {
@@ -162,7 +163,7 @@ namespace pwiz.PanoramaClient
         /// <returns>True if the user has the given permission type.</returns>
         public static bool CheckFolderPermissions(JToken folderJson, FolderPermission permissionType)
         {
-            var effectivePermissions = folderJson?[@"effectivePermissions"]?
+            var effectivePermissions = folderJson?[PERMS_JSON_PROP]?
                 .Select(token => token.ToString())
                 .ToArray();
 

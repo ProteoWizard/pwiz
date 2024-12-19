@@ -906,5 +906,80 @@ namespace pwiz.PanoramaClient
         {
             throw new InvalidOperationException();
         }
+
+        /// <summary>
+        /// Generates LabKey folder JSON for testing
+        /// </summary>
+        public class PanoramaFolder
+        {
+            public string Name { get; }
+            public bool Writable { get; }
+            public bool IsTargetedMsFolder { get; }
+            public bool IsLibraryFolder { get; }
+            public bool IsTargetedMsModuleEnabled { get; }
+            private string _parentPath;
+            public readonly IList<PanoramaFolder> _children;
+
+            public PanoramaFolder(string name, bool writable = true, bool isTargetedMsFolder = true, 
+                bool isTargetedMsModuleEnabled = false, bool isLibrary = false)
+            {
+                Name = name;
+                Writable = writable;
+                IsTargetedMsFolder = isTargetedMsFolder;
+                // Targeted MS module can be enabled in a folder that is not a "Targeted MS" folder type. 
+                // It can be enabled in a "Collaboration" folder type, for example.
+                IsTargetedMsModuleEnabled = isTargetedMsModuleEnabled || isTargetedMsFolder;
+                IsLibraryFolder = isLibrary;
+                _children = new List<PanoramaFolder>();
+            }
+
+            public void AddChild(PanoramaFolder child)
+            {
+                child._parentPath = GetPath();
+                _children.Add(child);
+            }
+
+            private bool HasChildren() => _children.Count > 0;
+
+            public string GetPath() => $"{_parentPath ?? "/"}{Name}/";
+
+            public JObject ToJson(bool addRoot = false)
+            {
+                if (!HasChildren() && (!Writable || !IsTargetedMsModuleEnabled))
+                {
+                    // Automatically add a writable subfolder if this folder is not writable, i.e. it is
+                    // not a targetedMS folder or the user does not have write permissions in this folder.
+                    // Otherwise, it will not get added to the folder tree (PublishDocumentDlg.AddChildContainers()).
+                    AddChild(new PanoramaFolder("Subfolder"));
+                }
+
+                var folderJson = new JObject
+                {
+                    ["name"] = Name,
+                    ["path"] = GetPath(),
+                    [PanoramaUtil.PERMS_JSON_PROP] = Writable 
+                        ? new JArray(FolderPermission.AUTHOR.RequiredPermissions)
+                        : new JArray(FolderPermission.READER.RequiredPermissions),
+                    ["folderType"] = IsTargetedMsFolder ? "Targeted MS" : "Collaboration",
+                    ["activeModules"] = IsTargetedMsModuleEnabled ? new JArray("TargetedMS")
+                        : new JArray("SomethingElse"),
+                    ["children"] = new JArray(_children.Select(child => child.ToJson()))
+                };
+
+                if (IsLibraryFolder)
+                {
+                    var libraryFolder = new JObject();
+                    libraryFolder["effectiveValue"] = "Library";
+                    folderJson.Add("moduleProperties", new JArray(libraryFolder));
+                }
+                if (!addRoot) return folderJson;
+                var root = new JObject
+                {
+                    ["name"] = "",
+                    ["children"] = new JArray(folderJson)
+                };
+                return root;
+            }
+        }
     }
 }
