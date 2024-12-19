@@ -154,6 +154,12 @@ namespace pwiz.Skyline.Model.Databinding
                     return null;
                 }
 
+                if (string.IsNullOrEmpty(replicate.Name))
+                {
+                    // When switching documents, the replicate might be invalid (Replicate.EMPTY_CHROMATOGRAM_SET)
+                    return null;
+                }
+
                 return new ResultKey(replicate, 0);
             }
 
