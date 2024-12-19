@@ -8,7 +8,6 @@ using System.Text;
 using System.Windows.Forms;
 using Ionic.Zip;
 using Microsoft.Win32;
-using NHibernate.Impl;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -252,7 +251,7 @@ namespace pwiz.Skyline.Model.Tools
         private void EnableWindowsLongPaths()
         {
 
-            var key = Microsoft.Win32.Registry.Users.OpenSubKey(REG_FILESYSTEM_KEY, RegistryKeyPermissionCheck.ReadWriteSubTree);
+            var key = Registry.Users.OpenSubKey(REG_FILESYSTEM_KEY, RegistryKeyPermissionCheck.ReadWriteSubTree);
             if (key != null)
                 key.SetValue(REG_LONGPATH_NAME, 1, RegistryValueKind.DWord);
         }
