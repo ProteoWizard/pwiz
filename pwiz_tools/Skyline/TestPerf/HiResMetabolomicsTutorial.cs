@@ -155,10 +155,11 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 14);
                 Assert.IsFalse(docTargets.MoleculeTransitions.Any(t => !t.Transition.IsPrecursor()));
 
+                const int SHORT_HEIGHT = 654;
                 RunUI(() =>
                 {
                     SkylineWindow.ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
-                    SkylineWindow.Size = new Size(957, 654);
+                    SkylineWindow.Size = new Size(957, SHORT_HEIGHT);
                     SkylineWindow.ExpandPrecursors();
                 });
                 RestoreViewOnScreen(5);
@@ -201,6 +202,8 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         menuStrip.Closing -= DenyMenuClosing;
                         subMenuStrip.Closing -= DenyMenuClosing;
                         menuStrip.Close();
+
+                        SkylineWindow.Height = SHORT_HEIGHT;
                     });
                 }
 
