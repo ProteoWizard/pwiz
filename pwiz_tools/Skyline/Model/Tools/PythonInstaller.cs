@@ -649,9 +649,9 @@ namespace pwiz.Skyline.Model.Tools
                 case PythonTaskName.create_virtual_environment:
                     return ValidateCreateVirtualEnvironment();
                 case PythonTaskName.pip_install_packages:
-                    return ValidateEnableLongpaths();
-                case PythonTaskName.enable_longpaths:
                     return ValidatePipInstallPackages();
+                case PythonTaskName.enable_longpaths:
+                    return ValidateEnableLongpaths();
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
             }
