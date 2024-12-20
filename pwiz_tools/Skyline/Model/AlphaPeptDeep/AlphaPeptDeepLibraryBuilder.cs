@@ -44,17 +44,31 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS
             };
 
+        private static IList<ModificationIndex> carafeSupportedModificationIndices =>
+            new[]
+            {
+                new ModificationIndex(4, new ModificationType(@"4", @"Carbamidomethyl", @"H(3) C(2) N O")),
+                new ModificationIndex(21, new ModificationType(@"21", @"Phospho", @"H O(3) P")),
+                new ModificationIndex(35, new ModificationType(@"35", @"Oxidation", @"O"))
+
+            };
+
+        internal static readonly IList<ModificationType> CarafeSupportedModificationNames = populateUniModList(carafeSupportedModificationIndices);
+
         /// <summary>
         /// List of UniMod Modifications available
         /// </summary>
-        internal static readonly IList<ModificationType> AlphapeptdeepModificationName = populateUniModList();
-        private static IList<ModificationType> populateUniModList()
+        internal static readonly IList<ModificationType> AlphapeptdeepModificationNames = populateUniModList(null);
+        private static IList<ModificationType> populateUniModList(IList<ModificationIndex> supportedList)
         {
             IList<ModificationType> modList = new List<ModificationType>();
             for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
             {
-                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue)
+                if (!UniModData.UNI_MOD_DATA[m].ID.HasValue || 
+                    (supportedList != null && 
+                     supportedList.Where(x => x.Index == UniModData.UNI_MOD_DATA[m].ID.Value).ToArray().SingleOrDefault() == null) )
                     continue;
+
                 var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
                 var name = UniModData.UNI_MOD_DATA[m].Name;
                 var formula = UniModData.UNI_MOD_DATA[m].Formula;
@@ -68,19 +82,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         }
         public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, bool AlphapeptDeepModFormat)
-        {
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Preparing input file")
-                .ChangePercentComplete(0));
-
-            var precursorTable = GetPrecursorTable(Document, AlphapeptDeepModFormat);
-            File.WriteAllLines(InputFilePath, precursorTable);
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
-        }
-
-        public void PrepareInputFileForCarafe(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, bool AlphapeptDeepModFormat)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(@"Preparing input file")
@@ -127,7 +128,10 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 var modsBuilder = new StringBuilder();
                 var modSitesBuilder = new StringBuilder();
                 bool unsupportedModification = false;
-
+           
+                var ModificationNames =
+                    AlphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
+                
                 for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
                 {
                     var mod = modifiedSequence.ExplicitMods[i];
@@ -140,7 +144,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
 
                     var unimodIdAA = mod.UnimodIdAA;
-                    var modNames = AlphapeptdeepModificationName.Where(m => m.Accession == unimodIdAA).ToArray();
+                    var modNames = ModificationNames.Where(m => m.Accession == unimodIdAA).ToArray();
                     if (modNames.Length == 0)
                     {
                         var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
@@ -237,6 +241,22 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         }
 
         public override string ToString() { return string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
+    }
+
+    public class ModificationIndex
+    {
+        public ModificationIndex(int index, ModificationType modification)
+        {
+            Index = index;
+            Modification = modification;
+        }
+        public ModificationType Modification { get; private set; }
+        public int Index { get; private set; }
+
+        public override string ToString()
+        {
+            return Index.ToString() + @":" + Modification.ToString();
+        }
     }
 
 
