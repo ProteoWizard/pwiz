@@ -280,7 +280,7 @@ namespace pwiz.SkylineTestTutorial
                     allChrom.Left = SkylineWindow.Right + 20;
                 });
 
-                PauseForScreenShot<SequenceTreeForm>("Targets view clipped - scrolled left and before fully imported", 26);
+                PauseForTargetsScreenShot("Targets view clipped - scrolled left and before fully imported");
             }
             WaitForDocumentLoaded(10 * 60 * 1000);    // 10 minutes
 
