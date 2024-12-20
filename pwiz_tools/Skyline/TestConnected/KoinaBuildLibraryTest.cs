@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestConnected
     [TestClass]
     public class KoinaBuildLibraryTest : AbstractFunctionalTest
     {
-        [TestMethod, NoParallelTesting(TestExclusionReason.DOCKER_ROOT_CERTS)]
+        //[TestMethod, NoParallelTesting(TestExclusionReason.DOCKER_ROOT_CERTS)]
         public void TestKoinaBuildLibrary()
         {
             if (!HasKoinaServer())
