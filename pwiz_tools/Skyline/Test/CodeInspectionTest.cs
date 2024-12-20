@@ -31,6 +31,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -40,6 +41,7 @@ using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -166,16 +168,6 @@ namespace pwiz.SkylineTest
                 false, // Pattern is not a regular expression
                 @"nonstandard {0} found instead"); // Explanation for requirement, appears in report
 
-            // Looking for non-accepted uses of P/Invoke by searching for the [DllImport] attribute
-            AddTextInspection(@"*.cs", // Examine files with this mask
-                Inspection.Forbidden, // This is a test for things that should NOT be in such files
-                Level.Error, // Any failure is treated as an error, and overall test fails
-                DllImportAllowedUsageFilesAndDirectories(), // Skip this check for specific files where DllImport use is explicitly allowed
-                "DllImport", // Only files containing this string get inspected for this
-                @"DllImport", // Forbidden pattern - match [DllImport
-                false, // Pattern is a regular expression
-                @"Use of P/Invoke is not allowed. Instead, use the interop library in pwiz.Common.SystemUtil.PInvoke."); // Explanation for prohibition, appears in report
-
             // Looking for Model code depending on UI code
             void AddForbiddenUIInspection(string fileMask, string cue, string why, int numberToleratedAsWarnings = 0)
             {
@@ -201,7 +193,7 @@ namespace pwiz.SkylineTest
                 "new System.Windows.Forms.DataGridView()", false,
                 "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
-            // TODO (ekoneil): remove CommonAlertDlg from the exclusion list, possibly by implementing exception handling in CommonAlertDlg.CopyMessage()
+            // CONSIDER: remove CommonAlertDlg from the exclusion list, possibly by implementing exception handling in CommonAlertDlg.CopyMessage()
             AddTextInspection("*.cs", 
                 Inspection.Forbidden, 
                 Level.Error,
@@ -210,6 +202,16 @@ namespace pwiz.SkylineTest
                 "Clipboard(Ex)?\\.SetText", 
                 true, 
                 "Use ClipboardHelper.SetClipboardText instead since it handles exceptions");
+
+            // Looking for non-accepted uses of P/Invoke by searching for the [DllImport] attribute
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                DllImportAllowedUsageFilesAndDirectories(), // Skip this check for specific files where DllImport use is explicitly allowed
+                "DllImport", // Only files containing this string get inspected for this
+                @"DllImport", // Forbidden pattern - match [DllImport
+                false, // Pattern is a regular expression
+                @"Use of P/Invoke is not allowed. Instead, use the interop library in pwiz.Common.SystemUtil.PInvoke."); // Explanation for prohibition, appears in report
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -533,6 +535,83 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
+        /// Inspect the P/Invoke API. This looks at classes inside the .PInvoke
+        /// namespace to monitor for changes to which Win32 APIs are referenced,
+        /// looking at both DLLs and methods. It also enforces naming conventions.
+        ///
+        /// See PInvokeCommon for more info.
+        /// </summary>
+        private static void InspectPInvokeApi(string root, List<string> errors)
+        {
+            var expectedPInvokeApi = new Dictionary<Type, int>
+            {
+                { typeof(Advapi32), 3 },
+                { typeof(Dwmapi), 4 },
+                { typeof(Gdi32), 4 },
+                { typeof(Kernel32), 10 },
+                { typeof(Ole32), 1 },
+                { typeof(Shell32), 2 },
+                { typeof(Shlwapi), 1 },
+                { typeof(User32), 37 }
+            };
+
+            var types = typeof(User32).Assembly.GetTypes()
+                .Where(type => type.Namespace is "pwiz.Common.SystemUtil.PInvoke" && type.IsClass).ToList();
+
+            foreach(var type in types)
+            {
+                var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                    .Where(method => method.GetCustomAttributes(typeof(DllImportAttribute), false).Length > 0).ToList();
+
+                if (methods.Count == 0)
+                {
+                    continue;
+                }
+
+                // unexpected class using [DllImport] attributes
+                if (!expectedPInvokeApi.ContainsKey(type))
+                {
+                    errors.Add($"P/Invoke error in {type.Name}. {type.FullName} is not included in a list of classes allowed to use [DllImport]. See PInvokeCommon or the wiki for more information.");
+                }
+
+                // too many functions in this class marked with [DllImport] attribute
+                if (methods.Count > expectedPInvokeApi[type])
+                {
+                    errors.Add($"P/Invoke error in {type.Name}. {type.FullName} has more methods marked with [DllImport] than expected. See PInvokeCommon or the wiki for more information.");
+                }
+                // too few methods in this class marked with [DllImport] attribute
+                else if (methods.Count < expectedPInvokeApi[type])
+                {
+                    errors.Add($"P/Invoke error in {type.Name}. {type.FullName} has fewer methods marked with [DllImport] than expected. See PInvokeCommon or the wiki for more information.");
+                }
+
+                foreach (var method in methods)
+                {
+                    var dllImportAttribute =
+                        method.GetCustomAttribute(typeof(DllImportAttribute), false) as DllImportAttribute;
+                    // ReSharper disable once PossibleNullReferenceException
+                    var dllName = dllImportAttribute.Value;
+
+                    if (dllName.EndsWith(".dll") && 
+                        !dllName.Substring(0, dllName.Length - ".dll".Length).Equals(type.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        errors.Add($"P/Invoke error in {method.Name} on {type.Name}. [DllImport]'s dllName parameter must match the class name.");
+                    }
+
+                    if (dllName.Any(char.IsUpper))
+                    {
+                        errors.Add($"P/Invoke error in {method.Name} on {type.Name}. [DllImport]'s dllName parameter must be all lower case");
+                    }
+
+                    if (!dllName.EndsWith(".dll"))
+                    {
+                        errors.Add($"P/Invoke error in {method.Name} on {type.Name}. [DllImport]'s dllName parameter must end in '.dll'.");
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations 
         /// </summary>
         void InspectMisplacedResources(string root, List<string> errors) 
@@ -747,6 +826,8 @@ namespace pwiz.SkylineTest
             InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
 
             InspectInconsistentSetting(root, results); // Look for conflicts between settings.settings and app.config
+
+            InspectPInvokeApi(root, results);
 
             var errorCounts = new Dictionary<PatternDetails, int>();
 
