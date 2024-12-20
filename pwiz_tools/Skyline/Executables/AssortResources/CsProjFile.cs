@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using pwiz.Common.SystemUtil;
-
 #nullable enable
 
 namespace AssortResources
@@ -120,7 +118,14 @@ namespace AssortResources
 
         public string GetRelativePath(string path)
         {
-            return PathEx.GetRelativePath(ProjectFolder, path);
+            if (!Path.IsPathRooted(path))
+            {
+                return path;
+            }
+            var baseUri = new Uri(ProjectFolder);
+            var absoluteUri = new Uri(path);
+            string relativePath = Uri.UnescapeDataString(baseUri.MakeRelativeUri(absoluteUri).ToString());
+            return relativePath.Replace('/', Path.DirectorySeparatorChar);
         }
 
         public string GetNamespace(string path)
