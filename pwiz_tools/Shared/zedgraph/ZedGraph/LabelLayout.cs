@@ -154,7 +154,7 @@ namespace ZedGraph
                 var diff = new SizeF(p.X - targetPoint.X, p.Y - targetPoint.Y);
                 return diff.Width * diff.Width + diff.Height * diff.Height;
             });
-            var rect = new RectangleF(pt.X - labelSize.Width / 2, pt.Y - labelSize.Height / 2, labelSize.Width,
+            var rect = new RectangleF(pt.X - labelSize.Width / 2, pt.Y, labelSize.Width,
                 labelSize.Height);
             var totalOverlap = 0.0;
             foreach (var cell in GetRectangleCells(rect))
@@ -220,7 +220,13 @@ namespace ZedGraph
                     penalty += 2000;
             }
 
-            return (float)((0.025 * dist + totalOverlap) + penalty + 0.2 * pathDensity);
+            // penalize the goal if the label is completely or partially outside of the chart area
+            var visibleArea = RectArea(RectangleF.Intersect(rect, _graph.Chart.Rect));
+            var clipPenalty = 0.0f;
+            if (visibleArea > 0)
+                clipPenalty = (1 - visibleArea / RectArea(rect)) * 500.0f;
+
+            return (float)((0.025 * dist + totalOverlap) + penalty + 0.2 * pathDensity) + clipPenalty;
         }
 
         private IEnumerable<GridCell> GetRectangleCells(RectangleF rect)
@@ -271,6 +277,8 @@ namespace ZedGraph
             return new Rectangle((int)rect.X, (int)rect.Y, (int)rect.Width, (int)rect.Height);
         }
 
+        private float RectArea(RectangleF rect) { return rect.Width * rect.Height; }
+
         public const int SEARCH_COUNT_COARSE = 80;
         public const int SEARCH_COUNT_FINE = 15;
 
@@ -289,6 +297,12 @@ namespace ZedGraph
         public bool PlaceLabel(LabeledPoint labPoint, Graphics g)
         {
             var labelRect = _graph.GetRectScreen(labPoint.Label, g);
+            // do not attempt placement if the chart is too small
+            if (labelRect.Height > _graph.Chart.Rect.Height)
+                return false;
+            if ((labelRect.Width / 2) > _graph.Chart.Rect.Width)
+                return false;
+
             var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
             var labelLength = (int)Math.Ceiling(1.0 * labelRect.Width / _cellSize); // label length in grid units
 
@@ -298,7 +312,11 @@ namespace ZedGraph
                 return false;
             var goal = float.MaxValue;
             var goalCell = Point.Empty;
-            var gridRect = new Rectangle(labelLength / 2, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height - 1);
+            var gridRect = Rectangle.Empty;
+            if (labelLength < _densityGridSize.Width)
+                gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height - 1);
+            else 
+                gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength/2, _densityGridSize.Height - 1);
             var points = new List<Point>();
             for (var count = SEARCH_COUNT_COARSE; count > 0; count--)
             {
@@ -329,8 +347,17 @@ namespace ZedGraph
             // Search the cell neighborhood for a better position
             var goalPoint = _densityGrid[goalCell.Y][goalCell.X]._location;
             var chartRect = _graph.Chart.Rect;
-            var allowedRect = new RectangleF(chartRect.X + labelRect.Width / 2, chartRect.Y,
-                chartRect.Width - labelRect.Width, chartRect.Height - labelRect.Height);
+            var allowedRect = RectangleF.Empty;
+            if (chartRect.Width > labelRect.Width * 1.2)
+            {
+                allowedRect = new RectangleF(chartRect.X + labelRect.Width / 2, chartRect.Y,
+                    chartRect.Width - labelRect.Width, chartRect.Height - labelRect.Height);
+            }
+            else
+            {
+                allowedRect = new RectangleF(chartRect.X + labelRect.Width / 2, chartRect.Y,
+                    chartRect.Width - labelRect.Width / 2, chartRect.Height - labelRect.Height);
+            }
             for (var count = SEARCH_COUNT_FINE; count > 0; count--)
             {
                 var p = goalPoint + new Size(GetRandom(_cellSize * 2), GetRandom(_cellSize * 2));
