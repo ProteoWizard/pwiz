@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -1512,6 +1513,127 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private Type[] treeNodeTypes = new Type[] {typeof(SrmTreeNodeParent), typeof(PeptideGroupTreeNode), typeof(PeptideTreeNode), typeof(TransitionGroupTreeNode), typeof(TransitionTreeNode)};
+
+        public int GetNodeCountRecursive(SrmTreeNode node = null)
+        {
+            if (node == null)
+                return Nodes.OfType<SrmTreeNode>().Sum(GetNodeCountRecursive);
+            if (node.Nodes.Count == 0)
+                return 1;
+            else
+            {
+                return node.Nodes.OfType<SrmTreeNode>().Sum(GetNodeCountRecursive) + 1;
+            }
+
+        }
+
+        public int PredictExpansionCount(HashSet<SrmTreeNode> expandList, int stopLevel, SrmTreeNode node = null)
+        {
+            var children = new List<SrmTreeNode>();
+            if (node == null)
+                return Nodes.OfType<SrmTreeNode>().Sum(n => PredictExpansionCount(expandList, stopLevel, n));
+            else
+            {
+                if (node.FirstNode is DummyNode)
+                {
+                    if (expandList.Contains(node))
+                        return DocTreeCount(node.Model, docNodeTypes[stopLevel]) + 1;
+                    else
+                        return 1;
+                }
+                else
+                    return node.Nodes.OfType<SrmTreeNode>().Sum(n => PredictExpansionCount(expandList, stopLevel, n)) + 1;
+            }
+        }
+
+        private Type[] docNodeTypes = new[] { typeof(DocNodeParent), typeof(PeptideGroupDocNode), typeof(PeptideDocNode), typeof(TransitionGroupDocNode), typeof(TransitionDocNode) };
+        private int DocTreeCount(DocNode docNode, Type stopType)
+        {
+            if (!(docNode is DocNodeParent) || !docNodeTypes.Contains(stopType))
+                return 0;
+            if (stopType == typeof(TransitionDocNode))
+                return 1;
+            var docNodeParent = (DocNodeParent)docNode;
+            var stopLevel = Array.IndexOf(docNodeTypes, stopType);
+            var level = Array.IndexOf(docNodeTypes, docNode.GetType());
+
+            if (level < stopLevel)
+                return docNodeParent.Children.Sum(node => DocTreeCount(node, docNodeTypes[level + 1]));
+            else
+                return 1;
+
+
+        }
+
+        public void ExpandSelectionBulk(Type nodeType)
+        {
+            using (BeginLargeUpdate())
+            {
+                ExpandSelection(nodeType);
+            }
+        }
+        public void ExpandSelection(Type nodeType)
+        {
+            if (!treeNodeTypes.Contains(nodeType))
+                return;
+            var level = Array.IndexOf(treeNodeTypes, nodeType);
+            var nodeCount = GetNodeCountRecursive();
+            var newNodeCount = PredictExpansionCount(new HashSet<SrmTreeNode>(SelectedNodes.OfType<SrmTreeNode>()), level);
+            var expansionLimit = MAX_PEPTIDE_EXPANSION;
+            if (nodeType == typeof(TransitionTreeNode))
+                expansionLimit = MAX_TRANSITION_EXPANSTION;
+            if ((newNodeCount - nodeCount) > expansionLimit)
+                MessageDlg.Show(this.Parent,
+                    string.Format(ControlsResources.SequenceTree_ExpansionTooLargeMessage, (newNodeCount - nodeCount), expansionLimit));
+            else
+            {
+                var selectedPaths = new List<List<TreeNodeMS>>();
+                foreach (var node in SelectedNodes)
+                {
+                    selectedPaths.Add(new List<TreeNodeMS>());
+                    for(var parentNode = node; parentNode != null && treeNodeTypes.Contains(parentNode.GetType()); parentNode = parentNode.Parent as TreeNodeMS)
+                        selectedPaths.Last().Add(parentNode);
+                    selectedPaths.Last().Reverse();
+                }
+
+                foreach (var path in selectedPaths)
+                {
+                    var nodes = new List<TreeNodeMS>();
+                    for (var i = 0; i < treeNodeTypes.Length; i++)
+                    {
+                        if (i < path.Count - 1)
+                        {
+                            if (i >= level)
+                                path[i].Collapse();
+                            SelectNode(path[i], path[i].IsVisible);
+                        }
+                        else if (i == path.Count - 1)
+                        {
+                            if (i >= level)
+                            {
+                                path[i].Collapse();
+                            }
+                            else
+                                path[i].Expand();
+                            
+                            SelectNode(path[i], path[i].IsVisible);
+                            nodes = path[i].Nodes.OfType<TreeNodeMS>().ToList();
+                        }
+                        else
+                        {
+                            if (i < level)
+                                nodes.ForEach(node => node.Expand());
+                            else
+                                nodes.ForEach(node => node.Collapse());
+
+                            nodes.ForEach(node => SelectNode(node, node.IsVisible));
+                            nodes = nodes.SelectMany(node => node.Nodes.OfType<TreeNodeMS>()).ToList();
+                        }
+                    }
+                }
+            }
+        }
         public bool LockDefaultExpansion { get; set; }
     }
 
