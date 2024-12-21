@@ -63,56 +63,45 @@ namespace pwiz.Skyline.Model.Koina.Models {
         /// <summary>
         ///   Looks up a localized string similar to  Accession: {0}, Name: {1}, Comment: {2}.
         /// </summary>
-        public static string AlphaPeptDeep_BuildPrecursorTable_ModificationType {
+        public static string BuildPrecursorTable_ModificationType {
             get {
-                return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_ModificationType", resourceCulture);
+                return ResourceManager.GetString("BuildPrecursorTable_ModificationType", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case..
         /// </summary>
-        public static string AlphaPeptDeep_BuildPrecursorTable_NonUnique_ModificationAccession {
+        public static string BuildPrecursorTable_NonUnique_ModificationAccession {
             get {
-                return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_NonUnique_ModificationAccession", resourceCulture);
+                return ResourceManager.GetString("BuildPrecursorTable_NonUnique_ModificationAccession", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python {0} installation is required for AlphapeptDeep, click &apos;OK&apos; to proceed..
+        ///   Looks up a localized string similar to Python {0} installation is required for {1}, click &apos;OK&apos; to proceed..
         /// </summary>
-        public static string AlphaPeptDeep_BuildPrecursorTable_Python_0_installation_is_required {
+        public static string BuildPrecursorTable_Python_0_installation_is_required {
             get {
-                return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Python {0} installation is required for Carafe, click &apos;OK&apos; to proceed..
-        /// </summary>
-        public static string Carafe_BuildPrecursorTable_Python_0_installation_is_required
-        {
-            get
-            {
-                return ResourceManager.GetString("Carafe_BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by AlphapeptdeepLibraryBuilder. This peptide will be skipped!.
-        /// </summary>
-        public static string AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification {
-            get {
-                return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification", resourceCulture);
+                return ResourceManager.GetString("BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1}, which is missing unimod ID and unknown to AlphapeptdeepLibraryBuilder. This peptide will be skipped!.
+        ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by {2} LibraryBuilder. This peptide will be skipped!.
         /// </summary>
-        public static string AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification {
+        public static string BuildPrecursorTable_Unimod_UnsupportedModification {
             get {
-                return ResourceManager.GetString("AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification", resourceCulture);
+                return ResourceManager.GetString("BuildPrecursorTable_Unimod_UnsupportedModification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1}, which is missing unimod ID and unknown to {2} LibraryBuilder. This peptide will be skipped!.
+        /// </summary>
+        public static string BuildPrecursorTable_UnsupportedModification {
+            get {
+                return ResourceManager.GetString("BuildPrecursorTable_UnsupportedModification", resourceCulture);
             }
         }
         

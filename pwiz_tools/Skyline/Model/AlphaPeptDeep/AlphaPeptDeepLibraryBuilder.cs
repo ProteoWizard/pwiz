@@ -81,13 +81,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             InputFilePath = inputFilePath;
 
         }
-        public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, bool AlphapeptDeepModFormat)
+        public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(@"Preparing input file")
                 .ChangePercentComplete(0));
 
-            var precursorTable = GetPrecursorTable(Document, AlphapeptDeepModFormat);
+            var precursorTable = GetPrecursorTable(Document, toolName);
             File.WriteAllLines(InputFilePath, precursorTable);
 
             progress.UpdateProgress(progressStatus = progressStatus
@@ -108,15 +108,19 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
         }
 
-        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, bool AlphapeptDeepFormat)
+        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, string toolName)
         {
             var result = new List<string>();
             string header;
-            
-            if (AlphapeptDeepFormat)
+            bool alphapeptDeepFormat = toolName.Equals(@"peptdeep");
+
+            if (alphapeptDeepFormat)
                 header = string.Join(TAB, PrecursorTableColumnNames);
+            else if (toolName.Equals(@"carafe"))
+                header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
             else
                 header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
+
 
             result.Add(header);
 
@@ -130,14 +134,14 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 bool unsupportedModification = false;
            
                 var ModificationNames =
-                    AlphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
+                    alphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
                 
                 for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
                 {
                     var mod = modifiedSequence.ExplicitMods[i];
                     if (!mod.UnimodId.HasValue)
                     {
-                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name);
+                        var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, toolName);
                         Messages.WriteAsyncUserMessage(msg);
                         unsupportedModification = true;
                         continue;
@@ -147,7 +151,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     var modNames = ModificationNames.Where(m => m.Accession == unimodIdAA).ToArray();
                     if (modNames.Length == 0)
                     {
-                        var msg = string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA);
+                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA, toolName);
                         Messages.WriteAsyncUserMessage(msg);
                         unsupportedModification = true;
 
@@ -156,7 +160,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                     string modName = "";
 
-                    if (AlphapeptDeepFormat)
+                    if (alphapeptDeepFormat)
                         modName = modNames.Single().AlphapeptDeepName();
                     else
                         modName = modNames.Single().Name;
@@ -175,7 +179,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 foreach (var charge in peptide.TransitionGroups
                              .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
                 {
-                    if (AlphapeptDeepFormat)
+                    if (alphapeptDeepFormat)
                     {
                         result.Add(string.Join(TAB, new[]
                             {
@@ -185,14 +189,18 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
                     else
                     {
-                        var docNode = peptide.TransitionGroups.Where(group => group.PrecursorCharge == charge).SingleOrDefault();                        
+                        var docNode = peptide.TransitionGroups.Where(group => group.PrecursorCharge == charge).SingleOrDefault();
+                        if (docNode == null)
+                        {
+                            continue;
+                        }
                         var precursor = TransitionGroupTreeNode.GetLabel(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
                         var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
                         var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
                         var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
                         var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
                         var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";
-                        var unimodSequence = modifiedSequence != null ? modifiedSequence.ToString() : @"";
+                        var unimodSequence = modifiedSequence.ToString();
 
                         result.Add(string.Join(TAB, new[]
                             {
@@ -240,7 +248,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             return Name.Replace(@"(", "").Replace(@")", @"").Replace(@" ", @"@").Replace(@"Acetyl@N-term",@"Acetyl@Protein_N-term");
         }
 
-        public override string ToString() { return string.Format(ModelsResources.AlphaPeptDeep_BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
+        public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
     }
 
     public class ModificationIndex
@@ -391,7 +399,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             progressStatus = progressStatus.ChangeSegments(0, 5);
 
-            LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, true);
+            LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
             progressStatus = progressStatus.NextSegment();
 
             PrepareSettingsFile(progress, ref progressStatus);
