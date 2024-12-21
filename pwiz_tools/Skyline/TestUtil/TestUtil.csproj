@@ -150,6 +150,7 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="FileLockingProcessFinder.cs" />
+    <Compile Include="GitFileHelper.cs" />
     <Compile Include="MultiFormActivator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -298,6 +299,7 @@
     <None Include="Resources\websource.png" />
     <None Include="Resources\noscreenshot.png" />
     <None Include="Resources\hand-cur.bmp" />
+    <None Include="Resources\gitsource.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
