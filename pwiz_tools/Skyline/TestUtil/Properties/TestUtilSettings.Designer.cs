@@ -86,24 +86,24 @@ namespace pwiz.SkylineTestUtil.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowWebImage {
-            get {
-                return ((bool)(this["ShowWebImage"]));
-            }
-            set {
-                this["ShowWebImage"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ManualSizePreview {
             get {
                 return ((bool)(this["ManualSizePreview"]));
             }
             set {
                 this["ManualSizePreview"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int OldImageSource {
+            get {
+                return ((int)(this["OldImageSource"]));
+            }
+            set {
+                this["OldImageSource"] = value;
             }
         }
     }
