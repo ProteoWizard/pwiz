@@ -367,11 +367,11 @@ namespace pwiz.SkylineTestTutorial
                 using var g = Graphics.FromImage(bmp);
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                g.DrawBoxOnColumn(documentGridForm, 3, 10, Color.Red);
-                g.DrawBoxOnColumn(documentGridForm, 5, 10, Color.Red);
-                g.DrawBoxOnColumn(documentGridForm, 6, 10, Color.Red);
+                g.DrawBoxOnColumn(documentGridForm, 3, 10);
+                g.DrawBoxOnColumn(documentGridForm, 5, 10);
+                g.DrawBoxOnColumn(documentGridForm, 6, 10);
 
-                g.DrawEllipseOnCell(documentGridForm, 1, 3, Color.Red);
+                g.DrawEllipseOnCell(documentGridForm, 1, 3);
                 g.DrawEllipseOnCell(documentGridForm, 3, 3, Color.Orange);
                 g.DrawEllipseOnCell(documentGridForm, 1, 5, Color.Orange);
                 g.DrawEllipseOnCell(documentGridForm, 3, 5, Color.Orange);
