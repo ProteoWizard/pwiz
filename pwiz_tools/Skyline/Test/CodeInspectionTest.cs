@@ -1053,6 +1053,7 @@ namespace pwiz.SkylineTest
             result.Add("settings.designer.cs");
             result.Add("resources.designer.cs");
             result.Add("Executables\\KeepResxW");
+            result.Add("Executables\\DevTools");
             result.Add("Executables\\Tools\\MSstats");
             result.Add("Executables\\Tools\\MS1Probe");
             result.Add("Executables\\Tools\\Skyline Gadget");
