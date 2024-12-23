@@ -99,7 +99,7 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private static readonly Color ANNOTATION_COLOR = Color.FromArgb(192, 0, 0);
+        public static readonly Color ANNOTATION_COLOR = Color.FromArgb(192, 0, 0);
 
         public static Bitmap DrawArrowOnBitmap(this Bitmap bmp, PointF startPointF, PointF endPointF, int tailWidth = 6, int arrowHeadWidth = 16, int arrowHeadHeight = 16)
         {
@@ -150,6 +150,20 @@ namespace pwiz.SkylineTestUtil
             // Draw the arrow head
             g.FillPolygon(brush, arrowHead);
 
+            return bmp;
+        }
+
+        public static Bitmap DrawAnnotationRectOnBitmap(this Bitmap bmp, RectangleF rectF, int lineWidth = 3)
+        {
+            using var g = Graphics.FromImage(bmp);
+            using var pen = new Pen(ANNOTATION_COLOR, lineWidth);
+            var rect = rectF.ToRect(bmp.Size);
+            // Shrink the rectangle to be drawn entirely inside the give rectangle.
+            rect.X += 1;
+            rect.Y += 1;
+            rect.Width -= lineWidth;
+            rect.Height -= lineWidth;
+            g.DrawRectangle(pen, rect);
             return bmp;
         }
 
@@ -273,9 +287,20 @@ namespace pwiz.SkylineTestUtil
             return newBitmap;
         }
 
+        public static Bitmap Inflate(this Bitmap bmp, float scalingFactor)
+        {
+            return new Bitmap(bmp, (int)(bmp.Width * scalingFactor), (int)(bmp.Height * scalingFactor));
+        }
+
         private static Point ToPoint(this PointF pointF, Size size)
         {
             return new Point((int)(pointF.X * size.Width), (int)(pointF.Y * size.Height));
+        }
+
+        private static Rectangle ToRect(this RectangleF rectF, Size size)
+        {
+            return new Rectangle(rectF.Location.ToPoint(size),
+                new Size((int)(rectF.Width * size.Width), (int)(rectF.Height * size.Height)));
         }
 
         // Display a placeholder message on a tutorial screenshot. Use when screenshots aren't correct yet and need to be updated.
@@ -299,15 +324,15 @@ namespace pwiz.SkylineTestUtil
             return bmp;
         }
 
-        public static void DrawBoxOnColumn(this Graphics g, DocumentGridForm documentGridForm, int column, int rows, Color color, int lineWidth = 3)
+        public static void DrawBoxOnColumn(this Graphics g, DocumentGridForm documentGridForm, int column, int rows, Color? color = null, int lineWidth = 3)
         {
             var rect = documentGridForm.DataGridView.GetCellDisplayRectangle(column, 0, true); // column's top data cell
             rect.Y += GetGridViewYOffset(documentGridForm);
             rect.Height *= rows; // draw rectangle around all rows
-            g.DrawRectangle(new Pen(color, lineWidth), rect);
+            g.DrawRectangle(new Pen(color ?? ANNOTATION_COLOR, lineWidth), rect);
         }
 
-        public static void DrawEllipseOnCell(this Graphics g, DocumentGridForm documentGridForm, int row, int column, Color color, int lineWidth = 3)
+        public static void DrawEllipseOnCell(this Graphics g, DocumentGridForm documentGridForm, int row, int column, Color? color = null, int lineWidth = 3)
         {
             var dataGridView = documentGridForm.DataGridView;
             var text = dataGridView.Rows[row].Cells[column].FormattedValue?.ToString();
@@ -317,7 +342,7 @@ namespace pwiz.SkylineTestUtil
             rect.Y += GetGridViewYOffset(documentGridForm);
             rect.Width = Convert.ToInt16(stringSize.Width * 1.1); // scale-up ellipse size so shape isn't too tight around text
 
-            g.DrawEllipse(new Pen(color, lineWidth), rect);
+            g.DrawEllipse(new Pen(color ?? ANNOTATION_COLOR, lineWidth), rect);
         }
         private static int GetGridViewYOffset(DocumentGridForm documentGridForm)
         {

@@ -38,6 +38,15 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public void Reset(params Form[] formsToActivate)
+        {
+            Clear();
+            foreach (var form in formsToActivate)
+            {
+                AddForm(form);
+            }
+        }
+
         public void AddForm(Form form)
         {
             lock (_formsToActivate)
@@ -47,18 +56,22 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public void AddRange(IEnumerable<Form> forms)
-        {
-            // Add only forms that do not parent another form. Track and activate only the
-            // deepest child forms. They are the ones that will get activated and bringing them
-            // forward will drag their parents with them.
-            var listForms = forms.ToArray();
-            var setParents = new HashSet<IntPtr>(listForms
-                .Where(f => f.Parent != null)
-                .Select(f => f.Parent.Handle));
-            foreach (var form in listForms.Where(f => !setParents.Contains(f.Handle)))
-                AddForm(form);
-        }
+        // This approach causes cross-thread exceptions
+        // public void AddRange(IEnumerable<Form> forms)
+        // {
+        //     lock (_formsToActivate)
+        //     {
+        //         // Add only forms that do not parent another form. Track and activate only the
+        //         // deepest child forms. They are the ones that will get activated and bringing them
+        //         // forward will drag their parents with them.
+        //         var listForms = forms.ToArray();
+        //         var setParents = new HashSet<IntPtr>(listForms
+        //             .Where(f => f.Parent != null)
+        //             .Select(f => f.Parent.Handle));
+        //         foreach (var form in listForms.Where(f => !setParents.Contains(f.Handle)))
+        //             AddForm(form);
+        //     }
+        // }
 
         public void RemoveForm(Form form)
         {
@@ -73,7 +86,7 @@ namespace pwiz.SkylineTestUtil
         {
             lock (_formsToActivate)
             {
-                foreach (var form in _formsToActivate)
+                foreach (var form in _formsToActivate.ToArray())
                     RemoveForm(form);
             }
         }
@@ -85,7 +98,7 @@ namespace pwiz.SkylineTestUtil
 
             lock (_formsToActivate)
             {
-                foreach (var form in _formsToActivate.Where(form => !ReferenceEquals(form, activatedForm) && form.Visible))
+                foreach (var form in _formsToActivate.Where(form => !ReferenceEquals(form, activatedForm)))
                 {
                     ActionUtil.RunAsync(() => ShowForm(form, activatedFormHandle));
                 }
@@ -95,13 +108,20 @@ namespace pwiz.SkylineTestUtil
         private void ShowForm(Form form, IntPtr referenceFormHandle)
         {
             // Must be done on the form's thread
-            form.Invoke((Action)(() => form.BringWindowToSameLevelWithoutActivating(referenceFormHandle)));
+            form.Invoke((Action)(() =>
+            {
+                if (form.Visible)
+                    form.BringWindowToSameLevelWithoutActivating(referenceFormHandle);
+            }));
         }
 
         public void Dispose()
         {
-            while (_formsToActivate.Any())
-                RemoveForm(_formsToActivate.First());
+            lock (_formsToActivate)
+            {
+                while (_formsToActivate.Any())
+                    RemoveForm(_formsToActivate.First());
+            }
         }
     }
 }
