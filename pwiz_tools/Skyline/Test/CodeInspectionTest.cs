@@ -1187,6 +1187,7 @@ namespace pwiz.SkylineTest
             result.Add("Executables\\Tools\\SProCoP");
             result.Add("Executables\\Tools\\TestArgCollector");
             result.Add("Executables\\Tools\\ExampleInteractiveTool");
+            result.Add("Executables\\DevTools");
             return result.ToArray();
         }
 

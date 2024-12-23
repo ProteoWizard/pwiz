@@ -196,8 +196,25 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Apparently this was added to Path in .NET 5 and later. Several places in the project have
+        /// now implemented this with either RemovePrefix or some other method.
+        /// </summary>
+        /// <param name="relativePathTo">The base path to make the path relative to</param>
+        /// <param name="path">The full path to make relative</param>
+        /// <returns>The relative path from the base path to the given path</returns>
+        public static string GetRelativePath(string relativePathTo, string path)
+        {
+            if (!relativePathTo.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                relativePathTo += Path.DirectorySeparatorChar;
+            return RemovePrefix(path, relativePathTo);
+        }
+
+        /// <summary>
         /// If the path starts with the prefix, then skip over the prefix; 
-        /// otherwise, return the original path.
+        /// otherwise, return the original path. This works well as a method of getting a relative
+        /// path in combination with <see cref="GetCommonRoot(System.Collections.Generic.IEnumerable{string})"/>, since
+        /// it is guaranteed to return a directory path ending with a Path.DirectorySeparatorChar, but not in
+        /// cases where a path to a directory lacks a terminating separator. In those cases, use <see cref="GetRelativePath"/>.
         /// </summary>
         public static string RemovePrefix(string path, string prefix)
         {
