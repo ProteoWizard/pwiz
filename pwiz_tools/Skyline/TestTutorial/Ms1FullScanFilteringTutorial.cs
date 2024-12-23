@@ -497,7 +497,11 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<AlignmentForm>("Retention time alignment form", tutorialPage++);
 
             OkDialog(alignmentForm, alignmentForm.Close);
-            PauseForScreenShot("Status bar clipped from main window - 4/50 pep 4/51 prec 10/153 tran", tutorialPage++, null, ClipSelectionStatus);
+            PauseForScreenShot("Status bar clipped from main window - 4/50 pep 4/51 prec 10/153 tran", tutorialPage++, null, bmp =>
+            {
+                bmp = ClipSelectionStatus(bmp);
+                return bmp.DrawAnnotationRectOnBitmap(new RectangleF(0.23F, 0, 0.23F, 1), 2).Inflate(1.5F);
+            });
 
             string TIP_NAME = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[TIP3].Name;
             string TIB_NAME = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[TIB_L].Name;

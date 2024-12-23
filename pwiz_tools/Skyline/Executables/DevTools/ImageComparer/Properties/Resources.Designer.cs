@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.SkylineTestUtil.Properties {
+namespace ImageComparer.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestUtil.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("pwiz.SkylineTestUtil.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ImageComparer.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -71,6 +71,16 @@ namespace pwiz.SkylineTestUtil.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap backwards {
+            get {
+                object obj = ResourceManager.GetObject("backwards", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon camera {
@@ -83,9 +93,9 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap continue_test {
+        internal static System.Drawing.Bitmap DiskFailure {
             get {
-                object obj = ResourceManager.GetObject("continue_test", resourceCulture);
+                object obj = ResourceManager.GetObject("DiskFailure", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,9 +103,9 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap DiskFailure {
+        internal static System.Drawing.Bitmap forwards {
             get {
-                object obj = ResourceManager.GetObject("DiskFailure", resourceCulture);
+                object obj = ResourceManager.GetObject("forwards", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -113,9 +123,9 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap hand_cur {
+        internal static System.Drawing.Bitmap NoPeak {
             get {
-                object obj = ResourceManager.GetObject("hand_cur", resourceCulture);
+                object obj = ResourceManager.GetObject("NoPeak", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -123,9 +133,9 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap imagebutton {
+        internal static System.Drawing.Bitmap openfolder {
             get {
-                object obj = ResourceManager.GetObject("imagebutton", resourceCulture);
+                object obj = ResourceManager.GetObject("openfolder", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -133,49 +143,9 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap larrow_cur {
+        internal static System.Drawing.Bitmap Peak {
             get {
-                object obj = ResourceManager.GetObject("larrow_cur", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap noscreenshot {
-            get {
-                object obj = ResourceManager.GetObject("noscreenshot", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap pause {
-            get {
-                object obj = ResourceManager.GetObject("pause", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap progress {
-            get {
-                object obj = ResourceManager.GetObject("progress", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap refresh {
-            get {
-                object obj = ResourceManager.GetObject("refresh", resourceCulture);
+                object obj = ResourceManager.GetObject("Peak", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -193,19 +163,9 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap save_and_continue {
+        internal static System.Drawing.Bitmap undo {
             get {
-                object obj = ResourceManager.GetObject("save_and_continue", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap textbutton {
-            get {
-                object obj = ResourceManager.GetObject("textbutton", resourceCulture);
+                object obj = ResourceManager.GetObject("undo", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
