@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -307,6 +308,14 @@ namespace pwiz.Skyline.Model
             // For small molecules we can't generate new nodes, so just mz filter those we have
             foreach (var nodeTran in groupDocNode.Transitions.Where(tran => tran.Transition.IsNonPrecursorNonReporterCustomIon()))
             {
+                if (useFilter)
+                {
+                    if (nodeTran.Transition.IonType != IonType.precursor &&
+                        !settings.TransitionSettings.Filter.IsExcluded(nodeTran.Mz, precursorMz))
+                    {
+                        continue;
+                    }
+                }
                 if (minMz <= nodeTran.Mz && nodeTran.Mz <= maxMz)
                     yield return nodeTran;
             }

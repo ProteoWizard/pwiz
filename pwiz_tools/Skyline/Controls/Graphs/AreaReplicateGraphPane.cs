@@ -967,12 +967,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Reformat Y-Axis for labels and whiskers
             var maxY = GraphHelper.GetMaxY(CurveList,this);
-            if (DotProductLabelsVisible || DotProductLineVisible)
+            if ((DotProductLabelsVisible || DotProductLineVisible) && !YAxis.Scale.IsLog)
             {
                 var reservedSpace = _labelHeight * 2;
                 var unitsPerPixel = maxY / (Chart.Rect.Height - reservedSpace);
-                var extraSpace = reservedSpace*unitsPerPixel;
-                maxY += extraSpace;
+                if (unitsPerPixel > 0)
+                {
+                    var extraSpace = reservedSpace * unitsPerPixel;
+                    maxY += extraSpace;
+                }
             }
        
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane
