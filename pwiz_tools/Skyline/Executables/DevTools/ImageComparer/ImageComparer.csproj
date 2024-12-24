@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AlphaColorPickerButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="FileSaver.cs" />
     <Compile Include="GitFileHelper.cs" />
     <Compile Include="ImageComparerWindow.cs">

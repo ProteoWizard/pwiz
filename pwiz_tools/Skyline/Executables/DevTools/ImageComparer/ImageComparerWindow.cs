@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -44,8 +43,10 @@ namespace ImageComparer
         private ScreenshotFile _fileToShow;
         private OldScreenshot _oldScreenshot;
         private OldScreenshot _newScreenshot;
-        private bool? _oldAndNewMatch;
+        private ScreenshotDiff _diff;
         #endregion
+
+        private RichTextBox _rtfDiff;
 
         public ImageComparerWindow()
         {
@@ -144,7 +145,8 @@ namespace ImageComparer
             if (HasBackgroundWork)
             {
                 var imageSource = OldImageSource;   // Get this value now
-                var threadUpdateScreenshots = new Thread(() => UpdateScreenshotsAsync(imageSource));
+                var highlightColor = HighlightColor;
+                var threadUpdateScreenshots = new Thread(() => UpdateScreenshotsAsync(imageSource, highlightColor));
                 threadUpdateScreenshots.Start();
             }
         }
@@ -155,22 +157,57 @@ namespace ImageComparer
             {
                 helpTip.SetToolTip(oldScreenshotLabel, _oldScreenshot.FileLoaded);
                 SetPreviewSize(labelOldSize, _oldScreenshot);
-                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot);
+                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot, _diff);
                 helpTip.SetToolTip(newScreenshotLabel, _newScreenshot.FileLoaded);
                 SetPreviewSize(labelNewSize, _newScreenshot);
                 SetPreviewImage(newScreenshotPictureBox, _newScreenshot);
-                if (!_oldAndNewMatch.HasValue)
+                if (_diff == null)
                 {
                     pictureMatching.Visible = false;
                     labelOldSize.Left = pictureMatching.Left;
+                    labelOldSize.ForeColor = Color.Black;
                 }
                 else
                 {
                     pictureMatching.Visible = true;
                     labelOldSize.Left = pictureMatching.Right;
-                    var bmpDiff = _oldAndNewMatch.Value ? Resources.Peak : Resources.NoPeak;
+                    bool matching = !_diff.IsDiff;
+                    var bmpDiff = matching ? Resources.Peak : Resources.NoPeak;
                     bmpDiff.MakeTransparent(Color.White);
                     pictureMatching.Image = bmpDiff;
+                    if (matching)
+                    {
+                        labelOldSize.ForeColor = Color.Green;
+                    }
+                    else
+                    {
+                        labelOldSize.ForeColor = Color.Red;
+                        labelOldSize.Text += _diff.DiffText;
+                        bool imagesMatch = !_diff.SizesDiffer && !_diff.PixelsDiffer;
+                        if (imagesMatch)
+                        {
+                            if (_rtfDiff == null)
+                            {
+                                _rtfDiff = new RichTextBox
+                                { 
+                                    Dock = DockStyle.Fill,
+                                    Font = new Font("Courier New", 10), // Use monospaced font for better alignment
+                                    ReadOnly = true,
+                                    WordWrap = false,
+                                    TabIndex = oldScreenshotPictureBox.TabIndex
+                                };
+                                var controlList = oldScreenshotPictureBox.Parent.Controls;
+                                controlList.Add(_rtfDiff);
+                                controlList.SetChildIndex(_rtfDiff, controlList.IndexOf(oldScreenshotPictureBox));
+                            }
+
+                            _diff.ShowBinaryDiff(_rtfDiff);
+                        }
+
+                        oldScreenshotPictureBox.Visible = !imagesMatch;
+                        if (_rtfDiff != null)
+                            _rtfDiff.Visible = imagesMatch;
+                    }
                 }
             }
         }
@@ -184,7 +221,7 @@ namespace ImageComparer
             {
                 lock (image)
                 {
-                    labelSize.Text = $@"{image.Width} x {image.Height}px";
+                    labelSize.Text = $@"{screenshot.ImageSize.Width} x {screenshot.ImageSize.Height}px";
                 }
             }
         }
@@ -193,11 +230,12 @@ namespace ImageComparer
         {
             toolStripPrevious.Enabled = toolStripFileList.SelectedIndex > 0;
             toolStripNext.Enabled = toolStripFileList.SelectedIndex < toolStripFileList.Items.Count - 1;
-            toolStripRevert.Enabled = !(_oldAndNewMatch ?? true);
+            // TODO: Pre-calculate diff to know whether revert is appropriate
+            // toolStripRevert.Enabled = (_pixelDiffCount ?? 0) != 0;
             toolStripGotoWeb.Enabled = _fileToShow != null;
         }
 
-        private void UpdateScreenshotsAsync(ImageSource oldImageSource)
+        private void UpdateScreenshotsAsync(ImageSource oldImageSource, Color highlightColor)
         {
             ScreenshotFile fileToShow;
             ScreenshotInfo oldScreenshot;
@@ -206,6 +244,8 @@ namespace ImageComparer
             lock (_lock)
             {
                 fileToShow = _fileToShow;
+                if (!Equals(fileToShow, _fileToShow))
+                    return;
                 oldFileLoaded = _oldScreenshot.FileLoaded;
                 oldScreenshot = new ScreenshotInfo(_oldScreenshot);
             }
@@ -222,11 +262,12 @@ namespace ImageComparer
                 if (!Equals(fileToShow, _fileToShow))
                     return;
                 _oldScreenshot = new OldScreenshot(oldScreenshot, oldFileLoaded);
+                _diff = null;
             }
 
             ScreenshotInfo newScreenshot;
             string newFileLoaded;
-            bool? oldAndNewMatch = null;
+            ScreenshotDiff diff = null;
 
             lock (_lock)
             {
@@ -241,29 +282,9 @@ namespace ImageComparer
                 newScreenshot = LoadScreenshot(fileToShow, ImageSource.disk);
             }
 
-            if (!newScreenshot.IsPlaceholder && !oldScreenshot.IsPlaceholder)
+            if (!newScreenshot.IsPlaceholder || !oldScreenshot.IsPlaceholder)
             {
-                Bitmap diffImage;
-                bool imageChanged;
-                lock (oldScreenshot.Image)
-                {
-                    lock (newScreenshot.Image)
-                    {
-                        diffImage = DiffImages(oldScreenshot.Image, newScreenshot.Image);
-                        imageChanged = !ReferenceEquals(diffImage, _oldScreenshot.Image);
-                    }
-                }
-
-                if (imageChanged || oldScreenshot.ImageSize != newScreenshot.ImageSize)
-                {
-                    oldAndNewMatch = false;
-                }
-                else
-                {
-                    oldAndNewMatch = true;
-                }
-
-                oldScreenshot = new ScreenshotInfo(diffImage);
+                diff = DiffScreenshots(oldScreenshot, newScreenshot, highlightColor);
             }
 
             lock (_lock)
@@ -272,68 +293,24 @@ namespace ImageComparer
                     return;
 
                 _newScreenshot = new OldScreenshot(newScreenshot, newFileDescription);
-                _oldScreenshot = new OldScreenshot(oldScreenshot, oldFileDescription);
-                _oldAndNewMatch = oldAndNewMatch;
+                _diff = diff;
             }
             
             FormStateChangedBackground();
         }
 
-        private Bitmap DiffImages(Bitmap bmpOld, Bitmap bmpNew)
+        private ScreenshotDiff DiffScreenshots(ScreenshotInfo oldScreenshot, ScreenshotInfo newScreenshot, Color highlightColor)
         {
-            if (bmpNew == null || bmpOld == null || bmpNew.Size != bmpOld.Size)
-                return bmpOld;
-
             try
             {
-                return HighlightDifferences(bmpOld, bmpNew, Color.Red);
+                return new ScreenshotDiff(oldScreenshot, newScreenshot, highlightColor);
             }
             catch (Exception e)
             {
-                this.BeginInvoke((Action)(() => ShowMessageWithException(
+                BeginInvoke((Action)(() => ShowMessageWithException(
                     "Failed to diff bitmaps.", e)));
-                return bmpOld;
+                return null;
             }
-        }
-
-        // ReSharper disable once UnusedParameter.Local
-        private void ShowMessageWithException(string message, Exception e)
-        {
-            // TODO: Make exception stack trace available somehow
-            MessageBox.Show(this, message);
-        }
-
-        public static Bitmap HighlightDifferences(Bitmap bmpOld, Bitmap bmpNew, Color highlightColor, int alpha = 128)
-        {
-            var result = new Bitmap(bmpOld.Width, bmpOld.Height);
-
-            bool diffFound = false;
-            for (int y = 0; y < bmpOld.Height; y++)
-            {
-                for (int x = 0; x < bmpOld.Width; x++)
-                {
-                    var pixel1 = bmpOld.GetPixel(x, y);
-                    var pixel2 = bmpNew.GetPixel(x, y);
-
-                    if (pixel1 != pixel2)
-                    {
-                        var blendedColor = Color.FromArgb(
-                            alpha,
-                            highlightColor.R * alpha / 255 + pixel1.R * (255 - alpha) / 255,
-                            highlightColor.G * alpha / 255 + pixel1.G * (255 - alpha) / 255,
-                            highlightColor.B * alpha / 255 + pixel1.B * (255 - alpha) / 255
-                        );
-                        result.SetPixel(x, y, blendedColor);
-                        diffFound = true;
-                    }
-                    else
-                    {
-                        result.SetPixel(x, y, pixel1);
-                    }
-                }
-            }
-
-            return diffFound ? result : bmpOld;
         }
 
         private ScreenshotInfo LoadScreenshot(ScreenshotFile file, ImageSource source)
@@ -360,7 +337,7 @@ namespace ImageComparer
                         break;
                 }
                 var ms = new MemoryStream(imageBytes);
-                return new ScreenshotInfo(new Bitmap(ms));
+                return new ScreenshotInfo(ms);
             }
             catch (Exception e)
             {
@@ -368,37 +345,27 @@ namespace ImageComparer
                     string.Format("Failed to load a bitmap from {0}.", file.GetDescription(source)), e)));
                 var failureBmp = Resources.DiskFailure;
                 failureBmp.MakeTransparent(Color.White);
-                return new ScreenshotInfo(failureBmp, true);
+                return new ScreenshotInfo(failureBmp);
             }
         }
 
-        private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot)
+        private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot, ScreenshotDiff diff = null)
         {
-            var newImage = screenshot.Image;
-            if (newImage != null && !screenshot.IsPlaceholder)
+            var baseImage = diff?.HighlightedImage ?? screenshot.Image;
+            var newImage = baseImage;
+            if (baseImage != null && !screenshot.IsPlaceholder)
             {
-                lock (newImage)
+                lock (baseImage)
                 {
                     var containerSize = !toolStripAutoSize.Checked ? previewBox.Size : Size.Empty;
                     var screenshotSize = CalcBitmapSize(screenshot, containerSize);
                     // Always make a copy to avoid having PictureBox lock the bitmap
                     // which can cause issues with future image diffs
-                    newImage = new Bitmap(screenshot.Image, screenshotSize);
+                    newImage = new Bitmap(baseImage, screenshotSize);
                 }
             }
 
             previewBox.Image = newImage;
-            if (newImage != null && Equals(newImage.RawFormat, ImageFormat.Gif))
-            {
-                // Unfortunately the animated progress GIF has a white background
-                // and it cannot be made transparent without removing the animation
-                previewBox.BackColor = Color.White;
-            }
-            else
-            {
-                // The oldScreenshotPictureBox never gets a white background
-                previewBox.BackColor = oldScreenshotPictureBox.BackColor;
-            }
         }
 
         private Size CalcBitmapSize(ScreenshotInfo screenshot, Size containerSize)
@@ -668,6 +635,20 @@ namespace ImageComparer
             }
         }
 
+        private Color HighlightColor
+        {
+            get => Color.FromArgb(Settings.Default.ImageDiffAlpha, 
+                Settings.Default.ImageDiffColor.R, 
+                Settings.Default.ImageDiffColor.G, 
+                Settings.Default.ImageDiffColor.B);
+
+            set
+            {
+                Settings.Default.ImageDiffAlpha = value.A;
+                Settings.Default.ImageDiffColor = Color.FromArgb(value.R, value.G, value.B);
+            }
+        }
+
         private void NextOldImageSource()
         {
             OldImageSource = OLD_IMAGE_SOURCES[(Settings.Default.OldImageSource + 1) % OLD_IMAGE_SOURCES.Length];
@@ -721,15 +702,15 @@ namespace ImageComparer
             Next();
         }
 
+        private void toolStripFileList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SetPath(toolStripFileList.SelectedItem as ScreenshotFile);
+        }
+
         private void toolStripRevert_Click(object sender, EventArgs e)
         {
             Revert();
         }
-
-        // private void toolStripRefresh_Click(object sender, EventArgs e)
-        // {
-        //     RefreshScreenshots();
-        // }
 
         private void toolStripGotoWeb_Click(object sender, EventArgs e)
         {
@@ -747,6 +728,13 @@ namespace ImageComparer
         private void buttonImageSource_Click(object sender, EventArgs e)
         {
             NextOldImageSource();
+        }
+
+        private void toolStripPickColorButton_ColorChanged(object sender, EventArgs e)
+        {
+            HighlightColor = toolStripPickColorButton.SelectedColor;
+            if (oldScreenshotPictureBox.Visible)
+                UpdateScreenshotsAsync(OldImageSource, HighlightColor); // On foreground thread because the screenshots are already loaded - just updating the diff
         }
 
         private void ScreenshotPreviewForm_KeyDown(object sender, KeyEventArgs e)
@@ -772,6 +760,7 @@ namespace ImageComparer
                     e.Handled = true;
                     break;
                 case Keys.Down:
+                case Keys.Right:
                     if (e.Control)
                     {
                         Next();
@@ -779,6 +768,7 @@ namespace ImageComparer
                     }
                     break;
                 case Keys.Up:
+                case Keys.Left:
                     if (e.Control)
                     {
                         Previous();
@@ -876,6 +866,13 @@ namespace ImageComparer
             form.Location = location;
         }
 
+        // ReSharper disable once UnusedParameter.Local
+        private void ShowMessageWithException(string message, Exception e)
+        {
+            // TODO: Make exception stack trace available somehow
+            MessageBox.Show(this, message);
+        }
+
         private static Screen GetScreen(int x, int y)
         {
             return Screen.FromPoint(new Point(x, y));
@@ -934,32 +931,39 @@ namespace ImageComparer
 
         private class ScreenshotInfo
         {
-            public ScreenshotInfo(Bitmap image = null, bool isPlaceholder = false)
+            protected ScreenshotInfo()
+            {
+            }
+
+            public ScreenshotInfo(Bitmap image)
             {
                 Image = image;
                 ImageSize = image?.Size ?? Size.Empty;
-                IsPlaceholder = isPlaceholder;
+            }
+
+            public ScreenshotInfo(MemoryStream ms)
+                : this(new Bitmap(ms))
+            {
+                Memory = ms;
             }
 
             public ScreenshotInfo(ScreenshotInfo info)
             {
                 Image = info.Image;
+                Memory = info.Memory;
                 ImageSize = info.ImageSize;
-                IsPlaceholder = info.IsPlaceholder;
             }
 
-            public Bitmap Image { get; private set; }
-            public Size ImageSize { get; private set; }
-            public bool IsPlaceholder { get; private set; }
+            public Bitmap Image { get; }
+            public MemoryStream Memory { get; }
+            public Size ImageSize { get; }
+            public bool IsPlaceholder => Memory == null;
         }
 
         private class OldScreenshot : ScreenshotInfo
         {
-            public OldScreenshot(Bitmap image = null, bool isPlaceholder = false, string fileLoaded = null, ImageSource source = ImageSource.disk)
-                : base(image, isPlaceholder)
+            public OldScreenshot()
             {
-                FileLoaded = fileLoaded;
-                Source = source;
             }
 
             public OldScreenshot(ScreenshotInfo info, string fileLoaded, ImageSource source = ImageSource.disk)
@@ -980,9 +984,212 @@ namespace ImageComparer
             }
         }
 
-        private void toolStripFileList_SelectedIndexChanged(object sender, EventArgs e)
+        private class ScreenshotDiff
         {
-            SetPath(toolStripFileList.SelectedItem as ScreenshotFile);
+            private readonly Size _sizeOld;
+            private readonly byte[] _memoryOld;
+            private readonly Size _sizeNew;
+            private readonly byte[] _memoryNew;
+
+            public ScreenshotDiff(ScreenshotInfo oldScreenshot, ScreenshotInfo newScreenshot, Color highlightColor)
+            {
+                _sizeOld = oldScreenshot.ImageSize;
+                _memoryOld = oldScreenshot.Memory?.ToArray();
+                _sizeNew = newScreenshot.ImageSize;
+                _memoryNew = newScreenshot.Memory?.ToArray();
+
+                if (!SizesDiffer)
+                {
+                    lock (oldScreenshot.Image)
+                    {
+                        lock (newScreenshot.Image)
+                        {
+                            CalcHighlightImage(oldScreenshot.Image, newScreenshot.Image, highlightColor);
+                        }
+                    }
+                }
+            }
+
+            public bool IsDiff => SizesDiffer || PixelsDiffer || BytesDiffer;
+            public bool SizesDiffer => !Equals(_sizeOld, _sizeNew);
+            public bool PixelsDiffer => PixelCount != 0;
+            public bool BytesDiffer => _memoryOld.Length != _memoryNew.Length || !_memoryOld.SequenceEqual(_memoryNew);
+            public Bitmap HighlightedImage { get; private set; }
+            public int PixelCount { get; private set; }
+
+            public string DiffText
+            {
+                get
+                {
+                    if (SizesDiffer)
+                        return $@" ({_sizeNew.Width - _sizeOld.Width} x {_sizeNew.Height - _sizeOld.Height}px)";
+                    if (PixelsDiffer)
+                        return $@" ({PixelCount} pixels)";
+                    if (BytesDiffer)
+                    {
+                        if (_memoryOld.Length != _memoryNew.Length)
+                            return $" ({_memoryNew.Length - _memoryOld.Length} bytes)";
+                        int startIndex = 0, diffCount = 0;
+                        for (int i = 0; i < _memoryOld.Length; i++)
+                        {
+                            if (_memoryOld[i] != _memoryNew[i])
+                            {
+                                if (diffCount == 0)
+                                    startIndex = i;
+                                diffCount++;
+                            }
+                        }
+
+                        return $@" (at {startIndex}, diff {diffCount} bytes)";
+                    }
+                    return string.Empty;
+                }
+            }
+
+            private void CalcHighlightImage(Bitmap bmpOld, Bitmap bmpNew, Color highlightColor)
+            {
+                var result = new Bitmap(bmpOld.Width, bmpOld.Height);
+                var alpha = highlightColor.A;
+
+                PixelCount = 0;
+                for (int y = 0; y < bmpOld.Height; y++)
+                {
+                    for (int x = 0; x < bmpOld.Width; x++)
+                    {
+                        var pixel1 = bmpOld.GetPixel(x, y);
+                        var pixel2 = bmpNew.GetPixel(x, y);
+
+                        if (pixel1 != pixel2)
+                        {
+                            var blendedColor = Color.FromArgb(
+                                alpha,
+                                highlightColor.R * alpha / 255 + pixel1.R * (255 - alpha) / 255,
+                                highlightColor.G * alpha / 255 + pixel1.G * (255 - alpha) / 255,
+                                highlightColor.B * alpha / 255 + pixel1.B * (255 - alpha) / 255
+                            );
+                            result.SetPixel(x, y, blendedColor);
+                            PixelCount++;
+                        }
+                        else
+                        {
+                            result.SetPixel(x, y, pixel1);
+                        }
+                    }
+                }
+
+                HighlightedImage = PixelCount > 0 ? result : bmpOld;
+            }
+
+            public void ShowBinaryDiff(RichTextBox richTextBox)
+            {
+                ShowDiff(richTextBox, _memoryOld, _memoryNew);
+
+            }
+            private static void ShowDiff(RichTextBox richTextBox, byte[] array1, byte[] array2)
+            {
+                richTextBox.Clear();
+
+                // Determine the longer array length
+                int maxLength = Math.Max(array1.Length, array2.Length);
+                int linesShown = 0;
+                for (int i = 0; i < maxLength; i += 16)
+                {
+                    if (ArraysMatch(i, 16, array1, array2))
+                    {
+                        continue;
+                    }
+
+                    ShowLineDiff(richTextBox, i, 16, array1, array2, Color.Red, "<<");
+                    ShowLineDiff(richTextBox, i, 16, array2, array1, Color.Green, ">>");
+
+                    if (++linesShown >= 4)
+                    {
+                        // Stop after 4 lines
+                        AppendText(richTextBox, "...", Color.Black);
+                        break;
+                    }
+                }
+            }
+
+            private static bool ArraysMatch(int startIndex, int len, byte[] array1, byte[] array2)
+            {
+                for (int i = startIndex; i < startIndex + len; i++)
+                {
+                    if (i >= array1.Length && i >= array2.Length)
+                        return true;
+                    if (i >= array1.Length || i >= array2.Length)
+                        return false;
+                    if (array1[i] != array2[i])
+                        return false;
+                }
+                return true;
+            }
+
+            private static void ShowLineDiff(RichTextBox richTextBox, int startIndex, int lineLen, byte[] arrayShow, byte[] arrayCompare, Color color, string prefix)
+            {
+                AppendText(richTextBox, $"{prefix} {startIndex:X8} ", Color.Black); // address
+
+                for (int n = 0; n < lineLen; n++)
+                {
+                    if (n == lineLen/2)
+                        AppendText(richTextBox, "  ", Color.Black);
+
+                    int i = startIndex + n;
+                    if (i < arrayShow.Length && i < arrayCompare.Length && arrayShow[i] == arrayCompare[i])
+                    {
+                        // Bytes are the same, display them in black
+                        AppendText(richTextBox, $"{arrayShow[i]:X2} ", Color.Black);
+                    }
+                    else if (i < arrayShow.Length)
+                    {
+                        // Bytes differ
+                        AppendText(richTextBox, $"{arrayShow[i]:X2} ", color);
+                    }
+                    else
+                    {
+                        // Bytes missing
+                        AppendText(richTextBox, "-- ", color);
+                    }
+                }
+                AppendText(richTextBox, "    ", Color.Black);
+                for (int n = 0; n < lineLen; n++)
+                {
+                    int i = startIndex + n;
+                    if (i < arrayShow.Length && i < arrayCompare.Length && arrayShow[i] == arrayCompare[i])
+                    {
+                        // Bytes are the same, display them in black
+                        AppendText(richTextBox, GetChar(arrayShow[i]), Color.Black);
+                    }
+                    else if (i < arrayShow.Length)
+                    {
+                        // Bytes differ
+                        AppendText(richTextBox, GetChar(arrayShow[i]), color);
+                    }
+                    else
+                    {
+                        // Bytes missing
+                        AppendText(richTextBox, "^", color);
+                    }
+                }
+                AppendText(richTextBox, Environment.NewLine, Color.Black);
+            }
+
+            /// <summary>
+            /// If a byte is printable ASCII the character as text is returned otherwise a period.
+            /// </summary>
+            private static string GetChar(byte b)
+            {
+                return (b >= 0x20 && b <= 0x7E ? (char)b : '.').ToString();
+            }
+
+            private static void AppendText(RichTextBox richTextBox, string text, Color color)
+            {
+                richTextBox.SelectionStart = richTextBox.TextLength;
+                richTextBox.SelectionLength = 0;
+                richTextBox.SelectionColor = color;
+                richTextBox.AppendText(text);
+                richTextBox.SelectionColor = richTextBox.ForeColor;
+            }
         }
     }
 }
