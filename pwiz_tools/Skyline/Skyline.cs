@@ -4075,8 +4075,12 @@ namespace pwiz.Skyline
                     if (!ImportingResultsWindow.IsUserCanceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
-                    if (!ImportingResultsWindow.HasErrors && Settings.Default.ImportResultsAutoCloseWindow)
+                    if (!ImportingResultsWindow.HasErrors &&
+                        !ImportingResultsWindow.IsProgressFrozen() &&
+                        Settings.Default.ImportResultsAutoCloseWindow)
+                    {
                         DestroyAllChromatogramsGraph();
+                    }
                 }
             }
 

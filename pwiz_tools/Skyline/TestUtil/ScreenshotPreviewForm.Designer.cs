@@ -38,6 +38,7 @@ namespace pwiz.SkylineTestUtil
             this.buttonImageSource = new System.Windows.Forms.Button();
             this.oldScreenshotLabel = new System.Windows.Forms.Label();
             this.newScreenshotLabelPanel = new System.Windows.Forms.Panel();
+            this.progressBar = new pwiz.Common.Controls.CustomTextProgressBar();
             this.newScreenshotLabel = new System.Windows.Forms.Label();
             this.previewFlowLayoutControlPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.continueBtn = new System.Windows.Forms.Button();
@@ -64,7 +65,9 @@ namespace pwiz.SkylineTestUtil
             this.toolStripGotoWeb = new System.Windows.Forms.ToolStripButton();
             this.toolStripDescription = new System.Windows.Forms.ToolStripLabel();
             this.toolStripSwitchToToolbar = new System.Windows.Forms.ToolStripButton();
-            this.progressBar = new pwiz.Common.Controls.CustomTextProgressBar();
+            this.labelOldSize = new System.Windows.Forms.Label();
+            this.labelNewSize = new System.Windows.Forms.Label();
+            this.pictureMatching = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.previewSplitContainer)).BeginInit();
@@ -79,6 +82,7 @@ namespace pwiz.SkylineTestUtil
             this.splitBar.Panel2.SuspendLayout();
             this.splitBar.SuspendLayout();
             this.toolStrip.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureMatching)).BeginInit();
             this.SuspendLayout();
             // 
             // oldScreenshotPictureBox
@@ -129,6 +133,8 @@ namespace pwiz.SkylineTestUtil
             // 
             this.oldScreenshotLabelPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.oldScreenshotLabelPanel.BackColor = System.Drawing.SystemColors.ActiveBorder;
+            this.oldScreenshotLabelPanel.Controls.Add(this.pictureMatching);
+            this.oldScreenshotLabelPanel.Controls.Add(this.labelOldSize);
             this.oldScreenshotLabelPanel.Controls.Add(this.buttonImageSource);
             this.oldScreenshotLabelPanel.Controls.Add(this.oldScreenshotLabel);
             this.oldScreenshotLabelPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -170,6 +176,7 @@ namespace pwiz.SkylineTestUtil
             // 
             this.newScreenshotLabelPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.newScreenshotLabelPanel.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.newScreenshotLabelPanel.Controls.Add(this.labelNewSize);
             this.newScreenshotLabelPanel.Controls.Add(this.progressBar);
             this.newScreenshotLabelPanel.Controls.Add(this.newScreenshotLabel);
             this.newScreenshotLabelPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -178,6 +185,18 @@ namespace pwiz.SkylineTestUtil
             this.newScreenshotLabelPanel.Name = "newScreenshotLabelPanel";
             this.newScreenshotLabelPanel.Size = new System.Drawing.Size(487, 30);
             this.newScreenshotLabelPanel.TabIndex = 3;
+            // 
+            // progressBar
+            // 
+            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressBar.CustomText = "Waiting on Skyline for next screenshot...";
+            this.progressBar.DisplayStyle = pwiz.Common.Controls.ProgressBarDisplayText.CustomText;
+            this.progressBar.Location = new System.Drawing.Point(408, 4);
+            this.progressBar.Name = "progressBar";
+            this.progressBar.Size = new System.Drawing.Size(76, 21);
+            this.progressBar.TabIndex = 1;
+            this.progressBar.Visible = false;
             // 
             // newScreenshotLabel
             // 
@@ -457,17 +476,31 @@ namespace pwiz.SkylineTestUtil
             this.toolStripSwitchToToolbar.ToolTipText = "Show Text Buttons";
             this.toolStripSwitchToToolbar.Click += new System.EventHandler(this.toolStripSwitchToToolbar_Click);
             // 
-            // progressBar
+            // labelOldSize
             // 
-            this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.CustomText = "Waiting on Skyline for next screenshot...";
-            this.progressBar.DisplayStyle = pwiz.Common.Controls.ProgressBarDisplayText.CustomText;
-            this.progressBar.Location = new System.Drawing.Point(408, 4);
-            this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(76, 21);
-            this.progressBar.TabIndex = 1;
-            this.progressBar.Visible = false;
+            this.labelOldSize.AutoSize = true;
+            this.labelOldSize.Location = new System.Drawing.Point(26, 9);
+            this.labelOldSize.Name = "labelOldSize";
+            this.labelOldSize.Size = new System.Drawing.Size(42, 13);
+            this.labelOldSize.TabIndex = 2;
+            this.labelOldSize.Text = "old size";
+            // 
+            // labelNewSize
+            // 
+            this.labelNewSize.AutoSize = true;
+            this.labelNewSize.Location = new System.Drawing.Point(5, 9);
+            this.labelNewSize.Name = "labelNewSize";
+            this.labelNewSize.Size = new System.Drawing.Size(48, 13);
+            this.labelNewSize.TabIndex = 2;
+            this.labelNewSize.Text = "new size";
+            // 
+            // pictureMatching
+            // 
+            this.pictureMatching.Location = new System.Drawing.Point(5, 7);
+            this.pictureMatching.Name = "pictureMatching";
+            this.pictureMatching.Size = new System.Drawing.Size(16, 16);
+            this.pictureMatching.TabIndex = 3;
+            this.pictureMatching.TabStop = false;
             // 
             // ScreenshotPreviewForm
             // 
@@ -490,7 +523,9 @@ namespace pwiz.SkylineTestUtil
             ((System.ComponentModel.ISupportInitialize)(this.previewSplitContainer)).EndInit();
             this.previewSplitContainer.ResumeLayout(false);
             this.oldScreenshotLabelPanel.ResumeLayout(false);
+            this.oldScreenshotLabelPanel.PerformLayout();
             this.newScreenshotLabelPanel.ResumeLayout(false);
+            this.newScreenshotLabelPanel.PerformLayout();
             this.previewFlowLayoutControlPanel.ResumeLayout(false);
             this.previewFlowLayoutControlPanel.PerformLayout();
             this.splitBar.Panel1.ResumeLayout(false);
@@ -501,6 +536,7 @@ namespace pwiz.SkylineTestUtil
             this.splitBar.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureMatching)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -542,5 +578,8 @@ namespace pwiz.SkylineTestUtil
         private System.Windows.Forms.Button buttonSwitchToToolStrip;
         private System.Windows.Forms.ToolStripButton toolStripSwitchToToolbar;
         private System.Windows.Forms.Button buttonImageSource;
+        private System.Windows.Forms.Label labelOldSize;
+        private System.Windows.Forms.Label labelNewSize;
+        private System.Windows.Forms.PictureBox pictureMatching;
     }
 }
