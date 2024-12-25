@@ -2,32 +2,44 @@
 using System.Collections.Generic;
 using System.Globalization;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public class LcPeakIonMetrics : IFormattable
+    public class LcPeakIonMetrics : Immutable, IFormattable
     {
-        public LcPeakIonMetrics(double? lcPeakTotalIonCurrentArea, double? apexTotalIonCount, double? lcPeakTotalIonCount, double? apexAnalyteIonCount, double? lcPeakAnalyteIonCount)
+        public LcPeakIonMetrics(string apexSpectrumId)
         {
-            LcPeakTotalIonCurrentArea = lcPeakTotalIonCurrentArea;
-            ApexTotalIonCount = apexTotalIonCount;
-            LcPeakTotalIonCount = lcPeakTotalIonCount;
-            ApexAnalyteIonCount = apexAnalyteIonCount;
-            LcPeakAnalyteIonCount = lcPeakAnalyteIonCount;
+            ApexSpectrumId = apexSpectrumId;
         }
+
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? LcPeakTotalIonCurrentArea
         {
             get; private set;
         }
 
+        public LcPeakIonMetrics ChangeTotalIonCurrentArea(double value)
+        {
+            return ChangeProp(ImClone(this), im => im.LcPeakTotalIonCurrentArea = value);
+        }
+
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? ApexTotalIonCount { get; }
+        public double? ApexTotalIonCount { get; private set; }
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
-        public double? LcPeakTotalIonCount { get; }
+        public double? LcPeakTotalIonCount { get; private set; }
+
+        public LcPeakIonMetrics ChangeTotalIonCount(double apexTotalIonCount, double lcPeakTotalIonCount)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ApexTotalIonCount = apexTotalIonCount;
+                im.LcPeakTotalIonCount = lcPeakTotalIonCount;
+            });
+        }
 
 
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
@@ -35,6 +47,22 @@ namespace pwiz.Skyline.Model.Results
 
         [Format(Formats.PEAK_AREA, NullValue = TextUtil.EXCEL_NA)]
         public double? LcPeakAnalyteIonCount { get; private set; }
+
+        public LcPeakIonMetrics ChangeAnalyteIonCount(double apexAnalyteIonCount, double lcPeakAnalyteIonCount)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ApexAnalyteIonCount = apexAnalyteIonCount;
+                im.LcPeakAnalyteIonCount = LcPeakAnalyteIonCount;
+            });
+        }
+
+        public string ApexSpectrumId { get; private set; }
+
+        public LcPeakIonMetrics ChangeApexSpectrumId(string value)
+        {
+            return ChangeProp(ImClone(this), im => im.ApexSpectrumId = value);
+        }
 
         public override string ToString()
         {

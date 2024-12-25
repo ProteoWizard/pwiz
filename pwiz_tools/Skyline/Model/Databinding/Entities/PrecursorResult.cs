@@ -413,22 +413,21 @@ namespace pwiz.Skyline.Model.Databinding.Entities
 
             List<float> ticTimes = new List<float>();
             List<float> ticIntensities = new List<float>();
-            double apexSpectrumIonCount = 0;
+            double? apexSpectrumIonCount = null;
             double totalSpectrumIonCount = 0;
-            double apexAnalyteIonCount = 0;
+            double? apexAnalyteIonCount = null;
             double lcPeakIonCount = 0;
             double? apexIntensity = null;
+            string apexSpectrumId = null;
             for (int i = iStart; i < times.Count; i++)
             {
                 var scanIndex = scanIndexes[i];
                 var time = times[i];
                 ticTimes.Add(time);
                 var spectrumMetadata = resultFileMetadata.SpectrumMetadatas[scanIndex];
-                if (!spectrumMetadata.InjectionTime.HasValue || !spectrumMetadata.TotalIonCurrent.HasValue)
-                {
-                    return null;
-                }
-                var totalIonCurrent = spectrumMetadata.TotalIonCurrent.Value;
+
+
+                var totalIonCurrent = spectrumMetadata.TotalIonCurrent.GetValueOrDefault();
                 ticIntensities.Add((float) totalIonCurrent);
                 if (time > MaxEndTime)
                 {
@@ -446,18 +445,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     intensity += chromatogramInfo.Intensities[i];
                 }
 
-                var injectionTimeSeconds = spectrumMetadata.InjectionTime.Value / 1000;
-                double ionCount = intensity * injectionTimeSeconds;
-                double spectrumIonCount = totalIonCurrent * injectionTimeSeconds;
+                double? injectionTimeSeconds = spectrumMetadata.InjectionTime / 1000;
+                double? ionCount = intensity * injectionTimeSeconds;
+                double? spectrumIonCount = totalIonCurrent * injectionTimeSeconds;
                 
                 if (apexIntensity == null || intensity > apexIntensity.Value)
                 {
                     apexAnalyteIonCount = ionCount;
                     apexSpectrumIonCount = spectrumIonCount;
                     apexIntensity = intensity;
+                    apexSpectrumId = spectrumMetadata.Id;
                 }
-                lcPeakIonCount += ionCount;
-                totalSpectrumIonCount += spectrumIonCount;
+                lcPeakIonCount += ionCount.GetValueOrDefault();
+                totalSpectrumIonCount += spectrumIonCount.GetValueOrDefault();
             }
 
             if (ticTimes.Count == 0)
@@ -465,10 +465,28 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 return null;
             }
 
-            var ticTimeIntensities = new TimeIntensities(ticTimes, ticIntensities);
-            var chromPeak = ChromPeak.IntegrateWithoutBackground(ticTimeIntensities, (float) MinStartTime, (float) MaxEndTime, 0, null);
-            Assume.AreEqual(0f, chromPeak.BackgroundArea);
-            return new LcPeakIonMetrics(chromPeak.Area, apexSpectrumIonCount, totalSpectrumIonCount, apexAnalyteIonCount, lcPeakIonCount);
+
+            var lcPeakIonMetrics = new LcPeakIonMetrics(apexSpectrumId);
+            if (ticTimes.Count != 0)
+            {
+                var ticTimeIntensities = new TimeIntensities(ticTimes, ticIntensities);
+                var chromPeak = ChromPeak.IntegrateWithoutBackground(ticTimeIntensities, (float)MinStartTime, (float)MaxEndTime, 0, null);
+                Assume.AreEqual(0f, chromPeak.BackgroundArea);
+                lcPeakIonMetrics = lcPeakIonMetrics.ChangeTotalIonCurrentArea(chromPeak.Area);
+            }
+
+            if (apexSpectrumIonCount.HasValue)
+            {
+                lcPeakIonMetrics =
+                    lcPeakIonMetrics.ChangeTotalIonCount(apexSpectrumIonCount.Value, totalSpectrumIonCount);
+            }
+
+            if (apexAnalyteIonCount.HasValue)
+            {
+                lcPeakIonMetrics = lcPeakIonMetrics.ChangeAnalyteIonCount(apexAnalyteIonCount.Value, lcPeakIonCount);
+            }
+
+            return lcPeakIonMetrics;
         }
     }
 }

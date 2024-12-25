@@ -171,6 +171,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Identifier of the spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexSpectrumId {
+            get {
+                return ResourceManager.GetString("ApexSpectrumId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identifier of the MS2 spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexSpectrumIdFragment {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identifier of the MS1 spectrum with the highest precursor intensity.
+        /// </summary>
+        public static string ApexSpectrumIdMS1 {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity.
         /// </summary>
         public static string ApexTotalIonCount {

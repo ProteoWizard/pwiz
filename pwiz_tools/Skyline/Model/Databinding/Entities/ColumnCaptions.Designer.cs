@@ -169,6 +169,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apex Spectrum ID.
+        /// </summary>
+        public static string ApexSpectrumId {
+            get {
+                return ResourceManager.GetString("ApexSpectrumId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Spectrum ID Fragment.
+        /// </summary>
+        public static string ApexSpectrumIdFragment {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Spectrum ID MS1.
+        /// </summary>
+        public static string ApexSpectrumIdMS1 {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Apex Total Ion Count.
         /// </summary>
         public static string ApexTotalIonCount {

@@ -153,6 +153,15 @@
   <data name="ApexAnalyteIonCountMS1">
     <value>Apex Analyte Ion Count MS1</value>
   </data>
+  <data name="ApexSpectrumId">
+    <value>Apex Spectrum ID</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>Apex Spectrum ID Fragment</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>Apex Spectrum ID MS1</value>
+  </data>
   <data name="ApexTotalIonCount">
     <value>Apex Total Ion Count</value>
   </data>
