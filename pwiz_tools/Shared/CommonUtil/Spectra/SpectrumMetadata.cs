@@ -28,10 +28,10 @@ namespace pwiz.Common.Spectra
         [Flags]
         private enum Flags
         {
-            HasCompensationVoltage,
-            HasScanWindow,
-            HasTotalIonCurrent,
-            HasInjectionTime
+            HasCompensationVoltage = 1,
+            HasScanWindow = 2,
+            HasTotalIonCurrent = 4,
+            HasInjectionTime = 8,
         }
         private ImmutableList<ImmutableList<SpectrumPrecursor>> _precursorsByMsLevel =
             ImmutableList<ImmutableList<SpectrumPrecursor>>.EMPTY;
@@ -195,6 +195,8 @@ namespace pwiz.Common.Spectra
                    Nullable.Equals(ScanWindowUpperLimit, other.ScanWindowUpperLimit) &&
                    Nullable.Equals(CompensationVoltage, other.CompensationVoltage) &&
                    Equals(PresetScanConfiguration, other.PresetScanConfiguration) &&
+                   Nullable.Equals(TotalIonCurrent, other.TotalIonCurrent) &&
+                   Nullable.Equals(InjectionTime, other.InjectionTime) &&
                    Equals(Analyzer, other.Analyzer);
         }
 
@@ -218,6 +220,8 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ ScanWindowLowerLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ ScanWindowUpperLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
+                hashCode = (hashCode * 397) ^ TotalIonCurrent.GetHashCode();
+                hashCode = (hashCode * 397) ^ InjectionTime.GetHashCode();
                 return hashCode;
             }
         }
