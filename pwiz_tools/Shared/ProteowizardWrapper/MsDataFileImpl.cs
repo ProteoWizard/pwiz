@@ -1498,20 +1498,30 @@ namespace pwiz.ProteowizardWrapper
             return param.value.ToString().Trim();
         }
 
-        private double GetTotalIonCurrent(Spectrum spectrum)
+        private double? GetTotalIonCurrent(Spectrum spectrum)
         {
-            return spectrum.cvParam(CVID.MS_total_ion_current)?.value ?? 0.0;
+            var param = spectrum.cvParam(CVID.MS_total_ion_current);
+            if (param.empty())
+            {
+                return null;
+            }
+            return param.value;
         }
 
-        private double GetInjectionTime(Spectrum spectrum)
+        private double? GetInjectionTime(Spectrum spectrum)
         {
-            double injectionTime = 0;
+            int count = 0;
+            double total = 0;
             foreach (var scan in spectrum.scanList.scans)
             {
-                injectionTime += scan.cvParam(CVID.MS_ion_injection_time)?.value ?? 0.0;
+                var param = scan.cvParam(CVID.MS_ion_injection_time);
+                if (!param.empty())
+                {
+                    count++;
+                    total += param.value;
+                }
             }
-
-            return injectionTime;
+            return count == 0 ? (double?) null : total;
         }
 
         private static int GetPresetScanConfiguration(Spectrum spectrum)

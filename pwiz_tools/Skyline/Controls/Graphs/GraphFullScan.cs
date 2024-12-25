@@ -600,14 +600,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (ionMobility.HasValue)
                         spectrumProperties.IonMobility = ionMobility.ToString();
                 }
-                var injectionTime = _msDataFileScanHelper.MsDataSpectra.Sum(scan => scan.Metadata.InjectionTime);
-                if (injectionTime != 0)
+                if (_msDataFileScanHelper.MsDataSpectra.Any(scan=>scan.Metadata.InjectionTime.HasValue))
                 {
-                    spectrumProperties.InjectionTime = injectionTime.ToString(@"0.####", CultureInfo.CurrentCulture);
+                    var injectionTime = _msDataFileScanHelper.MsDataSpectra.Sum(scan => scan.Metadata.InjectionTime);
+                    spectrumProperties.InjectionTime = injectionTime.Value.ToString(@"0.####", CultureInfo.CurrentCulture);
                 }
 
-                spectrumProperties.TotalIonCurrent = _msDataFileScanHelper.MsDataSpectra
-                    .Sum(scan => scan.Metadata.TotalIonCurrent).ToString(Formats.PEAK_AREA);
+                if (_msDataFileScanHelper.MsDataSpectra.Any(scan => scan.Metadata.TotalIonCurrent.HasValue))
+                {
+                    spectrumProperties.TotalIonCurrent = _msDataFileScanHelper.MsDataSpectra
+                        .Sum(scan => scan.Metadata.TotalIonCurrent ?? 0.0).ToString(Formats.PEAK_AREA);
+                }
 
                 if (_documentContainer is SkylineWindow stateProvider)
                 {

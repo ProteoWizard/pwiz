@@ -25,8 +25,18 @@ namespace pwiz.Common.Spectra
 {
     public class SpectrumMetadata : Immutable
     {
+        [Flags]
+        private enum Flags
+        {
+            HasCompensationVoltage,
+            HasScanWindow,
+            HasTotalIonCurrent,
+            HasInjectionTime
+        }
         private ImmutableList<ImmutableList<SpectrumPrecursor>> _precursorsByMsLevel =
             ImmutableList<ImmutableList<SpectrumPrecursor>>.EMPTY;
+
+        private Flags _flags;
 
         public SpectrumMetadata(string id, double retentionTime)
         {
@@ -85,22 +95,47 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.ScanDescription = scanDescription);
         }
 
-        public double? CompensationVoltage { get; private set; }
+        private double _compensationVoltage;
+        public double? CompensationVoltage
+        {
+            get
+            {
+                return GetFlag(Flags.HasCompensationVoltage) ? _compensationVoltage : (double?) null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasCompensationVoltage, value.HasValue);
+                _compensationVoltage = value.GetValueOrDefault();
+            }
+        }
 
         public SpectrumMetadata ChangeCompensationVoltage(double? compensationVoltage)
         {
             return ChangeProp(ImClone(this), im => im.CompensationVoltage = compensationVoltage);
         }
 
-        public double? ScanWindowLowerLimit { get; private set; }
-        public double? ScanWindowUpperLimit { get; private set; }
+        private double _scanWindowLowerLimit;
+        private double _scanWindowUpperLimit;
+        public double? ScanWindowLowerLimit
+        {
+            get { return GetFlag(Flags.HasScanWindow) ? _scanWindowLowerLimit : (double?)null; }
+        }
+
+        public double? ScanWindowUpperLimit
+        {
+            get
+            {
+                return GetFlag(Flags.HasScanWindow) ? _scanWindowUpperLimit : (double?)null;
+            }
+        }
 
         public SpectrumMetadata ChangeScanWindow(double lowerLimit, double upperLimit)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.ScanWindowLowerLimit = lowerLimit;
-                im.ScanWindowUpperLimit = upperLimit;
+                SetFlag(Flags.HasScanWindow, true);
+                im._scanWindowLowerLimit = lowerLimit;
+                im._scanWindowUpperLimit = upperLimit;
             });
         }
 
@@ -111,16 +146,42 @@ namespace pwiz.Common.Spectra
             return ChangeProp(ImClone(this), im => im.Analyzer = value);
         }
 
-        public double TotalIonCurrent { get; private set; }
+        private double _totalIonCurrent;
 
-        public SpectrumMetadata ChangeTotalIonCurrent(double value)
+        public double? TotalIonCurrent
+        {
+            get
+            {
+                return GetFlag(Flags.HasTotalIonCurrent) ? _totalIonCurrent : (double?)null;
+            }
+            private set
+            {
+                SetFlag(Flags.HasTotalIonCurrent, value.HasValue);
+                _totalIonCurrent = value.GetValueOrDefault();
+            }
+        }
+
+        public SpectrumMetadata ChangeTotalIonCurrent(double? value)
         {
             return ChangeProp(ImClone(this), im => im.TotalIonCurrent = value);
         }
 
-        public double InjectionTime { get; private set; }
+        private double _injectionTime;
 
-        public SpectrumMetadata ChangeInjectionTime(double value)
+        public double? InjectionTime
+        {
+            get
+            {
+                return GetFlag(Flags.HasInjectionTime) ? _injectionTime : (double?)null;
+            }
+            set
+            {
+                SetFlag(Flags.HasInjectionTime, value.HasValue);
+                _injectionTime = value.GetValueOrDefault();
+            }
+        }
+
+        public SpectrumMetadata ChangeInjectionTime(double? value)
         {
             return ChangeProp(ImClone(this), im => im.InjectionTime = value);
         }
@@ -158,6 +219,23 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ ScanWindowUpperLimit.GetHashCode();
                 hashCode = (hashCode * 397) ^ CompensationVoltage.GetHashCode();
                 return hashCode;
+            }
+        }
+
+        private bool GetFlag(Flags flag)
+        {
+            return 0 != (_flags & flag);
+        }
+
+        private void SetFlag(Flags flag, bool value)
+        {
+            if (value)
+            {
+                _flags |= flag;
+            }
+            else
+            {
+                _flags &= ~flag;
             }
         }
     }

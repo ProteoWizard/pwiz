@@ -27,7 +27,6 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
-using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
@@ -425,7 +424,11 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                 var time = times[i];
                 ticTimes.Add(time);
                 var spectrumMetadata = resultFileMetadata.SpectrumMetadatas[scanIndex];
-                var totalIonCurrent = spectrumMetadata.TotalIonCurrent;
+                if (!spectrumMetadata.InjectionTime.HasValue || !spectrumMetadata.TotalIonCurrent.HasValue)
+                {
+                    return null;
+                }
+                var totalIonCurrent = spectrumMetadata.TotalIonCurrent.Value;
                 ticIntensities.Add((float) totalIonCurrent);
                 if (time > MaxEndTime)
                 {
@@ -443,7 +446,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
                     intensity += chromatogramInfo.Intensities[i];
                 }
 
-                var injectionTimeSeconds = spectrumMetadata.InjectionTime / 1000;
+                var injectionTimeSeconds = spectrumMetadata.InjectionTime.Value / 1000;
                 double ionCount = intensity * injectionTimeSeconds;
                 double spectrumIonCount = totalIonCurrent * injectionTimeSeconds;
                 

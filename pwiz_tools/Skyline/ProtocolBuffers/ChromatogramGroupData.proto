@@ -1,4 +1,5 @@
 ﻿syntax = "proto3";
+import "google/protobuf/wrappers.proto";
 option csharp_namespace = "pwiz.Skyline.Model.Results.ProtoBuf";
 option java_package = "org.labkey.targetedms.parser.proto";
 message ChromatogramGroupData {
@@ -41,8 +42,8 @@ message ResultFileMetaDataProto {
 		int32 presetScanConfiguration = 6;
 		int32 analyzerIndex = 7;
 		int32 scanWindowIndex = 8;
-		float totalIonCurrent = 9;
-		float injectionTime = 10;
+		google.protobuf.FloatValue totalIonCurrent = 9;
+		google.protobuf.FloatValue injectionTime = 10;
 	}
 
 	message Precursor {
