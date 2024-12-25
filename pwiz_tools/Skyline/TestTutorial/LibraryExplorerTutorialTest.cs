@@ -103,6 +103,7 @@ namespace pwiz.SkylineTestTutorial
             ViewLibraryDlg viewLibraryDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var matchedPepsDlg = WaitForOpenForm<AddModificationsDlg>();
             OkDialog(matchedPepsDlg, matchedPepsDlg.CancelDialog);
+            RunUIForScreenShot(() => viewLibraryDlg.Size = new Size(775, 463));
             PauseForScreenShot<ViewLibraryDlg>("Library Explorer", 5);
 
             // Types text in Peptide textbox in the Spectral Library Explorer Window

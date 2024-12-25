@@ -444,8 +444,8 @@ namespace pwiz.SkylineTestTutorial
 
                     menuStrip = peakAreasControl.ContextMenuStrip;
                     subMenuStrip = showDotProductItem.DropDown;
-                    menuStrip.Closing += DenyMenuClose;
-                    subMenuStrip.Closing += DenyMenuClose;
+                    menuStrip.Closing += DenyMenuClosing;
+                    subMenuStrip.Closing += DenyMenuClosing;
                 });
 
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", tutorialPage++, null,
@@ -455,8 +455,8 @@ namespace pwiz.SkylineTestTutorial
 
                 RunUI(() =>
                 {
-                    menuStrip.Closing -= DenyMenuClose;
-                    subMenuStrip.Closing -= DenyMenuClose;
+                    menuStrip.Closing -= DenyMenuClosing;
+                    subMenuStrip.Closing -= DenyMenuClosing;
                     menuStrip.Close();
                 });
             }
@@ -497,7 +497,11 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<AlignmentForm>("Retention time alignment form", tutorialPage++);
 
             OkDialog(alignmentForm, alignmentForm.Close);
-            PauseForScreenShot("Status bar clipped from main window - 4/50 pep 4/51 prec 10/153 tran", tutorialPage++, null, ClipSelectionStatus);
+            PauseForScreenShot("Status bar clipped from main window - 4/50 pep 4/51 prec 10/153 tran", tutorialPage++, null, bmp =>
+            {
+                bmp = ClipSelectionStatus(bmp);
+                return bmp.DrawAnnotationRectOnBitmap(new RectangleF(0.23F, 0, 0.23F, 1), 2).Inflate(1.5F);
+            });
 
             string TIP_NAME = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[TIP3].Name;
             string TIB_NAME = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[TIB_L].Name;
@@ -771,11 +775,6 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             RunUI(SkylineWindow.NewDocument);
-        }
-
-        private void DenyMenuClose(object sender, ToolStripDropDownClosingEventArgs e)
-        {
-            e.Cancel = true;
         }
 
         private int GetTotalPointCount(GraphPane msGraphPane)

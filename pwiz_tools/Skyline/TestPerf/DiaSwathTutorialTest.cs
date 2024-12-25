@@ -23,6 +23,8 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -90,6 +92,8 @@ namespace TestPerf
             public int[] DiffPeptideCounts;
             public int UnpolishedProteins;
             public int? PolishedProteins;
+            public double? FoldChangeProteinsMax;
+            public double? FoldChangeProteinsMin;
 
             public string FastaPath =>
                 IsWholeProteome
@@ -275,6 +279,7 @@ namespace TestPerf
                     },
                     DiffPeptideCounts = new[] { 139, 47, 29, 52 },
                     UnpolishedProteins = 9,
+                    FoldChangeProteinsMax = 2,
                 };
             }
         }
@@ -584,6 +589,13 @@ namespace TestPerf
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUIForScreenShot(() =>
+            {
+                var cols = importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Columns;
+                cols[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                cols[0].Width = 175;    // just "interact.pep.xml"
+                cols[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; // To show the full PeptideProphet confidence
+            });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", screenshotPage++);
 
             AddIrtPeptidesDlg addIrtPeptidesDlg;
@@ -849,8 +861,10 @@ namespace TestPerf
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            WaitForConditionUI(() => allChrom.ProgressTotalPercent >= 20);
+            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
+            WaitForCondition(() => allChrom.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", screenshotPage++, 30*1000); // 30 second timeout to avoid getting stuck
+            allChrom.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
@@ -934,6 +948,11 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     SkylineWindow.Size = new Size(900, 900);
+                    SkylineWindow.ForceOnScreen();  // Avoid this shifting the window under the floating window later
+                });
+                Thread.Sleep(200);  // Give layout time to adjust
+                RunUI(() =>
+                {
                     var chromPane1 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Name);
                     var chromPane2 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[1].Name);
                     var rtGraphFrame = FindFloatingWindow(SkylineWindow.GraphRetentionTime);
@@ -1124,10 +1143,7 @@ namespace TestPerf
                 var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
                 ApplyFormatting(formattingDlg, "ECOLI", "128, 0, 255");
                 var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
-                {
-                    var bindingList = formattingDlg.GetCurrentBindingList();
-                    formattingDlg.ClickCreateExpression(bindingList.Count - 1);
-                });
+                    formattingDlg.ClickCreateExpression(formattingDlg.ResultList.Count - 1));
                 PauseForScreenShot<CreateMatchExpressionDlg>("Create Expression form", screenshotPage++);
                 OkDialog(createExprDlg, createExprDlg.OkDialog);
 
@@ -1212,20 +1228,17 @@ namespace TestPerf
 
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                if (IsPauseForScreenShots)
+                WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                RunUIForScreenShot(() =>
                 {
-                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
-                    RunUI(() =>
-                    {
-                        var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
-                        yScale.MinAuto = yScale.MaxAuto = false;
-                        yScale.Min = -2.4;
-                        yScale.Max = 2.2;
-                        yScale.MajorStep = 1;
-                        yScale.MinorStep = 0.2;
-                        yScale.Format = "0.#";
-                    });
-                }
+                    var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
+                    yScale.MinAuto = yScale.MaxAuto = false;
+                    yScale.Max = _analysisValues.FoldChangeProteinsMax ?? 2.2;
+                    yScale.Min = _analysisValues.FoldChangeProteinsMin ?? -2.4;
+                    yScale.MajorStep = 1;
+                    yScale.MinorStep = 0.2;
+                    yScale.Format = "0.#";
+                });
                 PauseForGraphScreenShot("By Condition:Bar Graph - proteins", barGraph);
 
                 RunQValueSummaryTest();
@@ -1370,9 +1383,9 @@ namespace TestPerf
         {
             RunUI(() =>
             {
-                var bindingList = formattingDlg.GetCurrentBindingList();
                 var color = RgbHexColor.ParseRgb(rgbText).Value;
-                bindingList.Add(new MatchRgbHexColor("ProteinName: " + matchText, false, color, PointSymbol.Circle, PointSize.normal));
+                formattingDlg.AddRow(new MatchRgbHexColor("ProteinName: " + matchText, 
+                    false, color, PointSymbol.Circle, PointSize.normal));
             });
         }
 

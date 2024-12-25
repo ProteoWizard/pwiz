@@ -223,6 +223,7 @@ namespace pwiz.SkylineTestTutorial
 
             FindNode(decorator + "IHGFDLAAINLQR");
             RestoreViewOnScreen(8);
+            RunUI(SkylineWindow.FocusDocument);
             RunUI(() => SkylineWindow.Size = new Size(984, 553));
             PauseForScreenShot("Main Skyline window", 8);
 

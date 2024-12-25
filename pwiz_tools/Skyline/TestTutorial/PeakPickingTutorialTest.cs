@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -118,8 +119,12 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(generateDecoysDlg, generateDecoysDlg.OkDialog);
 
             RestoreViewOnScreen(3);
-            RunUI(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11]);
-            PauseForScreenShot("Targets view clipped from main window", 3);
+            RunUIForScreenShot(() =>
+            {
+                SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[11];
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[12];
+            });
+            PauseForTargetsScreenShot("Targets view clipped from main window");
 
             // Open the file with decoys
             RunUI(() => SkylineWindow.OpenFile(GetTestPath("SRMCourse_DosR-hDP__20130501-tutorial-empty-decoys.sky")));
@@ -193,15 +198,24 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form trained model", 6);
             RunUI(() => Assert.AreEqual(0.5893, editDlg.PeakCalculatorsGrid.Items[3].PercentContribution ?? 0, 0.005));
 
-            RunUI(() => editDlg.SelectedGraphTab = 2);
-            PauseForScreenShot<EditPeakScoringModelDlg.PvalueTab>("Edit Peak Scoring Model form p value graph metafile", 7);
+            Control selectedGraphControl = null;
+            RunUI(() =>
+            {
+                editDlg.SelectedGraphTab = 2;
+                selectedGraphControl = editDlg.SelectedGraphControl;
+            });
+            PauseForGraphScreenShot("Edit Peak Scoring Model form p value graph metafile", selectedGraphControl);
 
-            RunUI(() => editDlg.SelectedGraphTab = 3);
-            PauseForScreenShot<EditPeakScoringModelDlg.QvalueTab>("Edit Peak Scoring Model form q value graph metafile", 8);
+            RunUI(() =>
+            {
+                editDlg.SelectedGraphTab = 3;
+                selectedGraphControl = editDlg.SelectedGraphControl;
+            });
+            PauseForGraphScreenShot("Edit Peak Scoring Model form q value graph metafile", selectedGraphControl);
 
             RunUI(() => editDlg.SelectedGraphTab = 1);
-            RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(3));
-            PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form feature score", 10);
+            RunUI(() => editDlg.PeakCalculatorsGrid.SelectRow(2));
+            PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form library dotp feature score", 10);
 
             RunUI(() =>
             {
@@ -215,15 +229,26 @@ namespace pwiz.SkylineTestTutorial
                 editDlg.FindMissingValues(2);   // Retention time
                 editDlg.PeakScoringModelName = "test1";
             });
-            PauseForScreenShot<EditPeakScoringModelDlg.FeaturesTab>("Edit Peak Scoring Model form find missing scores", 11);
+            RunUIForScreenShot(() => editDlg.ShowFindButton(true));
+            PauseForScreenShot(editDlg.GraphsControl, "Edit Peak Scoring Model form find missing scores", null, null, bmp =>
+                DrawLArrowCursorOnBitmap(bmp, 0.88, 0.7));
+            RunUIForScreenShot(() => editDlg.ShowFindButton(false));
 
             OkDialog(editDlg, editDlg.OkDialog);
             OkDialog(reintegrateDlg, reintegrateDlg.CancelDialog);
 
+            var findResultsForm = FindOpenForm<FindResultsForm>();
+            int oldSkylineWindowHeight = SkylineWindow.Height;
+            RunUIForScreenShot(() =>
+            {
+                SkylineWindow.Height = 715;
+                findResultsForm.ActivateItem(0);
+                findResultsForm.Focus();
+            });
             PauseForScreenShot<FindResultsForm>("Find Results view clipped from main window", 12);
+            RunUIForScreenShot(() => SkylineWindow.Height = oldSkylineWindowHeight);
 
             // Remove the peptide with no library dot product, and train again
-            FindResultsForm findResultsForm = null;
             var missingPeptides = new List<string> { "LGGNEQVTR", "IPVDSIYSPVLK", "YFNDGDIVEGTIVK", 
                                                      "DFDSLGTLR", "GGYAGMLVGSVGETVAQLAR", "GGYAGMLVGSVGETVAQLAR"};
             var isDecoys = new List<bool> {false, false, false, false, false, true};
@@ -287,8 +312,12 @@ namespace pwiz.SkylineTestTutorial
                 });
             PauseForScreenShot<EditPeakScoringModelDlg.ModelTab>("Edit Peak Scoring Model form with library score", 13);
 
-            RunUI(() => editDlgLibrary.SelectedGraphTab = 3);
-            PauseForScreenShot<EditPeakScoringModelDlg.QvalueTab>("Edit Peak Scoring Model form q value graph with library score metafile", 14);
+            RunUI(() =>
+            {
+                editDlgLibrary.SelectedGraphTab = 3;
+                selectedGraphControl = editDlgLibrary.SelectedGraphControl;
+            });
+            PauseForGraphScreenShot("Edit Peak Scoring Model form q value graph with library score metafile", selectedGraphControl);
 
             OkDialog(editDlgLibrary, editDlgLibrary.OkDialog);
 
@@ -334,7 +363,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(18.0, chromGroupInfo.RetentionTime.Value, 0.1);
             });
             FindNode(peptideSeqHighlight);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile corrected peak at 18.0", 17);
+            const string screenshotReplicate = "006_StC-DosR_B2";
+            PauseForChromGraphScreenShot("Chromatogram graph metafile corrected peak at 18.0", screenshotReplicate);
 
             // Reintegrate slightly differently, with a q value cutoff
             var reintegrateDlgQ = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
@@ -345,11 +375,20 @@ namespace pwiz.SkylineTestTutorial
                     reintegrateDlgQ.OverwriteManual = true;
                 });
             OkDialog(reintegrateDlgQ, reintegrateDlgQ.OkDialog);
-            PauseForScreenShot("Targets view with some null peaks clipped from main window", 17);
-            PauseForScreenShot<GraphChromatogram>("Chromatogram graph metafile with no picked peak", 18);
+            RunUIForScreenShot(() => SkylineWindow.SequenceTree.TopNode =
+                SkylineWindow.SequenceTree.SelectedNode.PrevVisibleNode.PrevVisibleNode);
+            FocusDocument();
+            PauseForTargetsScreenShot("Targets view with some null peaks clipped from main window", true, 4);
+            PauseForChromGraphScreenShot("Chromatogram graph metafile with no picked peak", screenshotReplicate);
 
             RestoreViewOnScreen(14);
             FindNode((622.3086).ToString(CultureInfo.CurrentCulture) + "++");
+            WaitForGraphs();
+            RunUIForScreenShot(() =>
+            {
+                SkylineWindow.GetGraphChrom(screenshotReplicate).ZoomTo(17.5, 18.4, 2E+5);
+                SkylineWindow.Width = 863;
+            });
             PauseForScreenShot("Main window with interference on transition", 19);
 
             // Export the mProphet features

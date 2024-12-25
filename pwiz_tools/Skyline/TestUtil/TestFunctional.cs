@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -190,7 +189,12 @@ namespace pwiz.SkylineTestUtil
 
         protected ScreenshotManager ScreenshotManager
         {
-            get { return _shotManager; }
+            get
+            {
+                Assume.IsNotNull(_shotManager); // This should be available when it is accessed, i.e. IsRecordingScreenshots
+                Assume.IsTrue(IsCoverShotMode); // This should only be necessary in IsCoverShotMode for composing cover shots from multiple screenshots
+                return _shotManager;
+            }
         }
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
@@ -281,18 +285,32 @@ namespace pwiz.SkylineTestUtil
                 dlg = WaitForOpenForm<TDlg>(millis);
             Assert.IsNotNull(dlg);
 
+            return dlg;
+        }
+
+        private static void EnsureScreenshotIcon(Form dlg)
+        {
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                var ico = dlg.Icon.Handle;
                 if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    ico == Resources.Skyline_Daily.Handle)
+                    AreIconsEqual(dlg.Icon, Resources.Skyline))    // Normally a fixed dialog will not have the Skyline icon
                 {
-                    if (ico != SkylineWindow.Icon.Handle)
+                    if (!AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
                         RunUI(() => dlg.Icon = SkylineWindow.Icon);
                 }
             }
-            return dlg;
+        }
+
+        private static bool AreIconsEqual(Icon icon1, Icon icon2)
+        {
+            using var ms1 = new MemoryStream();
+            using var ms2 = new MemoryStream();
+
+            icon1.Save(ms1);
+            icon2.Save(ms2);
+
+            return ms1.ToArray().SequenceEqual(ms2.ToArray());
         }
 
         /// <summary>
@@ -327,6 +345,17 @@ namespace pwiz.SkylineTestUtil
                     Assert.Fail(e.ToString());
                 }
             });
+        }
+
+        /// <summary>
+        /// Convenience function for getting a value from the UI thread
+        /// e.g. var value = CallUI(() => control.Value);
+        /// </summary>
+        public T CallUI<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            RunUI(() => result = func());
+            return result;
         }
 
         protected virtual bool ShowStartPage {get { return false; }}
@@ -425,6 +454,17 @@ namespace pwiz.SkylineTestUtil
         protected static void FocusDocument()
         {
             RunUI(SkylineWindow.FocusDocument);
+        }
+
+        public static void JiggleSelection()
+        {
+            if (!IsPauseForScreenShots)
+                return;
+
+            // Node change apparently required to get x-axis labels in peak areas view the way they should be
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextVisibleNode);
+            WaitForGraphs();
+            RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.PrevVisibleNode);
         }
 
         protected static void SelectNode(SrmDocument.Level level, int iNode)
@@ -764,6 +804,8 @@ namespace pwiz.SkylineTestUtil
                         PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
                     }
 
+                    EnsureScreenshotIcon(tForm);
+
                     return tForm;
                 }
 
@@ -775,6 +817,40 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
+        // Wait for a MultiButtonMsgDlg to be shown with a message that could have been created with the given format
+        public static MultiButtonMsgDlg WaitForMultiButtonMsgDlg(string messageFormat, int millis = WAIT_TIME)
+        {
+            // Break the message format into its constant parts
+            // e.g. "foo {1} bar baz {0} hmm" => "foo ", " bar baz ", " hmm"
+            var parts = messageFormat.Split('{');
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+                if (part.Contains("}"))
+                {
+                    parts[i] = part.Substring(part.IndexOf('}')+1);
+                }
+            }
+
+            // Find an open MultiButtonMsgDlg whose message contains all the constant parts of the given format
+            int waitCycles = GetWaitCycles(millis);
+            for (int i = 0; i < waitCycles; i++)
+            {
+                Assert.IsFalse(Program.TestExceptions.Any(), "Exception while running test");
+                foreach (var form in FindOpenForms<MultiButtonMsgDlg>())
+                {
+                    var message = form.Message;
+                    if (message != null && parts.All(p => string.IsNullOrEmpty(p) || message.Contains(p)))
+                    {
+                        return form; // Success
+                    }
+                }
+
+                Thread.Sleep(SLEEP_INTERVAL);
+            }
+            return null;
+
+        }
 
         public static TDlg WaitForOpenForm<TDlg>(int millis = WAIT_TIME) where TDlg : Form
         {
@@ -1327,14 +1403,6 @@ namespace pwiz.SkylineTestUtil
 
         private PauseAndContinueForm _pauseAndContinueForm;
 
-        private PauseAndContinueForm PauseAndContinueFormInstance
-        {
-            get
-            {
-                return _pauseAndContinueForm ??= new PauseAndContinueForm(ScreenshotManager);
-            }
-        }
-
         public void BeginDragDisplay(Control dockableForm, double xProportion, double yProportion)
         {
             if (!IsPauseForScreenShots)
@@ -1353,9 +1421,68 @@ namespace pwiz.SkylineTestUtil
                 RunUI(() => SkylineWindow.DockPanel.EndDragDisplay());
         }
 
+        protected Rectangle ShowReportsDropdown(string selectText)
+        {
+            var rectForm = Rectangle.Empty;
+            if (!IsPauseForScreenShots)
+                return rectForm;
+
+            // CONSIDER: The ShowDropDown() use below causes User+GDI handle leaks
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            RunUI(() =>
+            {
+                documentGridForm.NavBar.ReportsButton.ShowDropDown();   // We need to expand it to determine its full size
+                int ddHeight = documentGridForm.NavBar.ReportsButton.DropDown.Height;
+                var formLocation = new Point(SkylineWindow.DesktopBounds.Left + 200, SkylineWindow.DesktopBounds.Top + 200);
+                documentGridForm.NavBar.ReportsButton.HideDropDown();
+                var originalSize = documentGridForm.Size;
+                rectForm = new Rectangle(formLocation, new Size(documentGridForm.Width, ddHeight + 75));
+                // Make sure the dropdown fits into the window with some margin.
+                documentGridForm.FloatingPane.FloatAt(rectForm);
+                documentGridForm.NavBar.ReportsButton.ShowDropDown(); // TODO: Should deny closing until the screenshot is complete
+                documentGridForm.NavBar.ReportsButton.DropDown.Closing += DenyMenuClosing;
+
+                if (!string.IsNullOrEmpty(selectText))
+                {
+                    var items = documentGridForm.NavBar.ReportsButton.DropDown.Items;
+                    int itemIndex = IndexOfItem(items, selectText);
+                    if (itemIndex < 0)
+                        Assert.Fail("Reports menu does not contain an item with the text '{0}'", selectText);
+                    items[itemIndex].Select();
+                }
+
+                rectForm.Size = originalSize;
+            });
+            return rectForm;
+        }
+
+        protected void HideReportsDropdown()
+        {
+            if (!IsPauseForScreenShots)
+                return;
+
+            var documentGridForm = FindOpenForm<DocumentGridForm>();
+            RunUI(() =>
+            {
+                documentGridForm.NavBar.ReportsButton.DropDown.Closing -= DenyMenuClosing;
+                documentGridForm.NavBar.ReportsButton.HideDropDown();
+            });
+        }
+
+        private static int IndexOfItem(ToolStripItemCollection items, string itemText)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (Equals(items[i].Text, itemText))
+                    return i;
+            }
+
+            return -1;
+        }
+
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
-            return ClipBitmap(skylineWindowBmp, ComputeDockedFormsUnionRectangle(dockableForms));
+            return ClipBitmap(skylineWindowBmp.CleanupBorder(), ComputeDockedFormsUnionRectangle(dockableForms));
         }
 
         private Rectangle ComputeDockedFormsUnionRectangle(IList<DockableForm> dockableForms)
@@ -1378,7 +1505,7 @@ namespace pwiz.SkylineTestUtil
             int clipWidth = SkylineWindow.StatusSelectionWidth;
             int clipHeight = SkylineWindow.StatusBarHeight + 1;
             var cropRect = new Rectangle(skylineWindowBmp.Width - clipWidth, skylineWindowBmp.Height - clipHeight, clipWidth, clipHeight);
-            return ClipBitmap(skylineWindowBmp, cropRect);
+            return ClipBitmap(skylineWindowBmp.CleanupBorder(), cropRect);
         }
 
         protected Bitmap ClipGridToolbarSelection(Bitmap documentGridBmp)
@@ -1403,6 +1530,8 @@ namespace pwiz.SkylineTestUtil
             var sequenceTreeRect = sequenceTree.Bounds;
 
             sequenceTreeRect.Inflate(-1, -1);   // Borders outside parent rect
+            sequenceTreeRect.X += 1;
+            sequenceTreeRect.Y += 1;
 
             const int GWL_STYLE = -16;
             const int WS_VSCROLL = 0x00200000;
@@ -1569,76 +1698,6 @@ namespace pwiz.SkylineTestUtil
             return bmp;
         }
 
-        public static void DrawArrowOnBitmap(Bitmap bmp, Point startPoint, Point endPoint, int tailWidth = 6, int arrowHeadWidth = 16, int arrowHeadHeight = 16)
-        {
-            using Graphics graphics = Graphics.FromImage(bmp);
-
-            // Set high quality for smoother drawing
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // Define direction vector for the arrow head
-            double angle = Math.Atan2(endPoint.Y - startPoint.Y, endPoint.X - startPoint.X);
-            double sinAngle = Math.Sin(angle);
-            double cosAngle = Math.Cos(angle);
-
-            // Create a pen for the arrow tail with specified tail width
-            using Pen pen = new Pen(Color.FromArgb(192, 0, 0), tailWidth);
-
-            pen.StartCap = LineCap.Flat;
-            pen.EndCap = LineCap.Flat;
-
-            // Calculate the point where the tail should end (start of the arrowhead)
-            Point tailEndPoint = new Point(
-                (int)(endPoint.X - arrowHeadWidth * cosAngle),
-                (int)(endPoint.Y - arrowHeadWidth * sinAngle)
-            );
-
-            // Draw the tail of the arrow
-            graphics.DrawLine(pen, startPoint, tailEndPoint);
-
-            // Calculate arrowhead points
-            using SolidBrush brush = new SolidBrush(Color.FromArgb(192, 0, 0));
-
-            Point[] arrowHead = new Point[]
-            {
-                endPoint, // Tip of the arrow
-                new Point(
-                    (int)(endPoint.X - arrowHeadWidth * cosAngle + arrowHeadHeight * sinAngle / 2),
-                    (int)(endPoint.Y - arrowHeadWidth * sinAngle - arrowHeadHeight * cosAngle / 2)
-                ),
-                new Point(
-                    (int)(endPoint.X - arrowHeadWidth * cosAngle - arrowHeadHeight * sinAngle / 2),
-                    (int)(endPoint.Y - arrowHeadWidth * sinAngle + arrowHeadHeight * cosAngle / 2)
-                )
-            };
-
-            // Draw the arrow head
-            graphics.FillPolygon(brush, arrowHead);
-        }
-
-        // Display a placeholder message on a tutorial screenshot. Use when screenshots aren't correct yet and need to be updated.
-        public static Bitmap MarkBitmapAsPlaceholder(Bitmap bmp)
-        {
-            // TODO: support wrapping text on narrow images
-            var g = Graphics.FromImage(bmp);
-            var font = new Font("Tahoma", 12);
-            var text = "Placeholder screenshot, see test for more info";
-            var size = TextRenderer.MeasureText(g, text, font);
-
-            TextRenderer.DrawText(g,
-                text,
-                font,
-                new Rectangle(25, 25, size.Width, size.Height),
-                Color.Black,
-                Color.Yellow,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
-                TextFormatFlags.GlyphOverhangPadding);
-            g.Flush();
-
-            return bmp;
-
-        }
-
         protected GraphSummary FindGraphSummaryByGraphType<TGraphPane>() where TGraphPane : SummaryGraphPane
         {
             return FormUtil.OpenForms.OfType<GraphSummary>()
@@ -1697,6 +1756,9 @@ namespace pwiz.SkylineTestUtil
 
         public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
+            if (!IsPauseForScreenShots)
+                return;
+
             var graphRt = SkylineWindow.GraphRetentionTime;
             if (graphRt.TryGetGraphPane<RTLinearRegressionGraphPane>(out _)) 
                 WaitForRegression();
@@ -1741,7 +1803,18 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
-        /// Type that indicates a full-screen screenshot should be taken
+        /// Useful for keeping a menu on screen. Assign this with += to the menu
+        /// dropdown Closing event.
+        /// </summary>
+        protected void DenyMenuClosing(object sender, ToolStripDropDownClosingEventArgs e)
+        {
+            e.Cancel = true;
+        }
+
+        /// <summary>
+        /// Type that indicates a full-screen screenshot should be taken.
+        /// A null Type and a null Control were already reserved for a
+        /// screenshot of the Skyline form.
         /// </summary>
         public class ScreenForm : IFormView
         {
@@ -1765,6 +1838,8 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(Program.PauseSeconds * 1000);
             else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= ScreenshotCounter)
             {
+                WaitForGraphs();    // Screenshots always need graphs to be fully updated
+
                 if (screenshotForm == null)
                 {
                     if (!fullScreen && formType != null)
@@ -1781,15 +1856,16 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    Thread.Sleep(1000); // Wait for UI to settle down - Necessary?
-                    ScreenshotManager.ActivateScreenshotForm(screenshotForm);
-                    var fileToSave = _shotManager.ScreenshotFile(ScreenshotCounter);
+                    Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
+                    _shotManager.ActivateScreenshotForm(screenshotForm);
+                    var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
                 }
                 else
                 {
                     bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
-                    PauseAndContinueFormInstance.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                    _pauseAndContinueForm ??= new PauseAndContinueForm(_shotManager);
+                    _pauseAndContinueForm.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
             else
@@ -1816,13 +1892,13 @@ namespace pwiz.SkylineTestUtil
                     "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
             });
             var coverSavePath = GetCoverShotPath();
-            ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
+            _shotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
             if (coverSavePath != null)
             {
                 // Screenshot for the StartPage
                 coverSavePath2 = GetCoverShotPath(TestContext.GetProjectDirectory(@"Resources\StartPage"), "_start");
-                ScreenshotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
+                _shotManager.TakeShot(SkylineWindow, false, coverSavePath2, ProcessCoverShot, 0.20);
             }
             if (coverSavePath == null)
             {
@@ -1893,73 +1969,74 @@ namespace pwiz.SkylineTestUtil
                 return; // Don't want to run this lengthy test right now
             }
 
-            bool firstTry = true;
-            // Be prepared to re-run test in the event that a previously downloaded data file is damaged or stale
-            for (;;)
+            RunFunctionalTestAttempt(defaultUiMode);
+
+            if (Program.TestExceptions.Count > 0 && RetryDataDownloads)
             {
                 try
                 {
-                    RunFunctionalTestOrThrow(defaultUiMode);
+                    if (FreshenTestDataDownloads())
+                    {
+                        // Clear exceptions and run tests again with the fresh downloads
+                        Program.TestExceptions.Clear();
+
+                        RunFunctionalTestAttempt(defaultUiMode);
+                    }
                 }
                 catch (Exception x)
                 {
-                    Program.AddTestException(x);
+                    Program.AddTestException(x); // Some trouble with data download, make a note of it
                 }
+            }
 
-                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
-
-                // Delete unzipped test files.
-                if (TestFilesDirs != null)
-                {
-                    foreach (TestFilesDir dir in TestFilesDirs)
-                    {
-                        try
-                        {
-                            dir?.Cleanup();
-                        }
-                        catch (Exception x)
-                        {
-                            Program.AddTestException(x);
-                            FileStreamManager.Default.CloseAllStreams();
-                        }
-                    }
-                }
-
-                if (firstTry && Program.TestExceptions.Count > 0 && RetryDataDownloads)
-                {
-                    try
-                    {
-                        if (FreshenTestDataDownloads())
-                        {
-                            firstTry = false;
-                            Program.TestExceptions.Clear();
-                            continue;
-                        }
-                    }
-                    catch (Exception xx)
-                    {
-                        Program.AddTestException(xx); // Some trouble with data download, make a note of it
-                    }
-                }
-
-
-                if (Program.TestExceptions.Count > 0)
-                {
-                    //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
-                    const string errorSeparator = "------------------------------------------------------";
-                    Assert.Fail("{0}{1}{2}{3}",
-                        Environment.NewLine + Environment.NewLine,
-                        errorSeparator + Environment.NewLine,
-                        Program.TestExceptions[0],
-                        Environment.NewLine + errorSeparator + Environment.NewLine);
-                }
-                break;
+            if (Program.TestExceptions.Count > 0)
+            {
+                //Log<AbstractFunctionalTest>.Exception(@"Functional test exception", Program.TestExceptions[0]);
+                const string errorSeparator = "------------------------------------------------------";
+                Assert.Fail("{0}{1}{2}{3}",
+                    Environment.NewLine + Environment.NewLine,
+                    errorSeparator + Environment.NewLine,
+                    Program.TestExceptions[0],
+                    Environment.NewLine + errorSeparator + Environment.NewLine);
             }
 
             if (!_testCompleted)
             {
                 //Log<AbstractFunctionalTest>.Fail(@"Functional test did not complete");
                 Assert.Fail("Functional test did not complete");
+            }
+        }
+
+        private void RunFunctionalTestAttempt(string defaultUiMode)
+        {
+            try
+            {
+                RunFunctionalTestOrThrow(defaultUiMode);
+            }
+            catch (Exception x)
+            {
+                Program.AddTestException(x);
+            }
+
+            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+
+            // Delete unzipped test files.
+            if (TestFilesDirs != null)
+            {
+                CleanupPersistentDir(); // Clean before checking for modifications
+
+                foreach (var dir in TestFilesDirs.Where(d => d != null))
+                {
+                    try
+                    {
+                        dir.Cleanup();
+                    }
+                    catch (Exception x)
+                    {
+                        Program.AddTestException(x);
+                        FileStreamManager.Default.CloseAllStreams();
+                    }
+                }
             }
         }
 
@@ -1971,8 +2048,6 @@ namespace pwiz.SkylineTestUtil
             LocalizationHelper.InitThread();
 
             UnzipTestFiles();
-
-            _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
 
             // Run test in new thread (Skyline on main thread).
             Program.Init();
@@ -2292,6 +2367,10 @@ namespace pwiz.SkylineTestUtil
                     Assert.IsTrue(Program.MainWindow != null && Program.MainWindow.IsHandleCreated,
                         @"Timeout {0} seconds exceeded in WaitForSkyline", waitCycles * SLEEP_INTERVAL / 1000);
                 }
+
+                if (IsRecordingScreenShots)
+                    _shotManager = new ScreenshotManager(SkylineWindow, TutorialPath);
+
                 BeginAuditLogging();
                 RunTest();
                 EndAuditLogging();
