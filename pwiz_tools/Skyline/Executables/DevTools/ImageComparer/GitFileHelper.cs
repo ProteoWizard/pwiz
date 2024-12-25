@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -20,9 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using pwiz.Common.SystemUtil;
 
-namespace pwiz.SkylineTestUtil
+namespace ImageComparer
 {
     internal static class GitFileHelper
     {
@@ -53,6 +52,8 @@ namespace pwiz.SkylineTestUtil
             using var reader = new StringReader(output);
             while (reader.ReadLine() is { } line)
             {
+                if (!line.StartsWith(" M "))
+                    continue;
                 // 'git status --porcelain' format: XY path/to/file
                 var filePath = line.Substring(3).Replace('/', Path.DirectorySeparatorChar);
                 yield return Path.Combine(GetPathInfo(directoryPath).Root, filePath);
@@ -150,8 +151,19 @@ namespace pwiz.SkylineTestUtil
                 throw new InvalidOperationException($"The path '{fullPath}' is not part of a Git repository.");
             }
 
-            var relativePath = PathEx.GetRelativePath(repoRoot, fullPath).Replace(Path.DirectorySeparatorChar, '/');
+            var relativePath = GetRelativePath(repoRoot, fullPath).Replace(Path.DirectorySeparatorChar, '/');
             return new PathInfo { Root = repoRoot, RelativePath = relativePath };
+        }
+
+        private static string GetRelativePath(string basePath, string fullPath)
+        {
+            if (!basePath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                basePath += Path.DirectorySeparatorChar;
+            if (fullPath.ToLowerInvariant().StartsWith(basePath.ToLowerInvariant()))
+            {
+                return fullPath.Substring(basePath.Length);
+            }
+            return fullPath;
         }
 
         private struct PathInfo
