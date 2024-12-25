@@ -1,5 +1,4 @@
-﻿using ImageComparer;
-using pwiz.Common.Controls;
+﻿using pwiz.Common.Controls;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -58,7 +57,7 @@ namespace pwiz.SkylineTestUtil
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripGotoWeb = new System.Windows.Forms.ToolStripButton();
             this.toolStripDescription = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripPickColorButton = new ImageComparer.AlphaColorPickerButton();
+            this.toolStripPickColorButton = new AlphaColorPickerButton();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.previewSplitContainer)).BeginInit();
