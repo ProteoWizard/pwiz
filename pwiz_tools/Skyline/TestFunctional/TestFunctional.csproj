@@ -194,6 +194,7 @@
     <Compile Include="ExportPropertiesTest.cs" />
     <Compile Include="FindNodeCancelTest.cs" />
     <Compile Include="FullScanPropertiesTest.cs" />
+    <Compile Include="GpfIrtTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />
     <Compile Include="ImmediateWindowWarningsTest.cs" />
     <Compile Include="ImportPromptToSaveTest.cs" />

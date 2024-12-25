@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model
         public const int MAX_PARALLEL_LOAD_FILES = 12;
         public const int MAX_PARALLEL_LOAD_FILES_USER_GC = 3; // On some systems we find that parallel performance suffers when not using ServerGC, as during SkylineTester runs
 
-        private readonly QueueWorker<LoadInfo> _worker;
+        private readonly QueueWorker<InjectionGroup> _worker;
         private readonly Dictionary<MsDataFileUri, int> _loadingPaths;
         private readonly bool _synchronousMode;
         private int? _threadCountPreferred;
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model
 
         public MultiFileLoader(bool synchronousMode)
         {
-            _worker = new QueueWorker<LoadInfo>(null, LoadFile);
+            _worker = new QueueWorker<InjectionGroup>(null, LoadFile);
             _loadingPaths = new Dictionary<MsDataFileUri, int>();
             _synchronousMode = synchronousMode;
             _statusLock = new object();
@@ -204,6 +204,8 @@ namespace pwiz.Skyline.Model
                 _worker.RunAsync(threadCount, @"Load file");
 
                 var accumulator = new FileLoadCompletionAccumulator(complete, threadCount, uniqueLoadList.Count);
+                var sharedInjectionGroups = new Dictionary<string, InjectionGroup>();
+                var injectionGroups = new List<InjectionGroup>();
 
                 // Add new paths to queue.
                 foreach (var loadItem in uniqueLoadList)
@@ -211,19 +213,34 @@ namespace pwiz.Skyline.Model
                     var loadingStatus = new ChromatogramLoadingStatus(loadItem.DataFile, loadItem.ReplicateList);
 
                     ChangeStatus(s => s.Add(loadingStatus));
-
-                    // Queue work item to load the file.
-                    _worker.Add(new LoadInfo
+                    InjectionGroup injectionGroup;
+                    ChromatogramSet chromatogramSet = null;
+                    if (loadItem.ReplicateList.Count == 1)
                     {
-                        Path = loadItem.DataFile,
-                        PartPath = loadItem.PartPath,
-                        Document = document,
-                        DocumentFilePath = documentFilePath,
-                        CacheRecalc = cacheRecalc,
-                        Status = loadingStatus,
-                        LoadMonitor = new SingleFileLoadMonitor(loadMonitor, loadItem.DataFile),
-                        Complete = accumulator.Complete
-                    });
+                        document.MeasuredResults.TryGetChromatogramSet(loadItem.ReplicateList[0], out chromatogramSet, out _);
+                    }
+
+                    if (true == chromatogramSet?.MergeIrts)
+                    {
+                        if (!sharedInjectionGroups.TryGetValue(chromatogramSet.Name, out injectionGroup))
+                        {
+                            injectionGroup = new InjectionGroup(document, documentFilePath, cacheRecalc, accumulator, chromatogramSet,
+                                loadMonitor);
+                            injectionGroups.Add(injectionGroup);
+                            sharedInjectionGroups.Add(chromatogramSet.Name, injectionGroup);
+                        }
+                    }
+                    else
+                    {
+                        injectionGroup = new InjectionGroup(document, documentFilePath, cacheRecalc, accumulator, null, loadMonitor);
+                        injectionGroups.Add(injectionGroup);
+                    }
+                    injectionGroup.AddFileToLoad(loadItem.DataFile, loadItem.PartPath, loadingStatus);
+                }
+
+                foreach (var injectionGroup in injectionGroups)
+                {
+                    _worker.Add(injectionGroup);
                 }
             }
         }
@@ -291,33 +308,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private class LoadInfo
+        private void LoadFile(InjectionGroup injectionGroup, int threadIndex)
         {
-            public MsDataFileUri Path;
-            public string PartPath;
-            public SrmDocument Document;
-            public string DocumentFilePath;
-            public ChromatogramCache CacheRecalc;
-            public IProgressStatus Status;
-            public ILoadMonitor LoadMonitor;
-            public Action<ChromatogramCache, IProgressStatus> Complete;
-        }
-
-        private void LoadFile(LoadInfo loadInfo, int threadIndex)
-        {
-            ChromatogramCache.Build(
-                loadInfo.Document,
-                loadInfo.DocumentFilePath,
-                loadInfo.CacheRecalc,
-                loadInfo.PartPath,
-                loadInfo.Path,
-                loadInfo.Status,
-                loadInfo.LoadMonitor,
-                loadInfo.Complete);
-
-            var loadingStatus = loadInfo.Status as ChromatogramLoadingStatus;
-            if (loadingStatus != null)
-                loadingStatus.Transitions.Flush();
+            injectionGroup.Load();
         }
     }
 

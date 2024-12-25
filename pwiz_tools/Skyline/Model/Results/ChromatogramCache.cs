@@ -719,35 +719,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static void Build(SrmDocument document, string documentFilePath, ChromatogramCache cacheRecalc,
-            string cachePath, MsDataFileUri msDataFileUri, IProgressStatus status, ILoadMonitor loader,
-            Action<ChromatogramCache, IProgressStatus> complete)
-        {
-            try
-            {
-                if (Program.MultiProcImport && Program.ImportProgressPipe == null)
-                {
-                    // Import using a child process.
-                    Run(msDataFileUri, documentFilePath, cachePath, status, loader);
-
-                    var cacheNew = Load(cachePath, status, loader, document);
-                    complete(cacheNew, status);
-                }
-                else
-                {
-                    // Import using threads in this process.
-                    status = ((ChromatogramLoadingStatus) status).ChangeFilePath(msDataFileUri);
-                    var builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, msDataFileUri, loader, status, complete);
-                    builder.BuildCache();
-                }
-            }
-            catch (Exception x)
-            {
-                complete(null, status.ChangeErrorException(x));
-            }
-        }
-
-        private static void Run(MsDataFileUri msDataFileUri, string documentFilePath, string cachePath, IProgressStatus status, ILoadMonitor loader)
+        public static void BuildInSeparateProcess(MsDataFileUri msDataFileUri, string documentFilePath, string cachePath, IProgressStatus status, ILoadMonitor loader)
         {
             // Arguments for child Skyline process.
             string importProgressPipe = @"SkylineImportProgress-" + Guid.NewGuid();

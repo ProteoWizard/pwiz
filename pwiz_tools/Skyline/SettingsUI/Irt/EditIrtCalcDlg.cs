@@ -934,22 +934,30 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private static IEnumerable<IRetentionTimeProvider> GetRetentionTimeProviders(SrmDocument document)
             {
-                return document.Settings.MeasuredResults.MSDataFileInfos.Select(fileInfo => new DocumentRetentionTimeProvider(document, fileInfo));
+                for (int replicateIndex = 0;
+                     replicateIndex < document.MeasuredResults.Chromatograms.Count;
+                     replicateIndex++)
+                {
+                    foreach (var fileInfo in document.MeasuredResults.Chromatograms[replicateIndex].MSDataFileInfos)
+                    {
+                        yield return new DocumentRetentionTimeProvider(document, replicateIndex, fileInfo);
+                    }
+                }
             }
 
             private sealed class DocumentRetentionTimeProvider : IRetentionTimeProvider
             {
                 private readonly TargetMap<double> _dictPeptideRetentionTime;
 
-                public DocumentRetentionTimeProvider(SrmDocument document, ChromFileInfo fileInfo)
+                public DocumentRetentionTimeProvider(SrmDocument document, int replicateIndex, ChromFileInfo fileInfo)
                 {
                     Name = fileInfo.FilePath.ToString();
 
                     _dictPeptideRetentionTime =
-                        new TargetMap<double>(GetRetentionTimesFromDocument(document, fileInfo));
+                        new TargetMap<double>(GetRetentionTimesFromDocument(document, replicateIndex, fileInfo));
                 }
 
-                private static IEnumerable<KeyValuePair<Target, double>> GetRetentionTimesFromDocument(SrmDocument document, ChromFileInfo fileInfo)
+                private static IEnumerable<KeyValuePair<Target, double>> GetRetentionTimesFromDocument(SrmDocument document, int replicateIndex, ChromFileInfo fileInfo)
                 {
                     var targets = new HashSet<Target>();
                     foreach (var nodePep in document.Molecules)
@@ -957,7 +965,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         var modSeq = document.Settings.GetModifiedSequence(nodePep);
                         if (!targets.Add(modSeq))
                             continue;
-                        var centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);
+                        var centerTime = nodePep.GetSchedulingTime(replicateIndex, fileInfo.FileId);
                         if (!centerTime.HasValue)
                             continue;
                         yield return new KeyValuePair<Target, double>(modSeq, centerTime.Value);
