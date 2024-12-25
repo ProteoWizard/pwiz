@@ -25,6 +25,7 @@ namespace KeepResxW
             @"shared\zedgraph\*",
             @"shared\proteomedb\forms\proteomedbform.resx",
             @"skyline\executables\autoqc\*",        // For now
+            @"skyline\executables\devtools\*",
             @"skyline\executables\keepresxw\*",
             @"skyline\executables\localizationhelper\*",
             @"skyline\executables\multiload\*",

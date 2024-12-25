@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -286,18 +285,32 @@ namespace pwiz.SkylineTestUtil
                 dlg = WaitForOpenForm<TDlg>(millis);
             Assert.IsNotNull(dlg);
 
+            return dlg;
+        }
+
+        private static void EnsureScreenshotIcon(Form dlg)
+        {
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
                 if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    dlg.Icon.Handle == Resources.Skyline.Handle)    // Normally a fixed dialog will not have the Skyline icon handle
+                    AreIconsEqual(dlg.Icon, Resources.Skyline))    // Normally a fixed dialog will not have the Skyline icon
                 {
-                    var ico = dlg.Icon.Handle;
-                    if (ico != SkylineWindow.Icon.Handle)
+                    if (!AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
                         RunUI(() => dlg.Icon = SkylineWindow.Icon);
                 }
             }
-            return dlg;
+        }
+
+        private static bool AreIconsEqual(Icon icon1, Icon icon2)
+        {
+            using var ms1 = new MemoryStream();
+            using var ms2 = new MemoryStream();
+
+            icon1.Save(ms1);
+            icon2.Save(ms2);
+
+            return ms1.ToArray().SequenceEqual(ms2.ToArray());
         }
 
         /// <summary>
@@ -332,6 +345,17 @@ namespace pwiz.SkylineTestUtil
                     Assert.Fail(e.ToString());
                 }
             });
+        }
+
+        /// <summary>
+        /// Convenience function for getting a value from the UI thread
+        /// e.g. var value = CallUI(() => control.Value);
+        /// </summary>
+        public T CallUI<T>([InstantHandle] Func<T> func)
+        {
+            T result = default;
+            RunUI(() => result = func());
+            return result;
         }
 
         protected virtual bool ShowStartPage {get { return false; }}
@@ -779,6 +803,8 @@ namespace pwiz.SkylineTestUtil
                         formSeen.Saw(formType);
                         PauseAndContinueForm.Show(string.Format("Pausing for {0}", formType));
                     }
+
+                    EnsureScreenshotIcon(tForm);
 
                     return tForm;
                 }
@@ -1456,7 +1482,7 @@ namespace pwiz.SkylineTestUtil
 
         protected Bitmap ClipSkylineWindowShotWithForms(Bitmap skylineWindowBmp, IList<DockableForm> dockableForms)
         {
-            return ClipBitmap(skylineWindowBmp, ComputeDockedFormsUnionRectangle(dockableForms));
+            return ClipBitmap(skylineWindowBmp.CleanupBorder(), ComputeDockedFormsUnionRectangle(dockableForms));
         }
 
         private Rectangle ComputeDockedFormsUnionRectangle(IList<DockableForm> dockableForms)
@@ -1479,7 +1505,7 @@ namespace pwiz.SkylineTestUtil
             int clipWidth = SkylineWindow.StatusSelectionWidth;
             int clipHeight = SkylineWindow.StatusBarHeight + 1;
             var cropRect = new Rectangle(skylineWindowBmp.Width - clipWidth, skylineWindowBmp.Height - clipHeight, clipWidth, clipHeight);
-            return ClipBitmap(skylineWindowBmp, cropRect);
+            return ClipBitmap(skylineWindowBmp.CleanupBorder(), cropRect);
         }
 
         protected Bitmap ClipGridToolbarSelection(Bitmap documentGridBmp)
@@ -1672,76 +1698,6 @@ namespace pwiz.SkylineTestUtil
             return bmp;
         }
 
-        public static void DrawArrowOnBitmap(Bitmap bmp, Point startPoint, Point endPoint, int tailWidth = 6, int arrowHeadWidth = 16, int arrowHeadHeight = 16)
-        {
-            using Graphics graphics = Graphics.FromImage(bmp);
-
-            // Set high quality for smoother drawing
-            graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // Define direction vector for the arrow head
-            double angle = Math.Atan2(endPoint.Y - startPoint.Y, endPoint.X - startPoint.X);
-            double sinAngle = Math.Sin(angle);
-            double cosAngle = Math.Cos(angle);
-
-            // Create a pen for the arrow tail with specified tail width
-            using Pen pen = new Pen(Color.FromArgb(192, 0, 0), tailWidth);
-
-            pen.StartCap = LineCap.Flat;
-            pen.EndCap = LineCap.Flat;
-
-            // Calculate the point where the tail should end (start of the arrowhead)
-            Point tailEndPoint = new Point(
-                (int)(endPoint.X - arrowHeadWidth * cosAngle),
-                (int)(endPoint.Y - arrowHeadWidth * sinAngle)
-            );
-
-            // Draw the tail of the arrow
-            graphics.DrawLine(pen, startPoint, tailEndPoint);
-
-            // Calculate arrowhead points
-            using SolidBrush brush = new SolidBrush(Color.FromArgb(192, 0, 0));
-
-            Point[] arrowHead = new Point[]
-            {
-                endPoint, // Tip of the arrow
-                new Point(
-                    (int)(endPoint.X - arrowHeadWidth * cosAngle + arrowHeadHeight * sinAngle / 2),
-                    (int)(endPoint.Y - arrowHeadWidth * sinAngle - arrowHeadHeight * cosAngle / 2)
-                ),
-                new Point(
-                    (int)(endPoint.X - arrowHeadWidth * cosAngle - arrowHeadHeight * sinAngle / 2),
-                    (int)(endPoint.Y - arrowHeadWidth * sinAngle + arrowHeadHeight * cosAngle / 2)
-                )
-            };
-
-            // Draw the arrow head
-            graphics.FillPolygon(brush, arrowHead);
-        }
-
-        // Display a placeholder message on a tutorial screenshot. Use when screenshots aren't correct yet and need to be updated.
-        public static Bitmap MarkBitmapAsPlaceholder(Bitmap bmp)
-        {
-            // TODO: support wrapping text on narrow images
-            var g = Graphics.FromImage(bmp);
-            var font = new Font("Tahoma", 12);
-            var text = "Placeholder screenshot, see test for more info";
-            var size = TextRenderer.MeasureText(g, text, font);
-
-            TextRenderer.DrawText(g,
-                text,
-                font,
-                new Rectangle(25, 25, size.Width, size.Height),
-                Color.Black,
-                Color.Yellow,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |
-                TextFormatFlags.GlyphOverhangPadding);
-            g.Flush();
-
-            return bmp;
-
-        }
-
         protected GraphSummary FindGraphSummaryByGraphType<TGraphPane>() where TGraphPane : SummaryGraphPane
         {
             return FormUtil.OpenForms.OfType<GraphSummary>()
@@ -1900,7 +1856,7 @@ namespace pwiz.SkylineTestUtil
 
                 if (IsAutoScreenShotMode)
                 {
-                    // Thread.Sleep(500); // Wait for UI to settle down - Necessary?
+                    Thread.Sleep(500); // Wait for UI to settle down - or screenshots can end up blurry
                     _shotManager.ActivateScreenshotForm(screenshotForm);
                     var fileToSave = _shotManager.ScreenshotDestFile(ScreenshotCounter);
                     _shotManager.TakeShot(screenshotForm, fullScreen, fileToSave, processShot);
