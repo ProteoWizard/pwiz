@@ -94,5 +94,29 @@ namespace ImageComparer.Properties {
                 this["LastOpenFolder"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Red")]
+        public global::System.Drawing.Color ImageDiffColor {
+            get {
+                return ((global::System.Drawing.Color)(this["ImageDiffColor"]));
+            }
+            set {
+                this["ImageDiffColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("127")]
+        public int ImageDiffAlpha {
+            get {
+                return ((int)(this["ImageDiffAlpha"]));
+            }
+            set {
+                this["ImageDiffAlpha"] = value;
+            }
+        }
     }
 }

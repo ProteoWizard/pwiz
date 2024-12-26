@@ -142,6 +142,9 @@
   <ItemGroup>
     <Compile Include="AbstractFunctionalTestEx.cs" />
     <Compile Include="AbstractUnitTestEx.cs" />
+    <Compile Include="AlphaColorPickerButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="AssertEx.cs" />
     <Compile Include="AsSmallMoleculeTestUtil.cs" />
     <Compile Include="AuditLogUtil.cs" />
@@ -162,6 +165,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>TestUtilSettings.settings</DependentUpon>
     </Compile>
+    <Compile Include="ScreenshotInfo.cs" />
     <Compile Include="ScreenshotPreviewForm.cs">
       <SubType>Form</SubType>
     </Compile>
