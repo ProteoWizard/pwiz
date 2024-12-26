@@ -103,6 +103,26 @@ namespace pwiz.SkylineTestUtil.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap filechanged {
+            get {
+                object obj = ResourceManager.GetObject("filechanged", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap fileunchanged {
+            get {
+                object obj = ResourceManager.GetObject("fileunchanged", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap gitsource {
             get {
                 object obj = ResourceManager.GetObject("gitsource", resourceCulture);

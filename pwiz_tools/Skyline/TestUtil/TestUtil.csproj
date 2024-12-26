@@ -304,6 +304,8 @@
     <None Include="Resources\noscreenshot.png" />
     <None Include="Resources\hand-cur.bmp" />
     <None Include="Resources\gitsource.png" />
+    <None Include="Resources\fileunchanged.png" />
+    <None Include="Resources\filechanged.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
