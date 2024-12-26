@@ -910,6 +910,12 @@ namespace pwiz.Skyline.Controls.Databinding
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
         {
             UpdateDendrograms();
+
+            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
+            {
+                int horizontalOffset = e.NewValue;
+                dataGridViewEx1.HorizontalScrollingOffset = horizontalOffset;
+            }
         }
 
         private void bindingListSource_BindingComplete(object sender, BindingCompleteEventArgs e)
