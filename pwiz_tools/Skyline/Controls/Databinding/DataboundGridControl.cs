@@ -36,11 +36,8 @@ using pwiz.Skyline.Alerts;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Clustering;
 using pwiz.Skyline.Model.Databinding;
-using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using static pwiz.Skyline.Model.Results.ChromCacheMinimizer.MinStatistics;
-using Newtonsoft.Json.Linq;
 
 // This code is associated with the DocumentGrid.
 
@@ -687,9 +684,10 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
             if (true == replicatePivotColumns?.IsPivoted())
-            {
+            {                
                 dataGridViewEx1.Show();
-                dataGridViewEx1.DataSource = buildPivotByReplicateDataSet(replicatePivotColumns);
+                dataGridViewEx1.DataSource = BuildPivotByReplicateDataSet(replicatePivotColumns);
+                AlignPivotByReplicateGrid(replicatePivotColumns);
             }
             else if(dataGridViewEx1.Visible)
             {
@@ -820,7 +818,38 @@ namespace pwiz.Skyline.Controls.Databinding
             splitContainerHorizontal.Panel1Collapsed = false;
         }
 
-        private DataTable buildPivotByReplicateDataSet(ReplicatePivotColumns replicatePivotColumns)
+        private void AlignPivotByReplicateGrid(ReplicatePivotColumns replicatePivotColumns)
+        {
+            var nonReplicateWidth = 0;
+            var replicateWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
+                .ToDictionary(kvp => kvp.Key.ReplicateName,
+                    kvp => 0);
+
+            foreach (DataGridViewColumn column in boundDataGridView.Columns)
+            {
+                var foundReplicate = replicateWidthMap.Keys.FirstOrDefault(key => column.DataPropertyName.Contains(key));
+                if (foundReplicate != null)
+                {
+                    replicateWidthMap[foundReplicate] += column.Width;
+                }
+                else
+                {
+                    nonReplicateWidth += column.Width;
+                }
+            }
+
+            dataGridViewEx1.Columns[@"Property"]!.Width = nonReplicateWidth;
+            foreach (DataGridViewColumn column in dataGridViewEx1.Columns)
+            {
+                if (replicateWidthMap.TryGetValue(column.Name, out var value))
+                {
+                    column.Width = value;
+                }
+            }
+
+        }
+
+        private DataTable BuildPivotByReplicateDataSet(ReplicatePivotColumns replicatePivotColumns)
         {
             var dataTable = new DataTable();
 
@@ -870,6 +899,10 @@ namespace pwiz.Skyline.Controls.Databinding
         }
 
         private void boundDataGridView_Resize(object sender, EventArgs e)
+        {
+            UpdateDendrograms();
+        }
+        private void boundDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             UpdateDendrograms();
         }
