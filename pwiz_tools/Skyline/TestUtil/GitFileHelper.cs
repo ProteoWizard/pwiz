@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -53,6 +53,8 @@ namespace pwiz.SkylineTestUtil
             using var reader = new StringReader(output);
             while (reader.ReadLine() is { } line)
             {
+                if (!line.StartsWith(" M "))
+                    continue;
                 // 'git status --porcelain' format: XY path/to/file
                 var filePath = line.Substring(3).Replace('/', Path.DirectorySeparatorChar);
                 yield return Path.Combine(GetPathInfo(directoryPath).Root, filePath);
