@@ -91,7 +91,10 @@ namespace pwiz.SkylineTestUtil
         {
             using var g = Graphics.FromImage(bmp);
             using var pen = new Pen(color);
-            g.DrawRectangle(pen, 0, 0, bmp.Width - 1, bmp.Height - 1);
+            if (rect.Height == 1)
+                g.DrawLine(pen, rect.Location, new Point(rect.Right, rect.Top));
+            else
+                g.DrawRectangle(pen, rect.X, rect.Y, rect.Width - 1, rect.Height - 1);
             return bmp;
         }
 
@@ -123,11 +126,11 @@ namespace pwiz.SkylineTestUtil
             // Draw the image within the curved shape just drawn
             using var pathClipping = new GraphicsPath();
             rect.Inflate(-1, -1);
-            AddRoundedRectangle(pathClipping, rect, cornerRadius + cornerRadius/2); // Corners are very tricky with transparency
+            // Corner transparency is very tricky. So, it is necessary to clip the corner
+            // areas slightly further in then their true edges.
+            AddRoundedRectangle(pathClipping, rect, cornerRadius + cornerRadius/2);
             g.SmoothingMode = SmoothingMode.None;
             g.SetClip(pathClipping);
-            // using var foregroundBrush = new SolidBrush(Color.Red);
-            // g.FillRectangle(foregroundBrush, 0, 0, bmp.Width, bmp.Height);
             g.DrawImage(bmp, new Point(0, 0));
 
             return result;
