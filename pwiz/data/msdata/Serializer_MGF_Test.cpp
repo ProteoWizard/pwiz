@@ -156,8 +156,7 @@ void testWriteRead(const MSData& msd)
     DiffConfig diffConfig;
     diffConfig.ignoreIdentity = true;
     diffConfig.ignoreChromatograms = true;
-    diffConfig.ignoreSpectrumTitle = true;
-
+    
     Diff<MSData, DiffConfig> diff(msd, msd2, diffConfig);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
@@ -207,4 +206,3 @@ int main(int argc, char* argv[])
 
     TEST_EPILOG
 }
-
