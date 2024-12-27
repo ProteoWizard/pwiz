@@ -476,7 +476,7 @@ namespace ZedGraph
 						if ( pane._barSettings.Base == BarBase.X ||
 								pane._barSettings.Base == BarBase.X2 )
 						{
-                            // Only force z=0 for BarItems, not HiLowBarItems
+							// Only force z=0 for BarItems, not HiLowBarItems
 							if (!yScale.IsLog && !(curve is HiLowBarItem)) 
 							{
 								if ( tYMinVal > 0 )
