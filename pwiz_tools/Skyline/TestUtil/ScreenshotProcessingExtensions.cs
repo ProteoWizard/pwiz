@@ -41,11 +41,12 @@ namespace pwiz.SkylineTestUtil
 
         public static Bitmap CleanupBorder(this Bitmap bmp, bool toolWindow = false)
         {
+            bool isWindows11 = IsWindows11();
             if (!toolWindow)
             {
-                return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, bmp.Height), 8);
+                return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, bmp.Height), isWindows11 ? 8 : 0);
             }
-            else if (!IsWindows11())
+            else if (!isWindows11)
             {
                 // Floating dockable forms have only a transparent border at the top
                 return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, 1), 0);
@@ -76,6 +77,10 @@ namespace pwiz.SkylineTestUtil
             var bestBorderColor = colorCounts.FirstOrDefault(kvp => kvp.Value == maxColorCount).Key;
             // All white border means it is actually a graph so don't draw anything on it
             if (bestBorderColor.ToArgb() == Color.White.ToArgb())
+                return bmp;
+            // If there is supposed to be a corner curve but there is just one color, avoid
+            // drawing a curved corner on top of the otherwise rectangular border.
+            if (cornerRadius != 0 && colorCounts.Count == 1)
                 return bmp;
             return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius);
         }
