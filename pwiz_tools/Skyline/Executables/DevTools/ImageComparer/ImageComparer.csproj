@@ -59,6 +59,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScreenshotInfo.cs" />
     <EmbeddedResource Include="ImageComparerWindow.resx">
       <DependentUpon>ImageComparerWindow.cs</DependentUpon>
     </EmbeddedResource>
