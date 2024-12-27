@@ -1086,7 +1086,7 @@ namespace pwiz.SkylineTestUtil
                         {
                             changed = GitFileHelper.IsModified(filePath);
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             // Ignore and leave changed null
                         }
