@@ -8,16 +8,16 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace pwiz.SkylineTestUtil.Properties {
+namespace ImageComparer.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.9.0.0")]
-    internal sealed partial class TestUtilSettings : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
-        private static TestUtilSettings defaultInstance = ((TestUtilSettings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new TestUtilSettings())));
+        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
         
-        public static TestUtilSettings Default {
+        public static Settings Default {
             get {
                 return defaultInstance;
             }
@@ -25,61 +25,49 @@ namespace pwiz.SkylineTestUtil.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowPreview {
+        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
+        public global::System.Drawing.Point FormLocation {
             get {
-                return ((bool)(this["ShowPreview"]));
+                return ((global::System.Drawing.Point)(this["FormLocation"]));
             }
             set {
-                this["ShowPreview"] = value;
+                this["FormLocation"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point PreviewFormLocation {
+        public global::System.Drawing.Size FormSize {
             get {
-                return ((global::System.Drawing.Point)(this["PreviewFormLocation"]));
+                return ((global::System.Drawing.Size)(this["FormSize"]));
             }
             set {
-                this["PreviewFormLocation"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Size PreviewFormSize {
-            get {
-                return ((global::System.Drawing.Size)(this["PreviewFormSize"]));
-            }
-            set {
-                this["PreviewFormSize"] = value;
+                this["FormSize"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool PreviewFormMaximized {
+        public bool FormMaximized {
             get {
-                return ((bool)(this["PreviewFormMaximized"]));
+                return ((bool)(this["FormMaximized"]));
             }
             set {
-                this["PreviewFormMaximized"] = value;
+                this["FormMaximized"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ManualSizePreview {
+        public bool ManualSize {
             get {
-                return ((bool)(this["ManualSizePreview"]));
+                return ((bool)(this["ManualSize"]));
             }
             set {
-                this["ManualSizePreview"] = value;
+                this["ManualSize"] = value;
             }
         }
         
@@ -92,6 +80,18 @@ namespace pwiz.SkylineTestUtil.Properties {
             }
             set {
                 this["OldImageSource"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LastOpenFolder {
+            get {
+                return ((string)(this["LastOpenFolder"]));
+            }
+            set {
+                this["LastOpenFolder"] = value;
             }
         }
         
