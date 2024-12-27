@@ -293,6 +293,7 @@ namespace pwiz.SkylineTestUtil
         {
             lock (_lock)
             {
+                UpdateImageSourceButtons();
                 helpTip.SetToolTip(oldScreenshotLabel, _oldScreenshot.FileLoaded);
                 SetPreviewSize(labelOldSize, _oldScreenshot);
                 SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot, _diff);
@@ -896,7 +897,8 @@ namespace pwiz.SkylineTestUtil
 
         private bool SaveScreenshot()
         {
-            if (File.Exists(_fileToSave) && !FileEx.IsWritable(_fileToSave))
+            string filePath = _fileToSave;
+            if (File.Exists(filePath) && !IsWritable(filePath))
             {
                 ShowMessage(LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
                     "Check that it is not open in another program such as TortoiseIDiff."));
@@ -904,17 +906,37 @@ namespace pwiz.SkylineTestUtil
             }
             try
             {
-                string screenshotDir = Path.GetDirectoryName(_fileToSave) ?? string.Empty;
+                string screenshotDir = Path.GetDirectoryName(filePath) ?? string.Empty;
                 Assume.IsFalse(string.IsNullOrEmpty(screenshotDir));    // Because ReSharper complains about possible null
                 Directory.CreateDirectory(screenshotDir);
 
-                _newScreenshot.Image.Save(_fileToSave);
+                _newScreenshot.Image.Save(filePath);
                 return true;
             }
             catch (Exception e)
             {
-                PreviewMessageDlg.ShowWithException(this, string.Format("Failed to save screenshot {0}", _fileToSave), e);
+                PreviewMessageDlg.ShowWithException(this, string.Format("Failed to save screenshot {0}", filePath), e);
                 return false;
+            }
+        }
+
+        private void Revert()
+        {
+            string filePath = _fileToSave;
+            if (File.Exists(filePath) && !IsWritable(filePath))
+            {
+                ShowMessage(LineSeparate(string.Format("The file {0} is locked.", filePath),
+                    "Check that it is not open in another program such as TortoiseIDiff."));
+                return;
+            }
+            try
+            {
+                GitFileHelper.RevertFileToHead(filePath);
+                RefreshOldScreenshot();
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException(string.Format("Failed to revert screenshot {0}", filePath), e);
             }
         }
 
@@ -1056,7 +1078,28 @@ namespace pwiz.SkylineTestUtil
                     break;
                 case ImageSource.disk:
                 default:
-                    buttonImageSource.Image = Resources.save;
+                    bool? changed = null;
+                    var filePath = _fileToSave;
+                    if (File.Exists(filePath))
+                    {
+                        try
+                        {
+                            changed = GitFileHelper.IsModified(filePath);
+                        }
+                        catch (Exception)
+                        {
+                            // Ignore and leave changed null
+                        }
+                    }
+
+                    if (!changed.HasValue)
+                    {
+                        buttonImageSource.Image = Resources.fileunknown;
+                    }
+                    else
+                    {
+                        buttonImageSource.Image = changed.Value ? Resources.filechanged : Resources.fileunchanged;
+                    }
                     helpTip.SetToolTip(buttonImageSource, _defaultImageSourceTipText);
                     break;
             }
@@ -1092,6 +1135,11 @@ namespace pwiz.SkylineTestUtil
         private void toolStripSaveAndContinue_Click(object sender, EventArgs e)
         {
             SaveAndContinue();
+        }
+
+        private void toolStripRevert_Click(object sender, EventArgs e)
+        {
+            Revert();
         }
 
         private void toolStripGotoWeb_Click(object sender, EventArgs e)
@@ -1192,6 +1240,13 @@ namespace pwiz.SkylineTestUtil
                         e.Handled = true;
                     }
                     break;
+                case Keys.Z:
+                    if (e.Control)
+                    {
+                        Revert();
+                        e.Handled = true;
+                    }
+                    break;
             }
         }
 
@@ -1205,6 +1260,11 @@ namespace pwiz.SkylineTestUtil
             {
                 PreviewMessageDlg.ShowWithException(this, "Failed clipboard operation.", e);
             }
+        }
+
+        public static bool IsWritable(string path)
+        {
+            return FileEx.IsWritable(path);
         }
 
         private string LineSeparate(params string[] lines)
