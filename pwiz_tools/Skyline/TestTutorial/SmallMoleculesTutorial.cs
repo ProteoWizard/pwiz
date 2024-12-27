@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestTutorial
                     var altered = lines.Select(l => l.Substring(0,l.LastIndexOf(TextUtil.CsvSeparator))).ToArray();
                     impliedLabeled = TextUtil.LineSeparate(altered);
                 }
-                PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste", 5);
+                PauseForScreenShot<InsertTransitionListDlg>("ImportTransitionDlg ready for paste");
                 var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog3.TransitionListText = impliedLabeled);
                 RunUI(() => {
                     col4Dlg.radioMolecule.PerformClick();
@@ -124,7 +124,7 @@ namespace pwiz.SkylineTestTutorial
                         comboBoxes[9].SelectedIndex = comboBoxes[1].FindStringExact(Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Label_Type);
                     }
                 });
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with column headers selected", 6);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with column headers selected");
 
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
 
@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.Size = new Size(957, 654);
                 });
                 RestoreViewOnScreen(5);
-                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 6);
+                PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets");
 
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Amino Acid Metabolism.sky")));
 
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(GetTestPath());
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 7);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form");
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                     var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestTutorial
 
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
 
-                PauseForScreenShot("Skyline window multi-target graph", 9);
+                PauseForScreenShot("Skyline window multi-target graph");
 
                 var docResults = SkylineWindow.Document;
 
@@ -204,7 +204,7 @@ namespace pwiz.SkylineTestTutorial
                 if (!string.IsNullOrEmpty(msg))
                     Assert.IsTrue(string.IsNullOrEmpty(msg), msg);
                 RestoreViewOnScreen(9);
-                PauseForScreenShot("Skyline window multi-replicate layout", 10);
+                PauseForScreenShot("Skyline window multi-replicate layout");
 
                 if (IsCoverShotMode)
                 {

@@ -652,11 +652,11 @@ namespace pwiz.SkylineTestUtil
                                             string annotationName,
                                             AnnotationDef.AnnotationType annotationType = AnnotationDef.AnnotationType.text,
                                             IList<string> annotationValues = null,
-                                            int? pausePage = null)
+                                            bool pause = false)
         {
             AddAnnotation(documentSettingsDlg, annotationName, annotationType, annotationValues,
                     AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
-                    pausePage);
+                    pause);
         }
 
         public void AddAnnotation(DocumentSettingsDlg documentSettingsDlg,
@@ -664,7 +664,7 @@ namespace pwiz.SkylineTestUtil
                                             AnnotationDef.AnnotationType annotationType,
                                             IList<string> annotationValues,
                                             AnnotationDef.AnnotationTargetSet annotationTargets,
-                                            int? pausePage = null)
+                                            bool pause = false)
         {
             var annotationsListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>
                 (documentSettingsDlg.EditAnnotationList);
@@ -680,10 +680,10 @@ namespace pwiz.SkylineTestUtil
                 annotationDefDlg.AnnotationTargets = annotationTargets;
             });
 
-            if (pausePage.HasValue)
+            if (pause)
             {
                 RunUI(() => annotationDefDlg.Height = 442);  // Shorter for screenshots
-                PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage.Value);
+                PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName);
             }
 
             OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);
