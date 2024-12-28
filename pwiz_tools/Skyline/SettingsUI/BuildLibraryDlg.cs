@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Diagnostics;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -480,12 +481,75 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 // Install python when user clicks 'OK' here
-                pythonInstaller.InstallPythonVirtualEnvironment(this);
+                InstallPythonVirtualEnvironment(pythonInstaller);
 
             }
             return true;
         }
 
+        public DialogResult InstallPythonVirtualEnvironment(PythonInstaller pythonInstaller)
+        {
+            DialogResult result;
+            var tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment() : pythonInstaller.PendingTasks;
+            pythonInstaller.NumTotalTasks = tasks.Count;
+            pythonInstaller.NumCompletedTasks = 0;
+            foreach (var task in tasks)
+            {
+                try
+                {
+                    if (task.Name == PythonTaskName.enable_longpaths)
+                    {
+                        using var dlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), string.Format(Resources.OK));
+                        if (dlg.ShowDialog() == DialogResult.Cancel)
+                        {
+                            if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                            break;
+                        }
+                        else
+                        {
+                            // Attempt to enable Windows Long Paths
+                            pythonInstaller.EnableWindowsLongPaths();
+                        }
+                    }
+                    else if (task.IsActionWithNoArg)
+                    {
+                        using var waitDlg = new LongWaitDlg();
+                        waitDlg.Message = task.InProgressMessage;
+                        waitDlg.PerformWork(this, 50, task.AsActionWithNoArg);
+                    }
+                    else if (task.IsActionWithProgressMonitor)
+                    {
+                        using var waitDlg = new LongWaitDlg();
+                        waitDlg.ProgressValue = 0;
+                        waitDlg.PerformWork(this, 50, task.AsActionWithProgressMonitor);
+                    }
+                    else
+                    {
+                        throw new PythonInstallerUnsupportedTaskException(task);
+                    }
+                    pythonInstaller.NumCompletedTasks++;
+                }
+                catch (Exception ex)
+                {
+                    //MessageDlg.Show(this, task.FailureMessage);
+                    MessageDlg.ShowWithException(this, (ex.InnerException ?? ex).Message, ex);
+                    break;
+                }
+            }   
+            Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");
+            if (pythonInstaller.NumCompletedTasks == pythonInstaller.NumTotalTasks)
+            {
+                pythonInstaller.PendingTasks.Clear();
+                MessageDlg.Show(this, ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment);
+                result = DialogResult.OK;
+            }
+            else
+            {
+                MessageDlg.Show(this, ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment);
+                result = DialogResult.Cancel;
+            }
+            return result;
+        }
         private bool SetupPythonEnvironmentForCarafe()
         {
             var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
@@ -512,7 +576,7 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 // Install python when user clicks 'OK' here
-                pythonInstaller.InstallPythonVirtualEnvironment(this);
+                InstallPythonVirtualEnvironment(pythonInstaller);
 
             }
             return true;

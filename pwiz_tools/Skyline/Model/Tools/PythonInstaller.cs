@@ -114,69 +114,7 @@ namespace pwiz.Skyline.Model.Tools
             return tasks.Count == 0;
         }
 
-        public DialogResult InstallPythonVirtualEnvironment(Control parent)
-        {
-            DialogResult result;
-            var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
-            NumTotalTasks = tasks.Count;
-            NumCompletedTasks = 0;
-            foreach (var task in tasks)
-            {
-                try
-                {
-                    if (task.Name == PythonTaskName.enable_longpaths)
-                    {
-                        using var dlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), string.Format(Resources.OK));
-                        if (dlg.ShowDialog() == DialogResult.Cancel)
-                        {
-                            if (NumTotalTasks > 0) NumTotalTasks--;
-                            break;
-                        }
-                        else
-                        {
-                            // Attempt to enable Windows Long Paths
-                            EnableWindowsLongPaths();
-                        }
-                    }
-                    else if (task.IsActionWithNoArg)
-                    {
-                        using var waitDlg = new LongWaitDlg();
-                        waitDlg.Message = task.InProgressMessage;
-                        waitDlg.PerformWork(parent, 50, task.AsActionWithNoArg);
-                    }
-                    else if (task.IsActionWithProgressMonitor)
-                    {
-                        using var waitDlg = new LongWaitDlg();
-                        waitDlg.ProgressValue = 0;
-                        waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
-                    }
-                    else
-                    {
-                        throw new PythonInstallerUnsupportedTaskException(task);
-                    }
-                    NumCompletedTasks++;
-                }
-                catch (Exception ex)
-                {
-                    //MessageDlg.Show(parent, task.FailureMessage);
-                    MessageDlg.ShowWithException(parent, (ex.InnerException ?? ex).Message, ex);
-                    break;
-                }
-            }
-            Debug.WriteLine($@"total: {NumTotalTasks}, completed: {NumCompletedTasks}");
-            if (NumCompletedTasks == NumTotalTasks)
-            {
-                PendingTasks.Clear();
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment);
-                result = DialogResult.OK;
-            }
-            else
-            {
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment);
-                result = DialogResult.Cancel;
-            }
-            return result;
-        }
+        
 
         public List<PythonTask> ValidatePythonVirtualEnvironment()
         {
@@ -287,7 +225,7 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        private void EnableWindowsLongPaths()
+        public void EnableWindowsLongPaths()
         {
             var cmdBuilder = new StringBuilder();
             cmdBuilder.Append(REG_ADD_COMMAND)
