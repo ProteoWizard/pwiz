@@ -265,7 +265,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             WaitForDocumentLoaded(10 * 60 * 1000); // 10 minutes
-
+            FocusDocument();
             PauseForScreenShot("Skyline window maximized", _pageNum++);
 
             if (!IsFullData)

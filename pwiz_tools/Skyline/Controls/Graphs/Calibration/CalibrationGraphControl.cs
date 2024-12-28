@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         private void Settings_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (DisplaySettings != null)
+            if (e.PropertyName == nameof(Properties.Settings.Default.CalibrationCurveOptions ))
             {
                 Update(DisplaySettings);
             }
@@ -94,12 +94,26 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         [Browsable(false)]
         public Settings DisplaySettings { get; private set; }
 
+        private bool _inUpdate;
         public void Update(Settings displaySettings)
         {
-            DoUpdate(displaySettings);
-            GraphHelper.FormatFontSize(zedGraphControl.GraphPane, Options.FontSize);
-            zedGraphControl.AxisChange();
-            zedGraphControl.Invalidate();
+            if (_inUpdate)
+            {
+                return;
+            }
+
+            try
+            {
+                _inUpdate = true;
+                DoUpdate(displaySettings);
+                GraphHelper.FormatFontSize(zedGraphControl.GraphPane, Options.FontSize);
+                zedGraphControl.AxisChange();
+                zedGraphControl.Invalidate();
+            }
+            finally
+            {
+                _inUpdate = false;
+            }
         }
 
         public void Clear()
