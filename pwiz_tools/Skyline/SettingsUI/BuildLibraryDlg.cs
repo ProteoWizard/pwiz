@@ -480,7 +480,7 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 // Install python when user clicks 'OK' here
-                ToolInstallUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
+                PythonInstallerUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
 
             }
             return true;
@@ -511,7 +511,7 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 // Install python when user clicks 'OK' here
-                ToolInstallUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
+                PythonInstallerUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
 
             }
             return true;

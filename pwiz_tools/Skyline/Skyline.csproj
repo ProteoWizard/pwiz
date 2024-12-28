@@ -896,6 +896,7 @@
     <Compile Include="ToolsUI\PythonInstallerDlg.Designer.cs">
       <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\PythonInstallerUI.cs" />
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -3871,7 +3872,7 @@
       <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content  Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
       <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
