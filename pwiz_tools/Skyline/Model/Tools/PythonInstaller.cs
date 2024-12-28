@@ -10,7 +10,6 @@ using Microsoft.Win32;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
