@@ -23,12 +23,12 @@ namespace pwiz.SkylineTestFunctional
         private const string PYTHON = @"Python";
         //private const string VERSION_312 = @"3.1.2";
         private const string VERSION = @"3.9.2";
-        private IPythonInstallerTaskValidator TaskValidator { get; }
+        //private IPythonInstallerTaskValidator TaskValidator { get; }
 
         [TestMethod]
         public void TestPythonInstaller()
         {
-            TestFilesZip = @"TestFunctional\PythonInstallerTest.zip";
+            //TestFilesZip = @"TestFunctional\PythonInstallerTest.zip";
             RunFunctionalTest();
         }
 

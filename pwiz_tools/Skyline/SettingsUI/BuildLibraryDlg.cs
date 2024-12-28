@@ -39,7 +39,6 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.EditUI;
 
 namespace pwiz.Skyline.SettingsUI
