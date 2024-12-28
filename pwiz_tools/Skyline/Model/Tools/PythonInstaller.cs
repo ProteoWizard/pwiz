@@ -132,7 +132,7 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     if (isTaskValid && null == taskNode.ParentNodes) { continue; }
                    
-                    bool havePrerequisite = false;
+                    var havePrerequisite = false;
                     foreach (var parentTask in taskNode.ParentNodes)
                     {
                         if (tasks.Where(p => p.Name == parentTask.PythonTaskName).ToArray().Length > 0)
