@@ -21,11 +21,14 @@ namespace pwiz.SkylineTestFunctional
     public class PythonInstallerTest : AbstractFunctionalTest
     {
         private const string PYTHON = @"Python";
-        private const string VERSION_312 = @"3.1.2";
+        //private const string VERSION_312 = @"3.1.2";
+        private const string VERSION = @"3.9.2";
+        private IPythonInstallerTaskValidator TaskValidator { get; }
 
         [TestMethod]
         public void TestPythonInstaller()
         {
+            TestFilesZip = @"TestFunctional\PythonInstallerTest.zip";
             RunFunctionalTest();
         }
 
@@ -766,7 +769,7 @@ namespace pwiz.SkylineTestFunctional
                 new PythonPackage {Name = @"peptdeep", Version = null },
                 new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
             };
-            var programContainer = new ProgramPathContainer(PYTHON, VERSION_312);
+            var programContainer = new ProgramPathContainer(PYTHON, VERSION);
             return new PythonInstaller(
                 programContainer, packages, new TextBoxStreamWriterHelper(), taskValidator, @"test");
         }

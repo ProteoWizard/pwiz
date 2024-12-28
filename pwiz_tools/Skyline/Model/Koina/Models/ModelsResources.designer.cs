@@ -79,15 +79,6 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python {0} installation is required for {1}, click &apos;OK&apos; to proceed..
-        /// </summary>
-        public static string BuildPrecursorTable_Python_0_installation_is_required {
-            get {
-                return ResourceManager.GetString("BuildPrecursorTable_Python_0_installation_is_required", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by {2} LibraryBuilder. This peptide will be skipped!.
         /// </summary>
         public static string BuildPrecursorTable_Unimod_UnsupportedModification {

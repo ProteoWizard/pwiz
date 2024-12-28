@@ -473,7 +473,7 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             }
 
-            using var dlg = new MultiButtonMsgDlg(string.Format(ModelsResources.BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
+            using var dlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
             if (dlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
@@ -505,7 +505,7 @@ namespace pwiz.Skyline.SettingsUI
                 return true;
             }
 
-            using var dlg = new MultiButtonMsgDlg(string.Format(ModelsResources.BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
+            using var dlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
             if (dlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
