@@ -1080,7 +1080,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var newRadioTimeAroundTop = workflow == ImportPeptideSearchDlg.Workflow.feature_detection ?
                     radioTimeAroundMs2Ids.Top :
-                    radioKeepAllTime.Top;
+                    radioUseSchedulingWindow.Top;
                 int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
                 radioUseSchedulingWindow.Visible = false;
                 flowLayoutPanelUseSchedulingWindow.Visible = false;
