@@ -38,6 +38,10 @@ namespace pwiz.SkylineTestUtil
         /// On a red background this becomes #FF68251F
         /// </summary>
         private static readonly Color STANDARD_BORDER_COLOR = Color.FromArgb(0x70, 0x70, 0x70);
+        /// <summary>
+        /// The interior border color for a docked dockable form.
+        /// </summary>
+        private static readonly Color INTERIOR_BORDER_COLOR = Color.FromArgb(0xA0, 0xA0, 0xA0);
 
         public static Bitmap CleanupBorder(this Bitmap bmp, bool toolWindow = false)
         {
@@ -82,6 +86,15 @@ namespace pwiz.SkylineTestUtil
             // drawing a curved corner on top of the otherwise rectangular border.
             if (cornerRadius != 0 && colorCounts.Count == 1)
                 return bmp;
+            // If the proposed color is the standard border color and the best color is the
+            // interior boarder color, then use the interior color. This is the case for
+            // docked DockableForms.
+            if (color.HasValue &&
+                color.Value == STANDARD_BORDER_COLOR &&
+                bestBorderColor == INTERIOR_BORDER_COLOR)
+            {
+                color = bestBorderColor;
+            }
             return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius);
         }
 

@@ -416,10 +416,10 @@ namespace pwiz.SkylineTestUtil
                 focusText.Select(focusText.Text.Length, 0);
                 focusText.HideCaret();
             }
-            else if (focusControl is ComboBox { CanSelect: true } focusCombo)
+            else if (focusControl is ComboBox { DropDownStyle: ComboBoxStyle.DropDown } focusCombo)
             {
                 focusCombo.Select(0, 0);
-                focusCombo.HideCaret(); // CONSIDER: This does not seem to work
+                focusCombo.HideCaret();
             }
             else if (focusControl is TabControl focusTabControl)
             {

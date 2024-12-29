@@ -306,6 +306,7 @@ namespace pwiz.SkylineTestUtil
 
         private void ShowImageDiff()
         {
+            bool showOldPictureBox = true;
             if (_diff == null)
             {
                 pictureMatching.Visible = false;
@@ -334,11 +335,12 @@ namespace pwiz.SkylineTestUtil
                         _diff.ShowBinaryDiff(EnsureBinaryDiffControl());
                     }
 
-                    oldScreenshotPictureBox.Visible = !imagesMatch;
-                    if (_rtfDiff != null)
-                        _rtfDiff.Visible = imagesMatch;
+                    showOldPictureBox = !imagesMatch;
                 }
             }
+            oldScreenshotPictureBox.Visible = showOldPictureBox;
+            if (_rtfDiff != null)
+                _rtfDiff.Visible = !showOldPictureBox;
         }
 
         private RichTextBox EnsureBinaryDiffControl()
@@ -860,6 +862,7 @@ namespace pwiz.SkylineTestUtil
                 _fileToShow = new ScreenshotFile(_screenshotManager.ScreenshotSourceFile(_screenshotNum));
                 _fileToSave = _screenshotManager.ScreenshotDestFile(_screenshotNum);
                 _newScreenshot.IsTaken = false;
+                _diff = null;
             }
         }
 
@@ -874,6 +877,9 @@ namespace pwiz.SkylineTestUtil
                 FormStateChanged();
             }
 
+            // The MultiFormActivator can change test behavior. So, it needs to be cleared
+            // before continuing the test.
+            _activator.Clear();
             _pauseTestController.Continue();
         }
 
