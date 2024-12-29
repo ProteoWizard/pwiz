@@ -253,8 +253,15 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(arrangeGraphsDlg, arrangeGraphsDlg.OkDialog);
 
+            var savedBounds = Rectangle.Empty;
             if (IsPauseForScreenShots)
-                RunUI(() => SkylineWindow.WindowState = FormWindowState.Maximized);
+                RunUI(() =>
+                {
+                    // Essentially maximize the window for a 1920x1080 monitor at 100%
+                    savedBounds = SkylineWindow.Bounds;
+                    SkylineWindow.Size = new Size(1934, 1047);
+                    SkylineWindow.Location = new Point(-7, 0);
+                });
 
             SelectNode(SrmDocument.Level.Molecules, 0);
 
@@ -272,7 +279,7 @@ namespace pwiz.SkylineTestTutorial
                 TestApplyToAll();
 
             if (IsPauseForScreenShots)
-                RunUI(() => SkylineWindow.WindowState = FormWindowState.Normal);
+                RunUI(() => SkylineWindow.Bounds = savedBounds);
         }
 
         private void PlaceTargetsAndGraph(Control graphForm)
@@ -1469,12 +1476,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
             var foldChangeGridControl = foldChangeGrid.DataboundGridControl;
+            var foldChangePath = PropertyPath.Root.Property("FoldChangeResult");
             WaitForConditionUI(() => foldChangeGridControl.IsComplete &&
-                foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
+                                     foldChangeGridControl.FindColumn(foldChangePath) != null &&
+                                     foldChangeGridControl.RowCount == 48);
             RunUI(() =>
             {
-                var foldChangeResultColumn =
-                    foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                var foldChangeResultColumn = foldChangeGridControl.FindColumn(foldChangePath);
                 foldChangeGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
                 foldChangeGrid.Parent.Parent.Height = 278;
             });
@@ -1500,8 +1508,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             RunUI(() =>
             {
-                var foldChangeResultColumn =
-                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                var foldChangeResultColumn = foldChangeGrid.DataboundGridControl.FindColumn(foldChangePath);
                 Assert.IsNotNull(foldChangeResultColumn);
                 foldChangeGrid.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
             });

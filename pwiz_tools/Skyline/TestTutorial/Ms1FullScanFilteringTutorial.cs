@@ -469,6 +469,8 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.ShowChromatogramLegends(false);
             });
+            FocusDocument();
+            JiggleSelection();
             PauseForScreenShot("Main window layout", tutorialPage++);
 
             int atest = 0;
