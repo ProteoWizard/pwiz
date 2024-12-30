@@ -31,7 +31,6 @@ namespace pwiz.SkylineTestUtil
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ScreenshotPreviewForm));
             this.oldScreenshotPictureBox = new System.Windows.Forms.PictureBox();
             this.newScreenshotPictureBox = new System.Windows.Forms.PictureBox();
             this.previewSplitContainer = new System.Windows.Forms.SplitContainer();
@@ -52,12 +51,13 @@ namespace pwiz.SkylineTestUtil
             this.toolStripRefresh = new System.Windows.Forms.ToolStripButton();
             this.toolStripSave = new System.Windows.Forms.ToolStripButton();
             this.toolStripSaveAndContinue = new System.Windows.Forms.ToolStripButton();
+            this.toolStripRevert = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripAutoSize = new System.Windows.Forms.ToolStripButton();
+            this.toolStripPickColorButton = new pwiz.SkylineTestUtil.AlphaColorPickerButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripGotoWeb = new System.Windows.Forms.ToolStripButton();
             this.toolStripDescription = new System.Windows.Forms.ToolStripLabel();
-            this.toolStripPickColorButton = new AlphaColorPickerButton();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.previewSplitContainer)).BeginInit();
@@ -149,11 +149,12 @@ namespace pwiz.SkylineTestUtil
             // buttonImageSource
             // 
             this.buttonImageSource.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonImageSource.Image = global::pwiz.SkylineTestUtil.Properties.Resources.save;
+            this.buttonImageSource.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.buttonImageSource.Image = global::pwiz.SkylineTestUtil.Properties.Resources.fileunknown;
             this.buttonImageSource.Location = new System.Drawing.Point(455, 4);
             this.buttonImageSource.Margin = new System.Windows.Forms.Padding(1);
             this.buttonImageSource.Name = "buttonImageSource";
-            this.buttonImageSource.Size = new System.Drawing.Size(22, 22);
+            this.buttonImageSource.Size = new System.Drawing.Size(23, 23);
             this.buttonImageSource.TabIndex = 1;
             this.buttonImageSource.TabStop = false;
             this.helpTip.SetToolTip(this.buttonImageSource, "Switch Source (Ctrl-Tab)\r\nCurrent: Disk");
@@ -232,6 +233,7 @@ namespace pwiz.SkylineTestUtil
             this.toolStripRefresh,
             this.toolStripSave,
             this.toolStripSaveAndContinue,
+            this.toolStripRevert,
             this.toolStripSeparator1,
             this.toolStripAutoSize,
             this.toolStripPickColorButton,
@@ -296,6 +298,16 @@ namespace pwiz.SkylineTestUtil
             this.toolStripSaveAndContinue.ToolTipText = "Save and Continue (F6)";
             this.toolStripSaveAndContinue.Click += new System.EventHandler(this.toolStripSaveAndContinue_Click);
             // 
+            // toolStripRevert
+            // 
+            this.toolStripRevert.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripRevert.Image = global::pwiz.SkylineTestUtil.Properties.Resources.undo;
+            this.toolStripRevert.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripRevert.Name = "toolStripRevert";
+            this.toolStripRevert.Size = new System.Drawing.Size(23, 22);
+            this.toolStripRevert.ToolTipText = "Revert (Ctrl-Z)";
+            this.toolStripRevert.Click += new System.EventHandler(this.toolStripRevert_Click);
+            // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
@@ -313,6 +325,17 @@ namespace pwiz.SkylineTestUtil
             this.toolStripAutoSize.Size = new System.Drawing.Size(23, 22);
             this.toolStripAutoSize.ToolTipText = "Auto-Size";
             this.toolStripAutoSize.CheckedChanged += new System.EventHandler(this.toolStripAutoSize_CheckedChanged);
+            // 
+            // toolStripPickColorButton
+            // 
+            this.toolStripPickColorButton.BackColor = System.Drawing.SystemColors.Control;
+            this.toolStripPickColorButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripPickColorButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripPickColorButton.Name = "toolStripPickColorButton";
+            this.toolStripPickColorButton.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+            this.toolStripPickColorButton.Size = new System.Drawing.Size(13, 22);
+            this.toolStripPickColorButton.ToolTipText = "Selected Color: Color [A=128, R=255, G=0, B=0] (Alpha: 128)";
+            this.toolStripPickColorButton.ColorChanged += new System.EventHandler(this.toolStripPickColorButton_ColorChanged);
             // 
             // toolStripSeparator2
             // 
@@ -334,17 +357,6 @@ namespace pwiz.SkylineTestUtil
             this.toolStripDescription.Name = "toolStripDescription";
             this.toolStripDescription.Size = new System.Drawing.Size(38, 22);
             this.toolStripDescription.Text = "s-1: ...";
-            // 
-            // toolStripPickColorButton
-            // 
-            this.toolStripPickColorButton.BackColor = System.Drawing.SystemColors.Control;
-            this.toolStripPickColorButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripPickColorButton.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.toolStripPickColorButton.Name = "toolStripPickColorButton";
-            this.toolStripPickColorButton.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-            this.toolStripPickColorButton.Size = new System.Drawing.Size(29, 22);
-            this.toolStripPickColorButton.ToolTipText = "Selected Color: Color [A=128, R=255, G=0, B=0] (Alpha: 128)";
-            this.toolStripPickColorButton.ColorChanged += new System.EventHandler(this.toolStripPickColorButton_ColorChanged);
             // 
             // ScreenshotPreviewForm
             // 
@@ -405,5 +417,6 @@ namespace pwiz.SkylineTestUtil
         private System.Windows.Forms.Label labelNewSize;
         private System.Windows.Forms.PictureBox pictureMatching;
         private AlphaColorPickerButton toolStripPickColorButton;
+        private System.Windows.Forms.ToolStripButton toolStripRevert;
     }
 }

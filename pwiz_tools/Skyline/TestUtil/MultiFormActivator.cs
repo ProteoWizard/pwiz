@@ -94,6 +94,10 @@ namespace pwiz.SkylineTestUtil
         private void FormActivated(object sender, EventArgs e)
         {
             var activatedForm = (Form)sender;
+            // DockableForms can get activated during DockableForm.Dispose()
+            if (!activatedForm.IsHandleCreated)
+                return;
+
             var activatedFormHandle = activatedForm.Handle;
 
             lock (_formsToActivate)
@@ -107,6 +111,9 @@ namespace pwiz.SkylineTestUtil
 
         private void ShowForm(Form form, IntPtr referenceFormHandle)
         {
+            if (!form.IsHandleCreated)
+                return;
+
             // Must be done on the form's thread
             form.Invoke((Action)(() =>
             {
