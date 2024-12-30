@@ -545,6 +545,7 @@ namespace pwiz.SkylineTest
         {
             var expectedPInvokeApi = new Dictionary<Type, int>
             {
+                // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
                 { typeof(Dwmapi), 4 },
                 { typeof(Gdi32), 4 },
@@ -571,18 +572,22 @@ namespace pwiz.SkylineTest
                 // unexpected class using [DllImport] attributes
                 if (!expectedPInvokeApi.ContainsKey(type))
                 {
-                    errors.Add($"P/Invoke error in {type.Name}. {type.FullName} is not included in a list of classes allowed to use [DllImport]. See PInvokeCommon or the wiki for more information.");
+                    errors.Add($"P/Invoke error in {type.Name}. This class is not allowed to use [DllImport]. See the wiki or PInvokeCommon for more information.");
                 }
-
-                // too many functions in this class marked with [DllImport] attribute
-                if (methods.Count > expectedPInvokeApi[type])
+                else
                 {
-                    errors.Add($"P/Invoke error in {type.Name}. {type.FullName} has more methods marked with [DllImport] than expected. See PInvokeCommon or the wiki for more information.");
-                }
-                // too few methods in this class marked with [DllImport] attribute
-                else if (methods.Count < expectedPInvokeApi[type])
-                {
-                    errors.Add($"P/Invoke error in {type.Name}. {type.FullName} has fewer methods marked with [DllImport] than expected. See PInvokeCommon or the wiki for more information.");
+                    // too many functions in this class marked with [DllImport] attribute
+                    if (methods.Count > expectedPInvokeApi[type])
+                    {
+                        errors.Add(
+                            $"P/Invoke error in {type.Name}. {type.FullName} has more methods marked with [DllImport] than expected. See the wiki or PInvokeCommon for more information.");
+                    }
+                    // too few methods in this class marked with [DllImport] attribute
+                    else if (methods.Count < expectedPInvokeApi[type])
+                    {
+                        errors.Add(
+                            $"P/Invoke error in {type.Name}. {type.FullName} has fewer methods marked with [DllImport] than expected. See the wiki or PInvokeCommon for more information.");
+                    }
                 }
 
                 foreach (var method in methods)
@@ -592,20 +597,19 @@ namespace pwiz.SkylineTest
                     // ReSharper disable once PossibleNullReferenceException
                     var dllName = dllImportAttribute.Value;
 
-                    if (dllName.EndsWith(".dll") && 
-                        !dllName.Substring(0, dllName.Length - ".dll".Length).Equals(type.Name, StringComparison.OrdinalIgnoreCase))
+                    if (!dllName.EndsWith(".dll"))
                     {
-                        errors.Add($"P/Invoke error in {method.Name} on {type.Name}. [DllImport]'s dllName parameter must match the class name.");
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must end in '.dll'.");
+                    }
+                    else if (!type.Name.Equals(dllName.Substring(0, dllName.Length - ".dll".Length), StringComparison.OrdinalIgnoreCase))
+                    {
+                        var dllNameMinusSuffix = dllName.Substring(0, dllName.Length - ".dll".Length);
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter '{dllNameMinusSuffix}' must be the same as the class name '{type.Name}'.");
                     }
 
                     if (dllName.Any(char.IsUpper))
                     {
-                        errors.Add($"P/Invoke error in {method.Name} on {type.Name}. [DllImport]'s dllName parameter must be all lower case");
-                    }
-
-                    if (!dllName.EndsWith(".dll"))
-                    {
-                        errors.Add($"P/Invoke error in {method.Name} on {type.Name}. [DllImport]'s dllName parameter must end in '.dll'.");
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must be all lower case");
                     }
                 }
             }

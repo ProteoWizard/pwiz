@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Controls
                 base.WndProc(ref m);
                 if (m.Msg == (int)User32.WinMessageType.WM_VSCROLL)
                 {
-                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = User32.GetScrollPos(m.HWnd, User32.ScrollOrientation.vertical)};
+                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = User32.GetScrollPos(m.HWnd, Orientation.Vertical)};
                     if (Scroll != null) // For ReSharper
                         Scroll.Invoke(this, scrollEventArgs);
                 }

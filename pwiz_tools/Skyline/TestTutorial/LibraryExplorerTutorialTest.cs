@@ -20,6 +20,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -459,7 +460,7 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(docProteins, null, 250, 346, 347, 1041);
 
             RestoreViewOnScreen(21);
-            RunUIForScreenShot(() => SkylineWindow.SequenceTree.SetScrollPos(User32.ScrollOrientation.horizontal, 0));
+            RunUIForScreenShot(() => SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0));
             PauseForScreenShot("Main window", 21);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);

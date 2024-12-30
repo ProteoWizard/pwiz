@@ -65,12 +65,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             user = 1
         }
 
-        public enum ScrollOrientation
-        {
-            horizontal,
-            vertical            
-        }
-
         [Flags]
         public enum SetWindowPosFlags : uint
         {
@@ -215,10 +209,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern IntPtr GetOpenClipboardWindow();
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern int GetScrollPos(IntPtr hWnd, ScrollOrientation orientation);
+        public static extern int GetScrollPos(IntPtr hWnd, Orientation orientation);
 
         [DllImport("user32.dll")]
-        public static extern bool GetScrollRange(IntPtr hWnd, ScrollOrientation orientation, out int lpMinPos, out int lpMaxPos);
+        public static extern bool GetScrollRange(IntPtr hWnd, Orientation orientation, out int lpMinPos, out int lpMaxPos);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetWindowDC(IntPtr hWnd);
@@ -301,7 +295,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         internal static extern bool HideCaret(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
-        internal static extern int SetScrollPos(IntPtr hWnd, ScrollOrientation orientation, int nPos, bool bRedraw);
+        internal static extern int SetScrollPos(IntPtr hWnd, Orientation orientation, int nPos, bool bRedraw);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern IntPtr GetFocus();

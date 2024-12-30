@@ -98,18 +98,16 @@ namespace pwiz.SkylineTestUtil
             if (!activatedForm.IsHandleCreated)
                 return;
 
-            var activatedFormHandle = activatedForm.Handle;
-
             lock (_formsToActivate)
             {
                 foreach (var form in _formsToActivate.Where(form => !ReferenceEquals(form, activatedForm)))
                 {
-                    ActionUtil.RunAsync(() => ShowForm(form, activatedFormHandle));
+                    ActionUtil.RunAsync(() => ShowForm(form, activatedForm));
                 }
             }
         }
 
-        private void ShowForm(Form form, IntPtr referenceFormHandle)
+        private void ShowForm(Form form, Form referenceForm)
         {
             if (!form.IsHandleCreated)
                 return;
@@ -118,7 +116,7 @@ namespace pwiz.SkylineTestUtil
             form.Invoke((Action)(() =>
             {
                 if (form.Visible)
-                    form.BringWindowToSameLevelWithoutActivating(referenceFormHandle);
+                    form.BringWindowToSameLevelWithoutActivating(referenceForm);
             }));
         }
 
