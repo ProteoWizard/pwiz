@@ -506,14 +506,21 @@ namespace ImageComparer
                 toolStripFileList.Enabled = true;
                 if (toolStripFileList.SelectedIndex != 0)
                     toolStripFileList.SelectedIndex = 0;
+                FormStateChanged();
             }
             else
             {
                 toolStripFileList.Enabled = false;
+                lock (_lock)
+                {
+                    _fileToShow = null;
+                    _oldScreenshot = new OldScreenshot();
+                    _newScreenshot = new OldScreenshot();
+                    _diff = null;
+                }
+                FormStateChanged();
                 ShowMessage(string.Format("No changed PNG files found in {0}", folderPath));
             }
-            
-            FormStateChanged();
         }
 
         private void Previous()

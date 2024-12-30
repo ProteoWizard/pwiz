@@ -65,10 +65,12 @@ namespace ImageComparer
             using var reader = new StringReader(output);
             while (reader.ReadLine() is { } line)
             {
-                if (!line.StartsWith(" M "))
-                    continue;
                 // 'git status --porcelain' format: XY path/to/file
-                var filePath = line.Substring(3).Replace('/', Path.DirectorySeparatorChar);
+                // For modified have seen " M " and "M  "
+                line = line.Trim();
+                if (!line.StartsWith("M"))
+                    continue;
+                var filePath = line.Substring(1).Trim().Replace('/', Path.DirectorySeparatorChar);
                 yield return Path.Combine(GetPathInfo(directoryPath).Root, filePath);
             }
         }
