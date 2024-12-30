@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Model
 
                     // CONSIDER: read the file description to see what settings were used to generate the file;
                     // if the same settings were used, we can re-use the file, else regenerate
-/* temp removal - is this the trouble spot causing memory errors? TODO restore this?
+/* TODO(bspratt) temp removal - is this the trouble spot causing memory errors? TODO restore this?
                     if (MsDataFileImpl.IsValidFile(outputFilepath))
                     {
                         var outputFileConfig = DiaUmpire.Config.GetConfigFromDiaUmpireOutput(outputFilepath);
