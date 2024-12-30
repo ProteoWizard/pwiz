@@ -166,6 +166,7 @@ namespace ImageComparer
 
         private void ShowImageDiff()
         {
+            bool showOldPictureBox = true;
             if (_diff == null)
             {
                 pictureMatching.Visible = false;
@@ -194,11 +195,12 @@ namespace ImageComparer
                         _diff.ShowBinaryDiff(EnsureBinaryDiffControl());
                     }
 
-                    oldScreenshotPictureBox.Visible = !imagesMatch;
-                    if (_rtfDiff != null)
-                        _rtfDiff.Visible = imagesMatch;
+                    showOldPictureBox = !imagesMatch;
                 }
             }
+            oldScreenshotPictureBox.Visible = showOldPictureBox;
+            if (_rtfDiff != null)
+                _rtfDiff.Visible = !showOldPictureBox;
         }
 
         private RichTextBox EnsureBinaryDiffControl()

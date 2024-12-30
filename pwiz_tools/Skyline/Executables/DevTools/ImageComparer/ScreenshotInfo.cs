@@ -85,7 +85,7 @@ namespace ImageComparer
 
     internal class ScreenshotFile
     {
-        private static readonly Regex PATTERN = new Regex(@"\\(\w+)\\(\w\w)\\s-(\d\d)\.png");
+        private static readonly Regex PATTERN = new Regex(@"\\(\w+)\\(\w\w-?[A-Z]*)\\s-(\d\d)\.png");
 
         public static bool IsMatch(string filePath)
         {
@@ -224,7 +224,7 @@ namespace ImageComparer
                     if (pixel1 != pixel2)
                     {
                         var blendedColor = Color.FromArgb(
-                            alpha,
+                            255,    // Combined pixel colors always sum to 255
                             highlightColor.R * alpha / 255 + pixel1.R * (255 - alpha) / 255,
                             highlightColor.G * alpha / 255 + pixel1.G * (255 - alpha) / 255,
                             highlightColor.B * alpha / 255 + pixel1.B * (255 - alpha) / 255
