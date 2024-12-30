@@ -621,6 +621,8 @@ namespace pwiz.SkylineTestTutorial
 
             int[] m1Thru5 = { 1, 2, 3, 4, 5, 6 };
             PickTransitions(pepIndex, m1Thru5); // turn on M+3 M+4 and M+5
+            if (Equals("ja", CultureInfo.CurrentCulture.TwoLetterISOLanguageName))
+                RunUIForScreenShot(() => SkylineWindow.Width += 12);    // Japanese needs to be a bit wider for the next 4 screenshots
             PauseForChromGraphScreenShot("upper - Chromatogram graph metafile with M+3, M+4 and M+5 added", TIP_NAME, tutorialPage++);
             PauseForChromGraphScreenShot("lower - Chromatogram graph metafile with M+3, M+4 and M+5 added", TIB_NAME, tutorialPage);
             CheckAnnotations(TIB_L, pepIndex, atest++);
