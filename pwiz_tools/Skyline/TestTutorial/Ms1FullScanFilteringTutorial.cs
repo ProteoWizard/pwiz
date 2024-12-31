@@ -567,9 +567,9 @@ namespace pwiz.SkylineTestTutorial
             RevertDoc(undoIndex); // undo changes
 
             ActivateReplicate(TIP_NAME);
-            ClickChromatogram(TIP_NAME, 37.32, 151, checkTitle: true);
+            ClickChromatogram(TIP_NAME, 37.35, 151, titleTime: 37.32);   // Click to the right of the point, or it will often end up 37.14
             PauseForFullScanGraphScreenShot("MS1 spectrum graph 37.32 minutes", tutorialPage++);
-            ClickChromatogram(TIP_NAME, 33.19, 328.1, checkTitle: true);
+            ClickChromatogram(TIP_NAME, 33.19, 328.1, titleTime: 33.19);
             PauseForFullScanGraphScreenShot("MS1 spectrum graph 33.19 minutes", tutorialPage++);
 
             if (PreferWiff)
