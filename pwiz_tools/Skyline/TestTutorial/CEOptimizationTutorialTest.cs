@@ -271,7 +271,7 @@ namespace pwiz.SkylineTestTutorial
 
             var graphRegression = ShowDialog<GraphRegression>(addItem.ShowGraph);
 
-            PauseForScreenShot<GraphRegression>("Collision Energy Regression graphs", 10);
+            PauseForGraphScreenShot<GraphRegression>("Collision Energy Regression graphs", 10);
 
             var graphDatas = graphRegression.RegressionGraphDatas.ToArray();
             Assert.AreEqual(2, graphDatas.Length);
