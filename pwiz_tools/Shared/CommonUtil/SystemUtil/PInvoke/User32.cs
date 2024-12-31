@@ -17,6 +17,7 @@
 using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.PInvoke
@@ -171,6 +172,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
 
+        [DllImport("user32.dll")]
+        public static extern bool EnumThreadWindows(int tid, EnumThreadWindowsProc callback, IntPtr lp);
+        public delegate bool EnumThreadWindowsProc(IntPtr hWnd, IntPtr lp);
+
+        [DllImport("user32.dll")]
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen); 
+        
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDC(IntPtr hWnd);
 
@@ -197,6 +205,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool IsWindowVisible(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
 
         [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]
         public static extern bool OpenClipboard(IntPtr hWndNewOwner);

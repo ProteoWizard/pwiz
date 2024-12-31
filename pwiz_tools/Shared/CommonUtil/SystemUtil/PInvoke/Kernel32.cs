@@ -32,6 +32,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
         public static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 
+        [DllImport("kernel32.dll")]
+        public static extern int GetCurrentThreadId(); 
+        
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
 
