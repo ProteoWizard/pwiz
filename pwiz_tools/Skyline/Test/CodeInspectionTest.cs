@@ -49,6 +49,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib.PInvoke;
 using Environment = System.Environment;
 
 namespace pwiz.SkylineTest
@@ -547,17 +548,27 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Dwmapi), 4 },
-                { typeof(Gdi32), 4 },
-                { typeof(Kernel32), 10 },
-                { typeof(Ole32), 1 },
-                { typeof(Shell32), 2 },
+                { typeof(Gdi32), 3 },
+                { typeof(Kernel32), 5 },
+                { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
-                { typeof(User32), 37 }
+                { typeof(User32), 30 },
+
+                { typeof(DwmapiTest), 4 },
+                { typeof(Gdi32Test), 1 },
+                { typeof(Kernel32Test), 5 },
+                { typeof(Ole32Test), 1 },
+                { typeof(Shell32Test), 1 },
+                { typeof(User32Test), 8 }
             };
 
+            // add types from production code
             var types = typeof(User32).Assembly.GetTypes()
                 .Where(type => type.Namespace is "pwiz.Common.SystemUtil.PInvoke" && type.IsClass).ToList();
+
+            // add types from test code
+            types.AddRange(typeof(User32Test).Assembly.GetTypes()
+                .Where(type => type.Namespace is "TestRunnerLib.PInvoke" && type.IsClass).ToList());
 
             foreach(var type in types)
             {
@@ -590,26 +601,31 @@ namespace pwiz.SkylineTest
                     }
                 }
 
+                var expectedDllName = type.Name.EndsWith("Test") ? type.Name.Substring(0, type.Name.Length - 4) : type.Name;
+
                 foreach (var method in methods)
                 {
                     var dllImportAttribute =
                         method.GetCustomAttribute(typeof(DllImportAttribute), false) as DllImportAttribute;
                     // ReSharper disable once PossibleNullReferenceException
                     var dllName = dllImportAttribute.Value;
+                    
+                    if (dllName.Any(char.IsUpper))
+                    {
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must be all lower case");
+                    }
 
                     if (!dllName.EndsWith(".dll"))
                     {
                         errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must end in '.dll'.");
                     }
-                    else if (!type.Name.Equals(dllName.Substring(0, dllName.Length - ".dll".Length), StringComparison.OrdinalIgnoreCase))
+                    else
                     {
-                        var dllNameMinusSuffix = dllName.Substring(0, dllName.Length - ".dll".Length);
-                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter '{dllNameMinusSuffix}' must be the same as the class name '{type.Name}'.");
-                    }
-
-                    if (dllName.Any(char.IsUpper))
-                    {
-                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must be all lower case");
+                        var actualDllName = dllName.Substring(0, dllName.Length - ".dll".Length);
+                        if (!actualDllName.Equals(expectedDllName, StringComparison.OrdinalIgnoreCase)) 
+                        {
+                            errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter '{dllName}' must match the class name and be either {expectedDllName} or {expectedDllName}Test.");
+                        }
                     }
                 }
             }
@@ -1117,6 +1133,7 @@ namespace pwiz.SkylineTest
             return new[] {
                 // PInvoke API and associated check are allowed to use [DllImport]
                 @"SystemUtil\PInvoke",
+                @"TestRunnerLib\PInvoke",
                 @"Test\CodeInspectionTest.cs",
                 
                 // Classes allowed limited use of the [DllImport] attribute outside the PInvoke API.

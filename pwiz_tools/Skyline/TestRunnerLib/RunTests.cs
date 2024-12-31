@@ -33,7 +33,7 @@ using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 using Exception = System.Exception;
 
 namespace TestRunnerLib
@@ -472,9 +472,9 @@ namespace TestRunnerLib
             CommittedMemoryBytes = committedBytes;
             var previousPrivateBytes = TotalMemoryBytes;
             TotalMemoryBytes = _process.PrivateMemorySize64;
-            LastTotalHandleCount = GetHandleCount(User32.HandleType.total);
-            LastUserHandleCount = GetHandleCount(User32.HandleType.user);
-            LastGdiHandleCount = GetHandleCount(User32.HandleType.gdi);
+            LastTotalHandleCount = GetHandleCount(User32Test.HandleType.total);
+            LastUserHandleCount = GetHandleCount(User32Test.HandleType.user);
+            LastGdiHandleCount = GetHandleCount(User32Test.HandleType.gdi);
 
             if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
@@ -995,9 +995,9 @@ namespace TestRunnerLib
             }
         }
 
-        private int GetHandleCount(User32.HandleType handleType)
+        private int GetHandleCount(User32Test.HandleType handleType)
         {
-            if (handleType == User32.HandleType.total)
+            if (handleType == User32Test.HandleType.total)
                 return _process.HandleCount;
 
             return _process.GetGuiResources(handleType);

@@ -20,8 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util.Extensions;
+using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestUtil
 {

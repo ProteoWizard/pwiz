@@ -14,15 +14,23 @@
  * limitations under the License.
  */
 
-using System.Runtime.InteropServices.ComTypes;
+using System;
 using System.Runtime.InteropServices;
 
-namespace pwiz.Common.SystemUtil.PInvoke
+namespace TestRunnerLib.PInvoke
 {
-    public static class Ole32
+    public static class Gdi32Test
     {
-        [DllImport("ole32.dll")]
-        // ReSharper disable once IdentifierTypo
-        public static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+        // ReSharper disable once InconsistentNaming
+        public enum GDCFlags : uint
+        {
+            // ReSharper disable InconsistentNaming IdentifierTypo
+            VERTRES = 10,
+            DESKTOPVERTRES = 117
+            // ReSharper restore InconsistentNaming IdentifierTypo
+        }
+
+        [DllImport("gdi32.dll")]
+        public static extern int GetDeviceCaps(IntPtr hdc, GDCFlags flag);
     }
 }

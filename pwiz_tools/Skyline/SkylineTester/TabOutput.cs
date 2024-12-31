@@ -26,7 +26,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 using EnvDTE;
-using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 
 namespace SkylineTester
 {
@@ -225,7 +225,7 @@ namespace SkylineTester
                 ((TextSelection)dte.ActiveDocument.Selection).SelectLine();
 
                 // Bring Visual Studio to the foreground.
-                User32.SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
+                User32Test.SetForegroundWindow((IntPtr)dte.MainWindow.HWnd);
             }
             catch (COMException)
             {
@@ -271,7 +271,7 @@ namespace SkylineTester
 
             try
             {
-                Marshal.ThrowExceptionForHR(Ole32.CreateBindCtx(0, out bindCtx));
+                Marshal.ThrowExceptionForHR(Ole32Test.CreateBindCtx(0, out bindCtx));
                 bindCtx.GetRunningObjectTable(out rot);
                 rot.EnumRunning(out enumMonikers);
 

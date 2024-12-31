@@ -16,11 +16,12 @@
 
 using System.Runtime.InteropServices;
 using System;
+using pwiz.Common.SystemUtil.PInvoke;
 
-namespace pwiz.Common.SystemUtil.PInvoke
+namespace TestRunnerLib.PInvoke
 {
     // ReSharper disable IdentifierTypo
-    public static class Dwmapi
+    public static class DwmapiTest
     {
         // ReSharper disable InconsistentNaming
         [Flags]

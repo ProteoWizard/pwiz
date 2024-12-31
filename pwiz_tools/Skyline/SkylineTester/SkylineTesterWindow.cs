@@ -34,9 +34,9 @@ using System.Xml;
 using System.Xml.Linq;
 using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
-using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTester.Properties;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 using Label = System.Windows.Forms.Label;
 using Timer = System.Windows.Forms.Timer;
@@ -222,7 +222,7 @@ namespace SkylineTester
 
             // Refresh shell if association changed.
             if (checkRegistry == null)
-                Shell32.SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+                Shell32Test.SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 
             _runButtons = new[]
             {

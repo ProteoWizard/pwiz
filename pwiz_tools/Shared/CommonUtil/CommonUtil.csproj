@@ -171,10 +171,8 @@
     </Compile>
     <Compile Include="SystemUtil\CommonTextUtil.cs" />
     <Compile Include="SystemUtil\PInvoke\Advapi32.cs" />
-    <Compile Include="SystemUtil\PInvoke\Dwmapi.cs" />
     <Compile Include="SystemUtil\PInvoke\Gdi32.cs" />
     <Compile Include="SystemUtil\PInvoke\Kernel32.cs" />
-    <Compile Include="SystemUtil\PInvoke\Ole32.cs" />
     <Compile Include="SystemUtil\PInvoke\Shell32.cs" />
     <Compile Include="SystemUtil\PInvoke\Shlwapi.cs" />
     <Compile Include="SystemUtil\PInvoke\User32.cs" />

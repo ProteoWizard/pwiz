@@ -24,7 +24,7 @@ using System.Drawing;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 using Timer = System.Windows.Forms.Timer;
 
 namespace SkylineTester
@@ -478,7 +478,7 @@ namespace SkylineTester
                 if (_process == null)
                     return false;
                 var isDebuggerAttached=false;
-                Kernel32.CheckRemoteDebuggerPresent(_process.Handle, ref isDebuggerAttached);
+                Kernel32Test.CheckRemoteDebuggerPresent(_process.Handle, ref isDebuggerAttached);
                 return isDebuggerAttached;
             }
         }

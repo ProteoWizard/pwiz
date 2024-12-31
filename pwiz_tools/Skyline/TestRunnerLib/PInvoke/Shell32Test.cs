@@ -17,17 +17,11 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace pwiz.Common.SystemUtil.PInvoke
+namespace TestRunnerLib.PInvoke
 {
-    public static class Gdi32
-    { 
-        [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr CreateCompatibleDC(IntPtr hDC);
-    
-        [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
-        public static extern bool DeleteDC(IntPtr hDC);
-
-        [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+    public static class Shell32Test
+    {
+        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
     }
 }

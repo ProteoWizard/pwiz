@@ -43,9 +43,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             return path;
         }
 
-        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
-
         // From: https://www.pinvoke.net/default.aspx/shell32.SHGetKnownFolderPath
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);

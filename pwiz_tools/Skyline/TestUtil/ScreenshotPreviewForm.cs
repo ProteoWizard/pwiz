@@ -25,12 +25,12 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil.Properties;
 using pwiz.Skyline.Controls;
+using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestUtil
 {

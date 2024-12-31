@@ -24,20 +24,10 @@ namespace pwiz.Common.SystemUtil.PInvoke
     // CONSIDER: replace all out params with .NET types
     public static class User32
     {
-        // ReSharper disable InconsistentNaming IdentifierTypo
         public const int CF_ENHMETAFILE = 14;
         
-        public const int GWL_STYLE = -16;
-
         public const int SB_THUMBPOSITION = 4;
         
-        public const int WS_HSCROLL = 0x00100000;
-        public const int WS_VSCROLL = 0x00200000;
-        
-        public const ulong WS_BORDER = 0x00800000L;
-        public const ulong WS_VISIBLE = 0x10000000L;
-        // ReSharper restore InconsistentNaming IdentifierTypo
-
         public static IntPtr False = new IntPtr(0);
         public static IntPtr True = new IntPtr(1);
 
@@ -56,13 +46,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             SLIDE = 0x40000,
             BLEND = 0x80000
             // ReSharper restore InconsistentNaming
-        }
-
-        public enum HandleType
-        {
-            total = -1,
-            gdi = 0,
-            user = 1
         }
 
         [Flags]
@@ -143,15 +126,12 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        // ReSharper disable once InconsistentNaming
         public struct RECT
         {
-            // ReSharper disable FieldCanBeMadeReadOnly.Global
             public int left;
             public int top;
             public int right;
             public int bottom;
-            // ReSharper restore FieldCanBeMadeReadOnly.Global
 
             public RECT(int left, int top, int right, int bottom)
             {
@@ -191,19 +171,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
 
-        [DllImport("user32.dll")]
-        public static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
-        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDC(IntPtr hWnd);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDCEx(IntPtr hWnd, IntPtr hRgn, uint dwFlags);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool GetKeyboardState(byte[] lpKeyState);
 
         [DllImport("user32.dll")]
         public static extern IntPtr GetOpenClipboardWindow();
@@ -217,21 +189,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetWindowDC(IntPtr hWnd);
 
-        [DllImport("user32.dll")]
-        public static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll")]
-        public static extern ulong GetWindowLongA(IntPtr hWnd, int nIndex);
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetWindowRect(IntPtr hWnd, ref RECT rect);
 
         [DllImport("user32.dll")]
-        // ReSharper disable once IdentifierTypo
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        // ReSharper disable once IdentifierTypo
         public static extern bool IsWindowVisible(IntPtr hwnd);
 
         [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]
@@ -258,12 +222,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll")]
         public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
         
-        [DllImport("user32.dll")]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        public static extern bool SetKeyboardState(byte[] lpKeyState);
-
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int width, int height, SetWindowPosFlags uFlags);
 
@@ -271,9 +229,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern int ShowWindow(IntPtr hWnd, short cmdShow);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        // ReSharper disable IdentifierTypo
         public static extern bool UpdateLayeredWindow(IntPtr hwnd, IntPtr hdcDst, ref POINT pptDst, ref PInvokeCommon.SIZE psize, IntPtr hdcSrc, ref POINT pprSrc, int crKey, ref BLENDFUNCTION pblend, int dwFlags);
-        // ReSharper restore IdentifierTypo
 
         public static Control GetFocusedControl()
         {
@@ -289,10 +245,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
         }
 
         [DllImport("user32.dll")]
-        internal static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
-
-        [DllImport("user32.dll")]
-        internal static extern bool HideCaret(IntPtr hWnd);
+        public static extern bool HideCaret(IntPtr hWnd);
 
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern int SetScrollPos(IntPtr hWnd, Orientation orientation, int nPos, bool bRedraw);

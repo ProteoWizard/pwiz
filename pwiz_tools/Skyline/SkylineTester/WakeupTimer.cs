@@ -21,7 +21,7 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.Win32.SafeHandles;
-using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 
 namespace SkylineTester
 {
@@ -57,10 +57,10 @@ namespace SkylineTester
         {
             long waketime = (long)e.Argument;
 
-            using (SafeWaitHandle handle = Kernel32.CreateWaitableTimer(IntPtr.Zero, true,
+            using (SafeWaitHandle handle = Kernel32Test.CreateWaitableTimer(IntPtr.Zero, true,
                       GetType().Assembly.GetName().Name + "Timer_" + Guid.NewGuid()))
             {
-                if (Kernel32.SetWaitableTimer(handle, ref waketime, 0, IntPtr.Zero, IntPtr.Zero, true))
+                if (Kernel32Test.SetWaitableTimer(handle, ref waketime, 0, IntPtr.Zero, IntPtr.Zero, true))
                 {
                     using (EventWaitHandle wh = new EventWaitHandle(false,
                                                            EventResetMode.AutoReset))

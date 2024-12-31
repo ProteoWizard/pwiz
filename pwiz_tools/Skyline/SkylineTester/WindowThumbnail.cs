@@ -20,6 +20,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 
 namespace SkylineTester
 {
@@ -55,7 +56,7 @@ namespace SkylineTester
         {
             if (_thumb != IntPtr.Zero)
             {
-                Dwmapi.UnregisterThumbnail(_thumb);
+                DwmapiTest.UnregisterThumbnail(_thumb);
                 _thumb = IntPtr.Zero;
             }
         }
@@ -70,7 +71,7 @@ namespace SkylineTester
             }
 
             IntPtr newThumb;
-            Dwmapi.RegisterThumbnail(MainWindow.Handle, window, out newThumb);
+            DwmapiTest.RegisterThumbnail(MainWindow.Handle, window, out newThumb);
             if (newThumb == IntPtr.Zero)
             {
                 UnregisterThumb();
@@ -85,11 +86,11 @@ namespace SkylineTester
             Point locationOnForm = MainWindow.PointToClient(Parent.PointToScreen(Location));
 
             PInvokeCommon.SIZE size;
-            Dwmapi.QueryThumbnailSourceSize(_thumb, out size);
+            DwmapiTest.QueryThumbnailSourceSize(_thumb, out size);
 
-            var props = new Dwmapi.THUMBNAIL_PROPERTIES
+            var props = new DwmapiTest.THUMBNAIL_PROPERTIES
             {
-                dwFlags = (int)(Dwmapi.TNPFlags.VISIBLE | Dwmapi.TNPFlags.RECTDESTINATION | Dwmapi.TNPFlags.OPACITY),
+                dwFlags = (int)(DwmapiTest.TNPFlags.VISIBLE | DwmapiTest.TNPFlags.RECTDESTINATION | DwmapiTest.TNPFlags.OPACITY),
                 fVisible = true,
                 opacity = 255,
                 rcDestination = new User32.RECT(
@@ -104,23 +105,23 @@ namespace SkylineTester
             if (size.cy < Height)
                 props.rcDestination.bottom = props.rcDestination.top + size.cy;
 
-            Dwmapi.UpdateThumbnailProperties(_thumb, ref props);
+            DwmapiTest.UpdateThumbnailProperties(_thumb, ref props);
         }
 
         private IntPtr FindWindow(int processId)
         {
-            const ulong targetWindow = User32.WS_BORDER | User32.WS_VISIBLE;
+            const ulong targetWindow = User32Test.WS_BORDER | User32Test.WS_VISIBLE;
 
             IntPtr window = IntPtr.Zero;
 
-            User32.EnumWindows(
+            User32Test.EnumWindows(
                 delegate(IntPtr wnd, IntPtr param)
                 {
                     uint id;
                     User32.GetWindowThreadProcessId(wnd, out id);
 
                     if ((int)id == processId &&
-                        (User32.GetWindowLongA(wnd, User32.GWL_STYLE) & targetWindow) == targetWindow)
+                        (User32Test.GetWindowLongA(wnd, User32Test.GWL_STYLE) & targetWindow) == targetWindow)
                     {
                         window = wnd;
                         return false;

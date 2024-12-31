@@ -14,20 +14,14 @@
  * limitations under the License.
  */
 
-using System;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.InteropServices;
 
-namespace pwiz.Common.SystemUtil.PInvoke
+namespace TestRunnerLib.PInvoke
 {
-    public static class Gdi32
-    { 
-        [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr CreateCompatibleDC(IntPtr hDC);
-    
-        [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
-        public static extern bool DeleteDC(IntPtr hDC);
-
-        [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
-        public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+    public static class Ole32Test
+    {
+        [DllImport("ole32.dll")]
+        public static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
     }
 }

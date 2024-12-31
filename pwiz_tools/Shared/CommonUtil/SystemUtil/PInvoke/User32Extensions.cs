@@ -14,31 +14,12 @@
  * limitations under the License.
  */
 
-using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace pwiz.Common.SystemUtil.PInvoke
 {
     public static class User32Extensions
     {
-        /// <summary>
-        /// Adjust z-order without activating
-        /// </summary>
-        public static void BringWindowToSameLevelWithoutActivating(this Form form, Form formInsertAfter)
-        {
-            const User32.SetWindowPosFlags flags = User32.SetWindowPosFlags.NOMOVE | 
-                                                   User32.SetWindowPosFlags.NOSIZE | 
-                                                   User32.SetWindowPosFlags.NOACTIVATE | 
-                                                   User32.SetWindowPosFlags.SHOWWINDOW;
-
-            User32.SetWindowPos(form.Handle, formInsertAfter.Handle, 0, 0, 0, 0, flags);
-        }
-
-        public static int GetGuiResources(this Process process, User32.HandleType type)
-        {
-            return User32.GetGuiResources(process.Handle, (int)type);
-        }
-
         public static int GetScrollPos(this Control control, Orientation orientation)
         {
             return User32.GetScrollPos(control.Handle, orientation);
@@ -47,11 +28,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static void HideCaret(this Control control)
         {
             User32.HideCaret(control.Handle);
-        }
-
-        public static void SetForegroundWindow(this Control control)
-        {
-            User32.SetForegroundWindow(control.Handle);
         }
 
         public static void SetScrollPos(this Control control, Orientation orientation, int pos)

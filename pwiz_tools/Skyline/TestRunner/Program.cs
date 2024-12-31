@@ -41,7 +41,6 @@ using NetMQ.Sockets;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util;
 //WARNING: Including TestUtil in this project causes a strange build problem, where the first
@@ -52,6 +51,7 @@ using pwiz.Skyline.Util;
 //         problem.
 //using pwiz.SkylineTestUtil;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 
 
 namespace TestRunner
@@ -384,7 +384,7 @@ namespace TestRunner
                     TeamCityStartTestSuite(commandLineArgs);
 
                     // Prevent system sleep.
-                    using (new Kernel32.SystemSleep())
+                    using (new Kernel32Test.SystemSleep())
                     {
                         // Pause before first test for profiling.
                         bool profiling = commandLineArgs.ArgAsBool("profile");
@@ -958,7 +958,7 @@ namespace TestRunner
                 string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
-                Kernel32.SetConsoleCtrlHandler(c =>
+                Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
                     RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
                     cts.Cancel();
