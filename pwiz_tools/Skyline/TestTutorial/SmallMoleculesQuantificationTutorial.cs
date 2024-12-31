@@ -134,6 +134,7 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Transitions, 0);
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
+                FocusDocument();
                 PauseForScreenShot<SkylineWindow>("Skyline with small molecule targets", 7);
 
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -189,7 +190,7 @@ namespace pwiz.SkylineTestTutorial
 
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
-
+                FocusDocument();
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-precursor graph", 13);
 
                 var docResults = SkylineWindow.Document;
@@ -227,6 +228,12 @@ namespace pwiz.SkylineTestTutorial
                 SelectNode(SrmDocument.Level.Transitions, 0);
                 SelectNode(SrmDocument.Level.Transitions, 1);
                 SelectNode(SrmDocument.Level.Molecules, 0);
+                // TODO: Removed this once Nick has fixed what is causing x-axis labels in the Peak Areas plot to end up horizontal
+                RunUIForScreenShot(() => SkylineWindow.Height += 200);
+                JiggleSelection();
+                RunUIForScreenShot(() => SkylineWindow.Height -= 200);
+                JiggleSelection();
+                FocusDocument();
                 PauseForScreenShot<SkylineWindow>("Skyline window multi-replicate layout", 14);
 
                 // Peak integration correction
@@ -354,7 +361,7 @@ namespace pwiz.SkylineTestTutorial
                 }
 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
-                PauseForScreenShot<CalibrationForm>("Calibration Curve ", 23);
+                PauseForGraphScreenShot<CalibrationForm>("Calibration Curve ", 23);
 
                 EnableDocumentGridColumns(documentGrid, Resources.SkylineViewContext_GetDocumentGridRowSources_Replicates, 47,
                     new[]
@@ -413,7 +420,7 @@ namespace pwiz.SkylineTestTutorial
 
                 var calibrationForm = FindOpenForm<CalibrationForm>();
                 RunUI(() => calibrationForm.UpdateUI(false));
-                PauseForScreenShot<CalibrationForm>("Calibration Curve: Log", 26);
+                PauseForGraphScreenShot<CalibrationForm>("Calibration Curve: Log", 26);
             }
 
         }
