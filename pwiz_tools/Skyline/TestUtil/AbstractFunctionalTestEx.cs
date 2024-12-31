@@ -526,14 +526,14 @@ namespace pwiz.SkylineTestUtil
             ClickChromatogram(null, x, y, paneKey);
         }
 
-        public static void ClickChromatogram(string graphName, double x, double y, PaneKey? paneKey = null, bool checkTitle = false)
+        public static void ClickChromatogram(string graphName, double x, double y, PaneKey? paneKey = null, double? titleTime = null)
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
             MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
             RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
             WaitForGraphs();
-            CheckFullScanSelection(graphName, x, y, paneKey, checkTitle);
+            CheckFullScanSelection(graphName, x, y, paneKey, titleTime);
         }
 
         public static void MouseOverChromatogram(double x, double y, PaneKey? paneKey = null)
@@ -568,21 +568,21 @@ namespace pwiz.SkylineTestUtil
                     sleepInterval * sleepCycles / 1000.0)));
         }
 
-        public static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null, bool checkTitle = false)
+        public static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null, double? titleTime = null)
         {
-            CheckFullScanSelection(null, x, y, paneKey, checkTitle);
+            CheckFullScanSelection(null, x, y, paneKey, titleTime);
         }
 
-        public static void CheckFullScanSelection(string graphName, double x, double y, PaneKey? paneKey = null, bool checkTitle = false)
+        public static void CheckFullScanSelection(string graphName, double x, double y, PaneKey? paneKey = null, double? titleTime = null)
         {
             var graphChromatogram = GetGraphChrom(graphName);
             WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
-            if (checkTitle)
+            if (titleTime.HasValue)
             {
                 // Good idea to check the title for a tutorial screenshot
-                var matchTime = Regex.Match(SkylineWindow.GraphFullScan.TitleText, @".([0-9.]+) [\w]+.$");
+                var matchTime = Regex.Match(SkylineWindow.GraphFullScan.TitleText, @".([0-9.,]+) [\w]+.$");
                 Assert.IsTrue(matchTime.Success);
-                Assert.AreEqual(x, double.Parse(matchTime.Groups[1].Value));
+                Assert.AreEqual(titleTime.Value, double.Parse(matchTime.Groups[1].Value));
             }
             Assert.AreEqual(string.Empty, graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
