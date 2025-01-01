@@ -10,7 +10,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
@@ -65,6 +64,10 @@ namespace pwiz.Skyline.EditUI
                 tbxRtDeviationCutoff.Text = meanStandardDeviation.Value.ToString(format);
                 tbxUnalignedDocRtStdDev.Text = meanStandardDeviation.Value.ToString(Formats.RETENTION_TIME);
             }
+
+            comboRegressionMethod.Items.Add(AlignmentType.CONSENSUS);
+            comboRegressionMethod.Items.Add(AlignmentType.KDE);
+            comboRegressionMethod.SelectedIndex = 0;
         }
 
         private void ReceiverOnProgressChange()
@@ -113,7 +116,7 @@ namespace pwiz.Skyline.EditUI
                 if (_data.Alignments != null && cbxAlignAllGraphs.Checked)
                 {
                     SkylineWindow.RetentionTimeTransformOp =
-                        _data.Alignments.ChangeName(comboRetentionTimeAlignment.SelectedItem.ToString());
+                        _data.Alignments.ChangeName(comboRtCalculator.SelectedItem.ToString());
                 }
                 else
                 {
@@ -212,14 +215,20 @@ namespace pwiz.Skyline.EditUI
         {
             SetSequenceTree(SkylineWindow.SequenceTree);
             var document = SkylineWindow.DocumentUI;
-            ComboHelper.ReplaceItems(comboRetentionTimeAlignment, GetAlignmentOptions(document), 1);
+            var alignmentOptions = RtValueType.ForDocument(document).ToList();
+            ComboHelper.ReplaceItems(comboRtCalculator, alignmentOptions.Cast<object>().Prepend(string.Empty), 1);
             var scoringModel = GetScoringModelToUse(document);
             tbxScoringModel.Text = scoringModel.Name;
+            var alignmentType = (comboRegressionMethod.SelectedItem as AlignmentType) ?? AlignmentType.CONSENSUS;
 
-            var alignmentOption = comboRetentionTimeAlignment.SelectedItem as AlignmentOption;
+            var rtValueType = comboRtCalculator.SelectedItem as RtValueType;
+            if (rtValueType != null)
+            {
+                rtValueType = alignmentOptions.FirstOrDefault(opt => rtValueType.Equals(opt));
+            }
             var parameters = new PeakImputationData.Parameters(document)
-                .ChangeRtValueType(alignmentOption?.RtValueType)
-                .ChangeAlignmentType(alignmentOption?.AlignmentType)
+                .ChangeRtValueType(rtValueType)
+                .ChangeAlignmentType(alignmentType)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
                 .ChangeScoringModel(scoringModel)
                 .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null))
@@ -246,24 +255,6 @@ namespace pwiz.Skyline.EditUI
                 return scoringModel;
             }
             return LegacyScoringModel.DEFAULT_MODEL;
-        }
-
-        private bool HasQValues(SrmDocument document)
-        {
-            var libraries = document.Settings.PeptideSettings.Libraries;
-            if (!libraries.LibrarySpecs.Any(spec => spec.UseExplicitPeakBounds))
-            {
-                return false;
-            }
-
-            if (!libraries.IsLoaded)
-            {
-                // If the libraries haven't been loaded yet, assume they have q-values
-                return true;
-            }
-
-            return libraries.Libraries.Any(lib =>
-                lib is { UseExplicitPeakBounds: true, HasExplicitBoundsQValues: true });
         }
 
         public class Row
@@ -654,63 +645,6 @@ namespace pwiz.Skyline.EditUI
                 .SetSublistId(ppPeaks).SetName("Details");
         }
 
-        private class AlignmentOption
-        {
-            public AlignmentOption(string name, RtValueType rtValueType, AlignmentType alignmentType)
-            {
-                Name = name;
-                RtValueType = rtValueType;
-                AlignmentType = alignmentType;
-            }
-
-            public string Name { get; }
-            public override string ToString()
-            {
-                return Name;
-            }
-
-            public RtValueType RtValueType { get; }
-            public AlignmentType AlignmentType { get; }
-
-            protected bool Equals(AlignmentOption other)
-            {
-                return Name == other.Name && Equals(RtValueType, other.RtValueType) && Equals(AlignmentType, other.AlignmentType);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != this.GetType()) return false;
-                return Equals((AlignmentOption)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    var hashCode = (Name != null ? Name.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (RtValueType != null ? RtValueType.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (AlignmentType != null ? AlignmentType.GetHashCode() : 0);
-                    return hashCode;
-                }
-            }
-        }
-
-        private static IEnumerable<AlignmentOption> GetAlignmentOptions(SrmDocument document)
-        {
-            yield return new AlignmentOption(string.Empty, null, null);
-            yield return new AlignmentOption("Peak Apexes", RtValueType.PEAK_APEXES, AlignmentType.CONSENSUS);
-            // yield return new AlignmentOption("Good peak apex consensus", RtValueType.HIGH_SCORING_PEAK_APEXES,
-            //     AlignmentType.CONSENSUS);
-            // yield return new AlignmentOption("Peak Apex KDE", RtValueType.PEAK_APEXES, AlignmentType.KDE);
-            if (RtValueType.PSM_TIMES.IsValidFor(document))
-            {
-                yield return new AlignmentOption("PSM Times", RtValueType.PSM_TIMES, AlignmentType.CONSENSUS);
-//                yield return new AlignmentOption("PSM Times KDE", RtValueType.PSM_TIMES, AlignmentType.KDE);
-            }
-        }
-
         public class ImputeButtonCell : DataGridViewButtonCell
         {
             protected override void OnClick(DataGridViewCellEventArgs e)
@@ -842,6 +776,38 @@ namespace pwiz.Skyline.EditUI
             }
             var alignmentFunction = data.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
             return moleculePeaks.ExemplaryPeakBounds.ReverseAlignPreservingWidth(alignmentFunction);
+        }
+
+        private void linkLabelViewRegression_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            var rtValueType = comboRtCalculator.SelectedItem as RtValueType;
+            if (rtValueType == null)
+            {
+                MessageDlg.Show(this, "No retention time calculator selected");
+                return;
+            }
+
+            var calculator = (rtValueType as RtValueType.Calculator)?.RetentionScoreCalculator;
+            if (calculator == null)
+            {
+                MessageDlg.Show(this,
+                    string.Format("{0} cannot be displayed in the Retention Time Score To Run Regression window",
+                        rtValueType));
+                return;
+            }
+
+            var regressionMethod = comboRegressionMethod.SelectedItem as AlignmentType;
+            if (regressionMethod == AlignmentType.CONSENSUS)
+            {
+                MessageDlg.Show(this,
+                    string.Format(
+                        "Regression method {0} cannot be displayed in the Retention Time Score to Run Regression window",
+                        regressionMethod));
+                return;
+            }
+            SkylineWindow.ShowRTRegressionGraphScoreToRun();
+            SkylineWindow.ShowRegressionMethod(RegressionMethodRT.kde);
+            SkylineWindow.ChooseCalculator(calculator.Name);
         }
     }
 }

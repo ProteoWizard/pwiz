@@ -30,6 +30,8 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.comboRegressionMethod = new System.Windows.Forms.ComboBox();
+            this.lblRegressionMethod = new System.Windows.Forms.Label();
             this.btnImputeBoundaries = new System.Windows.Forms.Button();
             this.lblPercentPeakWidth = new System.Windows.Forms.Label();
             this.lblMinutes = new System.Windows.Forms.Label();
@@ -64,10 +66,12 @@
             this.cbxOverwriteManual = new System.Windows.Forms.CheckBox();
             this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
             this.lblSdCutoff = new System.Windows.Forms.Label();
-            this.comboRetentionTimeAlignment = new System.Windows.Forms.ComboBox();
+            this.comboRtCalculator = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+            this.imageList1 = new System.Windows.Forms.ImageList(this.components);
+            this.linkLabelViewRegression = new System.Windows.Forms.LinkLabel();
             this.panel1.SuspendLayout();
             this.groupBoxDocumentStatistics.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
@@ -81,6 +85,9 @@
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.linkLabelViewRegression);
+            this.panel1.Controls.Add(this.comboRegressionMethod);
+            this.panel1.Controls.Add(this.lblRegressionMethod);
             this.panel1.Controls.Add(this.btnImputeBoundaries);
             this.panel1.Controls.Add(this.lblPercentPeakWidth);
             this.panel1.Controls.Add(this.lblMinutes);
@@ -96,13 +103,32 @@
             this.panel1.Controls.Add(this.cbxOverwriteManual);
             this.panel1.Controls.Add(this.tbxRtDeviationCutoff);
             this.panel1.Controls.Add(this.lblSdCutoff);
-            this.panel1.Controls.Add(this.comboRetentionTimeAlignment);
+            this.panel1.Controls.Add(this.comboRtCalculator);
             this.panel1.Controls.Add(this.lblRetentionTimeAlignment);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(800, 223);
             this.panel1.TabIndex = 1;
+            // 
+            // comboRegressionMethod
+            // 
+            this.comboRegressionMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRegressionMethod.FormattingEnabled = true;
+            this.comboRegressionMethod.Location = new System.Drawing.Point(170, 71);
+            this.comboRegressionMethod.Name = "comboRegressionMethod";
+            this.comboRegressionMethod.Size = new System.Drawing.Size(127, 21);
+            this.comboRegressionMethod.TabIndex = 31;
+            this.comboRegressionMethod.SelectedIndexChanged += new System.EventHandler(this.SettingsControlChanged);
+            // 
+            // lblRegressionMethod
+            // 
+            this.lblRegressionMethod.AutoSize = true;
+            this.lblRegressionMethod.Location = new System.Drawing.Point(167, 55);
+            this.lblRegressionMethod.Name = "lblRegressionMethod";
+            this.lblRegressionMethod.Size = new System.Drawing.Size(101, 13);
+            this.lblRegressionMethod.TabIndex = 30;
+            this.lblRegressionMethod.Text = "Regression method:";
             // 
             // btnImputeBoundaries
             // 
@@ -157,7 +183,7 @@
             // cbxAlignAllGraphs
             // 
             this.cbxAlignAllGraphs.AutoSize = true;
-            this.cbxAlignAllGraphs.Location = new System.Drawing.Point(170, 56);
+            this.cbxAlignAllGraphs.Location = new System.Drawing.Point(170, 118);
             this.cbxAlignAllGraphs.Name = "cbxAlignAllGraphs";
             this.cbxAlignAllGraphs.Size = new System.Drawing.Size(97, 17);
             this.cbxAlignAllGraphs.TabIndex = 25;
@@ -244,7 +270,7 @@
             // 
             this.groupBoxScope.Controls.Add(this.radioScopeDocument);
             this.groupBoxScope.Controls.Add(this.radioScopeSelection);
-            this.groupBoxScope.Location = new System.Drawing.Point(170, 88);
+            this.groupBoxScope.Location = new System.Drawing.Point(170, 149);
             this.groupBoxScope.Name = "groupBoxScope";
             this.groupBoxScope.Size = new System.Drawing.Size(141, 68);
             this.groupBoxScope.TabIndex = 23;
@@ -441,24 +467,41 @@
             // 
             // comboRetentionTimeAlignment
             // 
-            this.comboRetentionTimeAlignment.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRetentionTimeAlignment.FormattingEnabled = true;
-            this.comboRetentionTimeAlignment.Location = new System.Drawing.Point(170, 29);
-            this.comboRetentionTimeAlignment.Name = "comboRetentionTimeAlignment";
-            this.comboRetentionTimeAlignment.Size = new System.Drawing.Size(127, 21);
-            this.comboRetentionTimeAlignment.TabIndex = 1;
-            this.toolTip1.SetToolTip(this.comboRetentionTimeAlignment, "The retention time alignment setting controls how the times from the accepted pea" +
+            this.comboRtCalculator.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRtCalculator.FormattingEnabled = true;
+            this.comboRtCalculator.Location = new System.Drawing.Point(170, 29);
+            this.comboRtCalculator.Name = "comboRtCalculator";
+            this.comboRtCalculator.Size = new System.Drawing.Size(127, 21);
+            this.comboRtCalculator.TabIndex = 1;
+            this.toolTip1.SetToolTip(this.comboRtCalculator, "The retention time alignment setting controls how the times from the accepted pea" +
         "ks are mapped onto the runs where a new peak needs to be chosen.");
-            this.comboRetentionTimeAlignment.SelectedIndexChanged += new System.EventHandler(this.SettingsControlChanged);
+            this.comboRtCalculator.SelectedIndexChanged += new System.EventHandler(this.SettingsControlChanged);
             // 
             // lblRetentionTimeAlignment
             // 
             this.lblRetentionTimeAlignment.AutoSize = true;
             this.lblRetentionTimeAlignment.Location = new System.Drawing.Point(167, 13);
             this.lblRetentionTimeAlignment.Name = "lblRetentionTimeAlignment";
-            this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(126, 13);
+            this.lblRetentionTimeAlignment.Size = new System.Drawing.Size(127, 13);
             this.lblRetentionTimeAlignment.TabIndex = 0;
-            this.lblRetentionTimeAlignment.Text = "Retention time alignment:";
+            this.lblRetentionTimeAlignment.Text = "Retention time calculator:";
+            // 
+            // imageList1
+            // 
+            this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
+            this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
+            this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
+            // 
+            // linkLabelViewRegression
+            // 
+            this.linkLabelViewRegression.AutoSize = true;
+            this.linkLabelViewRegression.Location = new System.Drawing.Point(167, 95);
+            this.linkLabelViewRegression.Name = "linkLabelViewRegression";
+            this.linkLabelViewRegression.Size = new System.Drawing.Size(86, 13);
+            this.linkLabelViewRegression.TabIndex = 32;
+            this.linkLabelViewRegression.TabStop = true;
+            this.linkLabelViewRegression.Text = "View Regression";
+            this.linkLabelViewRegression.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelViewRegression_LinkClicked);
             // 
             // PeakImputationForm
             // 
@@ -487,7 +530,7 @@
 
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label lblRetentionTimeAlignment;
-        private System.Windows.Forms.ComboBox comboRetentionTimeAlignment;
+        private System.Windows.Forms.ComboBox comboRtCalculator;
         private System.Windows.Forms.TextBox tbxRtDeviationCutoff;
         private System.Windows.Forms.Label lblSdCutoff;
         private System.Windows.Forms.CheckBox cbxOverwriteManual;
@@ -524,5 +567,9 @@
         private System.Windows.Forms.Label lblMinutes;
         private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label lblRegressionMethod;
+        private System.Windows.Forms.ComboBox comboRegressionMethod;
+        private System.Windows.Forms.ImageList imageList1;
+        private System.Windows.Forms.LinkLabel linkLabelViewRegression;
     }
 }
