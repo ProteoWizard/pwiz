@@ -214,6 +214,15 @@ namespace pwiz.Common.SystemUtil
         }
 
         [DllImport("user32.dll", SetLastError = true)]
+        private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+
+        public static void HideCaret(this ComboBox comboBox)
+        {
+            var handleEdit = FindWindowEx(comboBox.Handle, IntPtr.Zero, "Edit", null);
+            if (handleEdit != IntPtr.Zero)
+                HideCaret(handleEdit); }
+
+        [DllImport("user32.dll", SetLastError = true)]
         private static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
 
         public static void SetScrollPos(this Control control, Orientation sd, int pos)

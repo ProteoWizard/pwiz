@@ -290,15 +290,13 @@ namespace pwiz.SkylineTestUtil
 
         private static void EnsureScreenshotIcon(Form dlg)
         {
-            // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    AreIconsEqual(dlg.Icon, Resources.Skyline))    // Normally a fixed dialog will not have the Skyline icon
-                {
-                    if (!AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
-                        RunUI(() => dlg.Icon = SkylineWindow.Icon);
-                }
+                // If the form has the current Skyline resource Icon, but it is not the same
+                // as the Skyline window icon, use the Skyline window icon to avoid recording
+                // screenshots of the Skyline-daily icon
+                if (AreIconsEqual(dlg.Icon, Resources.Skyline) && !AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
+                    RunUI(() => dlg.Icon = SkylineWindow.Icon);
             }
         }
 
