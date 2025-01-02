@@ -73,6 +73,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestAuditLogTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            PauseStartingPage = 16;
