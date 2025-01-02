@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// A window that progressively displays chromatogram data during file import.
     /// </summary>
-    public partial class AllChromatogramsGraph : FormEx
+    public partial class AllChromatogramsGraph : FormEx, FileProgressControl.IStateProvider
     {
         private readonly Stopwatch _stopwatch;
         private int _selected = -1;
@@ -528,7 +528,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bool first = true;
             var width = flowFileStatus.Width - 2 - // Avoid clipping the cancel/retry button when we need a vertical scrollbar
                         (flowFileStatus.VerticalScroll.Visible || 
-                         status.ProgressList.Count > (panelFileList.Height / (new FileProgressControl()).Height)  // If scrollbar isn't visible already, it's about to be
+                         status.ProgressList.Count > (panelFileList.Height / new FileProgressControl(this).Height)  // If scrollbar isn't visible already, it's about to be
                             ? SystemInformation.VerticalScrollBarWidth
                             : 0);
             List<FileProgressControl> controlsToAdd = new List<FileProgressControl>();
@@ -540,7 +540,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 // Create a progress control for new file.
-                progressControl = new FileProgressControl
+                progressControl = new FileProgressControl(this)
                 {
                     Number = flowFileStatus.Controls.Count + controlsToAdd.Count + 1,
                     Width = width,
@@ -783,6 +783,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private int? _freezeProgressPercent;
         private string _elapsedTimeAtFreeze;
+        private DateTime? _timeAtFreeze;
+        private Tuple<string, string> _replacementText;
         private List<MultiProgressStatus> _missedProgressStatusList = new List<MultiProgressStatus>();
 
         /// <summary>
@@ -797,6 +799,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 _freezeProgressPercent = percent;
                 _elapsedTimeAtFreeze = elapsedTime;
             }
+        }
+
+        public void SetFreezeTimeForError(DateTime time)
+        {
+            _timeAtFreeze = time;
+        }
+
+        DateTime FileProgressControl.IStateProvider.Time => _timeAtFreeze ?? DateTime.Now;
+
+        public void SetReplacementForError(string oldValue, string newValue)
+        {
+            _replacementText = new Tuple<string, string>(oldValue, newValue);
+        }
+
+        string FileProgressControl.IStateProvider.PrepareErrorText(string errorText)
+        {
+            return _replacementText == null ? errorText
+                : errorText.Replace(_replacementText.Item1, _replacementText.Item2);
         }
 
         public bool IsProgressFrozen(MultiProgressStatus status = null)
