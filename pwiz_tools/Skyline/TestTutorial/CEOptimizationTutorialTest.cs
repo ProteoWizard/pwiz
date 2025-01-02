@@ -49,6 +49,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCEOptimizationTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             AsSmallMolecules = false;
             RunCEOptimizationTutorialTest();
         }

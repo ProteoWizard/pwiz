@@ -63,6 +63,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestPeakPickingTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
