@@ -33,6 +33,7 @@ using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using TestRunnerLib.PInvoke;
 using Exception = System.Exception;
 
 namespace TestRunnerLib
@@ -471,9 +472,9 @@ namespace TestRunnerLib
             CommittedMemoryBytes = committedBytes;
             var previousPrivateBytes = TotalMemoryBytes;
             TotalMemoryBytes = _process.PrivateMemorySize64;
-            LastTotalHandleCount = GetHandleCount(HandleType.total);
-            LastUserHandleCount = GetHandleCount(HandleType.user);
-            LastGdiHandleCount = GetHandleCount(HandleType.gdi);
+            LastTotalHandleCount = GetHandleCount(User32Test.HandleType.total);
+            LastUserHandleCount = GetHandleCount(User32Test.HandleType.user);
+            LastGdiHandleCount = GetHandleCount(User32Test.HandleType.gdi);
 
             if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
@@ -994,17 +995,12 @@ namespace TestRunnerLib
             }
         }
 
-        [DllImport("User32")]
-        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
-
-        private enum HandleType { total = -1, gdi = 0, user = 1 }
-
-        private int GetHandleCount(HandleType handleType)
+        private int GetHandleCount(User32Test.HandleType handleType)
         {
-            if (handleType == HandleType.total)
+            if (handleType == User32Test.HandleType.total)
                 return _process.HandleCount;
 
-            return GetGuiResources(_process.Handle, (int)handleType);
+            return _process.GetGuiResources(handleType);
         }
 
         private static void Try<TEx>(Action action, int loopCount, bool throwOnFailure = true, int milliseconds = 500) 

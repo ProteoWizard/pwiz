@@ -63,6 +63,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
@@ -1521,9 +1522,6 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(documentGridBmp, cropRect);
         }
 
-        [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
         protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
         {
             var sequenceTree = SkylineWindow.SequenceTree;
@@ -1533,13 +1531,10 @@ namespace pwiz.SkylineTestUtil
             sequenceTreeRect.X += 1;
             sequenceTreeRect.Y += 1;
 
-            const int GWL_STYLE = -16;
-            const int WS_VSCROLL = 0x00200000;
-            const int WS_HSCROLL = 0x00100000;
-            int style = GetWindowLong(sequenceTree.Handle, GWL_STYLE);
-            if ((style & WS_VSCROLL) != 0)
+            int style = User32Test.GetWindowLong(sequenceTree.Handle, User32Test.GWL_STYLE);
+            if ((style & User32Test.WS_VSCROLL) != 0)
                 sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
-            if ((style & WS_HSCROLL) != 0)
+            if ((style & User32Test.WS_HSCROLL) != 0)
                 sequenceTreeRect.Height -= SystemInformation.HorizontalScrollBarHeight;
 
             if (countTargets != null)
