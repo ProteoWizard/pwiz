@@ -154,7 +154,6 @@ void test(const string& rawpath)
             cout << "Full data enumeration: " << bpt::to_simple_string(stop - start) << endl;
         }
     }
-    wiffFile->close();
 }
 
 

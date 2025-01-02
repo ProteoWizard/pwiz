@@ -45,7 +45,6 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
     virtual size_t find(const std::string& id) const;
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     virtual ChromatogramPtr chromatogram(size_t index, DetailLevel detailLevel) const;
-	~ChromatogramList_ABI() override;
 
 #ifdef PWIZ_READER_ABI
     ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, const ExperimentsMap& experimentsMap, int sample, const Reader::Config& config);
