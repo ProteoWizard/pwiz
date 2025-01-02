@@ -1307,6 +1307,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool IsTranslationRequired => IsAutoScreenShotMode && !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
+
         private static bool _isCoverShotMode;
 
         public static bool IsCoverShotMode
