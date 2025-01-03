@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -118,6 +119,10 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES)]
         public void TestDiaTtofDiaUmpireTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             //IsPauseForScreenShots = true;
             _analysisValues = new AnalysisValues
             {
@@ -203,7 +208,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
-        public void TestDiaQeDiaUmpireTutorial()
+        public void TestDiaQeDiaUmpireTutorialExtra()
         {
             _analysisValues = new AnalysisValues
             {
@@ -316,7 +321,7 @@ namespace TestPerf
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsPauseForCoverShot = true;
-            CoverShotName = "DIA-SWATH with DiaUmpire";
+            CoverShotName = "DIA-Umpire-" + InstrumentTypeName;
 
             RunFunctionalTest();
         }
@@ -401,7 +406,8 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Import Peptide Search - Extract chromatograms page", 4);
+            // TODO: Put this back with tutorial text that explains it
+            // PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Import Peptide Search - Extract chromatograms page", 4);
 
             // With 2 sources, we get the remove prefix/suffix dialog; accept default behavior
             if (searchFiles.Length > 1)
@@ -506,10 +512,10 @@ namespace TestPerf
                     Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
                 }
             });
-            PauseForScreenShot("Isolation scheme", 8);
+            PauseForScreenShot<EditIsolationSchemeDlg>("Isolation scheme", 8);
 
             var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
-            PauseForScreenShot("Isolation scheme graph", 9);
+            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Isolation scheme graph", 9);
 
             OkDialog(isolationGraph, isolationGraph.CloseButton);
             OkDialog(isolationScheme, isolationScheme.OkDialog);
@@ -526,8 +532,12 @@ namespace TestPerf
                 Assert.AreEqual("Trypsin [KR | P]", importPeptideSearchDlg.ImportFastaControl.Enzyme.GetKey());
                 Assert.AreEqual(0, importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages);
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(fastaPathForSearch);
+                importPeptideSearchDlg.ImportFastaControl.ScrollFastaTextToEnd();   // So that the FASTA file name is visible
                 if (!_analysisValues.IsWholeProteome)
+                {
                     importPeptideSearchDlg.ImportFastaControl.FastaImportTargetsFile = fastaPathForImport;
+                    importPeptideSearchDlg.ImportFastaControl.ScrollFastaTargetsToEnd();
+                }
                 Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod =
                     Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence;
@@ -583,10 +593,12 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
             });
 
-            PauseForScreenShot("Import Peptide Search - DDA search progress page", 14);
-
             try
             {
+                WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
+                WaitForConditionUI(() => importPeptideSearchDlg.SearchControl.PercentComplete > 17);
+                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA search progress page", 14);
+
                 WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue, () => importPeptideSearchDlg.SearchControl.LogText);
                 RunUI(() => Assert.IsTrue(searchSucceeded.Value, importPeptideSearchDlg.SearchControl.LogText));
             }
@@ -619,10 +631,10 @@ namespace TestPerf
                 Assert.AreEqual(1.0, double.Parse(row.Cells[3].Value.ToString()));
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
             });
-            PauseForScreenShot("Add iRT peptides form", 15);
+            PauseForScreenShot<AddIrtPeptidesDlg>("Add iRT peptides form", 15);
 
             var irtGraph = ShowDialog<GraphRegression>(() => addIrtDlg.ShowRegression(0));
-            PauseForScreenShot("iRT regression graph", 15);
+            PauseForScreenShot<GraphRegression>("iRT regression graph", 15);
 
             OkDialog(irtGraph, irtGraph.CloseDialog);
             var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtDlg.OkDialog);
@@ -661,15 +673,19 @@ namespace TestPerf
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 ValidateTargets(ref _analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
             });
-            PauseForScreenShot("Import FASTA summary form", 16);
+            PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form", 16);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
+            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
+            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
+            WaitForCondition(() => allChrom.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 13, 30*1000); // 30 second timeout to avoid getting stuck
+            allChrom.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
             ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
-            PauseForScreenShot("mProphet model form", 17);
+            PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form", 17);
 
             OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
 
@@ -689,6 +705,36 @@ namespace TestPerf
 
             RunUI(() => SkylineWindow.SaveDocument());
 
+            if (IsPauseForScreenShots)
+            {
+                RestoreViewOnScreenNoSelChange(17);
+                SelectNode(SrmDocument.Level.MoleculeGroups, 0);
+                Rectangle rectFrame = Rectangle.Empty;
+                RunUI(() =>
+                {
+                    SkylineWindow.Size = new Size(900, 900);
+                    SkylineWindow.ForceOnScreen();  // Avoid this shifting the window under the floating window later
+                });
+                Thread.Sleep(200);  // Give layout time to adjust
+                RunUI(() =>
+                {
+                    var chromPane1 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Name);
+                    var chromPane2 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[1].Name);
+                    var rtGraphFrame = FindFloatingWindow(SkylineWindow.GraphRetentionTime);
+                    var chromTopLeft = chromPane1.PointToScreen(new Point(0, 0));
+                    var chromTopRight = chromPane2.PointToScreen(new Point(chromPane2.Width, 0));
+                    rtGraphFrame.Location = chromPane1.PointToScreen(new Point(((chromTopRight.X - chromTopLeft.X) - rtGraphFrame.Width) / 2, 50));
+                    rectFrame = rtGraphFrame.Bounds;
+                    rtGraphFrame.Activate();    // TODO: Want the graph activated but a screenshot of screen
+                });
+                PauseForScreenShot<ScreenForm>("Docking floating image with cursor", 18, null, bmp =>
+                    DrawLArrowCursorOnBitmap(ClipDockingRect(bmp, rectFrame), 0.5, 0.155));
+                BeginDragDisplay(SkylineWindow.GraphRetentionTime, 0.62, 0.11);
+                PauseForScreenShot<ScreenForm>("Docking image cursor on upper dock indicator", 18, null, bmp =>
+                    ClipDockingRect(bmp, rectFrame));
+                EndDragDisplay();
+            }
+
             const string proteinNameToSelect = "sp|P63284|CLPB_ECOLI";
             if (Equals(proteinNameToSelect, SkylineWindow.Document.MoleculeGroups.Skip(1).First().Name))
                 SelectNode(SrmDocument.Level.MoleculeGroups, 1);
@@ -705,6 +751,7 @@ namespace TestPerf
             });
             RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
+            RunUIForScreenShot(() => SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.SelectedNode);
             PauseForScreenShot("Manual review window layout with protein selected", 19);
 
             FindNode("TDINQALNR");
@@ -716,7 +763,7 @@ namespace TestPerf
             FindNode("TDINQALNR");
             RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
-            PauseForScreenShot("Snip just one chromatogram pane", 21);
+            PauseForChromGraphScreenShot("Snip just one chromatogram pane", "1_SW-A", 21);
 
             ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
                 _analysisValues.ChromatogramClickPoint.X,
@@ -740,7 +787,7 @@ namespace TestPerf
             ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
 
             // CONSIDER: No way to specify mass error graph window in PauseForScreenShot or ShowDialog
-            PauseForScreenShot("Mass errors histogram graph window", 23);
+            PauseForMassErrorGraphScreenShot("Mass errors histogram graph window", 23);
 
             // Review single replicates
             RunUI(SkylineWindow.ShowSingleReplicate);
@@ -769,11 +816,11 @@ namespace TestPerf
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             WaitForGraphs();
             RestoreViewOnScreenNoSelChange(24);
-            PauseForScreenShot("Retention time regression graph window - regression", 24);
+            PauseForRetentionTimeGraphScreenShot("Retention time regression graph window - regression", 24);
 
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
             WaitForGraphs();
-            PauseForScreenShot("Retention time regression graph window - residuals", 25);
+            PauseForRetentionTimeGraphScreenShot("Retention time regression graph window - residuals", 25);
             RunUI(() => SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.score_to_run_regression));
 
             if (IsCoverShotMode)
@@ -809,6 +856,17 @@ namespace TestPerf
                 foreach (var file in Directory.GetFiles(diaDir, "*-diaumpire.*"))
                     FileEx.SafeDelete(file);
             }
+        }
+
+        private static Bitmap ClipDockingRect(Bitmap bmp, Rectangle rectFrame)
+        {
+            const int hBorder = 20;
+            const int topBorder = 100;
+            const int bottomBorder = 10;
+            var rectClip = new Rectangle(rectFrame.X - hBorder, rectFrame.Y - topBorder, rectFrame.Width + hBorder * 2,
+                rectFrame.Height + topBorder + bottomBorder);
+            bmp = ClipBitmap(bmp, rectClip);
+            return bmp;
         }
 
         private void PrintAnalysisSettingsAndResultSummary(IDictionary<string, object> diaUmpireParameters, SearchSettingsControl.DdaSearchSettings searchSettings, AnalysisValues analysisValues)
