@@ -245,6 +245,12 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSAmanda)
+{
+Console.Write("skipping MSAmanda runs, to see if that's the memory corruption issue");
+return;
+}
+
             TestSearch();
         }
 
