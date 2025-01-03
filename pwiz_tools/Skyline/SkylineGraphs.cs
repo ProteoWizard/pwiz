@@ -29,6 +29,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
@@ -54,6 +55,7 @@ using pwiz.Skyline.Util;
 using ZedGraph;
 using pwiz.Skyline.Util.Extensions;
 using PeptideDocNode = pwiz.Skyline.Model.PeptideDocNode;
+using User32 = pwiz.Common.SystemUtil.PInvoke.User32;
 
 namespace pwiz.Skyline
 {
@@ -4455,16 +4457,6 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaNormalizeOption = normalizeOption;
             SequenceTree.NormalizeOption = normalizeOption;
-            if (AreaNormalizeOption == NormalizeOption.TOTAL ||
-                AreaNormalizeOption == NormalizeOption.MAXIMUM ||
-                AreaNormalizeOption == NormalizeOption.GLOBAL_STANDARDS ||
-                AreaNormalizeOption.IsRatioToLabel)
-            {
-                // Do not let the user combine Log with Ratios because
-                // the log scale does not work well with numbers that are less than 1.
-                // (this should be fixed)
-                Settings.Default.AreaLogScale = false;
-            }
             UpdatePeakAreaGraph();
         }
 
@@ -4646,8 +4638,10 @@ namespace pwiz.Skyline
         public void ShowPeptideLogScale(bool isChecked)
         {
             Settings.Default.AreaLogScale = isChecked ;
-            if (isChecked)
+            if (isChecked && !AreaNormalizeOption.AllowLogScale)
+            {
                 AreaNormalizeOption = NormalizeOption.NONE;
+            }
             UpdateSummaryGraphs();
         }
 

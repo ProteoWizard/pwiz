@@ -358,7 +358,7 @@ static void MFSTLog(string message,
                     libraryExplorer.GraphSettings.ShowCharge2 = true;
                     libraryExplorer.GraphSettings.ShowPrecursorIon = true;
                 });
-
+            RunUIForScreenShot(() => libraryExplorer.Height = 475);
             PauseForScreenShot<ViewLibraryDlg>("Spectral Library Explorer", tutorialPage++);
             RunUI(() =>
                 {
@@ -480,6 +480,8 @@ static void MFSTLog(string message,
                 SkylineWindow.ArrangeGraphsTiled();
                 SkylineWindow.ShowChromatogramLegends(false);
             });
+            FocusDocument();
+            JiggleSelection();
             PauseForScreenShot("Main window layout", tutorialPage++);
 
             int atest = 0;
@@ -554,9 +556,10 @@ static void MFSTLog(string message,
 
             var undoIndex = SkylineWindow.Document.RevisionIndex; // preserve for simulating ctrl-z
 
-            RunUI(() => SkylineWindow.Width = skylineWindowWidth);
+            RunUIForScreenShot(() => SkylineWindow.Size = new Size(skylineWindowWidth + 100, skylineWindowHeight + 5));
             PickPeakBoth(pepIndex, 40.471035, 40.8134); // select peak for both chromatograms at these respective retention times
             PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile", tutorialPage++);
+            RunUIForScreenShot(() => SkylineWindow.Size = new Size(skylineWindowWidth, skylineWindowHeight));
 
             int[] m1Thru4 = {1,2,3,4,5};
             PickTransitions(pepIndex, m1Thru4, "Transition pick list filtered", tutorialPage++, "Transition pick list unfiltered", 26); // turn on chromatograms
@@ -575,9 +578,9 @@ static void MFSTLog(string message,
             RevertDoc(undoIndex); // undo changes
 
             ActivateReplicate(TIP_NAME);
-            ClickChromatogram(TIP_NAME, 37.3, 142);
+            ClickChromatogram(TIP_NAME, 37.35, 151, titleTime: 37.32);   // Click to the right of the point, or it will often end up 37.14
             PauseForFullScanGraphScreenShot("MS1 spectrum graph 37.32 minutes", tutorialPage++);
-            ClickChromatogram(TIP_NAME, 33.2, 328.1);
+            ClickChromatogram(TIP_NAME, 33.19, 328.1, titleTime: 33.19);
             PauseForFullScanGraphScreenShot("MS1 spectrum graph 33.19 minutes", tutorialPage++);
 
             if (PreferWiff)
@@ -631,6 +634,8 @@ static void MFSTLog(string message,
 
             int[] m1Thru5 = { 1, 2, 3, 4, 5, 6 };
             PickTransitions(pepIndex, m1Thru5); // turn on M+3 M+4 and M+5
+            if (Equals("ja", CultureInfo.CurrentCulture.TwoLetterISOLanguageName))
+                RunUIForScreenShot(() => SkylineWindow.Width += 12);    // Japanese needs to be a bit wider for the next 4 screenshots
             PauseForChromGraphScreenShot("upper - Chromatogram graph metafile with M+3, M+4 and M+5 added", TIP_NAME, tutorialPage++);
             PauseForChromGraphScreenShot("lower - Chromatogram graph metafile with M+3, M+4 and M+5 added", TIB_NAME, tutorialPage);
             CheckAnnotations(TIB_L, pepIndex, atest++);
@@ -641,10 +646,11 @@ static void MFSTLog(string message,
             PauseForChromGraphScreenShot("lower - Chromatogram graph metafile for peptide ALVEFESNPEETREPGSPPSVQR", TIB_NAME, tutorialPage);
 
             pepIndex = JumpToPeptide("YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR"); // Not L10N
-            // TODO: Need pane keys
             if (IsPauseForScreenShots)
             {
                 RestoreViewOnScreen(34);
+                RunUI(() => FindFloatingWindow(SkylineWindow.GraphPeakArea).Width = 380);
+                JiggleSelection();
                 PauseForPeakAreaGraphScreenShot("upper - Peak Areas graph metafile for peptide YGPADVEDTTGSGATDSKDDDDIDLFGSDDEEESEEAKR", tutorialPage);
             }
 

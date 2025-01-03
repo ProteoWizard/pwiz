@@ -725,7 +725,7 @@ namespace pwiz.SkylineTestTutorial
 
                           SkylineWindow.Size = new Size(1250, 660);
                       });
-
+            FocusDocument();
             PauseForScreenShot("Main window", 33);
 
             // Add results and verify add dialog counts, p. 33

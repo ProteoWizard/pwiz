@@ -25,9 +25,9 @@ namespace pwiz.Skyline.FileUI
 {
     public class OpenDataSourceDialog : OpenFileDialogNE
     {
-        private static readonly string[] SOURCE_TYPES =
+        private static string[] SOURCE_TYPES => new[]
         {
-            FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
+            FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,   // Localized text can't be stored in a static variable
             DataSourceUtil.TYPE_WIFF,
             DataSourceUtil.TYPE_WIFF2,
             DataSourceUtil.TYPE_AGILENT,

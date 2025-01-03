@@ -20,8 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
+using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -94,24 +94,29 @@ namespace pwiz.SkylineTestUtil
         private void FormActivated(object sender, EventArgs e)
         {
             var activatedForm = (Form)sender;
-            var activatedFormHandle = activatedForm.Handle;
+            // DockableForms can get activated during DockableForm.Dispose()
+            if (!activatedForm.IsHandleCreated)
+                return;
 
             lock (_formsToActivate)
             {
                 foreach (var form in _formsToActivate.Where(form => !ReferenceEquals(form, activatedForm)))
                 {
-                    ActionUtil.RunAsync(() => ShowForm(form, activatedFormHandle));
+                    ActionUtil.RunAsync(() => ShowForm(form, activatedForm));
                 }
             }
         }
 
-        private void ShowForm(Form form, IntPtr referenceFormHandle)
+        private void ShowForm(Form form, Form referenceForm)
         {
+            if (!form.IsHandleCreated)
+                return;
+
             // Must be done on the form's thread
             form.Invoke((Action)(() =>
             {
                 if (form.Visible)
-                    form.BringWindowToSameLevelWithoutActivating(referenceFormHandle);
+                    form.BringWindowToSameLevelWithoutActivating(referenceForm);
             }));
         }
 

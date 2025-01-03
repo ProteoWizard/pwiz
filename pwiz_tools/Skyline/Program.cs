@@ -25,7 +25,6 @@ using System.IO;
 using System.IO.Pipes;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -171,7 +170,7 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        AttachConsole(-1);
+                        Common.SystemUtil.PInvoke.Kernel32.AttachConsoleToParentProcess();
                         textWriter = Console.Out;
                     }
                     var writer = new CommandStatusWriter(textWriter);
@@ -763,9 +762,6 @@ namespace pwiz.Skyline
                 Trace.WriteLine(value);
             }
         }
-
-        [DllImport("kernel32", SetLastError = true)]
-        private static extern bool AttachConsole(int dwProcessId);
     }
 
     public class CommandLineRunner

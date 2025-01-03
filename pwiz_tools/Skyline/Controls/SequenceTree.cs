@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -1195,9 +1196,9 @@ namespace pwiz.Skyline.Controls
         protected override void OnNotifyMessage(Message m)
         {
             // No erasebackground to reduce flicker
-            //if (m.Msg == (int)WinMsg.WM_ERASEBKGND)
+            //if (m.Msg == (int)User32.WinMessageType.WM_ERASEBKGND)
             //    return;
-            if (m.Msg == (int) WinMsg.WM_TIMER)
+            if (m.Msg == (int) User32.WinMessageType.WM_TIMER)
             {
                 if (_triggerLabelEdit != null && !ReferenceEquals(_triggerLabelEdit, SelectedNode))
                 {
