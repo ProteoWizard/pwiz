@@ -435,7 +435,7 @@ void PwizReader::transferSpec(BiblioSpec::SpecData& returnData,
     
     returnData.id = specInfo->scanNumber;
     returnData.retentionTime = specInfo->retentionTime/60;  // seconds to minutes
-    if (specInfo->msLevel > 1)
+    if (specInfo->msLevel > 1 && !specInfo->precursors.empty())
     {
         returnData.mz = specInfo->precursors[0].mz;
     }
