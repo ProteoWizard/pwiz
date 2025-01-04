@@ -21,12 +21,12 @@ using System;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil.Properties;
+using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -160,6 +160,7 @@ namespace pwiz.SkylineTestUtil
 
         private void Continue()
         {
+            TestUtilSettings.Default.Save();
             Hide();
 
             // Start the tests again

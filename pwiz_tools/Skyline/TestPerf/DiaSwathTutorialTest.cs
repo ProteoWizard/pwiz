@@ -23,6 +23,8 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -465,7 +467,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower worker VMs
-        public void TestDiaTtofFullSearchTutorial()
+        public void TestDiaTtofFullSearchTutorialExtra()
         {
             _testInfo.TestTtofData(true);
             if (!IsCoverShotMode)
@@ -482,7 +484,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
-        public void TestDiaQeFullSearchTutorial()
+        public void TestDiaQeFullSearchTutorialExtra()
         {
             _testInfo.TestQeData(true);
             if (!IsCoverShotMode)
@@ -494,6 +496,10 @@ namespace TestPerf
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaPasefTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             _testInfo.TestPasefData(false);
             if (!IsCoverShotMode)
                 RunTest();
@@ -503,7 +509,7 @@ namespace TestPerf
          NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Bruker wants exclusive read access to raw data
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Skip during Nightly
         [Timeout(int.MaxValue)] // These can take a long time
-        public void TestDiaPasefFullDataset()
+        public void TestDiaPasefFullDatasetExtra()
         {
             _testInfo.TestPasefData(true);
             if (!IsCoverShotMode)
@@ -587,6 +593,13 @@ namespace TestPerf
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
+            RunUIForScreenShot(() =>
+            {
+                var cols = importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Columns;
+                cols[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                cols[0].Width = 175;    // just "interact.pep.xml"
+                cols[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; // To show the full PeptideProphet confidence
+            });
             PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", screenshotPage++);
 
             AddIrtPeptidesDlg addIrtPeptidesDlg;
@@ -852,8 +865,10 @@ namespace TestPerf
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            WaitForConditionUI(() => allChrom.ProgressTotalPercent >= 20);
+            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
+            WaitForCondition(() => allChrom.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", screenshotPage++, 30*1000); // 30 second timeout to avoid getting stuck
+            allChrom.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
@@ -937,6 +952,11 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     SkylineWindow.Size = new Size(900, 900);
+                    SkylineWindow.ForceOnScreen();  // Avoid this shifting the window under the floating window later
+                });
+                Thread.Sleep(200);  // Give layout time to adjust
+                RunUI(() =>
+                {
                     var chromPane1 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Name);
                     var chromPane2 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[1].Name);
                     var rtGraphFrame = FindFloatingWindow(SkylineWindow.GraphRetentionTime);

@@ -30,7 +30,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -200,8 +200,10 @@ namespace pwiz.SkylineTestTutorial
             {
                 allChrom = WaitForOpenForm<AllChromatogramsGraph>();
 
-                WaitForConditionUI(() => allChrom.ProgressTotalPercent >= 5);
+                allChrom.SetFreezeProgressPercent(72, @"00:00:06");
+                WaitForCondition(() => allChrom.IsProgressFrozen());
                 PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms form", _pageNum++);
+                allChrom.SetFreezeProgressPercent(null, null);
             }
 
             RunUI(() =>
@@ -251,8 +253,15 @@ namespace pwiz.SkylineTestTutorial
 
             OkDialog(arrangeGraphsDlg, arrangeGraphsDlg.OkDialog);
 
+            var savedBounds = Rectangle.Empty;
             if (IsPauseForScreenShots)
-                RunUI(() => SkylineWindow.WindowState = FormWindowState.Maximized);
+                RunUI(() =>
+                {
+                    // Essentially maximize the window for a 1920x1080 monitor at 100%
+                    savedBounds = SkylineWindow.Bounds;
+                    SkylineWindow.Size = new Size(1934, 1047);
+                    SkylineWindow.Location = new Point(-7, 0);
+                });
 
             SelectNode(SrmDocument.Level.Molecules, 0);
 
@@ -263,14 +272,14 @@ namespace pwiz.SkylineTestTutorial
             });
 
             WaitForDocumentLoaded(10 * 60 * 1000); // 10 minutes
-
+            FocusDocument();
             PauseForScreenShot("Skyline window maximized", _pageNum++);
 
             if (!IsFullData)
                 TestApplyToAll();
 
             if (IsPauseForScreenShots)
-                RunUI(() => SkylineWindow.WindowState = FormWindowState.Normal);
+                RunUI(() => SkylineWindow.Bounds = savedBounds);
         }
 
         private void PlaceTargetsAndGraph(Control graphForm)
@@ -399,7 +408,14 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.NormalizeAreaGraphTo(NormalizeOption.NONE));
 
-            PauseForPeakAreaGraphScreenShot("Peak Areas graph", _pageNum++);
+            PauseForPeakAreaGraphScreenShot("Peak Areas graph with dotps", _pageNum++);
+
+            var areaProps = ShowDialog<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
+            RunUI(() =>
+            {
+                areaProps.SetDotpCutoffValue(AreaExpectedValue.library, (0.8).ToString(CultureInfo.CurrentCulture));
+            });
+            OkDialog(areaProps, areaProps.OkDialog);
 
             RestoreViewOnScreen(13); // Same layout for chromatogram graphs as before on page 13
 
@@ -836,21 +852,15 @@ namespace pwiz.SkylineTestTutorial
 
                 SelectNode(SrmDocument.Level.Molecules, i);
                 PauseForRetentionTimeGraphScreenShot("Retention Times graph - misintegrated peaks", _pageNum++, null, bmp =>
-                {
-                    DrawArrowOnBitmap(bmp, new Point((int)(bmp.Width * 0.85), (int)(bmp.Height * 0.8)),
-                        new Point((int)(bmp.Width * 0.78), (int)(bmp.Height * 0.65)));
-                    return bmp; 
-                });
+                    bmp.DrawArrowOnBitmap(new PointF(0.85F, 0.8F), new PointF(0.78F, 0.65F)));
 
                 RestoreViewOnScreen(12); // Same layout for Peak Areas graph as on page 12
                 SelectNode(SrmDocument.Level.Molecules, i);
 
                 PauseForPeakAreaGraphScreenShot("Peak Areas graph - no normalization", _pageNum, null, bmp =>
                 {
-                    int xPos = (int)(bmp.Width * 0.735);
-                    DrawArrowOnBitmap(bmp, new Point(xPos, (int)(bmp.Height * 0.42)),
-                        new Point(xPos, (int)(bmp.Height * 0.6)));
-                    return bmp;
+                    float xPos = 0.735F;
+                    return bmp.DrawArrowOnBitmap(new PointF(xPos, 0.42F), new PointF(xPos, 0.6F));
                 });
 
                 if (IsFullData)
@@ -964,13 +974,12 @@ namespace pwiz.SkylineTestTutorial
                 });
                 PauseForPeakAreaGraphScreenShot("Peak Areas graph - no normalization", _pageNum++, null, bmp =>
                 {
-                    int xFirst = (int)(bmp.Width * 0.398);
-                    var ptTail = new Point(xFirst, (int)(bmp.Height * 0.3));
-                    var ptHead = new Point(xFirst, (int)(bmp.Height * 0.6));
-                    DrawArrowOnBitmap(bmp, ptTail, ptHead);
-                    ptTail.X = ptHead.X = (int)(bmp.Width * 0.692);
-                    DrawArrowOnBitmap(bmp, ptTail, ptHead);
-                    return bmp;
+                    float xFirst = 0.398F;
+                    var ptTail = new PointF(xFirst, 0.3F);
+                    var ptHead = new PointF(xFirst, 0.6F);
+                    bmp.DrawArrowOnBitmap(ptTail, ptHead);
+                    ptTail.X = ptHead.X = 0.692F;
+                    return bmp.DrawArrowOnBitmap(ptTail, ptHead);
                 });
 
                 RunUI(() =>
@@ -1467,12 +1476,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(comparisonName));
             var foldChangeGrid = FindOpenForm<FoldChangeGrid>();
             var foldChangeGridControl = foldChangeGrid.DataboundGridControl;
+            var foldChangePath = PropertyPath.Root.Property("FoldChangeResult");
             WaitForConditionUI(() => foldChangeGridControl.IsComplete &&
-                foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult")) != null);
+                                     foldChangeGridControl.FindColumn(foldChangePath) != null &&
+                                     foldChangeGridControl.RowCount == 48);
             RunUI(() =>
             {
-                var foldChangeResultColumn =
-                    foldChangeGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                var foldChangeResultColumn = foldChangeGridControl.FindColumn(foldChangePath);
                 foldChangeGridControl.DataGridView.AutoResizeColumn(foldChangeResultColumn.Index);
                 foldChangeGrid.Parent.Parent.Height = 278;
             });
@@ -1498,8 +1508,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
             RunUI(() =>
             {
-                var foldChangeResultColumn =
-                    foldChangeGrid.DataboundGridControl.FindColumn(PropertyPath.Root.Property("FoldChangeResult"));
+                var foldChangeResultColumn = foldChangeGrid.DataboundGridControl.FindColumn(foldChangePath);
                 Assert.IsNotNull(foldChangeResultColumn);
                 foldChangeGrid.DataboundGridControl.DataGridView.Sort(foldChangeResultColumn, ListSortDirection.Ascending);
             });

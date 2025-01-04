@@ -29,7 +29,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -52,6 +51,7 @@ using pwiz.Skyline.Util;
 //         problem.
 //using pwiz.SkylineTestUtil;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 
 
 namespace TestRunner
@@ -61,8 +61,8 @@ namespace TestRunner
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestData.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
 
         private static readonly string executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en", "fr", "tr").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
-        private static readonly string[] qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
+        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en-US", "fr-FR", "tr-TR").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
+        private static readonly string[] qualityLanguages = allLanguages.Where(l => !l.StartsWith("tr")).ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
 
         private const int LeakTrailingDeltas = 7;   // Number of trailing deltas to average and check against thresholds below
         // CONSIDER: Ideally these thresholds would be zero, but memory and handle retention are not stable enough to support that
@@ -384,7 +384,7 @@ namespace TestRunner
                     TeamCityStartTestSuite(commandLineArgs);
 
                     // Prevent system sleep.
-                    using (new SystemSleep())
+                    using (new Kernel32Test.SystemSleep())
                     {
                         // Pause before first test for profiling.
                         bool profiling = commandLineArgs.ArgAsBool("profile");
@@ -896,7 +896,7 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("buildcheck"))
             {
                 loop = 1;
-                languages = new[] { "en" };
+                languages = new[] { "en-US" };
             }
 
             Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, pass) =>
@@ -958,7 +958,7 @@ namespace TestRunner
                 string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
-                SetConsoleCtrlHandler(c =>
+                Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
                     RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
                     cts.Cancel();
@@ -1285,7 +1285,19 @@ namespace TestRunner
             string value = args.ArgAsString("language");
             if (value == "all")
                 return allLanguages;
-            return value.Split(',');
+            return value.Split(',').Select(GetCanonicalLanguage).ToArray();
+        }
+
+        private static string GetCanonicalLanguage(string rawLanguage)
+        {
+            // If the raw language is a prefix of something from allLanguages, use
+            // the full name.
+            foreach (var language in allLanguages)
+            {
+                if (language.StartsWith(rawLanguage))
+                    return language;
+            }
+            return rawLanguage;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
@@ -1492,7 +1504,7 @@ namespace TestRunner
 
                 // Get list of languages
                 var languages = buildMode
-                    ? new[] { "en" }
+                    ? new[] { "en-US" }
                     : GetLanguages(commandLineArgs);
 
                 if (showFormNames)
@@ -2307,50 +2319,6 @@ Here is a list of recognized arguments:
             {
                 yield return list[i];
             }
-        }
-
-
-        [DllImport("Kernel32")]
-        private static extern bool SetConsoleCtrlHandler(ConsoleCtrlEventHandler handler, bool add);
-        private delegate bool ConsoleCtrlEventHandler(CtrlType sig);
-
-        enum CtrlType
-        {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT = 1,
-            CTRL_CLOSE_EVENT = 2,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT = 6
-        }
-    }
-
-    public class SystemSleep : IDisposable
-    {
-        private readonly EXECUTION_STATE _previousState;
-
-        public SystemSleep()
-        {
-            // Prevent system sleep.
-            _previousState = SetThreadExecutionState(
-                EXECUTION_STATE.awaymode_required |
-                EXECUTION_STATE.continuous |
-                EXECUTION_STATE.system_required);
-        }
-
-        public void Dispose()
-        {
-            SetThreadExecutionState(_previousState);
-        }
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
-
-        [Flags]
-        private enum EXECUTION_STATE : uint
-        {
-            awaymode_required = 0x00000040,
-            continuous = 0x80000000,
-            system_required = 0x00000001
         }
     }
 }

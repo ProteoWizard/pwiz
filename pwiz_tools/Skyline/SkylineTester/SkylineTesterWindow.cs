@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -37,6 +36,7 @@ using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
 using SkylineTester.Properties;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 using Label = System.Windows.Forms.Label;
 using Timer = System.Windows.Forms.Timer;
@@ -87,9 +87,9 @@ namespace SkylineTester
 
         private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
         {
-            {"en", "English"},
-            {"fr", "French"},
-            {"tr", "Turkish"},
+            {"en-US", "English"},
+            {"fr-FR", "French"},
+            {"tr-TR", "Turkish"},
             {"ja", "Japanese"},
             {"zh-CHS", "Chinese"}
         };
@@ -222,7 +222,7 @@ namespace SkylineTester
 
             // Refresh shell if association changed.
             if (checkRegistry == null)
-                SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+                Shell32Test.SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 
             _runButtons = new[]
             {
@@ -346,9 +346,6 @@ namespace SkylineTester
             loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
 
-        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
-
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
         {
             try
@@ -390,6 +387,9 @@ namespace SkylineTester
 
                 RunUI(() =>
                 {
+                    if (!Equals(testSet.SelectedItem, testSetValue))
+                        return;
+
                     testsTree.Nodes.Clear();
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();

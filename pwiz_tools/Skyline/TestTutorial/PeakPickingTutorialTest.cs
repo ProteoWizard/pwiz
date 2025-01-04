@@ -63,6 +63,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestPeakPickingTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
@@ -169,11 +173,11 @@ namespace pwiz.SkylineTestTutorial
                     Assert.AreEqual(chromGroupInfo.RetentionTime.Value, 18.0, 0.1);
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
                 });
-            RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
-                {
-                    dlg.FontSize = GraphFontSize.LARGE;
-                    dlg.OkDialog();
-                });
+            // RunDlg<ChromChartPropertyDlg>(SkylineWindow.ShowChromatogramProperties, dlg =>
+            //     {
+            //         dlg.FontSize = GraphFontSize.LARGE;
+            //         dlg.OkDialog();
+            //     });
             PauseForScreenShot("Main window", 5);
 
             // Test different point types on RTLinearRegressionGraph
