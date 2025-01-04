@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -190,9 +191,23 @@ namespace pwiz.SkylineTestUtil
 
             // Ideally, this would use FormUtil.OpenForms, but this works pretty well and including
             // all open forms gets tricky with cross-thread operations and choosing top level forms
-            _activator.Reset(this, _pauseTestController.ScreenshotControl.FindForm());
+            var activationForm = ActivationForm;
+            _activator.Reset(this, activationForm);
+            if (activationForm is FloatingWindow)
+                _activator.AddForm(activationForm.Owner);   // Add the SkylineWindow too
 
             FormStateChangedBackground();
+        }
+
+        private Form ActivationForm
+        {
+            get
+            {
+                var parentForm = _pauseTestController.ScreenshotControl.FindForm();
+                if (parentForm is DockableForm dockableForm)    // A dockable form is never the top level
+                    parentForm = dockableForm.Pane.FindForm();
+                return parentForm;
+            }
         }
 
         protected override bool ShowWithoutActivation
