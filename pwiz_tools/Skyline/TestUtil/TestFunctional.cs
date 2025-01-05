@@ -63,6 +63,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
@@ -290,15 +291,13 @@ namespace pwiz.SkylineTestUtil
 
         private static void EnsureScreenshotIcon(Form dlg)
         {
-            // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    AreIconsEqual(dlg.Icon, Resources.Skyline))    // Normally a fixed dialog will not have the Skyline icon
-                {
-                    if (!AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
-                        RunUI(() => dlg.Icon = SkylineWindow.Icon);
-                }
+                // If the form has the current Skyline resource Icon, but it is not the same
+                // as the Skyline window icon, use the Skyline window icon to avoid recording
+                // screenshots of the Skyline-daily icon
+                if (AreIconsEqual(dlg.Icon, Resources.Skyline) && !AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
+                    RunUI(() => dlg.Icon = SkylineWindow.Icon);
             }
         }
 
@@ -1308,6 +1307,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool IsTranslationRequired => IsAutoScreenShotMode && !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
+
         private static bool _isCoverShotMode;
 
         public static bool IsCoverShotMode
@@ -1389,6 +1390,8 @@ namespace pwiz.SkylineTestUtil
         {
             get { return IsTutorial && RecordAuditLogs; }
         }
+
+        public bool IsTestAuditLogPlacement => false;
 
         public static bool IsShowMatchingTutorialPages { get; set; }
 
@@ -1521,9 +1524,6 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(documentGridBmp, cropRect);
         }
 
-        [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
         protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
         {
             var sequenceTree = SkylineWindow.SequenceTree;
@@ -1533,13 +1533,10 @@ namespace pwiz.SkylineTestUtil
             sequenceTreeRect.X += 1;
             sequenceTreeRect.Y += 1;
 
-            const int GWL_STYLE = -16;
-            const int WS_VSCROLL = 0x00200000;
-            const int WS_HSCROLL = 0x00100000;
-            int style = GetWindowLong(sequenceTree.Handle, GWL_STYLE);
-            if ((style & WS_VSCROLL) != 0)
+            int style = User32Test.GetWindowLong(sequenceTree.Handle, User32Test.GWL_STYLE);
+            if ((style & User32Test.WS_VSCROLL) != 0)
                 sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
-            if ((style & WS_HSCROLL) != 0)
+            if ((style & User32Test.WS_HSCROLL) != 0)
                 sequenceTreeRect.Height -= SystemInformation.HorizontalScrollBarHeight;
 
             if (countTargets != null)
@@ -1968,6 +1965,12 @@ namespace pwiz.SkylineTestUtil
             {
                 return; // Don't want to run this lengthy test right now
             }
+            if (IsTestAuditLogPlacement)
+            {
+                // Just testing if audit logs are where they are expected to be
+                AssertAuditLogCorrectlyPlaced();
+                return;
+            }
 
             RunFunctionalTestAttempt(defaultUiMode);
 
@@ -2179,16 +2182,14 @@ namespace pwiz.SkylineTestUtil
                 return;
 
             // Ensure expected tutorial log file exists unless recording
-            var projectFile = GetLogFilePath(AuditLogTutorialDir);
-            bool existsInProject = File.Exists(projectFile);
             if (!IsRecordAuditLogForTutorials)
             {
-                Assert.IsTrue(existsInProject,
-                    "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
-                    TestContext.TestName, projectFile);
+                AssertProjectLogFileExists();
             }
 
             // Compare file contents
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            bool existsInProject = File.Exists(projectFile);
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
             if (AreEquivalentAuditLogs(expected, actual))
@@ -2236,6 +2237,28 @@ namespace pwiz.SkylineTestUtil
                 else
                     Console.WriteLine(@"Successfully recorded changed tutorial audit log");
             }
+        }
+
+        private void AssertAuditLogCorrectlyPlaced()
+        {
+            if (AuditLogCompareLogs)
+            {
+                AssertProjectLogFileExists();
+
+                Console.Write(@" found audit log ");
+            }
+            else
+            {
+                Console.Write(@" no audit log comparison ");
+            }
+        }
+
+        private void AssertProjectLogFileExists()
+        {
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            Assert.IsTrue(File.Exists(projectFile),
+                "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
+                TestContext.TestName, projectFile);
         }
 
         private static bool AreEquivalentAuditLogs(string expected, string actual)

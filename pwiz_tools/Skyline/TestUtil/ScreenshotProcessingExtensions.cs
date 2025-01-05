@@ -38,13 +38,23 @@ namespace pwiz.SkylineTestUtil
         /// On a red background this becomes #FF68251F
         /// </summary>
         private static readonly Color STANDARD_BORDER_COLOR = Color.FromArgb(0x70, 0x70, 0x70);
+        /// <summary>
+        /// The interior border color for a docked dockable form.
+        /// </summary>
+        private static readonly Color INTERIOR_BORDER_COLOR = Color.FromArgb(0xA0, 0xA0, 0xA0);
+
+        public const int CORNER_FORM_WINDOWS11 = 8;
+        public const int CORNER_TOOL_WINDOW_WINDOWS11 = 4;
+
+        public static int CornerForm => IsWindows11() ? CORNER_FORM_WINDOWS11 : 0;
+        public static int CornerToolWindow => IsWindows11() ? CORNER_TOOL_WINDOW_WINDOWS11 : 0;
 
         public static Bitmap CleanupBorder(this Bitmap bmp, bool toolWindow = false)
         {
             bool isWindows11 = IsWindows11();
             if (!toolWindow)
             {
-                return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, bmp.Height), isWindows11 ? 8 : 0);
+                return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, bmp.Height), isWindows11 ? CORNER_FORM_WINDOWS11 : 0);
             }
             else if (!isWindows11)
             {
@@ -54,16 +64,16 @@ namespace pwiz.SkylineTestUtil
             else
             {
                 // Floating dockable forms in Windows 11 have a 4 pixel corner radius
-                return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, bmp.Height), 4);
+                return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, bmp.Height), CORNER_TOOL_WINDOW_WINDOWS11);
             }
         }
 
-        public static Bitmap CleanupBorder(this Bitmap bmp, Rectangle rectWindow, int cornerRadius)
+        public static Bitmap CleanupBorder(this Bitmap bmp, Rectangle rectWindow, int cornerRadius, Rectangle? excludeRect = null)
         {
-            return bmp.CleanupBorder(STANDARD_BORDER_COLOR, rectWindow, cornerRadius);
+            return bmp.CleanupBorder(STANDARD_BORDER_COLOR, rectWindow, cornerRadius, excludeRect);
         }
 
-        private static Bitmap CleanupBorder(this Bitmap bmp, Color? color, Rectangle rect, int cornerRadius)
+        private static Bitmap CleanupBorder(this Bitmap bmp, Color? color, Rectangle rect, int cornerRadius, Rectangle? excludeRect)
         {
             var colorCounts = new Dictionary<Color, int>();
             foreach (var point in RectPoints(rect))
@@ -82,19 +92,31 @@ namespace pwiz.SkylineTestUtil
             // drawing a curved corner on top of the otherwise rectangular border.
             if (cornerRadius != 0 && colorCounts.Count == 1)
                 return bmp;
-            return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius);
+            // If the proposed color is the standard border color and the best color is the
+            // interior boarder color, then use the interior color. This is the case for
+            // docked DockableForms.
+            if (color.HasValue &&
+                color.Value == STANDARD_BORDER_COLOR &&
+                bestBorderColor == INTERIOR_BORDER_COLOR)
+            {
+                color = bestBorderColor;
+            }
+            return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius, excludeRect);
         }
 
-        private static Bitmap CleanupBorderInternal(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius)
+        private static Bitmap CleanupBorderInternal(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
+            Rectangle? excludeRect)
         {
             return IsWindows11()
-                ? bmp.CleanupBorder11(color, rect, cornerRadius)
-                : bmp.CleanupBorder10(color, rect);
+                ? bmp.CleanupBorder11(color, rect, cornerRadius, excludeRect)
+                : bmp.CleanupBorder10(color, rect, excludeRect);
         }
 
-        private static Bitmap CleanupBorder10(this Bitmap bmp, Color color, Rectangle rect)
+        private static Bitmap CleanupBorder10(this Bitmap bmp, Color color, Rectangle rect, Rectangle? excludeRect)
         {
             using var g = Graphics.FromImage(bmp);
+            ExcludeClip(g, excludeRect);
+
             using var pen = new Pen(color);
             if (rect.Height == 1)
                 g.DrawLine(pen, rect.Location, new Point(rect.Right, rect.Top));
@@ -103,7 +125,8 @@ namespace pwiz.SkylineTestUtil
             return bmp;
         }
 
-        private static Bitmap CleanupBorder11(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius)
+        private static Bitmap CleanupBorder11(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
+            Rectangle? excludeRect)
         {
             var result = new Bitmap(bmp.Width, bmp.Height);
 
@@ -116,6 +139,7 @@ namespace pwiz.SkylineTestUtil
             using var controlBrush = new SolidBrush(SystemColors.Control);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.SetClip(pathClippingOuter);
+            ExcludeClip(g, excludeRect);
             g.FillRectangle(controlBrush, rect);
             g.ResetClip();
 
@@ -136,9 +160,16 @@ namespace pwiz.SkylineTestUtil
             AddRoundedRectangle(pathClipping, rect, cornerRadius + cornerRadius/2);
             g.SmoothingMode = SmoothingMode.None;
             g.SetClip(pathClipping);
+            ExcludeClip(g, excludeRect);
             g.DrawImage(bmp, new Point(0, 0));
 
             return result;
+        }
+
+        private static void ExcludeClip(Graphics g, Rectangle? excludeRect)
+        {
+            if (excludeRect.HasValue)
+                g.ExcludeClip(excludeRect.Value);
         }
 
         /// <summary>

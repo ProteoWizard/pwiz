@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -166,6 +167,7 @@ namespace ImageComparer
 
         private void ShowImageDiff()
         {
+            bool showOldPictureBox = true;
             if (_diff == null)
             {
                 pictureMatching.Visible = false;
@@ -194,11 +196,12 @@ namespace ImageComparer
                         _diff.ShowBinaryDiff(EnsureBinaryDiffControl());
                     }
 
-                    oldScreenshotPictureBox.Visible = !imagesMatch;
-                    if (_rtfDiff != null)
-                        _rtfDiff.Visible = imagesMatch;
+                    showOldPictureBox = !imagesMatch;
                 }
             }
+            oldScreenshotPictureBox.Visible = showOldPictureBox;
+            if (_rtfDiff != null)
+                _rtfDiff.Visible = !showOldPictureBox;
         }
 
         private RichTextBox EnsureBinaryDiffControl()
@@ -504,14 +507,21 @@ namespace ImageComparer
                 toolStripFileList.Enabled = true;
                 if (toolStripFileList.SelectedIndex != 0)
                     toolStripFileList.SelectedIndex = 0;
+                FormStateChanged();
             }
             else
             {
                 toolStripFileList.Enabled = false;
+                lock (_lock)
+                {
+                    _fileToShow = null;
+                    _oldScreenshot = new OldScreenshot();
+                    _newScreenshot = new OldScreenshot();
+                    _diff = null;
+                }
+                FormStateChanged();
                 ShowMessage(string.Format("No changed PNG files found in {0}", folderPath));
             }
-            
-            FormStateChanged();
         }
 
         private void Previous()
@@ -824,6 +834,38 @@ namespace ImageComparer
                         e.Handled = true;
                     }
                     break;
+                case Keys.V:
+                    if (e.Control)
+                    {
+                        Paste();
+                        e.Handled = true;
+                    }
+                    break;
+            }
+        }
+
+        private void Paste()
+        {
+            try
+            {
+                var image = Clipboard.GetImage();
+                if (image == null)
+                {
+                    ShowMessage("No image found on the clipboard.");
+                    return;
+                }
+
+                lock (_lock)
+                {
+                    image.Save(_fileToShow.Path, ImageFormat.Png);
+                    _newScreenshot.FileLoaded = null;
+                }
+
+                FormStateChanged();
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException("Failed to save bitmap from clipboard.", e);
             }
         }
 
