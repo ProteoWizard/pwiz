@@ -49,6 +49,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCEOptimizationTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             AsSmallMolecules = false;
             RunCEOptimizationTutorialTest();
         }
@@ -271,7 +275,7 @@ namespace pwiz.SkylineTestTutorial
 
             var graphRegression = ShowDialog<GraphRegression>(addItem.ShowGraph);
 
-            PauseForScreenShot<GraphRegression>("Collision Energy Regression graphs", 10);
+            PauseForGraphScreenShot<GraphRegression>("Collision Energy Regression graphs", 10);
 
             var graphDatas = graphRegression.RegressionGraphDatas.ToArray();
             Assert.AreEqual(2, graphDatas.Length);

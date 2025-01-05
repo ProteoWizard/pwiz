@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
@@ -44,6 +45,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestLibraryExplorerTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
@@ -337,12 +341,15 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(2, viewLibraryDlg1.PeptideDisplayCount);
                 Assert.AreEqual(countLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
+            RunUIForScreenShot(() => viewLibraryDlg1.Width -= 185);
+            LimitXAxis(viewLibraryDlg1);
             PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 16);   // p. 16, figure 1a
             RunUI(() =>
             {
                 viewLibraryDlg1.SelectedIndex = 1;
                 Assert.AreEqual(countLabels2, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
+            LimitXAxis(viewLibraryDlg1);
             PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 16);   // p. 16, figure 1b
 
             docInitial = SkylineWindow.Document;
@@ -380,6 +387,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText)))); 
                 Assert.AreEqual(countLabels1 + countLossLabels1 + countPrecursors1, labelsPhospho.Count);
             });
+            LimitXAxis(viewLibraryDlg1);
             PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 18);   // p. 18, figure 1a.
 
             RunUI(() =>
@@ -390,6 +398,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText))));
                 Assert.AreEqual(countLabels2 + countLossLabels2 + countPrecursors2, labelsPhospho.Count);
             });
+            LimitXAxis(viewLibraryDlg1);
             PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 18);   // p. 18, figure 1b.
 
             // Matching Library Peptides to Proteins p. 18
@@ -400,6 +409,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"human.protdb");
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Human (mini)";
+                buildBackgroundProteomeDlg.SelToEndBackgroundProteomePath();
             });
             PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome", 19);   // p. 19
 
@@ -463,6 +473,11 @@ namespace pwiz.SkylineTestTutorial
             PauseForScreenShot("Main window", 21);
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
+        }
+
+        private void LimitXAxis(ViewLibraryDlg viewLibraryDlg)
+        {
+            viewLibraryDlg.GraphExtensionControl.Graph.GraphPane.XAxis.Scale.Max = 1225;
         }
     }
 }

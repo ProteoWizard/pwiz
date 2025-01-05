@@ -301,7 +301,11 @@ namespace pwiz.Skyline.Controls
             StatementCompletionForm.SetListItems(items);
             StatementCompletionForm.ResizeToIdealSize(ScreenRect);
             if (show)
+            {
                 StatementCompletionForm.Show(TextBox);
+                // Resize again in case the form was resized while being shown
+                StatementCompletionForm.ResizeToIdealSize(ScreenRect);
+            }
         }
 
         public void ListView_MouseDown(object sender, MouseEventArgs e)

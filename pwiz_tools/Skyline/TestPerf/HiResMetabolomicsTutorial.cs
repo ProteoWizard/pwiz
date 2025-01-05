@@ -49,6 +49,10 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
         [TestMethod]
         public void TestHiResMetabolomicsTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;

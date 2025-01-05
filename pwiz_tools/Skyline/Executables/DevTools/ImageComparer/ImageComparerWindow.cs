@@ -1,5 +1,5 @@
 ﻿/*
- * Original authors: Brendan MacLean <brendanx .at. uw.edu>
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>
  *                   MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -25,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using ImageComparer.Properties;
@@ -44,8 +42,10 @@ namespace ImageComparer
         private ScreenshotFile _fileToShow;
         private OldScreenshot _oldScreenshot;
         private OldScreenshot _newScreenshot;
-        private bool? _oldAndNewMatch;
+        private ScreenshotDiff _diff;
         #endregion
+
+        private RichTextBox _rtfDiff;
 
         public ImageComparerWindow()
         {
@@ -55,6 +55,7 @@ namespace ImageComparer
             InitializeComponent();
             
             Icon = Resources.camera;
+            toolStripPickColorButton.SelectedColor = HighlightColor;
 
             _defaultImageSourceTipText = helpTip.GetToolTip(buttonImageSource);
 
@@ -144,7 +145,8 @@ namespace ImageComparer
             if (HasBackgroundWork)
             {
                 var imageSource = OldImageSource;   // Get this value now
-                var threadUpdateScreenshots = new Thread(() => UpdateScreenshotsAsync(imageSource));
+                var highlightColor = HighlightColor;
+                var threadUpdateScreenshots = new Thread(() => UpdateScreenshotsAsync(imageSource, highlightColor));
                 threadUpdateScreenshots.Start();
             }
         }
@@ -155,24 +157,71 @@ namespace ImageComparer
             {
                 helpTip.SetToolTip(oldScreenshotLabel, _oldScreenshot.FileLoaded);
                 SetPreviewSize(labelOldSize, _oldScreenshot);
-                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot);
+                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot, _diff);
                 helpTip.SetToolTip(newScreenshotLabel, _newScreenshot.FileLoaded);
                 SetPreviewSize(labelNewSize, _newScreenshot);
                 SetPreviewImage(newScreenshotPictureBox, _newScreenshot);
-                if (!_oldAndNewMatch.HasValue)
+                ShowImageDiff();
+            }
+        }
+
+        private void ShowImageDiff()
+        {
+            bool showOldPictureBox = true;
+            if (_diff == null)
+            {
+                pictureMatching.Visible = false;
+                labelOldSize.Left = pictureMatching.Left;
+                labelOldSize.ForeColor = Color.Black;
+            }
+            else
+            {
+                pictureMatching.Visible = true;
+                labelOldSize.Left = pictureMatching.Right;
+                bool matching = !_diff.IsDiff;
+                var bmpDiff = matching ? Resources.Peak : Resources.NoPeak;
+                bmpDiff.MakeTransparent(Color.White);
+                pictureMatching.Image = bmpDiff;
+                if (matching)
                 {
-                    pictureMatching.Visible = false;
-                    labelOldSize.Left = pictureMatching.Left;
+                    labelOldSize.ForeColor = Color.Green;
                 }
                 else
                 {
-                    pictureMatching.Visible = true;
-                    labelOldSize.Left = pictureMatching.Right;
-                    var bmpDiff = _oldAndNewMatch.Value ? Resources.Peak : Resources.NoPeak;
-                    bmpDiff.MakeTransparent(Color.White);
-                    pictureMatching.Image = bmpDiff;
+                    labelOldSize.ForeColor = Color.Red;
+                    labelOldSize.Text += _diff.DiffText;
+                    bool imagesMatch = !_diff.SizesDiffer && !_diff.PixelsDiffer;
+                    if (imagesMatch)
+                    {
+                        _diff.ShowBinaryDiff(EnsureBinaryDiffControl());
+                    }
+
+                    showOldPictureBox = !imagesMatch;
                 }
             }
+            oldScreenshotPictureBox.Visible = showOldPictureBox;
+            if (_rtfDiff != null)
+                _rtfDiff.Visible = !showOldPictureBox;
+        }
+
+        private RichTextBox EnsureBinaryDiffControl()
+        {
+            if (_rtfDiff == null)
+            {
+                _rtfDiff = new RichTextBox
+                {
+                    Dock = DockStyle.Fill,
+                    Font = new Font("Courier New", 10), // Use monospaced font for better alignment
+                    ReadOnly = true,
+                    WordWrap = false,
+                    TabIndex = oldScreenshotPictureBox.TabIndex
+                };
+                var controlList = oldScreenshotPictureBox.Parent.Controls;
+                controlList.Add(_rtfDiff);
+                controlList.SetChildIndex(_rtfDiff, controlList.IndexOf(oldScreenshotPictureBox));
+            }
+
+            return _rtfDiff;
         }
 
         private static void SetPreviewSize(Label labelSize, ScreenshotInfo screenshot)
@@ -184,7 +233,7 @@ namespace ImageComparer
             {
                 lock (image)
                 {
-                    labelSize.Text = $@"{image.Width} x {image.Height}px";
+                    labelSize.Text = $@"{screenshot.ImageSize.Width} x {screenshot.ImageSize.Height}px";
                 }
             }
         }
@@ -193,11 +242,11 @@ namespace ImageComparer
         {
             toolStripPrevious.Enabled = toolStripFileList.SelectedIndex > 0;
             toolStripNext.Enabled = toolStripFileList.SelectedIndex < toolStripFileList.Items.Count - 1;
-            toolStripRevert.Enabled = !(_oldAndNewMatch ?? true);
+            toolStripRevert.Enabled = _diff?.IsDiff ?? false;
             toolStripGotoWeb.Enabled = _fileToShow != null;
         }
 
-        private void UpdateScreenshotsAsync(ImageSource oldImageSource)
+        private void UpdateScreenshotsAsync(ImageSource oldImageSource, Color highlightColor)
         {
             ScreenshotFile fileToShow;
             ScreenshotInfo oldScreenshot;
@@ -206,6 +255,8 @@ namespace ImageComparer
             lock (_lock)
             {
                 fileToShow = _fileToShow;
+                if (fileToShow == null || !Equals(fileToShow, _fileToShow))
+                    return;
                 oldFileLoaded = _oldScreenshot.FileLoaded;
                 oldScreenshot = new ScreenshotInfo(_oldScreenshot);
             }
@@ -222,11 +273,12 @@ namespace ImageComparer
                 if (!Equals(fileToShow, _fileToShow))
                     return;
                 _oldScreenshot = new OldScreenshot(oldScreenshot, oldFileLoaded);
+                _diff = null;
             }
 
             ScreenshotInfo newScreenshot;
             string newFileLoaded;
-            bool? oldAndNewMatch = null;
+            ScreenshotDiff diff = null;
 
             lock (_lock)
             {
@@ -241,29 +293,9 @@ namespace ImageComparer
                 newScreenshot = LoadScreenshot(fileToShow, ImageSource.disk);
             }
 
-            if (!newScreenshot.IsPlaceholder && !oldScreenshot.IsPlaceholder)
+            if (!newScreenshot.IsPlaceholder || !oldScreenshot.IsPlaceholder)
             {
-                Bitmap diffImage;
-                bool imageChanged;
-                lock (oldScreenshot.Image)
-                {
-                    lock (newScreenshot.Image)
-                    {
-                        diffImage = DiffImages(oldScreenshot.Image, newScreenshot.Image);
-                        imageChanged = !ReferenceEquals(diffImage, _oldScreenshot.Image);
-                    }
-                }
-
-                if (imageChanged || oldScreenshot.ImageSize != newScreenshot.ImageSize)
-                {
-                    oldAndNewMatch = false;
-                }
-                else
-                {
-                    oldAndNewMatch = true;
-                }
-
-                oldScreenshot = new ScreenshotInfo(diffImage);
+                diff = DiffScreenshots(oldScreenshot, newScreenshot, highlightColor);
             }
 
             lock (_lock)
@@ -272,68 +304,24 @@ namespace ImageComparer
                     return;
 
                 _newScreenshot = new OldScreenshot(newScreenshot, newFileDescription);
-                _oldScreenshot = new OldScreenshot(oldScreenshot, oldFileDescription);
-                _oldAndNewMatch = oldAndNewMatch;
+                _diff = diff;
             }
             
             FormStateChangedBackground();
         }
 
-        private Bitmap DiffImages(Bitmap bmpOld, Bitmap bmpNew)
+        private ScreenshotDiff DiffScreenshots(ScreenshotInfo oldScreenshot, ScreenshotInfo newScreenshot, Color highlightColor)
         {
-            if (bmpNew == null || bmpOld == null || bmpNew.Size != bmpOld.Size)
-                return bmpOld;
-
             try
             {
-                return HighlightDifferences(bmpOld, bmpNew, Color.Red);
+                return new ScreenshotDiff(oldScreenshot, newScreenshot, highlightColor);
             }
             catch (Exception e)
             {
-                this.BeginInvoke((Action)(() => ShowMessageWithException(
+                BeginInvoke((Action)(() => ShowMessageWithException(
                     "Failed to diff bitmaps.", e)));
-                return bmpOld;
+                return null;
             }
-        }
-
-        // ReSharper disable once UnusedParameter.Local
-        private void ShowMessageWithException(string message, Exception e)
-        {
-            // TODO: Make exception stack trace available somehow
-            MessageBox.Show(this, message);
-        }
-
-        public static Bitmap HighlightDifferences(Bitmap bmpOld, Bitmap bmpNew, Color highlightColor, int alpha = 128)
-        {
-            var result = new Bitmap(bmpOld.Width, bmpOld.Height);
-
-            bool diffFound = false;
-            for (int y = 0; y < bmpOld.Height; y++)
-            {
-                for (int x = 0; x < bmpOld.Width; x++)
-                {
-                    var pixel1 = bmpOld.GetPixel(x, y);
-                    var pixel2 = bmpNew.GetPixel(x, y);
-
-                    if (pixel1 != pixel2)
-                    {
-                        var blendedColor = Color.FromArgb(
-                            alpha,
-                            highlightColor.R * alpha / 255 + pixel1.R * (255 - alpha) / 255,
-                            highlightColor.G * alpha / 255 + pixel1.G * (255 - alpha) / 255,
-                            highlightColor.B * alpha / 255 + pixel1.B * (255 - alpha) / 255
-                        );
-                        result.SetPixel(x, y, blendedColor);
-                        diffFound = true;
-                    }
-                    else
-                    {
-                        result.SetPixel(x, y, pixel1);
-                    }
-                }
-            }
-
-            return diffFound ? result : bmpOld;
         }
 
         private ScreenshotInfo LoadScreenshot(ScreenshotFile file, ImageSource source)
@@ -360,45 +348,35 @@ namespace ImageComparer
                         break;
                 }
                 var ms = new MemoryStream(imageBytes);
-                return new ScreenshotInfo(new Bitmap(ms));
+                return new ScreenshotInfo(ms);
             }
             catch (Exception e)
             {
-                this.BeginInvoke((Action) (() => ShowMessageWithException(
+                BeginInvoke((Action) (() => ShowMessageWithException(
                     string.Format("Failed to load a bitmap from {0}.", file.GetDescription(source)), e)));
                 var failureBmp = Resources.DiskFailure;
                 failureBmp.MakeTransparent(Color.White);
-                return new ScreenshotInfo(failureBmp, true);
+                return new ScreenshotInfo(failureBmp);
             }
         }
 
-        private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot)
+        private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot, ScreenshotDiff diff = null)
         {
-            var newImage = screenshot.Image;
-            if (newImage != null && !screenshot.IsPlaceholder)
+            var baseImage = diff?.HighlightedImage ?? screenshot.Image;
+            var newImage = baseImage;
+            if (baseImage != null && !screenshot.IsPlaceholder)
             {
-                lock (newImage)
+                lock (baseImage)
                 {
                     var containerSize = !toolStripAutoSize.Checked ? previewBox.Size : Size.Empty;
                     var screenshotSize = CalcBitmapSize(screenshot, containerSize);
                     // Always make a copy to avoid having PictureBox lock the bitmap
                     // which can cause issues with future image diffs
-                    newImage = new Bitmap(screenshot.Image, screenshotSize);
+                    newImage = new Bitmap(baseImage, screenshotSize);
                 }
             }
 
             previewBox.Image = newImage;
-            if (newImage != null && Equals(newImage.RawFormat, ImageFormat.Gif))
-            {
-                // Unfortunately the animated progress GIF has a white background
-                // and it cannot be made transparent without removing the animation
-                previewBox.BackColor = Color.White;
-            }
-            else
-            {
-                // The oldScreenshotPictureBox never gets a white background
-                previewBox.BackColor = oldScreenshotPictureBox.BackColor;
-            }
         }
 
         private Size CalcBitmapSize(ScreenshotInfo screenshot, Size containerSize)
@@ -526,15 +504,24 @@ namespace ImageComparer
             }
             if (toolStripFileList.Items.Count > 0)
             {
+                toolStripFileList.Enabled = true;
                 if (toolStripFileList.SelectedIndex != 0)
                     toolStripFileList.SelectedIndex = 0;
+                FormStateChanged();
             }
             else
             {
-                ShowMessageWithException(string.Format("No changed PNG files found in {0}", folderPath), null);
+                toolStripFileList.Enabled = false;
+                lock (_lock)
+                {
+                    _fileToShow = null;
+                    _oldScreenshot = new OldScreenshot();
+                    _newScreenshot = new OldScreenshot();
+                    _diff = null;
+                }
+                FormStateChanged();
+                ShowMessage(string.Format("No changed PNG files found in {0}", folderPath));
             }
-            
-            FormStateChanged();
         }
 
         private void Previous()
@@ -554,8 +541,8 @@ namespace ImageComparer
             string filePath = _fileToShow.Path;
             if (File.Exists(filePath) && !IsWritable(filePath))
             {
-                ShowMessageWithException(LineSeparate(string.Format("The file {0} is locked.", filePath),
-                    "Check that it is not open in another program such as TortoiseIDiff."), null);
+                ShowMessage(LineSeparate(string.Format("The file {0} is locked.", filePath),
+                    "Check that it is not open in another program such as TortoiseIDiff."));
                 return;
             }
             try
@@ -567,19 +554,6 @@ namespace ImageComparer
             {
                 ShowMessageWithException(string.Format("Failed to revert screenshot {0}", filePath), e);
             }
-        }
-
-        private string LineSeparate(params string[] lines)
-        {
-            return LineSeparate(lines.ToList());
-        }
-
-        private string LineSeparate(IEnumerable<string> lines)
-        {
-            var sb = new StringBuilder();
-            foreach (var line in lines)
-                sb.AppendLine(line.Trim());
-            return sb.ToString();
         }
 
         public static bool IsWritable(string path)
@@ -603,9 +577,14 @@ namespace ImageComparer
 
         private void GotoLink()
         {
-            if (_fileToShow is { IsEmpty: false })
+            string urlInTutorial;
+            lock (_lock)
             {
-                OpenLink(_fileToShow.UrlInTutorial);
+                urlInTutorial = _fileToShow?.UrlInTutorial;
+            }
+            if (!string.IsNullOrEmpty(urlInTutorial))
+            {
+                OpenLink(urlInTutorial);
             }
         }
 
@@ -651,7 +630,19 @@ namespace ImageComparer
                 (WindowState == FormWindowState.Maximized);
         }
 
-        private enum ImageSource { disk, web, git }
+        private Color HighlightColor
+        {
+            get => Color.FromArgb(Settings.Default.ImageDiffAlpha,
+                Settings.Default.ImageDiffColor.R,
+                Settings.Default.ImageDiffColor.G,
+                Settings.Default.ImageDiffColor.B);
+
+            set
+            {
+                Settings.Default.ImageDiffAlpha = value.A;
+                Settings.Default.ImageDiffColor = Color.FromArgb(value.R, value.G, value.B);
+            }
+        }
 
         private static readonly ImageSource[] OLD_IMAGE_SOURCES = { ImageSource.git, ImageSource.web };
 
@@ -721,15 +712,15 @@ namespace ImageComparer
             Next();
         }
 
+        private void toolStripFileList_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            SetPath(toolStripFileList.SelectedItem as ScreenshotFile);
+        }
+
         private void toolStripRevert_Click(object sender, EventArgs e)
         {
             Revert();
         }
-
-        // private void toolStripRefresh_Click(object sender, EventArgs e)
-        // {
-        //     RefreshScreenshots();
-        // }
 
         private void toolStripGotoWeb_Click(object sender, EventArgs e)
         {
@@ -747,6 +738,13 @@ namespace ImageComparer
         private void buttonImageSource_Click(object sender, EventArgs e)
         {
             NextOldImageSource();
+        }
+
+        private void toolStripPickColorButton_ColorChanged(object sender, EventArgs e)
+        {
+            HighlightColor = toolStripPickColorButton.SelectedColor;
+            if (oldScreenshotPictureBox.Visible)
+                UpdateScreenshotsAsync(OldImageSource, HighlightColor); // On foreground thread because the screenshots are already loaded - just updating the diff
         }
 
         private void ScreenshotPreviewForm_KeyDown(object sender, KeyEventArgs e)
@@ -772,6 +770,7 @@ namespace ImageComparer
                     e.Handled = true;
                     break;
                 case Keys.Down:
+                case Keys.Right:
                     if (e.Control)
                     {
                         Next();
@@ -779,6 +778,7 @@ namespace ImageComparer
                     }
                     break;
                 case Keys.Up:
+                case Keys.Left:
                     if (e.Control)
                     {
                         Previous();
@@ -834,6 +834,38 @@ namespace ImageComparer
                         e.Handled = true;
                     }
                     break;
+                case Keys.V:
+                    if (e.Control)
+                    {
+                        Paste();
+                        e.Handled = true;
+                    }
+                    break;
+            }
+        }
+
+        private void Paste()
+        {
+            try
+            {
+                var image = Clipboard.GetImage();
+                if (image == null)
+                {
+                    ShowMessage("No image found on the clipboard.");
+                    return;
+                }
+
+                lock (_lock)
+                {
+                    image.Save(_fileToShow.Path, ImageFormat.Png);
+                    _newScreenshot.FileLoaded = null;
+                }
+
+                FormStateChanged();
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException("Failed to save bitmap from clipboard.", e);
             }
         }
 
@@ -847,6 +879,16 @@ namespace ImageComparer
             {
                 ShowMessageWithException("Failed clipboard operation.", e);
             }
+        }
+
+        #region Local implementations for Skyline functions
+
+        private string LineSeparate(params string[] lines)
+        {
+            var sb = new StringBuilder();
+            foreach (var line in lines)
+                sb.AppendLine(line.Trim());
+            return sb.ToString();
         }
 
         public static void OpenLink(string link)
@@ -881,108 +923,18 @@ namespace ImageComparer
             return Screen.FromPoint(new Point(x, y));
         }
 
-        private class ScreenshotFile
+        private void ShowMessage(string message)
         {
-            private static readonly Regex PATTERN = new Regex(@"\\(\w+)\\(\w\w)\\s-(\d\d)\.png");
-
-            public static bool IsMatch(string filePath)
-            {
-                return PATTERN.Match(filePath).Success;
-            }
-
-            public ScreenshotFile(string filePath)
-            {
-                Path = filePath;
-
-                var match = PATTERN.Match(filePath);
-                if (match.Success)
-                {
-                    Name = match.Groups[1].Value;
-                    Locale = match.Groups[2].Value;
-                    Number = int.Parse(match.Groups[3].Value);
-                }
-            }
-
-            public string Path { get; }
-            private string Name { get; }
-            private string Locale { get; }
-            private int Number { get; }
-
-            public bool IsEmpty => string.IsNullOrEmpty(Name);
-
-            private const string BASE_URL = "https://skyline.ms/tutorials/24-1";
-            public string UrlInTutorial => $"{BASE_URL}/{Name}/{Locale}/index.html#s-{Number}";
-            public string UrlToDownload => $"{BASE_URL}/{RelativePath}";
-            // RelativePath is used for ComboBox display
-            // ReSharper disable once MemberCanBePrivate.Local
-            public string RelativePath => $"{Name}/{Locale}/s-{Number}.png";
-
-            public string GetDescription(ImageSource source)
-            {
-                switch (source)
-                {
-                    case ImageSource.git:
-                        return $"Git HEAD: {RelativePath}";
-                    case ImageSource.web:
-                        return UrlToDownload;
-                    case ImageSource.disk:
-                    default:
-                        return Path;
-                }
-            }
+            MessageBox.Show(this, message);
         }
 
-        private class ScreenshotInfo
+        // ReSharper disable once UnusedParameter.Local
+        private void ShowMessageWithException(string message, Exception e)
         {
-            public ScreenshotInfo(Bitmap image = null, bool isPlaceholder = false)
-            {
-                Image = image;
-                ImageSize = image?.Size ?? Size.Empty;
-                IsPlaceholder = isPlaceholder;
-            }
-
-            public ScreenshotInfo(ScreenshotInfo info)
-            {
-                Image = info.Image;
-                ImageSize = info.ImageSize;
-                IsPlaceholder = info.IsPlaceholder;
-            }
-
-            public Bitmap Image { get; private set; }
-            public Size ImageSize { get; private set; }
-            public bool IsPlaceholder { get; private set; }
+            // TODO: Make exception stack trace available somehow
+            ShowMessage(message);
         }
 
-        private class OldScreenshot : ScreenshotInfo
-        {
-            public OldScreenshot(Bitmap image = null, bool isPlaceholder = false, string fileLoaded = null, ImageSource source = ImageSource.disk)
-                : base(image, isPlaceholder)
-            {
-                FileLoaded = fileLoaded;
-                Source = source;
-            }
-
-            public OldScreenshot(ScreenshotInfo info, string fileLoaded, ImageSource source = ImageSource.disk)
-                : base(info)
-            {
-                FileLoaded = fileLoaded;
-                Source = source;
-            }
-
-            public string FileLoaded { get; set; }
-
-            // ReSharper disable once UnusedAutoPropertyAccessor.Local
-            public ImageSource Source { get; private set; }
-
-            public bool IsCurrent(ScreenshotFile screenshot, ImageSource currentSource)
-            {
-                return Equals(FileLoaded, screenshot?.GetDescription(currentSource));
-            }
-        }
-
-        private void toolStripFileList_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            SetPath(toolStripFileList.SelectedItem as ScreenshotFile);
-        }
+        #endregion
     }
 }
