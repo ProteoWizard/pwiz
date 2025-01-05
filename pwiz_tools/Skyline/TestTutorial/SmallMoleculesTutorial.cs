@@ -93,10 +93,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 // Setting the UI mode, p 2  
                 var startPage = WaitForOpenForm<StartPage>();
-                RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
-//                PauseForScreenShot<StartPage>("Start Window proteomic", 2);
                 RunUI(() => startPage.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
-//                PauseForScreenShot<StartPage>("Start Window small molecule", 3);
                 ShowSkyline(() => startPage.DoAction(skylineWindow => true));
             }
 
@@ -125,11 +122,7 @@ namespace pwiz.SkylineTestTutorial
                     }
                 });
                 PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column Select Dlg with column headers selected");
-
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
-
-
-
 
                 var docTargets = WaitForDocumentChange(doc);
 
@@ -164,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
                 }
 
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
-
+                FocusDocument();
                 PauseForScreenShot("Skyline window multi-target graph");
 
                 var docResults = SkylineWindow.Document;

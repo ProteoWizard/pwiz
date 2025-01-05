@@ -19,7 +19,7 @@
 
 using System;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Skyline.Util
 {
@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// The methods of animation available.
         /// </summary>
-        public enum AnimationMethod
+        public enum AnimationMethod : uint
         {
             /// <summary>
             /// Rolls out from edge when showing and into edge when hiding.
@@ -43,22 +43,22 @@ namespace pwiz.Skyline.Util
             /// <remarks>
             /// This is the default animation method and requires a direction.
             /// </remarks>
-            roll = 0x0,
+            roll = User32.AnimateWindowFlags.ROLL,
             /// <summary>
             /// Expands out from centre when showing and collapses into centre when hiding.
             /// </summary>
-            centre = 0x10,
+            centre = User32.AnimateWindowFlags.CENTER,
             /// <summary>
             /// Slides out from edge when showing and slides into edge when hiding.
             /// </summary>
             /// <remarks>
             /// Requires a direction.
             /// </remarks>
-            slide = 0x40000,
+            slide = User32.AnimateWindowFlags.SLIDE,
             /// <summary>
             /// Fades from transaprent to opaque when showing and from opaque to transparent when hiding.
             /// </summary>
-            blend = 0x80000
+            blend = User32.AnimateWindowFlags.BLEND
         }
 
         /// <summary>
@@ -68,34 +68,25 @@ namespace pwiz.Skyline.Util
         /// Horizontal and vertical directions can be combined to create diagonal animations.
         /// </remarks>
         [Flags]
-        public enum AnimationDirection
+        public enum AnimationDirection : uint
         {
             /// <summary>
             /// From left to right.
             /// </summary>
-            right = 0x1,
+            right = User32.AnimateWindowFlags.HORIZONTAL_POSITIVE,
             /// <summary>
             /// From right to left.
             /// </summary>
-            left = 0x2,
+            left = User32.AnimateWindowFlags.HORIZONTAL_NEGATIVE,
             /// <summary>
             /// From top to bottom.
             /// </summary>
-            down = 0x4,
+            down = User32.AnimateWindowFlags.VERTICAL_POSITIVE,
             /// <summary>
             /// From bottom to top.
             /// </summary>
-            up = 0x8
+            up = User32.AnimateWindowFlags.VERTICAL_NEGATIVE
         }
-
-        /// <summary>
-        /// Hide the form.
-        /// </summary>
-        private const int AW_HIDE = 0x10000;
-        /// <summary>
-        /// Activate the form.
-        /// </summary>
-        private const int AW_ACTIVATE = 0x20000;
 
         /// <summary>
         /// The number of milliseconds over which the animation occurs if no 
@@ -147,14 +138,6 @@ namespace pwiz.Skyline.Util
         /// Gets/sets the parameters to be used for the "hide" animation
         /// </summary>
         public AnimationParams HideParams { get; set; }
-
-        /// <summary>
-        /// Windows API function to animate a window.
-        /// </summary>
-        [DllImport("user32")]
-        private static extern bool AnimateWindow(IntPtr hWnd,
-                                                 int dwTime,
-                                                 int dwFlags);
 
         /// <summary>
         /// Constructor used to specify the form to be animated
@@ -209,6 +192,10 @@ namespace pwiz.Skyline.Util
         /// </summary>
         private void Form_VisibleChanged(object sender, EventArgs e)
         {
+            // CONSIDER: pinvoke - Skyline has two distinct ways of specifying form animations - here and
+            //           in CustomTip. Consider consolidating these into one set of flags compatible with
+            //           User32.AnimateWindowFlags and updating User32.AnimateWindow to be more strongly typed.
+
             // Do not attempt to animate MDI child forms while showing or hiding as they do not behave as expected.
             if (Form.MdiParent == null)
             {
@@ -218,17 +205,17 @@ namespace pwiz.Skyline.Util
                 if (Form.Visible)
                 {
                     // Activate the form.
-                    flags = AW_ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
+                    flags = (int)User32.AnimateWindowFlags.ACTIVATE | (int)ShowParams.Method | (int)ShowParams.Direction;
                     duration = ShowParams.Duration;
                 }
                 else
                 {
                     // Hide the form.
-                    flags = AW_HIDE | (int)HideParams.Method | (int)HideParams.Direction;
+                    flags = (int)User32.AnimateWindowFlags.HIDE | (int)HideParams.Method | (int)HideParams.Direction;
                     duration = HideParams.Duration;
                 }
 
-                AnimateWindow(Form.Handle, duration, flags);
+                User32.AnimateWindow(Form.Handle, duration, flags);
             }
         }
     }

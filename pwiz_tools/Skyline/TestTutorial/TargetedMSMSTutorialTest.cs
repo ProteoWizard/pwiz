@@ -722,9 +722,16 @@ namespace pwiz.SkylineTestTutorial
 
             // Try to import a file to show it fails.
             ImportResultsDlg importResultsDlg3 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            var uri500fmol = MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw));
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
-                new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
+                new[] { uri500fmol }));
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
+            // Set a consistent time for a screenshot
+            var dateTimeCurrent = DateTime.Now;
+            var dateTimeError = new DateTime(dateTimeCurrent.Year, dateTimeCurrent.Month, dateTimeCurrent.Day, 12, 35, 0);
+            importProgress.SetFreezeTimeForError(dateTimeError);
+            // Remove the full path for the error in a screenshot
+            importProgress.SetReplacementForError(Path.GetDirectoryName(uri500fmol.GetFilePath()) + Path.DirectorySeparatorChar, string.Empty);
             var docFullScanError = WaitForDocumentChangeLoaded(docCalibrate1);
 //            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);

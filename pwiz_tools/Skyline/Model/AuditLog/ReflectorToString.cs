@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.AuditLog
 
             var enumerator = EnumerateDiffNodes(objectInfo, rootProp, docType, true);
 
-            return ToString(objectInfo.ParentObjectPair, docType, DiffTree.FromEnumerator(enumerator, DateTime.UtcNow).Root, state);
+            return ToString(objectInfo.ParentObjectPair, docType, DiffTree.FromEnumerator(enumerator).Root, state);
         }
 
         /// <summary>

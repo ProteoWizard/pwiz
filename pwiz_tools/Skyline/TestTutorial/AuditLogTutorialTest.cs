@@ -73,6 +73,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestAuditLogTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            PauseStartingScreenshot = 16;
@@ -90,6 +94,8 @@ namespace pwiz.SkylineTestTutorial
                     : @"https://skyline.ms/tutorials/AuditLogMzml.zip",
                 @"TestTutorial\AuditLogViews.zip"
             };
+
+            AuditLogEntry.TimeProvider = new TestTimeProvider();
 
             RunFunctionalTest();
         }
@@ -145,14 +151,14 @@ namespace pwiz.SkylineTestTutorial
 
             RunUIForScreenShot(() => SkylineWindow.ShowUndo());
             PauseForScreenShot("Undo list expanded.", null, bmp => 
-                ClipBitmap(bmp, new Rectangle(0, 0, 713, 131)));
+                ClipBitmap(bmp.CleanupBorder(), new Rectangle(0, 0, 713, 131)));
             RunUIForScreenShot(() => SkylineWindow.ShowUndo(false));
 
             RunUI(SkylineWindow.Undo);
 
             RunUIForScreenShot(() => SkylineWindow.ShowRedo());
             PauseForScreenShot("Redo list expanded.", null, bmp =>
-                ClipBitmap(bmp, new Rectangle(0, 0, 743, 127)));
+                ClipBitmap(bmp.CleanupBorder(), new Rectangle(0, 0, 743, 127)));
             RunUIForScreenShot(() => SkylineWindow.ShowRedo(false));
 
             RunUI(SkylineWindow.Redo);
@@ -165,11 +171,7 @@ namespace pwiz.SkylineTestTutorial
                 var pasteDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
                 RunUI(() => SetClipboardText("IEAIPQIDK\tGST-tag"));
                 RunUI(pasteDlg.PastePeptides);
-                RunUI(() =>
-                {
-                    pasteDlg.Size = new Size(700, 210);
-                    pasteDlg.Top = SkylineWindow.Bottom + 20;
-                });
+                RunUIForScreenShot(() => pasteDlg.Size = new Size(700, 210));
                 PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List");
 
                 using (new WaitDocumentChange())
@@ -386,7 +388,7 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() => SkylineWindow.AuditLogForm.Parent.Parent.Width += 100);    // Wider to remove the horizontal scrollbar
             ShowReportsDropdown(AuditLogStrings.AuditLogForm_AuditLogForm_All_Info);
             PauseForScreenShot<AuditLogForm>("Audit Log Reports menu", null, bmp =>
-                ClipBitmap(bmp, new Rectangle(0, 0, 503, bmp.Height)));
+                ClipBitmap(bmp.CleanupBorder(true), new Rectangle(0, 0, 503, bmp.Height)));
             HideReportsDropdown();
 
             // TODO(nicksh): Audit log reason field does not currently support fill down
@@ -464,7 +466,7 @@ namespace pwiz.SkylineTestTutorial
             RunUIForScreenShot(() =>
             {
                 var floatingForm = SkylineWindow.AuditLogForm.Parent.Parent;
-                floatingForm.Width = 1130; // Wider for Skyline Version and User columns
+                floatingForm.Width = 1140; // Wider for Skyline Version and User columns
                 floatingForm.Height += 10; // Extra for 2-line headers
             }); 
             PauseForScreenShot<AuditLogForm>("Audit Log with custom view.");
@@ -557,25 +559,16 @@ namespace pwiz.SkylineTestTutorial
             if (Program.SkylineOffscreen)
                 return;
 
+            const int timeExtra = 10;
             const int spacing = 20;
-            int formWidth = 772 + messageExtra;
+            int formWidth = 772 + messageExtra + timeExtra;
             if (verticalScrollbar)
                 formWidth += spacing;
             RunUI(() =>
             {
                 var floatingWindow = auditLogForm.Parent.Parent;
                 floatingWindow.Size = new Size(formWidth, height ?? 354);
-                var screen = Screen.FromControl(SkylineWindow);
-                if (screen.Bounds.Right > SkylineWindow.Right + spacing + floatingWindow.Width)
-                {
-                    floatingWindow.Top = SkylineWindow.Top;
-                    floatingWindow.Left = SkylineWindow.Right + spacing;
-                }
-                else
-                {
-                    floatingWindow.Top = SkylineWindow.Bottom + spacing;
-                    floatingWindow.Left = (screen.Bounds.Left + screen.Bounds.Right) / 2 - floatingWindow.Width / 2;
-                }
+                auditLogForm.DataGridView.Columns[0].Width += timeExtra;
                 if (messageExtra > 0)
                 {
                     var pathMessage = PropertyPath.Parse("Details!*.AllInfoMessage");
@@ -616,12 +609,6 @@ namespace pwiz.SkylineTestTutorial
 
             var extraInfoDialog = ShowDialog<AuditLogExtraInfoForm>(() =>
                 ((TextImageCell)SkylineWindow.AuditLogForm.DataGridView.Rows[0].Cells[1]).ClickImage(0));
-            RunUI(() =>
-            {
-                var logFloatingWindow = SkylineWindow.AuditLogForm.Parent.Parent;
-                extraInfoDialog.Left = logFloatingWindow.Left;
-                extraInfoDialog.Top = logFloatingWindow.Bottom + 20;
-            });
             PauseForScreenShot<AuditLogExtraInfoForm>(message);
             OkDialog(extraInfoDialog, extraInfoDialog.OkDialog);
         }
@@ -663,6 +650,30 @@ namespace pwiz.SkylineTestTutorial
             catch (Exception e)
             {
                 AssertEx.Fail("Error creating Panorama test folder. {0}", e.Message);
+            }
+        }
+    }
+
+    public class TestTimeProvider : AuditLogEntry.ITimeProvider
+    {
+        private readonly DateTime _startTime;
+        private TimeSpan _elapsedTime = TimeSpan.Zero;
+        private Random _random = new Random(1); // A consistent random series
+
+        public TestTimeProvider()
+        {
+            // Start with a consistent local time of 2025-1-1 at 9:35 AM
+            var localTime = new DateTime(2025, 1, 1, 9, 35, 0, DateTimeKind.Local);
+            // The audit logging system expects a UTC time.
+            _startTime = localTime.ToUniversalTime();
+        }
+
+        public DateTime Now
+        {
+            get
+            {
+                _elapsedTime += TimeSpan.FromSeconds(_random.Next(2, 10));  // Random time from 2 to 10 seconds
+                return _startTime.Add(_elapsedTime);
             }
         }
     }

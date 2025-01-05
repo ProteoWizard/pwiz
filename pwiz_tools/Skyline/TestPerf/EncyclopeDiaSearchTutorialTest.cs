@@ -45,7 +45,7 @@ namespace TestPerf
         private AnalysisValues _analysisValues;
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
-        public void TestEncyclopeDiaSearchTutorial()
+        public void TestEncyclopeDiaSearchTutorialDraft()
         {
             TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial-24_1.zip";
 

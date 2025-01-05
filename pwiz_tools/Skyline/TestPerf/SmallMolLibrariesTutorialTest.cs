@@ -51,6 +51,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
         [TestMethod]
         public void TestSmallMoleculeLibrariesTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
             CoverShotName = "SmallMoleculeIMSLibraries";

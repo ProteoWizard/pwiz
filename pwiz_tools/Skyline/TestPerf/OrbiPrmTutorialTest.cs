@@ -74,7 +74,7 @@ namespace TestPerf
         private static string[] SAMPLE_NAMES = { "G1_rep1", "G1_rep2", "G1_rep3", "G2M_rep1", "G2M_rep2", "G2M_rep3", "S_rep1", "S_rep2", "S_rep3" };
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
-        public void TestOrbiPrmTutorial()
+        public void TestOrbiPrmTutorialDraft()
         {
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;

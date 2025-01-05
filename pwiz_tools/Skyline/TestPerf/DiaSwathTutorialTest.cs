@@ -467,7 +467,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower worker VMs
-        public void TestDiaTtofFullSearchTutorial()
+        public void TestDiaTtofFullSearchTutorialExtra()
         {
             _testInfo.TestTtofData(true);
             if (!IsCoverShotMode)
@@ -484,7 +484,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
-        public void TestDiaQeFullSearchTutorial()
+        public void TestDiaQeFullSearchTutorialExtra()
         {
             _testInfo.TestQeData(true);
             if (!IsCoverShotMode)
@@ -496,6 +496,10 @@ namespace TestPerf
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaPasefTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             _testInfo.TestPasefData(false);
             if (!IsCoverShotMode)
                 RunTest();
@@ -505,7 +509,7 @@ namespace TestPerf
          NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Bruker wants exclusive read access to raw data
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Skip during Nightly
         [Timeout(int.MaxValue)] // These can take a long time
-        public void TestDiaPasefFullDataset()
+        public void TestDiaPasefFullDatasetExtra()
         {
             _testInfo.TestPasefData(true);
             if (!IsCoverShotMode)

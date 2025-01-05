@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -89,15 +90,19 @@ namespace pwiz.SkylineTestTutorial
 
                 SetCsvFileClipboardText(GetTestPath("Energy_TransitionList.csv"));
                 var confirmHeadersDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
-                RunUIForScreenShot(() => ResizeFormOnScreen(confirmHeadersDlg, 1070, null));
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Confirming column headers");
+                // TODO: After translation is updated this first image will need to be added for Chinese and Japanese
+                if (Equals("en", CultureInfo.CurrentCulture.TwoLetterISOLanguageName))
+                {
+                    RunUIForScreenShot(() => ResizeFormOnScreen(confirmHeadersDlg, 1070, null));
+                    PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Confirming column headers");
+                }
                 OkDialog(confirmHeadersDlg, confirmHeadersDlg.OkDialog);
 
                 RunUI(() =>
                 {
                     AdjustSequenceTreePanelWidth();
                 });
-
+                FocusDocument();
                 PauseForScreenShot("Main window after paste from csv");
 
                 var docTargets = WaitForDocumentChange(doc);
@@ -343,6 +348,7 @@ namespace pwiz.SkylineTestTutorial
                     molNode.Nodes[1].Expand();
                     SkylineWindow.ArrangeGraphsTabbed();
                 });
+                FocusDocument();
                 PauseForScreenShot("Skyline window with calibration data");
 
                 // Linearity
@@ -455,7 +461,7 @@ namespace pwiz.SkylineTestTutorial
                     PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form");
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
                 }
-
+                FocusDocument();
                 PauseForScreenShot("Skyline shows new replicate \"CE Optimization\"");
                 RunUI(() =>
                 {
@@ -466,6 +472,8 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.ShowSingleTransition();
                     SkylineWindow.ShowSplitChromatogramGraph(true);
                 });
+                RestoreViewOnScreen(33);
+                FocusDocument();
                 PauseForScreenShot("Split graph");
 
                 RunUI(() =>

@@ -56,6 +56,10 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDriftTimePredictorTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
 //            IsPauseForScreenShots = true;
 //            RunPerfTests = true;
 //            IsCoverShotMode = true;

@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                 SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
-                SkylineWindow.Size = new Size(1278, 736);
+                SkylineWindow.Size = new Size(1266, 736);
 
                 Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode.Text, "YLGAYLLATLGGNASPSAQDVLK"); // Not L10N
             });
@@ -149,9 +149,11 @@ namespace pwiz.SkylineTestTutorial
                     new[] {new KeyValuePair<string, MsDataFileUri[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
                 importResultsDlg.OkDialog();
             });
-            var allChromGraph = WaitForOpenForm<AllChromatogramsGraph>();   // To make the AllChromatogramsGraph form accessible to the SkylineTester forms tab
-            WaitForConditionUI(() => allChromGraph.ProgressTotalPercent >= 20);
+            var allChrom = WaitForOpenForm<AllChromatogramsGraph>();   // To make the AllChromatogramsGraph form accessible to the SkylineTester forms tab
+            allChrom.SetFreezeProgressPercent(98, @"00:00:01");
+            WaitForConditionUI(() => allChrom.IsProgressFrozen());
             PauseForScreenShot<AllChromatogramsGraph>("Loading Chromatograms: Take screenshot at about 25% loaded...");
+            allChrom.SetFreezeProgressPercent(null, null);
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 15 minutes
 
             Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);
@@ -475,6 +477,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.Size = new Size(1060, 550));
             RestoreViewOnScreen(21);
+            FocusDocument();
             PauseForScreenShot("Main window"); // Not L10N
 
             RTScheduleGraphPane pane = null;
@@ -570,6 +573,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RestoreViewOnScreen(26);
             WaitForGraphs();
+            FocusDocument();
             PauseForScreenShot("Main window"); // Not L10N
 
             // Show the RefineDlg.ConsistencyTab for localization text review
