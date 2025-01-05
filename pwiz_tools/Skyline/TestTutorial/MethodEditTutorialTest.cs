@@ -601,11 +601,26 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Auto-complete " + text, null,
                     bmp =>
                     {
-                        var completeRect = FindOpenForm<StatementCompletionForm>().Bounds;
-                        var skylineRect = SkylineWindow.Bounds;
+                        var completeRect = statementCompletionForm.Bounds;
+                        var skylineRect = ScreenshotManager.GetFramedWindowBounds(SkylineWindow);
+                        bmp = bmp.CleanupBorder(skylineRect, ScreenshotProcessingExtensions.CornerForm, completeRect);
+
                         int top = completeRect.Top - aboveAutoComplete;
-                        int bottom = Math.Max(skylineRect.Bottom - 7, completeRect.Bottom);
-                        var cropRect = new Rectangle(skylineRect.Left + 7, top, 735,  bottom - top);
+                        int bottom = Math.Max(skylineRect.Bottom, completeRect.Bottom);
+                        var cropRect = new Rectangle(skylineRect.Left, top, 735,  bottom - top);
+                        if (skylineRect.Bottom < bottom)
+                        {
+                            var bmpClipped = ClipRegionAndEraseBackground(bmp,
+                                new Control[] { statementCompletionForm, SkylineWindow },
+                                Array.Empty<ToolStripDropDown>(),
+                                Color.White);
+
+                            // The final clipping expects a full screen bitmap
+                            var bmpNew = new Bitmap(bmp.Width, bmp.Height);
+                            using var g = Graphics.FromImage(bmpNew);
+                            g.DrawImageUnscaled(bmpClipped, skylineRect.X, skylineRect.Y);
+                            bmp = bmpNew;
+                        }
                         return ClipBitmap(bmp, cropRect);
                     });
             }

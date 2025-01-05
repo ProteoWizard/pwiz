@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -833,6 +834,38 @@ namespace ImageComparer
                         e.Handled = true;
                     }
                     break;
+                case Keys.V:
+                    if (e.Control)
+                    {
+                        Paste();
+                        e.Handled = true;
+                    }
+                    break;
+            }
+        }
+
+        private void Paste()
+        {
+            try
+            {
+                var image = Clipboard.GetImage();
+                if (image == null)
+                {
+                    ShowMessage("No image found on the clipboard.");
+                    return;
+                }
+
+                lock (_lock)
+                {
+                    image.Save(_fileToShow.Path, ImageFormat.Png);
+                    _newScreenshot.FileLoaded = null;
+                }
+
+                FormStateChanged();
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException("Failed to save bitmap from clipboard.", e);
             }
         }
 
