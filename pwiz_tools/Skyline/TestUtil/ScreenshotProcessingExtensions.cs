@@ -100,6 +100,7 @@ namespace pwiz.SkylineTestUtil
                 bestBorderColor == INTERIOR_BORDER_COLOR)
             {
                 color = bestBorderColor;
+                cornerRadius = 0;   // No arched corners on interior borders
             }
             return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius, excludeRect);
         }
@@ -107,7 +108,7 @@ namespace pwiz.SkylineTestUtil
         private static Bitmap CleanupBorderInternal(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
             Rectangle? excludeRect)
         {
-            return IsWindows11()
+            return IsWindows11() && cornerRadius != 0
                 ? bmp.CleanupBorder11(color, rect, cornerRadius, excludeRect)
                 : bmp.CleanupBorder10(color, rect, excludeRect);
         }

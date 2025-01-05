@@ -44,7 +44,11 @@ namespace pwiz.Skyline.Controls
         private ProteinMatchQuery _proteinMatcher;
         private CancellationTokenSource _cancellationTokenSource;
         private readonly IDocumentUIContainer _documentUiContainer;
-        private readonly ImageList _imageList = new ImageList() {TransparentColor = Color.Magenta};
+        private readonly ImageList _imageList = new ImageList
+        {
+            TransparentColor = Color.Magenta,
+            ColorDepth = ColorDepth.Depth16Bit
+        };
         private ProteomeDb _proteomeDb;
         private bool _hideOnLoseFocus;
 
@@ -55,8 +59,8 @@ namespace pwiz.Skyline.Controls
         {
             MatchTypes = ProteinMatchTypes.ALL;
             _documentUiContainer = documentUiContainer;
-            _imageList.Images.Add(Resources.Protein);
-            _imageList.Images.Add(Resources.Peptide);
+            _imageList.Images.Add(Resources.Protein);   // 16bpp
+            _imageList.Images.Add(Resources.Peptide);   // 4bpp
             _hideOnLoseFocus = hideOnLoseFocus;
         }
 
@@ -426,7 +430,7 @@ namespace pwiz.Skyline.Controls
                 _cancellationTokenSource = null;
             }
         }
-        public static readonly ImageList IMAGE_LIST = new ImageList();
+        // public static readonly ImageList IMAGE_LIST = new ImageList();
         private enum ImageId
         {
             protein,
