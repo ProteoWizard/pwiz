@@ -1391,6 +1391,8 @@ namespace pwiz.SkylineTestUtil
             get { return IsTutorial && RecordAuditLogs; }
         }
 
+        public bool IsTestAuditLogPlacement => false;
+
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
         public static bool IsPass0 { get { return Program.IsPassZero; } }
@@ -1960,6 +1962,12 @@ namespace pwiz.SkylineTestUtil
             {
                 return; // Don't want to run this lengthy test right now
             }
+            if (IsTestAuditLogPlacement)
+            {
+                // Just testing if audit logs are where they are expected to be
+                AssertAuditLogCorrectlyPlaced();
+                return;
+            }
 
             RunFunctionalTestAttempt(defaultUiMode);
 
@@ -2171,16 +2179,14 @@ namespace pwiz.SkylineTestUtil
                 return;
 
             // Ensure expected tutorial log file exists unless recording
-            var projectFile = GetLogFilePath(AuditLogTutorialDir);
-            bool existsInProject = File.Exists(projectFile);
             if (!IsRecordAuditLogForTutorials)
             {
-                Assert.IsTrue(existsInProject,
-                    "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
-                    TestContext.TestName, projectFile);
+                AssertProjectLogFileExists();
             }
 
             // Compare file contents
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            bool existsInProject = File.Exists(projectFile);
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
             if (AreEquivalentAuditLogs(expected, actual))
@@ -2228,6 +2234,28 @@ namespace pwiz.SkylineTestUtil
                 else
                     Console.WriteLine(@"Successfully recorded changed tutorial audit log");
             }
+        }
+
+        private void AssertAuditLogCorrectlyPlaced()
+        {
+            if (AuditLogCompareLogs)
+            {
+                AssertProjectLogFileExists();
+
+                Console.Write(@" found audit log ");
+            }
+            else
+            {
+                Console.Write(@" no audit log comparison ");
+            }
+        }
+
+        private void AssertProjectLogFileExists()
+        {
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            Assert.IsTrue(File.Exists(projectFile),
+                "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
+                TestContext.TestName, projectFile);
         }
 
         private static bool AreEquivalentAuditLogs(string expected, string actual)
