@@ -11,7 +11,6 @@ using Microsoft.Win32;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -67,9 +66,7 @@ namespace pwiz.Skyline.Model.Tools
         public string VirtualEnvironmentDir => Path.Combine(PythonVersionDir, VirtualEnvironmentName);
         public string VirtualEnvironmentPythonExecutablePath => Path.Combine(VirtualEnvironmentDir, SCRIPTS, PYTHON_EXECUTABLE);
         public List<PythonTask> PendingTasks { get; set; }
-
-        public MultiButtonMsgDlg EnableLongPathsDlg { get; set; }
-
+        
         #region Functional testing support
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }

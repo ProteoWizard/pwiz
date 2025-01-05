@@ -12,6 +12,7 @@ namespace pwiz.Skyline.ToolsUI
     
     public static class PythonInstallerUI
     {
+        public static MultiButtonMsgDlg EnableLongPathsDlg { get; set; }
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
             DialogResult result;
@@ -24,8 +25,8 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     if (task.Name == PythonTaskName.enable_longpaths)
                     {
-                        pythonInstaller.EnableLongPathsDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
-                        var choice = pythonInstaller.EnableLongPathsDlg.ShowDialog();
+                        EnableLongPathsDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
+                        var choice = EnableLongPathsDlg.ShowDialog();
                         if (choice == DialogResult.No || choice == DialogResult.Cancel)
                         {
                             if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
