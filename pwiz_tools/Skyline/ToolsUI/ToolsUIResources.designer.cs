@@ -546,7 +546,17 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation may require enabling Windows Long Paths, click &apos;OK&apos; to enable or &apos;Cancel&apos; to attempt installation without this feature..
+        ///   Looks up a localized string similar to Python {0} set up is required for {1}, please wait for python to install and configure ....
+        /// </summary>
+        public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait {
+            get {
+                return ResourceManager.GetString("PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python installation might require enabling Windows Long Paths. Elevated priveleges are required for this feature. Would you like to enable Windows Long Paths?.
         /// </summary>
         public static string PythonInstaller_Enable_Windows_Long_Paths {
             get {
@@ -557,18 +567,18 @@ namespace pwiz.Skyline.ToolsUI {
         /// <summary>
         ///   Looks up a localized string similar to Failed to set up Python virtual environment.
         /// </summary>
-        public static string PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment {
+        public static string PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment {
             get {
-                return ResourceManager.GetString("PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Successfully set up Python virtual environment.
         /// </summary>
-        public static string PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment {
+        public static string PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment {
             get {
-                return ResourceManager.GetString("PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment", resourceCulture);
+                return ResourceManager.GetString("PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment", resourceCulture);
             }
         }
         

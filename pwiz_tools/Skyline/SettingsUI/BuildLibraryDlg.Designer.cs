@@ -703,5 +703,16 @@
         private System.Windows.Forms.ToolTip toolTipProteinDatabase;
         private System.Windows.Forms.ToolTip toolTipTrainingData;
         private System.Windows.Forms.ToolTip toolTipMsMsData;
+
+        internal string TextBoxTrainingDataFile
+        {
+            get => textBoxTrainingData.Text;
+            set => textBoxTrainingData.Text = value;
+        }
+        internal string TextBoxMsMsDataFile
+        {
+            get => textBoxMsMsData.Text;
+            set => textBoxMsMsData.Text = value;
+        }
     }
 }

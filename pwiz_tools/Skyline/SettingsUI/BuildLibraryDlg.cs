@@ -40,6 +40,9 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.EditUI;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -82,6 +85,8 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
+        public MultiButtonMsgDlg PythonDlg { get; private set; }
+        
         public enum Pages { properties, files, learning }
 
         public class PropertiesPage : IFormView { }
@@ -89,10 +94,10 @@ namespace pwiz.Skyline.SettingsUI
         public class LearningPage : IFormView { }
 
         private const string PYTHON = @"Python";
-        private const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.2";
+        internal const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.2";
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
-        private const string CARAFE_PYTHON_VERSION = @"3.9.2";
+        internal const string CARAFE_PYTHON_VERSION = @"3.9.2";
         private const string CARAFE = @"carafe";
         private const string WORKSPACES = @"workspaces";
         private const string PEPTDEEP = @"peptdeep";
@@ -107,7 +112,7 @@ namespace pwiz.Skyline.SettingsUI
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
         public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => true;
+        private bool IsCarafeEnabled => false;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
         private string CarafePythonVirtualEnvironmentDir =>
@@ -129,8 +134,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
-
-
+        public PythonInstaller pythonInstaller { get; private set; }
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -216,7 +220,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public ILibraryBuilder Builder { get; private set; }
+        public ILibraryBuilder Builder { get; internal set; }
 
         public IEnumerable<string> InputFileNames
         {
@@ -226,7 +230,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public string AddLibraryFile { get; private set; }
 
-        private bool ValidateBuilder(bool validateInputFiles)
+        internal SrmDocument DocumentUI
+        {
+            get => _documentUiContainer.DocumentUI;
+        }
+      
+        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))
@@ -281,8 +290,6 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            var libraryBuildAction = LibraryBuildAction;
-
             if (validateInputFiles)
             {
                 if (radioKoinaSource.Checked)
@@ -292,9 +299,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioAlphaSource.Checked)
                 {
-                    if (!SetupPythonEnvironmentForAlpha())
+                    if (!SetupPythonEnvironmentForAlpha(createDlg))
                         return false;
-                    Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, _documentUiContainer.DocumentUI);
+                    Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -356,14 +363,14 @@ namespace pwiz.Skyline.SettingsUI
                                 @$"Index {comboLearnFrom.SelectedIndex} of comboLearnFrom dropdown is not yet supported.");
                     }
 
-                    if (!SetupPythonEnvironmentForCarafe())
+                    if (!SetupPythonEnvironmentForCarafe(createDlg))
                     {
                         return false;
                     }
 
         
                     Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION,CARAFE, msMsDataFilePath,
-                                                        trainingDataFilePath, _documentUiContainer.DocumentUI);
+                                                        trainingDataFilePath, DocumentUI);
         
 
                     // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
@@ -399,7 +406,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
                     {
-                        Action = libraryBuildAction,
+                        Action = LibraryBuildAction,
                         IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
                         KeepRedundant = LibraryKeepRedundant,
                         ScoreThresholdsByFile = thresholdsByFile,
@@ -454,7 +461,7 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private bool SetupPythonEnvironmentForAlpha()
+        private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
             var programPathContainer = new ProgramPathContainer(PYTHON, ALPHAPEPTDEEP_PYTHON_VERSION);
             var packages = new List<PythonPackage>()
@@ -464,16 +471,22 @@ namespace pwiz.Skyline.SettingsUI
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
                 new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
-            };
-            var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
+            }; 
+            
+            pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 return true;
             }
+            else if (!createDlg)
+            {
+                return false;
+            }
 
-            using var dlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
-            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
+            
+            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
             }
@@ -483,9 +496,10 @@ namespace pwiz.Skyline.SettingsUI
                 PythonInstallerUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
 
             }
+
             return true;
         }
-        private bool SetupPythonEnvironmentForCarafe()
+        private bool SetupPythonEnvironmentForCarafe(bool createDlg = true)
         {
             var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
             var packages = new List<PythonPackage>()
@@ -496,15 +510,19 @@ namespace pwiz.Skyline.SettingsUI
                 new PythonPackage {Name = @"transformers", Version = @"4.36.1"}
 
             };
-            var pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
+            pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), CARAFE);
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 return true;
             }
+            else if (!createDlg)
+            {
+                return false;
+            }
 
-            using var dlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
-            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
+            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
             {
                 return false;
             }
@@ -582,18 +600,28 @@ namespace pwiz.Skyline.SettingsUI
             OkWizardPage();
         }
 
+        public bool PythonRequirementMet()
+        {
+            if (radioAlphaSource.Checked || radioKoinaSource.Checked)
+            {
+                return ValidateBuilder(true);
+            }
+
+            return ValidateBuilder(false);
+
+        }
         public void OkWizardPage()
         {
             if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (ValidateBuilder(true))
+                if (ValidateBuilder(true, true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
                     DialogResult = DialogResult.OK;
                 }
             }
-            else if (ValidateBuilder(false))
+            else if (ValidateBuilder(false, true))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
@@ -929,6 +957,16 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return radioKoinaSource.Checked; }
             set { radioKoinaSource.Checked = value; }
+        }
+        public bool AlphapeptDeep
+        {
+            get { return radioAlphaSource.Checked; }
+            set { radioAlphaSource.Checked = value; }
+        }
+        public bool Carafe
+        {
+            get { return radioCarafeSource.Checked; }
+            set { radioCarafeSource.Checked = value; }
         }
 
         public int NCE

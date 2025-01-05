@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Ionic.Zip;
@@ -10,8 +11,11 @@ using Microsoft.Win32;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+
+[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline.Model.Tools
 {
@@ -64,6 +68,8 @@ namespace pwiz.Skyline.Model.Tools
         public string VirtualEnvironmentPythonExecutablePath => Path.Combine(VirtualEnvironmentDir, SCRIPTS, PYTHON_EXECUTABLE);
         public List<PythonTask> PendingTasks { get; set; }
 
+        public MultiButtonMsgDlg EnableLongPathsDlg { get; set; }
+
         #region Functional testing support
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
@@ -73,7 +79,6 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         public List<PythonTaskName> TestPythonVirtualEnvironmentTaskNames { get; set; }
         #endregion
-
         private string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
         private string PythonEmbeddablePackageFileBaseName
         {
@@ -132,17 +137,29 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     if (isTaskValid && null == taskNode.ParentNodes) { continue; }
                    
-                    var havePrerequisite = false;
-                    foreach (var parentTask in taskNode.ParentNodes)
+                    bool havePrerequisite = false;
+
+                    if (taskNode.ParentNodes == null)
                     {
-                        if (tasks.Where(p => p.Name == parentTask.PythonTaskName).ToArray().Length > 0)
+                        tasks.Add(GetPythonTask(taskNode.PythonTaskName));
+                        continue;
+                    }
+                    else
+                    {
+                        foreach (var parentTask in taskNode.ParentNodes)
                         {
-                            havePrerequisite = true;
-                            break;
+                            if (tasks.Where(p => p.Name == parentTask.PythonTaskName).ToArray().Length > 0)
+                            {
+                                havePrerequisite = true;
+                                break;
+                            }
                         }
+
                     }
 
-                    if (!havePrerequisite) { continue; }
+                    if (!havePrerequisite) { 
+                        continue; 
+                    }
                 }
                 else
                 {
@@ -177,36 +194,36 @@ namespace pwiz.Skyline.Model.Tools
                     task3.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package;
                     task3.Name = pythonTaskName;
                     return task3;
-                case PythonTaskName.download_getpip_script:
-                    var task4 = new PythonTask(DownloadGetPipScript);
-                    task4.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script;
-                    task4.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script;
+                case PythonTaskName.enable_longpaths:
+                    var task4 = new PythonTask(() => EnableWindowsLongPaths());
+                    task4.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                    task4.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task4.Name = pythonTaskName;
                     return task4;
-                case PythonTaskName.run_getpip_script:
-                    var task5 = new PythonTask(RunGetPipScript);
-                    task5.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Running_the_get_pip_py_script;
-                    task5.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script;
+                case PythonTaskName.download_getpip_script:
+                    var task5 = new PythonTask(DownloadGetPipScript);
+                    task5.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script;
+                    task5.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script;
                     task5.Name = pythonTaskName;
                     return task5;
-                case PythonTaskName.pip_install_virtualenv:
-                    var virtualEnvPackage = new PythonPackage { Name = VIRTUALENV, Version = null };
-                    var task6 = new PythonTask(() => PipInstall(BasePythonExecutablePath, new[] { virtualEnvPackage }));
-                    task6.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Running_pip_install__0_, VIRTUALENV);
-                    task6.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_, VIRTUALENV);
+                case PythonTaskName.run_getpip_script:
+                    var task6 = new PythonTask(RunGetPipScript);
+                    task6.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Running_the_get_pip_py_script;
+                    task6.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script;
                     task6.Name = pythonTaskName;
                     return task6;
-                case PythonTaskName.create_virtual_environment:
-                    var task7 = new PythonTask(() => RunPythonModule(
-                        BasePythonExecutablePath, PythonVersionDir, VIRTUALENV, new[] { VirtualEnvironmentName }));
-                    task7.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, VirtualEnvironmentName);
-                    task7.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, VirtualEnvironmentName);
+                case PythonTaskName.pip_install_virtualenv:
+                    var virtualEnvPackage = new PythonPackage { Name = VIRTUALENV, Version = null };
+                    var task7 = new PythonTask(() => PipInstall(BasePythonExecutablePath, new[] { virtualEnvPackage }));
+                    task7.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Running_pip_install__0_, VIRTUALENV);
+                    task7.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_, VIRTUALENV);
                     task7.Name = pythonTaskName;
                     return task7;
-                case PythonTaskName.enable_longpaths:
-                    var task8 = new PythonTask(() => EnableWindowsLongPaths());
-                    task8.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
-                    task8.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
+                case PythonTaskName.create_virtual_environment:
+                    var task8 = new PythonTask(() => RunPythonModule(
+                        BasePythonExecutablePath, PythonVersionDir, VIRTUALENV, new[] { VirtualEnvironmentName }));
+                    task8.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, VirtualEnvironmentName);
+                    task8.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, VirtualEnvironmentName);
                     task8.Name = pythonTaskName;
                     return task8;
                 case PythonTaskName.pip_install_packages:
@@ -456,12 +473,12 @@ namespace pwiz.Skyline.Model.Tools
             var node1 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_python_embeddable_package, ParentNodes = null };
             var node2 = new PythonTaskNode { PythonTaskName = PythonTaskName.unzip_python_embeddable_package, ParentNodes = new List<PythonTaskNode> { node1 } };
             var node3 = new PythonTaskNode { PythonTaskName = PythonTaskName.enable_search_path_in_python_embeddable_package, ParentNodes = new List<PythonTaskNode> { node2 } };
-            var node4 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_getpip_script, ParentNodes = null };
-            var node5 = new PythonTaskNode { PythonTaskName = PythonTaskName.run_getpip_script, ParentNodes = new List<PythonTaskNode> { node3, node4 } };
-            var node6 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_virtualenv, ParentNodes = new List<PythonTaskNode> { node5 } };
-            var node7 = new PythonTaskNode { PythonTaskName = PythonTaskName.create_virtual_environment, ParentNodes = new List<PythonTaskNode> { node6 } };
-            var node8 = new PythonTaskNode { PythonTaskName = PythonTaskName.enable_longpaths, ParentNodes = null };
-            var node9 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node7 } };
+            var node4 = new PythonTaskNode { PythonTaskName = PythonTaskName.enable_longpaths, ParentNodes = null };
+            var node5 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_getpip_script, ParentNodes = new List<PythonTaskNode> { node3 } };
+            var node6 = new PythonTaskNode { PythonTaskName = PythonTaskName.run_getpip_script, ParentNodes = new List<PythonTaskNode> { node3, node5 } };
+            var node7 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_virtualenv, ParentNodes = new List<PythonTaskNode> { node6 } };
+            var node8 = new PythonTaskNode { PythonTaskName = PythonTaskName.create_virtual_environment, ParentNodes = new List<PythonTaskNode> { node7 } };
+            var node9 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node8 } };
             return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 };
         }
     }
@@ -476,11 +493,11 @@ namespace pwiz.Skyline.Model.Tools
         download_python_embeddable_package,
         unzip_python_embeddable_package,
         enable_search_path_in_python_embeddable_package,
+        enable_longpaths,
         download_getpip_script,
         run_getpip_script,
         pip_install_virtualenv,
         create_virtual_environment,
-        enable_longpaths,
         pip_install_packages
     }
 
@@ -498,11 +515,11 @@ namespace pwiz.Skyline.Model.Tools
             { PythonTaskName.download_python_embeddable_package, false },
             { PythonTaskName.unzip_python_embeddable_package, false },
             { PythonTaskName.enable_search_path_in_python_embeddable_package, false },
+            { PythonTaskName.enable_longpaths, false },
             { PythonTaskName.download_getpip_script, false },
             { PythonTaskName.run_getpip_script, false },
             { PythonTaskName.pip_install_virtualenv, false },
             { PythonTaskName.create_virtual_environment, false },
-            { PythonTaskName.enable_longpaths, false },
             { PythonTaskName.pip_install_packages, false }
         };
 
@@ -516,6 +533,8 @@ namespace pwiz.Skyline.Model.Tools
                     return ValidateUnzipPythonEmbeddablePackage();
                 case PythonTaskName.enable_search_path_in_python_embeddable_package:
                     return ValidateEnableSearchPathInPythonEmbeddablePackage();
+                case PythonTaskName.enable_longpaths:
+                    return ValidateEnableLongpaths();
                 case PythonTaskName.download_getpip_script:
                     return ValidateDownloadGetPipScript();
                 case PythonTaskName.run_getpip_script:
@@ -524,8 +543,6 @@ namespace pwiz.Skyline.Model.Tools
                     return ValidatePipInstallVirtualenv();
                 case PythonTaskName.create_virtual_environment:
                     return ValidateCreateVirtualEnvironment();
-                case PythonTaskName.enable_longpaths:
-                    return ValidateEnableLongpaths();
                 case PythonTaskName.pip_install_packages:
                     return ValidatePipInstallPackages();
                 default:
@@ -587,7 +604,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             return GetTaskValidationResult(PythonTaskName.create_virtual_environment);
         }
-        private bool ValidateEnableLongpaths()
+        internal bool ValidateEnableLongpaths()
         {
             return GetTaskValidationResult(PythonTaskName.enable_longpaths);
         }
@@ -628,6 +645,8 @@ namespace pwiz.Skyline.Model.Tools
                     return ValidateUnzipPythonEmbeddablePackage();
                 case PythonTaskName.enable_search_path_in_python_embeddable_package:
                     return ValidateEnableSearchPathInPythonEmbeddablePackage();
+                case PythonTaskName.enable_longpaths:
+                    return ValidateEnableLongpaths();
                 case PythonTaskName.download_getpip_script:
                     return ValidateDownloadGetPipScript();
                 case PythonTaskName.run_getpip_script:
@@ -638,8 +657,6 @@ namespace pwiz.Skyline.Model.Tools
                     return ValidateCreateVirtualEnvironment();
                 case PythonTaskName.pip_install_packages:
                     return ValidatePipInstallPackages();
-                case PythonTaskName.enable_longpaths:
-                    return ValidateEnableLongpaths();
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
             }
@@ -687,7 +704,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             return Directory.Exists(PythonInstaller.VirtualEnvironmentDir);
         }
-        private bool ValidateEnableLongpaths()
+        internal static bool ValidateEnableLongpaths()
         {
             return (int) Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
         }

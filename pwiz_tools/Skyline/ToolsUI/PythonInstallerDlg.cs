@@ -64,12 +64,12 @@ namespace pwiz.Skyline.ToolsUI
             if (Installer.NumCompletedTasks == Installer.NumTotalTasks)
             {
                 Installer.PendingTasks.Clear();
-                MessageDlg.Show(this, ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment);
+                MessageDlg.Show(this, ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
                 DialogResult = DialogResult.OK;
             }
             else
             {
-                MessageDlg.Show(this, ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment);
+                MessageDlg.Show(this, ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
                 DialogResult = DialogResult.Cancel;
             }
         }

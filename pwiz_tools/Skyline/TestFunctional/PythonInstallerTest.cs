@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
 
             OkDialog(dlg, dlg.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -177,7 +177,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -216,7 +216,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
 
             OkDialog(dlg, dlg.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -256,7 +256,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -300,7 +300,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -334,7 +334,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
             RunUI(() => Assert.IsTrue(File.Exists(Path.Combine(pythonInstaller.PythonEmbeddablePackageExtractDir, @"python312.pth"))));
 
             OkDialog(dlg, dlg.OkDialog);
@@ -371,7 +371,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -408,7 +408,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -437,7 +437,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
 
             OkDialog(dlg, dlg.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -474,7 +474,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -503,7 +503,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
 
             OkDialog(dlg, dlg.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -540,7 +540,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -569,7 +569,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
 
             OkDialog(dlg, dlg.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -607,7 +607,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -636,7 +636,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
 
             OkDialog(dlg, dlg.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -674,7 +674,7 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(dlg2, dlg2.OkDialog);
             var dlg3 = WaitForOpenForm<MessageDlg>();
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment, dlg3.Message));
 
             OkDialog(dlg3, dlg3.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -703,7 +703,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
 
             OkDialog(dlg, dlg.OkDialog);
             WaitForClosedForm(pythonInstallerDlg);
@@ -746,7 +746,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test
             var dlg = ShowDialog<MessageDlg>(pythonInstallerDlg.OkDialog);
-            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
+            RunUI(() => Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, dlg.Message));
             RunUI(() => Assert.AreEqual(8, pythonInstaller.NumTotalTasks));
             RunUI(() => Assert.AreEqual(8, pythonInstaller.NumCompletedTasks));
 

@@ -14,6 +14,9 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline.Model.Carafe
 {
@@ -63,8 +66,8 @@ namespace pwiz.Skyline.Model.Carafe
         private string PythonVirtualEnvironmentName { get; }
         private SrmDocument Document { get; }
         [CanBeNull] private string ProteinDatabaseFilePath { get;  }
-        private string ExperimentDataFilePath { get; }
-        private string ExperimentDataTuningFilePath { get; }
+        internal string ExperimentDataFilePath { get; set;  }
+        internal string ExperimentDataTuningFilePath { get; set; }
 
         private bool BuildLibraryForCurrentSkylineDocument => ProteinDatabaseFilePath.IsNullOrEmpty();
         private string PythonVirtualEnvironmentActivateScriptPath =>

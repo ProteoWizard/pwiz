@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             var result = new List<string>();
             string header;
-            bool alphapeptDeepFormat = toolName.Equals(@"peptdeep");
+            bool alphapeptDeepFormat = toolName.Equals(@"alphapeptdeep");
 
             if (alphapeptDeepFormat)
                 header = string.Join(TAB, PrecursorTableColumnNames);
@@ -160,10 +160,14 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                     string modName = "";
 
-                    if (alphapeptDeepFormat)
-                        modName = modNames.Single().AlphapeptDeepName();
+                    if (alphapeptDeepFormat) 
+                    {
+                        modName = modNames.Single().AlphaNameWithAminoAcid(unmodifiedSequence, mod.IndexAA);        
+                    }
                     else
+                    {
                         modName = modNames.Single().Name;
+                    }
 
                     modsBuilder.Append(modName);
                     modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
@@ -189,7 +193,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
                     else
                     {
-                        var docNode = peptide.TransitionGroups.Where(group => group.PrecursorCharge == charge).SingleOrDefault();
+                        var docNode = peptide.TransitionGroups.Where(group => group.PrecursorCharge == charge).FirstOrDefault();
                         if (docNode == null)
                         {
                             continue;
@@ -243,11 +247,18 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public string Name { get; private set; }
         public string Comment { get; private set; }
 
-        public string AlphapeptDeepName()
+        public string AlphaNameWithAminoAcid(string unmodifiedSequence, int index)
         {
-            return Name.Replace(@"(", "").Replace(@")", @"").Replace(@" ", @"@").Replace(@"Acetyl@N-term",@"Acetyl@Protein_N-term");
+            string modification = Name.Replace(@"(", "").Replace(@")", @"").Replace(@" ", @"@").Replace(@"Acetyl@N-term",@"Acetyl@Protein_N-term");
+            char delimiter = '@';
+            string[] name = modification.Split(delimiter);
+            string alphaName = name[0] + @"@" + unmodifiedSequence[index];
+            if (index == 0 && modification.EndsWith(@"term"))
+            {
+                alphaName = modification;
+            }
+            return alphaName;
         }
-
         public override string ToString() { return string.Format(ModelsResources.BuildPrecursorTable_ModificationType, Accession, Name, Comment); }
     }
 

@@ -5,10 +5,11 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Skyline.Properties;
+
 
 namespace pwiz.Skyline.ToolsUI
 {
+    
     public static class PythonInstallerUI
     {
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
@@ -23,13 +24,14 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     if (task.Name == PythonTaskName.enable_longpaths)
                     {
-                        using var dlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), string.Format(Resources.OK));
-                        if (dlg.ShowDialog() == DialogResult.Cancel)
+                        pythonInstaller.EnableLongPathsDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
+                        var choice = pythonInstaller.EnableLongPathsDlg.ShowDialog();
+                        if (choice == DialogResult.No || choice == DialogResult.Cancel)
                         {
                             if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                             break;
                         }
-                        else
+                        else if (choice == DialogResult.Yes)
                         {
                             // Attempt to enable Windows Long Paths
                             pythonInstaller.EnableWindowsLongPaths();
@@ -64,12 +66,12 @@ namespace pwiz.Skyline.ToolsUI
             if (pythonInstaller.NumCompletedTasks == pythonInstaller.NumTotalTasks)
             {
                 pythonInstaller.PendingTasks.Clear();
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstallerDlg_OkDialog_Successfully_set_up_Python_virtual_environment);
+                MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
                 result = DialogResult.OK;
             }
             else
             {
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstallerDlg_OkDialog_Failed_to_set_up_Python_virtual_environment);
+                MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
                 result = DialogResult.Cancel;
             }
             return result;

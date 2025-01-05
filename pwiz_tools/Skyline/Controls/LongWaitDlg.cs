@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -25,6 +26,8 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+
+[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline.Controls
 {
