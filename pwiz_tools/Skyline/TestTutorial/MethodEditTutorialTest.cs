@@ -393,12 +393,12 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Protein Name Auto-Completion
-            TestAutoComplete("ybl087", 0, 20, 51); // Not L10N
+            TestAutoComplete("ybl087", 0, true, 51); // Not L10N
             var peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YBL087C", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
             // Protein Description Auto-Completion
-            TestAutoComplete("eft2", 0, 20, 83); // Sorting logic puts this at the 0th entry in the list - Not L10N
+            TestAutoComplete("eft2", 0, true, 83); // Sorting logic puts this at the 0th entry in the list - Not L10N
             peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YDR385W", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
@@ -583,7 +583,7 @@ namespace pwiz.SkylineTestTutorial
             SetClipboardTextUI(File.ReadAllText(TestFilesDirs[0].GetTestPath(filepath)));
         }
 
-        private void TestAutoComplete(string text, int index, int? pageNum = null, int aboveAutoComplete = 0)
+        private void TestAutoComplete(string text, int index, bool pause = false, int aboveAutoComplete = 0)
         {
             var doc = WaitForDocumentLoaded();
             RunUI(() =>
@@ -595,7 +595,7 @@ namespace pwiz.SkylineTestTutorial
             });
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
             Assert.IsNotNull(statementCompletionForm);
-            if (pageNum != null)
+            if (pause)
             {
                 RunUI(() => SkylineWindow.SequenceTree.StatementCompletionEditBox.SelectWithoutChoosing(0));
                 PauseForScreenShot<ScreenForm>("Auto-complete " + text, null,

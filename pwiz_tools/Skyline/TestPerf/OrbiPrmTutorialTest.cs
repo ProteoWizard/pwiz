@@ -897,10 +897,10 @@ namespace TestPerf
             const string identityAnnotation = "BioReplicate";
             const string comparisonName1 = "G2M-vs-G1";
             const string caseValue1 = "G2M";
-            AddGroupComparison(documentSettingsDlg, comparisonName1, controlAnnotation, controlValue, caseValue1, identityAnnotation, 35);
+            AddGroupComparison(documentSettingsDlg, comparisonName1, controlAnnotation, controlValue, caseValue1, identityAnnotation);
             const string comparisonName2 = "S-vs-G1";
             const string caseValue2 = "S";
-            AddGroupComparison(documentSettingsDlg, comparisonName2, controlAnnotation, controlValue, caseValue2, identityAnnotation, 36);
+            AddGroupComparison(documentSettingsDlg, comparisonName2, controlAnnotation, controlValue, caseValue2, identityAnnotation);
             RunUI(() => documentSettingsDlg.Height = 310);
             PauseForScreenShot<DocumentSettingsDlg>("Document Settings");
             OkDialog(documentSettingsDlg, documentSettingsDlg.OkDialog);
@@ -966,7 +966,7 @@ namespace TestPerf
         }
 
         private void AddGroupComparison(DocumentSettingsDlg documentSettingsDlg, string comparisonName,
-            string controlAnnotation, string controlValue, string caseValue, string identityAnnotation, int pageNum)
+            string controlAnnotation, string controlValue, string caseValue, string identityAnnotation)
         {
             var editGroupComparisonDlg = ShowDialog<EditGroupComparisonDlg>(documentSettingsDlg.AddGroupComparison);
             RunUI(() =>
