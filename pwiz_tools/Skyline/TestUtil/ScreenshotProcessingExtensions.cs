@@ -75,9 +75,7 @@ namespace pwiz.SkylineTestUtil
 
         private static Bitmap CleanupBorder(this Bitmap bmp, Color? color, Rectangle rect, int cornerRadius, Rectangle? excludeRect)
         {
-            var colorCounts = new Dictionary<Color, int>();
-            foreach (var point in RectPoints(rect))
-                AddPixel(point, bmp, colorCounts);
+            var colorCounts = GetColorCounts(bmp, rect);
 
             // If no color is specified, use the most common color in the border.
             // This is dependent on the screen background color. So, it should not
@@ -86,7 +84,8 @@ namespace pwiz.SkylineTestUtil
             var maxColorCount = colorCounts.Values.Max();
             var bestBorderColor = colorCounts.FirstOrDefault(kvp => kvp.Value == maxColorCount).Key;
             // All white border means it is actually a graph so don't draw anything on it
-            if (bestBorderColor.ToArgb() == Color.White.ToArgb())
+            // Only when the rectangle is the full area of the bitmap
+            if (bestBorderColor.ToArgb() == Color.White.ToArgb() && rect == new Rectangle(0, 0, bmp.Width, bmp.Height))
                 return bmp;
             // If there is supposed to be a corner curve but there is just one color, avoid
             // drawing a curved corner on top of the otherwise rectangular border.
@@ -100,14 +99,24 @@ namespace pwiz.SkylineTestUtil
                 bestBorderColor == INTERIOR_BORDER_COLOR)
             {
                 color = bestBorderColor;
+                if (cornerRadius != CORNER_TOOL_WINDOW_WINDOWS11)
+                    cornerRadius = 0;   // No arched corners on interior borders
             }
             return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius, excludeRect);
+        }
+
+        private static IDictionary<Color, int> GetColorCounts(Bitmap bmp, Rectangle rect)
+        {
+            var colorCounts = new Dictionary<Color, int>();
+            foreach (var point in RectPoints(rect))
+                AddPixel(point, bmp, colorCounts);
+            return colorCounts;
         }
 
         private static Bitmap CleanupBorderInternal(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
             Rectangle? excludeRect)
         {
-            return IsWindows11()
+            return IsWindows11() && cornerRadius != 0
                 ? bmp.CleanupBorder11(color, rect, cornerRadius, excludeRect)
                 : bmp.CleanupBorder10(color, rect, excludeRect);
         }
@@ -133,7 +142,7 @@ namespace pwiz.SkylineTestUtil
             using var g = Graphics.FromImage(result);
 
             using var backgroundBrush = new SolidBrush(Color.White);
-            g.FillRectangle(backgroundBrush, 0, 0, result.Width, result.Height);
+            g.FillRectangle(backgroundBrush, rect);
             using var pathClippingOuter = new GraphicsPath();
             AddRoundedRectangle(pathClippingOuter, rect, cornerRadius);
             using var controlBrush = new SolidBrush(SystemColors.Control);
@@ -148,6 +157,7 @@ namespace pwiz.SkylineTestUtil
             rect.Height--;
             AddRoundedRectangle(pathDrawing, rect, cornerRadius);
             using var pen = new Pen(color);
+            ExcludeClip(g, excludeRect);
             g.DrawPath(pen, pathDrawing);
             rect.Width++;
             rect.Height++;
@@ -161,7 +171,13 @@ namespace pwiz.SkylineTestUtil
             g.SmoothingMode = SmoothingMode.None;
             g.SetClip(pathClipping);
             ExcludeClip(g, excludeRect);
-            g.DrawImage(bmp, new Point(0, 0));
+            g.DrawImage(bmp, rect, rect, GraphicsUnit.Pixel);
+            if (excludeRect.HasValue)
+            {
+                // If a rectangle was excluded from the border drawing, it needs to be copied now.
+                g.ResetClip();
+                g.DrawImage(bmp, excludeRect.Value, excludeRect.Value, GraphicsUnit.Pixel);
+            }
 
             return result;
         }

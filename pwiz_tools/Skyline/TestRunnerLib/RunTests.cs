@@ -173,7 +173,7 @@ namespace TestRunnerLib
             bool retrydatadownloads,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
-            int pauseStartingPage = 1,
+            int pauseStartingScreenshot = 1,
             bool useVendorReaders = true,
             int timeoutMultiplier = 1,
             string results = null,
@@ -222,7 +222,7 @@ namespace TestRunnerLib
             Skyline.Set("NoSaveSettings", true);
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
-            Skyline.Set("PauseStartingPage", pauseStartingPage);
+            Skyline.Set("PauseStartingScreenshot", pauseStartingScreenshot);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
             Skyline.Set("Log", (Action<string>)(s => Log(s)));
             Skyline.Run("Init");
