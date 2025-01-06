@@ -602,7 +602,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public bool PythonRequirementMet()
         {
-            if (radioAlphaSource.Checked || radioKoinaSource.Checked)
+            if (radioCarafeSource.Checked || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
                 return ValidateBuilder(true);
             }

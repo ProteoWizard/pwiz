@@ -18,7 +18,7 @@ namespace pwiz.SkylineTestFunctional
        
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         private const string TESTDATA_URL = @"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/";
-        private const string TESTDATA_FILE = @"CarafeBuildLibraryTestShort.zip";
+        private const string TESTDATA_FILE = @"CarafeBuildLibraryTest.zip";
         private const string TESTDATA_DIR = @"TestFunctional";
 
 
