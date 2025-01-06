@@ -44,7 +44,6 @@ namespace pwiz.SkylineTestUtil
         private string _imageUrl;
         private string _fileToShow;
         private string _fileToSave;
-        private bool _showMatchingPage;
         // Information for taking a screenshot
         private Control _screenshotForm;
         private bool _fullScreen;
@@ -88,14 +87,14 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Shows this form. Called from the "Functional test" thread. Blocks until Continue is clicked.
         /// </summary>
-        public void Show(string description, int screenshotNum, bool showMatchingPages, int? timeout,
+        public void Show(string description, int screenshotNum, int? timeout,
             Control screenshotForm, bool fullScreen, Func<Bitmap, Bitmap> processShot)
         {
             ShowInternal(_screenshotManager.ScreenshotDescription(screenshotNum, description),
-                screenshotNum, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                screenshotNum, timeout, screenshotForm, fullScreen, processShot);
         }
 
-        private void ShowInternal(string description, int screenshotNum = 0, bool showMatchingPages = false, int? timeout = null,
+        private void ShowInternal(string description, int screenshotNum = 0, int? timeout = null,
             Control screenshotForm = null, bool fullScreen = false, Func<Bitmap, Bitmap> processShot = null)
         {
             _screenshotNum = screenshotNum;
@@ -104,7 +103,6 @@ namespace pwiz.SkylineTestUtil
             _fileToSave = _screenshotManager?.ScreenshotDestFile(screenshotNum);
             _linkUrl = _screenshotManager?.ScreenshotUrl(screenshotNum);
             _imageUrl = _screenshotManager?.ScreenshotImgUrl(screenshotNum);
-            _showMatchingPage = showMatchingPages;
             _screenshotForm = screenshotForm;
             _fullScreen = fullScreen;
             _processShot = processShot;
@@ -208,9 +206,6 @@ namespace pwiz.SkylineTestUtil
 
                 _screenshotPreviewForm.ShowOrUpdate();
             }
-
-            if (_showMatchingPage)
-                GotoLink();
         }
 
         private void UpdateButtonVisibility()
