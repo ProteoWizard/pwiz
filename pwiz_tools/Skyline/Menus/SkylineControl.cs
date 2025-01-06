@@ -44,6 +44,8 @@ namespace pwiz.Skyline.Menus
             SkylineWindow = skylineWindow;
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Helpers.ModeUIExtender ModeUiHandler
         {
             get { return modeUIHandler; }
