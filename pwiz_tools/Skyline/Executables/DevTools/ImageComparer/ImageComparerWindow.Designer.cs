@@ -314,9 +314,7 @@
             this.toolStripPickColorButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripPickColorButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripPickColorButton.Name = "toolStripPickColorButton";
-            this.toolStripPickColorButton.SelectedColor = System.Drawing.Color.FromArgb(((int)(((byte)(128)))), ((int)(((byte)(255)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
             this.toolStripPickColorButton.Size = new System.Drawing.Size(29, 22);
-            this.toolStripPickColorButton.ToolTipText = "Selected Color: Color [A=128, R=255, G=0, B=0] (Alpha: 128)";
             this.toolStripPickColorButton.ColorChanged += new System.EventHandler(this.toolStripPickColorButton_ColorChanged);
             // 
             // ImageComparerWindow
