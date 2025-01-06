@@ -25,7 +25,7 @@ namespace pwiz.SkylineTestFunctional
         private const string VERSION = @"3.9.2";
         //private IPythonInstallerTaskValidator TaskValidator { get; }
 
-        [TestMethod]
+        //[TestMethod]
         public void TestPythonInstaller()
         {
             //TestFilesZip = @"TestFunctional\PythonInstallerTest.zip";

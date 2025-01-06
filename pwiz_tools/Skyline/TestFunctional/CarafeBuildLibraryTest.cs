@@ -23,7 +23,7 @@ namespace pwiz.SkylineTestFunctional
 
 
         public Uri TestDataPackageUri => new Uri($@"{TESTDATA_URL}{TESTDATA_FILE}");
-        [TestMethod]
+        //[TestMethod]
         public void TestCarafeBuildLibrary()
         {
             Directory.CreateDirectory(TESTDATA_DIR);

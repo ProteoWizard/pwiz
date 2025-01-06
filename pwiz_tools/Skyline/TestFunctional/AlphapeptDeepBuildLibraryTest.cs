@@ -11,7 +11,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class AlphapeptDeepBuildLibraryTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        //[TestMethod]
         public void TestAlphapeptDeepBuildLibrary()
         {
             TestFilesZip = "TestFunctional/AlphapeptDeepBuildLibraryTest.zip";

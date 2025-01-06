@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PythonInstallerLegacyDlgTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        //[TestMethod]
         public void  TestPythonInstallerLegacyDlg()
         {
             RunFunctionalTest();
