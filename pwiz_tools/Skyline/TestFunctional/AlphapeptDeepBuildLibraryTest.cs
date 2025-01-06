@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestFunctional
                         longPathDlg = WaitForOpenForm<MultiButtonMsgDlg>();
                         Assert.AreEqual(longPathDlg.Message,
                             string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths));
-                        RunDlg<MessageDlg>(longPathDlg.BtnYesClick, okDlg =>
+                        RunDlg<MessageDlg>(longPathDlg.ClickNo, okDlg =>
                         {
                             confirmDlg = okDlg;
                             Assert.AreEqual(okDlg.Message,
