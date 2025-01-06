@@ -8,16 +8,18 @@ namespace TestRunnerLib.PInvoke
     public static class User32TestExtensions
     {
         /// <summary>
-        /// Adjust z-order without activating
+        /// Adjust z-order without activating.
         /// </summary>
-        public static void BringWindowToSameLevelWithoutActivating(this Form form, Form formInsertAfter)
+        /// <param name="form">The form for which to change z-order</param>
+        /// <param name="formInsertAfterHandle">The handle of the form to place the other form behind. It is important that this form is specified by its handle to avoid CrossThreadOperationException</param>
+        public static void BringWindowToSameLevelWithoutActivating(this Form form, IntPtr formInsertAfterHandle)
         {
             const User32.SetWindowPosFlags flags = User32.SetWindowPosFlags.NOMOVE |
                                                    User32.SetWindowPosFlags.NOSIZE |
                                                    User32.SetWindowPosFlags.NOACTIVATE |
                                                    User32.SetWindowPosFlags.SHOWWINDOW;
 
-            User32.SetWindowPos(form.Handle, formInsertAfter.Handle, 0, 0, 0, 0, flags);
+            User32.SetWindowPos(form.Handle, formInsertAfterHandle, 0, 0, 0, 0, flags);
         }
 
         public static void HideCaret(this ComboBox comboBox)
