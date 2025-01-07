@@ -13,6 +13,7 @@ namespace pwiz.Skyline.ToolsUI
     public static class PythonInstallerUI
     {
         public static MultiButtonMsgDlg EnableLongPathsDlg { get; set; }
+        public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
             DialogResult result;
@@ -23,7 +24,25 @@ namespace pwiz.Skyline.ToolsUI
             {
                 try
                 {
-                    if (task.Name == PythonTaskName.enable_longpaths)
+                    if (task.Name == PythonTaskName.download_cuda_library)
+                    {
+                        EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
+                        var choice = EnableNvidiaGpuDlg.ShowDialog();
+                        if (choice == DialogResult.No || choice == DialogResult.Cancel)
+                        {
+                            if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                            break;
+                        }
+                        else if (choice == DialogResult.Yes)
+                        {
+                            //Download
+                            using var waitDlg = new LongWaitDlg();
+                            waitDlg.ProgressValue = 0;
+                            waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+                        }
+
+                    }
+                    else if (task.Name == PythonTaskName.enable_longpaths)
                     {
                         EnableLongPathsDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
                         var choice = EnableLongPathsDlg.ShowDialog();

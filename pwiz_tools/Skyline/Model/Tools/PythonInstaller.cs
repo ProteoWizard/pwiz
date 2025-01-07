@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -15,6 +16,8 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
+[assembly: InternalsVisibleTo("TestUtil")]
+
 
 namespace pwiz.Skyline.Model.Tools
 {
@@ -50,7 +53,16 @@ namespace pwiz.Skyline.Model.Tools
         internal const string REG_LONGPATH_FORCE = @"/f";
         internal string REG_LONGPATH_NAME = $@"/v {REG_LONGPATHS_ENABLED}";
 
+        private static string CUDA_VERSION = @"12.6.3";
 
+        //private static readonly string CUDA_INSTALLER_URL = $@"https://developer.download.nvidia.com/compute/cuda/{CUDA_VERSION}/local_installers/";
+        private static readonly string CUDA_INSTALLER_URL = $@"https://developer.download.nvidia.com/compute/cuda/{CUDA_VERSION}/network_installers/";
+
+        //private string CUDA_INSTALLER = $@"cuda_{CUDA_VERSION_FULL}_windows.exe";
+        private string CUDA_INSTALLER = $@"cuda_{CUDA_VERSION}_windows_network.exe";
+        public Uri CudaDownloadUri => new Uri(CUDA_INSTALLER_URL+CUDA_INSTALLER);
+        public string CudaDownloadPath => Path.Combine(CudaVersionDir, CudaInstallerDownloadPath);
+        public bool? NvidiaGpuAvailable { get; internal set; }
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
         public string PythonVersion { get; }
@@ -77,6 +89,9 @@ namespace pwiz.Skyline.Model.Tools
         public List<PythonTaskName> TestPythonVirtualEnvironmentTaskNames { get; set; }
         #endregion
         private string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
+        private string CudaVersionDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"cuda", CUDA_VERSION);
+        public string CudaInstallerDownloadPath => Path.Combine(CudaVersionDir, CUDA_INSTALLER);
+
         private string PythonEmbeddablePackageFileBaseName
         {
             get
@@ -90,7 +105,28 @@ namespace pwiz.Skyline.Model.Tools
         private string PythonRootDir { get; } = PythonInstallerUtil.PythonRootDir;
         internal TextWriter Writer { get; }
         private IPythonInstallerTaskValidator TaskValidator { get; }
-
+        private bool? TestForNvidiaGPU()
+        {
+            bool? nvidiaGpu = null;
+            try
+            {
+                // Query for video controllers using WMI
+                ManagementObjectSearcher searcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_VideoController");
+                
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    //  GPU information
+                    nvidiaGpu = obj[@"Name"].ToString().StartsWith(@"NVIDIA");
+                    if (nvidiaGpu != false) break;
+                }
+            }
+            catch (ManagementException e)
+            {
+                Console.WriteLine(@"An error occurred while querying for WMI data: " + e.Message);
+            }
+            return nvidiaGpu;
+        }
+        
         public PythonInstaller(ProgramPathContainer pythonPathContainer, IEnumerable<PythonPackage> packages,
             TextWriter writer, IPythonInstallerTaskValidator taskValidator, string virtualEnvironmentName)
         {
@@ -102,6 +138,7 @@ namespace pwiz.Skyline.Model.Tools
             PendingTasks = new List<PythonTask>();
             Directory.CreateDirectory(PythonRootDir);
             Directory.CreateDirectory(PythonVersionDir);
+            NvidiaGpuAvailable = TestForNvidiaGPU();
         }
 
         public bool IsPythonVirtualEnvironmentReady()
@@ -163,7 +200,9 @@ namespace pwiz.Skyline.Model.Tools
                     if (isTaskValid) { continue; }
                     hasSeenFailure = true;
                 }
-                tasks.Add(GetPythonTask(taskNode.PythonTaskName));
+
+                PythonTask nextTask = GetPythonTask(taskNode.PythonTaskName);
+                if (nextTask != null) tasks.Add(nextTask);
             }
             PendingTasks = tasks;
             return tasks;
@@ -229,6 +268,34 @@ namespace pwiz.Skyline.Model.Tools
                     task9.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task9.Name = pythonTaskName;
                     return task9;
+                case PythonTaskName.download_cuda_library:
+                    if (NvidiaGpuAvailable == true)
+                    {
+                        Directory.CreateDirectory(CudaVersionDir);
+                        var task10 = new PythonTask(DownloadCudaLibrary);
+                        task10.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Downloading_Cuda_Installer;
+                        task10.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_Cuda_Installer;
+                        task10.Name = pythonTaskName;
+                        return task10;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                case PythonTaskName.install_cuda_library:
+                    if (NvidiaGpuAvailable == true)
+                    {
+                        Directory.CreateDirectory(CudaVersionDir);
+                        var task10 = new PythonTask(InstallCudaLibrary);
+                        task10.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Installing_Cuda;
+                        task10.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Cuda;
+                        task10.Name = pythonTaskName;
+                        return task10;
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
             }
@@ -258,7 +325,23 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
         }
-
+        private void DownloadCudaLibrary(IProgressMonitor progressMonitor)
+        {
+            using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
+            if (!webClient.DownloadFileAsync(CudaDownloadUri, CudaDownloadPath, out var downloadException))
+                throw new ToolExecutionException(
+                    ToolsResources.PythonInstaller_Cuda_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
+        }
+        private void InstallCudaLibrary(IProgressMonitor progressMonitor)
+        {
+            var cmdBuilder = new StringBuilder();
+            cmdBuilder.Append(CudaDownloadPath);
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
+            cmd += cmdBuilder;
+            var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
+            if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+        }
         private void DownloadPythonEmbeddablePackage(IProgressMonitor progressMonitor)
         {
             using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
@@ -476,7 +559,9 @@ namespace pwiz.Skyline.Model.Tools
             var node7 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_virtualenv, ParentNodes = new List<PythonTaskNode> { node6 } };
             var node8 = new PythonTaskNode { PythonTaskName = PythonTaskName.create_virtual_environment, ParentNodes = new List<PythonTaskNode> { node7 } };
             var node9 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node8 } };
-            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 };
+            var node10 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_cuda_library, ParentNodes = null };
+            var node11 = new PythonTaskNode { PythonTaskName = PythonTaskName.install_cuda_library, ParentNodes = null };
+            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8}; //TODO: , node9, node10, node11 };
         }
     }
 
@@ -495,7 +580,9 @@ namespace pwiz.Skyline.Model.Tools
         run_getpip_script,
         pip_install_virtualenv,
         create_virtual_environment,
-        pip_install_packages
+        pip_install_packages,
+        download_cuda_library,
+        install_cuda_library
     }
 
     public class PythonPackage
@@ -517,7 +604,8 @@ namespace pwiz.Skyline.Model.Tools
             { PythonTaskName.run_getpip_script, false },
             { PythonTaskName.pip_install_virtualenv, false },
             { PythonTaskName.create_virtual_environment, false },
-            { PythonTaskName.pip_install_packages, false }
+            { PythonTaskName.pip_install_packages, false },
+            { PythonTaskName.download_cuda_library, false }
         };
 
         public bool Validate(PythonTaskName pythonTaskName, PythonInstaller pythonInstaller)
@@ -542,6 +630,10 @@ namespace pwiz.Skyline.Model.Tools
                     return ValidateCreateVirtualEnvironment();
                 case PythonTaskName.pip_install_packages:
                     return ValidatePipInstallPackages();
+                case PythonTaskName.download_cuda_library:
+                    return ValidateDownloadCudaLibrary();
+                case PythonTaskName.install_cuda_library:
+                    return ValidateInstallCudaLibrary();
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
             }
@@ -566,7 +658,14 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
         }
-
+        private bool ValidateDownloadCudaLibrary()
+        {
+            return GetTaskValidationResult(PythonTaskName.download_cuda_library);
+        }
+        private bool ValidateInstallCudaLibrary()
+        {
+            return GetTaskValidationResult(PythonTaskName.install_cuda_library);
+        }
         private bool ValidateDownloadPythonEmbeddablePackage()
         {
             return GetTaskValidationResult(PythonTaskName.download_python_embeddable_package);
@@ -654,11 +753,19 @@ namespace pwiz.Skyline.Model.Tools
                     return ValidateCreateVirtualEnvironment();
                 case PythonTaskName.pip_install_packages:
                     return ValidatePipInstallPackages();
+                case PythonTaskName.download_cuda_library:
+                    return ValidateDownloadCudaLibrary();
+                case PythonTaskName.install_cuda_library:
+                    //TODO: implement me return ValidateInstallCudaLibrary();
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
             }
         }
 
+        private bool ValidateDownloadCudaLibrary()
+        {
+            return File.Exists(PythonInstaller.CudaInstallerDownloadPath);
+        }
         private bool ValidateDownloadPythonEmbeddablePackage()
         {
             return File.Exists(PythonInstaller.PythonEmbeddablePackageDownloadPath);

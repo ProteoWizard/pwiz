@@ -94,7 +94,7 @@ namespace pwiz.Skyline.SettingsUI
         public class LearningPage : IFormView { }
 
         private const string PYTHON = @"Python";
-        internal const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.2";
+        public const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.2";
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
         internal const string CARAFE_PYTHON_VERSION = @"3.9.2";

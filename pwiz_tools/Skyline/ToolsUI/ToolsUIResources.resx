@@ -359,6 +359,12 @@
   <data name="PythonInstaller_Enable_Windows_Long_Paths" xml:space="preserve">
     <value>Python installation might require enabling Windows Long Paths. Elevated priveleges are required for this feature. Would you like to enable Windows Long Paths?</value>
   </data>
+  <data name="PythonInstaller_Install_Cuda_Library" xml:space="preserve">
+    <value>Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated priveleges are required for this feature.</value>
+  </data>
+  <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
+    <value>SkylineProcessRunner timed-out after {0} milliseconds</value>
+  </data>
   <data name="EditRemoteAccountDlg_TestConnectButton_AltLabelText_Connect" xml:space="preserve">
     <value>Connect</value>
   </data>

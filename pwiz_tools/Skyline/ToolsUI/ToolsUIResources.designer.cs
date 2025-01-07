@@ -565,6 +565,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated priveleges are required for this feature..
+        /// </summary>
+        public static string PythonInstaller_Install_Cuda_Library {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Install_Cuda_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to set up Python virtual environment.
         /// </summary>
         public static string PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment {
@@ -624,6 +633,15 @@ namespace pwiz.Skyline.ToolsUI {
         public static string RInstaller_InstallR_Downloading_R {
             get {
                 return ResourceManager.GetString("RInstaller_InstallR_Downloading_R", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SkylineProcessRunner timed-out after {0} milliseconds.
+        /// </summary>
+        public static string SkylineProcessRunner_Timeout {
+            get {
+                return ResourceManager.GetString("SkylineProcessRunner_Timeout", resourceCulture);
             }
         }
         

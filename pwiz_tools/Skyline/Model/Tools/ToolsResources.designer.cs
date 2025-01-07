@@ -107,7 +107,17 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Download failed. Check your network connection or contact Skyline team for help..
+        ///   Looks up a localized string similar to Cuda download failed. Check your network connection or contact Skyline team for help..
+        /// </summary>
+        public static string PythonInstaller_Cuda_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Cuda_Download_failed__Check_your_network_connection_or_contact_Sk" +
+                        "yline_team_for_help_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python download failed. Check your network connection or contact Skyline team for help..
         /// </summary>
         public static string PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_ {
             get {
@@ -172,6 +182,15 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Downloading Cuda Installer.
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Downloading_Cuda_Installer {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Downloading_Cuda_Installer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Downloading Python embeddable package.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package {
@@ -218,6 +237,15 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to download Cuda Installer.
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Failed_to_download_Cuda_Installer {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Failed_to_download_Cuda_Installer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to download Python embeddable package.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package {
@@ -256,6 +284,15 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to install Cuda Library.
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Failed_to_install_Cuda {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Failed_to_install_Cuda", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to install Python packages in virtual environment {0}.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_ {
@@ -289,6 +326,15 @@ namespace pwiz.Skyline.Model.Tools {
         public static string PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package {
             get {
                 return ResourceManager.GetString("PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing Cuda Library.
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Installing_Cuda {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Installing_Cuda", resourceCulture);
             }
         }
         
