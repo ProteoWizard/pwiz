@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestUtil
             // The drop shadow + border are 1/2 the difference between the window width and the client rect width
             // A border width is removed to keep the border around the window
             int borderOutsideClient = SystemInformation.BorderSize.Width;
-            if (ctrl is FloatingWindow)
+            if (ctrl is FloatingWindow || ctrl.Size == ctrl.ClientRectangle.Size)
                 borderOutsideClient = 0;
             int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - borderOutsideClient;
             Size imageSize;
