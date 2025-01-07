@@ -67,12 +67,12 @@ namespace pwiz.Skyline.FileUI
 
             _panoramaServers = servers;
             tbFilePath.Text = FileEx.GetTimeStampedFileName(fileName);
-            
-            treeViewFolders.ImageList = new ImageList();
-            treeViewFolders.ImageList.Images.Add(Resources.Panorama);
-            treeViewFolders.ImageList.Images.Add(Resources.LabKey);
-            treeViewFolders.ImageList.Images.Add(Resources.ChromLib);
-            treeViewFolders.ImageList.Images.Add(Resources.Folder);
+
+            treeViewFolders.ImageList = new ImageList { ColorDepth = ColorDepth.Depth32Bit };
+            treeViewFolders.ImageList.Images.Add(Resources.Panorama);   // 24bpp
+            treeViewFolders.ImageList.Images.Add(Resources.LabKey);     // 8bpp
+            treeViewFolders.ImageList.Images.Add(Resources.ChromLib);   // 8bpp
+            treeViewFolders.ImageList.Images.Add(Resources.Folder);     // 32bpp
 
             ServerTreeStateRestorer = new TreeViewStateRestorer(treeViewFolders);
 
