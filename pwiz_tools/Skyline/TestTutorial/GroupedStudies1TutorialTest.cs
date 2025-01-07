@@ -255,10 +255,10 @@ namespace pwiz.SkylineTestTutorial
             if (IsPauseForScreenShots)
                 RunUI(() =>
                 {
-                    // Essentially maximize the window for a 1920x1080 monitor at 100%
+                    // Essentially maximize the window
                     savedBounds = SkylineWindow.Bounds;
-                    SkylineWindow.Size = new Size(1934, 1047);
-                    SkylineWindow.Location = new Point(-7, 0);
+                    SkylineWindow.Size = Screen.FromControl(SkylineWindow).WorkingArea.Size;
+                    SkylineWindow.Location = new Point(0, 0);
                 });
 
             SelectNode(SrmDocument.Level.Molecules, 0);
@@ -1098,7 +1098,7 @@ namespace pwiz.SkylineTestTutorial
                 var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
 
                 AddAnnotation(documentSettingsDlg, "MissingData", AnnotationDef.AnnotationType.true_false, null,
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide));
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide), true);
 
                 RunUI(() => documentSettingsDlg.AnnotationsCheckedListBox.SetItemChecked(3, true));
 
