@@ -98,16 +98,21 @@ namespace pwiz.SkylineTestUtil
             if (!activatedForm.IsHandleCreated)
                 return;
 
+            // Record the handle value for the activated form while on its thread.
+            // It will not be possible to get this handle from the Form object on
+            // any other thread without causing a CrossThreadOperationException
+            var activatedFormHandle = activatedForm.Handle;
+
             lock (_formsToActivate)
             {
                 foreach (var form in _formsToActivate.Where(form => !ReferenceEquals(form, activatedForm)))
                 {
-                    ActionUtil.RunAsync(() => ShowForm(form, activatedForm));
+                    ActionUtil.RunAsync(() => ShowForm(form, activatedFormHandle));
                 }
             }
         }
 
-        private void ShowForm(Form form, Form referenceForm)
+        private void ShowForm(Form form, IntPtr referenceFormHandle)
         {
             if (!form.IsHandleCreated)
                 return;
@@ -116,7 +121,7 @@ namespace pwiz.SkylineTestUtil
             form.Invoke((Action)(() =>
             {
                 if (form.Visible)
-                    form.BringWindowToSameLevelWithoutActivating(referenceForm);
+                    form.BringWindowToSameLevelWithoutActivating(referenceFormHandle);
             }));
         }
 
