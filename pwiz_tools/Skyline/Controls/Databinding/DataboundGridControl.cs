@@ -684,14 +684,20 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
             if (true == replicatePivotColumns?.IsPivoted())
-            {                
+            {
                 dataGridViewEx1.Show();
+                dataGridSplitContainer.Panel1Collapsed = false;
                 dataGridViewEx1.DataSource = BuildPivotByReplicateDataSet(replicatePivotColumns);
                 AlignPivotByReplicateGridColumns(replicatePivotColumns);
+                ResizePivotByReplicateGridToFit();
             }
-            else if(dataGridViewEx1.Visible)
+            else
             {
-                dataGridViewEx1.Hide();
+                dataGridSplitContainer.Panel1Collapsed = true;
+                if (dataGridViewEx1.Visible)
+                {
+                    dataGridViewEx1.Hide();
+                }
             }
 
             var reportResults = BindingListSource.ReportResults as ClusteredReportResults ?? ClusteredReportResults.EMPTY;
@@ -945,6 +951,20 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             return dataTable;
         }
+        private void ResizePivotByReplicateGridToFit()
+        {
+            int rowLimit = 10;
+            int totalHeight = dataGridViewEx1.ColumnHeadersHeight;
+
+            int rowCount = Math.Min(dataGridViewEx1.Rows.Count, rowLimit);
+            for (int i = 0; i < rowCount; i++)
+            {
+                totalHeight += dataGridViewEx1.Rows[i].Height;
+            }
+
+            dataGridViewEx1.Height = totalHeight;
+            dataGridSplitContainer.SplitterDistance = totalHeight;
+        }
 
         private bool _inColumnChange;
 
@@ -989,10 +1009,17 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        private void dataGridViewEx1_Scroll(object sender, ScrollEventArgs e)
+        {
+            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
+            {
+                int horizontalOffset = e.NewValue;
+                boundDataGridView.HorizontalScrollingOffset = horizontalOffset;
+            }
+        }
+
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
         {
-            UpdateDendrograms();
-
             if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
             {
                 int horizontalOffset = e.NewValue;

@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataboundGridControl));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.sortAscendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortDescendingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -49,9 +49,10 @@
             this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
+            this.dataGridSplitContainer = new System.Windows.Forms.SplitContainer();
+            this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
-            this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
@@ -62,9 +63,13 @@
             this.splitContainerHorizontal.Panel1.SuspendLayout();
             this.splitContainerHorizontal.Panel2.SuspendLayout();
             this.splitContainerHorizontal.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).BeginInit();
+            this.dataGridSplitContainer.Panel1.SuspendLayout();
+            this.dataGridSplitContainer.Panel2.SuspendLayout();
+            this.dataGridSplitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             this.SuspendLayout();
             // 
             // contextMenuStrip
@@ -182,8 +187,7 @@
             // 
             // splitContainerHorizontal.Panel2
             // 
-            this.splitContainerHorizontal.Panel2.Controls.Add(this.boundDataGridView);
-            this.splitContainerHorizontal.Panel2.Controls.Add(this.dataGridViewEx1);
+            this.splitContainerHorizontal.Panel2.Controls.Add(this.dataGridSplitContainer);
             // 
             // columnDendrogram
             // 
@@ -192,41 +196,66 @@
             this.columnDendrogram.Name = "columnDendrogram";
             this.columnDendrogram.RectilinearLines = true;
             // 
+            // dataGridSplitContainer
+            // 
+            resources.ApplyResources(this.dataGridSplitContainer, "dataGridSplitContainer");
+            this.dataGridSplitContainer.Name = "dataGridSplitContainer";
+            // 
+            // dataGridSplitContainer.Panel1
+            // 
+            this.dataGridSplitContainer.Panel1.Controls.Add(this.dataGridViewEx1);
+            this.dataGridSplitContainer.Panel1Collapsed = true;
+            // 
+            // dataGridSplitContainer.Panel2
+            // 
+            this.dataGridSplitContainer.Panel2.Controls.Add(this.boundDataGridView);
+            // 
+            // dataGridViewEx1
+            // 
+            this.dataGridViewEx1.AllowUserToAddRows = false;
+            this.dataGridViewEx1.AllowUserToDeleteRows = false;
+            this.dataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            resources.ApplyResources(this.dataGridViewEx1, "dataGridViewEx1");
+            this.dataGridViewEx1.Name = "dataGridViewEx1";
+            this.dataGridViewEx1.RowTemplate.Height = 28;
+            this.dataGridViewEx1.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewEx1_ColumnWidthChanged);
+            this.dataGridViewEx1.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGridViewEx1_Scroll);
+            // 
             // boundDataGridView
             // 
             this.boundDataGridView.AutoGenerateColumns = false;
             this.boundDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.boundDataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.boundDataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.boundDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.boundDataGridView.ContextMenuStrip = this.contextMenuStrip;
             this.boundDataGridView.DataSource = this.bindingListSource;
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.boundDataGridView.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.boundDataGridView.DefaultCellStyle = dataGridViewCellStyle2;
             resources.ApplyResources(this.boundDataGridView, "boundDataGridView");
             this.boundDataGridView.MaximumColumnCount = 2000;
             this.boundDataGridView.Name = "boundDataGridView";
             this.boundDataGridView.ReportColorScheme = null;
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.boundDataGridView.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.boundDataGridView_CellContextMenuStripNeeded);
             this.boundDataGridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.boundDataGridView_ColumnHeaderMouseClick);
             this.boundDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.boundDataGridView_ColumnWidthChanged);
@@ -240,16 +269,6 @@
             this.bindingListSource.BindingComplete += new System.Windows.Forms.BindingCompleteEventHandler(this.bindingListSource_BindingComplete);
             this.bindingListSource.DataError += new System.Windows.Forms.BindingManagerDataErrorEventHandler(this.bindingListSource_DataError);
             this.bindingListSource.ListChanged += new System.ComponentModel.ListChangedEventHandler(this.bindingListSource_ListChanged);
-            // 
-            // dataGridViewEx1
-            // 
-            this.dataGridViewEx1.AllowUserToAddRows = false;
-            this.dataGridViewEx1.AllowUserToDeleteRows = false;
-            this.dataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            resources.ApplyResources(this.dataGridViewEx1, "dataGridViewEx1");
-            this.dataGridViewEx1.Name = "dataGridViewEx1";
-            this.dataGridViewEx1.RowTemplate.Height = 28;
-            this.dataGridViewEx1.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewEx1_ColumnWidthChanged);
             // 
             // navBar
             // 
@@ -274,9 +293,13 @@
             this.splitContainerHorizontal.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).EndInit();
             this.splitContainerHorizontal.ResumeLayout(false);
+            this.dataGridSplitContainer.Panel1.ResumeLayout(false);
+            this.dataGridSplitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).EndInit();
+            this.dataGridSplitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -304,5 +327,6 @@
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
         private DataGridViewEx dataGridViewEx1;
+        private System.Windows.Forms.SplitContainer dataGridSplitContainer;
     }
 }
