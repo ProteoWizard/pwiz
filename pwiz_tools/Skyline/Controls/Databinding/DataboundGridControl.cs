@@ -688,8 +688,22 @@ namespace pwiz.Skyline.Controls.Databinding
                 dataGridViewEx1.Show();
                 dataGridSplitContainer.Panel1Collapsed = false;
                 dataGridViewEx1.DataSource = BuildPivotByReplicateDataSet(replicatePivotColumns);
-                AlignPivotByReplicateGridColumns(replicatePivotColumns);
                 ResizePivotByReplicateGridToFit();
+
+                if (_inColumnChange)
+                {
+                    return;
+                }
+
+                try
+                {
+                    _inColumnChange = true;
+                    AlignPivotByReplicateGridColumns(replicatePivotColumns);
+                }
+                finally
+                {
+                    _inColumnChange = false;
+                }
             }
             else
             {
@@ -1001,7 +1015,8 @@ namespace pwiz.Skyline.Controls.Databinding
             try
             {
                 _inColumnChange = true;
-                UpdateDendrograms();
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                AlignPivotByReplicateGridColumns(replicatePivotColumns);
             }
             finally
             {
