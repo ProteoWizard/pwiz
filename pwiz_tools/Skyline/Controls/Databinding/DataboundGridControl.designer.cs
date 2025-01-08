@@ -249,6 +249,7 @@
             resources.ApplyResources(this.dataGridViewEx1, "dataGridViewEx1");
             this.dataGridViewEx1.Name = "dataGridViewEx1";
             this.dataGridViewEx1.RowTemplate.Height = 28;
+            this.dataGridViewEx1.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewEx1_ColumnWidthChanged);
             // 
             // navBar
             // 

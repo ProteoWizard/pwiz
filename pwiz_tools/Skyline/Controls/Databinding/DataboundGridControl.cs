@@ -687,7 +687,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {                
                 dataGridViewEx1.Show();
                 dataGridViewEx1.DataSource = BuildPivotByReplicateDataSet(replicatePivotColumns);
-                AlignPivotByReplicateGrid(replicatePivotColumns);
+                AlignPivotByReplicateGridColumns(replicatePivotColumns);
             }
             else if(dataGridViewEx1.Visible)
             {
@@ -818,35 +818,83 @@ namespace pwiz.Skyline.Controls.Databinding
             splitContainerHorizontal.Panel1Collapsed = false;
         }
 
-        private void AlignPivotByReplicateGrid(ReplicatePivotColumns replicatePivotColumns)
+        private void AlignPivotByReplicateGridColumns(ReplicatePivotColumns replicatePivotColumns)
         {
-            var nonReplicateWidth = 0;
-            var replicateWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
-                .ToDictionary(kvp => kvp.Key.ReplicateName,
-                    kvp => 0);
+            var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
+                .ToDictionary(
+                    kvp => kvp.Key.ReplicateName,
+                    kvp => kvp.Sum(column =>
+                        boundDataGridView.Columns
+                            .Cast<DataGridViewColumn>()
+                            .Where(dataGridViewColumn => dataGridViewColumn.DataPropertyName == column.Name)
+                            .Sum(dataGridViewColumn => dataGridViewColumn.Width)
+                    )
+                );
 
-            foreach (DataGridViewColumn column in boundDataGridView.Columns)
-            {
-                var foundReplicate = replicateWidthMap.Keys.FirstOrDefault(key => column.DataPropertyName.Contains(key));
-                if (foundReplicate != null)
-                {
-                    replicateWidthMap[foundReplicate] += column.Width;
-                }
-                else
-                {
-                    nonReplicateWidth += column.Width;
-                }
-            }
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+
+            var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
 
             dataGridViewEx1.Columns[@"Property"]!.Width = nonReplicateWidth;
             foreach (DataGridViewColumn column in dataGridViewEx1.Columns)
             {
-                if (replicateWidthMap.TryGetValue(column.Name, out var value))
+                if (replicateTotalWidthMap.TryGetValue(column.Name, out var replicateTotalWidth))
                 {
-                    column.Width = value;
+                    column.Width = replicateTotalWidth;
                 }
             }
 
+        }
+
+        private void AlignDataBoundGridColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
+                .ToDictionary(
+                    kvp => kvp.Key.ReplicateName,
+                    kvp => kvp.Sum(column =>
+                        boundDataGridView.Columns
+                            .Cast<DataGridViewColumn>()
+                            .Where(dataGridViewColumn => dataGridViewColumn.DataPropertyName == column.Name)
+                            .Sum(dataGridViewColumn => dataGridViewColumn.Width)
+                    )
+                );
+
+            foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
+            {
+                foreach (var column in grouping)
+                {
+                    foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
+                    {
+                        if (dataGridViewColumn.DataPropertyName == column.Name)
+                        {
+                            if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
+                            {
+                                var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
+                                dataGridViewColumn.Width = (int)Math.Round(dataGridViewEx1.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var propertyWidth = dataGridViewEx1.Columns[@"Property"]!.Width;
+
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+
+            var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
+
+            foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
+            {
+                if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
+                {
+                    var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
+                    dataGridViewColumn.Width = (int)Math.Round(propertyWidth * columnRatio);
+                }
+            }
         }
 
         private DataTable BuildPivotByReplicateDataSet(ReplicatePivotColumns replicatePivotColumns)
@@ -898,13 +946,47 @@ namespace pwiz.Skyline.Controls.Databinding
             return dataTable;
         }
 
+        private bool _inColumnChange;
+
+        private void dataGridViewEx1_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            if (_inColumnChange)
+            {
+                return;
+            }
+
+            try
+            {
+                _inColumnChange = true;
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                AlignDataBoundGridColumns(replicatePivotColumns);
+            }
+            finally
+            {
+                _inColumnChange = false;
+            }
+        }
+
         private void boundDataGridView_Resize(object sender, EventArgs e)
         {
             UpdateDendrograms();
         }
         private void boundDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
-            UpdateDendrograms();
+            if (_inColumnChange)
+            {
+                return;
+            }
+
+            try
+            {
+                _inColumnChange = true;
+                UpdateDendrograms();
+            }
+            finally
+            {
+                _inColumnChange = false;
+            }
         }
 
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
