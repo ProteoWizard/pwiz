@@ -65,6 +65,7 @@ namespace pwiz.SkylineTestUtil
                             RunDlg<MessageDlg>(longPathDlg.ClickYes, okDlg =>
                             {
                                 confirmDlg = okDlg;
+                                Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
                                 Assert.AreEqual(
                                     ToolsUIResources
                                         .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment,
@@ -80,6 +81,7 @@ namespace pwiz.SkylineTestUtil
                     }
                     else
                     {
+                        Console.WriteLine(@"Info: LongPathsEnabled registry key is set to 1");
                         confirmDlg = WaitForOpenForm<MessageDlg>();
                         Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, confirmDlg.Message);
                         OkDialog(confirmDlg, confirmDlg.OkDialog);
