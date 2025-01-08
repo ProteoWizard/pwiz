@@ -85,7 +85,7 @@ namespace ImageComparer
 
     internal class ScreenshotFile
     {
-        private static readonly Regex PATTERN = new Regex(@"\\([a-zA-Z\-]+)\\(\w\w-?[A-Z]*)\\s-(\d\d)\.png");
+        private static readonly Regex PATTERN = new Regex(@"\\([a-zA-Z0-9\-]+)\\(\w\w-?[A-Z]*)\\s-(\d\d)\.png");
 
         public static bool IsMatch(string filePath)
         {
