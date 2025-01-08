@@ -255,10 +255,20 @@ namespace pwiz.SkylineTestTutorial
             if (IsPauseForScreenShots)
                 RunUI(() =>
                 {
-                    // Essentially maximize the window for a 1920x1080 monitor at 100%
                     savedBounds = SkylineWindow.Bounds;
-                    SkylineWindow.Size = new Size(1934, 1047);
-                    SkylineWindow.Location = new Point(-7, 0);
+
+                    // Essentially maximize the window at 1920 x 1080 screen resolution at 100% zoom
+                    // Ideally this should be the maximum size that will fit on all screens or the minima
+                    // of the WorkingArea width and height.
+
+                    // SkylineWindow.Size = Screen.FromControl(SkylineWindow).WorkingArea.Size;
+
+                    // Size on Windows 10 = 1920 x 1040 (leaves 7 pixels below and 7 pixels on left and right for shadow)
+                    // Size on Windows 11 = 1920 x 1032 (same borders with a taller task bar)
+                    // A laptop at 1920 x 1200 would allow 120 pixels more in width
+
+                    SkylineWindow.Size = new Size(1920, 1032);
+                    SkylineWindow.Location = new Point(0, 0);
                 });
 
             SelectNode(SrmDocument.Level.Molecules, 0);
@@ -1098,7 +1108,7 @@ namespace pwiz.SkylineTestTutorial
                 var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
 
                 AddAnnotation(documentSettingsDlg, "MissingData", AnnotationDef.AnnotationType.true_false, null,
-                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide));
+                    AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.peptide), true);
 
                 RunUI(() => documentSettingsDlg.AnnotationsCheckedListBox.SetItemChecked(3, true));
 
