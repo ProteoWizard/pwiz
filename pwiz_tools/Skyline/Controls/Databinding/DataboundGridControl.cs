@@ -54,6 +54,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
+            dataGridViewEx1.CellValueChanged += dataGridViewEx1_CellValueChanged;
             NavBar.ClusterSplitButton.Visible = true;
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
                 heatMapContextMenuItem_Click));
@@ -912,6 +913,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
                 {
+                    //TODO I haven't seen issues with this logic, but it is possible that some of this rounding might lead to columns not aligning
                     var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
                     dataGridViewColumn.Width = (int)Math.Round(propertyWidth * columnRatio);
                 }
@@ -923,6 +925,8 @@ namespace pwiz.Skyline.Controls.Databinding
             try
             {
                 _populatingReplicateGrid = true;
+                //TODO consolidate with AbstractViewContext? 
+                var readOnlyCellColor = Color.FromArgb(245, 245, 245);
 
                 // Clear existing data
                 dataGridViewEx1.Columns.Clear();
@@ -961,6 +965,8 @@ namespace pwiz.Skyline.Controls.Databinding
                             // Add a new row if the property path is not found
                             iRow = dataGridViewEx1.Rows.Add();
                             dataGridViewEx1.Rows[iRow].Cells[propertyColumnName].Value = propertyPath.Name;
+                            dataGridViewEx1.Rows[iRow].Cells[propertyColumnName].ReadOnly = true;
+                            dataGridViewEx1.Rows[iRow].Cells[propertyColumnName].Style.BackColor = readOnlyCellColor;
                             rowPropertyPaths.Add(propertyPath);
                         }
 
@@ -970,6 +976,11 @@ namespace pwiz.Skyline.Controls.Databinding
 
                         // Set the cell value for the replicate column
                         dataGridViewEx1.Rows[iRow].Cells[replicateName].Value = value;
+                        dataGridViewEx1.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
+                        if (column.IsReadOnly)
+                        {
+                            dataGridViewEx1.Rows[iRow].Cells[replicateName].Style.BackColor = readOnlyCellColor;
+                        }
                     }
                 }
             }
