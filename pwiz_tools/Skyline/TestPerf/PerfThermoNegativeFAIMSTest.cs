@@ -150,7 +150,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
 
         }
 
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         private void TestReports(string msg = null)
         {

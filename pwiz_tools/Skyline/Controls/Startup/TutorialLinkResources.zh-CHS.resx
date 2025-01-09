@@ -118,59 +118,59 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="MethodEdit_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/MethodEdit-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_method_edit_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MethodRefine_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/MethodRefine-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_method_refine_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="ExistingQuant_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/ExistingQuant-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_existing_quant_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="AbsoluteQuant_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/AbsoluteQuant-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_absolute_quant_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="GroupedStudy_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/GroupedStudies1-3_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_grouped_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMolecule_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/SmallMolecule-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_small_molecule_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="MS1Filtering_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/MS1Filtering-21_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_ms1_filtering_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="TargetedMSMS_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/PRM-21_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_targeted_msms_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="CustomReports_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/CustomReports-20_2_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_custom_reports_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/DIA-2_6_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dia_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="DIA_TTOF_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/DIA-TTOF-20_2_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dia_swath_ttof_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeMethodDevCEOpt_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/SmallMoleculeMethodDev-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_small_method_ce_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="SmallMoleculeQuantification_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/SmallMoleculeQuant-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_small_quant_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
   <data name="iRT_pdf" xml:space="preserve">
-    <value>https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/Chinese/iRT-20_1_zh-CHS.pdf</value>
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_irt_zh</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
 </root>

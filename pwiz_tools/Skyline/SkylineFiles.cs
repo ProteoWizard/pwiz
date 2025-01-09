@@ -1307,7 +1307,7 @@ namespace pwiz.Skyline
             {
                 if (saverUser.CanSave())
                 {
-                    dockPanel.SaveAsXml(saverUser.SafeName);
+                    dockPanel.SaveAsXml(saverUser.SafeName, Encoding.UTF8);
                     saverUser.Commit();
                 }
             }
@@ -2832,7 +2832,7 @@ namespace pwiz.Skyline
                         switch (dlg.ShowDialog(this))
                         {
                             case DialogResult.Yes:
-                                if (!ShowGenerateDecoysDlg(dlg))
+                                if (!ShowGenerateDecoysDlg(this))
                                     return;
                                 break;
                             case DialogResult.No:
@@ -2840,7 +2840,7 @@ namespace pwiz.Skyline
                                     SkylineResources.SkylineWindow_ImportResults_Are_you_sure__Peak_scoring_models_trained_with_non_matching_targets_and_decoys_may_produce_incorrect_results_,
                                     MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
                                 {
-                                    if (dlg2.ShowDialog(dlg) == DialogResult.No)
+                                    if (dlg2.ShowDialog(this) == DialogResult.No)
                                         return;
                                 }
                                 break;
@@ -2860,7 +2860,7 @@ namespace pwiz.Skyline
                     switch (dlg.ShowDialog(this))
                     {
                         case DialogResult.Yes:
-                            if (!ShowGenerateDecoysDlg(dlg))
+                            if (!ShowGenerateDecoysDlg(this))
                                 return;
                             break;
                         case DialogResult.No:

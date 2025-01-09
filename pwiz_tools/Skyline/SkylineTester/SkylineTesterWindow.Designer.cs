@@ -70,7 +70,7 @@ namespace SkylineTester
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SkylineTesterWindow));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.mainPanel = new System.Windows.Forms.Panel();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.statusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -99,7 +99,6 @@ namespace SkylineTester
             this.SeenColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabTutorials = new System.Windows.Forms.TabPage();
             this.groupBox21 = new System.Windows.Forms.GroupBox();
-            this.showMatchingPagesTutorial = new System.Windows.Forms.CheckBox();
             this.showFormNamesTutorial = new System.Windows.Forms.CheckBox();
             this.label16 = new System.Windows.Forms.Label();
             this.groupBox14 = new System.Windows.Forms.GroupBox();
@@ -107,8 +106,8 @@ namespace SkylineTester
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.tutorialsTree = new SkylineTester.MyTreeView();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.pauseStartingPage = new System.Windows.Forms.TextBox();
-            this.labelPauseStartingPage = new System.Windows.Forms.Label();
+            this.pauseStartingScreenshot = new System.Windows.Forms.TextBox();
+            this.labelPauseStartingScreenshot = new System.Windows.Forms.Label();
             this.modeTutorialsCoverShots = new System.Windows.Forms.RadioButton();
             this.pauseTutorialsSeconds = new System.Windows.Forms.NumericUpDown();
             this.tutorialsDemoMode = new System.Windows.Forms.RadioButton();
@@ -691,11 +690,11 @@ namespace SkylineTester
             // SeenColumn
             // 
             this.SeenColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle2.Format = "N0";
-            dataGridViewCellStyle2.NullValue = null;
-            dataGridViewCellStyle2.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
-            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle1.Format = "N0";
+            dataGridViewCellStyle1.NullValue = null;
+            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(0, 0, 4, 0);
+            this.SeenColumn.DefaultCellStyle = dataGridViewCellStyle1;
             this.SeenColumn.HeaderText = "Seen";
             this.SeenColumn.MinimumWidth = 40;
             this.SeenColumn.Name = "SeenColumn";
@@ -721,7 +720,6 @@ namespace SkylineTester
             // groupBox21
             // 
             this.groupBox21.BackColor = System.Drawing.Color.Transparent;
-            this.groupBox21.Controls.Add(this.showMatchingPagesTutorial);
             this.groupBox21.Controls.Add(this.showFormNamesTutorial);
             this.groupBox21.Location = new System.Drawing.Point(13, 295);
             this.groupBox21.Margin = new System.Windows.Forms.Padding(4);
@@ -731,16 +729,6 @@ namespace SkylineTester
             this.groupBox21.TabIndex = 4;
             this.groupBox21.TabStop = false;
             this.groupBox21.Text = "Options";
-            // 
-            // showMatchingPagesTutorial
-            // 
-            this.showMatchingPagesTutorial.AutoSize = true;
-            this.showMatchingPagesTutorial.Location = new System.Drawing.Point(8, 45);
-            this.showMatchingPagesTutorial.Name = "showMatchingPagesTutorial";
-            this.showMatchingPagesTutorial.Size = new System.Drawing.Size(160, 17);
-            this.showMatchingPagesTutorial.TabIndex = 6;
-            this.showMatchingPagesTutorial.Text = "Show matching tutorial page";
-            this.showMatchingPagesTutorial.UseVisualStyleBackColor = true;
             // 
             // showFormNamesTutorial
             // 
@@ -821,8 +809,8 @@ namespace SkylineTester
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.pauseStartingPage);
-            this.groupBox4.Controls.Add(this.labelPauseStartingPage);
+            this.groupBox4.Controls.Add(this.pauseStartingScreenshot);
+            this.groupBox4.Controls.Add(this.labelPauseStartingScreenshot);
             this.groupBox4.Controls.Add(this.modeTutorialsCoverShots);
             this.groupBox4.Controls.Add(this.pauseTutorialsSeconds);
             this.groupBox4.Controls.Add(this.tutorialsDemoMode);
@@ -838,22 +826,22 @@ namespace SkylineTester
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "Pause";
             // 
-            // pauseStartingPage
+            // pauseStartingScreenshot
             // 
-            this.pauseStartingPage.Location = new System.Drawing.Point(99, 45);
-            this.pauseStartingPage.Name = "pauseStartingPage";
-            this.pauseStartingPage.Size = new System.Drawing.Size(41, 20);
-            this.pauseStartingPage.TabIndex = 2;
-            this.pauseStartingPage.Text = "1";
+            this.pauseStartingScreenshot.Location = new System.Drawing.Point(99, 45);
+            this.pauseStartingScreenshot.Name = "pauseStartingScreenshot";
+            this.pauseStartingScreenshot.Size = new System.Drawing.Size(41, 20);
+            this.pauseStartingScreenshot.TabIndex = 2;
+            this.pauseStartingScreenshot.Text = "1";
             // 
-            // labelPauseStartingPage
+            // labelPauseStartingScreenshot
             // 
-            this.labelPauseStartingPage.AutoSize = true;
-            this.labelPauseStartingPage.Location = new System.Drawing.Point(25, 48);
-            this.labelPauseStartingPage.Name = "labelPauseStartingPage";
-            this.labelPauseStartingPage.Size = new System.Drawing.Size(73, 13);
-            this.labelPauseStartingPage.TabIndex = 1;
-            this.labelPauseStartingPage.Text = "Starting page:";
+            this.labelPauseStartingScreenshot.AutoSize = true;
+            this.labelPauseStartingScreenshot.Location = new System.Drawing.Point(25, 48);
+            this.labelPauseStartingScreenshot.Name = "labelPauseStartingScreenshot";
+            this.labelPauseStartingScreenshot.Size = new System.Drawing.Size(69, 13);
+            this.labelPauseStartingScreenshot.TabIndex = 1;
+            this.labelPauseStartingScreenshot.Text = "Starting shot:";
             // 
             // modeTutorialsCoverShots
             // 
@@ -921,7 +909,6 @@ namespace SkylineTester
             this.pauseTutorialsScreenShots.Text = "Pause for screen shots";
             this.toolTip1.SetToolTip(this.pauseTutorialsScreenShots, "Interactively pauses the tutorial test at calls to PauseForScreenShot()");
             this.pauseTutorialsScreenShots.UseVisualStyleBackColor = true;
-            this.pauseTutorialsScreenShots.CheckedChanged += new System.EventHandler(this.pauseTutorialsScreenShots_CheckedChanged);
             // 
             // runTutorials
             // 
@@ -1364,11 +1351,13 @@ namespace SkylineTester
             "Quality",
             "Demo",
             "Screenshots",
+            "Auto-Screenshots",
             "Covershot"});
             this.runMode.Location = new System.Drawing.Point(276, 553);
             this.runMode.Name = "runMode";
             this.runMode.Size = new System.Drawing.Size(121, 21);
             this.runMode.TabIndex = 0;
+            this.runMode.SelectedIndexChanged += new System.EventHandler(this.runMode_SelectedIndexChanged);
             // 
             // label21
             // 
@@ -2807,7 +2796,7 @@ namespace SkylineTester
             // 
             this.outputSplitContainer.Panel2.Controls.Add(this.errorConsole);
             this.outputSplitContainer.Size = new System.Drawing.Size(671, 562);
-            this.outputSplitContainer.SplitterDistance = 338;
+            this.outputSplitContainer.SplitterDistance = 332;
             this.outputSplitContainer.SplitterWidth = 10;
             this.outputSplitContainer.TabIndex = 35;
             // 
@@ -2829,7 +2818,7 @@ namespace SkylineTester
             this.commandShell.NextCommand = 0;
             this.commandShell.RestartCount = 0;
             this.commandShell.RunStartTime = new System.DateTime(((long)(0)));
-            this.commandShell.Size = new System.Drawing.Size(671, 338);
+            this.commandShell.Size = new System.Drawing.Size(671, 332);
             this.commandShell.StopButton = null;
             this.commandShell.TabIndex = 2;
             this.commandShell.Text = "";
@@ -2847,7 +2836,7 @@ namespace SkylineTester
             this.errorConsole.Margin = new System.Windows.Forms.Padding(0);
             this.errorConsole.Name = "errorConsole";
             this.errorConsole.ReadOnly = true;
-            this.errorConsole.Size = new System.Drawing.Size(671, 214);
+            this.errorConsole.Size = new System.Drawing.Size(671, 220);
             this.errorConsole.TabIndex = 3;
             this.errorConsole.Text = "";
             this.errorConsole.SelectionChanged += new System.EventHandler(this.errorConsole_SelectionChanged);
@@ -3310,12 +3299,14 @@ namespace SkylineTester
             this.Controls.Add(this.mainPanel);
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Margin = new System.Windows.Forms.Padding(4);
             this.MinimumSize = new System.Drawing.Size(700, 700);
             this.Name = "SkylineTesterWindow";
             this.Text = "Skyline Tester";
             this.Load += new System.EventHandler(this.SkylineTesterWindow_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.SkylineTesterWindow_KeyDown);
             this.Move += new System.EventHandler(this.SkylineTesterWindow_Move);
             this.Resize += new System.EventHandler(this.SkylineTesterWindow_Resize);
             this.mainPanel.ResumeLayout(false);
@@ -3591,7 +3582,6 @@ namespace SkylineTester
         private ToolStripLabel labelFormsSeenPercent;
         private GroupBox groupBox2;
         private CheckBox runBuildVerificationTests;
-        private CheckBox showMatchingPagesTutorial;
         private ToolStripMenuItem optionsToolStripMenuItem;
         private ToolStripMenuItem accessInternet;
         private ToolTip toolTip1;
@@ -3635,8 +3625,8 @@ namespace SkylineTester
         private CheckBox nightlyRunIndefinitely;
         private CheckBox recordAuditLogs;
         private RadioButton modeTutorialsCoverShots;
-        private TextBox pauseStartingPage;
-        private Label labelPauseStartingPage;
+        private TextBox pauseStartingScreenshot;
+        private Label labelPauseStartingScreenshot;
         private Button diffButton;
         private ComboBox formsLanguageDiff;
         private Label label20;
