@@ -133,7 +133,7 @@ namespace pwiz.Common.Spectra
         {
             return ChangeProp(ImClone(this), im =>
             {
-                SetFlag(Flags.HasScanWindow, true);
+                im.SetFlag(Flags.HasScanWindow, true);
                 im._scanWindowLowerLimit = lowerLimit;
                 im._scanWindowUpperLimit = upperLimit;
             });

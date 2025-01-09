@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
                 });
             }
             WaitForGraphs();
-
+            PauseTest();
             ValidateChromatograms(replicateName, "21.2\n+0.1 ppm");
 
             ClickChromatogram(21.18, 6.06743E+07);
