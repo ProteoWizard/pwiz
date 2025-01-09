@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Koina {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class KoinaResources {
@@ -65,8 +65,8 @@ namespace pwiz.Skyline.Model.Koina {
         /// </summary>
         internal static string BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_are_not_set__Would_you_like_to_set_them_now_ {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_ar" +
-                        "e_not_set__Would_you_like_to_set_them_now_", resourceCulture);
+                return ResourceManager.GetString("BuildLibraryDlg_dataSourceFilesRadioButton_CheckedChanged_Some_Koina_settings_are" +
+                        "_not_set__Would_you_like_to_set_them_now_", resourceCulture);
             }
         }
         
@@ -125,12 +125,21 @@ namespace pwiz.Skyline.Model.Koina {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: {0} retrying {1}/{2}..
+        /// </summary>
+        internal static string KoinaModel_PredictBatches_Error___0__retrying__1_____2__ {
+            get {
+                return ResourceManager.GetString("KoinaModel_PredictBatches_Error___0__retrying__1_____2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Peptide Sequence &apos;{0}&apos; ({1}) is longer than the maximum supported length by Koina ({2}).
         /// </summary>
         internal static string KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_____1___is_longer_than_the_maximum_supported_length_by_Koina___2__ {
             get {
-                return ResourceManager.GetString("KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0_" +
-                        "____1___is_longer_than_the_maximum_supported_length_by_Koina___2__", resourceCulture);
+                return ResourceManager.GetString("KoinaPeptideTooLongException_KoinaPeptideTooLongException_Peptide_Sequence___0___" +
+                        "__1___is_longer_than_the_maximum_supported_length_by_Koina___2__", resourceCulture);
             }
         }
         
@@ -139,8 +148,8 @@ namespace pwiz.Skyline.Model.Koina {
         /// </summary>
         internal static string KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina {
             get {
-                return ResourceManager.GetString("KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0_" +
-                        "__in___1___is_not_supported_by_Koina", resourceCulture);
+                return ResourceManager.GetString("KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___" +
+                        "in___1___is_not_supported_by_Koina", resourceCulture);
             }
         }
         
@@ -167,8 +176,8 @@ namespace pwiz.Skyline.Model.Koina {
         /// </summary>
         internal static string KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_not_exist {
             get {
-                return ResourceManager.GetString("KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does" +
-                        "_not_exist", resourceCulture);
+                return ResourceManager.GetString("KoinaRetentionTimeModel_KoinaRetentionTimeModel_Retention_time_model___0___does_n" +
+                        "ot_exist", resourceCulture);
             }
         }
         
@@ -177,18 +186,18 @@ namespace pwiz.Skyline.Model.Koina {
         /// </summary>
         internal static string KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_peptides____0___is_a_small_molecule_ {
             get {
-                return ResourceManager.GetString("KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_pe" +
-                        "ptides____0___is_a_small_molecule_", resourceCulture);
+                return ResourceManager.GetString("KoinaSmallMoleculeException_KoinaSmallMoleculeException_Koina_only_supports_pepti" +
+                        "des____0___is_a_small_molecule_", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Modifcation &apos;{0}&apos; at index &apos;{1}&apos; in &apos;{2}&apos; is not supported by Koina.
+        ///   Looks up a localized string similar to Modification &apos;{0}&apos; at index &apos;{1}&apos; in &apos;{2}&apos; is not supported by Koina.
         /// </summary>
-        internal static string KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina {
+        internal static string KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina {
             get {
-                return ResourceManager.GetString("KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Mod" +
-                        "ifcation___0___at_index___1___in___2___is_not_supported_by_Koina", resourceCulture);
+                return ResourceManager.GetString("KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modif" +
+                        "ication___0___at_index___1___in___2___is_not_supported_by_Koina", resourceCulture);
             }
         }
         

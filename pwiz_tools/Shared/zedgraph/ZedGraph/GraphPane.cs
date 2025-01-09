@@ -1,6 +1,6 @@
 //============================================================================
 //ZedGraph Class Library - A Flexible Line Graph/Bar Graph Library in C#
-//Copyright © 2004  John Champion
+//Copyright Â© 2004  John Champion
 //
 //This library is free software; you can redistribute it and/or
 //modify it under the terms of the GNU Lesser General Public
@@ -1524,47 +1524,94 @@ namespace ZedGraph
 
 		#endregion
 
-	#region General Utility Methods
+		#region General Utility Methods
 
-        public void AdjustLabelSpacings(List<LabeledPoint> labPoints, Control parentControl)
+		/// <summary>
+		/// Performs the graph label layout. Places the labels into the coordinates specified in the savedLayoutString parameter
+		/// and performs the layout algorithm for the points that are not found there or whose user coordinates have changed.
+		/// Ignores the points not visible in the chart rectangle.
+		/// </summary>
+		/// <param name="labPoints">List of LabeledPoints objects prepared by the user graph. These should have
+		/// Point and Label components assigned.</param>
+		/// <param name="existingLayout">the list of saved label layout information. If provided, the points on the list
+		/// will be placed at the specified coordinates and layout optimization will not be performed for them.</param>
+		public void AdjustLabelSpacings(List<LabeledPoint> labPoints, List<LabeledPoint.PointLayout> existingLayout = null)
         {
-            if (!labPoints.Any())
+			// DigitalRune docking panel sometimes is resized with negative chart width, which crashes the layout algorithm.
+            if (!labPoints.Any() || Chart.Rect.Width <= 0 || Chart.Rect.Height <= 0)
                 return;
             // Need this to make sure the coordinate transforms work correctly.
             XAxis.Scale.SetupScaleData(this, XAxis);
             YAxis.Scale.SetupScaleData(this, YAxis);
 
             using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
-            {
-                var minLabelHeight = labPoints.Min(pt => GetRectScreen(pt.Label, g).Height);
-                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight), parentControl);
-
+            { 
+                var heights = labPoints.Select(p => GetRectScreen(p.Label, g).Height).ToList();
+                if (!heights.Any(h => h > 0))
+                    return; 
+                var minLabelHeight = heights.FindAll(h => h > 0).Min(); 
+                _labelLayout = new LabelLayout(this, (int)Math.Ceiling(minLabelHeight));
                 var visiblePoints = new List<LabeledPoint>();
                 foreach (var labeledPoint in labPoints)
                 {
                     if (_labelLayout.IsPointVisible(labeledPoint.Point))
                     {
+						labeledPoint.Label.IsDraggable = true;
                         visiblePoints.Add(labeledPoint);
                         labeledPoint.Label.IsVisible = true;
                     }
                     else
                         labeledPoint.Label.IsVisible = false;
                 }
-
+				
                 if (visiblePoints.Any())
                 {
-                    GraphObjList.RemoveAll(obj => obj is BoxObj || obj is LineObj);
+                    var savedLayout = existingLayout ?? new List<LabeledPoint.PointLayout>();
+					var newPoints = new List<LabeledPoint>();
                     foreach (var point in visiblePoints)
                     {
-                        if (_labelLayout.PlaceLabel(point, g))
+                        // if we already have a saved point layout for this peptide we do not need to re-adjust it
+						// CONSIDER: There is no stable persistent protein ID, so we cannot match the points using identityPath
+                        //var savedPoint = savedLayout.FirstOrDefault(p => p.Identity.Equals(point.UniqueID.ToString()));
+                        var savedPoint = savedLayout.FirstOrDefault(p => point.Point.Equals(p.PointLocation));
+                        if (savedPoint != null)
+                        {
+                            _labelLayout.AddLabel(point, savedPoint.LabelLocation);
+                            GraphObjList.Remove(point.Connector);
                             _labelLayout.DrawConnector(point, g);
+                        }
+						else // we should add all the existing points first to make sure the layout algorithm takes them into account when placing the new ones.
+                            newPoints.Add(point);
                     }
-                }
+                    foreach (var point in newPoints)
+                    {
+                        if (_labelLayout.PlaceLabel(point, g))
+                        {
+                            GraphObjList.Remove(point.Connector);
+                            _labelLayout.DrawConnector(point, g);
+                        }
+					}
+				}
             }
         }
 
-        public LabeledPoint OverLabel(Point mousePt)
+        public void UpdateConnectors()
         {
+			if (_labelLayout == null)
+				return;
+            using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+
+                foreach (var labPointPair in _labelLayout.LabeledPoints)
+                { 
+                    _labelLayout.UpdateConnector(labPointPair.Value, g);
+                }
+            }
+
+        }
+			public LabeledPoint OverLabel(Point mousePt, out bool isOverBoundary)
+        {
+            isOverBoundary = false;
             if (_labelLayout != null)
             {
                 using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
@@ -1572,16 +1619,20 @@ namespace ZedGraph
                     if (FindNearestObject(mousePt, g, out var nearestObj, out _))
                     {
                         if (nearestObj is TextObj label && _labelLayout.LabeledPoints.TryGetValue(label, out var labPoint))
+                        {
+                            float scaleFactor = CalcScaleFactor();
+                            isOverBoundary = labPoint.Label.PointOnBoxBoundary(mousePt, this, g, scaleFactor);
                             return labPoint;
+                        }
                     }
                 }
             }
             return null;
         }
-
+        
         public bool IsOverLabel(Point mousePt, out LabeledPoint labPoint)
         {
-            labPoint = OverLabel(mousePt);
+            labPoint = OverLabel(mousePt, out _);
             return labPoint !=	null;
         }
 

@@ -3263,6 +3263,15 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PasteDlg_UpdateMoleculeType_Note" xml:space="preserve">
     <value>Note</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_PrecursorNote" xml:space="preserve">
+    <value>Precursor Note</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeNote" xml:space="preserve">
+    <value>Molecule Note</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeListNote" xml:space="preserve">
+    <value>Molecule List Note</value>
+  </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>Click the 'Add File' button to add a FASTA file, and create a new proteome file.</value>
   </data>

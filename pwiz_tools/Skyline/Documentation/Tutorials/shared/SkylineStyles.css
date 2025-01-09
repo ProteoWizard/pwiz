@@ -1,0 +1,72 @@
+body {
+    max-width: 900px;
+    font-family: "Calibri";
+    font-size: 14px;
+}
+:is(h1, h2, h3, h4, h5, h6) {
+    color: #4F81BD;
+    font-family: "Cambria";
+}
+img {
+    max-width: 100%
+}
+h1.document-title {
+    border-bottom: 1px solid;
+    font-size: 32px;
+    color: #365F91;
+}
+h1 {
+    font-size: 20px;
+}
+table, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+table {
+    width: 100%;
+}
+p.keep-next {
+    -webkit-break-after: avoid;
+    break-after: avoid;
+}
+p.bibliography {
+    font-family: "Cambria";
+    margin:0;
+    text-indent: -16px; 
+    padding-left: 16px;
+}
+p.subtitle {
+    color: #5A5A5A;
+}
+.blue {
+    color: #0000FF;
+}
+.dark-green {
+    color: #4F6228;
+}
+.toc-h1 {
+    text-indent: .0in;
+}
+.toc-h2 {
+    text-indent: .25in;
+}
+.toc-h3 {
+    text-indent: .5in;
+}
+.toc-h4 {
+    text-indent: .75in;
+}
+.toc-h5 {
+    text-indent: 1in;
+}
+.toc-h6 {
+    text-indent: 1.25in;
+}
+.comp-fig {
+    text-align: center;
+    border: 0;
+    width: auto;
+}
+.fig-text {
+    font-size: 11px;
+}

@@ -362,6 +362,7 @@ int main(int argc, char* argv[])
                  << "Optional flags are:\n"
                  << "  --acceptZeroLengthSpectra (skip expensive checking for empty spectra when opening a file)\n"
                  << "  --ignoreZeroIntensityPoints (read profile data exactly as the vendor provides, even if there are no flanking zero points)\n"
+                 << "  --combineIonMobilitySpectra (use 3 array representation for ion mobility spectra)\n"
                  << "  --loop (repeat the run indefinitely)\n"
                  << "  --singleThreaded (do not use multiple threads to read spectra)\n"
                  << "  --reverse (iterate backwards)\n\n"
@@ -421,6 +422,11 @@ int main(int argc, char* argv[])
             else if (argv[i] == string("--acceptZeroLengthSpectra"))
             {
                 readerConfig.acceptZeroLengthSpectra = true;
+                --i;
+            }
+            else if (argv[i] == string("--combineIonMobilitySpectra"))
+            {
+                readerConfig.combineIonMobilitySpectra = true;
                 --i;
             }
             else if (argv[i] == string("--simAsSpectra"))
