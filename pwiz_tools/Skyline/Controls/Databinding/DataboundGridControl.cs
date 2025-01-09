@@ -979,6 +979,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             dataGridViewEx1.Height = totalHeight;
+            boundDataGridView.Height = dataGridSplitContainer.Height - totalHeight - dataGridSplitContainer.SplitterWidth;
             dataGridSplitContainer.SplitterDistance = totalHeight;
         }
 
