@@ -687,7 +687,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 dataGridViewEx1.Show();
                 dataGridSplitContainer.Panel1Collapsed = false;
-                dataGridViewEx1.DataSource = BuildPivotByReplicateDataSet(replicatePivotColumns);
+                PopulateReplicateDataGridView(replicatePivotColumns);
                 ResizePivotByReplicateGridToFit();
 
                 //TODO move locking code to shared function
@@ -916,57 +916,69 @@ namespace pwiz.Skyline.Controls.Databinding
                     dataGridViewColumn.Width = (int)Math.Round(propertyWidth * columnRatio);
                 }
             }
-        }
-
-        private List<ColumnPropertyDescriptor> _replicateColumnPropertyDescriptors = new List<ColumnPropertyDescriptor>();
-        private DataTable BuildPivotByReplicateDataSet(ReplicatePivotColumns replicatePivotColumns)
+        } 
+        
+        private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
         {
-            var dataTable = new DataTable();
-
-            // Add a column for property names
-            var propertyColumnName = @"Property";
-            dataTable.Columns.Add(propertyColumnName, typeof(string));
-            var rowPropertyPaths = new List<PropertyPath>();
-
-            // Iterate through item properties to create correct columns
-            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+            try
             {
-                var resultKey = group.Key;
-                var replicateName = resultKey.ReplicateName;
-                if (!dataTable.Columns.Contains(replicateName))
+                _populatingReplicateGrid = true;
+
+                // Clear existing data
+                dataGridViewEx1.Columns.Clear();
+                dataGridViewEx1.Rows.Clear();
+
+                // Add a column for property names
+                var propertyColumnName = @"Property";
+                dataGridViewEx1.Columns.Add(propertyColumnName, propertyColumnName);
+
+                var rowPropertyPaths = new List<PropertyPath>();
+
+                // Iterate through item properties to create columns and rows
+                foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
                 {
-                    dataTable.Columns.Add(replicateName, typeof(object));
-                }
+                    var resultKey = group.Key;
+                    var replicateName = resultKey.ReplicateName;
 
-                foreach (var column in group)
-                {
-                    if (!replicatePivotColumns.IsConstantColumn(column))
+                    // Add a column for the replicate name if it doesn't already exist
+                    if (!dataGridViewEx1.Columns.Contains(replicateName))
                     {
-                        continue;
+                        dataGridViewEx1.Columns.Add(replicateName, replicateName);
                     }
 
-                    var propertyPath = column.DisplayColumn.PropertyPath;
-                    int iRow = rowPropertyPaths.IndexOf(propertyPath);
-                    DataRow row;
-                    if (iRow < 0)
+                    foreach (var column in group)
                     {
-                        row = dataTable.NewRow();
-                        row[propertyColumnName] = propertyPath.Name;
-                        rowPropertyPaths.Add(propertyPath);
-                        dataTable.Rows.Add(row);
-                    }
-                    else
-                    {
-                        row = dataTable.Rows[iRow];
-                    }
+                        if (!replicatePivotColumns.IsConstantColumn(column))
+                        {
+                            continue;
+                        }
 
-                    var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
-                        .FirstOrDefault(v => v != null);
-                    row[replicateName] = value;
+                        var propertyPath = column.DisplayColumn.PropertyPath;
+                        int iRow = rowPropertyPaths.IndexOf(propertyPath);
+
+                        if (iRow < 0)
+                        {
+                            // Add a new row if the property path is not found
+                            iRow = dataGridViewEx1.Rows.Add();
+                            dataGridViewEx1.Rows[iRow].Cells[propertyColumnName].Value = propertyPath.Name;
+                            rowPropertyPaths.Add(propertyPath);
+                        }
+
+                        // Get the value for the current column
+                        var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
+                            .FirstOrDefault(v => v != null);
+
+                        // Set the cell value for the replicate column
+                        dataGridViewEx1.Rows[iRow].Cells[replicateName].Value = value;
+                    }
                 }
             }
-            return dataTable;
+            finally
+            {
+                _populatingReplicateGrid = false;
+            }
         }
+
         private void ResizePivotByReplicateGridToFit()
         {
             int rowLimit = 10;
@@ -985,6 +997,11 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void dataGridViewEx1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
+            if (_populatingReplicateGrid)
+            {
+                return;
+            }
+
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
             {
                 var cellValue = dataGridViewEx1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
@@ -1012,8 +1029,9 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        //TODO move these to a more proper location?
         private bool _inColumnChange;
-
+        private bool _populatingReplicateGrid;
         private void dataGridViewEx1_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             //TODO move locking code to shared function
