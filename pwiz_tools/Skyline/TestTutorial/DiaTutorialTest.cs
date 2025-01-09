@@ -319,7 +319,6 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowChromatogramLegends(false);
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 SkylineWindow.ArrangeGraphs(DisplayGraphsType.Row);
-                // TODO: Need to explain this in the tutorial
                 // CONSIDER: SkylineWindow should probably have a function for this
                 Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                 SkylineWindow.Width = 1250;
