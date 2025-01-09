@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -871,6 +870,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void AlignDataBoundGridColumns(ReplicatePivotColumns replicatePivotColumns)
         {
+            //TODO this logic is duplicated when aligning columns in the other direction
             var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
                 .ToDictionary(
                     kvp => kvp.Key.ReplicateName,
