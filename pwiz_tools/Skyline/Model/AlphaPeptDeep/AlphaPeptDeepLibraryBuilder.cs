@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
     public class AlphapeptdeepLibraryBuilder : IiRTCapableLibraryBuilder
     {
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
-        private const string BLIB_BUILD = "BlibBuild";
+        private const string BLIB_BUILD = @"BlibBuild";
         private const string CMD_FLOW_COMMAND = @"cmd-flow";
         private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
         private const string EXT_TSV = TextUtil.EXT_TSV;
@@ -551,7 +551,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 .ChangeMessage(@"Importing spectral library")
                 .ChangePercentComplete(0));
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(BLIB_BUILD, $@"-o -i {LibrarySpec.Name} {TransformedOutputSpectraLibFilepath} {LibrarySpec.FilePath}")
+            string args = $@"-o -i {TextUtil.Quote(LibrarySpec.Name)} {TextUtil.Quote(TransformedOutputSpectraLibFilepath)} {TextUtil.Quote(LibrarySpec.FilePath)}";
+            var psi = new ProcessStartInfo(BLIB_BUILD, args)
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,

@@ -34,9 +34,10 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
                 buildLibraryDlg.AlphapeptDeep = true;
             });
-            pythonUtil.InstallPython(buildLibraryDlg);
-            
-            OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
+
+            if (!pythonUtil.InstallPython(buildLibraryDlg)) 
+                OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
+            //PauseTest();
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
 

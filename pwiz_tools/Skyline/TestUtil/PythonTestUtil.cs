@@ -19,7 +19,9 @@ namespace pwiz.SkylineTestUtil
         {
             get; set;
         }
-        public static bool IsAdministrator()
+
+        private bool _undoRegistry;
+        public static bool IsRunningElevated()
         {
             // Get current user's Windows identity
             WindowsIdentity identity = WindowsIdentity.GetCurrent();
@@ -37,7 +39,7 @@ namespace pwiz.SkylineTestUtil
 
         }
         //[TestMethod]
-        public void InstallPython(BuildLibraryDlg buildLibraryDlg)
+        public bool InstallPython(BuildLibraryDlg buildLibraryDlg)
         {
             bool havePythonPrerequisite = false;
 
@@ -60,7 +62,7 @@ namespace pwiz.SkylineTestUtil
                         longPathDlg = WaitForOpenForm<MultiButtonMsgDlg>();
                         Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), longPathDlg.Message);
 
-                        if (IsAdministrator())
+                        if (IsRunningElevated())
                         {
                             RunDlg<MessageDlg>(longPathDlg.ClickYes, okDlg =>
                             {
@@ -70,9 +72,12 @@ namespace pwiz.SkylineTestUtil
                                     ToolsUIResources
                                         .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment,
                                     okDlg.Message);
+                                Console.WriteLine(@"Info: Successfully set LongPathsEnabled registry key to 1");
+                                _undoRegistry = true;
                                 okDlg.OkDialog();
                             });
-                            longPathDlg.Close();
+                            if (!longPathDlg.IsDisposed)
+                                longPathDlg.Dispose();
                         }
                         else
                         {
@@ -90,8 +95,15 @@ namespace pwiz.SkylineTestUtil
                 }, dlg => {
                     dlg.Close();
                 });
+                if (_undoRegistry)
+                {
+                    PythonInstallerTaskValidator.DisableWindowsLongPaths();
+                }
 
+                return true;
             }
+
+            return false;
         }
 
         protected override void DoTest()

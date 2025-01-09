@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Model.Tools
         internal const string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
         internal const string REG_LONGPATH_TYPE = @"/t REG_DWORD";
         internal const string REG_LONGPATH_VALUE = @"/d 0x00000001";
+        internal const string REG_LONGPATH_ZERO = @"/d 0x00000000";
         internal const string REG_LONGPATH_FORCE = @"/f";
         internal string REG_LONGPATH_NAME = $@"/v {REG_LONGPATHS_ENABLED}";
 
@@ -325,6 +326,30 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
         }
+        public void DisableWindowsLongPaths()
+        {
+            var cmdBuilder = new StringBuilder();
+            cmdBuilder.Append(REG_ADD_COMMAND)
+                .Append(SPACE)
+                .Append(TextUtil.Quote(REG_FILESYSTEM_KEY))
+                .Append(SPACE)
+                .Append(REG_LONGPATH_NAME)
+                .Append(SPACE)
+                .Append(REG_LONGPATH_TYPE)
+                .Append(SPACE)
+                .Append(REG_LONGPATH_ZERO)
+                .Append(SPACE)
+                .Append(REG_LONGPATH_FORCE);
+
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
+            cmd += cmdBuilder;
+
+            var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
+
+            if (processRunner.RunProcess(cmd, true, Writer) != 0)
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+
+        }
         private void DownloadCudaLibrary(IProgressMonitor progressMonitor)
         {
             using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
@@ -561,7 +586,7 @@ namespace pwiz.Skyline.Model.Tools
             var node9 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node8 } };
             var node10 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_cuda_library, ParentNodes = null };
             var node11 = new PythonTaskNode { PythonTaskName = PythonTaskName.install_cuda_library, ParentNodes = null };
-            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8}; //TODO: , node9, node10, node11 };
+            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 }; //TODO: , node10, node11 };
         }
     }
 
@@ -728,11 +753,15 @@ namespace pwiz.Skyline.Model.Tools
         private const string AT_SPLITTER = @" @ ";
         private const string GIT = @"git";
 
-        private PythonInstaller PythonInstaller { get; set; }
+        private static PythonInstaller _pythonInstaller { get; set; }
 
+        public static void DisableWindowsLongPaths()
+        {
+            _pythonInstaller.DisableWindowsLongPaths();
+        }
         public bool Validate(PythonTaskName pythonTaskName, PythonInstaller pythonInstaller)
         {
-            PythonInstaller = pythonInstaller;
+            _pythonInstaller = pythonInstaller;
             switch (pythonTaskName)
             {
                 case PythonTaskName.download_python_embeddable_package:
@@ -764,49 +793,49 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateDownloadCudaLibrary()
         {
-            return File.Exists(PythonInstaller.CudaInstallerDownloadPath);
+            return File.Exists(_pythonInstaller.CudaInstallerDownloadPath);
         }
         private bool ValidateDownloadPythonEmbeddablePackage()
         {
-            return File.Exists(PythonInstaller.PythonEmbeddablePackageDownloadPath);
+            return File.Exists(_pythonInstaller.PythonEmbeddablePackageDownloadPath);
         }
 
         private bool ValidateUnzipPythonEmbeddablePackage()
         {
-            return Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir);
+            return Directory.Exists(_pythonInstaller.PythonEmbeddablePackageExtractDir);
         }
 
         private bool ValidateEnableSearchPathInPythonEmbeddablePackage()
         {
-            if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
+            if (!Directory.Exists(_pythonInstaller.PythonEmbeddablePackageExtractDir))
             {
                 return false;
             }
-            var disabledPathFiles = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, "python*._pth");
-            var enabledPathFiles = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, "python*.pth");
+            var disabledPathFiles = Directory.GetFiles(_pythonInstaller.PythonEmbeddablePackageExtractDir, "python*._pth");
+            var enabledPathFiles = Directory.GetFiles(_pythonInstaller.PythonEmbeddablePackageExtractDir, "python*.pth");
             return disabledPathFiles.Length.Equals(0) && enabledPathFiles.Length.Equals(1);
         }
 
         private bool ValidateDownloadGetPipScript()
         {
-            return File.Exists(PythonInstaller.GetPipScriptDownloadPath);
+            return File.Exists(_pythonInstaller.GetPipScriptDownloadPath);
         }
 
         private bool ValidateRunGetPipScript()
         {
-            var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, SCRIPTS, PIP_DOT_EXE);
+            var filePath = Path.Combine(_pythonInstaller.PythonEmbeddablePackageExtractDir, SCRIPTS, PIP_DOT_EXE);
             return File.Exists(filePath);
         }
 
         private bool ValidatePipInstallVirtualenv()
         {
-            var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV_DOT_EXE);
+            var filePath = Path.Combine(_pythonInstaller.PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV_DOT_EXE);
             return File.Exists(filePath);
         }
 
         private bool ValidateCreateVirtualEnvironment()
         {
-            return Directory.Exists(PythonInstaller.VirtualEnvironmentDir);
+            return Directory.Exists(_pythonInstaller.VirtualEnvironmentDir);
         }
         internal static bool ValidateEnableLongpaths()
         {
@@ -814,7 +843,7 @@ namespace pwiz.Skyline.Model.Tools
         }
         private bool ValidatePipInstallPackages()
         {
-            if (!File.Exists(PythonInstaller.VirtualEnvironmentPythonExecutablePath))
+            if (!File.Exists(_pythonInstaller.VirtualEnvironmentPythonExecutablePath))
             {
                 return false;
             }
@@ -827,7 +856,7 @@ namespace pwiz.Skyline.Model.Tools
                 .Append(FREEZE);
             var processStartInfo = new ProcessStartInfo
             {
-                FileName = PythonInstaller.VirtualEnvironmentPythonExecutablePath,
+                FileName = _pythonInstaller.VirtualEnvironmentPythonExecutablePath,
                 Arguments = argumentsBuilder.ToString(),
                 RedirectStandardOutput = true,
                 UseShellExecute = false
@@ -853,7 +882,7 @@ namespace pwiz.Skyline.Model.Tools
                 packageToVersionMap.Add(words[0], words[1]);
             }
 
-            foreach (var package in PythonInstaller.PythonPackages)
+            foreach (var package in _pythonInstaller.PythonPackages)
             {
                 if (!packageToVersionMap.ContainsKey(package.Name))
                 {
