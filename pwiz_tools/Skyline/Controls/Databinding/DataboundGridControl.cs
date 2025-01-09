@@ -690,6 +690,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 dataGridViewEx1.DataSource = BuildPivotByReplicateDataSet(replicatePivotColumns);
                 ResizePivotByReplicateGridToFit();
 
+                //TODO move locking code to shared function
                 if (_inColumnChange)
                 {
                     return;
@@ -917,6 +918,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        private List<ColumnPropertyDescriptor> _replicateColumnPropertyDescriptors = new List<ColumnPropertyDescriptor>();
         private DataTable BuildPivotByReplicateDataSet(ReplicatePivotColumns replicatePivotColumns)
         {
             var dataTable = new DataTable();
@@ -980,10 +982,40 @@ namespace pwiz.Skyline.Controls.Databinding
             dataGridSplitContainer.SplitterDistance = totalHeight;
         }
 
+        private void dataGridViewEx1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                var cellValue = dataGridViewEx1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+
+                //TODO instead of searching for the ColumnPropertyDescriptor we can save it as we populate table
+                foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
+                {
+                    if (grouping.Key.ReplicateName.Equals(dataGridViewEx1.Columns[e.ColumnIndex].HeaderText))
+                    {
+                        foreach (var column in grouping)
+                        {
+                            if (column.DisplayColumn.PropertyPath.Name.Equals(dataGridViewEx1.Rows[e.RowIndex].Cells[0].Value))
+                            {
+                                var columnDescriptor = column.DisplayColumn.ColumnDescriptor;
+                                var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(r => columnDescriptor.Parent.GetPropertyValue(r, column.PivotKey) != null);
+                                if (rowItem != null)
+                                {
+                                    column.SetValue(rowItem, cellValue);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         private bool _inColumnChange;
 
         private void dataGridViewEx1_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
+            //TODO move locking code to shared function
             if (_inColumnChange)
             {
                 return;
@@ -1007,6 +1039,7 @@ namespace pwiz.Skyline.Controls.Databinding
         }
         private void boundDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
+            //TODO move locking code to shared function
             if (_inColumnChange)
             {
                 return;

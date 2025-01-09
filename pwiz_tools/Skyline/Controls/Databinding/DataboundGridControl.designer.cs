@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.Controls.Databinding
+﻿using System.Windows.Forms;
+
+namespace pwiz.Skyline.Controls.Databinding
 {
     partial class DataboundGridControl
     {
@@ -220,6 +222,7 @@
             this.dataGridViewEx1.RowTemplate.Height = 28;
             this.dataGridViewEx1.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewEx1_ColumnWidthChanged);
             this.dataGridViewEx1.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGridViewEx1_Scroll);
+            this.dataGridViewEx1.CellValueChanged += dataGridViewEx1_CellValueChanged;
             // 
             // boundDataGridView
             // 
