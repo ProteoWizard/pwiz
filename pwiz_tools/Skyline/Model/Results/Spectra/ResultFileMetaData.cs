@@ -131,8 +131,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 var spectrum = new ResultFileMetaDataProto.Types.SpectrumMetadata
                 {
                     RetentionTime = spectrumMetadata.RetentionTime,
-                    TotalIonCurrent = (float?) spectrumMetadata.TotalIonCurrent,
-                    InjectionTime = (float?) spectrumMetadata.InjectionTime
+                    TotalIonCurrent = spectrumMetadata.TotalIonCurrent,
+                    InjectionTime = spectrumMetadata.InjectionTime
                 };
                 spectrum.PresetScanConfiguration = spectrumMetadata.PresetScanConfiguration;
                 var intParts = GetScanIdParts(spectrumMetadata.Id);
