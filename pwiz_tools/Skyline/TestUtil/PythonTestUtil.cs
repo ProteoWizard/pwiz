@@ -68,10 +68,13 @@ namespace pwiz.SkylineTestUtil
                             {
                                 confirmDlg = okDlg;
                                 Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
-                                Assert.AreEqual(
-                                    ToolsUIResources
-                                        .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment,
-                                    okDlg.Message);
+                                if (ToolsUIResources
+                                        .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment !=
+                                    okDlg.Message)
+                                {
+                                    Console.ReadLine();
+                                }
+                                Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, okDlg.Message);
                                 Console.WriteLine(@"Info: Successfully set LongPathsEnabled registry key to 1");
                                 _undoRegistry = true;
                                 okDlg.OkDialog();
