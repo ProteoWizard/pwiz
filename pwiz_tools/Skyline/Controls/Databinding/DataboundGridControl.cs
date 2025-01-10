@@ -994,12 +994,12 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void UpdateReplicateGridFrozenState(ReplicatePivotColumns replicatePivotColumns, bool shouldFreeze)
         {
-            dataGridViewEx1.Columns[@"Property"]!.Frozen = true;
+            dataGridViewEx1.Columns[@"Property"]!.Frozen = shouldFreeze;
 
             var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
                 .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
             boundDataGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).ForEach(col => col.Frozen = true);
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).ForEach(col => col.Frozen = shouldFreeze);
         }
 
         private void ResizePivotByReplicateGridToFit()
