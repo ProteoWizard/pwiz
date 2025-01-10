@@ -1039,6 +1039,7 @@ namespace pwiz.SkylineTestTutorial
                     }
                 },
                 {"MzCount",37828.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"TotalIonCurrent", 692070},
                 {"IsCentroided","False"},
                 {"idotp",0.73.ToString(CultureInfo.CurrentCulture)}
             };
@@ -1065,6 +1066,8 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
+            var difference = expectedProperties.GetDifference(currentProperties);
+
             Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
 
