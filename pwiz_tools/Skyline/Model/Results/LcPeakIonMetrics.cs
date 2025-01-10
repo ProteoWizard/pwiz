@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im =>
             {
                 im.ApexAnalyteIonCount = apexAnalyteIonCount;
-                im.LcPeakAnalyteIonCount = LcPeakAnalyteIonCount;
+                im.LcPeakAnalyteIonCount = lcPeakAnalyteIonCount;
             });
         }
 
