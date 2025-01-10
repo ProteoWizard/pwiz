@@ -48,18 +48,18 @@ namespace TestRunnerLib.PInvoke
 
         // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
-        public static extern int RegisterThumbnail(IntPtr dest, IntPtr src, out IntPtr thumb);
+        public static extern int DwmRegisterThumbnail(IntPtr dest, IntPtr src, out IntPtr thumb);
 
         // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
-        public static extern int UnregisterThumbnail(IntPtr thumb);
+        public static extern int DwmUnregisterThumbnail(IntPtr thumb);
 
         // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
-        public static extern int QueryThumbnailSourceSize(IntPtr thumb, out PInvokeCommon.SIZE size);
+        public static extern int DwmQueryThumbnailSourceSize(IntPtr thumb, out PInvokeCommon.SIZE size);
 
         // ReSharper disable once StringLiteralTypo
         [DllImport("dwmapi.dll")]
-        public static extern int UpdateThumbnailProperties(IntPtr hThumb, ref THUMBNAIL_PROPERTIES props);
+        public static extern int DwmUpdateThumbnailProperties(IntPtr hThumb, ref THUMBNAIL_PROPERTIES props);
     }
 }

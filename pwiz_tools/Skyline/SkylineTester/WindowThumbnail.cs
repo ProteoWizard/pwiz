@@ -56,7 +56,7 @@ namespace SkylineTester
         {
             if (_thumb != IntPtr.Zero)
             {
-                DwmapiTest.UnregisterThumbnail(_thumb);
+                DwmapiTest.DwmUnregisterThumbnail(_thumb);
                 _thumb = IntPtr.Zero;
             }
         }
@@ -71,7 +71,7 @@ namespace SkylineTester
             }
 
             IntPtr newThumb;
-            DwmapiTest.RegisterThumbnail(MainWindow.Handle, window, out newThumb);
+            DwmapiTest.DwmRegisterThumbnail(MainWindow.Handle, window, out newThumb);
             if (newThumb == IntPtr.Zero)
             {
                 UnregisterThumb();
@@ -86,7 +86,7 @@ namespace SkylineTester
             Point locationOnForm = MainWindow.PointToClient(Parent.PointToScreen(Location));
 
             PInvokeCommon.SIZE size;
-            DwmapiTest.QueryThumbnailSourceSize(_thumb, out size);
+            DwmapiTest.DwmQueryThumbnailSourceSize(_thumb, out size);
 
             var props = new DwmapiTest.THUMBNAIL_PROPERTIES
             {
@@ -105,7 +105,7 @@ namespace SkylineTester
             if (size.cy < Height)
                 props.rcDestination.bottom = props.rcDestination.top + size.cy;
 
-            DwmapiTest.UpdateThumbnailProperties(_thumb, ref props);
+            DwmapiTest.DwmUpdateThumbnailProperties(_thumb, ref props);
         }
 
         private IntPtr FindWindow(int processId)
