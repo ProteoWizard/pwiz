@@ -131,6 +131,29 @@ namespace ZedGraph
             }
         }
 
+        private bool GetPointMarkerRectangle(PointF pt, out RectangleF rect)
+        {
+            rect = RectangleF.Empty;
+            foreach (var line in _graph.CurveList.OfType<LineItem>().Where(c => c.Symbol.Type != SymbolType.None))
+            {
+                for (var i = 0; i < line.Points.Count; i++)
+                {
+                    var screenPt = _graph.TransformCoord(line.Points[i].X, line.Points[i].Y, CoordType.AxisXYScale);
+                    if (Math.Abs(screenPt.X - pt.X) < 1 && Math.Abs(screenPt.Y - pt.Y) < 1 )
+
+                    {
+                        if (!line.GetCoords(this._graph, i, out var coords))
+                        {
+                            continue;
+                        }
+                        var sides = Array.ConvertAll(coords.Split(','), int.Parse);
+                        rect = new Rectangle(sides[0], sides[1], sides[2] - sides[0], sides[3] - sides[1]);
+                        return true;
+                    }                }
+            }
+            return false;
+        }
+
         /// <summary>
         /// Calculates goal function for a labeled point and a suggested label position.
         /// All coordinates are in screen pixels.
@@ -138,8 +161,10 @@ namespace ZedGraph
         /// <param name="pt">Center of the label box, in pixels</param>
         /// <param name="targetPoint">data point being labeled.</param>
         /// <param name="labelSize"> in pixels </param>
+        /// <param name="targetMarkerRect"> enclosing rectangle of the target point marker. We want to avoid
+        /// overlaps with it as much as possible.</param>
         /// <returns>goal function value.</returns>
-        private float GoalFuncion(PointF pt, PointF targetPoint, SizeF labelSize)
+        private float GoalFunction(PointF pt, PointF targetPoint, SizeF labelSize, RectangleF targetMarkerRect)
         {
             var pathCellCoord = CellIndexesFromXY(targetPoint);
             if (!IndexesWithinGrid(pathCellCoord))
@@ -149,10 +174,14 @@ namespace ZedGraph
             // Distance to the label is measured from the center or right/left ends, whichever is closer.
             var distPoints = new[]
                 { pt - new SizeF(labelSize.Width / 2, 0), pt, pt + new SizeF(labelSize.Width / 2, 0) };
+            var graphWidth = _graph.Chart.Rect.Width;
+            var graphHeight = _graph.Chart.Rect.Height;
             var dist = distPoints.Min(p =>
             {
                 var diff = new SizeF(p.X - targetPoint.X, p.Y - targetPoint.Y);
-                return diff.Width * diff.Width + diff.Height * diff.Height;
+                // calculate the distance relative to the chart size to make sure it works 
+                // for both large and small graphs
+                return diff.Width * diff.Width / (graphWidth * graphWidth) + diff.Height * diff.Height / (graphHeight * graphHeight);
             });
             var rect = new RectangleF(pt.X - labelSize.Width / 2, pt.Y, labelSize.Width,
                 labelSize.Height);
@@ -163,6 +192,9 @@ namespace ZedGraph
                 totalOverlap += 1.0 * intersect.Height * intersect.Width / (_cellSize * _cellSize) * cell._density;
             }
 
+            // overlap with the target point is bad, we should penalize it heavily
+            if (RectangleF.Intersect(rect, targetMarkerRect) != RectangleF.Empty)
+                totalOverlap += 1500;
             // penalize this point if there is more points between it and its label
             // we find the cells between the two points by traversing the vector intersection
             // with the grid
@@ -226,7 +258,7 @@ namespace ZedGraph
             if (visibleArea > 0)
                 clipPenalty = (1 - visibleArea / RectArea(rect)) * 500.0f;
 
-            return (float)((0.025 * dist + totalOverlap) + penalty + 0.2 * pathDensity) + clipPenalty;
+            return (float)((20000 * dist + totalOverlap) + penalty + 0.2 * pathDensity) + clipPenalty;
         }
 
         private IEnumerable<GridCell> GetRectangleCells(RectangleF rect)
@@ -265,11 +297,11 @@ namespace ZedGraph
         }
 
         /// <summary>
-        /// We use square of uniformly distributed randoms to get distribution with a peak
+        /// Uniform distribution searches the available area more efficiently.
         /// </summary>
         private int GetRandom(float range)
         {
-            return (int)((_randGenerator.NextDouble() - 0.5) * (_randGenerator.NextDouble() - 0.5) * range * 1.5);
+            return (int)((_randGenerator.NextDouble() - 0.5) * range * 0.75);
         }
 
         private static Rectangle ToRectangle(RectangleF rect)
@@ -313,13 +345,20 @@ namespace ZedGraph
             var goal = float.MaxValue;
             var goalCell = Point.Empty;
             var gridRect = Rectangle.Empty;
-            if (labelLength < _densityGridSize.Width)
+            // 4 is more or less arbitrary here, just to avoid search area 1 cell wide and make the search more efficient.
+            if (labelLength < _densityGridSize.Width - 4)
                 gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height - 1);
             else 
                 gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength/2, _densityGridSize.Height - 1);
             var points = new List<Point>();
+
+            GetPointMarkerRectangle(targetPoint, out var targetMarkerRect);
+            var totalCount = SEARCH_COUNT_COARSE * 5;
             for (var count = SEARCH_COUNT_COARSE; count > 0; count--)
             {
+                // make sure we are not stuck in this loop if the search area is exhausted.
+                 if (totalCount-- <= 0)
+                     break;
                 var randomGridPoint = pointCell +
                                       new Size(GetRandom(_densityGridSize.Width), GetRandom(_densityGridSize.Height));
 
@@ -335,7 +374,7 @@ namespace ZedGraph
                 }
 
                 points.Add(randomGridPoint);
-                var goalEstimate = GoalFuncion(CellFromPoint(randomGridPoint)._location, targetPoint, labelRect.Size);
+                var goalEstimate = GoalFunction(CellFromPoint(randomGridPoint)._location, targetPoint, labelRect.Size, targetMarkerRect);
                 if (goalEstimate < goal)
                 {
                     goal = goalEstimate;
@@ -363,7 +402,7 @@ namespace ZedGraph
                 var p = goalPoint + new Size(GetRandom(_cellSize * 2), GetRandom(_cellSize * 2));
                 if (!allowedRect.Contains(p))   // label should not overlap chart's borders
                     continue;
-                var goalEstimate1 = GoalFuncion(p, targetPoint, labelRect.Size);
+                var goalEstimate1 = GoalFunction(p, targetPoint, labelRect.Size, targetMarkerRect);
                 if (goalEstimate1 < goal)
                 {
                     goal = goalEstimate1;
@@ -391,6 +430,21 @@ namespace ZedGraph
             labPoint.LabelVector = new VectorF(targetPoint, goalPoint);
             _labeledPoints[labPoint.Label] = labPoint;
             return true;
+        }
+
+        // mostly for debugging support
+        public float CalculateGoalFunction(LabeledPoint labPoint)
+        {
+            if (labPoint == null)
+                return 0;
+            var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
+            var hasTargetMarker = GetPointMarkerRectangle(targetPoint, out var targetMarkerRect);
+            RectangleF labelRect;
+            using (var g = Graphics.FromHwnd(IntPtr.Zero))
+                labelRect = _graph.GetRectScreen(labPoint.Label, g);
+            var labScreenCoords = _graph.TransformCoord(labPoint.Label.Location.X, labPoint.Label.Location.Y, CoordType.AxisXYScale);
+            labScreenCoords = new PointF(labScreenCoords.X, labScreenCoords.Y - labelRect.Height/2);
+            return GoalFunction(labScreenCoords, targetPoint, labelRect.Size, targetMarkerRect);
         }
 
         /// <summary>
