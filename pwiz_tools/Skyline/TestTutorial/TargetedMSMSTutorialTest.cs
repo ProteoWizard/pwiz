@@ -583,7 +583,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SaveDocument());
 
                 var fiveRunFile = TestFilesDirs[2].GetTestPath(@"BSA_Protea_label_free_20100323_meth3_long_all.sky");
-                RunUI(() => SkylineWindow.OpenFile(fiveRunFile));
+                OpenDocument(fiveRunFile);
                 FindNode("K.LVNELTEFAK.T [66, 75]");
 
                 RunUI(() =>
@@ -708,7 +708,7 @@ namespace pwiz.SkylineTestTutorial
             // Import a new Document. High-Resolution Mass Spectra, working with TOF p27.
             string newDocumentFile = GetTestPath(@"TOF\BSA_Agilent.sky");
             WaitForCondition(() => File.Exists(newDocumentFile));
-            RunUI(() => SkylineWindow.OpenFile(newDocumentFile));
+            OpenDocument(newDocumentFile);
 
             bool asSmallMolecules = AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.none;
             if (asSmallMolecules)

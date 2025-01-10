@@ -32,7 +32,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class PrmCeOptimizationTest : AbstractFunctionalTest
+    public class PrmCeOptimizationTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestPrmCeOptimization()
@@ -45,7 +45,7 @@ namespace pwiz.SkylineTestFunctional
             var dir = TestFilesDir.GetTestPath(".");
 
             // Open the document.
-            RunUI(() => SkylineWindow.OpenFile(Path.Combine(dir, "doc.sky")));
+            OpenDocument(Path.Combine(dir, "doc.sky"));
 
             var doc = SkylineWindow.Document;
 
