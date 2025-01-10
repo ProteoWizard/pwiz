@@ -510,7 +510,6 @@ namespace pwiz.SkylineTestTutorial
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(NormalizeGraphToHeavy);
             PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
-            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             WaitForGraphs();
             PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
