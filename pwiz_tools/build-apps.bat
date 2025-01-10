@@ -10,41 +10,37 @@ set REGISTER=
 set OPTIMIZATION=optimization=speed
 set NOLOG=
 
-set ALL_ARGS= %*
+REM that trailing space matters for argument parsing - keeps "debug-symbols" from matching "debug"
+set ALL_ARGS= %* 
 
-if "%ALL_ARGS: 32=%" neq "%ALL_ARGS%" (
+if "%ALL_ARGS: 32 =%" neq "%ALL_ARGS%" (
     set TARGETPLATFORM=32
-    set ALL_ARGS=%ALL_ARGS: 32=%
+    set ALL_ARGS=%ALL_ARGS: 32 =%
 )
-if "%ALL_ARGS: 64=%" neq "%ALL_ARGS%" (
+if "%ALL_ARGS: 64 =%" neq "%ALL_ARGS%" (
     set TARGETPLATFORM=64
-    set ALL_ARGS=%ALL_ARGS: 64=%
+    set ALL_ARGS=%ALL_ARGS: 64 =%
 )
 if "%ALL_ARGS: register=%" neq "%ALL_ARGS%" (
     set REGISTER=1
-    set ALL_ARGS=%ALL_ARGS: register=%
+    set ALL_ARGS=%ALL_ARGS: register =%
 )
 if "%ALL_ARGS: REGISTER=%" neq "%ALL_ARGS%" (
     set REGISTER=1
-    set ALL_ARGS=%ALL_ARGS: REGISTER=%
+    set ALL_ARGS=%ALL_ARGS: REGISTER =%
 )
-if "%ALL_ARGS: debug=%" neq "%ALL_ARGS%" (
+if "%ALL_ARGS: debug =%" neq "%ALL_ARGS%" (
     set OPTIMIZATION=debug
-    if "%ALL_ARGS: debug-symbols=%" == "%ALL_ARGS%" (
-        set ALL_ARGS=%ALL_ARGS: debug=%
-    )
+
 )
-if "%ALL_ARGS: DEBUG=%" neq "%ALL_ARGS%" (
+if "%ALL_ARGS: DEBUG =%" neq "%ALL_ARGS%" (
     set OPTIMIZATION=debug
-    if "%ALL_ARGS: DEBUG-SYMBOLS=%" == "%ALL_ARGS%" (
-        set ALL_ARGS=%ALL_ARGS: DEBUG=%
-    )
 )
-if "%ALL_ARGS: nolog=%" neq "%ALL_ARGS%" (
+if "%ALL_ARGS: nolog =%" neq "%ALL_ARGS%" (
     set NOLOG=1
     set ALL_ARGS=%ALL_ARGS: nolog=%
 )
-if "%ALL_ARGS: NOLOG=%" neq "%ALL_ARGS%" (
+if "%ALL_ARGS: NOLOG =%" neq "%ALL_ARGS%" (
     set NOLOG=1
     set ALL_ARGS=%ALL_ARGS: NOLOG=%
 )
