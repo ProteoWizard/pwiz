@@ -56,6 +56,7 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
+            this.toolStripSplitButton1 = new System.Windows.Forms.ToolStripSplitButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -143,8 +144,8 @@
             // 
             // tbxFind
             // 
-            this.tbxFind.Name = "tbxFind";
             resources.ApplyResources(this.tbxFind, "tbxFind");
+            this.tbxFind.Name = "tbxFind";
             this.tbxFind.TextChanged += new System.EventHandler(this.FindBoxOnTextChanged);
             // 
             // navBarButtonMatchCase
@@ -171,6 +172,7 @@
             this.bindingNavigator1.CountItem = this.bindingNavigatorCountItem;
             this.bindingNavigator1.DeleteItem = null;
             this.bindingNavigator1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.bindingNavigator1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonViews,
             this.btnGroupTotal,
@@ -194,7 +196,8 @@
             this.tbxFind,
             this.navBarButtonMatchCase,
             this.toolStripSeparator2,
-            this.lblFilterApplied});
+            this.lblFilterApplied,
+            this.toolStripSplitButton1});
             resources.ApplyResources(this.bindingNavigator1, "bindingNavigator1");
             this.bindingNavigator1.MoveFirstItem = this.bindingNavigatorMoveFirstItem;
             this.bindingNavigator1.MoveLastItem = this.bindingNavigatorMoveLastItem;
@@ -253,6 +256,13 @@
             this.navBarButtonActions.Name = "navBarButtonActions";
             this.navBarButtonActions.DropDownOpening += new System.EventHandler(this.navBarButtonActions_DropDownOpening);
             // 
+            // toolStripSplitButton1
+            // 
+            this.toolStripSplitButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripSplitButton1.Image = global::pwiz.Common.Properties.Resources.FreezeCells;
+            resources.ApplyResources(this.toolStripSplitButton1, "toolStripSplitButton1");
+            this.toolStripSplitButton1.Name = "toolStripSplitButton1";
+            // 
             // NavBar
             // 
             resources.ApplyResources(this, "$this");
@@ -295,5 +305,6 @@
         private System.Windows.Forms.ToolStripSplitButton navBarButtonCluster;
         private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem navBarButtonClusterGrid;
+        private System.Windows.Forms.ToolStripSplitButton toolStripSplitButton1;
     }
 }
