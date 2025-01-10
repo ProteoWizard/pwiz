@@ -592,6 +592,7 @@
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
