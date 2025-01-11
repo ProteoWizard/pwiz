@@ -1327,18 +1327,17 @@ namespace pwiz.SkylineTestUtil
 
         public string CoverShotName { get; set; }
 
-        private string GetCoverShotPath(string folderPath = null, string suffix = null)
+        private string GetCoverShotPath()
         {
-            if (CoverShotName == null)
-            {
-                return null;
-            }
+            Assume.IsNotNull(CoverShotName);
+            return Path.Combine(TutorialPath, "cover.png");
+        }
 
-            if (folderPath == null)
-                folderPath = Path.Combine(PathEx.GetDownloadsPath(), "covershots");
-            if (suffix == null)
-                suffix = string.Format("-{0}_{1}", Install.MajorVersion, Install.MinorVersion);
-            string cultureSuffix = CultureInfo.CurrentCulture.Name;
+        private string GetCoverShotPath([NotNull] string folderPath, [NotNull] string suffix)
+        {
+            Assume.IsNotNull(CoverShotName);
+
+            string cultureSuffix = GetFolderNameForLanguage(CultureInfo.CurrentCulture);
             if (Equals(cultureSuffix, "en"))
                 cultureSuffix = string.Empty;
             else
