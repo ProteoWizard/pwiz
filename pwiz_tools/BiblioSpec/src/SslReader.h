@@ -64,6 +64,11 @@ class sslPSM : public PSM {
             } catch (bad_lexical_cast) {
                 if (bal::istarts_with(value, "index="))
                     psm.specIndex = boost::lexical_cast<int>(value.substr(6));
+                else if (bal::istarts_with(value, "scan="))
+                {
+                    psm.specKey = boost::lexical_cast<int>(trimLeadingZeros(value.substr(5)));
+                    psm.specIndex = -1;
+                }
                 else
                     psm.specName = value;
             }
