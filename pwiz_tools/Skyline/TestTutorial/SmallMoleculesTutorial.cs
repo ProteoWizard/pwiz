@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override bool ShowStartPage
         {
-            get { return !IsPauseForScreenShots; }  // So we can point out the UI mode control
+            get { return !IsRecordingScreenShots; }  // So we can point out the UI mode control
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            if (IsPauseForScreenShots)
+            if (!ShowStartPage)
                 RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
             else // old way of doing things
             {

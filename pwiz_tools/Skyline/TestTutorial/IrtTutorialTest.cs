@@ -595,6 +595,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                 {
+                    SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
+
                     Settings.Default.ChromatogramFontSize = 14;
                     Settings.Default.AreaFontSize = 14;
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);

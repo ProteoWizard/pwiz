@@ -451,6 +451,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
                 // Need to click again to get the full-scan graph populated after restoring view
                 ClickChromatogram(F_A_018, 14.807, 152.0E3, PaneKey.PRECURSORS);
                 TakeCoverShot();

@@ -85,30 +85,39 @@ namespace ImageComparer
 
     internal class ScreenshotFile
     {
+        private static readonly Regex PATTERN_COVER = new Regex(@"\\([a-zA-Z0-9\-]+)\\(\w\w-?[A-Z]*)\\cover\.png");
         private static readonly Regex PATTERN = new Regex(@"\\([a-zA-Z0-9\-]+)\\(\w\w-?[A-Z]*)\\s-(\d\d)\.png");
 
         public static bool IsMatch(string filePath)
         {
-            return PATTERN.Match(filePath).Success;
+            return PATTERN.Match(filePath).Success || PATTERN_COVER.Match(filePath).Success;
         }
 
         public ScreenshotFile(string filePath)
         {
             Path = filePath;
 
-            var match = PATTERN.Match(filePath);
-            if (match.Success)
-            {
-                Name = match.Groups[1].Value;
-                Locale = match.Groups[2].Value;
+            if (!FromPath(filePath, PATTERN) && !FromPath(filePath, PATTERN_COVER))
+                throw new IOException($"Not supported PNG file {filePath}");
+        }
+
+        private bool FromPath(string filePath, Regex regex)
+        {
+            var match = regex.Match(filePath);
+            if (!match.Success)
+                return false;
+
+            Name = match.Groups[1].Value;
+            Locale = match.Groups[2].Value;
+            if (match.Groups.Count > 3)
                 Number = int.Parse(match.Groups[3].Value);
-            }
+            return true;
         }
 
         public string Path { get; }
-        private string Name { get; }
-        private string Locale { get; }
-        private int Number { get; }
+        private string Name { get; set; }
+        private string Locale { get; set; }
+        private int Number { get; set; }
 
         public bool IsEmpty => string.IsNullOrEmpty(Name);
 
@@ -117,7 +126,9 @@ namespace ImageComparer
         public string UrlToDownload => $"{BASE_URL}/{RelativePath}";
         // RelativePath is used for ComboBox display
         // ReSharper disable once MemberCanBePrivate.Local
-        public string RelativePath => $"{Name}/{Locale}/s-{Number}.png";
+        public string RelativePath => Number != 0
+            ? $"{Name}/{Locale}/s-{Number}.png"
+            : $"{Name}/{Locale}/cover.png";
 
         public string GetDescription(ImageSource source)
         {

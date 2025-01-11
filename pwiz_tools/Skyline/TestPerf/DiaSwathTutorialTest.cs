@@ -1255,6 +1255,13 @@ namespace TestPerf
                     changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
                     RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);
                     OkDialog(changeGroupComparisonSettings, changeGroupComparisonSettings.Close);
+                    volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreCoverViewOnScreen
+                    RunUI(() =>
+                    {
+                        var xAxis = volcanoPlot.GraphControl.GraphPane.XAxis;
+                        xAxis.Scale.Min = -4;
+                        xAxis.Scale.Max = 4;
+                    });
 
                     RunUI(() =>
                     {

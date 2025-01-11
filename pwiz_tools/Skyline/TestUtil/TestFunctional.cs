@@ -1269,7 +1269,7 @@ namespace pwiz.SkylineTestUtil
                     MessageBoxIcon.Information);
         }
 
-        private static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
+        protected static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
 
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
@@ -1307,7 +1307,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static bool IsTranslationRequired => IsAutoScreenShotMode && !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
+        public static bool IsTranslationRequired => (IsAutoScreenShotMode || IsCoverShotMode) &&
+                                                    !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
 
         private static bool _isCoverShotMode;
 
@@ -1881,9 +1882,11 @@ namespace pwiz.SkylineTestUtil
             Thread.Sleep(1000); // Give windows time to repaint
             RunUI(() =>
             {
+                AssertEx.AreEqual(1.0, (new Size(1, 1) * ScreenshotManager.GetScalingFactor()).Width,
+                    "Cover shots must be taken at a scale factor of 100% (96DPI)");
                 var screenRect = Screen.FromControl(SkylineWindow).Bounds;
-                AssertEx.IsTrue(screenRect.Width == 1920 && screenRect.Height == 1080,
-                    "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
+                AssertEx.IsTrue(screenRect.Width >= 1920 && screenRect.Height >= 1080,
+                    "Cover shots must be taken at screen resolution of at least 1920x1080");
             });
             var coverSavePath = GetCoverShotPath();
             _shotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);

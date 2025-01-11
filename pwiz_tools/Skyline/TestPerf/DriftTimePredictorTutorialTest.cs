@@ -265,7 +265,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
                     RenameReplicate(manageResultsDlg, 1, "Yeast_BSA");
                     OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
 
-                    RunUI(SkylineWindow.FocusDocument);
+                    FocusDocument();
 
                     TakeCoverShot();
                     return;
