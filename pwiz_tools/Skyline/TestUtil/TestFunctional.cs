@@ -1873,7 +1873,7 @@ namespace pwiz.SkylineTestUtil
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
         {
             // Override to modify the cover shot before it is saved or put on the clipboard
-            return bmp;
+            return bmp.CleanupBorder();
         }
 
         public void TakeCoverShot()

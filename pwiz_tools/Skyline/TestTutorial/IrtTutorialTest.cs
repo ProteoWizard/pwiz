@@ -622,6 +622,7 @@ namespace pwiz.SkylineTestTutorial
                     irtEditor.Top = SkylineWindow.Bottom - irtEditor.Height - SkylineWindow.StatusBarHeight - 5;
                     irtEditor.Left = SkylineWindow.Right - irtEditor.Width - 5;
                 });
+                ScreenshotManager.ActivateScreenshotForm(irtEditor);    // To hide selection in TextBox
                 TakeCoverShot();
                 OkDialog(irtEditor, irtEditor.CancelDialog);
                 OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);

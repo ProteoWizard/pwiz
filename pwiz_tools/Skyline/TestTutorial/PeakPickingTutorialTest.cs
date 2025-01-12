@@ -282,6 +282,7 @@ namespace pwiz.SkylineTestTutorial
             if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
+                JiggleSelection();
                 var reintegrateDlgCover = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
                 var editModelCover = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlgCover.AddPeakScoringModel);
                 RunUI(() =>
@@ -291,6 +292,7 @@ namespace pwiz.SkylineTestTutorial
                     editModelCover.PeakScoringModelName = "SRMCourse";
                     editModelCover.TrainModelClick();
                 });
+                ScreenshotManager.ActivateScreenshotForm(editModelCover);   // To hide the caret in the text box
                 TakeCoverShot();
 
                 OkDialog(editModelCover, editModelCover.CancelDialog);

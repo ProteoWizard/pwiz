@@ -214,6 +214,11 @@ namespace pwiz.SkylineTestTutorial
                     var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                     string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                     var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = impliedLabeled2);
+                    RunUI(() =>
+                    {
+                        colDlg.Height -= 55;
+                        colDlg.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - colDlg.Height - 10);
+                    });
 
                     TakeCoverShot();
 

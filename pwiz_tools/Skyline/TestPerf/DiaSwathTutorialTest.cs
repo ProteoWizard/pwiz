@@ -479,8 +479,7 @@ namespace TestPerf
         public void TestDiaQeTutorial()
         {
             _testInfo.TestQeData(false);
-            if (!IsCoverShotMode)
-                RunTest();
+            RunTest();
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
@@ -501,8 +500,7 @@ namespace TestPerf
                 return;
 
             _testInfo.TestPasefData(false);
-            if (!IsCoverShotMode)
-                RunTest();
+            RunTest();
         }
 
         [TestMethod,
@@ -1255,12 +1253,16 @@ namespace TestPerf
                     changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
                     RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);
                     OkDialog(changeGroupComparisonSettings, changeGroupComparisonSettings.Close);
+                    WaitForConditionUI(() => fcGrid.IsComplete);
                     volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreCoverViewOnScreen
                     RunUI(() =>
                     {
-                        var xAxis = volcanoPlot.GraphControl.GraphPane.XAxis;
-                        xAxis.Scale.Min = -4;
-                        xAxis.Scale.Max = 4;
+                        var pane = volcanoPlot.GraphControl.GraphPane;
+                        var xScale = pane.XAxis.Scale;
+                        xScale.MaxAuto = xScale.MinAuto = false;
+                        xScale.Min = -4;
+                        xScale.Max = 4;
+                        pane.AxisChange();
                     });
 
                     RunUI(() =>

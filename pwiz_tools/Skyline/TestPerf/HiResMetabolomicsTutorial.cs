@@ -303,6 +303,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     WaitForGraphs();
                     RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
                     WaitForGraphs();
+                    FocusDocument();
 
                     TakeCoverShot();
                     return;

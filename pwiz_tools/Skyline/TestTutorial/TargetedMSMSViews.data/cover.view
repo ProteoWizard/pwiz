@@ -5,8 +5,8 @@
   <Contents Count="5">
     <Content ID="0" PersistString="pwiz.Skyline.Controls.Graphs.GraphSpectrum" AutoHidePortion="0.25" IsHidden="True" IsFloating="False" />
     <Content ID="1" PersistString="pwiz.Skyline.Controls.SequenceTreeForm|0(0,1,2,3,4),1(0(0),1),2(0,1)|13,13|0" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
-    <Content ID="2" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|20fmol_uL_tech1" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
-    <Content ID="3" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|80fmol_uL_tech1" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="2" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|20fmol" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
+    <Content ID="3" PersistString="pwiz.Skyline.Controls.Graphs.GraphChromatogram|80fmol" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
     <Content ID="4" PersistString="pwiz.Skyline.Controls.Graphs.GraphSummary|AreaGraphController|replicate" AutoHidePortion="0.25" IsHidden="False" IsFloating="False" />
   </Contents>
   <Panes Count="6">
