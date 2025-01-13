@@ -46,7 +46,7 @@ namespace pwiz.Common.DataBinding
         
         public const string DefaultViewName = "default";
         private IList<RowSourceInfo> _rowSources;
-
+        protected ViewEditor _customizedViewForm = null;
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
         {
             DataSchema = dataSchema;
@@ -335,21 +335,40 @@ namespace pwiz.Common.DataBinding
         {
             return new ViewEditor(this, GetViewInfo(viewGroup, viewSpec));
         }
-        
+
         public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath)
         {
-            using (var customizeViewForm = CreateViewEditor(viewPath, viewSpec))
-            {
-                if (FormUtil.ShowDialog(owner, customizeViewForm) == DialogResult.Cancel)
-                {
-                    return null;
-                }
-                // Consider: if save fails, reshow CustomizeViewForm?
-                ViewInfo viewInfo = customizeViewForm.ViewInfo;
-                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(customizeViewForm.ViewName));
+            NavBar.ApplyChanges = false;
+            var formResult = DialogResult.Cancel;
+            if (_customizedViewForm == null) 
+            { 
+                _customizedViewForm = CreateViewEditor(viewPath, viewSpec);
+            }
+    
+            formResult = FormUtil.ShowDialog(owner, _customizedViewForm);
+        
+
+            ViewInfo viewInfo = _customizedViewForm.ViewInfo;
+            if ( formResult == DialogResult.Yes)
+            {                
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(_customizedViewForm.ViewName));
+             
                 SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+                var newSpec = viewInfo.GetViewSpec();
+                NavBar.ApplyChanges = true;
                 return viewInfo.GetViewSpec();
             }
+            else if (formResult == DialogResult.Cancel)
+            {
+                return null;
+            }
+            // Consider: if save fails, reshow CustomizeViewForm?
+            viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(_customizedViewForm.ViewName));
+            SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+            //_customizedViewForm.Hide();
+            _customizedViewForm.Dispose();
+            _customizedViewForm = null;
+            return viewInfo.GetViewSpec();         
         }
 
         public ViewSpec NewView(Control owner, ViewGroup viewPath)

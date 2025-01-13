@@ -38,6 +38,7 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private BindingListSource _bindingListSource;
         private string _waitingMsg;
+        public static bool ApplyChanges { get; set; }
         public NavBar()
         {
             InitializeComponent();
@@ -310,6 +311,12 @@ namespace pwiz.Common.DataBinding.Controls
                 return;
             }
             BindingListSource.SetViewContext(ViewContext, ViewContext.GetViewInfo(viewGroup, newView));
+            if (ApplyChanges == true)
+            {
+                CustomizeView();
+                //User Must Click "Apply" each time customizing a new view
+                ApplyChanges = false;
+            }
         }
 
         void OnCopyView(object sender, EventArgs eventArgs)
