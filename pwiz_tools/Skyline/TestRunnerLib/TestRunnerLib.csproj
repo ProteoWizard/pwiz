@@ -64,6 +64,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
     </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Condition="'$(Platform)' == 'x86'" Include="TestDiagnostics">
       <HintPath>..\..\Shared\ProteowizardWrapper\obj\x86\TestDiagnostics.dll</HintPath>
     </Reference>
@@ -87,6 +88,13 @@
     <Compile Include="FormSeen.cs" />
     <Compile Include="InvokeSkyline.cs" />
     <Compile Include="MiniDump.cs" />
+    <Compile Include="PInvoke\DwmapiTest.cs" />
+    <Compile Include="PInvoke\Gdi32Test.cs" />
+    <Compile Include="PInvoke\Kernel32Test.cs" />
+    <Compile Include="PInvoke\Ole32Test.cs" />
+    <Compile Include="PInvoke\Shell32Test.cs" />
+    <Compile Include="PInvoke\User32Test.cs" />
+    <Compile Include="PInvoke\User32TestExtensions.cs" />
     <Compile Include="RunTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestRunnerContext.cs" />

@@ -20,7 +20,6 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
-using ImageComparer.Properties;
 
 namespace ImageComparer
 {
@@ -30,6 +29,8 @@ namespace ImageComparer
         private int _alpha;
         private Timer _colorChangeTimer;
         private bool _pendingColorChange;
+        private TrackBar _alphaTrackBar;
+        private Label _alphaLabelValue;
 
         public event EventHandler ColorChanged;
 
@@ -40,17 +41,13 @@ namespace ImageComparer
             {
                 _selectedColor = Color.FromArgb(value.R, value.G, value.B);
                 _alpha = value.A;
-                UpdateButtonAppearance();
+                UpdateControls();
                 TriggerColorChange();
             }
         }
 
         public AlphaColorPickerButton()
         {
-            _selectedColor = Settings.Default.ImageDiffColor;
-            _alpha = Settings.Default.ImageDiffAlpha;
-
-            ToolTipText = @"Pick Color";
             InitializeDropDown();
             InitializeTimer();
             UpdateButtonAppearance();
@@ -72,6 +69,9 @@ namespace ImageComparer
 
         private void InitializeDropDown()
         {
+            if (DesignMode)
+                return;
+
             var predefinedColors = new[]
             {
                 Color.Red, Color.Green, Color.Blue, Color.Yellow,
@@ -113,7 +113,7 @@ namespace ImageComparer
                 TextAlign = ContentAlignment.MiddleRight,
                 Width = panel.Width/2,
             };
-            var alphaLabelValue = new Label
+            _alphaLabelValue = new Label
             {
                 Text = _alpha.ToString(),
                 Dock = DockStyle.Top,
@@ -129,19 +129,19 @@ namespace ImageComparer
                 Margin = new Padding(0)
             };
             alphaContainer.Controls.Add(alphaLabelText);
-            alphaContainer.Controls.Add(alphaLabelValue);
+            alphaContainer.Controls.Add(_alphaLabelValue);
 
-            var alphaTrackBar = new TrackBar
+            _alphaTrackBar = new TrackBar
             {
                 Minimum = 0,
                 Maximum = 255,
                 Value = _alpha,
                 Dock = DockStyle.Bottom
             };
-            alphaTrackBar.Scroll += (s, e) =>
+            _alphaTrackBar.Scroll += (s, e) =>
             {
-                _alpha = alphaTrackBar.Value;
-                alphaLabelValue.Text = _alpha.ToString();
+                _alpha = _alphaTrackBar.Value;
+                _alphaLabelValue.Text = _alpha.ToString();
                 UpdateButtonAppearance();
                 TriggerColorChange();
             };
@@ -165,7 +165,7 @@ namespace ImageComparer
 
             panel.Controls.Add(colorPanel);
             panel.Controls.Add(alphaContainer);
-            panel.Controls.Add(alphaTrackBar);
+            panel.Controls.Add(_alphaTrackBar);
             panel.Controls.Add(moreColorsButton);
 
             var host = new ToolStripControlHost(panel)
@@ -175,6 +175,13 @@ namespace ImageComparer
             };
 
             DropDownItems.Add(host);
+        }
+
+        private void UpdateControls()
+        {
+            _alphaTrackBar.Value = _alpha;
+            _alphaLabelValue.Text = _alpha.ToString();
+            UpdateButtonAppearance();
         }
 
         private void UpdateButtonAppearance()
