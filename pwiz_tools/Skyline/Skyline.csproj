@@ -2973,13 +2973,16 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.ja.resx">
       <DependentUpon>TutorialImageResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>TutorialImageResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.zh-CHS.resx">
       <DependentUpon>TutorialImageResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialLinkResources.ja.resx">
       <DependentUpon>TutorialLinkResources.resx</DependentUpon>
@@ -3861,7 +3864,7 @@
       <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content  Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
       <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
