@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
         }
 
-        protected override int SelectedIndex => GraphSummary.StateProvider.SelectedResultsIndex;
+        public override int SelectedIndex => GraphSummary.StateProvider.SelectedResultsIndex;
 
 
         #region Functional Test Support
