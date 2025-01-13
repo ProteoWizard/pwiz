@@ -364,9 +364,10 @@ namespace SkylineTester
         {
             foreach (var language in GetLanguages())
             {
-                string name;
-                if (_languageNames.TryGetValue(language, out name))
-                    yield return name;
+                yield return _languageNames
+                    .Where(lang => lang.Key.StartsWith(language))
+                    .Select(lang => lang.Value)
+                    .First();
             }
         }
 

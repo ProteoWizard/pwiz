@@ -156,13 +156,13 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.SelectedPath = document.GetPathTo((int) SrmDocument.Level.Molecules, 0));
             RunUI(() => SkylineWindow.Size = new Size(820, 554));
             RestoreViewOnScreen(3);
-            PauseForScreenShot("Main window", 3);
+            PauseForScreenShot("Main window");
 
             // p. 4 Configure Document for Thermo raw files
             {
                 var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
                 RunUI(() => transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.FullScan);
-                PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Peptide Settings - Full-Scan tab blank", 5);
+                PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Peptide Settings - Full-Scan tab blank");
 
                 RunUI(() =>
                 {
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.PrecursorMassAnalyzer = FullScanMassAnalyzerType.qit;
                     transitionSettingsUI.AcquisitionMethod = FullScanAcquisitionMethod.PRM;
                 });
-                PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Peptide Settings - Full-Scan tab low res", 6);
+                PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Peptide Settings - Full-Scan tab low res");
 
                 RunUI(() =>
                 {
@@ -183,7 +183,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.FocusIonMatchTolerance();
                 });
                 PauseForScreenShot<TransitionSettingsUI.LibraryTab>(
-                    "Transition Settings - Library tab match tolerance same as MS/MS resolution", 8);
+                    "Transition Settings - Library tab match tolerance same as MS/MS resolution");
 
                 RunUI(() =>
                 {
@@ -192,7 +192,7 @@ namespace pwiz.SkylineTestTutorial
                     Assert.IsTrue(transitionSettingsUI.FragmentTypes.Contains("p")); // Should be added automatically
                     Assert.IsTrue(transitionSettingsUI.SmallMoleculeFragmentTypes.Contains("p")); // Should be added automatically
                 });
-                PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 9);
+                PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab");
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
 
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestTutorial
                         });
                         if (!pausedForScreenShot)
                         {
-                            PauseForScreenShot<PopupPickList>("Transitions popup pick-list", 10);
+                            PauseForScreenShot<PopupPickList>("Transitions popup pick-list");
                             pausedForScreenShot = true;
                         }
                         OkDialog(picklist, picklist.OnOk);
@@ -252,14 +252,14 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.SetMethodType(ExportMethodType.Standard);
                 exportMethodDlg.SetTemplateFile(GetTestPath(@"Low Res\TargetedMSMS_template.meth"), true);
             });
-            PauseForScreenShot<ExportMethodDlg.MethodView>("Export Method form", 11);
+            PauseForScreenShot<ExportMethodDlg.MethodView>("Export Method form");
 
             // p. 10 Ok the error box.
             {
                 var messageDlg = ShowDialog<MessageDlg>(
                     () => exportMethodDlg.OkDialog(GetTestPath(@"Low Res\TargetedMSMS_BSA_Protea.meth")));
                 RunUI(() => messageDlg.Height = 210);
-                PauseForScreenShot<MessageDlg>("Error message (expected)", 12);
+                PauseForScreenShot<MessageDlg>("Error message (expected)");
 
                 OkDialog(messageDlg, messageDlg.OkDialog);
             }
@@ -287,7 +287,7 @@ namespace pwiz.SkylineTestTutorial
                 }
                 Assert.AreEqual(4, viewEditor.ChooseColumnsTab.ColumnCount);
             });
-            PauseForScreenShot<ViewEditor>("Edit Report form", 13);
+            PauseForScreenShot<ViewEditor>("Edit Report form");
 
             {
                 var previewReportDlg = ShowDialog<DocumentGridForm>(viewEditor.ShowPreview);
@@ -311,7 +311,7 @@ namespace pwiz.SkylineTestTutorial
                     previewReportDlg.Size = new Size(460, 330);
                     previewReportDlg.Left = SkylineWindow.Right + 20;
                 });
-                PauseForScreenShot<DocumentGridForm>("Preview New Report window", 14);
+                PauseForScreenShot<DocumentGridForm>("Preview New Report window");
 
                 OkDialog(previewReportDlg, previewReportDlg.Close);
             }
@@ -354,7 +354,7 @@ namespace pwiz.SkylineTestTutorial
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
             RunUI(() => importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library blank page", 15);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library blank page");
 
             const int prefixLen = 35;
             const string lowResDir = "Low Res";
@@ -383,7 +383,7 @@ namespace pwiz.SkylineTestTutorial
                 importPeptideSearchDlg.BuildPepSearchLibControl.FilterForDocumentPeptides = true;
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page", 16);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search Build Spectral Library with files page");
 
             RunDlg<MessageDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck, dlg => dlg.OkDialog());
             doc = WaitForDocumentChangeLoaded(doc, WAIT_TIME*2);    // double wait time, becuase of intermittent failures on nightly runs
@@ -403,7 +403,7 @@ namespace pwiz.SkylineTestTutorial
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search Extract Chromatograms page", 17);
+            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsPage>("Import Peptide Search Extract Chromatograms page");
 
             // We're on the "Extract Chromatograms" page of the wizard.
             // All the test results files are in the same directory as the 
@@ -467,7 +467,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => allChromGraph.Left = SkylineWindow.Right + 20);
 
             WaitForConditionUI(() => allChromGraph.ProgressTotalPercent >= 15);
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 19);
+            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window");
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
             WaitForClosedAllChromatogramsGraph();
 
@@ -504,7 +504,7 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunUI(() => SkylineWindow.Width = 1050);
             RestoreViewOnScreen(20);
-            PauseForScreenShot("Main window with data imported", 20);
+            PauseForScreenShot("Main window with data imported");
             if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)
             {
                 TestPropertySheet();
@@ -527,7 +527,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => SkylineWindow.AutoZoomBestPeak());
             // Ensure Graphs look like p21. (checked)
             WaitForGraphs();
-            PauseForScreenShot("Chromatogram graphs clipped from main window with zoomed peaks", 21, null,
+            PauseForScreenShot("Chromatogram graphs clipped from main window with zoomed peaks", null,
                 bmp =>
                     ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
                     {
@@ -542,7 +542,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.GraphSpectrum.SelectSpectrum(new SpectrumIdentifier(lowRes20FileRaw, 77.7722));
                 SkylineWindow.GraphSpectrum.Focus();
             });
-            PauseForScreenShot<GraphSpectrum>("Library Match view clipped from main window with noisy spectrum", 22);
+            PauseForScreenShot<GraphSpectrum>("Library Match view clipped from main window with noisy spectrum");
 
             RunUI(() =>
             {
@@ -650,7 +650,7 @@ namespace pwiz.SkylineTestTutorial
                 Settings.Default.ChromatogramFontSize = 14;
                 SkylineWindow.ShowGraphPeakArea(false);
             });
-            PauseForScreenShot("Chromatogram graphs clipped from main window with split graphs", 26, null,
+            PauseForScreenShot("Chromatogram graphs clipped from main window with split graphs", null,
                 bmp =>
                     ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
                     {
@@ -722,9 +722,16 @@ namespace pwiz.SkylineTestTutorial
 
             // Try to import a file to show it fails.
             ImportResultsDlg importResultsDlg3 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            var uri500fmol = MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw));
             RunUI(() => importResultsDlg3.NamedPathSets = importResultsDlg3.GetDataSourcePathsFileReplicates(
-                new[] { MsDataFileUri.Parse(GetTestPath(@"TOF\6-BSA-500fmol" + ExtAgilentRaw)) }));
+                new[] { uri500fmol }));
             var importProgress = ShowDialog<AllChromatogramsGraph>(importResultsDlg3.OkDialog);
+            // Set a consistent time for a screenshot
+            var dateTimeCurrent = DateTime.Now;
+            var dateTimeError = new DateTime(dateTimeCurrent.Year, dateTimeCurrent.Month, dateTimeCurrent.Day, 12, 35, 0);
+            importProgress.SetFreezeTimeForError(dateTimeError);
+            // Remove the full path for the error in a screenshot
+            importProgress.SetReplacementForError(Path.GetDirectoryName(uri500fmol.GetFilePath()) + Path.DirectorySeparatorChar, string.Empty);
             var docFullScanError = WaitForDocumentChangeLoaded(docCalibrate1);
 //            WaitForConditionUI(() => importProgress.Files.Any());
             WaitForConditionUI(() => importProgress.Finished);
@@ -800,7 +807,7 @@ namespace pwiz.SkylineTestTutorial
                     transitionSettingsUI.ProductMassAnalyzer = FullScanMassAnalyzerType.centroided;
                     transitionSettingsUI.ProductRes = 20;
                 });
-                PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan tab for TOF", 29);
+                PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan tab for TOF");
 
                 RunUI(() =>
                 {
@@ -842,8 +849,8 @@ namespace pwiz.SkylineTestTutorial
                 }
             }
             RestoreViewOnScreen(30);
-            PauseForScreenShot<SequenceTreeForm>("Targets View tree clipped from main window", 30, 
-                processShot:bmp => ClipTargets(bmp, 12));
+            PauseForScreenShot<SequenceTreeForm>("Targets View tree clipped from main window", 
+                processShot: bmp => ClipTargets(bmp, 12));
 
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg2 =>
             {
@@ -889,7 +896,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.FocusDocument();
             });
-            PauseForScreenShot("Main window", 31);
+            PauseForScreenShot("Main window");
 
             // if (AsSmallMoleculesTestMode != RefinementSettings.ConvertToSmallMoleculesMode.masses_only)  // No formula means no isotopes, so this check is not applicable
             //     ValidatePeakRanks(18, 270, false);
@@ -934,7 +941,7 @@ namespace pwiz.SkylineTestTutorial
 
             PauseForScreenShot<SequenceTreeForm>("Targets View tree clipped from main window", processShot: bmp => ClipTargets(bmp, 12));
             // p. 34
-            PauseForScreenShot("Chromatogram graphs clipped from main window zoomed", 34, null,
+            PauseForScreenShot("Chromatogram graphs clipped from main window zoomed", null,
                 bmp =>
                     ClipSkylineWindowShotWithForms(bmp, new DockableForm[]
                     {
