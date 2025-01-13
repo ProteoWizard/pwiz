@@ -485,7 +485,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
+            libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries, Path.GetFileName(FilePath));
            
             using (FileSaver fs = new FileSaver(CachePath, sm))
             using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))

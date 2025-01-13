@@ -1077,15 +1077,17 @@ namespace pwiz.Skyline.Model.Lib
             _libraryEntries = new LibKeyMap<TInfo>(entryList, entryList.Select(entry=>entry.Key.LibraryKey));
         }
 
-        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries)
+        protected List<TInfo> FilterInvalidLibraryEntries(ref IProgressStatus status, IEnumerable<TInfo> entries, string dataSource)
         {
             var validEntries = new List<TInfo>();
             var invalidKeys = new List<LibKey>();
             foreach (var entry in entries)
             {
-                if (!IsValidLibKey(entry.Key))
+                if (!IsValidLibKey(entry.Key, out var whyNot))
                 {
                     invalidKeys.Add(entry.Key);
+                    Messages.WriteAsyncUserMessage(ModelResources.AbstractModificationMatcher_CreateDocNodeFromSettings_In_entry___0___of___1_____2_, 
+                        entry.Key, dataSource, whyNot);
                 }
                 else
                 {
@@ -1097,15 +1099,17 @@ namespace pwiz.Skyline.Model.Lib
             return validEntries;
         }
 
-        protected bool IsValidLibKey(LibKey libKey)
+        protected bool IsValidLibKey(LibKey libKey, out string errorMessage)
         {
             try
             {
+                errorMessage = null;
                 var unused = libKey.LibraryKey.CreatePeptideIdentityObj();
                 return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                errorMessage = e.Message;
                 return false;
             }
         }
