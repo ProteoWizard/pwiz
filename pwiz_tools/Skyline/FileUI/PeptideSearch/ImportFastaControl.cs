@@ -304,6 +304,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             tbxFasta.Select(tbxFasta.Text.Length, 0);
         }
 
+        public void ScrollFastaTargetsToEnd()
+        {
+            tbxFastaTargets.Select(tbxFastaTargets.Text.Length, 0);
+        }
+
         public void SetFastaContent(string fastaFilePath, bool forceFastaAsFilepath = false)
         {
             try
