@@ -586,7 +586,7 @@ namespace pwiz.Skyline.Model.Tools
             var node9 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node8 } };
             var node10 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_cuda_library, ParentNodes = null };
             var node11 = new PythonTaskNode { PythonTaskName = PythonTaskName.install_cuda_library, ParentNodes = null };
-            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 }; //TODO: , node10, node11 };
+            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 , node10, node11 };
         }
     }
 
@@ -630,7 +630,8 @@ namespace pwiz.Skyline.Model.Tools
             { PythonTaskName.pip_install_virtualenv, false },
             { PythonTaskName.create_virtual_environment, false },
             { PythonTaskName.pip_install_packages, false },
-            { PythonTaskName.download_cuda_library, false }
+            { PythonTaskName.download_cuda_library, false },
+            { PythonTaskName.install_cuda_library, false }
         };
 
         public bool Validate(PythonTaskName pythonTaskName, PythonInstaller pythonInstaller)
@@ -785,7 +786,7 @@ namespace pwiz.Skyline.Model.Tools
                 case PythonTaskName.download_cuda_library:
                     return ValidateDownloadCudaLibrary();
                 case PythonTaskName.install_cuda_library:
-                    //TODO: implement me return ValidateInstallCudaLibrary();
+                    return ValidateInstallCudaLibrary();
                 default:
                     throw new PythonInstallerUnsupportedTaskNameException(pythonTaskName);
             }
@@ -795,6 +796,12 @@ namespace pwiz.Skyline.Model.Tools
         {
             return File.Exists(_pythonInstaller.CudaInstallerDownloadPath);
         }
+
+        private bool ValidateInstallCudaLibrary()
+        {
+            return false; // File.Exists(_pythonInstaller.CudaInstallerDownloadPath);
+        }
+
         private bool ValidateDownloadPythonEmbeddablePackage()
         {
             return File.Exists(_pythonInstaller.PythonEmbeddablePackageDownloadPath);
