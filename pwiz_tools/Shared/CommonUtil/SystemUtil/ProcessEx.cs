@@ -18,7 +18,7 @@
  */
 
 using System;
-using System.Runtime.InteropServices;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -27,11 +27,6 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// Returns true iff the process is running under Wine (the "wine_get_version" function is exported by ntdll.dll)
         /// </summary>
-        public static bool IsRunningOnWine => GetProcAddress(GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-        static extern IntPtr GetModuleHandle([MarshalAs(UnmanagedType.LPWStr)] string lpModuleName);
-        [DllImport("kernel32", CharSet = CharSet.Ansi, ExactSpelling = true, SetLastError = true)]
-        static extern IntPtr GetProcAddress(IntPtr hModule, string procName); 
+        public static bool IsRunningOnWine => Kernel32.GetProcAddress(Kernel32.GetModuleHandle(@"ntdll.dll"), @"wine_get_version") != IntPtr.Zero;
     }
 }
