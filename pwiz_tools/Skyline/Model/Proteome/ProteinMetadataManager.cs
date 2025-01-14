@@ -164,14 +164,23 @@ namespace pwiz.Skyline.Model.Proteome
                                     }
                                     else if (nodePepGroup.ProteinMetadata.NeedsSearch())
                                     {
-                                        void CheckBackgroundProteome(FastaSequence seq, ProteinMetadata proteinMetadataOrGroup, int i)
+                                        for (var i = 0; i < nodePepGroup.ProteinMetadata.ProteinMetadataList.Count; i++)
                                         {
+                                            var name = nodePepGroup.IsPeptideList ? 
+                                                nodePepGroup.Name : 
+                                                (nodePepGroup.PeptideGroup as FastaSequence)?.FastaSequenceList[i].Name;
+                                            var proteinMetadataOrGroup = nodePepGroup.ProteinMetadata;
                                             var currentProteinMetadata = proteinMetadataOrGroup.ProteinMetadataList[i];
-                                            var proteinMetadata = proteomeDb.GetProteinMetadataByName(seq.Name);
+                                            var proteinMetadata = proteomeDb.GetProteinMetadataByName(name);
                                             if ((proteinMetadata == null) && !Equals(nodePepGroup.Name, nodePepGroup.OriginalName))
                                                 proteinMetadata = proteomeDb.GetProteinMetadataByName(nodePepGroup.OriginalName); // Original name might hit
                                             if ((proteinMetadata == null) && !String.IsNullOrEmpty(currentProteinMetadata.Accession))
                                                 proteinMetadata = proteomeDb.GetProteinMetadataByName(currentProteinMetadata.Accession); // Parsed accession might hit
+                                            if (proteinMetadata == null && nodePepGroup.IsPeptideList && proteomeDb.GetProteinByName(nodePepGroup.Name)==null)
+                                            {
+                                                // It's something like "Library Peptides"
+                                                proteinMetadata = nodePepGroup.ProteinMetadata.SetWebSearchCompleted();
+                                            }
                                             if ((proteinMetadata != null) && !proteinMetadata.NeedsSearch())
                                             {
                                                 // Background proteome has already resolved this
@@ -180,12 +189,6 @@ namespace pwiz.Skyline.Model.Proteome
                                                 else
                                                     _processedNodes.Add(nodePepGroup.Id.GlobalIndex, nodePepGroup.ProteinMetadata.ChangeSingleProteinMetadata(proteinMetadata));
                                             }
-                                        }
-
-                                        for (var i = 0; i < nodePepGroup.ProteinMetadata.ProteinMetadataList.Count; i++)
-                                        {
-                                            var fastaSequenceOrGroup = nodePepGroup.PeptideGroup as FastaSequence;
-                                            CheckBackgroundProteome(fastaSequenceOrGroup?.FastaSequenceList[i], nodePepGroup.ProteinMetadata, i);
                                         }
                                         nResolved++;
                                     }
