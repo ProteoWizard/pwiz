@@ -1488,7 +1488,7 @@ file, or the file name again for other file types.</value>
 values.</value>
   </data>
   <data name="Strict">
-    <value>Calculated value unavailable when missing data could comparisons between replicates.</value>
+    <value>Calculated value unavailable when missing data could impact comparisons between replicates.</value>
   </data>
   <data name="SummaryMessage">
     <value>Description of the change</value>
