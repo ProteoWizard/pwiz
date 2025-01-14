@@ -556,7 +556,7 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation might require enabling Windows Long Paths. Elevated priveleges are required for this feature. Would you like to enable Windows Long Paths?.
+        ///   Looks up a localized string similar to Python installation requires LongPathsEnabled key to be set in the Window Registry. Elevated privileges are required for this feature. Please see the following link for more information: https://skyline.ms/wiki/home/development/page.view?name=SkylineTesterDoc#LongPathsEnabled  Would you like to enable Windows Long Paths?.
         /// </summary>
         public static string PythonInstaller_Enable_Windows_Long_Paths {
             get {
@@ -565,7 +565,7 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated priveleges are required for this feature..
+        ///   Looks up a localized string similar to Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required for this feature..
         /// </summary>
         public static string PythonInstaller_Install_Cuda_Library {
             get {
