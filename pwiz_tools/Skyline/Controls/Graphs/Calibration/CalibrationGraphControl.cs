@@ -45,11 +45,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public SkylineWindow SkylineWindow { get; set; }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public Helpers.ModeUIAwareFormHelper ModeUIAwareFormHelper
         {
             get;
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public CalibrationCurveOptions Options
         {
             get
@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         private void Settings_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (DisplaySettings != null)
+            if (e.PropertyName == nameof(Properties.Settings.Default.CalibrationCurveOptions ))
             {
                 Update(DisplaySettings);
             }
@@ -91,15 +91,29 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
         public Settings DisplaySettings { get; private set; }
 
+        private bool _inUpdate;
         public void Update(Settings displaySettings)
         {
-            DoUpdate(displaySettings);
-            GraphHelper.FormatFontSize(zedGraphControl.GraphPane, Options.FontSize);
-            zedGraphControl.AxisChange();
-            zedGraphControl.Invalidate();
+            if (_inUpdate)
+            {
+                return;
+            }
+
+            try
+            {
+                _inUpdate = true;
+                DoUpdate(displaySettings);
+                GraphHelper.FormatFontSize(zedGraphControl.GraphPane, Options.FontSize);
+                zedGraphControl.AxisChange();
+                zedGraphControl.Invalidate();
+            }
+            finally
+            {
+                _inUpdate = false;
+            }
         }
 
         public void Clear()
@@ -534,8 +548,11 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
         }
 
+        [Browsable(false)]
         public CalibrationCurve CalibrationCurve { get; private set; }
+        [Browsable(false)]
         public CalibrationCurveMetrics CalibrationCurveMetrics { get; private set; }
+        [Browsable(false)]
         public FiguresOfMerit FiguresOfMerit { get; private set; }
 
         public class Settings : Immutable
@@ -637,6 +654,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             return nearestCurve.Points[iNeareast].Tag as CalibrationPoint?;
         }
 
+        [Browsable(false)]
         public ZedGraphControl ZedGraphControl
         {
             get

@@ -147,6 +147,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 if (GetViewName(listView1.Items[i]).Name == name)
                 {
                     listView1.SelectedIndices.Add(i);
+                    listView1.FocusedItem = listView1.Items[i];
                     return true;
                 }
             }
@@ -157,13 +158,17 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             var nameSet = new HashSet<string>(names);
             listView1.SelectedIndices.Clear();
+            int? iFirst = null;
             for (int i = 0; i < listView1.Items.Count; i++)
             {
                 if (nameSet.Contains(GetViewName(listView1.Items[i]).Name))
                 {
-                     listView1.SelectedIndices.Add(i);
+                    listView1.SelectedIndices.Add(i);
+                    iFirst ??= i;
                 }
             }
+            if (iFirst.HasValue)
+                listView1.FocusedItem = listView1.Items[iFirst.Value];
         }
 
         [Browsable(false)]

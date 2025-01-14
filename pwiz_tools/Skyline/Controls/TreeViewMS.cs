@@ -24,7 +24,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.Controls
 
         public void ScrollLeft()
         {
-            this.SetScrollPos(ScrollDirection.horz, 0);
+            this.SetScrollPos(Orientation.Horizontal, 0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)

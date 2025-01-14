@@ -20,14 +20,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
 {
-    public enum ScrollDirection { horz = 0, vert = 1 }
-
     public static class FormUtil
     {
         /// <summary>
@@ -197,30 +194,6 @@ namespace pwiz.Common.SystemUtil
         public static void RemoveTabPage(TabPage tabPage, ToolTip toolTipControl)
         {
             RemoveTabPage(tabPage, ImmutableList.Singleton(toolTipControl));
-        }
-
-        [DllImport("user32.dll")]
-        static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        public static void SetForegroundWindow(this Control control)
-        {
-            SetForegroundWindow(control.Handle);
-        }
-
-        [DllImport("user32.dll")]
-        private static extern bool HideCaret(IntPtr hWnd);
-
-        public static void HideCaret(this Control control)
-        {
-            HideCaret(control.Handle);
-        }
-
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int SetScrollPos(IntPtr hWnd, int nBar, int nPos, bool bRedraw);
-
-        public static void SetScrollPos(this Control control, ScrollDirection sd, int pos)
-        {
-            SetScrollPos(control.Handle, (int)sd, pos, true);
         }
 
         public static Control GetFocus(this Control control)

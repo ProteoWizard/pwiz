@@ -32,6 +32,7 @@ using NHibernate;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -779,10 +780,6 @@ namespace pwiz.Skyline.Util
             return GetTempFileName(basePath, prefix, 0);
         }
 
-        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        static extern uint GetTempFileName(string lpPathName, string lpPrefixString,
-            uint uUnique, [Out] StringBuilder lpTempFileName);
-
         private static string GetTempFileName(string basePath, string prefix, uint unique)
         {
             // 260 is MAX_PATH in Win32 windows.h header
@@ -790,7 +787,7 @@ namespace pwiz.Skyline.Util
             StringBuilder sb = new StringBuilder(260);
 
             Directory.CreateDirectory(basePath);
-            uint result = GetTempFileName(basePath, prefix, unique, sb);
+            uint result = Kernel32.GetTempFileName(basePath, prefix, unique, sb);
             if (result == 0)
             {
                 var lastWin32Error = Marshal.GetLastWin32Error();
@@ -843,22 +840,22 @@ namespace pwiz.Skyline.Util
             return !IsDirectory(path);
         }
 
-        public static bool IsWriteLocked(string path)
+        public static bool IsWritable(string path)
         {
             try
             {
                 using var fs = new FileStream(path, FileMode.Open, FileAccess.Write, FileShare.None);
-                return false;
+                return true;
             }
             catch (IOException)
             {
                 // An IOException means the file is locked
-                return true;
+                return false;
             }
             catch (UnauthorizedAccessException)
             {
-                // Or we lack permissions, treat it as locked
-                return true;
+                // Or we lack permissions can also make it not possible to write to
+                return false;
             }
         }
 
@@ -983,15 +980,12 @@ namespace pwiz.Skyline.Util
             return deltaTicks + @" ticks";
         }
 
-        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
-        static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
-
         /// <summary>
         /// Tries to create a hard-link from sourceFilepath to destinationFilepath and returns true if the link was successfully created.
         /// </summary>
         public static bool CreateHardLink(string sourceFilepath, string destinationFilepath)
         {
-            return CreateHardLink(destinationFilepath, sourceFilepath, IntPtr.Zero);
+            return Kernel32.CreateHardLink(destinationFilepath, sourceFilepath, IntPtr.Zero);
         }
 
         /// <summary>
@@ -1466,7 +1460,7 @@ namespace pwiz.Skyline.Util
         public static unsafe void ReadBytes(SafeHandle file, byte* bytes, int byteCount)
         {
             uint bytesRead;
-            bool ret = Kernel32.ReadFile(file, bytes, (uint)byteCount, &bytesRead, null);
+            bool ret = Kernel32Unsafe.ReadFile(file, bytes, (uint)byteCount, &bytesRead, null);
             if (!ret || bytesRead != byteCount)
             {
                 // If nothing was read, it may be possible to recover by
@@ -1501,7 +1495,7 @@ namespace pwiz.Skyline.Util
         /// <param name="position"></param>
         public static unsafe void SetFilePointer(SafeHandle file, long position)
         {
-            Kernel32.SetFilePointerEx(file, position, null, 0);
+            Kernel32Unsafe.SetFilePointerEx(file, position, null, 0);
         }
     }
 
@@ -1518,7 +1512,7 @@ namespace pwiz.Skyline.Util
         public static unsafe void WriteBytes(SafeHandle file, byte* bytes, int byteCount)
         {
             uint bytesWritten;
-            bool ret = Kernel32.WriteFile(file, bytes, (uint)byteCount, &bytesWritten, null);
+            bool ret = Kernel32Unsafe.WriteFile(file, bytes, (uint)byteCount, &bytesWritten, null);
             if (!ret || bytesWritten != byteCount)
                 throw new IOException();
         }
@@ -1702,10 +1696,10 @@ namespace pwiz.Skyline.Util
             return Path.Combine(skylineFolder ?? string.Empty, @"SkylineProcessRunner.exe");
         }
     }
-    
-    internal static class Kernel32
+
+    internal static class Kernel32Unsafe
     {
-        [DllImport("kernel32", SetLastError = true)]
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern unsafe bool ReadFile(
             SafeHandle hFile,
             byte* lpBuffer,

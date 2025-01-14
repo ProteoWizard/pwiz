@@ -142,6 +142,9 @@
   <ItemGroup>
     <Compile Include="AbstractFunctionalTestEx.cs" />
     <Compile Include="AbstractUnitTestEx.cs" />
+    <Compile Include="AlphaColorPickerButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="AssertEx.cs" />
     <Compile Include="AsSmallMoleculeTestUtil.cs" />
     <Compile Include="AuditLogUtil.cs" />
@@ -150,11 +153,19 @@
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="FileLockingProcessFinder.cs" />
+    <Compile Include="GitFileHelper.cs" />
+    <Compile Include="MultiFormActivator.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Properties\TestUtilSettings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>TestUtilSettings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="ScreenshotInfo.cs" />
     <Compile Include="ScreenshotPreviewForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -179,12 +190,14 @@
     <Compile Include="AbstractUnitTest.cs" />
     <Compile Include="Schemas\SchemaDocuments.cs" />
     <Compile Include="ScreenshotManager.cs" />
+    <Compile Include="ScreenshotProcessingExtensions.cs" />
     <Compile Include="SpectralLibraryTestUtil.cs" />
     <Compile Include="StackTraceLogger.cs" />
     <Compile Include="TestDocumentContainer.cs" />
     <Compile Include="TestFilesDir.cs" />
     <Compile Include="TestFunctional.cs" />
     <Compile Include="TypeInspector.cs" />
+    <Compile Include="ArdiaTestUtil.cs" />
     <Compile Include="UnifiTestUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -271,8 +284,30 @@
     <EmbeddedResource Include="Resources\larrow-cur.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\camera.ico" />
-    <Content Include="Resources\progress.gif" />
+    <None Include="app.config" />
+    <None Include="Properties\TestUtilSettings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>TestUtilSettings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Resources\camera.ico" />
+    <None Include="Resources\save.png" />
+    <None Include="Resources\refresh.png" />
+    <None Include="Resources\pause.png" />
+    <None Include="Resources\continue.png" />
+    <None Include="Resources\progress.gif" />
+    <None Include="Resources\save_and_continue.png" />
+    <None Include="Resources\webdestination.png" />
+    <None Include="Resources\autosizeoptimize.png" />
+    <None Include="Resources\imagebutton.png" />
+    <None Include="Resources\textbutton.png" />
+    <None Include="Resources\websource.png" />
+    <None Include="Resources\noscreenshot.png" />
+    <None Include="Resources\hand-cur.bmp" />
+    <None Include="Resources\gitsource.png" />
+    <None Include="Resources\fileunchanged.png" />
+    <None Include="Resources\filechanged.png" />
+    <None Include="Resources\fileunknown.png" />
+    <None Include="Resources\undo.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

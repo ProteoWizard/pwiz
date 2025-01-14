@@ -1,10 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
+﻿/*
+ * Original author: Rita Chupalov <ritach .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -13,6 +31,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 
 namespace pwiz.SkylineTestUtil
@@ -20,7 +40,8 @@ namespace pwiz.SkylineTestUtil
     public class ScreenshotManager
     {
         private readonly SkylineWindow _skylineWindow;
-        private readonly string _tutorialPath;
+        private readonly string _tutorialSourcePath;
+        private readonly string _tutorialDestPath;
 
         public class PointFactor
         {
@@ -52,30 +73,68 @@ namespace pwiz.SkylineTestUtil
             var dockableForm = ctrl as DockableForm;
             if (dockableForm != null && dockedStates.Any(state => dockableForm.DockState == state))
             {
-                var origin = Point.Empty;
-                dockableForm.Invoke((Action) (() =>
-                {
-                    origin = dockableForm.Pane.PointToScreen(new Point(0, 0));
-                    snapshotBounds = new Rectangle(origin, dockableForm.Pane.Size);
-                }));
+                snapshotBounds = GetDockedFormBounds(dockableForm);
             }
             else if (fullScreen)
             {
-                ctrl.Invoke((Action) (() => snapshotBounds = Screen.FromControl(ctrl).Bounds));
+                snapshotBounds = (Rectangle)ctrl.Invoke((Func<Rectangle>) (() => Screen.FromControl(ctrl).Bounds));
             }
             else
             {
-                ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
-                ctrl.Invoke((Action)(() =>
-                {
-                    int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
-                    int frameWidth = (width - ctrl.ClientRectangle.Width) / 2 - SystemInformation.Border3DSize.Width + SystemInformation.BorderSize.Width;
-                    Size imageSize = ctrl.Size + new PointAdditive(-2 * frameWidth, -frameWidth);
-                    Point sourcePoint = ctrl.Location + new PointAdditive(frameWidth, 0);
-                    snapshotBounds = new Rectangle(sourcePoint, imageSize);
-                }));
+                snapshotBounds = GetFramedWindowBounds(ctrl);
             }
             return scale ? snapshotBounds * GetScalingFactor() : snapshotBounds;
+        }
+
+        public static Rectangle GetDockedFormBounds(DockableForm ctrl)
+        {
+            return ctrl.InvokeRequired
+                ? (Rectangle)ctrl.Invoke((Func<Rectangle>)(() => GetDockedFormBoundsInternal(ctrl)))
+                : GetDockedFormBoundsInternal(ctrl);
+        }
+
+        public static Rectangle GetDockedFormBoundsInternal(DockableForm dockedForm)
+        {
+            var parentRelativeVBounds = dockedForm.Pane.Bounds;
+            // The pane bounds do not include the border for Document state
+            if (dockedForm.DockState == DockState.Document)
+                parentRelativeVBounds.Inflate(SystemInformation.BorderSize.Width, SystemInformation.BorderSize.Width);
+            return dockedForm.Pane.Parent.RectangleToScreen(parentRelativeVBounds);
+        }
+        
+        public static Rectangle GetFramedWindowBounds(Control ctrl)
+        {
+            ctrl = FindParent<FloatingWindow>(ctrl) ?? ctrl;
+            return ctrl.InvokeRequired 
+                ? (Rectangle) ctrl.Invoke((Func<Rectangle>)(() => GetFramedWindowBoundsInternal(ctrl)))
+                : GetFramedWindowBoundsInternal(ctrl);
+        }
+
+        private static Rectangle GetFramedWindowBoundsInternal(Control ctrl)
+        {
+            int width = (ctrl as Form)?.DesktopBounds.Width ?? ctrl.Width;
+            // The drop shadow + border are 1/2 the difference between the window width and the client rect width
+            // A border width is removed to keep the border around the window
+            int borderOutsideClient = SystemInformation.BorderSize.Width;
+            if (ctrl is FloatingWindow || ctrl.Size == ctrl.ClientRectangle.Size)
+                borderOutsideClient = 0;
+            int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - borderOutsideClient;
+            Size imageSize;
+            Point sourcePoint;
+            if (ctrl is Form)
+            {
+                // The snapshot size then removes the shadow width on both sides and from only the bottom
+                imageSize = ctrl.Size + new PointAdditive(-2 * dropShadowWidth, -dropShadowWidth);
+                // And the origin is shifted one shadow width to the right
+                sourcePoint = ctrl.Location + new PointAdditive(dropShadowWidth, 0);
+            }
+            else
+            {
+                // Otherwise, it is just a control on a form without a drop shadow
+                imageSize = ctrl.Size;
+                sourcePoint = ctrl.Parent.PointToScreen(ctrl.Location);
+            }
+            return new Rectangle(sourcePoint, imageSize);
         }
 
         public static TParent FindParent<TParent>(Control ctrl) where TParent : Control
@@ -90,31 +149,24 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
-        [DllImport("gdi32.dll")]
-        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-
-        private enum DeviceCap
-        {
-            VERTRES = 10,
-            DESKTOPVERTRES = 117,
-        }
-
         public static PointFactor GetScalingFactor()
         {
-            Graphics g = Graphics.FromHwnd(IntPtr.Zero);
+            using var g = Graphics.FromHwnd(IntPtr.Zero);
             IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
-            int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
-
+            int LogicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.VERTRES);
+            int PhysicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.DESKTOPVERTRES);
             float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
         }
+
         private abstract class SkylineScreenshot
         {
-            /**
-             * Factory method
-             */
+            /// <summary>
+            /// Returns a new instance of the right type of screenshot
+            /// </summary>
+            /// <param name="control">A control to create a screenshot for</param>
+            /// <param name="fullScreen">True if it should be fullscreen</param>
             public static SkylineScreenshot CreateScreenshot(Control control, bool fullScreen = false)
             {
                 if (control is ZedGraphControl zedGraphControl)
@@ -126,6 +178,7 @@ namespace pwiz.SkylineTestUtil
                     return new ActiveWindowShot(control, fullScreen);
                 }
             }
+
             public abstract Bitmap Take();
         }
 
@@ -143,25 +196,28 @@ namespace pwiz.SkylineTestUtil
             [NotNull]
             public override Bitmap Take()
             {
-                Rectangle shotFrame = GetWindowRectangle(_activeWindow, _fullscreen);
-                Bitmap bmCapture = new Bitmap(shotFrame.Width, shotFrame.Height, PixelFormat.Format32bppArgb);
-                Graphics graphCapture = Graphics.FromImage(bmCapture);
-                bool captured = false;
-                while (!captured)
+                var shotRect = GetWindowRectangle(_activeWindow, _fullscreen);
+                var bmpCapture = new Bitmap(shotRect.Width, shotRect.Height, PixelFormat.Format32bppArgb);
+                using var g = Graphics.FromImage(bmpCapture);
+                while (!CaptureFromScreen(g, shotRect))
                 {
-                    try
-                    {
-                        graphCapture.CopyFromScreen(shotFrame.Location,
-                            new Point(0, 0), shotFrame.Size);
-                        captured = true;
-                    }
-                    catch (Exception)
-                    {
-                        Thread.Sleep(1000); // Try again in one second - remote desktop may be minimized
-                    }
+                    Thread.Sleep(1000); // Try again in one second - remote desktop may be minimized
                 }
-                graphCapture.Dispose();
-                return bmCapture;
+                return bmpCapture;
+            }
+
+            private static bool CaptureFromScreen(Graphics g, Rectangle shotRect)
+            {
+                try
+                {
+                    g.CopyFromScreen(shotRect.Location,
+                        Point.Empty, shotRect.Size);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
             }
         }
 
@@ -174,37 +230,94 @@ namespace pwiz.SkylineTestUtil
             }
             public override Bitmap Take()
             {
-                Metafile emf = (_zedGraphControl.MasterPane.GetMetafile());
-                Bitmap bmp = new Bitmap(emf.Width, emf.Height);
+                var emf = _zedGraphControl.MasterPane.GetMetafile();
+                var bmp = new Bitmap(emf.Width, emf.Height);
                 bmp.SetResolution(emf.HorizontalResolution, emf.VerticalResolution);
-                using (Graphics g = Graphics.FromImage(bmp))
+                using (var g = Graphics.FromImage(bmp))
                 {
                     g.DrawImage(emf, 0, 0);
                 }
+                // Need to use a consistent resolution or PNGs will differ depending on the monitor they were rendered on
+                // You can get PNGs that are pixel for pixel identical but the PNGs will differ in the pHYs blocks
+                // Original resolution on ASUS 28" monitors - a modern laptop had much higher DPI
+                // Hex values taken from binary editor for original files
+                bmp.SetResolution(DpmToDpi(0x0C13), DpmToDpi(0x0C5F));
                 return bmp;
             }
 
+            /// <summary>
+            /// Converts dots per meter (DPM) found in pHYs blocks in PNG files to DPI used in Bitmap resolution.
+            /// </summary>
+            /// <param name="dpm">A dots per meter integer</param>
+            /// <returns>A dots per inch (DPM/39.37) value</returns>
+            private float DpmToDpi(int dpm)
+            {
+                return (float)(dpm / 39.37);
+            }
         }
 
-        public ScreenshotManager([NotNull] SkylineWindow pSkylineWindow, string tutorialPath)
+        public ScreenshotManager([NotNull] SkylineWindow skylineWindow, string tutorialPath)
         {
-            _skylineWindow = pSkylineWindow;
-            _tutorialPath = tutorialPath;
+            Assume.IsNotNull(skylineWindow);
+
+            _skylineWindow = skylineWindow;
+            _tutorialDestPath = tutorialPath;
+            _tutorialSourcePath = GetAvailableTutorialPath(tutorialPath);
+        }
+
+        private string GetAvailableTutorialPath(string tutorialPath)
+        {
+            if (!string.IsNullOrEmpty(tutorialPath) && !Directory.Exists(tutorialPath))
+            {
+                var langLetters = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.CurrentCulture);
+                var langLettersInvariant = AbstractFunctionalTest.GetFolderNameForLanguage(CultureInfo.InvariantCulture);
+                if (!Equals(langLettersInvariant, langLetters) && tutorialPath.EndsWith(langLetters))
+                {
+                    tutorialPath = tutorialPath.Substring(0, tutorialPath.Length - langLetters.Length) + langLettersInvariant;
+                }
+            }
+            return tutorialPath;
         }
 
         public string ScreenshotUrl(int screenshotNum)
         {
-            if (string.IsNullOrEmpty(_tutorialPath))
+            if (string.IsNullOrEmpty(_tutorialSourcePath))
                 return null;
-            var fileUri = new Uri(Path.Combine(_tutorialPath, "index.html")).AbsoluteUri + "#s-" + screenshotNum;
-            const string tutorialSearch = "/Tutorials/";
-            int tutorialIndex = fileUri.IndexOf(tutorialSearch, StringComparison.Ordinal);
-            return "https://skyline.ms/tutorials/24-1/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
+            return GetTutorialUrl("index.html") + "#s-" + screenshotNum;
         }
 
-        public string ScreenshotFile(int screenshotNum)
+        public string ScreenshotImgUrl(int screenshotNum)
         {
-            return !string.IsNullOrEmpty(_tutorialPath) ? $"{Path.Combine(_tutorialPath, "s-" + screenshotNum)}.png" : null;
+            return GetTutorialUrl("s-" + screenshotNum + ".png");
+            // Use this latter version once the website is updated
+            // return GetTutorialUrl("s-" + PadScreenshotNum(screenshotNum) + ".png");
+        }
+
+        private const string SCREENSHOT_URL_FOLDER = "24-1";
+
+        private string GetTutorialUrl(string filePart)
+        {
+            if (string.IsNullOrEmpty(_tutorialSourcePath))
+                return null;
+            var fileUri = new Uri(Path.Combine(_tutorialSourcePath, filePart)).AbsoluteUri;
+            const string tutorialSearch = "/Tutorials/";
+            int tutorialIndex = fileUri.IndexOf(tutorialSearch, StringComparison.Ordinal);
+            return "https://skyline.ms/tutorials/" + SCREENSHOT_URL_FOLDER + "/" + fileUri.Substring(tutorialIndex + tutorialSearch.Length);
+        }
+
+        public string ScreenshotSourceFile(int screenshotNum)
+        {
+            return !string.IsNullOrEmpty(_tutorialSourcePath) ? $"{Path.Combine(_tutorialSourcePath, "s-" + PadScreenshotNum(screenshotNum))}.png" : null;
+        }
+
+        public string ScreenshotDestFile(int screenshotNum)
+        {
+            return !string.IsNullOrEmpty(_tutorialDestPath) ? $"{Path.Combine(_tutorialDestPath, "s-" + PadScreenshotNum(screenshotNum))}.png" : null;
+        }
+
+        private static string PadScreenshotNum(int screenshotNum)
+        {
+            return screenshotNum.ToString("D2");
         }
 
         public string ScreenshotDescription(int i, string description)
@@ -212,37 +325,98 @@ namespace pwiz.SkylineTestUtil
             return string.Format("s-{0}: {1}", i, description);
         }
 
-        public static void ActivateScreenshotForm(Control screenshotControl)
+        public bool IsOverlappingScreenshot(Rectangle bounds)
+        {
+            var skylineRect = GetScreenshotBounds();
+            return !Rectangle.Intersect(skylineRect, bounds).IsEmpty;
+        }
+
+        /// <summary>
+        /// Returns the bounds of the area reserved for the screenshot.
+        /// Currently, the bounds of the SkylineWindow is returned, which
+        /// is imperfect because there is no guarantee that the screenshot
+        /// will not be taken outside those bounds. If we knew the true
+        /// bounds of the screenshot at this point, we would probably want
+        /// the union of them and the Skyline bounds, since avoiding covering
+        /// the SkylineWindow is still useful.
+        /// </summary>
+        public Rectangle GetScreenshotBounds()
+        {
+            return (Rectangle)_skylineWindow.Invoke((Func<Rectangle>)(() => _skylineWindow.Bounds));
+        }
+
+        public Rectangle GetScreenshotScreenBounds()
+        {
+            return GetScreenshotScreen().Bounds;
+        }
+
+        public Screen GetScreenshotScreen()
+        {
+            return Screen.FromRectangle(GetScreenshotBounds());
+        }
+
+        private void ForceOnScreenshotScreen(Form form)
+        {
+            var location = form.Location;
+            var screen = GetScreenshotScreen();
+            location.X = Math.Max(screen.WorkingArea.Left,
+                Math.Min(location.X, screen.WorkingArea.Right - form.Size.Width));
+            location.Y = Math.Max(screen.WorkingArea.Top,
+                Math.Min(location.Y, screen.WorkingArea.Bottom - form.Size.Height));
+            form.Location = location;
+        }
+
+        public void ActivateScreenshotForm(Control screenshotControl)
         {
             Assume.IsTrue(screenshotControl.InvokeRequired);    // Use ActionUtil.RunAsync() to call this method from the UI thread
 
             // Bring to the front
             RunUI(screenshotControl, screenshotControl.SetForegroundWindow);
 
-            // If it is a form, try not to change the focus within the form.
-            var form = FormUtil.FindParentOfType<Form>(screenshotControl)?.ParentForm;
+            // If there is a form, try not to change the focus within the form.
+            var form = FormUtil.FindParentOfType<Form>(screenshotControl)?.ParentForm ?? screenshotControl as Form;
             if (form != null)
             {
-                RunUI(form, () => form.Activate());
+                RunUI(form, () =>
+                {
+                    ForceOnScreenshotScreen(form); // Make sure the owning form is fully on screen
+                    form.Activate();
+                });
             }
             else
             {
                 RunUI(screenshotControl,() => screenshotControl.Focus());
             }
 
-            Thread.Sleep(200);  // Allow activation message processing on the UI thread
+            Thread.Sleep(500);  // Allow activation message processing on the UI thread
 
-            RunUI(screenshotControl, () =>
-            {
-                var focusText = screenshotControl.GetFocus() as TextBox;
-                if (focusText != null)
-                {
-                    focusText.Select(focusText.Text.Length, 0);
-                    focusText.HideCaret();
-                }
-            });
+            RunUI(screenshotControl, () => HideSensitiveFocusDisplay(screenshotControl));
 
             Thread.Sleep(10);   // Allow selection to repaint on the UI thread
+        }
+
+        /// <summary>
+        /// Attempt to get more consistent screenshots by hiding sensitive
+        /// display elements indicating a control has the focus, like blinking
+        /// cursors and dotted rectangles on tab controls.
+        /// </summary>
+        private void HideSensitiveFocusDisplay(Control screenshotControl)
+        {
+            var focusControl = screenshotControl.GetFocus();
+            if (focusControl is TextBox focusText)
+            {
+                focusText.Select(focusText.Text.Length, 0);
+                focusText.HideCaret();
+            }
+            else if (focusControl is ComboBox { DropDownStyle: ComboBoxStyle.DropDown } focusCombo)
+            {
+                focusCombo.Select(0, 0);
+                focusCombo.HideCaret();
+            }
+            else if (focusControl is TabControl focusTabControl)
+            {
+                focusTabControl.SelectedTab.Focus();
+            }
         }
 
         private static void RunUI(Control control, Action action)
@@ -254,13 +428,15 @@ namespace pwiz.SkylineTestUtil
         {
             activeWindow ??= _skylineWindow;
 
-            //check UI and create a blank shot according to the user selection
-            SkylineScreenshot newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
+            // Check UI and create a blank shot according to the user selection
+            var newShot = SkylineScreenshot.CreateScreenshot(activeWindow, fullScreen);
 
-            Bitmap shotPic = newShot.Take();
+            var shotPic = newShot.Take();
             if (processShot != null)
             {
-                // execute on window's thread in case delegate accesses UI controls
+                // Processing must include border cleanup if necessary, since
+                // the shot-pic is not guaranteed to need a constant border
+                // Execute processing on window's thread in case delegate accesses UI controls
                 shotPic = activeWindow.Invoke(processShot, shotPic) as Bitmap;
                 Assert.IsNotNull(shotPic);
             }
@@ -268,7 +444,9 @@ namespace pwiz.SkylineTestUtil
             {
                 // Tidy up annoying variations in screenshot border due to underlying windows
                 // Only for unprocessed window screenshots
-                CleanupBorder(shotPic); 
+                // Floating windows only have a transparent titlebar border
+                var form = activeWindow as DockableForm;
+                shotPic = shotPic.CleanupBorder(form is { DockState: DockState.Floating });
             }
 
             if (scale.HasValue)
@@ -283,59 +461,13 @@ namespace pwiz.SkylineTestUtil
                 SaveToFile(pathToSave, shotPic);
             }
 
-            //Have to do it this way because of the limitation on OLE access from background threads.
+            // Have to do it this way because of the limitation on OLE access from background threads.
             var clipThread = new Thread(() => Clipboard.SetImage(shotPic));
             clipThread.SetApartmentState(ApartmentState.STA);
             clipThread.Start();
             clipThread.Join();
 
             return shotPic;
-        }
-
-        private static void CleanupBorder(Bitmap shotPic)
-        {
-            // Determine border color, then make it consistently that color
-            var stats = new Dictionary<Color, int>();
-
-            void UpdateStats(int x, int y)
-            {
-                var c = shotPic.GetPixel(x, y);
-                if (stats.ContainsKey(c))
-                {
-                    stats[c]++;
-                }
-                else
-                {
-                    stats[c] = 1;
-                }
-            }
-
-            for (var x = 0; x < shotPic.Width; x++)
-            {
-                UpdateStats(x, 0);
-                UpdateStats(x, shotPic.Height - 1);
-            }
-
-            for (var y = 0; y < shotPic.Height; y++)
-            {
-                UpdateStats(0, y);
-                UpdateStats(shotPic.Width - 1, y);
-            }
-
-            var color = stats.FirstOrDefault(kvp => kvp.Value == stats.Values.Max()).Key;
-
-            // Enforce a clean border
-            for (var x = 0; x < shotPic.Width; x++)
-            {
-                shotPic.SetPixel(x, 0, color);
-                shotPic.SetPixel(x, shotPic.Height - 1, color);
-            }
-
-            for (var y = 0; y < shotPic.Height; y++)
-            {
-                shotPic.SetPixel(0, y, color);
-                shotPic.SetPixel(shotPic.Width - 1, y, color);
-            }
         }
 
         private void SaveToFile(string filePath, Bitmap bmp)
@@ -346,9 +478,15 @@ namespace pwiz.SkylineTestUtil
             if (dirPath != null && !Directory.Exists(dirPath))
                 Directory.CreateDirectory(dirPath);
 
-            bmp.Save(filePath);
+            bmp.Save(filePath, ImageFormat.Png);
+        }
+
+        public MemoryStream SaveToMemory(Bitmap bmp)
+        {
+            var ms = new MemoryStream();
+            bmp.Save(ms, ImageFormat.Png);
+            return ms;
         }
     }
-
 }
 

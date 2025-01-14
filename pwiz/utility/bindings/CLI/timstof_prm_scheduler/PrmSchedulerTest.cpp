@@ -576,7 +576,7 @@ void test()
 
     //bfs::create_directory("test_scheduling_dir");
     string templateFilepath = pwiz::util::env::get("PWIZ_ROOT") + "/pwiz/utility/bindings/CLI/timstof_prm_scheduler/timstof_prm_scheduler.prmsqlite";
-    bfs::copy_file(templateFilepath, "timstof_prm_scheduler.prmsqlite", bfs::copy_option::overwrite_if_exists);
+    bfs::copy_file(templateFilepath, "timstof_prm_scheduler.prmsqlite", bfs::copy_options::overwrite_existing);
     auto s = gcnew Scheduler(ToSystemString("timstof_prm_scheduler.prmsqlite"));
     s->SetAdditionalMeasurementParameters(parameters);
 
@@ -666,6 +666,7 @@ int main(int argc, char* argv[])
 
     try
     {
+        bfs::current_path(bfs::path(testArgs[0]).parent_path()); // set working directory to test exe location
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         if (os_) *os_ << "PrmSchedulerTest\n";
 
