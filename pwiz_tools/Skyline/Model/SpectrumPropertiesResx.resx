@@ -109,6 +109,9 @@
   <data name="Category_PrecursorInfo" xml:space="preserve">
     <value>Precursor</value>
   </data>
+  <data name="Category_SpectrumInfo" xml:space="preserve">
+    <value>Spectrum Statistics</value>
+  </data>
   <data name="CCS" xml:space="preserve">
     <value>CCS</value>
   </data>
@@ -157,6 +160,19 @@
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>Number of measured spectra for this peptide in the library</value>
   </data>
+  <data name="Description_PeakCount">
+    <value>Number of non-zero peaks in the library spectrum</value>
+  </data>
+  <data name="Description_TotalIC">
+    <value>Sum of all peak intensities in the library spectrum</value>
+  </data>
+  <data name="Description_MirrorPeakCount">
+    <value>Number of non-zero peaks in the mirror spectrum</value>
+  </data>
+  <data name="Description_MirrorTotalIC">
+    <value>Sum of all peak intensities in the mirror spectrum</value>
+  </data>
+
   <data name="Adduct" xml:space="preserve">
     <value>Adduct</value>
   </data>
@@ -198,5 +214,17 @@
   </data>
   <data name="SpectrumCount" xml:space="preserve">
     <value>Spectrum Count</value>
+  </data>
+  <data name="PeakCount">
+    <value>Peak Count</value>
+  </data>
+  <data name="TotalIC">
+    <value>Total Ion Current</value>
+  </data>
+  <data name="MirrorPeakCount">
+    <value>Mirror Peak Count</value>
+  </data>
+  <data name="MirrorTotalIC">
+    <value>Mirror Total Ion Current</value>
   </data>
 </root>
