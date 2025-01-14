@@ -97,6 +97,10 @@ void ScanRankerMetrics(const QuameterInput&);
 void IDFreeMetrics(const QuameterInput&);
 void ExecuteMetricsThread();
 
+// BEG KEESH MAYO ASYMM METRIC
+string append_to_filename_before_extension(const string& filepath, const string& append_str);
+// END KEESH MAYO ASYMM METRIC
+
  /**
     * Given an idpDB file, return its RAW/mzML/etc source files.
     * Add: also accept filenames of interest (e.g. ignore all source files except -these-)

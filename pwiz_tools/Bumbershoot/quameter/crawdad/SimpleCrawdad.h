@@ -33,6 +33,7 @@ using namespace crawpeaks;
 
 struct CrawdadPeak
 {
+    // BEG KEESH MAYO ASYMM METRIC
     CrawdadPeak(const SlimCrawPeak& crawPeak)
     {
         _timeIndex = crawPeak.peak_rt_idx;
@@ -45,6 +46,9 @@ struct CrawdadPeak
         _backgroundArea = max(0.0f, crawPeak.bg_area);
         _fwhm = crawPeak.fwhm;
         _fwhmDegenerate = !crawPeak.fwhm_calculated_ok;
+    
+        _start01Index = crawPeak.start01_rt_idx;
+        _end01Index = crawPeak.stop01_rt_idx;
     }
 
     int getTimeIndex() { return _timeIndex; } 
@@ -60,6 +64,14 @@ struct CrawdadPeak
     float getFwhm() { return _fwhm; } 
     bool getFwhmDegenerate() { return _fwhmDegenerate; } 
 
+
+    int getStart01Index() { return _start01Index; }
+    void setStart01Index(int value) { _start01Index = value; }
+    int getEnd01Index() { return _end01Index; }
+    void setEnd01Index(int value) { _end01Index = value; }
+
+
+
     private:
     int _timeIndex;
     int _startIndex;
@@ -69,8 +81,11 @@ struct CrawdadPeak
     float _height;
     float _fwhm;
     bool _fwhmDegenerate;
-};
 
+    int _start01Index;
+    int _end01Index;
+};
+// END KEESH MAYO ASYMM METRIC
 typedef boost::shared_ptr<CrawdadPeak> CrawdadPeakPtr;
 
 

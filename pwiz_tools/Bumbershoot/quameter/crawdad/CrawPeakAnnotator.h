@@ -191,6 +191,11 @@ void set_bg_scratch ( int start_idx, int stop_idx );
 
 void calc_fwhm( SlimCrawPeak & peak );
 
+// BEG KEESH MAYO ASYMM METRIC
+// Do we need to duplicat in ProteoWizard\pwiz_tools\Shared\Crawdad\CrawPeakAnnotator.H too?
+void calc_fw01m(SlimCrawPeak& peak);
+// END KEESH MAYO ASYMM METRIC
+
 #if 0
   void set_peak_positions ( SlimCrawPeak & peak ) {
 
@@ -205,7 +210,7 @@ void calc_fwhm( SlimCrawPeak & peak );
     //calls set_peak_areas onpeak member variables
     set_peak_bg_subtracted_area(peak);
     calc_fwhm(peak);
-  };
+    };
 
 
 private :

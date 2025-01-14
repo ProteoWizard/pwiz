@@ -515,6 +515,47 @@ void CrawPeakAnnotator::calc_fwhm( SlimCrawPeak & peak ) {
    peak.fwhm = rh_hm - lh_hm;
 }
 
+// BEG KEESH MAYO ASYMM METRIC
+void CrawPeakAnnotator::calc_fw01m(SlimCrawPeak& peak) {
+    std::vector<float>* c = this->get_active_chrom();
+    std::vector<float>& chrom = *c;
+    float lh_height = chrom.at(peak.start_rt_idx);
+    float rh_height = chrom.at(peak.stop_rt_idx);
+    float height = peak.raw_height - std::min(lh_height, rh_height);
+    float one_tenth_max = (float)(peak.raw_height - (0.9 * height));
+    int lh_pt = -1, rh_pt = -1;
+    float lh_hm, rh_hm;
+    for (int i = peak.start_rt_idx; i < peak.peak_rt_idx; i++) {
+        if (chrom[i] <= one_tenth_max && chrom[i + 1] >= one_tenth_max) {
+            lh_pt = i;
+            break;
+        }
+    }
+    for (int i = peak.peak_rt_idx; i < std::min(peak.stop_rt_idx, (int)(chrom.size() - 2)); i++) {
+        if (chrom[i] >= one_tenth_max && chrom[i + 1] <= one_tenth_max) {
+            rh_pt = i;
+            break;
+        }
+    }
+    if (lh_pt == -1) {
+        lh_hm = (float)peak.start_rt_idx;
+    }
+    else {
+        float frac_delta = (one_tenth_max - chrom[lh_pt]) / (chrom[lh_pt + 1] - chrom[lh_pt]);
+        lh_hm = (float)lh_pt + frac_delta;
+    }
+    if (rh_pt == -1) {
+        rh_hm = (float)peak.stop_rt_idx;
+    }
+    else {
+        float frac_delta = (chrom[rh_pt] - one_tenth_max) / (chrom[rh_pt] - chrom[rh_pt + 1]);
+        rh_hm = (float)rh_pt + frac_delta;
+    }
+    peak.start01_rt_idx = (int)lh_hm;
+    peak.stop01_rt_idx = (int)rh_hm;
+}
+// END KEESH MAYO ASYMM METRIC
+
 void CrawPeakAnnotator::refind_peak_peak( SlimCrawPeak & peak ) {
    peak.peak_rt_idx = get_peakloc_in_range( peak.start_rt_idx, peak.stop_rt_idx );
 }

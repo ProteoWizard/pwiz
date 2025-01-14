@@ -202,6 +202,13 @@ vector<CrawdadPeakPtr> CrawdadPeakFinder::CalcPeaks(int maxPeaks)
 				itPeak->stop_rt_idx = max(_widthDataWings, min(stop_rt, itPeak->stop_rt_idx));
 				itPeak->stop_rt_idx -= _widthDataWings;
 
+                // BEG KEESH MAYO ASYMM METRIC
+                itPeak->start01_rt_idx = max(_widthDataWings, itPeak->start01_rt_idx);
+                itPeak->start01_rt_idx -= _widthDataWings;
+                itPeak->stop01_rt_idx = max(_widthDataWings, min(stop_rt, itPeak->stop01_rt_idx));
+                itPeak->stop01_rt_idx -= _widthDataWings;
+                // END KEESH MAYO ASYMM METRIC
+
 				result.push_back(CrawdadPeakPtr(new CrawdadPeak(*itPeak)));
 
 				totalArea += itPeak->peak_area;

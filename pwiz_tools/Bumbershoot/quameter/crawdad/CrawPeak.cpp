@@ -43,12 +43,17 @@ namespace crawpeaks {
       return peak_area / bg_area;
    }
 
+   // BEG KEESH MAYO ASYMM METRIC
    SlimCrawPeak::SlimCrawPeak( int start_idx, int stop_idx, int peak_idx, 
-			     const std::vector<float> & raw ,std::vector<float> & scratch , int mz_idx  ) : 
+			     const std::vector<float> & raw ,std::vector<float> & scratch , int mz_idx,
+                 int start01_idx, int stop01_idx) :
     start_rt_idx(start_idx) , 
     stop_rt_idx(stop_idx) , 
     peak_rt_idx(peak_idx) , 
-    mz_idx(mz_idx) 
+    mz_idx(mz_idx),
+    start01_rt_idx(start01_idx),
+    stop01_rt_idx(stop01_idx)
+   // END KEESH MAYO ASYMM METRIC
    {
      init();
      
@@ -66,7 +71,7 @@ void SlimCrawPeak::init() {
     raw_area = bg_area = peak_area = bgslope = peak_height = raw_height = -1.0f;
     fwhm = -1;
     this->fwhm_calculated_ok = false;
-  }
+ }
 
 void CrawPeak::init() {
   stddev_mean_above_baseline = -1.0f;
@@ -77,10 +82,13 @@ void CrawPeak::init() {
 int SlimCrawPeak::delcnt = 0;
 #endif
 
+// BEG KEESH MAYO ASYMM METRIC
 CrawPeak::CrawPeak(  int start_idx, int stop_idx, int peak_idx, 
-		  const std::vector<float> & raw , std::vector<float> & scratch,  int mz_idx 
+		  const std::vector<float> & raw , std::vector<float> & scratch,  int mz_idx,
+          int start01_idx, int stop01_idx
                  ) :
-    SlimCrawPeak( start_idx, stop_idx, peak_idx, raw, scratch, mz_idx ) {
+    SlimCrawPeak( start_idx, stop_idx, peak_idx, raw, scratch, mz_idx,  start01_idx, stop01_idx) {
+ // END KEESH MAYO ASYMM METRIC
   init();     
   intensities.resize(this->len);
   background_vals.resize(this->len);
@@ -219,10 +227,10 @@ void CrawPeak::calc_baseline_stats( )  {
   }
 
 
-
+  
   std::string SlimCrawPeak::as_string_header() const { 
     return std::string("mz\tstart_idx\tpeak_idx\tstop_idx\tfwhm");
-  }
+  } 
    std::string SlimCrawPeak::as_string() const {
        char tmpstr[256];
        sprintf(tmpstr,"%d\t%d\t%d\t%d\t%d\t%2.2f",mz_idx,start_rt_idx,peak_rt_idx,stop_rt_idx,fwhm);
@@ -279,7 +287,7 @@ void CrawPeak::calc_baseline_stats( )  {
 /* ---- suppeaklocated ---- */
 
 CrawPeakLocated::CrawPeakLocated( int lh_valley, int rh_valley,
-			       int peak_loc, const std::vector<float> &chrom , std::vector<float> & scratch, int mz_idx ) : 
+			       int peak_loc, const std::vector<float> &chrom , std::vector<float> & scratch, int mz_idx ) :
   CrawPeak( lh_valley, rh_valley, peak_loc, chrom, scratch, mz_idx ) {
 }
 

@@ -597,6 +597,9 @@ void StackCrawPeakFinder::peak_voodoo( int lh_valley, int rh_valley, int peak_lo
      annotator.set_peak_slope(peak);
      annotator.set_peak_bg_subtracted_area ( peak );
      annotator.calc_fwhm(peak);
+     // BEG KEESH MAYO ASYMM METRIC
+     annotator.calc_fw01m(peak);
+     // END KEESH MAYO ASYMM METRIC
      sps.push_back(peak);
 
 }
