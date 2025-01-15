@@ -37,10 +37,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             if (!(remoteUrl is WatersConnectUrl wcUrl))
                 throw new ArgumentException();
 
-            if (wcUrl.Type == WatersConnectUrl.ItemType.folder_without_sample_sets)
+            if (wcUrl.Type == WatersConnectUrl.ItemType.folder_child_folders_only)
                 return AsyncFetch(GetRootContentsUrl(), GetFolders, out remoteException);
 
-            if (wcUrl.Type == WatersConnectUrl.ItemType.folder)
+            if (wcUrl.Type == WatersConnectUrl.ItemType.folder_child_folders_sample_sets)
             {
                 var gotFolders = AsyncFetch(GetRootContentsUrl(), GetFolders, out remoteException);
                 if (wcUrl.EncodedPath == null) // assume root folder cannot have sample sets
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             yield return new WatersConnectFolderObject(currentFolder, parentId, false);
         }
 
-        private ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
+        protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
@@ -103,8 +103,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                 .Where(f => WatersConnectObject.GetProperty(f, @"contentType").StartsWith(@"SampleSet"))
                 .Select(f => new WatersConnectFolderObject(f, null, true)));
         }
-
-        private ImmutableList<WatersConnectFileObject> GetFiles(Uri requestUri)
+        
+        protected ImmutableList<WatersConnectFileObject> GetFiles(Uri requestUri)
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
@@ -133,8 +133,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                     {
                         var childUrl = watersConnectUrl.ChangeFolderOrSampleSetId(folderObject.Id)
                             .ChangeType(folderObject.HasSampleSets
-                                ? WatersConnectUrl.ItemType.folder
-                                : WatersConnectUrl.ItemType.folder_without_sample_sets)
+                                ? WatersConnectUrl.ItemType.folder_child_folders_sample_sets
+                                : WatersConnectUrl.ItemType.folder_child_folders_only)
                             .ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] { folderObject.Name }));
                         yield return new RemoteItem(childUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
                     }
@@ -182,18 +182,18 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var watersConnectUrl = (WatersConnectUrl) remoteUrl;
             RetryFetch(GetRootContentsUrl(), GetFolders);
-            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.folder)
+            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.folder_child_folders_sample_sets)
                 RetryFetch(GetSampleSetsUrl(watersConnectUrl), GetFolders);
             if (watersConnectUrl.Type == WatersConnectUrl.ItemType.sample_set)
                 RetryFetch(GetInjectionsUrl(watersConnectUrl), GetFiles);
         }
 
-        private Uri GetRootContentsUrl()
+        protected Uri GetRootContentsUrl()
         {
             return new Uri(WatersConnectAccount.ServerUrl + @"/waters_connect/v1.0/folders");
         }
 
-        private WatersConnectUrl GetWatersConnectUrlWithFolderOrSampleSetId(WatersConnectUrl watersConnectUrl, bool fetchSamples)
+        protected WatersConnectUrl GetWatersConnectUrlWithFolderOrSampleSetId(WatersConnectUrl watersConnectUrl, bool fetchSamples)
         {
             if (watersConnectUrl.FolderOrSampleSetId != null || watersConnectUrl.EncodedPath == null)
                 return watersConnectUrl;

@@ -22,13 +22,30 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
     public class WatersConnectFolderObject : WatersConnectObject
     {
         public string Path { get; private set; }
+
+        /// <summary>
+        /// In some places set true based on if "accessType" "read" access is true
+        /// </summary>
         public bool HasSampleSets { get; private set; }
         public string ParentId { get; private set; }
+
+        /// <summary>
+        /// Set true based on if "accessType" "read" access is true and isSampleSet in ctor call is false
+        /// </summary>
+        public bool AccessTypeReadTrue { get; private set; }
+
+        /// <summary>
+        /// Set true based on if "accessType" "write" access is true and isSampleSet in ctor call is false
+        /// </summary>
+        public bool AccessTypeWriteTrue { get; private set; }
+
+        public string Children { get; private set; }
 
         public WatersConnectFolderObject(JObject jobject, string parentId, bool isSampleSet)
         {
             // ReSharper disable LocalizableElement
             Name = GetProperty(jobject, "name");
+            Children = GetProperty(jobject, "children");
             if (isSampleSet)
             {
                 Id = GetProperty(jobject, "sampleSetId");
@@ -39,6 +56,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                 Id = GetProperty(jobject, "id");
                 Path = GetProperty(jobject, "path");
                 HasSampleSets = jobject["accessType"]["read"].Value<bool>();
+                AccessTypeReadTrue = jobject["accessType"]["read"].Value<bool>();
+                AccessTypeWriteTrue = jobject["accessType"]["write"].Value<bool>();
             }
             // ReSharper restore LocalizableElement
             ParentId = parentId;

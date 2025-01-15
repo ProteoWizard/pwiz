@@ -203,6 +203,7 @@ namespace pwiz.Skyline.Model
         public const string WATERS_SYNAPT_TRAP = "Waters Synapt (trap)";
         public const string WATERS_SYNAPT_TRANSFER = "Waters Synapt (transfer)";
         public const string WATERS_QUATTRO_PREMIER = "Waters Quattro Premier";
+        public const string WATERS_CONNECT_INSTRUMENT = "Waters Connect Instrument";
 
         public const string EXT_AB_SCIEX = ".dam";
         public const string EXT_SCIEX_OS = ".msm";
@@ -235,6 +236,7 @@ namespace pwiz.Skyline.Model
                 THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
+                WATERS_CONNECT_INSTRUMENT
             };
 
         public static readonly string[] TRANSITION_LIST_TYPES =

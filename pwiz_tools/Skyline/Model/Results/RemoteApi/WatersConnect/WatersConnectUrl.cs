@@ -33,26 +33,35 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
 
         public enum ItemType
         {
-            folder,
-            folder_without_sample_sets,
+            folder_child_folders_sample_sets, // Child Folders and Sample Sets in the given folder
+            folder_child_folders_only,  // Child Folders only
             sample_set, // a collection of related injections
-            injection   // like a .raw file
+            injection,   // like a .raw file
+            folder_child_folders_acquisition_methods,  // Child Folders and Acquisition Methods in the given folder
+            acquisition_method // Single Acquisition Method
         }
 
         protected override void Init(NameValueParameters nameValueParameters)
         {
             base.Init(nameValueParameters);
             InjectionId = nameValueParameters.GetValue(@"injectionId");
+            AcquisitionMethodId = nameValueParameters.GetValue(@"acquisitionMethodId");
             FolderOrSampleSetId = nameValueParameters.GetValue(@"sampleSetId");
-            Type = (ItemType?) nameValueParameters.GetLongValue(@"type") ?? ItemType.folder;
+            Type = (ItemType?) nameValueParameters.GetLongValue(@"type") ?? ItemType.folder_child_folders_sample_sets;
         }
         public string InjectionId { get; private set; }
+        public string AcquisitionMethodId { get; private set; }
         public string FolderOrSampleSetId { get; private set; }
         public ItemType Type { get; private set; }
 
         public WatersConnectUrl ChangeInjectionId(string id)
         {
             return ChangeProp(ImClone(this), im => im.InjectionId = id);
+        }
+
+        public WatersConnectUrl ChangeAcquisitionMethodId(string id)
+        {
+            return ChangeProp(ImClone(this), im => im.AcquisitionMethodId = id);
         }
 
         public WatersConnectUrl ChangeFolderOrSampleSetId(string id)
@@ -79,6 +88,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var result = base.GetParameters();
             result.SetValue(@"injectionId", InjectionId);
+            if (AcquisitionMethodId != null)
+                result.SetValue(@"acquisitionMethodId", AcquisitionMethodId);
             result.SetValue(@"sampleSetId", FolderOrSampleSetId);
             result.SetLongValue(@"type", (long) Type);
             return result;
@@ -92,6 +103,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                 throw new RemoteServerException(string.Format(WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
                     Username, ServerUrl));
             }
+
+            //  TODO 'serverUrl' currently excludes 'AcquisitionMethodId'
+
             // ReSharper disable LocalizableElement
             string serverUrl = ServerUrl.Replace("://", "://" + account.Username + ":" + account.Password + "@");
             serverUrl += $@"/?sampleSetId={FolderOrSampleSetId}&injectionId={InjectionId}";

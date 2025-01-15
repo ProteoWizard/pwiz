@@ -33,6 +33,9 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -51,9 +54,19 @@ namespace pwiz.Skyline.FileUI
 
         public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return FileUIResources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
 
+
+        //   TODO ZZZ FOR TESTING ONLY
+        // private static readonly string WATERS_CONNECT__TEMPLATE_METHOD_NAME__FOR_TESTING = "FAKE WC Template";
+        // private static readonly string WATERS_CONNECT__TEMPLATE_METHOD_ID__FOR_TESTING = "FAKE WC TemplateMethodId";
+
+
         private readonly SrmDocument _document;
         private readonly ExportFileType _fileType;
         private string _instrumentType;
+
+
+        //  TODO  ZZZ Save this to Settings.Default.ExportMethodTemplateList instead???
+        private WatersConnectUrl _watersConnectUrl;
 
         private readonly ExportDlgProperties _exportProperties;
 
@@ -331,6 +344,7 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.WATERS_XEVO_TQ) ||
                    Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                    Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
+                   Equals(type, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT) ||
                    // For AbSciex's TOF 5600 and QSTAR instruments, the dwell (accumulation) time
                    // given in the template method is used. So we will not display the 
                    // "Dwell Time" text box.
@@ -359,6 +373,7 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS_XEVO_TQ) ||
                        Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
+                       Equals(type, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
                        Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
                        // LTQ can only schedule for inclusion lists, but then it always
@@ -821,6 +836,25 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog(string outputPath)
         {
+            MessageDlg.Show(this, @"ZZZ: HARD CODED:  outputPath.  HARD CODED parts so NOT final code");
+
+            //  TODO  ZZZ   FAKE VALUE
+            // outputPath = @"FAKE_OUTPUT_PATH";
+
+
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            {
+                //  Export to Waters Connect
+
+                if (_watersConnectUrl == null)
+                {
+                    MessageDlg.Show(this, "Instrument Type is Waters Connect but Template file is not selected from Waters Connect");
+
+                    return;
+                }
+            }
+
+
             var helper = new MessageBoxHelper(this, true);
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
@@ -849,9 +883,13 @@ namespace pwiz.Skyline.FileUI
                     helper.ShowTextBoxError(textTemplateFile, FileUIResources.ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method);
                     return;
                 }
-                if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
+                
+                //  TODO  ZZZ  need to add a test for existing WATERS_CONNECT_INSTRUMENT when start saving the template to Skyline Settings
+
+                if ((!Equals(InstrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT)) && // Exclude WATERS_CONNECT_INSTRUMENT since template NOT on local file system
+                    (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
                     Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF)
-                    ? !Directory.Exists(templateName) : !File.Exists(templateName))
+                    ? !Directory.Exists(templateName) : !File.Exists(templateName)))
                 {
                     helper.ShowTextBoxError(textTemplateFile, FileUIResources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist, templateName);
                     return;
@@ -1106,65 +1144,157 @@ namespace pwiz.Skyline.FileUI
                 string ext = TextUtil.EXT_CSV;
                 string filter = FileUIResources.ExportMethodDlg_OkDialog_Method_File;
 
-                switch (_fileType)
+                //  TODO  ZZZ  Export Waters Connect Differently
+
+                if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
                 {
-                    case ExportFileType.List:
-                        filter = FileUIResources.ExportMethodDlg_OkDialog_Transition_List;
-                        ext = ExportInstrumentType.TransitionListExtension(_instrumentType);
-                        break;
 
-                    case ExportFileType.IsolationList:
-                        filter = FileUIResources.ExportMethodDlg_OkDialog_Isolation_List;
-                        ext = ExportInstrumentType.IsolationListExtension(_instrumentType);
-                        break;
 
-                    case ExportFileType.Method:
-                        title = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, _instrumentType);
-                        ext = ExportInstrumentType.MethodExtension(_instrumentType);
-                        break;
+
+
+
+
+                    //  Export to Waters Connect
+
+                    //  TODO  ZZZ  Export Waters Connect Need Code
+
+                    MessageDlg.Show(this, "ZZZ  Export Waters Connect Need Code to get Folder Id and name to export to");
+                  
+                    //  TODO First show Save Dialog to get folder id and name to export to
+
+                    //  TODO  Next make webservice call to Waters Connect
+
+                    // _watersConnect_TemplateMethodId = watersConnectUrl.InjectionId;
+                    // _watersConnect_FolderId = watersConnectUrl.FolderOrSampleSetId;
+
+
+
+
+
+
+
                 }
-
-                using (var dlg = new SaveFileDialog())
+                else
                 {
-                    dlg.Title = title;
-                    dlg.InitialDirectory = Settings.Default.ExportDirectory;
-                    dlg.OverwritePrompt = true;
-                    dlg.DefaultExt = ext;
-                    dlg.Filter = TextUtil.FileDialogFilterAll(filter, ext);
-                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    //  Export to local file
+
+                    switch (_fileType)
                     {
-                        return;
+                        case ExportFileType.List:
+                            filter = FileUIResources.ExportMethodDlg_OkDialog_Transition_List;
+                            ext = ExportInstrumentType.TransitionListExtension(_instrumentType);
+                            break;
+
+                        case ExportFileType.IsolationList:
+                            filter = FileUIResources.ExportMethodDlg_OkDialog_Isolation_List;
+                            ext = ExportInstrumentType.IsolationListExtension(_instrumentType);
+                            break;
+
+                        case ExportFileType.Method:
+                            title = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, _instrumentType);
+                            ext = ExportInstrumentType.MethodExtension(_instrumentType);
+                            break;
                     }
 
-                    outputPath = dlg.FileName;
+
+                    using (var dlg = new SaveFileDialog())
+                    {
+                        dlg.Title = title;
+                        dlg.InitialDirectory = Settings.Default.ExportDirectory;
+                        dlg.OverwritePrompt = true;
+                        dlg.DefaultExt = ext;
+                        dlg.Filter = TextUtil.FileDialogFilterAll(filter, ext);
+                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+
+                        outputPath = dlg.FileName;
+                    }
+
                 }
             }
             _exportProperties.PolarityFilter = comboPolarityFilter.Enabled
                 ? (ExportPolarity)comboPolarityFilter.SelectedIndex
                 : ExportPolarity.all;
 
-            Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
+            //  TODO  ZZZ  Is setting this to null correct for Waters Connect???
 
-            // Set ShowMessages property on ExportDlgProperties to true
-            // so that we see the progress dialog during the export process
-            var wasShowMessageValue = _exportProperties.ShowMessages;
-            _exportProperties.ShowMessages = true;
-            try
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
             {
-                _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
+                Settings.Default.ExportDirectory = null;
             }
-            catch(UnauthorizedAccessException x)
+            else
             {
-                MessageDlg.ShowException(this, x);
-                _exportProperties.ShowMessages = wasShowMessageValue;
-                return;
+                Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
             }
-            catch (IOException x)
+
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
             {
-                MessageDlg.ShowException(this, x);
-                _exportProperties.ShowMessages = wasShowMessageValue;
-                return;
+
+
+
+
+
+
+
+                //  Export to Waters Connect
+
+                //  TODO  ZZZ   NEED CODE HERE
+
+
+                //  Export to Waters Connect
+
+                //  TODO  ZZZ  Export Waters Connect Need Code
+
+                var watersConnectUrl = _watersConnectUrl;
+
+                MessageDlg.Show(this, "ZZZ  Export Waters Connect Need Code for Webservice POST. AcquisitionMethodId: " + _watersConnectUrl.AcquisitionMethodId);
+
+                //  TODO First show Save Dialog to get folder id and name to export to
+
+                //  TODO  Next make webservice call to Waters Connect
+
+                // _watersConnect_TemplateMethodId = watersConnectUrl.InjectionId;
+                // _watersConnect_FolderId = watersConnectUrl.FolderOrSampleSetId;
+
+
+
+
+
+
             }
+            else
+            {
+                //  Export to Local File
+
+
+                // Set ShowMessages property on ExportDlgProperties to true
+                // so that we see the progress dialog during the export process
+                var wasShowMessageValue = _exportProperties.ShowMessages;
+                _exportProperties.ShowMessages = true;
+                try
+                {
+                    _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
+                }
+                catch (UnauthorizedAccessException x)
+                {
+                    MessageDlg.ShowException(this, x);
+                    _exportProperties.ShowMessages = wasShowMessageValue;
+                    return;
+                }
+                catch (IOException x)
+                {
+                    MessageDlg.ShowException(this, x);
+                    _exportProperties.ShowMessages = wasShowMessageValue;
+                    return;
+                }
+            }
+
+
+            //  TODO  ZZZ  Validate that all code below is applicable for Waters Connect
+
+
 
             // Successfully completed dialog.  Store the values in settings.
             Settings.Default.ExportInstrumentType = _instrumentType;
@@ -1673,6 +1803,15 @@ namespace pwiz.Skyline.FileUI
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
 
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            {
+                textTemplateFile.Enabled = false; // Make so user cannot change value to restrict user to change via "Browse" button
+            }
+            else
+            {
+                textTemplateFile.Enabled = true;
+            }
+
             // Temporary code until we support Agilent export of DIA isolation lists.
             if (Equals(_instrumentType, ExportInstrumentType.AGILENT_TOF) && IsDia)
             {
@@ -1685,10 +1824,34 @@ namespace pwiz.Skyline.FileUI
             if (wasFullScanInstrument != IsFullScanInstrument)
                 UpdateMaxTransitions();
 
+
             MethodTemplateFile templateFile;
-            textTemplateFile.Text = Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile)
-                ? templateFile.FilePath
-                : string.Empty;
+
+            if (!Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            {
+                textTemplateFile.Text = Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile)
+                    ? templateFile.FilePath
+                    : string.Empty;
+            }
+            else
+            {
+                //  Waters Connect - Always reset to empty since currently NOT storing _watersConnect_TemplateMethodId in Settings.Default.ExportMethodTemplateList
+                textTemplateFile.Text = string.Empty;
+                _watersConnectUrl = null;
+            }
+
+
+            //  TODO   ZZZ  TEMP Hard Code Get a Template to use
+
+            // if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            // {
+            //     //  TODO   TEMP Hard Code Get a Template to use
+            //
+            //     textTemplateFile.Text = WATERS_CONNECT__TEMPLATE_METHOD_NAME__FOR_TESTING;
+            //
+            //     _watersConnect_TemplateMethodId = WATERS_CONNECT__TEMPLATE_METHOD_ID__FOR_TESTING;
+            // }
+
 
             var targetType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
             if (targetType == ExportMethodType.Triggered && !CanTrigger && CanSchedule)
@@ -2056,6 +2219,97 @@ namespace pwiz.Skyline.FileUI
 
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
+
+            if (Equals(InstrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            {
+                MessageDlg.Show(this, @"ZZZ: Browse for WATERS_CONNECT_INSTRUMENT Template.  Need to filter Settings.Default.RemoteAccountList to ONLY Waters Connect.  Preferable to only allow user to create Waters Connect connections.");
+
+                //  TODO  Need to filter Settings.Default.RemoteAccountList to ONLY Waters Connect
+                //  TODO  Preferable to only allow user to create Waters Connect connections
+
+                IList<RemoteAccount> remoteAccountsFiltered = null;
+
+                if (Settings.Default.RemoteAccountList != null)
+                {
+                    remoteAccountsFiltered = new RemoteAccountList();
+                    foreach (var remoteAccount in Settings.Default.RemoteAccountList)
+                    {
+                        if (remoteAccount.AccountType == RemoteAccountType.WATERS_CONNECT)
+                        {
+                            remoteAccountsFiltered.Add(remoteAccount);
+                        }
+                    }
+                }
+
+                IList<RemoteAccountType> remoteAccountTypeCreateRestriction = new List<RemoteAccountType>();
+                remoteAccountTypeCreateRestriction.Add(RemoteAccountType.WATERS_CONNECT);
+
+                using (var dlgOpen = new OpenFileDialogNEWatersConnectMethod(remoteAccountsFiltered))
+                {
+                   dlgOpen.Text = "Select Template";
+                   // The dialog expects null to mean no directory was supplied, so don't assign
+                   // an empty string.
+                   string initialDir = null; // Settings.Default.Srm; // Path.GetDirectoryName(documentSavedPath) ?? Settings.Default.SrmResultsDirectory;
+                   if (string.IsNullOrEmpty(initialDir))
+                       initialDir = null;
+
+                   //  TODO  ZZZ   FAKE since not appears to properly use initialDir
+                   initialDir = null;
+
+
+                   dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
+                   // Use saved source type, if there is one.
+                   string sourceType = null; // Settings.Default.SrmResultsSourceType;
+                   if (!string.IsNullOrEmpty(sourceType))
+                   dlgOpen.SourceTypeName = sourceType;
+
+                   if (dlgOpen.ShowDialog(this) != DialogResult.OK)
+                       return;
+
+
+                   // TODO Probably do something different setting different properties in "Settings.Default"
+
+                   // Settings.Default.SrmResultsDirectory = dlgOpen.CurrentDirectory.ToString();
+                   // Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
+
+
+
+                   var dataSources = dlgOpen.FileNames;
+
+                   if (dataSources == null || dataSources.Length == 0)
+                   {
+                       MessageDlg.Show(this, "No Method Template chosen");
+                       return;
+                    }
+
+                    if (dataSources.Length > 1)
+                    {
+                        MessageDlg.Show(this, "Cannot choose more than one Method Template");
+                        return;
+                    }
+
+                    var dataSource = dataSources[0];
+
+                    var watersConnectUrl = dataSource as WatersConnectUrl;
+                    if (watersConnectUrl == null)
+                    {
+                        throw new Exception("dataSource not type WatersConnectUrl");
+                    }
+
+                    _watersConnectUrl = watersConnectUrl;
+
+                    textTemplateFile.Text = watersConnectUrl.GetFilePath();
+
+                    // return dataSources;
+                }
+
+                return;
+            }
+
+            //  Clear since not Waters Connect
+            _watersConnectUrl = null;
+
+
             string templateName = textTemplateFile.Text;
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
                 Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))
@@ -2139,7 +2393,8 @@ namespace pwiz.Skyline.FileUI
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_THERMO));
                 }
                 else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ) ||
-                         Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
+                         Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
+                         Equals(InstrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_WATERS));
                 }

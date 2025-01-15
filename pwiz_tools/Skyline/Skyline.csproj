@@ -485,6 +485,9 @@
       <DependentUpon>SynchronizedIntegrationDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\ZedGraphClipboard.cs" />
+    <Compile Include="FileUI\OpenFileDialogNEWatersConnectMethod.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="FileUI\OpenFileDialogNE.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -591,6 +594,8 @@
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectSessionAcquisitionMethod.cs" />
+    <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectWatersConnectAcquisitionMethodObjectMethodObject.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFolderObject.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectObject.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.Designer.cs">
@@ -3877,7 +3882,7 @@
       <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content  Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
       <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

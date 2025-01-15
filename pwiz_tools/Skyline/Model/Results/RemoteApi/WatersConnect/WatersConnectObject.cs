@@ -64,5 +64,60 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             }
             return int.Parse(value, CultureInfo.InvariantCulture);
         }
+
+
+        ///  Duplicated for JToken
+        ///
+        /// 
+
+        public static string GetProperty(JToken jtoken, string propertyName)
+        {
+            var property = jtoken[propertyName];
+            if (property == null)
+            {
+                return null;
+            }
+            return property.ToString();
+        }
+
+        public static DateTime? GetDateProperty(JToken jtoken, string propertyName)
+        {
+            string value = GetProperty(jtoken, propertyName);
+            if (value == null)
+            {
+                return null;
+            }
+            try
+            {
+                if (DateTime.TryParseExact(value, @"dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+                    return result;
+                return DateTime.Parse(value, CultureInfo.InvariantCulture);
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static int? GetIntegerProperty(JToken jtoken, string propertyName)
+        {
+            string value = GetProperty(jtoken, propertyName);
+            if (value == null)
+            {
+                return null;
+            }
+            return int.Parse(value, CultureInfo.InvariantCulture);
+        }
+
+        public static bool? GetBooleanProperty(JToken jtoken, string propertyName)
+        {
+            string value = GetProperty(jtoken, propertyName);
+            if (value == null)
+            {
+                return null;
+            }
+            return bool.Parse(value);
+        }
     }
 }
+
