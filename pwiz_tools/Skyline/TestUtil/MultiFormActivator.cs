@@ -20,8 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util.Extensions;
+using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -98,6 +98,9 @@ namespace pwiz.SkylineTestUtil
             if (!activatedForm.IsHandleCreated)
                 return;
 
+            // Record the handle value for the activated form while on its thread.
+            // It will not be possible to get this handle from the Form object on
+            // any other thread without causing a CrossThreadOperationException
             var activatedFormHandle = activatedForm.Handle;
 
             lock (_formsToActivate)

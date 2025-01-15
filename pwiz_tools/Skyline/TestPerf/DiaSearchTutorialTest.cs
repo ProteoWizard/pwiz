@@ -73,7 +73,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
-        public void TestDiaSearchStellarTutorial()
+        public void TestDiaSearchStellarTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
@@ -124,7 +124,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
-        public void TestDiaSearchQeTutorial()
+        public void TestDiaSearchQeTutorialDraft()
         {
             // Set true to look at tutorial screenshots.
             //IsPauseForScreenShots = true;
@@ -206,7 +206,7 @@ namespace TestPerf
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            var graph = Graphics.FromImage(bmp);
+            var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
             graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
             return bmp;
         }
@@ -226,14 +226,12 @@ namespace TestPerf
                     else
                         FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
 
-            int tutorialPage = 3;
-
             // Set standard type to None
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
             RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications);
             RunUI(() => peptideSettingsUI.SelectedInternalStandardTypeName = Resources.LabelTypeComboDriver_LoadList_none);
-            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab", tutorialPage++);
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab");
 
             var docBeforePeptideSettings = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
@@ -241,7 +239,7 @@ namespace TestPerf
 
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Select DIA Files to Search page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Select DIA Files to Search page");
 
             // We're on the "Build Spectral Library" page of the wizard.
             RunUI(() =>
@@ -251,7 +249,7 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = false;
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DIA Files page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - After Selecting DIA Files page");
 
             RunUI(() =>
             {
@@ -259,7 +257,7 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
                 importPeptideSearchDlg.ImportResultsDIAControl.IsGpf = _analysisValues.IsGpfData;
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Extract Chromatograms page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Extract Chromatograms page");
 
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
 
@@ -267,14 +265,14 @@ namespace TestPerf
             {
                 // Remove prefix/suffix dialog pops up; accept default behavior
                 var removeSuffix = WaitForOpenForm<ImportResultsNameDlg>();
-                PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix form", tutorialPage++);
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results - Common prefix form");
                 OkDialog(removeSuffix, () => removeSuffix.YesDialog());
                 WaitForDocumentLoaded();
             }
 
             // We're on the "Match Modifications" page. Add M+16
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
-            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - Add Modifications page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - Add Modifications page");
 
             var editStructModListUI =
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
@@ -286,7 +284,7 @@ namespace TestPerf
             OkDialog(editStructModListUI, editStructModListUI.OkDialog);
 
             RunUI(() => importPeptideSearchDlg.MatchModificationsControl.ChangeAll(true));
-            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - After adding modifications page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.MatchModsPage>("Import Peptide Search - After adding modifications page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             RunUI(() =>
@@ -336,9 +334,9 @@ namespace TestPerf
                         Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
                 }
             });
-            PauseForScreenShot<EditIsolationSchemeDlg>("Isolation scheme", tutorialPage++);
+            PauseForScreenShot<EditIsolationSchemeDlg>("Isolation scheme");
             var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
-            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Isolation scheme graph", tutorialPage++);
+            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Isolation scheme graph");
 
             OkDialog(isolationGraph, isolationGraph.CloseButton);
             var okDlgAction = new Action(isolationScheme.OkDialog);
@@ -367,7 +365,7 @@ namespace TestPerf
             RunUI(okDlgAction);
             WaitForClosedForm(isolationScheme);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Import FASTA" page.
@@ -378,7 +376,7 @@ namespace TestPerf
                 importPeptideSearchDlg.ImportFastaControl.MaxMissedCleavages = 1;
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath(_analysisValues.FastaPath));
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the DIA-Umpire settings page
@@ -387,7 +385,7 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.converter_settings_page);
                 Assert.IsFalse(importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - DIA-Umpire Settings page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - DIA-Umpire Settings page");
 
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
@@ -410,11 +408,17 @@ namespace TestPerf
 
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - Search Settings page", tutorialPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.DDASearchSettingsPage>("Import Peptide Search - Search Settings page");
 
             WaitForConditionUI(() => _analysisValues.FragmentMzTolerance.Unit == importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance.Unit);
 
             // Run the search
+            if (IsCoverShotMode)
+            {
+                // Resize the form before running or the output will not appear scrolled to the end
+                RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+            }
+
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
 
             // SearchEngine changed to MSFragger automatically due to changing to DIA workflow: handle download dialogs if necessary
@@ -423,8 +427,7 @@ namespace TestPerf
                 var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                 if (msfraggerDownloaderDlg != null)
                 {
-                    PauseForScreenShot<MsFraggerDownloadDlg>("Import Peptide Search - Download MSFragger",
-                        tutorialPage++); // Maybe someday
+                    PauseForScreenShot<MsFraggerDownloadDlg>("Import Peptide Search - Download MSFragger"); // Maybe someday
                     RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)",
                         "matt.chambers42@gmail.com", "UW"));
                     OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
@@ -433,8 +436,7 @@ namespace TestPerf
                 var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                 if (downloaderDlg != null)
                 {
-                    PauseForScreenShot<MultiButtonMsgDlg>("Import Peptide Search - Download Java and Crux",
-                        tutorialPage++); // Maybe someday
+                    PauseForScreenShot<MultiButtonMsgDlg>("Import Peptide Search - Download Java and Crux"); // Maybe someday
                     OkDialog(downloaderDlg, downloaderDlg.ClickYes);
                     var waitDlg = WaitForOpenForm<LongWaitDlg>();
                     WaitForClosedForm(waitDlg);
@@ -445,7 +447,7 @@ namespace TestPerf
             {
 
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
-                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - Search Progress page", tutorialPage++);
+                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - Search Progress page");
 
                 // Wait for search to finish
                 WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
@@ -458,7 +460,6 @@ namespace TestPerf
 
             if (IsCoverShotMode)
             {
-                RunUI(() => importPeptideSearchDlg.Width = 404);
                 _searchLogImage = ScreenshotManager.TakeShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
             }
@@ -475,7 +476,7 @@ namespace TestPerf
             else
             {
                 var ambiguousDlg = ShowDialog<MessageDlg>(() => importPeptideSearchDlg.ClickNextButton());
-                PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog", tutorialPage++);
+                PauseForScreenShot<MessageDlg>("Import Peptide Search - Ambiguous Peptides dialog");
                 RunUI(() => AssertEx.Contains(ambiguousDlg.Message,
                     Resources.BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_));
                 OkDialog(ambiguousDlg, ambiguousDlg.OkDialog);
@@ -513,7 +514,7 @@ namespace TestPerf
                     }
                 }
             });
-            PauseForScreenShot("Import Peptide Search - Empty Proteins dialog", tutorialPage++);
+            PauseForScreenShot("Import Peptide Search - Empty Proteins dialog");
 
             using (new WaitDocumentChange(null, true, 600 * 1000))
             {
@@ -537,14 +538,13 @@ namespace TestPerf
             });
             //RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
-            tutorialPage++;   // Docking drag-drop image page
-            PauseForScreenShot("Manual review window layout with protein selected", tutorialPage++);
+            PauseForScreenShot("Manual review window layout with protein selected");
 
             try
             {
                 FindNode(peptideToSelect);
                 WaitForGraphs();
-                PauseForScreenShot("Manual review window layout with peptide selected", tutorialPage++);
+                PauseForScreenShot("Manual review window layout with peptide selected");
             }
             catch (AssertFailedException e)
             {

@@ -505,7 +505,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        bfs::path exeDir(bfs::path(argv[0]).branch_path());
+        bfs::path exeDir(bfs::path(argv[0]).parent_path());
 
         vector<OBO> obos;
         map<string, int> enumMultiplierByPrefix;

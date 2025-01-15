@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -184,9 +185,16 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 pep.Irt = regression.GetY(pep.Irt);
             }
-            IrtStandard = new IrtStandard(name, null, null, !IsRecalibration
+
+            var irtPeptides = !IsRecalibration
                 ? StandardPeptideList.Select(pep => new DbIrtPeptide(pep.Target, pep.Irt, true, TimeSource.peak))
-                : _standard.Peptides.Select(pep => new DbIrtPeptide(pep.Target, regression.GetY(pep.Irt), true, TimeSource.peak)));
+                : _standard.Peptides.Select(pep => _updatePeptides.Contains(pep) ? pep :    // Avoid double updating
+                    new DbIrtPeptide(pep.Target, regression.GetY(pep.Irt), true, TimeSource.peak));
+            var irtPeptideList = irtPeptides.ToList();
+            string docXml = IrtDb.GenerateDocumentXml(irtPeptideList.Select(p => p.Target),
+                Program.ActiveDocumentUI, null);
+            IrtStandard = new IrtStandard(name, null, docXml, irtPeptideList);
+
             DialogResult = DialogResult.OK;
         }
 
@@ -737,25 +745,28 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
 
                 RegressionLine cirtRegression = null;
-                var useCirt = false;
+                List<Tuple<DbIrtPeptide, PeptideDocNode>> cirtPeps = null;
                 var cirtUsePredefined = false;
-                if (_picker.TryGetCirtRegression(count, out var tryCirtRegression, out var matchedPeptides))
+                var cirtResult = _picker.GetCirtRegressionResult(count);
+                if (cirtResult.Valid)
                 {
+                    cirtRegression = cirtResult.Regression;
+                    cirtPeps = cirtResult.DbIrtPeptides.Zip(cirtResult.NodePeps, Tuple.Create).ToList();
+
                     var currentIsCirt = currentRegression != null && currentRegression.IsCirtDiscovered;
                     switch (MultiButtonMsgDlg.Show(_parent, string.Format(
                         IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_This_document_contains__0__CiRT_peptides__Would_you_like_to_use__1__of_them_as_your_iRT_standards_,
-                        _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
+                                _picker.CirtPeptideCount, count), MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                     {
                         case DialogResult.Yes:
-                            cirtRegression = tryCirtRegression;
-                            useCirt = true;
+                            cirtRegression = cirtResult.Regression;
                             if ((currentRegression != null && currentRegression.FixedPoint) || currentIsCirt)
                             {
                                 switch (MultiButtonMsgDlg.Show(_parent,
                                     IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Would_you_like_to_use_the_predefined_iRT_values_,
                                     IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Predefined_values,
                                     IrtResources.CalibrationGridViewDriver_FindEvenlySpacedPeptides_Calculate_from_regression,
-                                    true))
+                                            true))
                                 {
                                     case DialogResult.Yes:
                                         cirtUsePredefined = true;
@@ -768,15 +779,41 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             }
                             break;
                         case DialogResult.No:
-                            if (currentIsCirt)
-                                cirtRegression = tryCirtRegression;
+                            if (!currentIsCirt)
+                                cirtRegression = null;
+                            cirtResult = null;
                             break;
                         case DialogResult.Cancel:
                             return null;
                     }
                 }
+                else if (_picker.CirtPeptideCount >= count)
+                {
+                    var msg = new StringBuilder();
 
-                var bestPeptides = _picker.Pick(count, exclude, useCirt);
+                    if (cirtResult.Regression == null)
+                    {
+                        msg.AppendLine(string.Format(
+                            IrtResources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found__but_a_valid_regression_could_not_be_calculated_,
+                            _picker.CirtPeptideCount));
+                    }
+                    else
+                    {
+                        msg.AppendLine(string.Format(
+                            IrtResources.CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range__2_0____to__3_0____minutes_,
+                            _picker.CirtPeptideCount, cirtResult.Count, cirtResult.MinRt, cirtResult.MaxRt
+                        ));
+                        msg.AppendLine();
+                        foreach (var pep in cirtResult.Peptides.OrderBy(pep => pep.Time))
+                        {
+                            msg.AppendLine(string.Format(@"{0} ({1})", pep.NodePep.ModifiedTarget, pep.Time.ToString(Formats.RETENTION_TIME)));
+                        }
+                    }
+
+                    MessageDlg.Show(_parent, msg.ToString());
+                }
+
+                var bestPeptides = _picker.Pick(count, exclude, cirtResult);
                 if (cirtRegression != null)
                 {
                     var standardPeptides = bestPeptides.Select(pep => new StandardPeptide
@@ -785,8 +822,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         RetentionTime = pep.RetentionTime,
                         Target = pep.Target
                     }).ToList();
-                    cirt = new RegressionOption(Resources.CalibrationGridViewDriver_CiRT_option_name, cirtRegression, false,
-                        matchedPeptides.ToList(), standardPeptides);
+                    cirt = new RegressionOption(Resources.CalibrationGridViewDriver_CiRT_option_name, cirtRegression,
+                        false, cirtPeps, standardPeptides);
                 }
                 return bestPeptides;
             }
