@@ -441,6 +441,7 @@ struct PrecursorInfo
     string collisionEnergy;
     string activation;
     double windowWideness;
+    
 
     bool empty() const 
     {
@@ -513,7 +514,6 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
 
     return result;
 }
-
 
 void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precursorInfo)
 {

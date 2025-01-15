@@ -595,6 +595,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 RunUI(() =>
                 {
+                    SkylineWindow.ShowPlotType(PlotTypeRT.correlation);
+
                     Settings.Default.ChromatogramFontSize = 14;
                     Settings.Default.AreaFontSize = 14;
                     SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
@@ -620,7 +622,7 @@ namespace pwiz.SkylineTestTutorial
                     irtEditor.Top = SkylineWindow.Bottom - irtEditor.Height - SkylineWindow.StatusBarHeight - 5;
                     irtEditor.Left = SkylineWindow.Right - irtEditor.Width - 5;
                 });
-                TakeCoverShot();
+                TakeCoverShot(irtEditor);
                 OkDialog(irtEditor, irtEditor.CancelDialog);
                 OkDialog(peptideSettingsUI, peptideSettingsUI.CancelDialog);
                 return;

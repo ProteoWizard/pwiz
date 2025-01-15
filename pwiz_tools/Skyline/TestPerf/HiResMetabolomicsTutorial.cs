@@ -40,6 +40,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Controls.Graphs;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
@@ -281,6 +282,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 {
                     RunUI(() =>
                     {
+                        Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                         Settings.Default.ChromatogramFontSize = 14;
                         Settings.Default.AreaFontSize = 14;
                         SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
@@ -301,6 +303,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     WaitForGraphs();
                     RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
                     WaitForGraphs();
+                    FocusDocument();
 
                     TakeCoverShot();
                     return;

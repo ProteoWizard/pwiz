@@ -282,6 +282,7 @@ namespace pwiz.SkylineTestTutorial
             if (IsCoverShotMode)
             {
                 RestoreCoverViewOnScreen();
+                JiggleSelection();
                 var reintegrateDlgCover = ShowDialog<ReintegrateDlg>(SkylineWindow.ShowReintegrateDialog);
                 var editModelCover = ShowDialog<EditPeakScoringModelDlg>(reintegrateDlgCover.AddPeakScoringModel);
                 RunUI(() =>
@@ -291,7 +292,7 @@ namespace pwiz.SkylineTestTutorial
                     editModelCover.PeakScoringModelName = "SRMCourse";
                     editModelCover.TrainModelClick();
                 });
-                TakeCoverShot();
+                TakeCoverShot(editModelCover);
 
                 OkDialog(editModelCover, editModelCover.CancelDialog);
                 OkDialog(reintegrateDlgCover, reintegrateDlgCover.CancelDialog);
