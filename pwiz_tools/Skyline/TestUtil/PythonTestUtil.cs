@@ -57,9 +57,9 @@ namespace pwiz.SkylineTestUtil
                     OkDialog(pythonDlg, pythonDlg.OkDialog);
                     if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
                     {
-                        MultiButtonMsgDlg longPathDlg = null;
-                        longPathDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), longPathDlg.Message);
+                        MessageDlg longPathDlg = null;
+                        longPathDlg = WaitForOpenForm<MessageDlg>();
+                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), longPathDlg.Message);
 
                         if (IsRunningElevated())
                         {

@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         public List<PythonTaskName> TestPythonVirtualEnvironmentTaskNames { get; set; }
         #endregion
-        private string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
+        public string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
         private string CudaVersionDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"cuda", CUDA_VERSION);
         public string CudaInstallerDownloadPath => Path.Combine(CudaVersionDir, CUDA_INSTALLER);
 

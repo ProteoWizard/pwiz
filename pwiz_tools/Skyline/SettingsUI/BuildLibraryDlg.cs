@@ -300,7 +300,11 @@ namespace pwiz.Skyline.SettingsUI
                 else if (radioAlphaSource.Checked)
                 {
                     if (!SetupPythonEnvironmentForAlpha(createDlg))
+                    {
+                        CleanUpPythonEnvironmentForAlpha();
                         return false;
+
+                    }
                     Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
                 }
                 else if (radioCarafeSource.Checked)
@@ -365,6 +369,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (!SetupPythonEnvironmentForCarafe(createDlg))
                     {
+                        CleanUpPythonEnvironmentForCarafe();
                         return false;
                     }
 
@@ -460,7 +465,16 @@ namespace pwiz.Skyline.SettingsUI
 
             return true;
         }
-
+        private void CleanUpPythonEnvironmentForCarafe()
+        {
+            Directory.Delete(pythonInstaller.PythonVersionDir);
+            Directory.Delete(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE));
+        }
+        private void CleanUpPythonEnvironmentForAlpha()
+        {
+            Directory.Delete(pythonInstaller.PythonVersionDir);
+            Directory.Delete(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP));
+        }
         private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
             var programPathContainer = new ProgramPathContainer(PYTHON, ALPHAPEPTDEEP_PYTHON_VERSION);
@@ -490,11 +504,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return false;
             }
-            else
-            {
-                // Install python when user clicks 'OK' here
-                PythonInstallerUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
-
+            // Install python when user clicks 'OK' here
+            else if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+            { 
+                return false;
             }
 
             return true;
@@ -526,12 +539,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return false;
             }
-            else
+            //Install python when user clicks 'OK' here
+            else if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
             {
-                // Install python when user clicks 'OK' here
-                PythonInstallerUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
-
+                return false;
             }
+
             return true;
        
         }
