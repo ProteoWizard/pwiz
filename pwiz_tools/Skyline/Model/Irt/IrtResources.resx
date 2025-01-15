@@ -124,11 +124,6 @@
   <data name="EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_" xml:space="preserve">
     <value>Could not get a minimum or maximum standard peptide.</value>
   </data>
-  <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
-    <value>The calculator {0} requires all {1} of its standard peptides to be in the targets list in order to determine a regression. The following {2} peptides are missing:
-
-{3}</value>
-  </data>
   <data name="IrtDb_FILTER_IRTDB_iRT_Database_Files" xml:space="preserve">
     <value>iRT Database Files</value>
   </data>
@@ -188,5 +183,11 @@
   </data>
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>Unexpected use of iRT calculator before successful initialization.</value>
+  </data>
+  <data name="IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_" xml:space="preserve">
+    <value>The calculator {0} requires at least {1} of its {2} standard peptides. The following {3} peptides are missing:</value>
+  </data>
+  <data name="IrtStandard_ReadXml_Standard_peptides_must_specify_a_sequence_and_score_" xml:space="preserve">
+    <value>Standard peptides must specify a sequence and score.</value>
   </data>
 </root>

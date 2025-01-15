@@ -155,6 +155,7 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
+    <Compile Include="AddIrtStandardsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
@@ -191,6 +192,7 @@
     <Compile Include="ImportPromptToSaveTest.cs" />
     <Compile Include="ImportResultsFilesRestoreTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="IrtCalibrationTest.cs" />
     <Compile Include="InternationalFilenamesTest.cs" />
     <Compile Include="LegacyIgnoreSimTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
@@ -520,6 +522,7 @@
   <ItemGroup>
     <None Include="AccessServerTest.zip" />
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
+    <None Include="AddIrtStandardsTest.zip" />
     <None Include="AddLibraryTest.zip" />
     <None Include="AddMixedLibraryTest.zip" />
     <None Include="AgilentCeOptimizationTest.zip" />
@@ -596,6 +599,7 @@
     <None Include="InvalidPeptideRankIdTest.zip" />
     <None Include="InvalidPeptidesInLibraryTest.zip" />
     <None Include="IonMobilityTest.zip" />
+    <None Include="IrtCalibrationTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />
