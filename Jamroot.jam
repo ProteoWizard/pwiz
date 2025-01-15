@@ -588,7 +588,7 @@ path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 path-constant GD_SOURCE : $(PWIZ_LIBRARIES_PATH)/libgd-2.1.0alpha ;
 path-constant PNG_SOURCE : $(PWIZ_LIBRARIES_PATH)/libpng-1.5.6 ;
-path-constant FREETYPE_SOURCE : $(PWIZ_LIBRARIES_PATH)/freetype-2.4.7 ;
+path-constant FREETYPE_SOURCE : $(PWIZ_LIBRARIES_PATH)/freetype-VER-2-13-3 ;
 path-constant EXPAT_SOURCE : $(PWIZ_LIBRARIES_PATH)/expat-2.0.1 ;
 
 using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
@@ -1732,7 +1732,6 @@ constant .common-sources :
     $(.common-src-exclusions)
     
     $(PWIZ_ROOT_PATH)/Jamroot.jam
-    $(PWIZ_ROOT_PATH)/NOTICE
     $(PWIZ_ROOT_PATH)/LICENSE
     $(PWIZ_ROOT_PATH)/quickbuild.bat
     $(PWIZ_ROOT_PATH)/quickbuild.sh
