@@ -220,7 +220,7 @@ namespace pwiz.SkylineTestTutorial
                         colDlg.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - colDlg.Height - 10);
                     });
 
-                    TakeCoverShot();
+                    TakeCoverShot(colDlg);
 
                     OkDialog(colDlg, colDlg.CancelDialog);
                 }

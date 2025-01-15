@@ -1254,7 +1254,9 @@ namespace TestPerf
                     RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);
                     OkDialog(changeGroupComparisonSettings, changeGroupComparisonSettings.Close);
                     WaitForConditionUI(() => fcGrid.IsComplete);
+                    WaitForGraphs();
                     volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreCoverViewOnScreen
+                    WaitForConditionUI(() => !volcanoPlot.UpdatePending);
                     RunUI(() =>
                     {
                         var pane = volcanoPlot.GraphControl.GraphPane;
@@ -1263,6 +1265,7 @@ namespace TestPerf
                         xScale.Min = -4;
                         xScale.Max = 4;
                         pane.AxisChange();
+                        volcanoPlot.GraphControl.Invalidate();
                     });
 
                     RunUI(() =>
@@ -1272,16 +1275,20 @@ namespace TestPerf
                         fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                     });
 
-                    if (IsPasef)
+                    if (!IsPasef)
+                    {
+                        FocusDocument();
+                        TakeCoverShot();
+                    }
+                    else
                     {
                         ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
                             1.2642E+01, 1.0521E+04);
                         RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
                         RunUI(() => SkylineWindow.GraphFullScan.SetZoom(true));
                         WaitForGraphs();
+                        TakeCoverShot(FindOpenForm<GraphFullScan>());
                     }
-
-                    TakeCoverShot();
                 }
             }
         }

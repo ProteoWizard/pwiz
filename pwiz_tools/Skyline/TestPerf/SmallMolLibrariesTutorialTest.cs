@@ -461,7 +461,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     var frame = fullScanForm.Parent.Parent;
                     frame.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - frame.Height - 10);
                 });
-                TakeCoverShot();
+                TakeCoverShot(fullScanForm);
                 return;
             }
 

@@ -239,8 +239,15 @@ namespace TestPerf
             // Run the search
             if (IsCoverShotMode)
             {
+                // Filter time related messages
+                RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FilterTimeMessageLock());
                 // Resize the form before running or the output will not appear scrolled to the end
                 RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+            }
+            else if (IsPauseForScreenShots)
+            {
+                // Stop progress at a specific line number
+                RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = new FixedLineCountLock(31));
             }
 
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
@@ -271,10 +278,14 @@ namespace TestPerf
 
             try
             {
-
                 WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_page);
-                WaitForConditionUI(() => importPeptideSearchDlg.SearchControl.PercentComplete > 25);
-                PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page");
+                if (IsPauseForScreenShots)
+                {
+                    WaitForConditionUI(() => importPeptideSearchDlg.SearchControl.IsProgressLocked);
+                    PauseForScreenShot<ImportPeptideSearchDlg.DDASearchPage>("Import Peptide Search - DDA Search Progress page", null,
+                        bmp => bmp.CleanupBorder().FillProgressBar(importPeptideSearchDlg.SearchControl.ProgressBar));
+                    RunUI(() => importPeptideSearchDlg.SearchControl.ProgressLock = null); // Unfreeze progress
+                }
 
                 // Wait for search to finish
                 WaitForConditionUI(60000 * 60, () => searchSucceeded.HasValue);
@@ -287,6 +298,8 @@ namespace TestPerf
 
             if (IsCoverShotMode)
             {
+                // Screenshot at 100% means no animation in the progress bar
+                ScreenshotManager.ActivateScreenshotForm(importPeptideSearchDlg);
                 _searchLogImage = ScreenshotManager.TakeShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
             }
@@ -437,6 +450,29 @@ namespace TestPerf
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                 doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath(documentFile)));
+        }
+
+        internal class FilterTimeMessageLock : SearchControl.IProgressLock
+        {
+            public int? LockLineCount => null;
+            public string FilterMessage(string message)
+            {
+                return !message.Contains("time") ? message : null;
+            }
+        }
+
+        internal class FixedLineCountLock : SearchControl.IProgressLock
+        {
+            public FixedLineCountLock(int lockLineCount)
+            {
+                LockLineCount = lockLineCount;
+            }
+
+            public int? LockLineCount { get; }
+            public string FilterMessage(string message)
+            {
+                return message;
+            }
         }
     }
 }

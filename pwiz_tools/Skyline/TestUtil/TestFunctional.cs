@@ -1876,7 +1876,7 @@ namespace pwiz.SkylineTestUtil
             return bmp.CleanupBorder();
         }
 
-        public void TakeCoverShot()
+        public void TakeCoverShot(Control activateControl = null)
         {
             Thread.Sleep(1000); // Give windows time to repaint
             RunUI(() =>
@@ -1888,6 +1888,7 @@ namespace pwiz.SkylineTestUtil
                     "Cover shots must be taken at screen resolution of at least 1920x1080");
             });
             var coverSavePath = GetCoverShotPath();
+            ScreenshotManager.ActivateScreenshotForm(activateControl ?? SkylineWindow);
             _shotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
             if (coverSavePath != null)

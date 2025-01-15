@@ -625,6 +625,7 @@ namespace TestPerf
 
             if (IsCoverShotMode)
             {
+                ScreenshotManager.ActivateScreenshotForm(importPeptideSearchDlg);
                 _searchLogImage = ScreenshotManager.TakeShot(importPeptideSearchDlg);
                 Assert.IsNotNull(_searchLogImage);
             }

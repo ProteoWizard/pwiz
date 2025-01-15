@@ -292,8 +292,7 @@ namespace pwiz.SkylineTestTutorial
                     editModelCover.PeakScoringModelName = "SRMCourse";
                     editModelCover.TrainModelClick();
                 });
-                ScreenshotManager.ActivateScreenshotForm(editModelCover);   // To hide the caret in the text box
-                TakeCoverShot();
+                TakeCoverShot(editModelCover);
 
                 OkDialog(editModelCover, editModelCover.CancelDialog);
                 OkDialog(reintegrateDlgCover, reintegrateDlgCover.CancelDialog);
