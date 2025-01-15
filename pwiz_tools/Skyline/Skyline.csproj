@@ -4082,6 +4082,7 @@
     <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT_all.sky" />
     <None Include="Method\Agilent\6400\BuildAgilentMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
