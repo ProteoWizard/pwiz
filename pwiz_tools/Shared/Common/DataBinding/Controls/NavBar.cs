@@ -619,6 +619,18 @@ namespace pwiz.Common.DataBinding.Controls
 
         public int Separator2Position => bindingNavigatorSeparator2.Bounds.Left;
 
+        private void navBarButtonFreezeColumns_ButtonClick(object sender, EventArgs e)
+        {
+            if (BindingListSource.ColumnFormats.FrozenColumnCount > 0)
+            {
+                //TODO currently we default the number of columns to 1 but this could be contextually decided
+                BindingListSource.ColumnFormats.FrozenColumnCount = 0;
+            }
+            else
+            {
+                BindingListSource.ColumnFormats.FrozenColumnCount = 1;
+            }
+        }
         private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
         {
             if (null != BindingListSource.ClusteringSpec && !BindingListSource.IsComplete &&

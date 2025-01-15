@@ -284,9 +284,19 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
+        private void UpdateColumnsFrozen()
+        {
+            var frozenColumnCount = _bindingListSource.ColumnFormats.FrozenColumnCount;
+            for (int i = 0; i < Columns.Count; i++)
+            {
+                Columns[i].Frozen = (i + 1) <= frozenColumnCount;
+            }
+        }
+
         protected void OnFormatsChanged()
         {
             UpdateColumnFormats(true);
+            UpdateColumnsFrozen();
         }
 
         protected override void OnRowValidating(DataGridViewCellCancelEventArgs e)

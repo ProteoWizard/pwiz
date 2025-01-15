@@ -56,7 +56,7 @@
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
-            this.toolStripSplitButton1 = new System.Windows.Forms.ToolStripSplitButton();
+            this.navBarButtonFreezeColumns = new System.Windows.Forms.ToolStripSplitButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -197,7 +197,7 @@
             this.navBarButtonMatchCase,
             this.toolStripSeparator2,
             this.lblFilterApplied,
-            this.toolStripSplitButton1});
+            this.navBarButtonFreezeColumns});
             resources.ApplyResources(this.bindingNavigator1, "bindingNavigator1");
             this.bindingNavigator1.MoveFirstItem = this.bindingNavigatorMoveFirstItem;
             this.bindingNavigator1.MoveLastItem = this.bindingNavigatorMoveLastItem;
@@ -256,12 +256,13 @@
             this.navBarButtonActions.Name = "navBarButtonActions";
             this.navBarButtonActions.DropDownOpening += new System.EventHandler(this.navBarButtonActions_DropDownOpening);
             // 
-            // toolStripSplitButton1
+            // navBarButtonFreezeColumns
             // 
-            this.toolStripSplitButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.toolStripSplitButton1.Image = global::pwiz.Common.Properties.Resources.FreezeCells;
-            resources.ApplyResources(this.toolStripSplitButton1, "toolStripSplitButton1");
-            this.toolStripSplitButton1.Name = "toolStripSplitButton1";
+            this.navBarButtonFreezeColumns.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.navBarButtonFreezeColumns.Image = global::pwiz.Common.Properties.Resources.FreezeCells;
+            resources.ApplyResources(this.navBarButtonFreezeColumns, "navBarButtonFreezeColumns");
+            this.navBarButtonFreezeColumns.Name = "navBarButtonFreezeColumns";
+            this.navBarButtonFreezeColumns.ButtonClick += new System.EventHandler(this.navBarButtonFreezeColumns_ButtonClick);
             // 
             // NavBar
             // 
@@ -305,6 +306,6 @@
         private System.Windows.Forms.ToolStripSplitButton navBarButtonCluster;
         private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem navBarButtonClusterGrid;
-        private System.Windows.Forms.ToolStripSplitButton toolStripSplitButton1;
+        private System.Windows.Forms.ToolStripSplitButton navBarButtonFreezeColumns;
     }
 }

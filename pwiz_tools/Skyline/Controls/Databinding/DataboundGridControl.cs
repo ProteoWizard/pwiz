@@ -688,8 +688,6 @@ namespace pwiz.Skyline.Controls.Databinding
                 dataGridViewEx1.Show();
                 dataGridSplitContainer.Panel1Collapsed = false;
                 PopulateReplicateDataGridView(replicatePivotColumns);
-                //TODO for now we hard code this to true but can be called based on a user option
-                UpdateReplicateGridFrozenState(replicatePivotColumns, true);
                 ResizePivotByReplicateGridToFit();
 
                 //TODO move locking code to shared function
@@ -990,16 +988,6 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 _populatingReplicateGrid = false;
             }
-        }
-
-        private void UpdateReplicateGridFrozenState(ReplicatePivotColumns replicatePivotColumns, bool shouldFreeze)
-        {
-            dataGridViewEx1.Columns[@"Property"]!.Frozen = shouldFreeze;
-
-            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
-                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
-            boundDataGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).ForEach(col => col.Frozen = shouldFreeze);
         }
 
         private void ResizePivotByReplicateGridToFit()

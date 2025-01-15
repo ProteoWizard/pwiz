@@ -427,8 +427,8 @@
   <data name="toolStripSplitButton1.Size" type="System.Drawing.Size, System.Drawing">
     <value>45, 33</value>
   </data>
-  <data name="toolStripSplitButton1.Text" xml:space="preserve">
-    <value>toolStripSplitButton1</value>
+  <data name="navBarButtonFreezeColumns.Text" xml:space="preserve">
+    <value>Freeze Columns</value>
   </data>
   <data name="bindingNavigator1.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
@@ -620,10 +620,10 @@
   <data name="&gt;&gt;navBarButtonActions.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripDropDownButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;toolStripSplitButton1.Name" xml:space="preserve">
-    <value>toolStripSplitButton1</value>
+  <data name="&gt;&gt;navBarButtonFreezeColumns.Name" xml:space="preserve">
+    <value>navBarButtonFreezeColumns</value>
   </data>
-  <data name="&gt;&gt;toolStripSplitButton1.Type" xml:space="preserve">
+  <data name="&gt;&gt;navBarButtonFreezeColumns.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSplitButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
