@@ -522,7 +522,7 @@ namespace pwiz.SkylineTestFunctional
                 throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - unknown failure").ToString());
             }
 
-            public override void ValidateFolder(string folderPath, FolderPermission permission, bool checkTargetedMs = true)
+            public override void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true)
             {
             }
 

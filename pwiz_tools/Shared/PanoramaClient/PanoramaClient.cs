@@ -24,7 +24,7 @@ namespace pwiz.PanoramaClient
 
         PanoramaServer ValidateServer();
 
-        void ValidateFolder(string folderPath, FolderPermission permission, bool checkTargetedMs = true);
+        void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true);
 
         JToken GetInfoForFolders(string folder);
 
@@ -74,13 +74,13 @@ namespace pwiz.PanoramaClient
             return validatedServer;
         }
 
-        public void ValidateFolder(string folderPath, FolderPermission permission, bool checkTargetedMs = true)
+        public void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true)
         {
             var requestUri = PanoramaUtil.GetContainersUri(ServerUri, folderPath, false);
-            ValidateFolder(requestUri, folderPath, permission, checkTargetedMs);
+            ValidateFolder(requestUri, folderPath, permissionSet, checkTargetedMs);
         }
 
-        public virtual void ValidateFolder(Uri requestUri, string folderPath, FolderPermission permission, bool checkTargetedMs = true)
+        public virtual void ValidateFolder(Uri requestUri, string folderPath, PermissionSet requiredPermissions, bool checkTargetedMs = true)
         {
             using (var requestHelper = GetRequestHelper())
             {
@@ -88,7 +88,7 @@ namespace pwiz.PanoramaClient
                     string.Format(Resources.AbstractPanoramaClient_ValidateFolder_Error_validating_folder___0__,
                         folderPath));
 
-                if (permission != null && !PanoramaUtil.CheckFolderPermissions(response, permission))
+                if (requiredPermissions != null && !PanoramaUtil.CheckFolderPermissions(response, requiredPermissions))
                 {
                     throw new PanoramaServerException(
                         new ErrorMessageBuilder(FolderState.nopermission.Error(ServerUri, folderPath, Username))
@@ -520,7 +520,7 @@ namespace pwiz.PanoramaClient
                     folderToCreate));
             }
 
-            ValidateFolder(parentFolderPath, FolderPermission.ADMIN, false); // Parent folder should exist and have admin permissions.
+            ValidateFolder(parentFolderPath, PermissionSet.FOLDER_ADMIN, false); // Parent folder should exist and have admin permissions.
 
 
             //Create JSON body for the request
@@ -886,7 +886,7 @@ namespace pwiz.PanoramaClient
             throw new InvalidOperationException();
         }
 
-        public virtual void ValidateFolder(string folderPath, FolderPermission permission, bool checkTargetedMs = true)
+        public virtual void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true)
         {
             throw new InvalidOperationException();
         }
@@ -968,8 +968,8 @@ namespace pwiz.PanoramaClient
                     ["name"] = Name,
                     ["path"] = GetPath(),
                     [PanoramaUtil.PERMS_JSON_PROP] = Writable 
-                        ? new JArray(FolderPermission.AUTHOR.RequiredPermissions)
-                        : new JArray(FolderPermission.READER.RequiredPermissions),
+                        ? new JArray(PermissionSet.AUTHOR.Permissions)
+                        : new JArray(PermissionSet.READER.Permissions),
                     ["folderType"] = IsTargetedMsFolder ? "Targeted MS" : "Collaboration",
                     ["activeModules"] = IsTargetedMsModuleEnabled ? new JArray("TargetedMS")
                         : new JArray("SomethingElse"),

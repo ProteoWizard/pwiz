@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -149,25 +150,25 @@ namespace pwiz.PanoramaClient
 
         public static bool HasReadPermissions(JToken folderJson)
         {
-            return CheckFolderPermissions(folderJson, FolderPermission.READER);
+            return CheckFolderPermissions(folderJson, PermissionSet.READER);
         }
 
         public static bool HasUploadPermissions(JToken folderJson)
         {
-            return CheckFolderPermissions(folderJson, FolderPermission.AUTHOR);
+            return CheckFolderPermissions(folderJson, PermissionSet.AUTHOR);
         }
 
         /// <summary>
         /// Parses the JSON returned from the getContainers LabKey API to look for user permissions in the container.
         /// </summary>
-        /// <returns>True if the user has the given permission type.</returns>
-        public static bool CheckFolderPermissions(JToken folderJson, FolderPermission permissionType)
+        /// <returns>True if the user has the given permissions.</returns>
+        public static bool CheckFolderPermissions(JToken folderJson, PermissionSet requiredPermissions)
         {
             var effectivePermissions = folderJson?[PERMS_JSON_PROP]?
                 .Select(token => token.ToString())
                 .ToArray();
 
-            return effectivePermissions != null && permissionType.MatchesPermissions(effectivePermissions);
+            return effectivePermissions != null && new PermissionSet(effectivePermissions).HasAllPermissions(requiredPermissions);
         }
 
         public static Uri Call(Uri serverUri, string controller, string folderPath, string method, bool isApi = false)
@@ -307,42 +308,60 @@ namespace pwiz.PanoramaClient
     public enum UserStateEnum { valid, nonvalid, unknown }
     public enum FolderState { valid, notpanorama, nopermission, notfound }
 
-    public class FolderPermission
+    public static class Permission
     {
-        public static readonly FolderPermission READER = new FolderPermission(
-            new[] { "org.labkey.api.security.permissions.ReadPermission" });
+        public const string READ = "org.labkey.api.security.permissions.ReadPermission";
+        public const string INSERT = "org.labkey.api.security.permissions.InsertPermission";
+        public const string UPDATE = "org.labkey.api.security.permissions.UpdatePermission";
+        public const string DELETE = "org.labkey.api.security.permissions.DeletePermission";
+        public const string ADMIN = "org.labkey.api.security.permissions.AdminPermission";
+    }
 
-        public static readonly FolderPermission AUTHOR = new FolderPermission(
-            new[]
-            {
-                "org.labkey.api.security.permissions.ReadPermission",
-                "org.labkey.api.security.permissions.InsertPermission"
-            });
+    public class PermissionSet
+    {
+        public static readonly PermissionSet READER = CreatePermissionSet(Permission.READ);
 
-        public static readonly FolderPermission EDITOR = new FolderPermission(
-            new[]
-            {
-                "org.labkey.api.security.permissions.ReadPermission",
-                "org.labkey.api.security.permissions.InsertPermission",
-                "org.labkey.api.security.permissions.UpdatePermission",
-                "org.labkey.api.security.permissions.DeletePermission"
-            });
+        public static readonly PermissionSet AUTHOR = CreatePermissionSet(Permission.READ, Permission.INSERT);
+        
+        public static readonly PermissionSet EDITOR = CreatePermissionSet(Permission.READ, Permission.INSERT, Permission.UPDATE, Permission.DELETE);
+        
+        public static readonly PermissionSet FOLDER_ADMIN = CreatePermissionSet(Permission.READ, Permission.INSERT, Permission.UPDATE, Permission.DELETE, Permission.ADMIN);
 
-        public static readonly FolderPermission ADMIN = new FolderPermission(
-            new[] { "org.labkey.api.security.permissions.AdminPermission" });
 
-        public string[] RequiredPermissions { get; }
-
-        private FolderPermission(string[] requiredPermissions)
+        private static PermissionSet CreatePermissionSet(params string[] permissions)
         {
-            RequiredPermissions = requiredPermissions;
+            return new PermissionSet(permissions);
         }
 
-        // Check if effective permissions match required permissions
-        public bool MatchesPermissions(string[] effectivePermissions)
+        private readonly HashSet<string> _permissions;
+
+        public IReadOnlyCollection<string> Permissions => _permissions;
+
+        public PermissionSet(IEnumerable<string> permissions)
         {
-            return RequiredPermissions.All(perm =>
-                effectivePermissions?.Contains(perm, StringComparer.OrdinalIgnoreCase) == true);
+            if (permissions == null)
+            {
+                throw new ArgumentNullException(nameof(permissions));
+            }
+            _permissions = new HashSet<string>(permissions, StringComparer.OrdinalIgnoreCase);
+        }
+
+        public bool IsEmpty() => !_permissions.Any();
+
+        // Checks if this permission set contains all the permissions from another permission set.
+        // Returns true if the other permission set is null or empty.
+        public bool HasAllPermissions(PermissionSet permissions)
+        {
+            return permissions == null 
+                   || permissions.IsEmpty() 
+                   || _permissions.IsSupersetOf(permissions.Permissions);
+        }
+
+        public override string ToString()
+        {
+            return IsEmpty()
+                ? @"PermissionSet: [Empty]"
+                : string.Format(@"PermissionSet: {0}", string.Join(@", ", _permissions));
         }
     }
 
