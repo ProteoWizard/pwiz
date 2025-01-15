@@ -144,8 +144,8 @@
             // 
             // tbxFind
             // 
-            resources.ApplyResources(this.tbxFind, "tbxFind");
             this.tbxFind.Name = "tbxFind";
+            resources.ApplyResources(this.tbxFind, "tbxFind");
             this.tbxFind.TextChanged += new System.EventHandler(this.FindBoxOnTextChanged);
             // 
             // navBarButtonMatchCase
@@ -172,7 +172,6 @@
             this.bindingNavigator1.CountItem = this.bindingNavigatorCountItem;
             this.bindingNavigator1.DeleteItem = null;
             this.bindingNavigator1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.bindingNavigator1.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.bindingNavigator1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.navBarButtonViews,
             this.btnGroupTotal,
