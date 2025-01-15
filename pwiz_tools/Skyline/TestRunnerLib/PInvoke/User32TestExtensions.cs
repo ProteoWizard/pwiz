@@ -40,5 +40,10 @@ namespace TestRunnerLib.PInvoke
         {
             User32Test.SetForegroundWindow(control.Handle);
         }
+
+        public static void AllowSetForegroundWindow(this Process process)
+        {
+            User32Test.AllowSetForegroundWindow((uint) process.Id);
+        }
     }
 }
