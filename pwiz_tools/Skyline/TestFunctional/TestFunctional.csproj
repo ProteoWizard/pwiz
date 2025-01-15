@@ -184,6 +184,7 @@
     <Compile Include="EncyclopeDiaPeptidesWithNoSignalTest.cs" />
     <Compile Include="ExplicitMissingPeakBoundsTest.cs" />
     <Compile Include="ExportPropertiesTest.cs" />
+    <Compile Include="FilesTreeFormTest.cs" />
     <Compile Include="FindNodeCancelTest.cs" />
     <Compile Include="FullScanPropertiesTest.cs" />
     <Compile Include="IgnoreSimScansTest.cs" />

@@ -491,6 +491,7 @@ namespace pwiz.Skyline
             // deserialization has problems using existing windows.
             DestroySequenceTreeForm();
             DestroyGraphSpectrum();
+            DestroyFilesTreeForm();
 
             var type = RTGraphController.GraphType;
             _listGraphRetentionTime.ToList().ForEach(DestroyGraphRetentionTime);
@@ -587,6 +588,11 @@ namespace pwiz.Skyline
             else if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
             {
                 return _graphSpectrum ?? CreateGraphSpectrum();                
+            }
+            else if (persistentString.StartsWith(typeof(FilesTreeForm).ToString()))
+            {
+                // show FilesTree if it has serialized state in the .view file
+                return _filesTreeForm ?? CreateFilesTreeForm(persistentString);
             }
 
             var split = persistentString.Split('|');
