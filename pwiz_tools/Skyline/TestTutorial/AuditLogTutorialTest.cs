@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json.Linq;
 using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -68,7 +69,9 @@ namespace pwiz.SkylineTestTutorial
         public const string PANORAMA_USER_NAME = "skyline_tester@proteinms.net";
         public const string PANORAMA_PASSWORD = "Lclcmsms1!";
 
-        public string testFolderName = "AuditLogUpload";
+        public const string testFolderName = "AuditLogUpload";
+
+        private bool _assumeNetwork;
 
         [TestMethod]
         public void TestAuditLogTutorial()
@@ -81,6 +84,9 @@ namespace pwiz.SkylineTestTutorial
 //            IsPauseForScreenShots = true;
 //            PauseStartingScreenshot = 16;
 //            IsCoverShotMode = true;
+
+            _assumeNetwork = IsPauseForScreenShots && !IsAutoScreenShotMode;
+
             CoverShotName = "AuditLog";
 
             ForceMzml = true;   // Mzml is ~8x faster for this test.
@@ -471,33 +477,43 @@ namespace pwiz.SkylineTestTutorial
             }); 
             PauseForScreenShot<AuditLogForm>("Audit Log with custom view.");
 
-            var registrationDialog = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(null));
+            var panoramaClient = _assumeNetwork ? null : new AuditLogTestPanoramaClient(SERVER_URL);
+            var panoramaPublishClient = _assumeNetwork ? null : new AuditLogTestPanoramaPublishClient(panoramaClient);
+
+            var registrationDialog = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.ShowPublishDlg(panoramaPublishClient));
             PauseForScreenShot<MultiButtonMsgDlg>("Upload confirmation dialog.");
 
             var loginDialog = ShowDialog<EditServerDlg>(registrationDialog.ClickNo);
+            if (panoramaClient != null) loginDialog.PanoramaClient = panoramaClient;
             PauseForScreenShot<EditServerDlg>("Login dialog.");
 
             RunUI(() =>
             {
                 loginDialog.URL = SERVER_URL;
                 loginDialog.Username = PANORAMA_USER_NAME;
+                loginDialog.Password = _assumeNetwork ? PANORAMA_PASSWORD : "dummy-password";
             });
 
-            if (!IsPauseForScreenShots || IsAutoScreenShotMode) // Skip manual screenshots if in auto-screenshot mode
-                OkDialog(loginDialog, loginDialog.CancelButton.PerformClick);
+            
+            PanoramaSetup();
+
+            var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
+            publishDialog.PanoramaPublishClient = panoramaPublishClient;
+
+            WaitForCondition(() => publishDialog.IsLoaded);
+            RunUI(() =>
+            {
+                publishDialog.SelectItem(testFolderName);
+            });
+            PauseForScreenShot<PublishDocumentDlg>("Folder selection dialog.");
+
+            if (!_assumeNetwork)
+            {
+                // Skip uploading the document to Panorama
+                OkDialog(publishDialog, publishDialog.CancelButton.PerformClick);
+            }
             else
             {
-                PanoramaSetup();
-
-                PauseForManualTutorialStep("MANUAL STEP (no screenshot). Enter password in the Edit Server dialog but DO NOT click OK. Close this window instead to proceed.");
-
-                var publishDialog = ShowDialog<PublishDocumentDlg>(loginDialog.OkDialog);
-                WaitForCondition(() => publishDialog.IsLoaded);
-                RunUI(() =>
-                {
-                    publishDialog.SelectItem(testFolderName);
-                });
-                PauseForScreenShot<PublishDocumentDlg>("Folder selection dialog.");
                 var shareTypeDlg = ShowDialog<ShareTypeDlg>(publishDialog.OkDialog);
                 var browserConfirmationDialog = ShowDialog<MultiButtonMsgDlg>(shareTypeDlg.OkDialog);
                 OkDialog(browserConfirmationDialog, browserConfirmationDialog.ClickYes);
@@ -627,6 +643,8 @@ namespace pwiz.SkylineTestTutorial
 
         private void PanoramaSetup()
         {
+            if (!_assumeNetwork) return;
+
             // NOTE: This method is called when IsPauseForScreenShots is set to true. 
             // Before running the test change the permissions on the Panorama project folder at 
             // https://panoramaweb.org/SkylineTest/project-begin.view 
@@ -651,6 +669,38 @@ namespace pwiz.SkylineTestTutorial
             {
                 AssertEx.Fail("Error creating Panorama test folder. {0}", e.Message);
             }
+        }
+
+        public class AuditLogTestPanoramaClient : BaseTestPanoramaClient
+        {
+            public AuditLogTestPanoramaClient(string serverUri)
+            {
+                ServerUri = new Uri(serverUri);
+                Username = null;
+            }
+            public override PanoramaServer ValidateServer()
+            {
+                return new PanoramaServer(ServerUri, null, null);
+            }
+
+            public override JToken GetInfoForFolders(string folder)
+            {
+                PanoramaFolder testFolder = new PanoramaFolder(PANORAMA_FOLDER);
+                testFolder.AddChild(new PanoramaFolder(testFolderName));
+                return testFolder.ToJson(true);
+            }
+        }
+
+        public class AuditLogTestPanoramaPublishClient : AbstractPanoramaPublishClient
+        {
+            private AuditLogTestPanoramaClient _panoramaClient;
+
+            public AuditLogTestPanoramaPublishClient(AuditLogTestPanoramaClient panoramaClient)
+            {
+                _panoramaClient = panoramaClient;
+            }
+
+            public override IPanoramaClient PanoramaClient => _panoramaClient;
         }
     }
 
