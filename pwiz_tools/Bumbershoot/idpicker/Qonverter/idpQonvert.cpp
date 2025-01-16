@@ -328,7 +328,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             else
             {
                 analysis.importSettings.proteinDatabaseFilepath = (bfs::path(analysis.filepaths[0]).parent_path() / bfs::path(proteinDatabaseFilepath).filename()).string();
-                if (!bfs::exists(analysis.importSettings.proteinDatabaseFilepath) && !proteinDatabaseFilepath.is_complete())
+                if (!bfs::exists(analysis.importSettings.proteinDatabaseFilepath) && !proteinDatabaseFilepath.is_absolute())
                     analysis.importSettings.proteinDatabaseFilepath = (bfs::path(analysis.filepaths[0]).parent_path() / proteinDatabaseFilepath).string();
             }
 
@@ -454,12 +454,12 @@ struct UserFeedbackIterationListener : public IterationListener
 
         vector<string> updateStrings;
 
-        BOOST_FOREACH_FIELD((const string& filepath)(PersistentUpdateMessage& updateMessage), lastUpdateByFilepath)
+        BOOST_FOREACH_FIELD((const string& filepath)(PersistentUpdateMessage& lastUpdateMessage), lastUpdateByFilepath)
         {
             // create a message for each file like "source (message: index/count)"
             string source = Parser::sourceNameFromFilename(bfs::path(filepath).filename().string());
-            int index = updateMessage.iterationIndex;
-            int count = updateMessage.iterationCount;
+            int index = lastUpdateMessage.iterationIndex;
+            int count = lastUpdateMessage.iterationCount;
             const string& message = originalMessage;
 
             if (message.empty())
