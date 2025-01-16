@@ -117,7 +117,7 @@ namespace ImageComparer
         public string UrlToDownload => $"{BASE_URL}/{RelativePath}";
         // RelativePath is used for ComboBox display
         // ReSharper disable once MemberCanBePrivate.Local
-        public string RelativePath => $"{Name}/{Locale}/s-{Number}.png";
+        public string RelativePath => $"{Name}/{Locale}/s-{Number:D2}.png";
 
         public string GetDescription(ImageSource source)
         {
