@@ -43,12 +43,9 @@ namespace pwiz.SkylineTestFunctional
         /// <summary>
         /// Change to true to write annotation value arrays to console
         /// </summary>
-        private bool IsRecordMode
-        {
-            get { return false; }
-        }
+        protected override bool IsRecordMode => false;
 
-        // BEGIN GENERATED CODE: Use IsRecordeMode = true to regenerat
+        // BEGIN GENERATED CODE: Use IsRecordMode = true to regenerate
         private static readonly int[,] TARGET_PEPTIDE_COUNTS =
         {
             {0, 22, 22, 22, 22},

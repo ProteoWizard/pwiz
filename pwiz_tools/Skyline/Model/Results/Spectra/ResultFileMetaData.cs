@@ -66,7 +66,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
 
                 var spectrumMetadata = new SpectrumMetadata(id, protoSpectrum.RetentionTime)
-                    .ChangePresetScanConfiguration(protoSpectrum.PresetScanConfiguration);
+                    .ChangePresetScanConfiguration(protoSpectrum.PresetScanConfiguration)
+                    .ChangeTotalIonCurrent(protoSpectrum.TotalIonCurrent)
+                    .ChangeInjectionTime(protoSpectrum.InjectionTime);
                 if (protoSpectrum.ScanDescriptionIndex > 0)
                 {
                     spectrumMetadata =
@@ -104,6 +106,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
             var spectrumPrecursor =
                 new SpectrumPrecursor(new SignedMz(protoPrecursor.TargetMz, protoPrecursor.TargetMz < 0));
+            if (protoPrecursor.IsolationWindowLower != 0 || protoPrecursor.IsolationWindowUpper != 0)
+            {
+                spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
+                    protoPrecursor.IsolationWindowLower, protoPrecursor.IsolationWindowUpper);
+            }
             if (protoPrecursor.CollisionEnergy != 0)
             {
                 spectrumPrecursor = spectrumPrecursor.ChangeCollisionEnergy(protoPrecursor.CollisionEnergy);
@@ -124,6 +131,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 var spectrum = new ResultFileMetaDataProto.Types.SpectrumMetadata
                 {
                     RetentionTime = spectrumMetadata.RetentionTime,
+                    TotalIonCurrent = spectrumMetadata.TotalIonCurrent,
+                    InjectionTime = spectrumMetadata.InjectionTime
                 };
                 spectrum.PresetScanConfiguration = spectrumMetadata.PresetScanConfiguration;
                 var intParts = GetScanIdParts(spectrumMetadata.Id);
@@ -172,6 +181,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 if (spectrumPrecursor.CollisionEnergy.HasValue)
                 {
                     protoPrecursor.CollisionEnergy = spectrumPrecursor.CollisionEnergy.Value;
+                }
+
+                if (spectrumPrecursor.IsolationWindowLowerWidth.HasValue)
+                {
+                    protoPrecursor.IsolationWindowLower = spectrumPrecursor.IsolationWindowLowerWidth.Value;
+                }
+
+                if (spectrumPrecursor.IsolationWindowUpperWidth.HasValue)
+                {
+                    protoPrecursor.IsolationWindowUpper = spectrumPrecursor.IsolationWindowUpperWidth.Value;
                 }
                 proto.Precursors.Add(protoPrecursor);
             }

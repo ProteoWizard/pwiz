@@ -529,7 +529,7 @@ namespace pwiz.Skyline.Model
             // Filter again, retain only those with rank info,  or at least an interesting name
             SpectrumHeaderInfo groupLibInfo = null;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
-            nodeGroupUnranked.GetLibraryInfo(Settings, ExplicitMods.EMPTY, true, ref groupLibInfo, transitionRanks);
+            nodeGroupUnranked.GetLibraryInfo(Settings, ExplicitMods.EMPTY, false, true, ref groupLibInfo, transitionRanks);
             foreach (var ranked in transitionRanks)
             {
                 transitionDocNodes.Add(TransitionFromPeakAndAnnotations(key, nodeGroupMatched, fragmentCharge, ranked.Value.MI, ranked.Value.Rank));
@@ -627,7 +627,7 @@ namespace pwiz.Skyline.Model
                 return CreateCrosslinkDocNode(peptide, crosslinkLibraryKey, diff, out nodeGroupMatched);
             }
             var seq = target.Sequence;
-            seq = Transition.StripChargeIndicators(seq, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
+            seq = Transition.StripChargeIndicators(seq, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE, true);
             if (peptide == null)
             {
                 string seqUnmod = FastaSequence.StripModifications(seq);
@@ -1221,8 +1221,10 @@ namespace pwiz.Skyline.Model
             public override string ToString()
             {
                 return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? @"{0}{{{1}{2}}}" : @"{0}[{1}{2}]",
-                    AA, Mass > 0 ? @"+" : string.Empty, Mass);
+                    AA, Mass > 0 ? @"+" : string.Empty, Mass) + TerminusText;
             }
+
+            public string TerminusText => Terminus.HasValue ? @"-" + Terminus.Value : string.Empty;
         }
 
         public struct AAModMatch

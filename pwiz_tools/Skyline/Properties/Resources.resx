@@ -3263,6 +3263,15 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PasteDlg_UpdateMoleculeType_Note" xml:space="preserve">
     <value>Note</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_PrecursorNote" xml:space="preserve">
+    <value>Precursor Note</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeNote" xml:space="preserve">
+    <value>Molecule Note</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeListNote" xml:space="preserve">
+    <value>Molecule List Note</value>
+  </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>Click the 'Add File' button to add a FASTA file, and create a new proteome file.</value>
   </data>
@@ -3572,9 +3581,6 @@ Most peptide transition lists can be imported with the "File|Import|Transition L
   </data>
   <data name="EditOptimizationLibraryDlg_UpdateValueHeader_Declustering_Potential" xml:space="preserve">
     <value>Declustering Potential</value>
-  </data>
-  <data name="HtmlFragment_ClipBoardText_From_Clipboard" xml:space="preserve">
-    <value>From Clipboard</value>
   </data>
   <data name="AddPeakCompareDlg_OkDialog_The_selected_file_or_model_does_not_assign_peak_boundaries_to_any_chromatograms_in_the_document___Please_select_a_different_model_or_file_" xml:space="preserve">
     <value>The selected file or model does not assign peak boundaries to any chromatograms in the document.  Please select a different model or file.</value>

@@ -41,6 +41,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
         private readonly ImportPeptideSearchDlg _documentContainer;
         private readonly FullScanSettingsControl _hardklorInstrumentSettingsControl;
+        private SearchEngine? _searchEngine;
 
         public SearchSettingsControl(ImportPeptideSearchDlg documentContainer, ImportPeptideSearch importPeptideSearch)
         {
@@ -48,9 +49,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             ImportPeptideSearch = importPeptideSearch;
             _documentContainer = documentContainer;
 
-            if (importPeptideSearch.IsFeatureDetection)
+            if (ImportPeptideSearch.IsFeatureDetection)
             {
                 SearchEngineComboBox_SelectedIndexChanged(null, null); // Initialize
+                _searchEngine = SearchEngine.Hardklor;
                 // Hide all controls other than the logo picture box
                 foreach (Control control in Controls)
                 {
@@ -62,7 +64,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
                 // Add the Hardklor full scan settings control, used only when the user set FullScan analyzer to "Centroided"
                 // Otherwise just displays the previously designated Full Scan settings
-                _hardklorInstrumentSettingsControl = new FullScanSettingsControl(documentContainer, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
+                _hardklorInstrumentSettingsControl = new FullScanSettingsControl(_documentContainer, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
                 _hardklorInstrumentSettingsControl.ModifyOptionsForImportPeptideSearchWizard(ImportPeptideSearchDlg.Workflow.feature_detection, false, ImportPeptideSearch.eFeatureDetectionPhase.hardklor_settings);
                 Controls.Add(_hardklorInstrumentSettingsControl);
                 _hardklorInstrumentSettingsControl.Location = new System.Drawing.Point(0, 0);
@@ -79,16 +81,36 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 searchEngineComboBox.SelectedIndexChanged += SearchEngineComboBox_SelectedIndexChanged;
                 txtMS1Tolerance.LostFocus += txtMS1Tolerance_LostFocus;
                 txtMS2Tolerance.LostFocus += txtMS2Tolerance_LostFocus;
-
-                searchEngineComboBox.SelectedIndex = 0;
                 groupBoxHardklor.Enabled = groupBoxHardklor.Visible = false;
             }
 
+            InitializeControls();
+        }
+
+        public void InitializeControls()
+        {
             LoadMassUnitEntries();
+
+            if (ImportPeptideSearch.IsFeatureDetection)
+                return;
+
+            if (_searchEngine == null || ImportPeptideSearch.IsDIASearch && _searchEngine != SearchEngine.MSFragger)
+                searchEngineComboBox.SelectedIndex = ImportPeptideSearch.IsDIASearch ? 2 : 0; // currently only supported by MSFragger
         }
 
         private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if (_searchEngine == SelectedSearchEngine && ImportPeptideSearch.SearchEngine?.IsDisposed != true)
+                return; // nothing to do
+
+            if (ImportPeptideSearch.IsDIASearch && SelectedSearchEngine != SearchEngine.MSFragger) // currently only supported by MSFragger
+            {
+                MessageDlg.Show(Parent, DdaSearchResources.SearchSettingsControl_SelectedIndexChanged_Only_MSFragger_is_currently_supported);
+                SelectedSearchEngine = _searchEngine.Value; // go back to previous selection
+                return;
+            }
+
+            _searchEngine = (SearchEngine) searchEngineComboBox.SelectedIndex;
             ImportPeptideSearch.SearchEngine?.Dispose();
             ImportPeptideSearch.SearchEngine = InitSelectedSearchEngine();
             InitializeEngine();
@@ -182,6 +204,22 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return !SimpleFileDownloader.FilesNotAlreadyDownloaded(filesNotAlreadyDownloaded).Any();
         }
 
+        private bool EnsureRequiredFilesDownloaded()
+        {
+            switch (_searchEngine)
+            {
+                case SearchEngine.MSGFPlus:
+                    return EnsureRequiredFilesDownloaded(MsgfPlusSearchEngine.FilesToDownload);
+                case SearchEngine.MSFragger:
+                    return EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog);
+                case SearchEngine.Hardklor:
+                case SearchEngine.MSAmanda:
+                    return true;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
         public static bool HasRequiredFilesDownloaded(SearchEngine searchEngine)
         {
             FileDownloadInfo[] fileDownloadInfo;
@@ -211,13 +249,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 case SearchEngine.MSAmanda:
                     return new MSAmandaSearchWrapper();
                 case SearchEngine.MSGFPlus:
-                    if (!EnsureRequiredFilesDownloaded(MsgfPlusSearchEngine.FilesToDownload))
-                        SelectedSearchEngine = SearchEngine.MSAmanda;
                     return new MsgfPlusSearchEngine();
                 case SearchEngine.MSFragger:
-                    if (!EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog))
-                        SelectedSearchEngine = SearchEngine.MSAmanda;
-                    return new MsFraggerSearchEngine(CutoffScore);
+                    MsFraggerSearchEngine.DataType dataType;
+                    if (!ImportPeptideSearch.IsDIASearch)
+                        dataType = MsFraggerSearchEngine.DataType.dda;
+                    else
+                        dataType = ImportPeptideSearch.IsGpfData ? MsFraggerSearchEngine.DataType.dia_gpf : MsFraggerSearchEngine.DataType.dia;
+                    return new MsFraggerSearchEngine(dataType);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
@@ -344,16 +383,20 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             CutoffScore =
                 BiblioSpecLiteBuilder.GetDefaultScoreThreshold(ImportPeptideSearch.SearchEngine.CutoffScoreName) ??
                 ImportPeptideSearch.SearchEngine.DefaultCutoffScore;
+            ImportPeptideSearch.SearchEngine.SetCutoffScore(CutoffScore);
         }
 
         private void LoadMassUnitEntries()
         {
-            cbMS1TolUnit.Items.Clear();
-            cbMS2TolUnit.Items.Clear();
-
-            string[] entries = {@"Da", @"ppm"};
-            cbMS1TolUnit.Items.AddRange(entries);
-            cbMS2TolUnit.Items.AddRange(entries);
+            string[] entries = { @"Da", @"ppm" };
+            foreach (var cb in new [] { cbMS1TolUnit, cbMS2TolUnit })
+            {
+                int oldSelectedIndex = cb.SelectedIndex;
+                cb.Items.Clear();
+                cb.Items.AddRange(entries);
+                if (oldSelectedIndex > -1)
+                    cb.SelectedIndex = oldSelectedIndex;
+            }
         }
 
         private void LoadFragmentIonEntries()
@@ -402,6 +445,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             bool valid = ValidateEntries(interactive);
             if (!valid)
+                return false;
+
+            if (!EnsureRequiredFilesDownloaded())
                 return false;
 
             var modSettings = _documentContainer.Document.Settings.PeptideSettings.Modifications;

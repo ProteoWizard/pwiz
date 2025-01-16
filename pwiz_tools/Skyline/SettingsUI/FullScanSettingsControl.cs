@@ -32,7 +32,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -81,9 +80,6 @@ namespace pwiz.Skyline.SettingsUI
             cbHighSelectivity.Checked = FullScan.UseSelectiveExtraction;
 
             _prevval_comboIsolationScheme = IsolationScheme; // initialize previous value to initial value
-
-            cbIgnoreSim.Checked = FullScan.IgnoreSimScans;
-            toolTip.SetToolTip(cbIgnoreSim, string.Format(toolTip.GetToolTip(cbIgnoreSim), SpectrumFilter.SIM_ISOLATION_CUTOFF));
         }
 
         private void InitializeFeatureDetectionUI()
@@ -195,7 +191,7 @@ namespace pwiz.Skyline.SettingsUI
                 double precursorRes;
                 return double.TryParse(textPrecursorRes.Text, out precursorRes) ? (double?)precursorRes : null;
             }
-            set { textPrecursorRes.Text = FormatPrecursorRes(value, PrecursorMassAnalyzer); }
+            set { textPrecursorRes.Text = FormatRes(value, PrecursorMassAnalyzer); }
         }
 
         public double? PrecursorResMz
@@ -215,7 +211,7 @@ namespace pwiz.Skyline.SettingsUI
                 double productRes;
                 return double.TryParse(textProductRes.Text, out productRes) ? (double?)productRes : null;
             }
-            set { textProductRes.Text = value.ToString(); }
+            set { textProductRes.Text = FormatRes(value, ProductMassAnalyzer); }
         }
 
         public double? ProductResMz
@@ -232,12 +228,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return cbHighSelectivity.Checked; }
             set { cbHighSelectivity.Checked = value; }
-        }
-
-        public bool IgnoreSimScans
-        {
-            get { return cbIgnoreSim.Checked; }
-            set { cbIgnoreSim.Checked = value; }
         }
 
         public RetentionTimeFilterType RetentionTimeFilterType
@@ -381,7 +371,6 @@ namespace pwiz.Skyline.SettingsUI
                 // Selection change should set filter m/z textbox correctly
                 comboPrecursorAnalyzerType.SelectedIndex = -1;
                 comboPrecursorAnalyzerType.Enabled = false;
-                cbIgnoreSim.Enabled = cbIgnoreSim.Checked = false;
             }
             else
             {
@@ -417,7 +406,6 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
                 textPrecursorIsotopeFilter.Enabled = true;
                 comboPrecursorAnalyzerType.Enabled = true;
-                cbIgnoreSim.Enabled = true;
             }
             FullScanEnabledChanged?.Invoke(new FullScanEnabledChangeEventArgs(comboPrecursorAnalyzerType.Enabled, null)); // Fire event so Filter iontypes settings can update as needed
             UpdateRetentionTimeFilterUi();
@@ -474,7 +462,6 @@ namespace pwiz.Skyline.SettingsUI
                     PrecursorMassAnalyzer,
                     precursorRes,
                     precursorResMz,
-                    IgnoreSimScans,
                     UseSelectiveExtraction,
                     Enrichments,
                     retentionTimeFilterType,
@@ -898,7 +885,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return double.Parse(tbxTimeAroundPrediction.Text); }
         }
 
-        private static string FormatPrecursorRes(double? resolvingPower, FullScanMassAnalyzerType analyzerType)
+        private static string FormatRes(double? resolvingPower, FullScanMassAnalyzerType analyzerType)
         {
             if (!resolvingPower.HasValue)
                 return string.Empty;
@@ -934,7 +921,7 @@ namespace pwiz.Skyline.SettingsUI
                 labelTh.Visible = false;
                 textAt.Visible = false;
                 textRes.Enabled = true;
-                textRes.Text = FormatPrecursorRes(
+                textRes.Text = FormatRes(
                     resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
                         ? resCurrent
                         : TransitionFullScan.DEFAULT_CENTROIDED_PPM,
@@ -964,9 +951,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
-                    textRes.Text = FormatPrecursorRes(resCurrent, analyzerTypeNew);
+                    textRes.Text = FormatRes(resCurrent, analyzerTypeNew);
                 else
-                    textRes.Text = FormatPrecursorRes(TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew], analyzerTypeNew);
+                    textRes.Text = FormatRes(TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew], analyzerTypeNew);
 
                 labelAt.Visible = variableRes;
                 textAt.Visible = variableRes;
@@ -1093,7 +1080,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var newRadioTimeAroundTop = workflow == ImportPeptideSearchDlg.Workflow.feature_detection ?
                     radioTimeAroundMs2Ids.Top :
-                    radioKeepAllTime.Top;
+                    radioUseSchedulingWindow.Top;
                 int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
                 radioUseSchedulingWindow.Visible = false;
                 flowLayoutPanelUseSchedulingWindow.Visible = false;

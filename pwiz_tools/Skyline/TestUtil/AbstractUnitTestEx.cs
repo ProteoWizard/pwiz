@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Resources;
 using System.Text;
@@ -112,6 +113,13 @@ namespace pwiz.SkylineTestUtil
             return document.ReadAuditLog(path, skylineDocumentHash, () => throw new AssertFailedException("Document hash did not match"));
         }
 
+        // Sometimes a text representation is useful for running down differences in behavior between branches
+        public static void SerializeDocumentToFile(SrmDocument doc, string path)
+        {
+            var serializer = new XmlSerializer(typeof(SrmDocument));
+            using var writer = new StreamWriter(path);
+            serializer.Serialize(writer, doc);
+        }
 
         public static void AssertLastEntry(AuditLogList auditLogList, MessageType messageType)
         {
@@ -121,6 +129,10 @@ namespace pwiz.SkylineTestUtil
             Assert.AreEqual(messageType, lastEntry.AllInfo[0].MessageInfo.Type);
         }
 
+        protected virtual bool IsRecordMode
+        {
+            get { return false; }
+        }
 
         /// <summary>
         /// Returns true if Skyline was compiled with a Koina config file that enables connecting to a real server.
@@ -137,20 +149,29 @@ namespace pwiz.SkylineTestUtil
         /// <example>GetSystemResourceString("IO.FileNotFound_FileName", "SomeFilepath")</example>
         public string GetSystemResourceString(string resourceId, params object[] args)
         {
-            if (_systemResources == null || !Equals(_systemResourcesCultureInfo, CultureInfo.CurrentUICulture))
+            if (!_systemResources.TryGetValue(CultureInfo.CurrentUICulture, out var resourceSet))
             {
-                _systemResources?.Dispose();
                 var assembly = Assembly.GetAssembly(typeof(object));
                 var assemblyName = assembly.GetName().Name;
                 var manager = new ResourceManager(assemblyName, assembly);
-                _systemResources = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
-                _systemResourcesCultureInfo = CultureInfo.CurrentUICulture;
+
+                if (!_systemResources.ContainsKey(CultureInfo.CurrentUICulture))
+                {
+                    resourceSet = _systemResources[CultureInfo.CurrentUICulture] = manager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+                    _systemResourceString[resourceSet] = new Dictionary<string, string>();
+                }
+
+                resourceSet = _systemResources[CultureInfo.CurrentUICulture];
             }
 
-            return string.Format(_systemResources.GetString(resourceId) ?? throw new ArgumentException(nameof(resourceId)), args);
+            if (!_systemResourceString[resourceSet!].TryGetValue(resourceId, out var formatString))
+                formatString = _systemResourceString[resourceSet][resourceId] = resourceSet.GetString(resourceId) ??
+                    throw new ArgumentException(nameof(resourceId));
+            return string.Format(formatString, args);
         }
 
-        private static ResourceSet _systemResources;
-        private static CultureInfo _systemResourcesCultureInfo;
+        private static Dictionary<CultureInfo, ResourceSet> _systemResources = new Dictionary<CultureInfo, ResourceSet>();
+        private static Dictionary<ResourceSet, Dictionary<string, string>> _systemResourceString =
+            new Dictionary<ResourceSet, Dictionary<string, string>>();
     }
 }

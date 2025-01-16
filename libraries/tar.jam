@@ -93,13 +93,14 @@ class create-tar-target-class : basic-target
         self.pwd = [ path.make [ path.pwd ] ] ;
         self.anchor = $(self.pwd) ;
         self.tar-args += -C [ path.native $(self.anchor) ] ;
+        self.tar-excludes = "" ;
         
         for local s in $(sources)
         {
             add-source $(s) ;
         }
 
-        self.tar-args = [ sequence.join $(self.tar-args) : " " ] ;
+        #self.tar-args = [ sequence.join $(self.tar-excludes) $(self.tar-args) : " " ] ;
         #echo tar: $(self.tar-args) ;
         basic-target.__init__ $(name) : $(project) : $(non-file-sources) :
             $(requirements) : $(default-build) : $(usage-requirements) ;
@@ -133,7 +134,7 @@ class create-tar-target-class : basic-target
 
         local actual-result = [ $(t).actualize ] ;
         ALWAYS $(actual-result) ;
-        TAR_ARGS on $(actual-result) = $(self.tar-args) ;
+        TAR_ARGS on $(actual-result) = $(self.tar-excludes) $(self.tar-args) ;
         return [ property-set.empty ] $(t) ;
     }
 
@@ -152,7 +153,7 @@ class create-tar-target-class : basic-target
         }
         else if $(possible-exclude)
         {
-            self.tar-args += --exclude \"$(possible-exclude)\" ;
+            self.tar-excludes += --exclude \"$(possible-exclude)\" ;
         }
         else
         {

@@ -1802,4 +1802,16 @@
   <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
     <value>Score type</value>
   </data>
+  <data name="TransitionGroupDocNode_SpectrumFilter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
+  <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
+  <data name="ImportResultsSettings_IsGpf" xml:space="preserve">
+    <value>Gas phase fractionation</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
+    <value>Deconvolute spectra with DIA-Umpire</value>
+  </data>
 </root>

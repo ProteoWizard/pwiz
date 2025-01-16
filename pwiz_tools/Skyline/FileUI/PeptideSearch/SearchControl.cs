@@ -28,6 +28,7 @@ using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
@@ -97,6 +98,37 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Program.MainWindow.UpdateTaskbarProgress(state, percentComplete);
         }
 
+        public interface IProgressLock
+        {
+            int? LockLineCount { get; }
+            string FilterMessage(string message);
+        }
+
+        private IProgressLock _progressLock;
+
+        public IProgressLock ProgressLock
+        {
+            get
+            {
+                return _progressLock;
+            }
+            set
+            {
+                bool unlocking = IsProgressLocked && value == null;
+                _progressLock = value;
+                if (unlocking)
+                    RefreshProgressTextbox();
+            }
+        }
+
+        public bool IsProgressLocked
+        {
+            get
+            {
+                return (_progressLock?.LockLineCount ?? int.MaxValue) <= _progressTextItems.Count;
+            }
+        }
+
         protected int lastSegment = -1;
         protected string lastMessage;
         protected string lastSegmentName;
@@ -132,18 +164,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (status.SegmentCount > 0)
                 percentComplete = status.Segment * 100 / status.SegmentCount + status.ZoomedPercentComplete / status.SegmentCount;
 
-            UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, percentComplete);
-            if (status.PercentComplete == -1)
-                progressBar.Style = ProgressBarStyle.Marquee;
-            else
+            if (!IsProgressLocked)
             {
-                progressBar.Value = percentComplete;
-                progressBar.Style = ProgressBarStyle.Continuous;
+                UpdateTaskbarProgress(TaskbarProgress.TaskbarStates.Normal, percentComplete);
+                if (status.PercentComplete == -1)
+                    progressBar.Style = ProgressBarStyle.Marquee;
+                else
+                {
+                    progressBar.Value = percentComplete;
+                    progressBar.Style = ProgressBarStyle.Continuous;
+                }
             }
 
             // look at the last 10 lines for the same message and if found do not relog the same message
-            if (_progressTextItems.Skip(Math.Max(0, _progressTextItems.Count - 10)).Any(entry => entry.Message == message))
+            if (Enumerable.Range(Math.Max(0, _progressTextItems.Count - 10), Math.Min(10, _progressTextItems.Count))
+                .Any(i => _progressTextItems[i].Message == message))
+            {
                 return;
+            }
 
             if (message.EndsWith(@"%") && double.TryParse(message.Substring(0, message.Length - 1), out _))
             {
@@ -151,9 +189,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
+            if (ProgressLock != null)
+            {
+                message = ProgressLock.FilterMessage(message);
+                if (string.IsNullOrEmpty(message))
+                    return;
+            }
+
             var newEntry = new ProgressEntry(DateTime.Now, message);
             _progressTextItems.Add(newEntry);
-            txtSearchProgress.AppendLineWithAutoScroll($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+            if (!IsProgressLocked)
+                txtSearchProgress.AppendLineWithAutoScroll($@"{newEntry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
         }
 
         public void SetProgressBarDisplayStyle(ProgressBarDisplayText style)
@@ -169,6 +215,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 Invalidate();
             }
         }
+
+        public ProgressBar ProgressBar => progressBar;
+
+        public int PercentComplete => progressBar.Value;
 
         protected CancellationTokenSource _cancelToken;
 
@@ -229,8 +279,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void RefreshProgressTextbox()
         {
             txtSearchProgress.Clear();
-            foreach (var entry in _progressTextItems)
-                txtSearchProgress.AppendText($@"{entry.ToString(showTimestampsCheckbox.Checked)}{Environment.NewLine}");
+            txtSearchProgress.AppendText(TextUtil.LineSeparate(_progressTextItems.Select(entry
+                => entry.ToString(showTimestampsCheckbox.Checked))) + Environment.NewLine);
+
         }
 
         public string LogText => txtSearchProgress.Text;
@@ -247,7 +298,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (InvokeRequired)
                 Invoke(new MethodInvoker(() => UpdateProgress(status)));
             else
-                UpdateSearchEngineProgress(status.ChangeMessage(status.Message));
+                UpdateSearchEngineProgress(status);
 
             return UpdateProgressResponse.normal;
         }

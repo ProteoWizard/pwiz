@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -80,18 +82,32 @@ namespace pwiz.SkylineTestUtil
             string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
             if (zipBaseName == null)
                 Assert.Fail("Null zip base name");  // Resharper
-            directoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
-            FullPath = TestContext.GetTestPath(directoryName);
+            DirectoryName = GetExtractDir(directoryName, zipBaseName, false);   // Only persistent files can be extract here
+            FullPath = TestContext.GetTestPath(DirectoryName);
             if (Directory.Exists(FullPath))
             {
                 Helpers.TryTwice(() => Directory.Delete(FullPath, true));
             }
             // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
+            IsExtractHere = isExtractHere;
             if (PersistentFiles != null)
                 PersistentFilesDir = GetExtractDir(Path.GetDirectoryName(relativePathZip), zipBaseName, isExtractHere);
 
             TestContext.ExtractTestFiles(relativePathZip, FullPath, PersistentFiles, PersistentFilesDir);
+        }
+
+        public void RecordMetrics()
+        {
+            // record the size of the persistent directory after extracting
+            var targetDir = IsExtractHere ? Path.Combine(PersistentFilesDir ?? string.Empty, DirectoryName) : PersistentFilesDir;
+            var persistentDirInfo = string.IsNullOrEmpty(PersistentFilesDir) ? null : new DirectoryInfo(targetDir);
+            if (persistentDirInfo != null && Directory.Exists(PersistentFilesDir))
+            {
+                var persistentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+                PersistentFilesDirTotalSize = persistentFileInfos.Sum(f => f.Length);
+                PersistentFilesDirFileSet = persistentFileInfos.Select(f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName)).ToHashSet();
+            }
         }
 
         private static string GetExtractDir(string directoryName, string zipBaseName, bool isExtractHere)
@@ -105,11 +121,23 @@ namespace pwiz.SkylineTestUtil
             return directoryName;
         }
 
+        public string DirectoryName { get; private set; }
         public string FullPath { get; private set; }
 
         public string PersistentFilesDir { get; private set; }
 
         public string[] PersistentFiles { get; private set; }
+        private bool IsExtractHere { get; }
+
+        /// <summary>
+        /// The sum of all file sizes in the persistent files dir after extracting the ZIP.
+        /// </summary>
+        public long? PersistentFilesDirTotalSize { get; private set; }
+
+        /// <summary>
+        /// Full list of all file paths in the persistent files dir after extracting the ZIP.
+        /// </summary>
+        public ISet<string> PersistentFilesDirFileSet { get; private set; }
 
         public string RootPath
         {
@@ -173,9 +201,7 @@ namespace pwiz.SkylineTestUtil
             ABI,
             Agilent,
             Bruker,
-/* Waiting for CCS<->DT support in .mbi reader
             Mobilion,
-*/
             Shimadzu,
             Thermo,
             UIMF,
@@ -245,6 +271,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public void Cleanup()
         {
+            // check that persistent files dir has not changed
+            CheckForModifiedPersistentFilesDir();
+
             var desiredCleanupLevel = TestContext.GetEnumValue("DesiredCleanupLevel", DesiredCleanupLevel.none);
 
             CheckForFileLocks(RootPath, desiredCleanupLevel == DesiredCleanupLevel.all);
@@ -256,6 +285,56 @@ namespace pwiz.SkylineTestUtil
                 {
                     CheckForFileLocks(PersistentFilesDir, desiredCleanupLevel != DesiredCleanupLevel.none);
                 }
+            }
+        }
+
+        private void CheckForModifiedPersistentFilesDir()
+        {
+            if (!PersistentFilesDirTotalSize.HasValue) return;
+
+            // Do a garbage collection in case any finalizer is supposed to release a file handle
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            var lastDirectoryName = Path.GetFileName(FullPath) ?? "";
+            var targetDir = IsExtractHere ? Path.Combine(PersistentFilesDir ?? "", lastDirectoryName) : PersistentFilesDir;
+            List<FileInfo> currentFileInfos;
+            try
+            {
+                var persistentDirInfo = new DirectoryInfo(targetDir);
+                currentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(@"Warning: while checking for modified persistent files directory, " + ex.Message);
+                return;
+            }
+
+            long currentSize = currentFileInfos.Sum(f => f.Length);
+            var currentFiles = currentFileInfos.Select(f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName)).ToHashSet();
+            var newFiles = new HashSet<string>(currentFiles);
+            newFiles.ExceptWith(PersistentFilesDirFileSet);
+            var deletedFiles = new HashSet<string>(PersistentFilesDirFileSet);
+            deletedFiles.ExceptWith(currentFiles);
+            if (newFiles.Any() || deletedFiles.Any() || PersistentFilesDirTotalSize - currentSize > 0)
+            {
+                var changeSummary = new StringBuilder($"PersistentFilesDir ({PersistentFilesDir}) has been modified.\r\n");
+                changeSummary.AppendLine($"  Original size: {PersistentFilesDirTotalSize}");
+                changeSummary.AppendLine($"Size at cleanup: {currentSize}");
+                if (newFiles.Any())
+                {
+                    changeSummary.AppendLine("New files:");
+                    changeSummary.Append(TextUtil.LineSeparate(newFiles));
+                }
+
+                if (deletedFiles.Any())
+                {
+                    changeSummary.Append("Deleted files:");
+                    changeSummary.Append(TextUtil.LineSeparate(deletedFiles));
+                }
+
+                throw new IOException(changeSummary.ToString());
             }
         }
 
@@ -321,10 +400,11 @@ namespace pwiz.SkylineTestUtil
                 try
                 {
                     Helpers.TryTwice(() => Directory.Delete(path, true));
+                    return; // If this succeeds then the lock was only temporary and we don't have a GUID folder to move back.
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{path}"",""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{path}"", ""{guidName}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
 
@@ -342,7 +422,7 @@ namespace pwiz.SkylineTestUtil
                 }
                 catch (Exception e)
                 {
-                    throw new IOException($@"Directory.Move(""{guidName}"",(""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
+                    throw new IOException($@"Directory.Move(""{guidName}"", ""{path}"") failed, attempt to delete instead resulted in ""{e.Message}""{GetProcessNamesLockingFile(path, e)}");
                 }
             }
         }

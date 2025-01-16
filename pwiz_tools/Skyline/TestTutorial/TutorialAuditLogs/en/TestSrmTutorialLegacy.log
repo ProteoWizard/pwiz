@@ -311,8 +311,8 @@ Summary   : Settings > Transition Settings changed
 All Info  :
 Transition Settings changed
 Settings > Transition Settings -- Prediction > Collision energy changed from "SCIEX" to "SRMcourse_20140211_Parameters_custom-CE-equation"
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.025", Intercept = "8.6852" }
-Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.046", Intercept = "-1.9754" }
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "2", Slope = "0.0239", Intercept = "9.2348" }
+Settings > Transition Settings -- Prediction > Collision energy > Regression parameters : contains { Charge = "3", Slope = "0.057", Intercept = "-8.077" }
 Settings > Transition Settings -- Instrument > Method match tolerance m/z changed from "0.055" to "0.01"
 
 Undo Redo : Managed results

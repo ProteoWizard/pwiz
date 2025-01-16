@@ -90,12 +90,12 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(Skyline.Controls.GroupComparison.GroupComparisonResources
                         .VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_Protein_Expression_Formatting,
                     formattingDlg.Text);
-                var row = formattingDlg.GetCurrentBindingList().AddNew();
+                var row = formattingDlg.AddRow();
                 Assert.IsNotNull(row);
                 row.Expression = new MatchExpression("QE", new[] { MatchOption.PeptideSequence }).ToString();
                 row.PointSymbol = PointSymbol.Diamond;
                 row.Color = Color.FromArgb(Color.Indigo.ToArgb());
-                row = formattingDlg.GetCurrentBindingList().AddNew();
+                row = formattingDlg.AddRow();
                 Assert.IsNotNull(row);
                 row.Expression = new MatchExpression("GQ", new[] { MatchOption.PeptideSequence }).ToString();
                 row.PointSymbol = PointSymbol.Triangle;
@@ -158,11 +158,11 @@ namespace pwiz.SkylineTestFunctional
             formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(pane.ShowFormattingDialog);
             RunUI(() =>
             {
-                Assert.AreEqual(PointSymbol.Diamond, formattingDlg.GetCurrentBindingList()[0].PointSymbol);
-                formattingDlg.GetCurrentBindingList()[0].PointSymbol = PointSymbol.Plus;
+                Assert.AreEqual(PointSymbol.Diamond, formattingDlg.GetRowPointSymbol(0));
+                formattingDlg.SetRowPointSymbol(0, PointSymbol.Plus);
             });
             WaitForGraphs();
-            RunUI(() => formattingDlg.GetCurrentBindingList()[0].PointSymbol =PointSymbol.Diamond);
+            RunUI(() => formattingDlg.SetRowPointSymbol(0, PointSymbol.Diamond));
             WaitForGraphs();
             OkDialog(formattingDlg, formattingDlg.OkDialog);
         }

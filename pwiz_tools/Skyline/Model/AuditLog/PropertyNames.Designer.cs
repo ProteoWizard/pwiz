@@ -367,6 +367,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Deconvolute spectra with DIA-Umpire.
+        /// </summary>
+        public static string BuildPeptideSearchLibrarySettings_UseDiaUmpire {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibrarySettings_UseDiaUmpire", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Workflow.
         /// </summary>
         public static string BuildPeptideSearchLibrarySettings_WorkFlow {
@@ -1947,6 +1956,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string ImportResultsSettings_FoundResultsFiles {
             get {
                 return ResourceManager.GetString("ImportResultsSettings_FoundResultsFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gas phase fractionation.
+        /// </summary>
+        public static string ImportResultsSettings_IsGpf {
+            get {
+                return ResourceManager.GetString("ImportResultsSettings_IsGpf", resourceCulture);
             }
         }
         
@@ -4624,6 +4642,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string TransitionFullScan_SpectrumFilter {
+            get {
+                return ResourceManager.GetString("TransitionFullScan_SpectrumFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use high-selectivity extraction.
         /// </summary>
         public static string TransitionFullScan_UseSelectiveExtraction {
@@ -4665,6 +4692,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string TransitionGroupDocNode_PrecursorConcentration {
             get {
                 return ResourceManager.GetString("TransitionGroupDocNode_PrecursorConcentration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string TransitionGroupDocNode_SpectrumFilter {
+            get {
+                return ResourceManager.GetString("TransitionGroupDocNode_SpectrumFilter", resourceCulture);
             }
         }
         

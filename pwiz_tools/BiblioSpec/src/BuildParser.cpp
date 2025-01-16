@@ -102,7 +102,7 @@ void BuildParser::setSpecFileName(
     {
         try
         {
-            if (bfs::exists(bfs::complete(specfilepath.parent_path(), filepath_)))
+            if (bfs::exists(bfs::absolute(specfilepath.parent_path(), filepath_)))
             {
                 localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
             }
@@ -176,7 +176,7 @@ void BuildParser::setSpecFileName(
     if( curSpecFileName_.empty() ) {
         string extString = fileNotFoundMessage(specfileroot,
                                                extensions, localDirectories);
-        throw BlibException(true, extString.c_str());
+        throw BlibException(true, extString);
     }// else we found a file and set the name
 
     Verbosity::comment(V_DETAIL, "spectrum filename set to %s", curSpecFileName_.c_str());

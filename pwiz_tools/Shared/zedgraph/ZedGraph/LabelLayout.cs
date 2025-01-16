@@ -40,7 +40,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Windows.Forms;
+using Newtonsoft.Json;
 
 namespace ZedGraph
 {
@@ -54,7 +54,15 @@ namespace ZedGraph
 
         public Dictionary<TextObj, LabeledPoint> LabeledPoints => _labeledPoints;
 
-        public LabelLayout(GraphPane graph, int cellSize, Control parentControl)
+        public List<LabeledPoint.PointLayout> PointsLayout
+        {
+            get
+            {
+                return _labeledPoints.Select(lp => new LabeledPoint.PointLayout(lp.Value)).ToList();
+            }
+        }
+
+        public LabelLayout(GraphPane graph, int cellSize)
         {
             _graph = graph;
             _cellSize = cellSize;
@@ -66,11 +74,9 @@ namespace ZedGraph
         private class GridCell
         {
             public PointF _location;
-            public Point _indexes;
             public RectangleF _bounds;
             public float _density;
             // public PointF _gradient;
-            public List<RectangleF> _overlaps; // a list of bounding rectangles of elements overlapping with this cell
             public static Dictionary<Color, Brush> _brushes = new Dictionary<Color, Brush>();
         }
 
@@ -93,9 +99,7 @@ namespace ZedGraph
                     _densityGrid[i][j] = new GridCell()
                     {
                         _location = location,
-                        _overlaps = new List<RectangleF>(),
                         _bounds = new RectangleF(location, new SizeF(_cellSize, _cellSize)),
-                        _indexes = new Point(i, j)
                     };
                 }
             }
@@ -118,17 +122,11 @@ namespace ZedGraph
                         var intersect = RectangleF.Intersect(markerRect, cell._bounds);
                         if (intersect != Rectangle.Empty)
                         {
-                            cell._overlaps.Add(markerRect);
                             cell._density += intersect.Height * intersect.Width;
                         }
                     }
                 }
             }
-        }
-
-        public void ShowToolTip(Point pt)
-        {
-            //var tooltipLabel = new TextObj("Test", pt.X, pt.Y){}
         }
 
         /// <summary>
@@ -336,13 +334,11 @@ namespace ZedGraph
 
             var labelLocation = new PointF(goalPoint.X, goalPoint.Y + labelRect.Height / 2);
             _graph.ReverseTransform(new PointF(labelLocation.X, labelLocation.Y), out var x, out var y);
-            //_graph.ReverseTransform(targetPoint, out var x, out var y);
 
             labPoint.Label.Location.X = x;
             labPoint.Label.Location.Y = y;
 
             // update density grid to prevent overlaps
-            var cellArea = _cellSize * _cellSize;
             var newScreenRectangle = _graph.GetRectScreen(labPoint.Label, g);
             var newLabelRectangle = ToRectangle(newScreenRectangle);
 
@@ -358,6 +354,36 @@ namespace ZedGraph
             return true;
         }
 
+        /// <summary>
+        /// Places the label at the specified coordinates and updates the density grid so that
+        /// the future calls to PlaceLabel take avoid overlaps and crossovers with this label
+        /// </summary>
+        /// <param name="labPoint">Point to add. It is assumed that this LabeledPoint object already has
+        /// Label and Point components </param>
+        /// <param name="newLabelLocation">new label position</param>
+        public void AddLabel(LabeledPoint labPoint, PointF newLabelLocation)
+        {
+            labPoint.Label.Location.X = newLabelLocation.X;
+            labPoint.Label.Location.Y = newLabelLocation.Y;
+            using (var g = Graphics.FromHwnd(IntPtr.Zero))
+            {
+                var newScreenRectangle = _graph.GetRectScreen(labPoint.Label, g);
+                var newLabelRectangle = ToRectangle(newScreenRectangle);
+
+                foreach (var cell in GetRectangleCells(newLabelRectangle))
+                {
+                    var cellOverlap = RectangleF.Intersect(newLabelRectangle, cell._bounds);
+                    var densityIncrement = cellOverlap.Height * cellOverlap.Width;
+                    cell._density += 2.0f * densityIncrement;
+                }
+
+                var targetPoint = _graph.TransformCoord(labPoint.Point.X, labPoint.Point.Y, CoordType.AxisXYScale);
+                var goalPoint = _graph.TransformCoord(labPoint.Label.Location.X, labPoint.Label.Location.Y, CoordType.AxisXYScale);
+                labPoint.LabelVector = new VectorF(targetPoint, goalPoint);
+                _labeledPoints[labPoint.Label] = labPoint;
+            }
+        }
+
         public void DrawConnector(LabeledPoint labPoint, Graphics g)
         {
             var endSize = CalculateConnectorSize(labPoint, g, _graph);
@@ -366,6 +392,15 @@ namespace ZedGraph
                 labPoint.Point.X + endSize.Width, labPoint.Point.Y + endSize.Height){IsClippedToChartRect = true};
             labPoint.Connector = line;
             _graph.GraphObjList.Add(line);
+        }
+
+        public void UpdateConnector(LabeledPoint labPoint, Graphics g)
+        {
+            var endSize = CalculateConnectorSize(labPoint, g, _graph);
+            var loc = labPoint.Connector.Location;
+            var newLocation = new Location(loc.X, loc.Y, endSize.Width, endSize.Height, CoordType.AxisXYScale,
+                AlignH.Left, AlignV.Top);
+            labPoint.Connector.Location = newLocation;
         }
 
         // Used to recalculate label connector attachment point during drag
@@ -379,7 +414,7 @@ namespace ZedGraph
             var diag2 = new VectorF(new PointF(rect.X, rect.Y + rect.Height), new PointF(rect.Right, rect.Y));
             var center = new PointF(rect.Left + rect.Width / 2, rect.Top + rect.Height / 2);
 
-            var labelVector = new VectorF(new PointF((float)targetPoint.X, (float)targetPoint.Y), center);
+            var labelVector = new VectorF(new PointF(targetPoint.X, targetPoint.Y), center);
 
             PointF endPoint;
             // If this multiple >0 then the connector line approaches the label from top or bottom, otherwise from right or left.
@@ -392,6 +427,15 @@ namespace ZedGraph
 
             graph.ReverseTransform(new PointF(endPoint.X, endPoint.Y), out var x, out var y);
             return new SizeF((float)(x - labPoint.Point.X), (float)(y - labPoint.Point.Y));
+        }
+
+        public LabeledPoint FindById(object id)
+        {
+            var res = _labeledPoints.ToList().FindAll(lpt => lpt.Value.UniqueID.Equals(id)).Select(pair => pair.Value).ToList();
+            if (res.Any())
+                return res.First();
+            else
+                return null;
         }
 
         public bool IsPointVisible(PointPair point)
@@ -416,9 +460,10 @@ namespace ZedGraph
         private LineObj _connector;
         private TextObj _label;
 
-        public LabeledPoint(bool isSelected)
+        public LabeledPoint(bool isSelected, object uniqueId)
         {
             IsSelected = isSelected;
+            UniqueID = uniqueId;
         }
 
         public PointPair Point { get; set; }
@@ -430,6 +475,7 @@ namespace ZedGraph
             {
                 _label = value;
                 LabelPosition = _label.Location.TopLeft;
+                _label.FontSpec.BoxExpansion = 2;
             }
         }
 
@@ -449,6 +495,7 @@ namespace ZedGraph
         public Location ConnectorLoc { get; private set; }
         public PointF LabelPosition { get; private set; }
         public bool IsSelected { get; private set; }
+        public object UniqueID { get; private set; }
 
         // This method is used to memorize starting positions during drags
         public void UpdatePositions()
@@ -466,6 +513,26 @@ namespace ZedGraph
                 var newConnectorEnd = LabelLayout.CalculateConnectorSize(this, g, graph);
                 Connector.Location.Width = newConnectorEnd.Width;
                 Connector.Location.Height = newConnectorEnd.Height;
+            }
+        }
+
+        // Connector class to pass layout information to the document persistence code
+        [JsonObject]
+        public class PointLayout
+        {
+            public string Identity { get; set; }
+            public PointF PointLocation { get; set; }
+            public PointF LabelLocation { get; set; }
+
+            public PointLayout()
+            {
+            }
+
+            public PointLayout(LabeledPoint labPoint)
+            {
+                Identity = labPoint.UniqueID.ToString();
+                PointLocation = new PointF((float)labPoint.Point.X, (float)labPoint.Point.Y);
+                LabelLocation = new PointF((float)labPoint.Label.Location.X, (float)labPoint.Label.Location.Y);
             }
         }
     }

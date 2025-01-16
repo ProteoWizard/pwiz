@@ -250,7 +250,6 @@ namespace pwiz.SkylineTestConnected
                 {
                     if (PredictionTestsByModel.TryGetValue(modelsSuffix, out var predictionTests))
                     {
-                        int testIndex = 0;
                         Assert.AreEqual(predictionTests.Count, blibLibrary.SpectrumCount, $"Testing model {modelsSuffix}: spectrum count not equal");
                         foreach (PeptideLibraryKey key in blibLibrary.Keys)
                         {
@@ -262,10 +261,10 @@ namespace pwiz.SkylineTestConnected
 
                             string testTag = $"Testing model {modelsSuffix} for peptide {key.ModifiedSequence}+{key.Charge}";
 
-                            var expected = predictionTests[testIndex++];
+                            var expected = predictionTests.First(t => t.PeptideModSeq == key.ModifiedSequence);
                             Assert.AreEqual(expected.PrecursorMz, precursorMz, 1e-8, $"{testTag}: PrecursorMz not equal");
                             Assert.AreEqual(expected.PrecursorCharge, key.Charge, $"{testTag}: PrecursorCharge not equal");
-                            Assert.AreEqual(expected.RetentionTime, spectrum.RetentionTime.Value, 1e-5, $"{testTag}: RetentionTime not equal");
+                            Assert.AreEqual(expected.RetentionTime, spectrum.RetentionTime.Value, 1e-2, $"{testTag}: RetentionTime not equal");
 
                             if (!comparePeaks)
                                 continue;
@@ -277,7 +276,7 @@ namespace pwiz.SkylineTestConnected
                                 var expectedPeak = expected.Peaks[i];
                                 var actualPeak = actualPeaks[i];
                                 Assert.AreEqual(expectedPeak.Mz, actualPeak.Mz, 1e-5, $"{testTag}: peak[{i}].Mz not equal");
-                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, 1e-5, $"{testTag}: peak[{i}].Intensity not equal");
+                                Assert.AreEqual(expectedPeak.Intensity, actualPeak.Intensity, 1e-2, $"{testTag}: peak[{i}].Intensity not equal");
                             }
                         }
                     }

@@ -41,6 +41,8 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -58,6 +60,11 @@ namespace pwiz.Skyline
         private static string GetPathToFile(string ext)
         {
             return PATH_TO_FILE() + ext;
+        }
+
+        public static bool IsRemoteUrl(string pathOrUrl)
+        {
+            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix) || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix);
         }
 
         public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
@@ -451,7 +458,7 @@ namespace pwiz.Skyline
 
         private void ParseImportFile(NameValuePair pair)
         {
-            ReplicateFile.Add(new MsDataFilePath(pair.ValueFullPath));
+            ReplicateFile.Add(MsDataFileUri.Parse(pair.ValueFullPath));
         }
 
         private bool ParseImportNamingPattern(NameValuePair pair)
@@ -1331,7 +1338,7 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert);
+                    panoramaClient.ValidateFolder(panoramaFolder, PermissionSet.AUTHOR);
                     return true;
                 }
                 catch (PanoramaServerException x)
@@ -3041,6 +3048,8 @@ namespace pwiz.Skyline
                 {
                     try
                     {
+                        if (IsRemoteUrl(Value))
+                            return Value;
                         return Path.GetFullPath(Value);
                     }
                     catch (Exception)

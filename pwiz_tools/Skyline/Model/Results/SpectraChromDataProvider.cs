@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -51,6 +50,7 @@ namespace pwiz.Skyline.Model.Results
         private bool _isSingleMzMatch;
         private bool _sourceHasPositivePolarityData;
         private bool _sourceHasNegativePolarityData;
+        private Predicate<SpectrumMetadata> _globalSpectrumClassFilter;
         private double? _ticArea;
 
         private readonly ChromatogramLoadingStatus.TransitionData _allChromData;
@@ -125,6 +125,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (NeedMaxIonMobilityValue(dataFile))
                 _maxIonMobilityValue = dataFile.GetMaxIonMobility();
+            _globalSpectrumClassFilter = _document.Settings.TransitionSettings.FullScan.SpectrumClassFilter.MakePredicate();
 
             // Create the filter responsible for chromatogram extraction
             bool firstPass = (_retentionTimePredictor != null);
@@ -151,7 +152,7 @@ namespace pwiz.Skyline.Model.Results
             }
             catch(Exception)
             {
-                // If exception thrown before construction is complete than Dispose will not be called.
+                // If exception thrown before construction is complete then Dispose will not be called.
                 if (_spectra == null)
                     dataFile.Dispose();
                 else
@@ -292,10 +293,13 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 UpdatePercentComplete();
-
+                var dataSpectrum = _spectra.CurrentSpectrum;
+                if (!_globalSpectrumClassFilter(dataSpectrum.Metadata))
+                {
+                    continue;
+                }
                 if (_spectra.HasSrmSpectra)
                 {
-                    var dataSpectrum = _spectra.CurrentSpectrum;
 
                     var precursorMz = dataSpectrum.Precursors[0].PrecursorMz ?? SignedMz.ZERO;
                     int filterIndex;
@@ -319,7 +323,6 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (_filter.EnabledMsMs || _filter.EnabledMs)
                 {
-                    var dataSpectrum = _spectra.CurrentSpectrum;
                     var spectra = _spectra.CurrentSpectra;
 
                     // FAIMS chromatogram extraction is a special case for non-contiguous scans
@@ -1593,7 +1596,7 @@ namespace pwiz.Skyline.Model.Results
             var im = _dataFile.IonMobilityFromCCS(ccs, mz, charge);
             if (!im.HasValue)
             {
-                Trace.TraceWarning(ResultsResources.DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion, obj, ccs, mz, charge);
+                Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion, obj, ccs, mz, charge);
             }
             return im;
         }
@@ -1602,7 +1605,7 @@ namespace pwiz.Skyline.Model.Results
             var ccs = _dataFile.CCSFromIonMobilityValue(im, mz, charge);
             if (double.IsNaN(ccs))
             {
-                Trace.TraceWarning(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
+                Messages.WriteAsyncUserMessage(ResultsResources.DataFileInstrumentInfo_CCSFromIonMobility_no_conversion, obj, im, mz, charge);
             }
             return ccs;
         }

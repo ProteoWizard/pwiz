@@ -411,15 +411,39 @@ namespace pwiz.Skyline.Model.Koina.Models
             var koinaOutput = new List<TKoinaOut>();
             for (int i = 0; i < inputsList.Count; ++i)
                 koinaOutput.Add(null);
-
+            int retryCount = Settings.Default.KoinaRetryCount;
             ParallelEx.For(0, inputsList.Count, batchIndex =>
             {
                 var koinaIn = inputsList[batchIndex];
 
                 if (progressMonitor.UpdateProgress(localProgressStatus) == UpdateProgressResponse.cancel)
                     return;
-
-                koinaOutput[batchIndex] = Predict(predictionClient, koinaIn, token);
+                var koinaExceptions = new List<KoinaException>();
+                for (int attempt = 0;; attempt++)
+                {
+                    try
+                    {
+                        koinaOutput[batchIndex] = Predict(predictionClient, koinaIn, token);
+                        break;
+                    }
+                    catch (KoinaException koinaException)
+                    {
+                        koinaExceptions.Add(koinaException);
+                        if (attempt >= retryCount)
+                        {
+                            throw new AggregateException(koinaExceptions);
+                        }
+                        lock (progressMonitor)
+                        {
+                            string message = string.Format(
+                                KoinaResources.KoinaModel_PredictBatches_Error___0__retrying__1_____2__,
+                                koinaException.Message,
+                                attempt + 1, retryCount);
+                            localProgressStatus = localProgressStatus.ChangeMessage(message);
+                            progressMonitor.UpdateProgress(localProgressStatus);
+                        }
+                    }
+                }
 
                 lock(progressMonitor)
                 {
@@ -752,7 +776,7 @@ namespace pwiz.Skyline.Model.Koina.Models
             while (dataIndex < data.Count)
             {
                 var size = Math.Min(data.Count - dataIndex, batchSize);
-                yield return data.Skip(dataIndex).Take(size);
+                yield return Enumerable.Range(dataIndex, size).Select(i => data[i]);
                 dataIndex += size;
             }
         }
@@ -842,7 +866,7 @@ namespace pwiz.Skyline.Model.Koina.Models
         /// <returns>A list of string representations of the sequence</returns>
         public static string[] DecodeSequences(InferInputTensor tensor)
         {
-            return DecodeSequences2(tensor).Select(s => s.FullNames).ToArray();
+            return DecodeSequences2(tensor).Select(s => s.MonoisotopicMasses).ToArray();
 
             /*var n = tensor.TensorShape.Dim[0].Size;
             var result = new string[n];
@@ -901,22 +925,7 @@ namespace pwiz.Skyline.Model.Koina.Models
             var result = new int[tensor.Shape[0]];
             for (int i = 0; i < tensor.Shape[0]; ++i)
             {
-                result[i] = -1;
-                for (int j = 0; j < tensor.Shape[1]; ++j)
-                {
-                    if (tensor.Contents.Fp32Contents[i * KoinaConstants.PRECURSOR_CHARGES + j] == 1.0f)
-                    {
-                        result[i] = j + 1;
-                        break;
-                    }
-                }
-
-                if (result[i] == -1)
-                {
-                    var charges = tensor.Contents.Fp32Contents.Skip(i * KoinaConstants.PRECURSOR_CHARGES).Take(KoinaConstants.PRECURSOR_CHARGES);
-                    throw new KoinaException(string.Format(@"[{0}] is not a valid one-hot encoded charge", string.Join(
-                        @", ", charges)));
-                }
+                result[i] = tensor.Contents.IntContents[i];
             }
 
             return result;

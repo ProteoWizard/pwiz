@@ -51,9 +51,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
         [TestMethod]
         public void TestSmallMoleculeLibrariesTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
-            CoverShotName = "SmallMolLibraries";
+            CoverShotName = "SmallMoleculeIMSLibraries";
 
             LinkPdf = "https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/SmallMoleculeIMSLibraries-20_2.pdf";
 
@@ -99,7 +103,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 transitionSettingsUI.Left = SkylineWindow.Right + 20;
             });
             //   • The Transition Settings form should now look like this:
-            PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings: Filter", 3);
+            PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings: Filter");
 
             RunUI(() =>
             {
@@ -122,7 +126,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             });
 
             //   The Transition Settings form should look like this:
-            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan", 4);
+            PauseForScreenShot<TransitionSettingsUI.FullScanTab>("Transition Settings - Full-Scan");
             //   • Click the OK button.
             OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             doc = WaitForDocumentChange(doc);
@@ -164,7 +168,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 peptideSettingsUI.Left = SkylineWindow.Right + 20;
             });
             //   The Molecule Settings form should now look like:
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Molecule Settings - Library", 6);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Molecule Settings - Library");
             //   • Click the OK button in the Molecule Settings form.
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             doc = WaitForDocumentChangeLoaded(doc);
@@ -172,14 +176,16 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             //   To open the library explorer and view the contents of the library you just added, do the following: 
             //   • From the View menu, click Spectral Libraries.
             var viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
-            RunUI(() =>
+            RunUIForScreenShot(() =>
             {
                 viewLibUI.Left = SkylineWindow.Right + 20;
                 viewLibUI.Top = SkylineWindow.Top;
+                viewLibUI.Width = 775;
+                viewLibUI.Height = 463;
             });
 
             //   The library explorer should now resemble the image below:
-            PauseForScreenShot("Library Explorer (probably need to resize wider)", 7);
+            PauseForScreenShot<ViewLibraryDlg>("Library Explorer");
 
             //  To add all the molecules in the library to your target list:
             //   • Click the Add All button.
@@ -196,7 +202,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 
             //   Your Skyline window should now resemble:
             RunUI(() => SkylineWindow.Size = new Size(951, 607));
-            PauseForScreenShot("Populated Skyline window", 8);
+            FocusDocument();
+            PauseForScreenShot("Populated Skyline window");
 
             //Importing Results Chromatogram.Data
             //    In this section, you will import the Drosophila data without utilizing IMS filtering. This is an initial look at the data to see the impact of interference among lipids and their shared fragments. To import the data, perform the following steps:
@@ -217,7 +224,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     importResultsDlg1.Top = SkylineWindow.Top;
                     importResultsDlg1.Left = SkylineWindow.Right + 20;
                 });
-                PauseForScreenShot<ImportResultsDlg>("Import Results", 9);
+                PauseForScreenShot<ImportResultsDlg>("Import Results");
                 var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
                     importResultsDlg1.GetDataSourcePathsFile(null));
                 //   • Click the OK button.
@@ -231,7 +238,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     openDataSourceDialog1.Left = importResultsDlg1.Left;
                     openDataSourceDialog1.Top = importResultsDlg1.Bottom + 10;
                 });
-                PauseForScreenShot<OpenDataSourceDialog>("Import Results Files selection form", 10);
+                PauseForScreenShot<OpenDataSourceDialog>("Import Results Files selection form");
                 OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
 
                 //   • Click the Open button.
@@ -245,7 +252,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     allChromatograms.Top = SkylineWindow.Top;
                     allChromatograms.Left = SkylineWindow.Right + 20;
                 });
-                PauseForScreenShot<AllChromatogramsGraph>("Importing results form", 11);
+                WaitForConditionUI(() => allChromatograms.ProgressTotalPercent > 40);
+                PauseForScreenShot<AllChromatogramsGraph>("Importing results form");
             }
 
             WaitForGraphs();
@@ -276,12 +284,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             });
             //  • Select the molecule PC(16:0_18:1) and your spectra should appear as: 
             FindNode("PC(16:0_18:1)");
-            PauseForScreenShot("Chromatograms - prtsc-paste-edit", 12);
+            PauseForScreenShot("Chromatograms", null, ClipChromatograms);
 
             RestoreViewOnScreen(13);
+            WaitForGraphs();
             var libraryMatchView = WaitForOpenForm<GraphSpectrum>();
             RunUI(() => libraryMatchView.ZoomXAxis(100, 400));
-            PauseForScreenShot("Library Match", 13);
+            PauseForScreenShot<GraphSpectrum>("Library Match");
 
             //Since there are only 38 precursors in this document, you may want to review all 38 to get an overall feel for how the XIC look prior to IMS filtering.Before starting this review, do the following:
             //   • On the View menu, choose Retention Times and click Replicate Comparison (F8).
@@ -311,7 +320,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
                 WaitForGraphs();
-                PauseForScreenShot("Main window", 14);
+                PauseForScreenShot("Main window");
             }
 
             //Skyline often does a good job picking peaks and most integration boundaries do not need to be edited.However, there are a few isomer pairs that require some manual peak picking. 
@@ -332,22 +341,31 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 propDlg.OkDialog();
             });
             WaitForGraphs();
-            PauseForScreenShot("Chromatogram", 15);
+            var firstReplicateName = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.First().Name;
+            var clickPoint = new PointF(14.81F, 162.1E3F);
+            if (IsPauseForScreenShots)
+            {
+                MouseOverChromatogram(firstReplicateName, clickPoint.X, clickPoint.Y, PaneKey.PRECURSORS);
+            }
+            var graphChrom = SkylineWindow.GetGraphChrom(firstReplicateName);
+            PauseForScreenShot(graphChrom,"Chromatogram", null, bmp =>
+                ClipBitmap(DrawHandCursorOnChromBitmap(bmp, graphChrom, true, clickPoint.X, clickPoint.Y, PaneKey.PRECURSORS),
+                    new Rectangle(0, 0, bmp.Width, (int)(bmp.Height * 0.515))));
 
             //   • Hover the mouse cursor over the precursor chromatogram peak apex until a blue circle appears that tracks the mouse movement, and click on it.
-            ClickChromatogram(F_A_018, 14.81, 162.1E3, PaneKey.PRECURSORS);
+            ClickChromatogram(F_A_018, clickPoint.X, clickPoint.Y, PaneKey.PRECURSORS);
             //   This should bring up the Full-Scan view showing a familiar two-dimensional spectrum in profile mode:
             RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(true));
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(true));
-            PauseForScreenShot("2D plot", 16);
+            PauseForFullScanGraphScreenShot("2D plot");
 
             //   • Click the Show 2D Spectrum button  to change the plot to a three-dimensional spectrum with drift time.
             RunUI(() => SkylineWindow.GraphFullScan.SetSpectrum(false));
-            PauseForScreenShot("3D plot", 16);
+            PauseForFullScanGraphScreenShot("3D plot");
 
             //   • Click the Zoom to Selection button to see the entire 3D MS1 spectrum at the selected retention time.
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
-            PauseForScreenShot("3D plot full range", 17);
+            PauseForFullScanGraphScreenShot("3D plot full range");
 
             //    This is a fairly typical MS1 spectrum for IMS-MS lipidomics data.You can get a better sense of the data by zooming into multiple areas on this plot.You can also select other lipids and click on the blue circle at the apex of each precursor chromatogram peak to see how this plot can differ with retention time. An interesting example is PE(O-18:0/16:1), which has distinct ion distributions showing correlations between m/z and drift time for different lipid classes.
             //    To inspect a relevant MS/MS spectrum:
@@ -360,13 +378,13 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
             ClickChromatogram(F_A_018, 14.83, 120.5E3, PaneKey.PRODUCTS);
             //   The Full-Scan graph should change to:
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(true));
-            PauseForScreenShot("3D plot MSMS zoomed", 18);
+            PauseForFullScanGraphScreenShot("3D plot MSMS zoomed");
 
 
             //You can see that at least three visible ions are contributing to the extracted intensities at 33, 37, and 44 ms.This goes back to the nature of lipid fragmentation as previously discussed, where most lipids with an 18:3 fatty acyl chain will share this fragment.The complexity is increased for fatty acyl chains fragments with fewer double bonds, such as 18:2 at m/z 279, which may have multiple ions as well as isotopic overlap from the abundant 18:3 fragment at m/z 277 contributing to the extracted intensity.A similar observation can be made with the FA 16:1(+O) fragment.
             //   • Click the Zoom to Selection button again to see the entire 3D MS/MS spectrum.
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
-            PauseForScreenShot("3D plot MSMS full range", 18);
+            PauseForFullScanGraphScreenShot("3D plot MSMS full range");
 
 
             //    Reimporting Data with Drift Time Filtering
@@ -395,7 +413,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                 transitionSettingsUI.Left = SkylineWindow.Right + 20;
             });
             //   • The Transition Settings form should now look like this:
-            PauseForScreenShot<TransitionSettingsUI.IonMobilityTab>("Transition Settings: IonMobility", 20);            //The Transition Settings should now look like:
+            PauseForScreenShot<TransitionSettingsUI.IonMobilityTab>("Transition Settings: IonMobility");            //The Transition Settings should now look like:
 
 
             //   • Click the OK button.
@@ -432,14 +450,22 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 
             if (IsCoverShotMode)
             {
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
+
                 RestoreCoverViewOnScreen();
                 // Need to click again to get the full-scan graph populated after restoring view
                 ClickChromatogram(F_A_018, 14.807, 152.0E3, PaneKey.PRECURSORS);
-                TakeCoverShot();
+                var fullScanForm = FindOpenForm<GraphFullScan>();
+                RunUI(() =>
+                {
+                    var frame = fullScanForm.Parent.Parent;
+                    frame.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - frame.Height - 10);
+                });
+                TakeCoverShot(fullScanForm);
                 return;
             }
 
-            PauseForScreenShot("Full scan graph with IM filtering", 21);
+            PauseForFullScanGraphScreenShot("Full scan graph with IM filtering");
 
             // Note that if you were interested in lipids that are not present in the current spectral library, you can add to it manually or using LipidCreator. To access the LipidCreator plugin, do the following:
             //   • From the Tools menu, click Tool Store.
@@ -458,7 +484,7 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
                     pick.SelectTool("LipidCreator");
                     pick.Left = SkylineWindow.Right + 20;
                 });
-                PauseForScreenShot("LipidCreator in tool store", 22);
+                PauseForScreenShot<ToolStoreDlg>("LipidCreator in tool store");
                 OkDialog(pick, pick.CancelDialog);
                 OkDialog(configureToolsDlg, configureToolsDlg.Cancel);
                 //   • Click the Install button.

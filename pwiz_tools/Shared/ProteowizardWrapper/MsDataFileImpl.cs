@@ -841,7 +841,7 @@ namespace pwiz.ProteowizardWrapper
 
         public double[] GetTotalIonCurrent()
         {
-            if (ChromatogramList == null)
+            if (ChromatogramList == null || ChromatogramList.size() == 0)
             {
                 return null;
             }
@@ -1191,7 +1191,16 @@ namespace pwiz.ProteowizardWrapper
                 {
                     if (msPrecursor.IsolationMz.HasValue)
                     {
-                        spectrumPrecursors.Add(new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor.PrecursorCollisionEnergy));
+                        var spectrumPrecursor =
+                            new SpectrumPrecursor(msPrecursor.IsolationMz.Value).ChangeCollisionEnergy(msPrecursor
+                                .PrecursorCollisionEnergy);
+                        if (msPrecursor.IsolationWindowLower.HasValue && msPrecursor.IsolationWindowUpper.HasValue)
+                        {
+                            spectrumPrecursor = spectrumPrecursor.ChangeIsolationWindowWidth(
+                                msPrecursor.IsolationWindowLower.Value,
+                                msPrecursor.IsolationWindowUpper.Value);
+                        }
+                        spectrumPrecursors.Add(spectrumPrecursor);
                     }
                 }
                 precursorsByMsLevel.Add(spectrumPrecursors);
@@ -1254,6 +1263,8 @@ namespace pwiz.ProteowizardWrapper
                 metadata = metadata.ChangeScanWindow(scanWindowLowerLimit.Value, scanWindowUpperLimit.Value);
             }
 
+            metadata = metadata.ChangeTotalIonCurrent(GetTotalIonCurrent(spectrum));
+            metadata = metadata.ChangeInjectionTime(GetInjectionTime(spectrum));
             return metadata;
         }
 
@@ -1485,6 +1496,32 @@ namespace pwiz.ProteowizardWrapper
             if (param.empty())
                 return null;
             return param.value.ToString().Trim();
+        }
+
+        private double? GetTotalIonCurrent(Spectrum spectrum)
+        {
+            var param = spectrum.cvParam(CVID.MS_total_ion_current);
+            if (param.empty())
+            {
+                return null;
+            }
+            return param.value;
+        }
+
+        private double? GetInjectionTime(Spectrum spectrum)
+        {
+            int count = 0;
+            double total = 0;
+            foreach (var scan in spectrum.scanList.scans)
+            {
+                var param = scan.cvParam(CVID.MS_ion_injection_time);
+                if (!param.empty())
+                {
+                    count++;
+                    total += param.value;
+                }
+            }
+            return count == 0 ? (double?) null : total;
         }
 
         private static int GetPresetScanConfiguration(Spectrum spectrum)
@@ -1738,7 +1775,7 @@ namespace pwiz.ProteowizardWrapper
             MSDataFile.write(_msDataFile, path);
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             _lastSpectrum?.Dispose();
             _lastScanIndex = -1;

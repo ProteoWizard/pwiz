@@ -171,6 +171,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     new KeyValuePair<string, string>("check_spectral_files", "0"),
                     new KeyValuePair<string, string>("calibrate_mass", "0"),
+                    //new KeyValuePair<string, string>("output_report_topN", "5"),
                     new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
                 },
                 ExpectedResultsFinal = new ExpectedResults(143, 340, 428, 1284, 166)
@@ -180,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        //[TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
         public void TestDdaSearchMsFraggerBadFasta()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
@@ -210,7 +211,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(IsRecordMode);
         }
 
-        public bool IsRecordMode => false;
+        protected override bool IsRecordMode => false;
         private bool RedownloadTools => !IsRecordMode && IsPass0;
 
         private string GetTestPath(string path)
@@ -264,7 +265,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
                 importPeptideSearchDlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => (MsDataFileUri)new MsDataFilePath(o)).Take(1).ToArray();
-                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia; // will go back and switch to DDA
+                importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.prm; // will go back and switch to DDA
                 importPeptideSearchDlg.BuildPepSearchLibControl.IrtStandards = IrtStandard.AUTO;
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
                 // With only 1 source, no add/remove prefix/suffix dialog
@@ -355,8 +356,28 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
             });
 
-            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = TestSettings.SearchEngine));
 
+
+            // delete the FASTA to cause the error
+            if (errorExpected)
+                File.Delete(GetTestPath(TestSettings.FastaFilename));
+
+            RunUI(() =>
+            {
+                importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = TestSettings.SearchEngine;
+                foreach (var setting in TestSettings.AdditionalSettings)
+                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(setting.Key, setting.Value);
+                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = TestSettings.PrecursorTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
+                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
+                importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
+                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
+
+                // Run the search
+                //Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+            });
+
+            SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.ClickNextButton()));
             if (RedownloadTools || TestSettings.HasMissingDependencies)
             {
                 if (TestSettings.SearchEngine == SearchSettingsControl.SearchEngine.MSFragger)
@@ -381,23 +402,6 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            // delete the FASTA to cause the error
-            if (errorExpected)
-                File.Delete(GetTestPath(TestSettings.FastaFilename));
-
-            RunUI(() =>
-            {
-                foreach (var setting in TestSettings.AdditionalSettings)
-                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting(setting.Key, setting.Value);
-                importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = TestSettings.PrecursorTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = TestSettings.FragmentTolerance;
-                importPeptideSearchDlg.SearchSettingsControl.FragmentIons = TestSettings.FragmentIons;
-                importPeptideSearchDlg.SearchSettingsControl.Ms2Analyzer = TestSettings.Ms2Analyzer;
-                importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.1;
-
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
-            });
             TryWaitForOpenForm(typeof(ImportPeptideSearchDlg.DDASearchPage));   // Stop to show this form during form testing
             RunUI(() =>
             {
@@ -405,7 +409,8 @@ namespace pwiz.SkylineTestFunctional
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
 
                 // Cancel search
-                importPeptideSearchDlg.SearchControl.Cancel();
+                if (!errorExpected)
+                    importPeptideSearchDlg.SearchControl.Cancel();
             });
 
             if (errorExpected)
