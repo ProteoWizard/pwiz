@@ -265,6 +265,12 @@
   <data name="Description_IonMobilityCount" xml:space="preserve">
     <value>Number of unique ion mobility values in this spectrum.</value>
   </data>
+  <data name="TotalIonCurrent" xml:space="preserve">
+    <value>Total Ion Current</value>
+  </data>
+  <data name="Description_TotalIonCurrent" xml:space="preserve">
+    <value>Sum of the intensities of all detected ions in this spectrum</value>
+  </data>
   <data name="InjectionTime" xml:space="preserve">
     <value>Injection Time</value>
   </data>

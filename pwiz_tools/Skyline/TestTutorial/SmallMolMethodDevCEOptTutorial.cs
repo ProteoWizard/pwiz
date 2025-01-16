@@ -499,6 +499,7 @@ namespace pwiz.SkylineTestTutorial
                     });
 
                     RestoreCoverViewOnScreen();
+                    FocusDocument();
                     TakeCoverShot();
                     return;
                 }

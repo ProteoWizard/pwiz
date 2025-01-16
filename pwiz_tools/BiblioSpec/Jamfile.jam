@@ -95,7 +95,7 @@ tar.create bibliospec-bin.tar.bz2
     "exclude:pwiz/utility/bindings/CLI/example"
     "exclude:pwiz_tools/commandline"
     "exclude:pwiz_tools/MSConvertGUI"
-    "exclude:pwiz_tools/Bumbershoot/idpicker/Tutorials"
+    "exclude:pwiz_tools/SeeMS"
     "exclude:pwiz_tools/examples"
     "exclude:pwiz_tools/sld"
     "exclude:pwiz_tools/Bumbershoot"
