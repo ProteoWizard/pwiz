@@ -113,11 +113,6 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TreeNodeMS AuditLogTreeNode { get; }
 
-        public int RootNodeCount()
-        {
-            return Root.Nodes.Count;
-        }
-
         public string RootNodeText()
         {
             return Root.Text;

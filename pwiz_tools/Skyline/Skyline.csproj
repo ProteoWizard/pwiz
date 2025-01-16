@@ -390,6 +390,9 @@
     <Compile Include="Controls\FilesTreeForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Controls\FilesTreeForm.Designer.cs">
+      <DependentUpon>FilesTreeForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\Calibration\CalibrationCurveOptionsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
