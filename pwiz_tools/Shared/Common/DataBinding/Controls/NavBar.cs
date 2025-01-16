@@ -623,11 +623,11 @@ namespace pwiz.Common.DataBinding.Controls
         {
             if (BindingListSource.ColumnFormats.FrozenColumnCount > 0)
             {
-                //TODO currently we default the number of columns to 1 but this could be contextually decided
                 BindingListSource.ColumnFormats.FrozenColumnCount = 0;
             }
             else
             {
+                //TODO currently we default the number of columns to 1 but this could be contextually decided
                 BindingListSource.ColumnFormats.FrozenColumnCount = 1;
             }
         }

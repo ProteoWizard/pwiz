@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using pwiz.Common.Properties;
@@ -105,17 +104,6 @@ namespace pwiz.Common.DataBinding
         public PropertyPath SetParent(PropertyPath newParent)
         {
             return new PropertyPath(newParent, Name, IsProperty);
-        }
-
-        public IEnumerable<PropertyPath> Ancestors
-        {
-            get
-            {
-                for (var pp = this; pp != null; pp = pp.Parent)
-                {
-                    yield return pp;
-                }
-            }
         }
 
         public bool IsRoot { get { return ReferenceEquals(this, Root); } }
