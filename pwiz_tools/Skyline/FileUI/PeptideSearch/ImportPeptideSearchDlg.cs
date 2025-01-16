@@ -228,9 +228,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private UserControl GetPageControl(TabPage tabPage)
         {
-            var wizardPageControls = tabPage.Controls.OfType<UserControl>().ToArray();
-            Assume.AreEqual(1, wizardPageControls.Length);
-            return wizardPageControls[0];
+            // Assume each tabPage only has a single UserControl; if that changes this function will need to be updated
+            return tabPage.Controls.OfType<UserControl>().Single();
         }
 
         public SrmDocument Document
@@ -1489,10 +1488,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             DialogResult = result;
         }
 
+        private bool CanWizardClose()
+        {
+            var wizardPageControl = GetPageControl(wizardPagesImportPeptideSearch.SelectedTab) as WizardPageControl;
+            return wizardPageControl?.CanWizardClose() == false;
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             // Ask current WizardPageControl if wizard is in a good state to close
-            if ((GetPageControl(wizardPagesImportPeptideSearch.SelectedTab) as WizardPageControl)?.CanWizardClose() == false)
+            if (CanWizardClose())
             {
                 e.Cancel = true;
                 return;

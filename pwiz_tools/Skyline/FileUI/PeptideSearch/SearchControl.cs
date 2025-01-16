@@ -271,7 +271,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             if (btnCancel.Enabled)
             {
-                MessageDlg.Show(Parent, PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_);
+                if (DialogResult.Yes == MessageDlg.Show(Parent,
+                        PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_, false,
+                        MessageBoxButtons.YesNo))
+                {
+                    Cancel();
+                    SearchFinished += _ => ParentForm?.Close();
+                }
                 return false;
             }
             return base.CanWizardClose();
