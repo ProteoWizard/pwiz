@@ -77,6 +77,7 @@ namespace TestRunner
             TotalHandles = 2,
             UserGdiHandles = 1
         };
+        private static bool useWinDbg;
         private const int CrtLeakThreshold = 1000;  // No longer used
         private const int LeakCheckIterations = 24; // Maximum number of runs to try to achieve below thresholds for trailing deltas
         private static bool IsFixedLeakIterations { get { return false; } } // CONSIDER: It would be nice to make this true to reduce test run count variance
@@ -408,6 +409,12 @@ namespace TestRunner
                         {
                             Console.WriteLine("\nTaking second memory snapshot...\n");
                             MemoryProfiler.Snapshot("end");
+                        }
+
+                        if (useWinDbg)
+                        {
+                            // Create before and after memory dumps if we see leaking
+                            MemoryProfiler.CaptureMemoryDump($"end_of_run{GetTestRunTimeStamp()}", commandLineArgs.ArgAsString("dmpdir"));
                         }
                     }
 
@@ -1679,7 +1686,16 @@ namespace TestRunner
                             }
 
                             if (leakMessage != null)
+                            {
+                                if (!useWinDbg && !(clientMode || serverMode))
+                                {
+                                    // Create before and after memory dumps if we see a lot of leaking
+                                    Console.WriteLine("\nLeak detected - will try to create before and after WinDbg memory dumps\n");
+                                    useWinDbg = true;
+                                    MemoryProfiler.CaptureMemoryDump($"after_first_leak{GetTestRunTimeStamp()}", dmpDir);
+                                }
                                 removeList.Add(test);
+                            }
                             runTests.Log(minDeltas.Value.GetLogMessage(test.TestMethod.Name, iterationCount + 1));
 
                             maxDeltas = maxDeltas.Max(minDeltas.Value);
