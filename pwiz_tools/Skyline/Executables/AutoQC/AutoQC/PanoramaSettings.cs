@@ -88,7 +88,7 @@ namespace AutoQC
                 // Insert permission is required to upload documents.
                 // Update is required for AutoQCPingAction.
                 // Delete is required for deleting redundant results and documents in the folder.
-                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.EDITOR);
+                panoramaClient.ValidateFolder(PanoramaFolder, PermissionSet.EDITOR);
             }
             catch (Exception ex)
             {
