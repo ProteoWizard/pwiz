@@ -226,7 +226,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void btnCreateDb_Click(object sender, EventArgs e)
         {
-            if (DatabaseChanged)
+            if (!string.IsNullOrEmpty(CalcPath) && DatabaseChanged)
             {
                 var result = MultiButtonMsgDlg.Show(this, IrtResources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     MessageBoxButtons.YesNo);

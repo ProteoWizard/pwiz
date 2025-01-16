@@ -403,7 +403,7 @@ namespace pwiz.SkylineTestTutorial
                         Assert.IsTrue(viewEditorCover.ChooseColumnsTab.TrySelect(id), "Unable to select {0}", id);
                     }
                 });
-                TakeCoverShot();
+                TakeCoverShot(viewEditorCover);
 
                 OkDialog(viewEditorCover, viewEditorCover.CancelButton.PerformClick);
                 return false;
