@@ -27,12 +27,13 @@ using pwiz.Common.Collections;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
 {
-    public abstract partial class SearchControl : UserControl, IProgressMonitor
+    public abstract partial class SearchControl : WizardPageControl, IProgressMonitor
     {
         public Action<IProgressStatus> UpdateUI;
 
@@ -264,6 +265,16 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             _cancelToken?.Cancel();
             btnCancel.Enabled = false;
+        }
+
+        public override bool CanWizardClose()
+        {
+            if (btnCancel.Enabled)
+            {
+                MessageDlg.Show(Parent, PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_);
+                return false;
+            }
+            return base.CanWizardClose();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

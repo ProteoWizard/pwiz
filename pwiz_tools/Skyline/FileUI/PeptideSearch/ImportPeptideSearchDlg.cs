@@ -226,6 +226,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             tabPage.Controls.Add(pageControl);
         }
 
+        private UserControl GetPageControl(TabPage tabPage)
+        {
+            var wizardPageControls = tabPage.Controls.OfType<UserControl>().ToArray();
+            Assume.AreEqual(1, wizardPageControls.Length);
+            return wizardPageControls[0];
+        }
+
         public SrmDocument Document
         {
             get
@@ -998,7 +1005,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Enabled = false;
             btnCancel.Enabled = false;
             btnBack.Enabled = false;
-            ControlBox = false;
 
             AbstractDdaConverter.MsdataFileFormat requiredFormat =
                 IsFeatureDetectionWorkflow
@@ -1085,7 +1091,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
-            ControlBox = true;
             btnNext.Enabled = success;
         }
 
@@ -1486,6 +1491,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Ask current WizardPageControl if wizard is in a good state to close
+            if ((GetPageControl(wizardPagesImportPeptideSearch.SelectedTab) as WizardPageControl)?.CanWizardClose() == false)
+            {
+                e.Cancel = true;
+                return;
+            }
+
             // Close file handles to the peptide search library
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(Document);
 
