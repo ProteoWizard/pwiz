@@ -3166,7 +3166,7 @@ namespace pwiz.Skyline
 
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (ReferenceEquals(e.Node, _filesTreeForm.FilesTree.ActivityLogTreeNode))
+            if (ReferenceEquals(e.Node, _filesTreeForm.FilesTree.AuditLogTreeNode))
             {
                 ShowAuditLog();
             }

@@ -235,7 +235,7 @@
   <data name="FilesTree_TreeNodeLabel_Settings" xml:space="preserve">
 	  <value>Settings</value>
   </data>
-  <data name="FilesTree_TreeNodeLabel_ActivityLog" xml:space="preserve">
-	  <value>Activity Log</value>
+  <data name="FilesTree_TreeNodeLabel_AuditLog" xml:space="preserve">
+	  <value>Audit Log</value>
   </data>
 </root>

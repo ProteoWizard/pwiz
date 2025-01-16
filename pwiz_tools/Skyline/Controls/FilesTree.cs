@@ -93,10 +93,10 @@ namespace pwiz.Skyline.Controls
             _hiddenFilesTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_HiddenFiles);
             _hiddenFilesTreeNode.ImageIndex = (int)ImageId.folder;
 
-            ActivityLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_ActivityLog);
-            ActivityLogTreeNode.ImageIndex = (int)ImageId.file;
+            AuditLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_AuditLog);
+            AuditLogTreeNode.ImageIndex = (int)ImageId.file;
 
-            _hiddenFilesTreeNode.Nodes.Add(ActivityLogTreeNode);
+            _hiddenFilesTreeNode.Nodes.Add(AuditLogTreeNode);
             _hiddenFilesTreeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Settings));
             _hiddenFilesTreeNode.Collapse(true);
         }
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public TreeNodeMS ActivityLogTreeNode { get; }
+        public TreeNodeMS AuditLogTreeNode { get; }
 
         public int RootNodeCount()
         {
