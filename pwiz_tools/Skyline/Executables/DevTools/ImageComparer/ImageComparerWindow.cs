@@ -496,7 +496,9 @@ namespace ImageComparer
             else
             {
                 var changedFiles = GitFileHelper.GetChangedFilePaths(folderPath);
-                var listScreenshots = changedFiles.Where(ScreenshotFile.IsMatch).Select(f => new ScreenshotFile(f)).ToArray();
+                var listScreenshots = changedFiles.Where(ScreenshotFile.IsMatch)
+                    .OrderBy(s => s, StringComparer.InvariantCultureIgnoreCase)
+                    .Select(f => new ScreenshotFile(f)).ToArray();
                 comboBox.BeginUpdate();
                 comboBox.DataSource = listScreenshots;
                 comboBox.DisplayMember = "RelativePath";
