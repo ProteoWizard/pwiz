@@ -40,11 +40,26 @@ namespace pwiz.Skyline.Controls
             return base.GetPersistentString() + @"|" + FilesTree.GetPersistentString();
         }
 
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows Form Designer generated code
+
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FilesTreeForm));
-            this.filesTree = new pwiz.Skyline.Controls.FilesTree();
+            this.filesTree = new FilesTree();
             this.panel1 = new System.Windows.Forms.Panel();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -81,5 +96,7 @@ namespace pwiz.Skyline.Controls
             this.ResumeLayout(false);
 
         }
+
+        #endregion
     }
 }

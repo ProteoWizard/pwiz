@@ -23,6 +23,7 @@ using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using pwiz.Skyline.Controls;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -41,13 +42,14 @@ namespace pwiz.SkylineTestFunctional
             // SCENARIO 1
             RunUI(() =>
             {
-                SkylineWindow.ShowFilesTreeForm(true, null);
+                SkylineWindow.ShowFilesTreeForm(true);
             });
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible );
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual("New Document", SkylineWindow.FilesTree.RootNodeText());
-            Assert.AreEqual(3, SkylineWindow.FilesTree.RootNodeCount());
-            
+            Assert.AreEqual(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
+            Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+
             // SCENARIO 2
             SrmDocument emptyDocument = SrmDocumentHelper.MakeEmptyDocument();
             SrmDocumentHelper.AddProteinsToDocument(emptyDocument, 50);
@@ -55,12 +57,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 SkylineWindow.SwitchDocument(emptyDocument, null);
-                SkylineWindow.ShowFilesTreeForm(true, null);
+                SkylineWindow.ShowFilesTreeForm(true);
             });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual("New Document", SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
 
+            // FilesTree should only have one set of nodes after opening a new document
+            Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
+            Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+
+            // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() =>
             {
                 SkylineWindow.HideFilesTreeForm();

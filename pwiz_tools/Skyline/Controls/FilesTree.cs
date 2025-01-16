@@ -64,16 +64,16 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.Skyline);
 
             // Right-click menu
-            var removeFromProject = new ToolStripMenuItem("Remove From Project");
+            var removeFromProject = new ToolStripMenuItem(ControlsResources.FilesTree_ToolStripMenuItem_RemoveFromProject);
             removeFromProject.ImageTransparentColor = Color.Magenta;
             removeFromProject.Image = Resources.Delete;
             removeFromProject.Enabled = false;
 
-            _openContainingFolder = new ToolStripMenuItem("Open Containing Folder");
+            _openContainingFolder = new ToolStripMenuItem(ControlsResources.FilesTree_ToolStripMenuItem_OpenContainingFolder);
             _openContainingFolder.Image = Resources.Folder;
             _openContainingFolder.Click += openContainingFolderMenuItem_Click;
 
-            _showHiddenFiles = new ToolStripMenuItem("Show Hidden Files");
+            _showHiddenFiles = new ToolStripMenuItem(ControlsResources.FilesTree_ToolStripMenuItem_ShowHiddenFiles);
             _showHiddenFiles.CheckOnClick = true;
             _showHiddenFiles.CheckState = CheckState.Unchecked;
             _showHiddenFiles.CheckedChanged += showHiddenFilesMenuItem_CheckedChanged;
@@ -90,14 +90,14 @@ namespace pwiz.Skyline.Controls
             base.ContextMenuStrip = menu;
 
             // TreeNode for Hidden Files
-            _hiddenFilesTreeNode = new TreeNodeMS("Hidden Files");
+            _hiddenFilesTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_HiddenFiles);
             _hiddenFilesTreeNode.ImageIndex = (int)ImageId.folder;
 
-            ActivityLogTreeNode = new TreeNodeMS("Activity Log");
+            ActivityLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_ActivityLog);
             ActivityLogTreeNode.ImageIndex = (int)ImageId.file;
 
             _hiddenFilesTreeNode.Nodes.Add(ActivityLogTreeNode);
-            _hiddenFilesTreeNode.Nodes.Add(new TreeNodeMS("Settings"));
+            _hiddenFilesTreeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Settings));
             _hiddenFilesTreeNode.Collapse(true);
         }
 
@@ -155,21 +155,32 @@ namespace pwiz.Skyline.Controls
                 return;
             }
 
+            // If Skyline is opening a file, empty out the tree's nodes. Handles the case where Skyline is running,
+            // showing one project and a new project is open - whose nodes should replace ones already in the tree
+            if (e.IsOpeningFile)
+            {
+                BeginUpdateMS();
+                Nodes.Clear();
+                EndUpdateMS();
+            }
+
             if (DocumentContainer.DocumentFilePath == null)
             {
+                BeginUpdateMS();
                 Nodes.Clear(); // CONSIDER: is this necessary?
-                Root = new SkylineRootTreeNode("New Document", null);
+                EndUpdateMS();
+
+                Root = new SkylineRootTreeNode(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null);
             }
             else
             {
-                Root = new SkylineRootTreeNode(Path.GetFileName(DocumentContainer.DocumentFilePath),
-                    DocumentContainer.DocumentFilePath);
+                Root = new SkylineRootTreeNode(Path.GetFileName(DocumentContainer.DocumentFilePath), DocumentContainer.DocumentFilePath);
             }
 
             Nodes.Add(Root);
 
             // SrmDocument => <measured_results> => <replicate>^*
-            var replicatesRoot = new TreeNodeMS("Replicates");
+            var replicatesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Replicates);
             replicatesRoot.ImageIndex = (int)ImageId.folder;
             Root.Nodes.Add(replicatesRoot);
 
@@ -196,11 +207,11 @@ namespace pwiz.Skyline.Controls
             }
             else
             {
-                replicatesRoot.Nodes.Add(new TreeNodeMS("None"));
+                replicatesRoot.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
             }
 
             // SrmDocument => <peptide_libraries> => <*_library>^*
-            var peptideLibrariesRoot = new TreeNodeMS("Libraries");
+            var peptideLibrariesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Libraries);
             peptideLibrariesRoot.ImageIndex = (int)ImageId.folder;
             Root.Nodes.Add(peptideLibrariesRoot);
 
@@ -222,13 +233,13 @@ namespace pwiz.Skyline.Controls
             }
             else
             {
-                peptideLibrariesRoot.Nodes.Add(new TreeNodeMS("None"));
+                peptideLibrariesRoot.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
             }
 
             // SrmDocument => ...
-            var backgroundProteomeNode = new TreeNodeMS("Background Proteome");
+            var backgroundProteomeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
             backgroundProteomeNode.ImageIndex = (int)ImageId.folder;
-            backgroundProteomeNode.Nodes.Add(new TreeNodeMS("Not supported yet"));
+            backgroundProteomeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
             Root.Nodes.Add(backgroundProteomeNode);
 
             // Hidden Files => ...
@@ -295,7 +306,6 @@ namespace pwiz.Skyline.Controls
         private void rightClickMenu_Opening(object sender, CancelEventArgs e)
         {
             var selectedNode = SelectedNode;
-            Console.WriteLine($@"Selected node is {selectedNode.Text}");
 
             if (selectedNode.GetType() == typeof(SkylineRootTreeNode))
             {
@@ -384,7 +394,8 @@ namespace pwiz.Skyline.Controls
 
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
-            customTable.AddDetailRow("Path", FilePath, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_ActiveDirectory, Settings.Default.ActiveDirectory, rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
@@ -415,17 +426,17 @@ namespace pwiz.Skyline.Controls
 
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
-            customTable.AddDetailRow("Sample Name", Text, rt);
-            customTable.AddDetailRow("Path", _chromFileInfo.FilePath.GetFilePath(), rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_SampleName, Text, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, _chromFileInfo.FilePath.GetFilePath(), rt);
 
             if (_chromFileInfo.RunStartTime != null)
             {
-                customTable.AddDetailRow("Acquired Time", _chromFileInfo.RunStartTime.ToString(), rt); // TODO: i18n
+                customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_AcquiredTime, _chromFileInfo.RunStartTime.ToString(), rt); // TODO: i18n
             }
 
             if (_chromFileInfo.InstrumentInfoList != null && _chromFileInfo.InstrumentInfoList.Count > 0)
             {
-                customTable.AddDetailRow("Instrument Model", _chromFileInfo.InstrumentInfoList[0].Model, rt);
+                customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_InstrumentModel, _chromFileInfo.InstrumentInfoList[0].Model, rt);
             }
 
             // CONSIDER include annotations?
@@ -455,7 +466,7 @@ namespace pwiz.Skyline.Controls
 
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
-            customTable.AddDetailRow("Path", FilePath, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);

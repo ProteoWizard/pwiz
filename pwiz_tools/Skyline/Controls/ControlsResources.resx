@@ -190,4 +190,52 @@
   <data name="UndoRedoList_GetLabelText_Undo_1_Action" xml:space="preserve">
     <value>Undo 1 Action</value>
   </data>
+  <data name="FilesTree_TreeNodeLabel_NewDocument" xml:space="preserve">
+	  <value>New Document</value>
+  </data>
+  <data name="FilesTree_TreeNodeLabel_Replicates" xml:space="preserve">
+	  <value>Replicates</value>
+  </data>
+  <data name="FilesTree_TreeNodeLabel_None" xml:space="preserve">
+	  <value>None</value>
+  </data>
+  <data name="FilesTree_TreeNodeLabel_Libraries" xml:space="preserve">
+	  <value>Libraries</value>
+  </data>
+  <data name="FilesTree_TreeNodeLabel_BackgroundProteome" xml:space="preserve">
+	  <value>Background Proteome</value>
+  </data>
+  <data name="FilesTree_TreeNode_RenderTip_Path" xml:space="preserve">
+	  <value>Path</value>
+  </data>
+  <data name="FilesTree_TreeNode_RenderTip_ActiveDirectory" xml:space="preserve">
+	  <value>Active Directory</value>
+  </data>
+  <data name="FilesTree_TreeNode_RenderTip_SampleName" xml:space="preserve">
+	  <value>Sample Name</value>
+  </data>
+  <data name="FilesTree_TreeNode_RenderTip_AcquiredTime" xml:space="preserve">
+	  <value>Acquired Time</value>
+  </data>
+  <data name="FilesTree_TreeNode_RenderTip_InstrumentModel" xml:space="preserve">
+	  <value>Instrument Model</value>
+  </data>
+  <data name="FilesTree_ToolStripMenuItem_RemoveFromProject" xml:space="preserve">
+	  <value>Remove From Project</value>
+  </data>
+  <data name="FilesTree_ToolStripMenuItem_OpenContainingFolder" xml:space="preserve">
+	  <value>Open Containing Folder</value>
+  </data>
+  <data name="FilesTree_ToolStripMenuItem_ShowHiddenFiles" xml:space="preserve">
+	  <value>Show Hidden Files</value>
+  </data>
+  <data name="FilesTree_TreeNodeLabel_HiddenFiles" xml:space="preserve">
+	  <value>Hidden Files</value>
+  </data>
+  <data name="FilesTree_TreeNodeLabel_Settings" xml:space="preserve">
+	  <value>Settings</value>
+  </data>
+  <data name="FilesTree_TreeNodeLabel_ActivityLog" xml:space="preserve">
+	  <value>Activity Log</value>
+  </data>
 </root>
