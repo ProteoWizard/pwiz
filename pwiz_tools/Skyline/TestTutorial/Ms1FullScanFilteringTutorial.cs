@@ -446,9 +446,16 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
-                    bmp => ClipRegionAndEraseBackground(bmp,
-                        new Control[] { peakAreas }, new[] { menuStrip, subMenuStrip },
-                        Color.White));
+                    bmp =>
+                    {
+                        bmp = bmp.CleanupBorder(ScreenshotManager.GetFramedWindowBounds(peakAreas),
+                            ScreenshotProcessingExtensions.CornerToolWindow, 
+                            Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
+
+                        return ClipRegionAndEraseBackground(bmp,
+                            new Control[] { peakAreas }, new[] { menuStrip, subMenuStrip },
+                            Color.White);
+                    });
 
                 RunUI(() =>
                 {
