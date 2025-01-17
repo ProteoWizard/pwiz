@@ -109,15 +109,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Protobuf, Version=3.5.1.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Grpc.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
+    <Reference Include="Grpc.Core.Api, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\Grpc.Core.Api.dll</HintPath>
     </Reference>
@@ -163,6 +155,7 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
+    <Compile Include="AddIrtStandardsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
@@ -199,6 +192,7 @@
     <Compile Include="ImportPromptToSaveTest.cs" />
     <Compile Include="ImportResultsFilesRestoreTest.cs" />
     <Compile Include="InteractiveCommandLineToolTest.cs" />
+    <Compile Include="IrtCalibrationTest.cs" />
     <Compile Include="InternationalFilenamesTest.cs" />
     <Compile Include="LegacyIgnoreSimTest.cs" />
     <Compile Include="LegacyOptimizationStepTest.cs" />
@@ -220,6 +214,7 @@
     <Compile Include="PanoramaClientPublishTest.cs" />
     <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
+    <Compile Include="PeakMetricsTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
     <Compile Include="QcTraceNameTest.cs" />
@@ -516,6 +511,10 @@
       <Project>{3FD4E167-8F9C-4116-8122-67C7AD143490}</Project>
       <Name>SkylineTool</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
+      <Project>{e3f0e34f-f9e6-4360-996f-e2054e4fa1ae}</Project>
+      <Name>TestRunnerLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestUtil\TestUtil.csproj">
       <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
       <Name>TestUtil</Name>
@@ -524,6 +523,7 @@
   <ItemGroup>
     <None Include="AccessServerTest.zip" />
     <None Include="AddAllPeptidesWithModificationsTest.zip" />
+    <None Include="AddIrtStandardsTest.zip" />
     <None Include="AddLibraryTest.zip" />
     <None Include="AddMixedLibraryTest.zip" />
     <None Include="AgilentCeOptimizationTest.zip" />
@@ -600,6 +600,7 @@
     <None Include="InvalidPeptideRankIdTest.zip" />
     <None Include="InvalidPeptidesInLibraryTest.zip" />
     <None Include="IonMobilityTest.zip" />
+    <None Include="IrtCalibrationTest.zip" />
     <None Include="IrtTest.zip" />
     <None Include="LabelPeakPickingTest.zip" />
     <None Include="LegacyCrosslinkTest.zip" />

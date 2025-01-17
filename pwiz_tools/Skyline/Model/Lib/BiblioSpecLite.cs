@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model.Lib
                                     ? Convert.ToDouble(reader.GetValue(icolCutoffScore))
                                     : (double?)null;
 
-                                if (!string.IsNullOrEmpty(scoreName))
+                                if (!string.IsNullOrEmpty(scoreName) && ScoreType.INVARIANT_NAMES.Contains(scoreName))
                                 {
                                     var scoreType = new ScoreType(scoreName, probabilityType);
                                     sourceFileDetails.ScoreThresholds[scoreType] = cutoffScore;

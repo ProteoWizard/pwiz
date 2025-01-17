@@ -23,7 +23,6 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -32,6 +31,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 
 namespace pwiz.SkylineTestUtil
@@ -115,7 +116,7 @@ namespace pwiz.SkylineTestUtil
             // The drop shadow + border are 1/2 the difference between the window width and the client rect width
             // A border width is removed to keep the border around the window
             int borderOutsideClient = SystemInformation.BorderSize.Width;
-            if (ctrl is FloatingWindow)
+            if (ctrl is FloatingWindow || ctrl.Size == ctrl.ClientRectangle.Size)
                 borderOutsideClient = 0;
             int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - borderOutsideClient;
             Size imageSize;
@@ -148,21 +149,12 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
-        [DllImport("gdi32.dll")]
-        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-
-        private enum DeviceCap
-        {
-            VERTRES = 10,
-            DESKTOPVERTRES = 117,
-        }
-
         public static PointFactor GetScalingFactor()
         {
             using var g = Graphics.FromHwnd(IntPtr.Zero);
             IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
-            int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
+            int LogicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.VERTRES);
+            int PhysicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.DESKTOPVERTRES);
             float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%

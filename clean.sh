@@ -12,7 +12,7 @@ if [ -d libraries/gd-2.0.33 ]; then rm -fr libraries/gd-2.0.33; fi;
 if [ -d libraries/zlib-1.2.3 ]; then rm -fr libraries/zlib-1.2.3; fi;
 if [ -d libraries/libgd-2.1.0alpha ]; then rm -fr libraries/libgd-2.1.0alpha; fi;
 if [ -d libraries/libpng-1.5.6 ]; then rm -fr libraries/libpng-1.5.6; fi;
-if [ -d libraries/freetype-2.4.7 ]; then rm -fr libraries/freetype-2.4.7; fi;
+if [ -d libraries/freetype-VER-2-13-3 ]; then rm -fr libraries/freetype-VER-2-13-3; fi;
 if [ -d libraries/hdf5-1.8.7 ]; then rm -fr libraries/hdf5-1.8.7; fi;
 if [ -d libraries/fftw-3.1.2 ]; then rm -fr libraries/fftw-3.1.2; fi;
 if [ -d libraries/expat-2.0.1 ]; then rm -fr libraries/expat-2.0.1; fi;

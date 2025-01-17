@@ -85,7 +85,7 @@ namespace ImageComparer
 
     internal class ScreenshotFile
     {
-        private static readonly Regex PATTERN = new Regex(@"\\(\w+)\\(\w\w-?[A-Z]*)\\s-(\d\d)\.png");
+        private static readonly Regex PATTERN = new Regex(@"\\([a-zA-Z0-9\-]+)\\(\w\w-?[A-Z]*)\\s-(\d\d)\.png");
 
         public static bool IsMatch(string filePath)
         {
@@ -117,7 +117,7 @@ namespace ImageComparer
         public string UrlToDownload => $"{BASE_URL}/{RelativePath}";
         // RelativePath is used for ComboBox display
         // ReSharper disable once MemberCanBePrivate.Local
-        public string RelativePath => $"{Name}/{Locale}/s-{Number}.png";
+        public string RelativePath => $"{Name}/{Locale}/s-{Number:D2}.png";
 
         public string GetDescription(ImageSource source)
         {
