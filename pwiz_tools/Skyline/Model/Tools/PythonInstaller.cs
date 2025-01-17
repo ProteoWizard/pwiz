@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Model.Tools
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
+            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, PIP_EXE);
@@ -454,7 +454,7 @@ namespace pwiz.Skyline.Model.Tools
             cmd += string.Format(ToolsResources.PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__, ECHO, CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
+            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
          
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);
@@ -489,7 +489,7 @@ namespace pwiz.Skyline.Model.Tools
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, GetEscapedCmdString(cmdBuilder.ToString()), CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer) != 0)
+            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
 

@@ -1626,13 +1626,16 @@ namespace pwiz.Skyline.Util
         /// <param name="runAsAdministrator">If true, this process will be run as administrator, which
         /// allows for the CMD.exe process to be ran with elevated privileges</param>
         /// <param name="writer">The textwriter to which the command lines output will be written to</param>
+        /// <param name="createNoWindow">Whether or not execution runs in its own window</param>
         /// <returns>The exitcode of the CMD process ran with the specified arguments</returns>
-        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer)
+        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false)
         {
             // create GUID
             string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
             var startInfo = new ProcessStartInfo
                 {
+                    CreateNoWindow = createNoWindow,
+                    UseShellExecute = !createNoWindow,
                     FileName = GetSkylineProcessRunnerExePath(),
                     Arguments = guidSuffix + @" " + arguments,
                 };
