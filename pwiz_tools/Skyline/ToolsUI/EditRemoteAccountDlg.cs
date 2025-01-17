@@ -621,7 +621,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (RemoteAccountType.UNIFI.Equals(AccountType))
+            if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
 
