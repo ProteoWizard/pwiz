@@ -914,6 +914,7 @@ namespace pwiz.Skyline.Menus
         public void ViewMenuDropDownOpening()
         {
             viewTargetsMenuItem.Checked = SkylineWindow.SequenceTreeFormIsVisible;
+            viewFilesMenuItem.Checked = SkylineWindow.FilesTreeFormIsVisible;
             viewModificationsMenuItem.DropDownItems.Clear();
             var currentOption = DisplayModificationOption.Current;
             foreach (var opt in DisplayModificationOption.All)
@@ -1073,6 +1074,21 @@ namespace pwiz.Skyline.Menus
         {
             // The "Spectrum Grid" menu item is only visible if the user was holding down shift
             spectrumGridMenuItem.Visible = 0 != (ModifierKeys & Keys.Shift);
+        }
+
+        private void viewFilesMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!(sender is ToolStripMenuItem toolStripMenuItem))
+                throw new InvalidOperationException(@"viewFilesMenuItem_Click must be triggered by a ToolStripMenuItem");
+
+            var isChecked = toolStripMenuItem.Checked;
+
+            ShowFilesWindow(isChecked);
+        }
+
+        private void ShowFilesWindow(bool isChecked)
+        {
+            SkylineWindow.ShowFilesTreeForm(isChecked);
         }
     }
 }
