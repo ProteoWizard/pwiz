@@ -893,6 +893,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 {
                     foreach (var column in grouping)
                     {
+                        var replicateColumndRounder = new AdjustingRounder();
                         foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
                         {
                             if (dataGridViewColumn.DataPropertyName == column.Name)
@@ -900,7 +901,7 @@ namespace pwiz.Skyline.Controls.Databinding
                                 if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
                                 {
                                     var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
-                                    dataGridViewColumn.Width = (int)Math.Round(dataGridViewEx1.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
+                                    dataGridViewColumn.Width = (int)replicateColumndRounder.Round(dataGridViewEx1.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
                                 }
                             }
                         }
@@ -915,13 +916,13 @@ namespace pwiz.Skyline.Controls.Databinding
                 var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
                     .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
 
+                var propertyColumnRounder = new AdjustingRounder();
                 foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
                 {
                     if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
                     {
-                        //TODO I haven't seen issues with this logic, but it is possible that some of this rounding might lead to columns not aligning
                         var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
-                        dataGridViewColumn.Width = (int)Math.Round(propertyWidth * columnRatio);
+                        dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
                     }
                 }
             }
@@ -1127,6 +1128,33 @@ namespace pwiz.Skyline.Controls.Databinding
             };
             formGroup.ShowSibling(pcaPlot);
             pcaPlot.ClusterInput = CreateClusterInput();
+        }
+
+        //TODO currently experimenting with this class as a way to keep columns calculations aligned across multiple rounding operations
+        private class AdjustingRounder
+        {
+            private double _roundedDifference = 0;
+
+            public double Round(double value)
+            {
+                double roundedValue = Math.Round(value);
+                double difference = roundedValue - value;
+
+                if (_roundedDifference + difference >= 1)
+                {
+                    roundedValue -= 1; 
+                    difference = roundedValue - value;
+                }
+                else if (_roundedDifference + difference <= -1)
+                {
+                    roundedValue += 1;
+                    difference = roundedValue - value;
+                }
+
+                _roundedDifference += difference;
+
+                return roundedValue;
+            }
         }
     }
 }
