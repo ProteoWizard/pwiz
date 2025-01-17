@@ -394,7 +394,13 @@ namespace pwiz.SkylineTestTutorial
                         resultsDlg.RemoveReplicates();
                         resultsDlg.OkDialog();
                     });
-
+                    var calCurveForm = FindOpenForm<CalibrationForm>();
+                    RunUI(() =>
+                    {
+                        var frame = calCurveForm.Parent.Parent;
+                        frame.Location = new Point(SkylineWindow.Right - frame.Width - 10,
+                            SkylineWindow.Bottom - frame.Height - 10);
+                    });
                     RunUI(SkylineWindow.FocusDocument);
                     TakeCoverShot();
                     return;

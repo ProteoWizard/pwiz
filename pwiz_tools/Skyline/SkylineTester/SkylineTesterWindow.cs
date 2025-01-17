@@ -1971,6 +1971,7 @@ namespace SkylineTester
             // Adjust settings to match the mode
             var runModeTest = RunTestMode.SelectedItem.ToString();
             bool offScreenEnabled = true;
+            bool translationLanguagesOnly = false;
             if (!Equals(runModeTest, "Test"))
             {
                 runSerial.Checked = true;
@@ -1985,8 +1986,13 @@ namespace SkylineTester
                     runLoopsCount.Text = 1.ToString();
                     Offscreen.Checked = false;  // Can't do screenshots offscreen
                     offScreenEnabled = false;
+                    translationLanguagesOnly = true;
                 }
             }
+
+            TestsFrench.Enabled = TestsTurkish.Enabled = !translationLanguagesOnly;
+            if (translationLanguagesOnly)
+                TestsFrench.Checked = TestsTurkish.Checked = false;
             Offscreen.Enabled = offScreenEnabled;
         }
 
