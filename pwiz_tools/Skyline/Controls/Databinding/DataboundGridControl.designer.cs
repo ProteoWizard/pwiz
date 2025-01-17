@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.Controls.Databinding
+﻿using System.Windows.Forms;
+
+namespace pwiz.Skyline.Controls.Databinding
 {
     partial class DataboundGridControl
     {
@@ -49,6 +51,8 @@
             this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
+            this.dataGridSplitContainer = new System.Windows.Forms.SplitContainer();
+            this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
@@ -61,12 +65,18 @@
             this.splitContainerHorizontal.Panel1.SuspendLayout();
             this.splitContainerHorizontal.Panel2.SuspendLayout();
             this.splitContainerHorizontal.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).BeginInit();
+            this.dataGridSplitContainer.Panel1.SuspendLayout();
+            this.dataGridSplitContainer.Panel2.SuspendLayout();
+            this.dataGridSplitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
             this.SuspendLayout();
             // 
             // contextMenuStrip
             // 
+            this.contextMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.sortAscendingToolStripMenuItem,
             this.sortDescendingToolStripMenuItem,
@@ -179,7 +189,7 @@
             // 
             // splitContainerHorizontal.Panel2
             // 
-            this.splitContainerHorizontal.Panel2.Controls.Add(this.boundDataGridView);
+            this.splitContainerHorizontal.Panel2.Controls.Add(this.dataGridSplitContainer);
             // 
             // columnDendrogram
             // 
@@ -187,6 +197,31 @@
             resources.ApplyResources(this.columnDendrogram, "columnDendrogram");
             this.columnDendrogram.Name = "columnDendrogram";
             this.columnDendrogram.RectilinearLines = true;
+            // 
+            // dataGridSplitContainer
+            // 
+            resources.ApplyResources(this.dataGridSplitContainer, "dataGridSplitContainer");
+            this.dataGridSplitContainer.Name = "dataGridSplitContainer";
+            // 
+            // dataGridSplitContainer.Panel1
+            // 
+            this.dataGridSplitContainer.Panel1.Controls.Add(this.dataGridViewEx1);
+            this.dataGridSplitContainer.Panel1Collapsed = true;
+            // 
+            // dataGridSplitContainer.Panel2
+            // 
+            this.dataGridSplitContainer.Panel2.Controls.Add(this.boundDataGridView);
+            // 
+            // dataGridViewEx1
+            // 
+            this.dataGridViewEx1.AllowUserToAddRows = false;
+            this.dataGridViewEx1.AllowUserToDeleteRows = false;
+            this.dataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            resources.ApplyResources(this.dataGridViewEx1, "dataGridViewEx1");
+            this.dataGridViewEx1.Name = "dataGridViewEx1";
+            this.dataGridViewEx1.RowTemplate.Height = 28;
+            this.dataGridViewEx1.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewEx1_ColumnWidthChanged);
+            this.dataGridViewEx1.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGridViewEx1_Scroll);
             // 
             // boundDataGridView
             // 
@@ -225,6 +260,7 @@
             this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.boundDataGridView.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.boundDataGridView_CellContextMenuStripNeeded);
             this.boundDataGridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.boundDataGridView_ColumnHeaderMouseClick);
+            this.boundDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.boundDataGridView_ColumnWidthChanged);
             this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
             this.boundDataGridView.Scroll += new System.Windows.Forms.ScrollEventHandler(this.boundDataGridView_Scroll);
             this.boundDataGridView.Resize += new System.EventHandler(this.boundDataGridView_Resize);
@@ -259,6 +295,11 @@
             this.splitContainerHorizontal.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).EndInit();
             this.splitContainerHorizontal.ResumeLayout(false);
+            this.dataGridSplitContainer.Panel1.ResumeLayout(false);
+            this.dataGridSplitContainer.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).EndInit();
+            this.dataGridSplitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
             this.ResumeLayout(false);
@@ -287,5 +328,7 @@
         private Common.Controls.Clustering.DendrogramControl rowDendrogram;
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
+        private DataGridViewEx dataGridViewEx1;
+        private System.Windows.Forms.SplitContainer dataGridSplitContainer;
     }
 }

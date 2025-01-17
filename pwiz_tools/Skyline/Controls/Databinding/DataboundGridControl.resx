@@ -279,6 +279,60 @@
   <data name="&gt;&gt;splitContainerHorizontal.Panel1.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="dataGridSplitContainer.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="dataGridSplitContainer.IsSplitterFixed" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="dataGridSplitContainer.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="dataGridSplitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
+    <value>Horizontal</value>
+  </data>
+  <data name="dataGridViewEx1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="dataGridViewEx1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="dataGridViewEx1.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+    <value>Vertical</value>
+  </data>
+  <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>670, 138</value>
+  </data>
+  <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="dataGridViewEx1.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.Name" xml:space="preserve">
+    <value>dataGridViewEx1</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=24.1.1.339, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
+    <value>dataGridSplitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;dataGridViewEx1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel1.Name" xml:space="preserve">
+    <value>dataGridSplitContainer.Panel1</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel1.Parent" xml:space="preserve">
+    <value>dataGridSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel1.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <metadata name="bindingListSource.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
@@ -301,9 +355,45 @@
     <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
-    <value>splitContainerHorizontal.Panel2</value>
+    <value>dataGridSplitContainer.Panel2</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel2.Name" xml:space="preserve">
+    <value>dataGridSplitContainer.Panel2</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitterPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel2.Parent" xml:space="preserve">
+    <value>dataGridSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Panel2.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="dataGridSplitContainer.Size" type="System.Drawing.Size, System.Drawing">
+    <value>703, 300</value>
+  </data>
+  <data name="dataGridSplitContainer.SplitterDistance" type="System.Int32, mscorlib">
+    <value>90</value>
+  </data>
+  <data name="dataGridSplitContainer.SplitterWidth" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="dataGridSplitContainer.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Name" xml:space="preserve">
+    <value>dataGridSplitContainer</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SplitContainer, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.Parent" xml:space="preserve">
+    <value>splitContainerHorizontal.Panel2</value>
+  </data>
+  <data name="&gt;&gt;dataGridSplitContainer.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="&gt;&gt;splitContainerHorizontal.Panel2.Name" xml:space="preserve">

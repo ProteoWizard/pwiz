@@ -26,6 +26,17 @@ namespace pwiz.Common.DataBinding
     public class ColumnFormats
     {
         private Dictionary<ColumnId, ColumnFormat> _formats = new Dictionary<ColumnId, ColumnFormat>();
+        private int _frozenColumnCount;
+
+        public int FrozenColumnCount
+        {
+            get { return _frozenColumnCount; }
+            set { 
+                _frozenColumnCount = value;
+                FireFormatChanged();
+            }
+        }
+
         public void SetFormat(ColumnId columnId, ColumnFormat columnFormat)
         {
             if (columnFormat.IsEmpty)

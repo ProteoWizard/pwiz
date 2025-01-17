@@ -49,11 +49,14 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _dataGridViewPasteHandler;
+        private bool _inColumnChange;
+        private bool _populatingReplicateGrid;
 
         public DataboundGridControl()
         {
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
+            dataGridViewEx1.CellValueChanged += dataGridViewEx1_CellValueChanged;
             NavBar.ClusterSplitButton.Visible = true;
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
                 heatMapContextMenuItem_Click));
@@ -681,6 +684,24 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public void UpdateDendrograms()
         {
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            if (true == replicatePivotColumns?.IsPivoted())
+            {
+                dataGridViewEx1.Show();
+                dataGridSplitContainer.Panel1Collapsed = false;
+                PopulateReplicateDataGridView(replicatePivotColumns);
+                ResizePivotByReplicateGridToFit();
+                AlignPivotByReplicateGridColumns(replicatePivotColumns);
+            }
+            else
+            {
+                dataGridSplitContainer.Panel1Collapsed = true;
+                if (dataGridViewEx1.Visible)
+                {
+                    dataGridViewEx1.Hide();
+                }
+            }
+
             var reportResults = BindingListSource.ReportResults as ClusteredReportResults ?? ClusteredReportResults.EMPTY;
             var colorScheme = boundDataGridView.ReportColorScheme;
             UpdateColumnDendrograms(reportResults.ClusteredProperties, colorScheme,
@@ -805,14 +826,262 @@ namespace pwiz.Skyline.Controls.Databinding
             splitContainerHorizontal.Panel1Collapsed = false;
         }
 
+        private void AlignPivotByReplicateGridColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            if (_inColumnChange)
+            {
+                return;
+            }
+
+            try
+            {
+                _inColumnChange = true;
+                var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
+                    .ToDictionary(
+                        kvp => kvp.Key.ReplicateName,
+                        kvp => kvp.Sum(column =>
+                            boundDataGridView.Columns
+                                .Cast<DataGridViewColumn>()
+                                .Where(dataGridViewColumn => dataGridViewColumn.DataPropertyName == column.Name)
+                                .Sum(dataGridViewColumn => dataGridViewColumn.Width)
+                        )
+                    );
+
+                var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                    .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+
+                var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                    .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
+
+                dataGridViewEx1.Columns[@"Property"]!.Width = nonReplicateWidth;
+                foreach (DataGridViewColumn column in dataGridViewEx1.Columns)
+                {
+                    if (replicateTotalWidthMap.TryGetValue(column.Name, out var replicateTotalWidth))
+                    {
+                        column.Width = replicateTotalWidth;
+                    }
+                }
+            }
+            finally
+            {
+                _inColumnChange = false;
+            }
+        }
+
+        private void AlignDataBoundGridColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            if (_inColumnChange)
+            {
+                return;
+            }
+
+            try
+            {
+                _inColumnChange = true;
+                var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
+                    .ToDictionary(
+                        kvp => kvp.Key.ReplicateName,
+                        kvp => kvp.Sum(column =>
+                            boundDataGridView.Columns
+                                .Cast<DataGridViewColumn>()
+                                .Where(dataGridViewColumn => dataGridViewColumn.DataPropertyName == column.Name)
+                                .Sum(dataGridViewColumn => dataGridViewColumn.Width)
+                        )
+                    );
+
+                foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
+                {
+                    foreach (var column in grouping)
+                    {
+                        var replicateColumndRounder = new AdjustingRounder();
+                        foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
+                        {
+                            if (dataGridViewColumn.DataPropertyName == column.Name)
+                            {
+                                if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
+                                {
+                                    var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
+                                    dataGridViewColumn.Width = (int)replicateColumndRounder.Round(dataGridViewEx1.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var propertyWidth = dataGridViewEx1.Columns[@"Property"]!.Width;
+
+                var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                    .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+
+                var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                    .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
+
+                var propertyColumnRounder = new AdjustingRounder();
+                foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
+                {
+                    if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
+                    {
+                        var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
+                        dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
+                    }
+                }
+            }
+            finally
+            {
+                _inColumnChange = false;
+            }
+        } 
+        
+        private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
+        {
+            try
+            {
+                _populatingReplicateGrid = true;
+                var readOnlyCellColor = Color.FromArgb(245, 245, 245);
+
+                // Clear existing data
+                dataGridViewEx1.Columns.Clear();
+                dataGridViewEx1.Rows.Clear();
+
+                // Add a column for property names
+                var propertyColumnName = @"Property";
+                dataGridViewEx1.Columns.Add(propertyColumnName, propertyColumnName);
+
+                var rowPropertyPaths = new List<PropertyPath>();
+
+                // Iterate through item properties to create columns and rows
+                foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+                {
+                    var resultKey = group.Key;
+                    var replicateName = resultKey.ReplicateName;
+
+                    // Add a column for the replicate name if it doesn't already exist
+                    if (!dataGridViewEx1.Columns.Contains(replicateName))
+                    {
+                        dataGridViewEx1.Columns.Add(replicateName, replicateName);
+                    }
+
+                    foreach (var column in group)
+                    {
+                        if (!replicatePivotColumns.IsConstantColumn(column))
+                        {
+                            continue;
+                        }
+
+                        var propertyPath = column.DisplayColumn.PropertyPath;
+                        int iRow = rowPropertyPaths.IndexOf(propertyPath);
+
+                        if (iRow < 0)
+                        {
+                            // Add a new row if the property path is not found
+                            iRow = dataGridViewEx1.Rows.Add();
+                            dataGridViewEx1.Rows[iRow].Cells[propertyColumnName].Value = propertyPath.Name;
+                            dataGridViewEx1.Rows[iRow].Cells[propertyColumnName].ReadOnly = true;
+                            dataGridViewEx1.Rows[iRow].Cells[propertyColumnName].Style.BackColor = readOnlyCellColor;
+                            rowPropertyPaths.Add(propertyPath);
+                        }
+
+                        // Get the value for the current column
+                        var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
+                            .FirstOrDefault(v => v != null);
+
+                        // Set the cell value for the replicate column
+                        dataGridViewEx1.Rows[iRow].Cells[replicateName].Value = value;
+                        dataGridViewEx1.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
+                        if (column.IsReadOnly)
+                        {
+                            dataGridViewEx1.Rows[iRow].Cells[replicateName].Style.BackColor = readOnlyCellColor;
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                _populatingReplicateGrid = false;
+            }
+        }
+
+        private void ResizePivotByReplicateGridToFit()
+        {
+            int rowLimit = 10;
+            int totalHeight = dataGridViewEx1.ColumnHeadersHeight;
+
+            int rowCount = Math.Min(dataGridViewEx1.Rows.Count, rowLimit);
+            for (int i = 0; i < rowCount; i++)
+            {
+                totalHeight += dataGridViewEx1.Rows[i].Height;
+            }
+
+            dataGridViewEx1.Height = totalHeight;
+            boundDataGridView.Height = dataGridSplitContainer.Height - totalHeight - dataGridSplitContainer.SplitterWidth;
+            dataGridSplitContainer.SplitterDistance = totalHeight;
+        }
+
+        private void dataGridViewEx1_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (_populatingReplicateGrid)
+            {
+                return;
+            }
+
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                var cellValue = dataGridViewEx1.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+
+                foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
+                {
+                    if (grouping.Key.ReplicateName.Equals(dataGridViewEx1.Columns[e.ColumnIndex].HeaderText))
+                    {
+                        foreach (var column in grouping)
+                        {
+                            if (column.DisplayColumn.PropertyPath.Name.Equals(dataGridViewEx1.Rows[e.RowIndex].Cells[0].Value))
+                            {
+                                var columnDescriptor = column.DisplayColumn.ColumnDescriptor;
+                                var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(r => columnDescriptor.Parent.GetPropertyValue(r, column.PivotKey) != null);
+                                if (rowItem != null)
+                                {
+                                    column.SetValue(rowItem, cellValue);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void dataGridViewEx1_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            AlignDataBoundGridColumns(replicatePivotColumns);
+        }
+
         private void boundDataGridView_Resize(object sender, EventArgs e)
         {
             UpdateDendrograms();
         }
+        private void boundDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            AlignPivotByReplicateGridColumns(replicatePivotColumns);
+        }
+
+        private void dataGridViewEx1_Scroll(object sender, ScrollEventArgs e)
+        {
+            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
+            {
+                int horizontalOffset = e.NewValue;
+                boundDataGridView.HorizontalScrollingOffset = horizontalOffset;
+            }
+        }
 
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
         {
-            UpdateDendrograms();
+            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
+            {
+                int horizontalOffset = e.NewValue;
+                dataGridViewEx1.HorizontalScrollingOffset = horizontalOffset;
+            }
         }
 
         private void bindingListSource_BindingComplete(object sender, BindingCompleteEventArgs e)
@@ -859,6 +1128,33 @@ namespace pwiz.Skyline.Controls.Databinding
             };
             formGroup.ShowSibling(pcaPlot);
             pcaPlot.ClusterInput = CreateClusterInput();
+        }
+
+        //TODO currently experimenting with this class as a way to keep columns calculations aligned across multiple rounding operations
+        private class AdjustingRounder
+        {
+            private double _roundedDifference = 0;
+
+            public double Round(double value)
+            {
+                double roundedValue = Math.Round(value);
+                double difference = roundedValue - value;
+
+                if (_roundedDifference + difference >= 1)
+                {
+                    roundedValue -= 1; 
+                    difference = roundedValue - value;
+                }
+                else if (_roundedDifference + difference <= -1)
+                {
+                    roundedValue += 1;
+                    difference = roundedValue - value;
+                }
+
+                _roundedDifference += difference;
+
+                return roundedValue;
+            }
         }
     }
 }
