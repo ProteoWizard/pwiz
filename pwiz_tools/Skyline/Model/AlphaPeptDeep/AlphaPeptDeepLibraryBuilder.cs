@@ -377,7 +377,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             Document = document;
             Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            LibraryHelper = new LibraryHelper(InputFilePath);
+            if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
 
         }
@@ -410,7 +410,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             progressStatus = progressStatus.ChangeSegments(0, 5);
 
-            LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+            if (Document.DocumentHash != null) LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
             progressStatus = progressStatus.NextSegment();
 
             PrepareSettingsFile(progress, ref progressStatus);

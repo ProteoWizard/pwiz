@@ -301,7 +301,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!SetupPythonEnvironmentForAlpha(createDlg))
                     {
-                        CleanUpPythonEnvironmentForAlpha();
+                        pythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
                         return false;
 
                     }
@@ -369,7 +369,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (!SetupPythonEnvironmentForCarafe(createDlg))
                     {
-                        CleanUpPythonEnvironmentForCarafe();
+                        pythonInstaller.CleanUpPythonEnvironment(CARAFE);
                         return false;
                     }
 
@@ -465,16 +465,8 @@ namespace pwiz.Skyline.SettingsUI
 
             return true;
         }
-        private void CleanUpPythonEnvironmentForCarafe()
-        {
-            Directory.Delete(pythonInstaller.PythonVersionDir);
-            Directory.Delete(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE));
-        }
-        private void CleanUpPythonEnvironmentForAlpha()
-        {
-            Directory.Delete(pythonInstaller.PythonVersionDir);
-            Directory.Delete(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP));
-        }
+       
+
         private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
             var programPathContainer = new ProgramPathContainer(PYTHON, ALPHAPEPTDEEP_PYTHON_VERSION);

@@ -6,7 +6,6 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 
-
 namespace pwiz.Skyline.ToolsUI
 {
     
