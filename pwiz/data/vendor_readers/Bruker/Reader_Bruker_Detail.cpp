@@ -24,7 +24,6 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "boost/filesystem/convenience.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 
 using namespace pwiz::vendor_api::Bruker;
@@ -47,9 +46,9 @@ Reader_Bruker_Format format(const string& path)
     {
         // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf/.U2
         // Note that direct paths to baf or u2 will fail to find a baf/u2 hybrid source
-        std::string leaf = BFS_STRING(sourcePath.leaf());
+        std::string leaf = BFS_STRING(sourcePath.filename());
         bal::to_lower(leaf);
-        if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "analysis.baf"))
+        if (leaf == "fid" && !bfs::exists(sourcePath.parent_path() / "analysis.baf"))
             return Reader_Bruker_Format_FID;
         else if(extension(sourcePath) == ".u2")
             return Reader_Bruker_Format_U2;
@@ -87,7 +86,7 @@ Reader_Bruker_Format format(const string& path)
     for (; itr != endItr; ++itr)
         if (bfs::is_directory(itr->status()))
         {
-            if (BFS_STRING(itr->path().leaf())[0] == '.') // HACK: skip ".svn"
+            if (BFS_STRING(itr->path().filename())[0] == '.') // HACK: skip ".svn"
                 continue;
             else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
                      bfs::exists(itr->path() / "1SRef/fid") ||

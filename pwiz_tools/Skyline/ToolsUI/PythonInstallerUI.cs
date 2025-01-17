@@ -6,13 +6,11 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 
-
 namespace pwiz.Skyline.ToolsUI
 {
     
     public static class PythonInstallerUI
     {
-        public static MultiButtonMsgDlg EnableLongPathsDlg { get; set; }
         public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
@@ -44,14 +42,13 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     else if (task.Name == PythonTaskName.enable_longpaths)
                     {
-                        EnableLongPathsDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
-                        var choice = EnableLongPathsDlg.ShowDialog();
-                        if (choice == DialogResult.No || choice == DialogResult.Cancel)
+                        var choice = MessageDlg.Show(parent, string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), false, MessageBoxButtons.OKCancel);
+                        if (choice == DialogResult.Cancel)
                         {
                             if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
-                            break;
+                            return choice;
                         }
-                        else if (choice == DialogResult.Yes)
+                        else if (choice == DialogResult.OK)
                         {
                             // Attempt to enable Windows Long Paths
                             pythonInstaller.EnableWindowsLongPaths();
@@ -77,9 +74,8 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 catch (Exception ex)
                 {
-                    //MessageDlg.Show(parent, task.FailureMessage);
                     MessageDlg.ShowWithException(parent, (ex.InnerException ?? ex).Message, ex);
-                    break;
+                    return DialogResult.Cancel;
                 }
             }
             Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");

@@ -300,7 +300,11 @@ namespace pwiz.Skyline.SettingsUI
                 else if (radioAlphaSource.Checked)
                 {
                     if (!SetupPythonEnvironmentForAlpha(createDlg))
+                    {
+                        pythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
                         return false;
+
+                    }
                     Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
                 }
                 else if (radioCarafeSource.Checked)
@@ -365,6 +369,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (!SetupPythonEnvironmentForCarafe(createDlg))
                     {
+                        pythonInstaller.CleanUpPythonEnvironment(CARAFE);
                         return false;
                     }
 
@@ -460,6 +465,7 @@ namespace pwiz.Skyline.SettingsUI
 
             return true;
         }
+       
 
         private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
@@ -490,11 +496,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return false;
             }
-            else
-            {
-                // Install python when user clicks 'OK' here
-                PythonInstallerUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
-
+            // Install python when user clicks 'OK' here
+            else if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+            { 
+                return false;
             }
 
             return true;
@@ -526,12 +531,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return false;
             }
-            else
+            //Install python when user clicks 'OK' here
+            else if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
             {
-                // Install python when user clicks 'OK' here
-                PythonInstallerUI.InstallPythonVirtualEnvironment(this,pythonInstaller);
-
+                return false;
             }
+
             return true;
        
         }

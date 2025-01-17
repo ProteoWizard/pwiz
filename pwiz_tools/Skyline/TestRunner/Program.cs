@@ -1388,6 +1388,12 @@ namespace TestRunner
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
             bool coverage = commandLineArgs.ArgAsBool("coverage");
 
+            // If pausing for screenshots, make sure this process is allowed to fully activate its forms
+            if (pauseSeconds != 0)
+            {
+                Process.GetCurrentProcess().AllowSetForegroundWindow();
+            }
+
             // If running Nightly tests, remove any flagged for exclusion by the NoNightlyTesting custom attribute
             if (asNightly)
             {

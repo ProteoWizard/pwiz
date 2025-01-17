@@ -556,16 +556,7 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python installation might require enabling Windows Long Paths. Elevated priveleges are required for this feature. Would you like to enable Windows Long Paths?.
-        /// </summary>
-        public static string PythonInstaller_Enable_Windows_Long_Paths {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Enable_Windows_Long_Paths", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated priveleges are required for this feature..
+        ///   Looks up a localized string similar to Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required for this feature..
         /// </summary>
         public static string PythonInstaller_Install_Cuda_Library {
             get {
@@ -588,6 +579,15 @@ namespace pwiz.Skyline.ToolsUI {
         public static string PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment {
             get {
                 return ResourceManager.GetString("PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?.
+        /// </summary>
+        public static string PythonInstaller_Requesting_Administrator_elevation {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Requesting_Administrator_elevation", resourceCulture);
             }
         }
         

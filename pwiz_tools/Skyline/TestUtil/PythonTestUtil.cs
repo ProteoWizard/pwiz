@@ -57,13 +57,13 @@ namespace pwiz.SkylineTestUtil
                     OkDialog(pythonDlg, pythonDlg.OkDialog);
                     if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
                     {
-                        MultiButtonMsgDlg longPathDlg = null;
-                        longPathDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Enable_Windows_Long_Paths), longPathDlg.Message);
+                        MessageDlg longPathDlg = null;
+                        longPathDlg = WaitForOpenForm<MessageDlg>();
+                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), longPathDlg.Message);
 
                         if (IsRunningElevated())
                         {
-                            RunDlg<MessageDlg>(longPathDlg.ClickYes, okDlg =>
+                            RunDlg<MessageDlg>(longPathDlg.ClickOk, okDlg =>
                             {
                                 confirmDlg = okDlg;
                                 Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestUtil
                     else
                     {
                         Console.WriteLine(@"Info: LongPathsEnabled registry key is set to 1");
-                        confirmDlg = WaitForOpenForm<MessageDlg>();
+                        confirmDlg = WaitForOpenForm<MessageDlg>(600000);
                         Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, confirmDlg.Message);
                         OkDialog(confirmDlg, confirmDlg.OkDialog);
                     }

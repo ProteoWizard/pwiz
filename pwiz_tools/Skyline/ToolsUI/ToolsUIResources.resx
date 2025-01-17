@@ -356,11 +356,11 @@
   <data name="PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required_please_wait" xml:space="preserve">
     <value>Python {0} set up is required for {1}, please wait for python to install and configure ...</value>
   </data>
-  <data name="PythonInstaller_Enable_Windows_Long_Paths" xml:space="preserve">
-    <value>Python installation might require enabling Windows Long Paths. Elevated priveleges are required for this feature. Would you like to enable Windows Long Paths?</value>
+  <data name="PythonInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+    <value>Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?</value>
   </data>
   <data name="PythonInstaller_Install_Cuda_Library" xml:space="preserve">
-    <value>Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated priveleges are required for this feature.</value>
+    <value>Python installation detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required for this feature.</value>
   </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
     <value>SkylineProcessRunner timed-out after {0} milliseconds</value>
