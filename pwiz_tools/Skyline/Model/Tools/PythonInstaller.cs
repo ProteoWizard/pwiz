@@ -13,7 +13,6 @@ using Microsoft.Win32;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -381,7 +380,6 @@ namespace pwiz.Skyline.Model.Tools
 
         private void UnzipPythonEmbeddablePackage(IProgressMonitor progressMonitor)
         {
-            //PythonInstallerUtil.UnblockFile(PythonEmbeddablePackageDownloadPath);
             using var zipFile = ZipFile.Read(PythonEmbeddablePackageDownloadPath);
             zipFile.ExtractAll(PythonEmbeddablePackageExtractDir);
         }
@@ -707,31 +705,6 @@ namespace pwiz.Skyline.Model.Tools
                     return BitConverter.ToString(hashBytes).Replace(@"-", @"").ToLower();
                 }
             }
-        }
-        public static void UnblockFile(string filePath)
-        {
-            // Construct the PowerShell command
-            TextWriter writer = new TextBoxStreamWriterHelper();
-            var command = TextUtil.Quote($@"Unblock-File -Path '{filePath}'");
-
-            var cmd = $@"powershell.exe -Command {command}";
-
-            // Prepare the ProcessStartInfo
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "powershell.exe",
-                Arguments = $"-Command \"{command}\"",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            var processRunner = new SkylineProcessRunnerWrapper();
-
-            if (processRunner.RunProcess(cmd, true, writer) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmd));
-
         }
     }
 
