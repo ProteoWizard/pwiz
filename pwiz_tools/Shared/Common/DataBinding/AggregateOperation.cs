@@ -39,6 +39,11 @@ namespace pwiz.Common.DataBinding
             () => Resources.AggregateOperation_Mean_Mean, () => Resources.AggregateOperation_Mean_Mean__0_, 
             values => values.Mean());
 
+        // TODO(nicksh): Generalize Median for non-numeric value types.
+        public static readonly AggregateOperation Median = new NumericAggregate(@"Median", () => "Median",
+            () => "Median {0}",
+            values => values.Median());
+
         public static readonly AggregateOperation Min = new SelectOne(@"Min",
             () => Resources.AggregateOperation_Min_Min, () => Resources.AggregateOperation_Min_Min__0_, 
             (dataSchema, values) => FindFirst(values, (v1, v2) => +dataSchema.Compare(v1, v2))
@@ -63,6 +68,7 @@ namespace pwiz.Common.DataBinding
             Sum,
             Count, 
             Mean,
+            Median,
             Min,
             Max,
             StdDev,

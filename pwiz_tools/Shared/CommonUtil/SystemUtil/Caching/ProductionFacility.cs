@@ -48,7 +48,21 @@ namespace pwiz.Common.SystemUtil.Caching
             lock (this)
             {
                 _entries.TryGetValue(key, out var entry);
+                if (entry?.Result != null)
+                {
+                    return 100;
+                }
                 return entry?.ProgressValue??0;
+            }
+        }
+
+        public DeepProgress GetDeepProgress(WorkOrder key)
+        {
+            lock (this)
+            {
+                var selfProgress = GetProgressValue(key);
+                string description = key.Producer.GetDescription(key);
+                return new DeepProgress(description, selfProgress, key.GetInputs().Select(GetDeepProgress));
             }
         }
 
@@ -269,7 +283,10 @@ namespace pwiz.Common.SystemUtil.Caching
                 IProductionListener[] listeners;
                 lock (Cache)
                 {
-                    ProgressValue = progress;
+                    if (Equals(key, Key))
+                    {
+                        ProgressValue = progress;
+                    }
                     listeners = _listeners.ToArray();
                 }
 

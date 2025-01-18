@@ -18,7 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil.Caching
 {
@@ -63,6 +65,11 @@ namespace pwiz.Common.SystemUtil.Caching
         public IEnumerable<WorkOrder> GetInputs()
         {
             return Producer.GetInputs(WorkParameter);
+        }
+
+        public string GetDescription()
+        {
+            return Producer.GetDescription(WorkParameter);
         }
     }
     public interface IProductionListener
@@ -112,5 +119,61 @@ namespace pwiz.Common.SystemUtil.Caching
         {
             _progressChange?.Invoke(progress);
         }
+
+        public IProgressMonitor AsProgressMonitor()
+        {
+            return new ProgressMonitorImpl(this);
+        }
+
+        private class ProgressMonitorImpl : IProgressMonitor
+        {
+            private ProductionMonitor _productionMonitor;
+            public ProgressMonitorImpl(ProductionMonitor productionMonitor)
+            {
+                _productionMonitor = productionMonitor;
+            }
+
+            public bool IsCanceled
+            {
+                get { return _productionMonitor.CancellationToken.IsCancellationRequested; }
+            }
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                _productionMonitor.SetProgress(status.PercentComplete);
+                return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
+            }
+
+            public bool HasUI
+            {
+                get { return false; }
+            }
+        }
+    }
+
+    public class DeepProgress : Immutable
+    {
+        public DeepProgress(string description, int selfProgress, IEnumerable<DeepProgress> inputs)
+        {
+            Description = description;
+            ProgressValue = selfProgress;
+            InputProgress = ImmutableList.ValueOfOrEmpty(inputs);
+        }
+        public string Description { get; private set; }
+        public int ProgressValue { get; private set; }
+
+        public double DeepProgressValue
+        {
+            get
+            {
+                if (InputProgress.Count == 0)
+                {
+                    return ProgressValue;
+                }
+
+                return ProgressValue / 2.0 + InputProgress.Average(progress => progress.DeepProgressValue) / 2;
+            }
+        }
+
+        public ImmutableList<DeepProgress> InputProgress { get; private set; }
     }
 }

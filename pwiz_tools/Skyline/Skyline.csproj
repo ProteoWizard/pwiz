@@ -472,6 +472,12 @@
     <Compile Include="EditUI\EditSpectrumFilterDlg.Designer.cs">
       <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditUI\PeakImputationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\PeakImputationForm.Designer.cs">
+      <DependentUpon>PeakImputationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\PermuteIsotopeModificationsDlg.designer.cs">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
     </Compile>
@@ -576,6 +582,21 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Results\Imputation\AlignmentParameters.cs" />
+    <Compile Include="Model\Results\Imputation\AlignmentResults.cs" />
+    <Compile Include="Model\Results\Imputation\AlignmentType.cs" />
+    <Compile Include="Model\Results\Imputation\KdeAlignmentType.cs" />
+    <Compile Include="Model\Results\Imputation\ChromatogramTimeRanges.cs" />
+    <Compile Include="Model\Results\Imputation\PeakImputer.cs" />
+    <Compile Include="Model\Results\Imputation\RatedPeak.cs" />
+    <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />
+    <Compile Include="Model\Results\Imputation\LongestCommonSequenceFinder.cs" />
+    <Compile Include="Model\Results\Imputation\MoleculePeaks.cs" />
+    <Compile Include="Model\Results\Imputation\PeakBounds.cs" />
+    <Compile Include="Model\Results\Imputation\PeakImputationData.cs" />
+    <Compile Include="Model\Results\Imputation\RtValueType.cs" />
+    <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
+    <Compile Include="Model\Results\ReplicateFileId.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />
@@ -3061,6 +3082,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\MassErrorChartPropertyDlg.zh-CHS.resx">
       <DependentUpon>MassErrorChartPropertyDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\PeakImputationForm.resx">
+      <DependentUpon>PeakImputationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\PermuteIsotopeModificationsDlg.ja.resx">
       <DependentUpon>PermuteIsotopeModificationsDlg.cs</DependentUpon>
@@ -7175,6 +7199,7 @@
     </PublishFile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="EditUI\PeakImputation\" />
     <PackageReference Include="Microsoft.Web.WebView2">
       <Version>1.0.2420.47</Version>
     </PackageReference>

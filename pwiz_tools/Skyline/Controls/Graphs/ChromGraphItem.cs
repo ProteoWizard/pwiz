@@ -26,6 +26,7 @@ using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
@@ -47,6 +48,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
         private static readonly Color COLOR_BOUNDARIES = Color.LightGray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
+        private static readonly Color COLOR_EXEMPLARY_PEAK = Color.Coral;
         public static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.FromArgb(30, Color.BlueViolet);
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
@@ -183,6 +185,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double[] AlignedRetentionMsMs { get; set; }
         public double[] UnalignedRetentionMsMs { get; set; }
+
+        public RatedPeak.PeakBounds ExemplaryPeakBounds { get; set; }
 
         public bool HideBest { get; set; }
 
@@ -528,6 +532,23 @@ namespace pwiz.Skyline.Controls.Graphs
                             Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
                             IsClippedToChartRect = true,
                             Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
+                        };
+                        annotations.Add(line);
+                    }
+                }
+
+                if (ExemplaryPeakBounds != null)
+                {
+                    foreach (var time in new[] { ExemplaryPeakBounds.StartTime, ExemplaryPeakBounds.EndTime })
+                    {
+                        var scaledTime = ScaleRetentionTime(time);
+                        var line = new LineObj(COLOR_EXEMPLARY_PEAK, scaledTime.DisplayTime, 0, scaledTime.DisplayTime,
+                            1)
+                        {
+                            ZOrder = ZOrder.F_BehindGrid,
+                            Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                            IsClippedToChartRect = true,
+                            Line = { Style = DashStyle.DashDot }
                         };
                         annotations.Add(line);
                     }

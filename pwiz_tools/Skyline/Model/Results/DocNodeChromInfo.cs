@@ -1462,7 +1462,8 @@ namespace pwiz.Skyline.Model.Results
         FALSE,  // Best peak picked during results import
         IMPORTED,   // Import peak boundaries
         REINTEGRATED,   // Edit > Refine > Reintegrate
-        MATCHED // Forced by peak matching when adding missing label type precursors
+        MATCHED, // Forced by peak matching when adding missing label type precursors
+        IMPUTED, // Edit > Integration > Impute Peaks
     }
 
     public static class UserSetFastLookup
@@ -1503,7 +1504,17 @@ namespace pwiz.Skyline.Model.Results
             // This keeps importing and reintegrating from resetting each other's peaks
             // when the specifide boundaries are not different.
             return (userSetPrimary == UserSet.MATCHED || userSetSecondary == UserSet.FALSE);
-        }        
+        }
+
+        public static UserSet ForDocumentFormat(this UserSet userSet, DocumentFormat documentFormat)
+        {
+            if (userSet == UserSet.IMPUTED && documentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                return UserSet.TRUE;
+            }
+
+            return userSet;
+        }
     }
 
     /// <summary>
