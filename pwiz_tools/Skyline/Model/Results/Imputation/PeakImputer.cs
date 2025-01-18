@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             RatedPeak.PeakBounds bestPeakBounds)
         {
             var chromatogramGroupInfos = LoadChromatogramGroupInfos(document, peptideDocNode).ToList();
-            var timeRanges = ChromatogramTimeRanges.GetTimeRanges(peptideDocNode);
+            var timeRanges = ChromatogramTimeRanges?.GetTimeRanges(peptideDocNode);
             var timeIntervals = timeRanges?.GetTimeIntervals(ReplicateFileInfo.MsDataFileUri);
             if (!MaxRtShift.HasValue)
             {
