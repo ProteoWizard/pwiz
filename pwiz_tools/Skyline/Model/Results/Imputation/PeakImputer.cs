@@ -43,10 +43,18 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     new IdentityPath(PeptideIdentityPath, transitionGroupDocNode.TransitionGroup);
                 var chromatogramSet =
                     document.MeasuredResults.Chromatograms[ReplicateFileInfo.ReplicateIndex];
-                document = document.ChangePeak(identityPath, chromatogramSet.Name,
-                    ReplicateFileInfo.MsDataFileUri, null, newPeakBounds?.StartTime ?? 0, newPeakBounds?.EndTime ?? 0,
-                    UserSet.IMPUTED, null,
-                    false);
+                try
+                {
+                    document = document.ChangePeak(identityPath, chromatogramSet.Name,
+                        ReplicateFileInfo.MsDataFileUri, null, newPeakBounds?.StartTime ?? 0,
+                        newPeakBounds?.EndTime ?? 0,
+                        UserSet.IMPUTED, null,
+                        false);
+                }
+                catch (ArgumentException)
+                {
+                    // No results: ignore
+                }
             }
 
             return document;
