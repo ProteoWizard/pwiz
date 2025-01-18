@@ -159,6 +159,7 @@
     </Compile>
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
+    <Compile Include="AlphapeptdeepLibraryBuilderTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
     <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
