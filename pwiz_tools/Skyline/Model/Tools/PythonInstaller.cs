@@ -634,7 +634,7 @@ namespace pwiz.Skyline.Model.Tools
             var node9 = new PythonTaskNode { PythonTaskName = PythonTaskName.pip_install_packages, ParentNodes = new List<PythonTaskNode> { node8 } };
             var node10 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_cuda_library, ParentNodes = null };
             var node11 = new PythonTaskNode { PythonTaskName = PythonTaskName.install_cuda_library, ParentNodes = null };
-            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 , node10, node11 };
+            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 }; //, node10, node11 };
         }
 
         public static string GetFileHash(string filePath)
