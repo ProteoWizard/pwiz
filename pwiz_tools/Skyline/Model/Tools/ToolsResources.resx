@@ -260,7 +260,10 @@
     <value>Python download failed. Check your network connection or contact Skyline team for help.</value>
   </data>
   <data name="PythonInstaller_Cuda_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_" xml:space="preserve">
-    <value>Cuda download failed. Check your network connection or contact Skyline team for help.</value>
+    <value>Cuda library download failed. Check your network connection or contact Skyline team for help.</value>
+  </data>
+  <data name="PythonInstaller_CuDNN_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_" xml:space="preserve">
+    <value>CuDNN library download failed. Check your network connection or contact Skyline team for help.</value>
   </data>
   <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_Python_embeddable_package" xml:space="preserve">
     <value>Downloading Python embeddable package</value>
@@ -348,6 +351,18 @@
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_install_Cuda" xml:space="preserve">
     <value>Failed to install Cuda Library</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Downloading_CuDNN_Installer" xml:space="preserve">
+    <value>Downloading CuDNN Installer</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Failed_to_download_CuDNN_Installer" xml:space="preserve">
+    <value>Failed to download CuDNN Installer</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Installing_CuDNN" xml:space="preserve">
+    <value>Installing CuDNN Library</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Failed_to_install_CuDNN" xml:space="preserve">
+    <value>Failed to install CuDNN Library</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Running_the_get_pip_py_script" xml:space="preserve">
     <value>Running the get pip py script</value>

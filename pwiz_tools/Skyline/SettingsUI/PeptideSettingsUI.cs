@@ -731,8 +731,10 @@ namespace pwiz.Skyline.SettingsUI
             using (var dlg = new BuildLibraryDlg(_parent))
             {
                 dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
+                Cursor.Current = Cursors.WaitCursor;
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
+                    Cursor.Current = Cursors.Default;
                     if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                     {
                         using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList))
@@ -786,6 +788,7 @@ namespace pwiz.Skyline.SettingsUI
                         IsBuildingLibrary = false;
                     });
                 }
+                Cursor.Current = Cursors.Default;
             }
         }
 

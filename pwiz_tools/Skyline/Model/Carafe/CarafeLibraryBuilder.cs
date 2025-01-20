@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Carafe
                 new ArgumentAndValue(@"o", CarafeOutputLibraryDir, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"cor", @"0.8", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"device", @"cpu", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"device", @"gpu", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"enzyme", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
