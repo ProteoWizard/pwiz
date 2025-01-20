@@ -195,7 +195,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     viewLibraryDlg.SetBounds(SkylineWindow.Left, SkylineWindow.Top, SkylineWindow.Width, SkylineWindow.Height);
                 });
-                TakeCoverShot();
+                TakeCoverShot(viewLibraryDlg);
 
                 OkDialog(viewLibraryDlg, viewLibraryDlg.CancelDialog);
                 return;

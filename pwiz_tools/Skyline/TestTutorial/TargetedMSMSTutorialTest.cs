@@ -479,7 +479,7 @@ namespace pwiz.SkylineTestTutorial
             // TODO: figure out why these assertions fail when taking screenshots. During screenshots, the expected / actual values:
             //      expected20TransitionCount = 88. Actual = 87
             //      expected80TransitionCount = 87. Actual = 86
-            if (!IsPauseForScreenShots)
+            if (!IsRecordingScreenShots)
             {
                 AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName,
                     expectedMoleculeCount, expectedTransitionGroupCount, 0, expected20TransitionCount, 0);

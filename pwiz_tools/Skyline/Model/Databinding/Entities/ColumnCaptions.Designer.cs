@@ -142,6 +142,87 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Apex Analyte Ion Count.
+        /// </summary>
+        public static string ApexAnalyteIonCount {
+            get {
+                return ResourceManager.GetString("ApexAnalyteIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Analyte Ion Count Fragment.
+        /// </summary>
+        public static string ApexAnalyteIonCountFragment {
+            get {
+                return ResourceManager.GetString("ApexAnalyteIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Analyte Ion Count MS1.
+        /// </summary>
+        public static string ApexAnalyteIonCountMS1 {
+            get {
+                return ResourceManager.GetString("ApexAnalyteIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Spectrum ID.
+        /// </summary>
+        public static string ApexSpectrumId {
+            get {
+                return ResourceManager.GetString("ApexSpectrumId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Spectrum ID Fragment.
+        /// </summary>
+        public static string ApexSpectrumIdFragment {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Spectrum ID MS1.
+        /// </summary>
+        public static string ApexSpectrumIdMS1 {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Total Ion Count.
+        /// </summary>
+        public static string ApexTotalIonCount {
+            get {
+                return ResourceManager.GetString("ApexTotalIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Total Ion Count Fragment.
+        /// </summary>
+        public static string ApexTotalIonCountFragment {
+            get {
+                return ResourceManager.GetString("ApexTotalIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Apex Total Ion Count MS1.
+        /// </summary>
+        public static string ApexTotalIonCountMS1 {
+            get {
+                return ResourceManager.GetString("ApexTotalIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area.
         /// </summary>
         public static string Area {
@@ -1443,6 +1524,105 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LastPosition {
             get {
                 return ResourceManager.GetString("LastPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Analyte Ion Count.
+        /// </summary>
+        public static string LcPeakAnalyteIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakAnalyteIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Analyte Ion Count Fragment.
+        /// </summary>
+        public static string LcPeakAnalyteIonCountFragment {
+            get {
+                return ResourceManager.GetString("LcPeakAnalyteIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Analyte Ion Count MS1.
+        /// </summary>
+        public static string LcPeakAnalyteIonCountMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakAnalyteIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Ion Metrics Fragment.
+        /// </summary>
+        public static string LcPeakIonMetricsFragment {
+            get {
+                return ResourceManager.GetString("LcPeakIonMetricsFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Ion Metrics MS1.
+        /// </summary>
+        public static string LcPeakIonMetricsMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakIonMetricsMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Total Ion Count.
+        /// </summary>
+        public static string LcPeakTotalIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Total Ion Count Fragment.
+        /// </summary>
+        public static string LcPeakTotalIonCountFragment {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Total Ion Count MS1.
+        /// </summary>
+        public static string LcPeakTotalIonCountMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Total Ion Current Area.
+        /// </summary>
+        public static string LcPeakTotalIonCurrentArea {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCurrentArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Total Ion Current Area Fragment.
+        /// </summary>
+        public static string LcPeakTotalIonCurrentAreaFragment {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCurrentAreaFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to LC Peak Total Ion Current Area MS1.
+        /// </summary>
+        public static string LcPeakTotalIonCurrentAreaMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCurrentAreaMS1", resourceCulture);
             }
         }
         
