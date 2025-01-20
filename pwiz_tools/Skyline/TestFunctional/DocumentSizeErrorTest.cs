@@ -31,7 +31,7 @@ namespace pwiz.SkylineTestFunctional
     /// Summary description for DocumentSizeErrorTest
     /// </summary>
     [TestClass]
-    public class DocumentSizeErrorTest : AbstractFunctionalTest
+    public class DocumentSizeErrorTest : AbstractFunctionalTestEx
     {
         [TestMethod, MinidumpLeakThreshold(15)]
         public void TestDocumentSizeError()

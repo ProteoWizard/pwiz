@@ -292,7 +292,7 @@ namespace pwiz.SkylineTestTutorial
             }
             else
             {
-                RunUI(() => SkylineWindow.OpenFile(GetTestPath(DIA_IMPORTED_CHECKPOINT)));
+                OpenDocument(GetTestPath(DIA_IMPORTED_CHECKPOINT));
             }
 
             if (IsRecordMode)

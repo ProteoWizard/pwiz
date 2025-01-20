@@ -95,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
 
         DdaTestSettings TestSettings;
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoNightlyTestingAttribute(TestExclusionReason.MSAMANDA_MEMORY_ISSUES)]
         public void TestDdaSearch()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
