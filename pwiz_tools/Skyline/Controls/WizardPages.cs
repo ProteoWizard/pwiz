@@ -50,6 +50,17 @@ namespace pwiz.Skyline.Controls
             return base.ProcessCmdKey(ref msg, keyData);
         }
     }
+
+    public class WizardPageControl : UserControl
+    {
+        /// <summary>
+        /// Allow controls in a wizard to preempt close requests by the wizard's form. Returns true iff the close request should continue, false if it should be canceled.
+        /// </summary>
+        public virtual bool CanWizardClose()
+        {
+            return true;
+        }
+    }
 }
 
 
