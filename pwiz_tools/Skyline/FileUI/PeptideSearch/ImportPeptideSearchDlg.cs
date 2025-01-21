@@ -1156,6 +1156,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 btnBack.Hide();
                 btnEarlyFinish.Location = btnBack.Location;
             }
+            else if (CurrentPage == Pages.spectra_page) // No "back" from page zero
+            {
+                btnBack.Hide();
+            }
             else if (!btnBack.Visible)
             {
                 btnEarlyFinish.Left = btnBack.Left - btnBack.Width - 6;
