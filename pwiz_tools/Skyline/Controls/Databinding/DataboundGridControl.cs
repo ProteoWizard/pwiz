@@ -930,7 +930,18 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 _inColumnChange = false;
             }
-        } 
+        }
+
+        private void UpdateReplicateDataGridFrozenState()
+        {
+            if (bindingListSource.ColumnFormats.FrozenColumnCount > 0)
+            {
+                dataGridViewEx1.Columns[@"Property"]!.Frozen = true;
+
+                //TODO here we need to do some size calculations for when there is a mismatch in columns that are being frozen
+                // as the user scroll we need to calculate how much of the property column we show. if there is a mismatch between the frozen sizes in both. 
+            }
+        }
         
         private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
         {
@@ -1081,6 +1092,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 int horizontalOffset = e.NewValue;
                 dataGridViewEx1.HorizontalScrollingOffset = horizontalOffset;
+                UpdateReplicateDataGridFrozenState();
             }
         }
 
