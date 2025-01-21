@@ -40,11 +40,10 @@ namespace pwiz.Skyline.Controls
             skyline
         }
 
-        private readonly TreeNodeMS _hiddenFilesTreeNode;
-        private readonly ToolStripMenuItem _showHiddenFiles;
         private readonly ToolStripMenuItem _openContainingFolder;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private NodeTip _nodeTip;
+        private TreeNodeMS _auditLogTreeNode;
 
         public FilesTree()
         {
@@ -73,32 +72,15 @@ namespace pwiz.Skyline.Controls
             _openContainingFolder.Image = Resources.Folder;
             _openContainingFolder.Click += openContainingFolderMenuItem_Click;
 
-            _showHiddenFiles = new ToolStripMenuItem(ControlsResources.FilesTree_ToolStripMenuItem_ShowHiddenFiles);
-            _showHiddenFiles.CheckOnClick = true;
-            _showHiddenFiles.CheckState = CheckState.Unchecked;
-            _showHiddenFiles.CheckedChanged += showHiddenFilesMenuItem_CheckedChanged;
-
             var menu = new ContextMenuStrip();
             menu.Items.AddRange(new ToolStripItem[]
             {
                 removeFromProject,
                 new ToolStripSeparator(),
                 _openContainingFolder,
-                _showHiddenFiles
             });
             menu.Opening += rightClickMenu_Opening;
             base.ContextMenuStrip = menu;
-
-            // TreeNode for Hidden Files
-            _hiddenFilesTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_HiddenFiles);
-            _hiddenFilesTreeNode.ImageIndex = (int)ImageId.folder;
-
-            AuditLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_AuditLog);
-            AuditLogTreeNode.ImageIndex = (int)ImageId.file;
-
-            _hiddenFilesTreeNode.Nodes.Add(AuditLogTreeNode);
-            _hiddenFilesTreeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Settings));
-            _hiddenFilesTreeNode.Collapse(true);
         }
 
         [Browsable(false)]
@@ -111,7 +93,7 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public TreeNodeMS AuditLogTreeNode { get; }
+        public TreeNodeMS AuditLogTreeNode { get { return _auditLogTreeNode; } }
 
         public string RootNodeText()
         {
@@ -215,15 +197,12 @@ namespace pwiz.Skyline.Controls
             {
                 foreach (var peptideLibrary in peptideLibrarySet)
                 {
-                    // Ex: "Rat (NIST) (Rat_plasma2) (Rat_plasma)" =>
-                    var peptideLibraryNode = new TreeNodeMS(peptideLibrary.Name);
-                    peptideLibraryNode.ImageIndex = (int)ImageId.folder;
+                    // Ex: "Rat (NIST) (Rat_plasma2) (Rat_plasma)"
+                    //      * In tooltip: "rat_consensus_final_true_lib.blib"
+                    var peptideLibraryNode = new PeptideLibraryTreeNode(peptideLibrary.Name, peptideLibrary.FilePath);
 
-                    // Ex: "rat_consensus_final_true_lib.blib"
-                    var peptideFile = new PeptideLibraryTreeNode(peptideLibrary.FilePath);
-
+                    // CONSIDER: if available, show the cache file (*.slc) under the .blib file
                     peptideLibrariesRoot.Nodes.Add(peptideLibraryNode);
-                    peptideLibraryNode.Nodes.Add(peptideFile);
                 }
             }
             else
@@ -237,8 +216,11 @@ namespace pwiz.Skyline.Controls
             backgroundProteomeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
             Root.Nodes.Add(backgroundProteomeNode);
 
-            // Hidden Files => ...
-            //     Will show / hide on demand
+            _auditLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_AuditLog)
+            {
+                ImageIndex = (int)ImageId.file
+            };
+            Root.Nodes.Add(_auditLogTreeNode);
 
             // Expand root's immediate children so FilesTree shows a few nodes but isn't overwhelming
             Root.Expand();
@@ -302,41 +284,23 @@ namespace pwiz.Skyline.Controls
         {
             var selectedNode = SelectedNode;
 
+            _nodeTip.HideTip();
+
             if (selectedNode.GetType() == typeof(SkylineRootTreeNode))
             {
-                _showHiddenFiles.Visible = true;
                 _openContainingFolder.Enabled = Root.FilePath != null;
             }
             else if (selectedNode.GetType() == typeof(ReplicateTreeNode))
             {
                 _openContainingFolder.Enabled = true;
-                _showHiddenFiles.Visible = false;
             }
             else if (selectedNode.GetType() == typeof(PeptideLibraryTreeNode))
             {
                 _openContainingFolder.Enabled = true;
-                _showHiddenFiles.Visible = false;
             }
             else
             {
                 _openContainingFolder.Enabled = false;
-                _showHiddenFiles.Visible = false;
-            }
-        }
-
-        // Context Menu => Show Hidden Files
-        private void showHiddenFilesMenuItem_CheckedChanged(object sender, EventArgs e)
-        {
-            if (_showHiddenFiles.Checked)
-            {
-                Nodes.Add(_hiddenFilesTreeNode);
-                _hiddenFilesTreeNode.EnsureVisible();
-                _hiddenFilesTreeNode.Expand();
-            }
-            else
-            {
-                Nodes.Remove(_hiddenFilesTreeNode);
-                ScrollToTop();
             }
         }
 
@@ -426,7 +390,7 @@ namespace pwiz.Skyline.Controls
 
             if (_chromFileInfo.RunStartTime != null)
             {
-                customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_AcquiredTime, _chromFileInfo.RunStartTime.ToString(), rt); // TODO: i18n
+                customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_AcquiredTime, _chromFileInfo.RunStartTime.ToString(), rt); // TODO: i18n date / time?
             }
 
             if (_chromFileInfo.InstrumentInfoList != null && _chromFileInfo.InstrumentInfoList.Count > 0)
@@ -444,7 +408,7 @@ namespace pwiz.Skyline.Controls
 
     public class PeptideLibraryTreeNode : TreeNodeMS, ITipProvider, IFilePathProvider
     {
-        public PeptideLibraryTreeNode(string filePath) : base(Path.GetFileName(filePath))
+        public PeptideLibraryTreeNode(string name, string filePath) : base(name)
         {
             FilePath = filePath;
 

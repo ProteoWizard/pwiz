@@ -196,15 +196,6 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Settings.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_Settings {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_Settings", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to C-Term:.
         /// </summary>
         public static string IonTypeSelector_CTermLabel {

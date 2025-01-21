@@ -232,9 +232,6 @@
   <data name="FilesTree_TreeNodeLabel_HiddenFiles" xml:space="preserve">
 	  <value>Hidden Files</value>
   </data>
-  <data name="FilesTree_TreeNodeLabel_Settings" xml:space="preserve">
-	  <value>Settings</value>
-  </data>
   <data name="FilesTree_TreeNodeLabel_AuditLog" xml:space="preserve">
 	  <value>Audit Log</value>
   </data>

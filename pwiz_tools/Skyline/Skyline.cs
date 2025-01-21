@@ -3151,16 +3151,13 @@ namespace pwiz.Skyline
 
         public bool FilesTreeFormIsVisible => _filesTreeForm is { Visible: true };
 
-        public void HideFilesTreeForm()
-        {
-            _filesTreeForm.Close();
-        }
-
-        private void DestroyFilesTreeForm()
+        public void DestroyFilesTreeForm()
         {
             if (_filesTreeForm != null)
             {
                 _filesTreeForm.FilesTree.NodeMouseDoubleClick -= FilesTree_TreeNodeMouseDoubleClick;
+                _filesTreeForm.Close();
+                _filesTreeForm = null;
             }
         }
 
