@@ -74,36 +74,48 @@ namespace pwiz.SkylineTestUtil.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowTextButtons {
-            get {
-                return ((bool)(this["ShowTextButtons"]));
-            }
-            set {
-                this["ShowTextButtons"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool ShowWebImage {
-            get {
-                return ((bool)(this["ShowWebImage"]));
-            }
-            set {
-                this["ShowWebImage"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ManualSizePreview {
             get {
                 return ((bool)(this["ManualSizePreview"]));
             }
             set {
                 this["ManualSizePreview"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int OldImageSource {
+            get {
+                return ((int)(this["OldImageSource"]));
+            }
+            set {
+                this["OldImageSource"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Red")]
+        public global::System.Drawing.Color ImageDiffColor {
+            get {
+                return ((global::System.Drawing.Color)(this["ImageDiffColor"]));
+            }
+            set {
+                this["ImageDiffColor"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("127")]
+        public int ImageDiffAlpha {
+            get {
+                return ((int)(this["ImageDiffAlpha"]));
+            }
+            set {
+                this["ImageDiffAlpha"] = value;
             }
         }
     }

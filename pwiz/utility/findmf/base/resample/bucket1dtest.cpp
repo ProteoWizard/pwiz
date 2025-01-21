@@ -23,7 +23,6 @@
 #include "pwiz/utility/findmf/base/resample/bin1d.hpp"
 
 #include <algorithm>
-#include <boost/timer.hpp>
 #include <boost/cstdint.hpp>
 
 #include "pwiz/utility/misc/unit.hpp"
