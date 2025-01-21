@@ -439,7 +439,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.AuditLogForm.DataGridView.AutoResizeColumn(reasonIndex);
                     SkylineWindow.AuditLogForm.DataGridView.AutoResizeColumn(reasonIndex - 1);
                 });
-                TakeCoverShot();
+                TakeCoverShot(floatingLogWindow);
             }
 
             var customizeDialog = ShowDialog<ViewEditor>(SkylineWindow.AuditLogForm.NavBar.CustomizeView);
