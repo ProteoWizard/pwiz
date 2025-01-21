@@ -1022,7 +1022,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         // In the end, couldn't understand this as a peptide nor as a small molecule - ignore. 
                         // Historical behavior is to be silent, posting a user message is better than nothing.
-                        Messages.WriteAsyncUserMessage(LibResources.NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___ignored, sequence, lineCount); 
+                        Messages.WriteAsyncUserMessage(LibResources.NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored, sequence, lineCount); 
                         continue; 
                     }
 

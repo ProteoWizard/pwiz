@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Model
 
         public static MoleculeAccessionNumbers Create(Dictionary<string, string> accessions)
         {
-            if (accessions==null || accessions.Count == 0)
+            if (accessions == null || accessions.Count == 0)
             {
                 return EMPTY;
             }
@@ -131,45 +131,40 @@ namespace pwiz.Skyline.Model
         // Look for labels buried in descriptions, e.g. InChi's /i section
         public Dictionary<string, int> FindLabels()
         {
-            Dictionary<string, int> result = null;
             var inchi = GetInChI();
-            if (!string.IsNullOrEmpty(inchi))
+            if (string.IsNullOrEmpty(inchi))
             {
-                // e.g. InChI=1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1D4 (replace 4 H with H')
-                // e.g. InChI=1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1C13,2C13,3C13,4C13 (replace C with C' at positions 1,2,3, and 4)
-                var parts = inchi.Split('/');
-                if (parts.Length > 4)
-                {
-                    var matches = REGEX_INCHI_ISOTOPES.Matches(parts[4]);
+                return null; // No InChI at all
+            }
 
-                    foreach (Match match in matches)
+            // e.g. InChI=1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1D4 (replace 4 H with H')
+            // e.g. InChI=1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1C13,2C13,3C13,4C13 (replace C with C' at positions 1,2,3, and 4)
+            var parts = inchi.Split('/');
+            if (parts.Length < 5)
+            {
+                return null; // No /i section
+            }
+
+            Dictionary<string, int> result = null;
+            var matches = REGEX_INCHI_ISOTOPES.Matches(parts[4]);
+
+            foreach (Match match in matches)
+            {
+                var isotope = match.Groups[1].Value;
+                var count = 1;
+                if (isotope.StartsWith(BioMassCalc.D) || isotope.StartsWith(BioMassCalc.T)) // e.g. "D4" in ".../i1D4" (replace 4 H with H') 
+                {
+                    if (!int.TryParse(isotope.Substring(1), out count)) // Get the count, if any e.g. 3 in "/i1T3"
                     {
-                        var isotope = match.Groups[1].Value;
-                        var count = 1;
-                        if (isotope.StartsWith(BioMassCalc.D) || isotope.StartsWith(BioMassCalc.T)) // e.g. "D4" in ".../i1D4" (replace 4 H with H') 
-                        {
-                            if (!int.TryParse(isotope.Substring(1), out count)) // Get the count, if any e.g. 3 in "/i1T3"
-                            {
-                                count = 1;
-                            }
-                            isotope = isotope.Substring(0, 1);
-                        }
-                        if (Adduct.DICT_ADDUCT_ISOTOPE_NICKNAMES.TryGetValue(isotope, out var skylineIsotope)) // e.g. "C13" => "C'"
-                        {
-                            if (result == null)
-                            {
-                                result = new Dictionary<string, int>() { { skylineIsotope, count } };
-                            }
-                            else if (!result.TryGetValue(skylineIsotope, out var existing))
-                            {
-                                result.Add(skylineIsotope, count);
-                            }
-                            else
-                            {
-                                result[skylineIsotope] = existing + count;
-                            }
-                        }
+                        count = 1;
                     }
+                    isotope = isotope.Substring(0, 1);
+                }
+                if (Adduct.DICT_ADDUCT_ISOTOPE_NICKNAMES.TryGetValue(isotope, out var skylineIsotope)) // e.g. "C13" => "C'"
+                {
+                    result ??= new Dictionary<string, int>();
+                    result.TryGetValue(skylineIsotope, out var existing);
+                    result[skylineIsotope] = existing + count;
                 }
             }
 

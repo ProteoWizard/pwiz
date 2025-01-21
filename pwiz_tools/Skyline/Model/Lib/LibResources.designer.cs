@@ -467,11 +467,12 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing details for {0} at line {1}, ignored.
+        ///   Looks up a localized string similar to Missing details for {0} at line {1}, this entry will be ignored.
         /// </summary>
-        public static string NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___ignored {
+        public static string NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored {
             get {
-                return ResourceManager.GetString("NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___ignored", resourceCulture);
+                return ResourceManager.GetString("NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_" +
+                        "be_ignored", resourceCulture);
             }
         }
         
