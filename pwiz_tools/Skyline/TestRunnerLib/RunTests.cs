@@ -54,6 +54,7 @@ namespace TestRunnerLib
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
         public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
+        public readonly int TimeoutMs;
 
         public TestInfo(Type testClass, MethodInfo testMethod, MethodInfo testInitializeMethod, MethodInfo testCleanupMethod)
         {
@@ -78,6 +79,8 @@ namespace TestRunnerLib
 
             var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
             SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
+
+            TimeoutMs = (RunTests.GetAttribute(testMethod, "TimeoutAttribute") as TimeoutAttribute)?.Timeout ?? int.MaxValue;
 
             var minidumpAttr = RunTests.GetAttribute(testMethod, "MinidumpLeakThresholdAttribute");
             MinidumpLeakThreshold = minidumpAttr != null
@@ -350,6 +353,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                TestContext.Properties["TestPass"] = pass.ToString();
                 if (IsParallelClient)
                 {
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
@@ -392,7 +396,30 @@ namespace TestRunnerLib
                         // to put this in.
                         //CrtDebugHeap.Checkpoint();
                     }
-                    test.TestMethod.Invoke(testObject, null);
+
+                    Exception testException = null;
+                    var testThread = new Thread(() =>
+                    {
+                        try
+                        {
+                            test.TestMethod.Invoke(testObject, null);
+                        }
+                        catch (Exception e)
+                        {
+                            testException = e;
+                        }
+                    });
+                    testThread.SetApartmentState(ApartmentState.STA);
+                    testThread.Start();
+                    if (!testThread.Join(test.TimeoutMs))
+                    {
+                        testThread.Abort();
+                        throw new TimeoutException("test did not finish before timeout (" + test.TimeoutMs + " ms)");
+                    }
+
+                    if (testException != null)
+                        throw testException;
+
                     if (CheckCrtLeaks > 0)
                     {
                         //crtLeakedBytes = CrtDebugHeap.DumpLeaks(true);
