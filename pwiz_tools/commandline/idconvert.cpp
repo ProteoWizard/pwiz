@@ -464,7 +464,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         }
         catch (exception& e)
         {
-            cerr << "Error writing analysis " << (i+1) << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
+            cerr << "Error writing analysis " << (i+1) << " in " << bfs::path(filename).filename() << ":\n" << e.what() << endl;
         }
     }
     cout << endl;

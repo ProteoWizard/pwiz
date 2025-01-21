@@ -23,7 +23,10 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -75,9 +78,7 @@ namespace pwiz.SkylineTestUtil
 
         private static Bitmap CleanupBorder(this Bitmap bmp, Color? color, Rectangle rect, int cornerRadius, Rectangle? excludeRect)
         {
-            var colorCounts = new Dictionary<Color, int>();
-            foreach (var point in RectPoints(rect))
-                AddPixel(point, bmp, colorCounts);
+            var colorCounts = GetColorCounts(bmp, rect);
 
             // If no color is specified, use the most common color in the border.
             // This is dependent on the screen background color. So, it should not
@@ -86,7 +87,8 @@ namespace pwiz.SkylineTestUtil
             var maxColorCount = colorCounts.Values.Max();
             var bestBorderColor = colorCounts.FirstOrDefault(kvp => kvp.Value == maxColorCount).Key;
             // All white border means it is actually a graph so don't draw anything on it
-            if (bestBorderColor.ToArgb() == Color.White.ToArgb())
+            // Only when the rectangle is the full area of the bitmap
+            if (bestBorderColor.ToArgb() == Color.White.ToArgb() && rect == new Rectangle(0, 0, bmp.Width, bmp.Height))
                 return bmp;
             // If there is supposed to be a corner curve but there is just one color, avoid
             // drawing a curved corner on top of the otherwise rectangular border.
@@ -100,14 +102,24 @@ namespace pwiz.SkylineTestUtil
                 bestBorderColor == INTERIOR_BORDER_COLOR)
             {
                 color = bestBorderColor;
+                if (cornerRadius != CORNER_TOOL_WINDOW_WINDOWS11)
+                    cornerRadius = 0;   // No arched corners on interior borders
             }
             return bmp.CleanupBorderInternal(color ?? bestBorderColor, rect, cornerRadius, excludeRect);
+        }
+
+        private static IDictionary<Color, int> GetColorCounts(Bitmap bmp, Rectangle rect)
+        {
+            var colorCounts = new Dictionary<Color, int>();
+            foreach (var point in RectPoints(rect))
+                AddPixel(point, bmp, colorCounts);
+            return colorCounts;
         }
 
         private static Bitmap CleanupBorderInternal(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
             Rectangle? excludeRect)
         {
-            return IsWindows11()
+            return IsWindows11() && cornerRadius != 0
                 ? bmp.CleanupBorder11(color, rect, cornerRadius, excludeRect)
                 : bmp.CleanupBorder10(color, rect, excludeRect);
         }
@@ -133,7 +145,7 @@ namespace pwiz.SkylineTestUtil
             using var g = Graphics.FromImage(result);
 
             using var backgroundBrush = new SolidBrush(Color.White);
-            g.FillRectangle(backgroundBrush, 0, 0, result.Width, result.Height);
+            g.FillRectangle(backgroundBrush, rect);
             using var pathClippingOuter = new GraphicsPath();
             AddRoundedRectangle(pathClippingOuter, rect, cornerRadius);
             using var controlBrush = new SolidBrush(SystemColors.Control);
@@ -148,6 +160,7 @@ namespace pwiz.SkylineTestUtil
             rect.Height--;
             AddRoundedRectangle(pathDrawing, rect, cornerRadius);
             using var pen = new Pen(color);
+            ExcludeClip(g, excludeRect);
             g.DrawPath(pen, pathDrawing);
             rect.Width++;
             rect.Height++;
@@ -161,7 +174,13 @@ namespace pwiz.SkylineTestUtil
             g.SmoothingMode = SmoothingMode.None;
             g.SetClip(pathClipping);
             ExcludeClip(g, excludeRect);
-            g.DrawImage(bmp, new Point(0, 0));
+            g.DrawImage(bmp, rect, rect, GraphicsUnit.Pixel);
+            if (excludeRect.HasValue)
+            {
+                // If a rectangle was excluded from the border drawing, it needs to be copied now.
+                g.ResetClip();
+                g.DrawImage(bmp, excludeRect.Value, excludeRect.Value, GraphicsUnit.Pixel);
+            }
 
             return result;
         }
@@ -476,6 +495,83 @@ namespace pwiz.SkylineTestUtil
         {
             // compute top-left corner of data grid's cells, 4px offset puts shapes in the correct place
             return documentGridForm.NavBar.Height + documentGridForm.DataGridView.ColumnHeadersHeight - 4;
+        }
+
+        /// <summary>
+        /// Draws the state of a ProgressBar on the ProgressBar to cover up
+        /// any animation that Windows may have drawn on the completed progress
+        /// </summary>
+        public static Bitmap FillProgressBar(this Bitmap bmp, ProgressBar progressBar)
+        {
+            var bitmapForm = FormEx.GetParentForm(progressBar);
+            var formRect = ScreenshotManager.GetFramedWindowBounds(bitmapForm);
+            var progressControlRect = progressBar.RectangleToScreen(progressBar.ClientRectangle);
+            progressControlRect.Offset(-formRect.Left, -formRect.Top);  // Into bitmap coordinates
+            var progressRect = progressControlRect; // Copy values for percent complete bar
+            progressRect.Inflate(-1, -1);   // Exclude the border
+
+            // Do the necessary drawing
+            return bmp.RenderAsControl(progressBar, g =>
+            {
+                using var brushControl = new SolidBrush(Color.FromArgb(230, 230, 230)); // Slightly darker than Control
+                g.FillRectangle(brushControl, progressRect);
+
+                progressRect.Width = (int)Math.Round(progressRect.Width * progressBar.Value / 100.0);
+                using var brush = new SolidBrush(Color.FromArgb(6, 176, 37));   // The color that gets used
+                g.FillRectangle(brush, progressRect);
+
+                if (progressBar is CustomTextProgressBar customProgressBar)
+                {
+                    customProgressBar.DrawText(g, progressControlRect);
+                }
+
+                using var pen = new Pen(Color.FromArgb(188, 188, 188));
+                progressControlRect.Width -= 1; // Pens draw to the right
+                progressControlRect.Height -= 1; // Pens draw below
+                g.DrawRectangle(pen, progressControlRect);
+            });
+        }
+
+        /// <summary>
+        /// Creates a MemoryDC based on a control and renders with it using the
+        /// rendering function argument.
+        /// </summary>
+        /// <param name="bmp">The Bitmap to draw on</param>
+        /// <param name="control">The control to match as closely as possible</param>
+        /// <param name="render">The function that does the actual drawing</param>
+        private static Bitmap RenderAsControl(this Bitmap bmp, Control control, Action<Graphics> render)
+        {
+            var hdc = User32.GetDC(control.Handle);
+            try
+            {
+                var memDc = Gdi32.CreateCompatibleDC(hdc);
+                try
+                {
+                    var hBmp = bmp.GetHbitmap();
+                    var oldBmp = Gdi32.SelectObject(memDc, hBmp);
+
+                    using (var g = Graphics.FromHdc(memDc))
+                    {
+                        render(g);
+                    }
+
+                    Gdi32.SelectObject(memDc, oldBmp);
+                    
+                    var result = Image.FromHbitmap(hBmp);
+                    
+                    Gdi32.DeleteObject(hBmp);
+
+                    return result;
+                }
+                finally
+                {
+                    Gdi32.DeleteDC(memDc);
+                }
+            }
+            finally
+            {
+                User32.ReleaseDC(control.Handle, hdc);
+            }
         }
     }
 }
