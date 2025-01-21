@@ -226,6 +226,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             tabPage.Controls.Add(pageControl);
         }
 
+        private UserControl GetPageControl(TabPage tabPage)
+        {
+            // Assume each tabPage only has a single UserControl; if that changes this function will need to be updated
+            return tabPage.Controls.OfType<UserControl>().SingleOrDefault();
+        }
+
         public SrmDocument Document
         {
             get
@@ -998,7 +1004,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             btnNext.Enabled = false;
             btnCancel.Enabled = false;
             btnBack.Enabled = false;
-            ControlBox = false;
 
             AbstractDdaConverter.MsdataFileFormat requiredFormat =
                 IsFeatureDetectionWorkflow
@@ -1085,7 +1090,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
-            ControlBox = true;
             btnNext.Enabled = success;
         }
 
@@ -1488,8 +1492,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             DialogResult = result;
         }
 
+        private bool CanWizardClose()
+        {
+            var wizardPageControl = GetPageControl(wizardPagesImportPeptideSearch.SelectedTab) as WizardPageControl;
+            return wizardPageControl == null || wizardPageControl.CanWizardClose();
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Ask current WizardPageControl if wizard is in a good state to close
+            if (!CanWizardClose())
+            {
+                e.Cancel = true;
+                return;
+            }
+
             // Close file handles to the peptide search library
             ImportPeptideSearch.ClosePeptideSearchLibraryStreams(Document);
 

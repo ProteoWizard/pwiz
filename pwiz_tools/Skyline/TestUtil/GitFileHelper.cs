@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -42,6 +42,19 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>
+        /// Tells if a path has uncommitted changes with respect to the Git HEAD.
+        /// </summary>
+        /// <param name="path">The fully qualified path to a file or directory.</param>
+        /// <returns>True if the path has uncommitted changes, otherwise false.</returns>
+        public static bool IsModified(string path)
+        {
+            var output = RunGitCommand(GetPathInfo(path), "status --porcelain \"{RelativePath}\"");
+
+            // If there is any output the path has additions, deletions, or modifications
+            return !string.IsNullOrWhiteSpace(output);
+        }
+        
+        /// <summary>
         /// Gets a list of changed file paths under a specific directory.
         /// </summary>
         /// <param name="directoryPath">The fully qualified directory path.</param>
@@ -53,8 +66,12 @@ namespace pwiz.SkylineTestUtil
             using var reader = new StringReader(output);
             while (reader.ReadLine() is { } line)
             {
+                // For modified have seen " M " and "M  "
                 // 'git status --porcelain' format: XY path/to/file
-                var filePath = line.Substring(3).Replace('/', Path.DirectorySeparatorChar);
+                line = line.Trim();
+                if (!line.StartsWith("M"))
+                    continue;
+                var filePath = line.Substring(1).Trim().Replace('/', Path.DirectorySeparatorChar);
                 yield return Path.Combine(GetPathInfo(directoryPath).Root, filePath);
             }
         }

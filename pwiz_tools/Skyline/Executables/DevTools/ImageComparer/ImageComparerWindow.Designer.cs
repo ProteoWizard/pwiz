@@ -52,6 +52,7 @@
             this.toolStripAutoSize = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.toolStripGotoWeb = new System.Windows.Forms.ToolStripButton();
+            this.toolStripPickColorButton = new ImageComparer.AlphaColorPickerButton();
             ((System.ComponentModel.ISupportInitialize)(this.oldScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.newScreenshotPictureBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.previewSplitContainer)).BeginInit();
@@ -214,6 +215,7 @@
             this.toolStripRevert,
             this.toolStripFileList,
             this.toolStripAutoSize,
+            this.toolStripPickColorButton,
             this.toolStripSeparator3,
             this.toolStripGotoWeb});
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
@@ -306,6 +308,15 @@
             this.toolStripGotoWeb.ToolTipText = "Goto Web (Ctrl-G)";
             this.toolStripGotoWeb.Click += new System.EventHandler(this.toolStripGotoWeb_Click);
             // 
+            // toolStripPickColorButton
+            // 
+            this.toolStripPickColorButton.BackColor = System.Drawing.SystemColors.Control;
+            this.toolStripPickColorButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripPickColorButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripPickColorButton.Name = "toolStripPickColorButton";
+            this.toolStripPickColorButton.Size = new System.Drawing.Size(29, 22);
+            this.toolStripPickColorButton.ColorChanged += new System.EventHandler(this.toolStripPickColorButton_ColorChanged);
+            // 
             // ImageComparerWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -362,5 +373,6 @@
         private System.Windows.Forms.PictureBox pictureMatching;
         private System.Windows.Forms.ToolStripComboBox toolStripFileList;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private AlphaColorPickerButton toolStripPickColorButton;
     }
 }

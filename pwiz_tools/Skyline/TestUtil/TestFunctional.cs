@@ -63,6 +63,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
@@ -290,15 +291,13 @@ namespace pwiz.SkylineTestUtil
 
         private static void EnsureScreenshotIcon(Form dlg)
         {
-            // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))
             {
-                if (dlg.FormBorderStyle != FormBorderStyle.FixedDialog ||
-                    AreIconsEqual(dlg.Icon, Resources.Skyline))    // Normally a fixed dialog will not have the Skyline icon
-                {
-                    if (!AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
-                        RunUI(() => dlg.Icon = SkylineWindow.Icon);
-                }
+                // If the form has the current Skyline resource Icon, but it is not the same
+                // as the Skyline window icon, use the Skyline window icon to avoid recording
+                // screenshots of the Skyline-daily icon
+                if (AreIconsEqual(dlg.Icon, Resources.Skyline) && !AreIconsEqual(dlg.Icon, SkylineWindow.Icon))
+                    RunUI(() => dlg.Icon = SkylineWindow.Icon);
             }
         }
 
@@ -1270,7 +1269,7 @@ namespace pwiz.SkylineTestUtil
                     MessageBoxIcon.Information);
         }
 
-        private static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
+        protected static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
 
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
@@ -1308,6 +1307,9 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static bool IsTranslationRequired => (IsAutoScreenShotMode || IsCoverShotMode) &&
+                                                    !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
+
         private static bool _isCoverShotMode;
 
         public static bool IsCoverShotMode
@@ -1325,18 +1327,17 @@ namespace pwiz.SkylineTestUtil
 
         public string CoverShotName { get; set; }
 
-        private string GetCoverShotPath(string folderPath = null, string suffix = null)
+        private string GetCoverShotPath()
         {
-            if (CoverShotName == null)
-            {
-                return null;
-            }
+            Assume.IsNotNull(CoverShotName);
+            return Path.Combine(TutorialPath, "cover.png");
+        }
 
-            if (folderPath == null)
-                folderPath = Path.Combine(PathEx.GetDownloadsPath(), "covershots");
-            if (suffix == null)
-                suffix = string.Format("-{0}_{1}", Install.MajorVersion, Install.MinorVersion);
-            string cultureSuffix = CultureInfo.CurrentCulture.Name;
+        private string GetCoverShotPath([NotNull] string folderPath, [NotNull] string suffix)
+        {
+            Assume.IsNotNull(CoverShotName);
+
+            string cultureSuffix = GetFolderNameForLanguage(CultureInfo.CurrentCulture);
             if (Equals(cultureSuffix, "en"))
                 cultureSuffix = string.Empty;
             else
@@ -1344,7 +1345,7 @@ namespace pwiz.SkylineTestUtil
             return Path.Combine(folderPath, CoverShotName + suffix + cultureSuffix + ".png");
         }
 
-        public int PauseStartingPage { get; set; }
+        public int PauseStartingScreenshot { get; set; }
 
         public static bool IsPauseForAuditLog { get; set; }
 
@@ -1390,7 +1391,7 @@ namespace pwiz.SkylineTestUtil
             get { return IsTutorial && RecordAuditLogs; }
         }
 
-        public static bool IsShowMatchingTutorialPages { get; set; }
+        public bool IsTestAuditLogPlacement => false;
 
         public static bool IsDemoMode { get { return Program.DemoMode; } }
 
@@ -1521,9 +1522,6 @@ namespace pwiz.SkylineTestUtil
             return ClipBitmap(documentGridBmp, cropRect);
         }
 
-        [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
         protected Bitmap ClipTargets(Bitmap targetsBmp, int? countTargets = null, bool fromBottom = false, bool includeNewItem = false)
         {
             var sequenceTree = SkylineWindow.SequenceTree;
@@ -1533,13 +1531,10 @@ namespace pwiz.SkylineTestUtil
             sequenceTreeRect.X += 1;
             sequenceTreeRect.Y += 1;
 
-            const int GWL_STYLE = -16;
-            const int WS_VSCROLL = 0x00200000;
-            const int WS_HSCROLL = 0x00100000;
-            int style = GetWindowLong(sequenceTree.Handle, GWL_STYLE);
-            if ((style & WS_VSCROLL) != 0)
+            int style = User32Test.GetWindowLong(sequenceTree.Handle, User32Test.GWL_STYLE);
+            if ((style & User32Test.WS_VSCROLL) != 0)
                 sequenceTreeRect.Width -= SystemInformation.VerticalScrollBarWidth;
-            if ((style & WS_HSCROLL) != 0)
+            if ((style & User32Test.WS_HSCROLL) != 0)
                 sequenceTreeRect.Height -= SystemInformation.HorizontalScrollBarHeight;
 
             if (countTargets != null)
@@ -1704,17 +1699,17 @@ namespace pwiz.SkylineTestUtil
                 .FirstOrDefault(graphSummary => graphSummary.TryGetGraphPane(out TGraphPane _));
         }
 
-        public void PauseForScreenShot(string description = null, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForScreenShot(string description = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             PauseForScreenShotInternal(description, null, null, timeout, processShot);
         }
 
-        public void PauseForScreenShot(Control screenshotForm, string description = null, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForScreenShot(Control screenshotForm, string description = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             PauseForScreenShotInternal(description, null, screenshotForm, timeout, processShot);
         }
 
-        public void PauseForScreenShot<TView>(string description, int? pageNum = null, int ? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForScreenShot<TView>(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
             where TView : IFormView
         {
             PauseForScreenShotInternal(description, typeof(TView), null, timeout, processShot);
@@ -1726,19 +1721,19 @@ namespace pwiz.SkylineTestUtil
                 PauseForScreenShot<SequenceTreeForm>(description);
             else
             {
-                PauseForScreenShot<SequenceTreeForm>(description, null, null, bmp =>
+                PauseForScreenShot<SequenceTreeForm>(description, null, bmp =>
                     ClipTargets(bmp, countTargets, fromBottom, includeNewItem));
             }
         }
 
-        public void PauseForGraphScreenShot<TForm>(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForGraphScreenShot<TForm>(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
             where TForm : Form
         {
             var form = WaitForOpenForm<TForm>();
-            PauseForGraphScreenShot(description, form, pageNum, timeout, processShot);
+            PauseForGraphScreenShot(description, form, timeout, processShot);
         }
 
-        public void PauseForGraphScreenShot(string description, Control graphContainer, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForGraphScreenShot(string description, Control graphContainer, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             if (!IsPauseForScreenShots)
                 return;
@@ -1749,12 +1744,12 @@ namespace pwiz.SkylineTestUtil
             PauseForScreenShotInternal(description, null, zedGraph, timeout, processShot);
         }
 
-        public void PauseForPeakAreaGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForPeakAreaGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GraphPeakArea, pageNum, timeout, processShot);
+            PauseForGraphScreenShot(description, SkylineWindow.GraphPeakArea, timeout, processShot);
         }
 
-        public void PauseForRetentionTimeGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForRetentionTimeGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             if (!IsPauseForScreenShots)
                 return;
@@ -1762,29 +1757,29 @@ namespace pwiz.SkylineTestUtil
             var graphRt = SkylineWindow.GraphRetentionTime;
             if (graphRt.TryGetGraphPane<RTLinearRegressionGraphPane>(out _)) 
                 WaitForRegression();
-            PauseForGraphScreenShot(description, graphRt, pageNum, timeout, processShot);
+            PauseForGraphScreenShot(description, graphRt, timeout, processShot);
         }
 
-        public void PauseForMassErrorGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForMassErrorGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, pageNum, timeout, processShot);
+            PauseForGraphScreenShot(description, SkylineWindow.GraphMassError, timeout, processShot);
         }
 
-        public void PauseForFullScanGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForFullScanGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GraphFullScan, pageNum, timeout, processShot);
+            PauseForGraphScreenShot(description, SkylineWindow.GraphFullScan, timeout, processShot);
         }
 
-        public void PauseForLibrarySpectrumGraphScreenShot(string description, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForLibrarySpectrumGraphScreenShot(string description, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
-            PauseForGraphScreenShot(description, SkylineWindow.GraphSpectrum, pageNum, timeout, processShot);
+            PauseForGraphScreenShot(description, SkylineWindow.GraphSpectrum, timeout, processShot);
         }
 
-        public void PauseForChromGraphScreenShot(string description, string replicateName = null, int? pageNum = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
+        public void PauseForChromGraphScreenShot(string description, string replicateName = null, int? timeout = null, Func<Bitmap, Bitmap> processShot = null)
         {
             if (replicateName == null)
                 RunUI(() => replicateName = SkylineWindow.SelectedGraphChromName);
-            PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), pageNum, timeout, processShot);
+            PauseForGraphScreenShot(description, SkylineWindow.GetGraphChrom(replicateName), timeout, processShot);
         }
 
         protected ZedGraphControl FindZedGraph(Control graphContainer)
@@ -1836,7 +1831,7 @@ namespace pwiz.SkylineTestUtil
                 Thread.Sleep(3 * 1000);
             else if (Program.PauseSeconds > 0)
                 Thread.Sleep(Program.PauseSeconds * 1000);
-            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingPage, Program.PauseStartingPage) <= ScreenshotCounter)
+            else if ((IsPauseForScreenShots || IsAutoScreenShotMode) && Math.Max(PauseStartingScreenshot, Program.PauseStartingScreenshot) <= ScreenshotCounter)
             {
                 WaitForGraphs();    // Screenshots always need graphs to be fully updated
 
@@ -1863,9 +1858,8 @@ namespace pwiz.SkylineTestUtil
                 }
                 else
                 {
-                    bool showMatchingPages = IsShowMatchingTutorialPages || Program.ShowMatchingPages;
                     _pauseAndContinueForm ??= new PauseAndContinueForm(_shotManager);
-                    _pauseAndContinueForm.Show(description, ScreenshotCounter, showMatchingPages, timeout, screenshotForm, fullScreen, processShot);
+                    _pauseAndContinueForm.Show(description, ScreenshotCounter, timeout, screenshotForm, fullScreen, processShot);
                 }
             }
             else
@@ -1879,19 +1873,22 @@ namespace pwiz.SkylineTestUtil
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
         {
             // Override to modify the cover shot before it is saved or put on the clipboard
-            return bmp;
+            return bmp.CleanupBorder();
         }
 
-        public void TakeCoverShot()
+        public void TakeCoverShot(Control activateControl = null)
         {
             Thread.Sleep(1000); // Give windows time to repaint
             RunUI(() =>
             {
+                AssertEx.AreEqual(1.0, (new Size(1, 1) * ScreenshotManager.GetScalingFactor()).Width,
+                    "Cover shots must be taken at a scale factor of 100% (96DPI)");
                 var screenRect = Screen.FromControl(SkylineWindow).Bounds;
-                AssertEx.IsTrue(screenRect.Width == 1920 && screenRect.Height == 1080,
-                    "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
+                AssertEx.IsTrue(screenRect.Width >= 1920 && screenRect.Height >= 1080,
+                    "Cover shots must be taken at screen resolution of at least 1920x1080");
             });
             var coverSavePath = GetCoverShotPath();
+            ScreenshotManager.ActivateScreenshotForm(activateControl ?? SkylineWindow);
             _shotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
             if (coverSavePath != null)
@@ -1967,6 +1964,12 @@ namespace pwiz.SkylineTestUtil
             if (IsPerfTest && !RunPerfTests)
             {
                 return; // Don't want to run this lengthy test right now
+            }
+            if (IsTestAuditLogPlacement)
+            {
+                // Just testing if audit logs are where they are expected to be
+                AssertAuditLogCorrectlyPlaced();
+                return;
             }
 
             RunFunctionalTestAttempt(defaultUiMode);
@@ -2179,16 +2182,14 @@ namespace pwiz.SkylineTestUtil
                 return;
 
             // Ensure expected tutorial log file exists unless recording
-            var projectFile = GetLogFilePath(AuditLogTutorialDir);
-            bool existsInProject = File.Exists(projectFile);
             if (!IsRecordAuditLogForTutorials)
             {
-                Assert.IsTrue(existsInProject,
-                    "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
-                    TestContext.TestName, projectFile);
+                AssertProjectLogFileExists();
             }
 
             // Compare file contents
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            bool existsInProject = File.Exists(projectFile);
             var expected = existsInProject ? ReadTextWithNormalizedLineEndings(projectFile) : string.Empty;
             var actual = ReadTextWithNormalizedLineEndings(recordedFile);
             if (AreEquivalentAuditLogs(expected, actual))
@@ -2236,6 +2237,28 @@ namespace pwiz.SkylineTestUtil
                 else
                     Console.WriteLine(@"Successfully recorded changed tutorial audit log");
             }
+        }
+
+        private void AssertAuditLogCorrectlyPlaced()
+        {
+            if (AuditLogCompareLogs)
+            {
+                AssertProjectLogFileExists();
+
+                Console.Write(@" found audit log ");
+            }
+            else
+            {
+                Console.Write(@" no audit log comparison ");
+            }
+        }
+
+        private void AssertProjectLogFileExists()
+        {
+            var projectFile = GetLogFilePath(AuditLogTutorialDir);
+            Assert.IsTrue(File.Exists(projectFile),
+                "Log file for test \"{0}\" does not exist at \"{1}\", set IsRecordAuditLogForTutorials=true to create it",
+                TestContext.TestName, projectFile);
         }
 
         private static bool AreEquivalentAuditLogs(string expected, string actual)
@@ -2603,6 +2626,13 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(WAIT_TIME, () => true, null, true, false);
         }
 
+        /// <summary>
+        /// Restores the SkylineWindow layout by loading a saved .view file named p{pageNum}.view.
+        /// The page numbers were originally associated with tutorial Word documents and PDFs,
+        /// but could be any numbers. Ideally they should still increase from start to finish
+        /// of the tutorial.
+        /// </summary>
+        /// <param name="pageNum">A number originally associated with a page in a Word document and PDF</param>
         public void RestoreViewOnScreen(int pageNum)
         {
             RestoreViewNameOnScreen(string.Format(@"p{0:0#}", pageNum));
