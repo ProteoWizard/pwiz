@@ -4,6 +4,7 @@ using System.Linq;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
@@ -13,9 +14,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public static readonly RtValueType PSM_TIMES = new PsmTimes();
 
 
-        public static readonly ImmutableList<RtValueType> All = ImmutableList.ValueOf(new []{PEAK_APEXES, PSM_TIMES});
-
-        public static IEnumerable<RtValueType> ForDocument(SrmDocument document)
+        public static IEnumerable<RtValueType> GetChoices(SrmDocument document)
         {
             return Properties.Settings.Default.RTScoreCalculatorList.Select(calc => new Calculator(calc))
                 .Prepend(PSM_TIMES)
@@ -27,6 +26,32 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             return true;
         }
+
+        public static RtValueType ForName(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            foreach (var rtValueType in new[] { PEAK_APEXES, PSM_TIMES })
+            {
+                if (rtValueType.Name == name)
+                {
+                    return rtValueType;
+                }
+            }
+
+            var calc = Properties.Settings.Default.RTScoreCalculatorList[name];
+            if (calc != null)
+            {
+                return new Calculator(calc);
+            }
+
+            return null;
+        }
+
+        public abstract string Name { get; }
 
         public Dictionary<Target, double> GetRetentionTimes(SrmDocument document,
             ReplicateFileId replicateFileId)
@@ -80,6 +105,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public override string ToString()
             {
                 return "Peak Apexes";
+            }
+
+            public override string Name
+            {
+                get { return "peak_apexes"; }
             }
         }
 
@@ -135,6 +165,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
                 return false;
             }
+
+            public override string Name
+            {
+                get { return "psm_times"; }
+            }
         }
 
         public class Calculator : RtValueType
@@ -182,6 +217,11 @@ namespace pwiz.Skyline.Model.Results.Imputation
             public override int GetHashCode()
             {
                 return RetentionScoreCalculator.Name.GetHashCode();
+            }
+
+            public override string Name
+            {
+                get { return RetentionScoreCalculator.Name; }
             }
         }
     }

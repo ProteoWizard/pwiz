@@ -3407,9 +3407,8 @@ namespace pwiz.Skyline
             chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
 
             int i = 0;
-            foreach (var calculator in Settings.Default.RTScoreCalculatorList)
+            foreach (var calculatorName in Settings.Default.RTScoreCalculatorList.Select(calc=>calc.Name).Concat(RTLinearRegressionGraphPane.ExtraCalculatorNames))
             {
-                string calculatorName = calculator.Name;
                 var menuItem = new ToolStripMenuItem(calculatorName, null, delegate { ChooseCalculator(calculatorName);})
                 {
                     Checked = Equals(calculatorName, Settings.Default.RTCalculatorName)

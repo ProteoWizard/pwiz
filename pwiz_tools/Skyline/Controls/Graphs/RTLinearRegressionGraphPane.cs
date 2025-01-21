@@ -24,6 +24,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -31,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -730,7 +732,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 var origTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 var targetTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
 
-                var reportingStep = document.PeptideCount / (90 / REPORTING_STEP);
                 foreach (var nodePeptide in document.Molecules)
                 {
                     ProgressMonitor.CheckCanceled(token);
@@ -824,9 +825,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    var calc = !string.IsNullOrEmpty(_calculatorName)
-                        ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
-                        : null;
+                    var calc = GetCalculator(token, _calculatorName, document);
                     if (calc == null)
                     {
                         // Initialize all calculators
@@ -977,6 +976,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     return true;
                 if (_statisticsAll == null)
                     return false;
+                if (_calculator is ConsensusScoreCalculator)
+                {
+                    return true;
+                }
                 return RetentionTimeRegression.IsAboveThreshold(_statisticsAll.R, _threshold);
             }
 
@@ -1466,6 +1469,35 @@ namespace pwiz.Skyline.Controls.Graphs
         public Rectangle RectToScreen(Rectangle r)
         {
             return GraphSummary.RectangleToScreen(r);
+        }
+
+        public static ImmutableList<string> ExtraCalculatorNames =
+            ImmutableList.ValueOf(new[] { "PeakApexConsensus", "PsmTimesConsensus" });
+
+        private static RetentionScoreCalculatorSpec GetCalculator(CancellationToken cancellationToken, string name, SrmDocument document)
+        {
+            if (name == null)
+            {
+                return null;
+            }
+            RtValueType rtValueType = null;
+            if (name == "PeakApexConsensus")
+            {
+                rtValueType = RtValueType.PEAK_APEXES;
+            }
+            else if (name == "PsmTimesConsensus")
+            {
+                rtValueType = RtValueType.PSM_TIMES;
+            }
+
+            if (rtValueType != null)
+            {
+                var alignmentParams = new AlignmentParameters(document, rtValueType, AlignmentType.CONSENSUS);
+                var alignmentResults = alignmentParams.GetResults(new ProductionMonitor(cancellationToken, i => { }));
+                return new ConsensusScoreCalculator(name, alignmentResults);
+            }
+
+            return Settings.Default.GetCalculatorByName(name);
         }
     }
 

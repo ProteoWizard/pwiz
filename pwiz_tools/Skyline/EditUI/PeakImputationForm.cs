@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using EnvDTE;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -21,6 +22,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Imputation;
@@ -37,9 +39,9 @@ namespace pwiz.Skyline.EditUI
     {
         private List<Row> _rows;
         private BindingList<Row> _rowsBindingList;
-        private Receiver<PeakImputationData.Parameters, PeakImputationData> _receiver;
+        private Receiver<PeakImputationRows.Parameters, PeakImputationRows> _receiver;
         private SkylineDataSchema _dataSchema;
-        private PeakImputationData _data;
+        private PeakImputationRows _data;
         private SequenceTree _sequenceTree;
 
         public PeakImputationForm(SkylineWindow skylineWindow)
@@ -55,19 +57,10 @@ namespace pwiz.Skyline.EditUI
                 rowSource, GetDefaultViewSpecs().Select(viewSpec=>new ViewInfo(_dataSchema, typeof(Row), viewSpec)));
             var viewContext = new SkylineViewContext(_dataSchema, new[] { rowSourceInfo });
             BindingListSource.SetViewContext(viewContext);
-            _receiver = PeakImputationData.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
+            _receiver = PeakImputationRows.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
             _receiver.ProgressChange += ReceiverOnProgressChange;
-            var meanStandardDeviation = PeakImputationData.GetMeanRtStandardDeviation(SkylineWindow.Document, null);
-            if (meanStandardDeviation.HasValue)
-            {
-                string format = meanStandardDeviation > 0.05 ? Formats.RETENTION_TIME : Formats.RoundTrip;
-                tbxRtDeviationCutoff.Text = meanStandardDeviation.Value.ToString(format);
-                tbxUnalignedDocRtStdDev.Text = meanStandardDeviation.Value.ToString(Formats.RETENTION_TIME);
-            }
-
             comboRegressionMethod.Items.Add(AlignmentType.CONSENSUS);
             comboRegressionMethod.Items.Add(AlignmentType.KDE);
-            comboRegressionMethod.SelectedIndex = 0;
         }
 
         private void ReceiverOnProgressChange()
@@ -102,21 +95,22 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
 
-                var document = _data.Params.Document;
+                var document = _data.PeakImputationData.Params.Document;
+                var alignments = _data.PeakImputationData.Alignments;
                 tbxUnalignedDocRtStdDev.Text =
                     PeakImputationData.GetMeanRtStandardDeviation(document, null)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
                 tbxAlignedDocRtStdDev.Text =
-                    PeakImputationData.GetMeanRtStandardDeviation(document, _data.Alignments)
+                    PeakImputationData.GetMeanRtStandardDeviation(document, alignments)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
                 tbxAvgPeakWidthCV.Text = PeakImputationData.GetAveragePeakWidthCV(document)?.ToString(Formats.CV) ??
                                          string.Empty;
 
                 progressBar1.Visible = false;
-                if (_data.Alignments != null && cbxAlignAllGraphs.Checked)
+                if (alignments != null && cbxAlignAllGraphs.Checked)
                 {
                     SkylineWindow.RetentionTimeTransformOp =
-                        _data.Alignments.ChangeName(comboRtCalculator.SelectedItem.ToString());
+                        alignments.ChangeName(comboRtCalculator.SelectedItem.ToString());
                 }
                 else
                 {
@@ -215,24 +209,20 @@ namespace pwiz.Skyline.EditUI
         {
             SetSequenceTree(SkylineWindow.SequenceTree);
             var document = SkylineWindow.DocumentUI;
-            var alignmentOptions = RtValueType.ForDocument(document).ToList();
-            ComboHelper.ReplaceItems(comboRtCalculator, alignmentOptions.Cast<object>().Prepend(string.Empty), 1);
+            var imputationSettings = document.Settings.PeptideSettings.Imputation;
+            var alignmentOptions = RtValueType.GetChoices(document).ToList();
+            ComboHelper.ReplaceItems(comboRtCalculator, alignmentOptions.Cast<object>().Prepend(string.Empty));
+            comboRtCalculator.SelectedItem =
+                alignmentOptions.FirstOrDefault(option => option.Name == imputationSettings.RtCalcName);
+            comboRegressionMethod.SelectedItem =
+                AlignmentType.ForName(imputationSettings.RegressionMethodName) ?? AlignmentType.KDE;
+            tbxMaxPeakWidthVariation.Text = imputationSettings.MaxPeakWidthVariation?.ToString() ?? string.Empty;
+            tbxRtDeviationCutoff.Text = imputationSettings.MaxRtShift?.ToString() ?? string.Empty;
+
             var scoringModel = GetScoringModelToUse(document);
             tbxScoringModel.Text = scoringModel.Name;
-            var alignmentType = (comboRegressionMethod.SelectedItem as AlignmentType) ?? AlignmentType.CONSENSUS;
-
-            var rtValueType = comboRtCalculator.SelectedItem as RtValueType;
-            if (rtValueType != null)
-            {
-                rtValueType = alignmentOptions.FirstOrDefault(opt => rtValueType.Equals(opt));
-            }
-            var parameters = new PeakImputationData.Parameters(document)
-                .ChangeRtValueType(rtValueType)
-                .ChangeAlignmentType(alignmentType)
-                .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked)
-                .ChangeScoringModel(scoringModel)
-                .ChangeAllowableRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null))
-                .ChangeMaxPeakWidthVariation(GetDoubleValue(tbxMaxPeakWidthVariation, 0, null) / 100);
+            var parameters = new PeakImputationRows.Parameters(document)
+                .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked);
             if (!DocumentWide)
             {
                 var peptideIdentityPaths =
@@ -424,7 +414,37 @@ namespace pwiz.Skyline.EditUI
 
         private void SettingsControlChanged(object sender, EventArgs e)
         {
-            OnDocumentChanged();
+            if (_inChange)
+            {
+                return;
+            }
+            var newImputationSettings = GetImputationSettings();
+            var document = SkylineWindow.DocumentUI;
+            if (Equals(newImputationSettings, document.Settings.PeptideSettings.Imputation))
+            {
+                OnDocumentChanged();
+            }
+            else
+            {
+                SkylineWindow.ModifyDocument("Change imputation settings",
+                    doc => doc.ChangeSettings(
+                        doc.Settings.ChangePeptideSettings(
+                            doc.Settings.PeptideSettings.ChangeImputation(newImputationSettings))),
+                    AuditLogEntry.SettingsLogFunction);
+            }
+        }
+
+        private ImputationSettings GetImputationSettings()
+        {
+            var imputationSettings = ImputationSettings.DEFAULT.ChangeRtCalcName((comboRtCalculator.SelectedItem as RtValueType)?.Name)
+                .ChangeMaxRtShift(GetDoubleValue(tbxRtDeviationCutoff, 0, null))
+                .ChangeMaxPeakWidthVariation(GetDoubleValue(tbxMaxPeakWidthVariation, 0, null) / 100);
+            if (imputationSettings.RtCalcName != null)
+            {
+                imputationSettings = imputationSettings.ChangeRegressionMethodName((comboRegressionMethod.SelectedItem as AlignmentType)?.Name ?? AlignmentType.KDE.Name);
+            }
+
+            return imputationSettings;
         }
 
         private double? GetDoubleValue(TextBox textBox, double? min, double? max)
@@ -549,7 +569,7 @@ namespace pwiz.Skyline.EditUI
                             {
                                 continue;
                             }
-                            var peakImputer = new PeakImputer(newDoc, _data.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
+                            var peakImputer = new PeakImputer(newDoc, _data.PeakImputationData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
                                 rejectedPeak.ReplicateFileInfo);
                             var bestPeakBounds =
                                 exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
@@ -758,7 +778,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             var data = peakImputationForm._data;
-            if (data == null || !ReferenceEquals(document, data.Params.Document))
+            if (data == null || !ReferenceEquals(document, data.PeakImputationData.Params.Document))
             {
                 return null;
             }
@@ -774,7 +794,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
-            var alignmentFunction = data.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
+            var alignmentFunction = data.PeakImputationData.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
             return moleculePeaks.ExemplaryPeakBounds.ReverseAlignPreservingWidth(alignmentFunction);
         }
 

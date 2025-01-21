@@ -46,11 +46,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
             }
         }
 
-        public AlignmentResults GetResults(IDictionary<WorkOrder, object> results)
-        {
-            return ALIGNMENT_PRODUCER.GetResult(results, this);
-        }
-
         public WorkOrder MakeWorkOrder()
         {
             return ALIGNMENT_PRODUCER.MakeWorkOrder(this);
@@ -60,17 +55,22 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override AlignmentResults ProduceResult(ProductionMonitor productionMonitor, AlignmentParameters parameter, IDictionary<WorkOrder, object> inputs)
             {
-                var document = parameter.Document;
-                var times = ReplicateFileId.List(document.MeasuredResults).ToDictionary(
-                    replicateFileId => replicateFileId,
-                    replicateFileId => parameter.RtValueType.GetRetentionTimes(document, replicateFileId));
-                return new AlignmentResults(parameter.AlignmentType.PerformAlignment(productionMonitor, times));
+                return parameter.GetResults(productionMonitor);
             }
 
             public override string GetDescription(object workParameter)
             {
                 return "Retention time alignment";
             }
+        }
+
+        public AlignmentResults GetResults(ProductionMonitor productionMonitor)
+        {
+            var document = Document;
+            var times = ReplicateFileId.List(document.MeasuredResults).ToDictionary(
+                replicateFileId => replicateFileId,
+                replicateFileId => RtValueType.GetRetentionTimes(document, replicateFileId));
+            return new AlignmentResults(AlignmentType.PerformAlignment(productionMonitor, times));
         }
     }
 }

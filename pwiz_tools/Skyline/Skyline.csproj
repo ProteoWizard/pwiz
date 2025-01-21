@@ -569,6 +569,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
+    <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
@@ -587,6 +588,7 @@
     <Compile Include="Model\Results\Imputation\AlignmentType.cs" />
     <Compile Include="Model\Results\Imputation\KdeAlignmentType.cs" />
     <Compile Include="Model\Results\Imputation\ChromatogramTimeRanges.cs" />
+    <Compile Include="Model\Results\Imputation\PeakImputationRows.cs" />
     <Compile Include="Model\Results\Imputation\PeakImputer.cs" />
     <Compile Include="Model\Results\Imputation\RatedPeak.cs" />
     <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />
@@ -595,7 +597,6 @@
     <Compile Include="Model\Results\Imputation\PeakBounds.cs" />
     <Compile Include="Model\Results\Imputation\PeakImputationData.cs" />
     <Compile Include="Model\Results\Imputation\RtValueType.cs" />
-    <Compile Include="Model\Results\Imputation\ImputationParameters.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
@@ -7199,10 +7200,12 @@
     </PublishFile>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="EditUI\PeakImputation\" />
     <PackageReference Include="Microsoft.Web.WebView2">
       <Version>1.0.2420.47</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="EditUI\PeakImputation\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">

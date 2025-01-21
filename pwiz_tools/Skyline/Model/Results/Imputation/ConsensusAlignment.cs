@@ -6,6 +6,7 @@ using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Results.Imputation
@@ -183,5 +184,41 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public ImmutableList<KeyValuePair<Target, double>> StandardTimes { get; }
         public ImmutableList<KeyValuePair<ReplicateFileId, AlignmentFunction>> AlignmentFunctions { get; }
+    }
+
+    public class ConsensusScoreCalculator : RetentionScoreCalculatorSpec
+    {
+        private Dictionary<Target, double> _standardTimes;
+        public ConsensusScoreCalculator(string name, AlignmentResults alignmentResults) : base(name)
+        {
+            AlignmentResults = alignmentResults;
+            _standardTimes = CollectionUtil.SafeToDictionary(alignmentResults.StandardTimes);
+        }
+
+        public AlignmentResults AlignmentResults { get; }
+
+        public override double? ScoreSequence(Target sequence)
+        {
+            if (_standardTimes.TryGetValue(sequence, out var score))
+            {
+                return score;
+            }
+            return null;
+        }
+
+        public override double UnknownScore
+        {
+            get { return 0; }
+        }
+        public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
+        {
+            minCount = 2;
+            return peptides.Where(_standardTimes.ContainsKey);
+        }
+
+        public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
+        {
+            return _standardTimes.Keys;
+        }
     }
 }

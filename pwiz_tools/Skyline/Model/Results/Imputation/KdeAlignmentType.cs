@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil.Caching;
@@ -62,9 +63,16 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
 
-            var kdeAligner = new KdeAligner(-1, -1);
-            kdeAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
-            return kdeAligner;
+            try
+            {
+                var kdeAligner = new KdeAligner(-1, -1);
+                kdeAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
+                return kdeAligner;
+            }
+            catch (InvalidOperationException)
+            {
+                return null;
+            }
         }
 
     }
