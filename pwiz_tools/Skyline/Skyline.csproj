@@ -564,7 +564,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\BootstrapFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -2777,6 +2776,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationGraphControl.resx">
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.ja.resx">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>

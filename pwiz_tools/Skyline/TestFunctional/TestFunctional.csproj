@@ -160,6 +160,7 @@
     <Compile Include="AgilentCeOptimizationTest.cs" />
     <Compile Include="AgilentGCEITest.cs" />
     <Compile Include="AlertDlgTest.cs" />
+    <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
