@@ -223,4 +223,7 @@
   <data name="FilesTree_TreeNodeLabel_AuditLog" xml:space="preserve">
 	  <value>Audit Log</value>
   </data>
+  <data name="FilesTree_TreeNode_RenderTip_Name" xml:space="preserve">
+	  <value>Name</value>
+  </data>
 </root>

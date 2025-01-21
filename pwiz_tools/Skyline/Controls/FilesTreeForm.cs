@@ -56,6 +56,7 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; private set; }
 
+        // CONSIDER: move menu actions to separate class
         public void ShowAuditLog()
         {
             SkylineWindow.ShowAuditLog();
@@ -64,6 +65,16 @@ namespace pwiz.Skyline.Controls
         public void OpenContainingFolder(string folderPath)
         {
             Process.Start(@"explorer.exe", $@"/select, ""{folderPath}""");
+        }
+
+        public void OpenLibraryExplorer(string libraryName)
+        {
+            SkylineWindow.OpenLibraryExplorer(libraryName);
+        }
+
+        public void OpenReplicate(string name)
+        {
+            SkylineWindow.ActivateReplicate(name);
         }
 
         public void FilesTree_MouseMove(Point location)
@@ -152,9 +163,17 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            if (ReferenceEquals(e.Node, FilesTree.AuditLogTreeNode))
+            switch (e.Node)
             {
-                ShowAuditLog();
+                case AuditLogTreeNode _:
+                    ShowAuditLog();
+                    break;
+                case PeptideLibraryTreeNode peptideLibrary:
+                    OpenLibraryExplorer(peptideLibrary.Text);
+                    break;
+                case ReplicateTreeNode replicate:
+                    OpenReplicate(replicate.ChromatogramName);
+                    break;
             }
         }
     }

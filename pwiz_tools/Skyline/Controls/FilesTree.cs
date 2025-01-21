@@ -20,6 +20,8 @@ using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
@@ -59,10 +61,6 @@ namespace pwiz.Skyline.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineRootTreeNode Root { get; set; }
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public TreeNodeMS AuditLogTreeNode { get; private set; }
 
         public string RootNodeText()
         {
@@ -132,20 +130,22 @@ namespace pwiz.Skyline.Controls
 
             if (Document.Settings.MeasuredResults != null)
             {
-                var chromatogramSet = Document.Settings.MeasuredResults.Chromatograms;
-                if (chromatogramSet.Count > 0)
+                var chromatograms = Document.Settings.MeasuredResults.Chromatograms;
+                if (chromatograms.Count > 0)
                 {
-                    foreach (var chromatogram in chromatogramSet)
+                    foreach (var chromatogramSet in chromatograms)
                     {
                         // Ex: "D_102_REP1" =>
-                        var replicate = new TreeNodeMS(chromatogram.Name);
-                        replicate.ImageIndex = (int)ImageId.folder;
+                        var replicate = new TreeNodeMS(chromatogramSet.Name)
+                        {
+                            ImageIndex = (int)ImageId.folder
+                        };
                         replicatesRoot.Nodes.Add(replicate);
 
-                        foreach (var fileInfo in chromatogram.MSDataFileInfos)
+                        foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
                         {
                             // Ex: "D_102_REP1.raw"
-                            var replicateFile = new ReplicateTreeNode(fileInfo);
+                            var replicateFile = new ReplicateTreeNode(chromatogramSet, fileInfo);
                             replicate.Nodes.Add(replicateFile);
                         }
                     }
@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Controls
                 {
                     // Ex: "Rat (NIST) (Rat_plasma2) (Rat_plasma)"
                     //      * In tooltip: "rat_consensus_final_true_lib.blib"
-                    var peptideLibraryNode = new PeptideLibraryTreeNode(peptideLibrary.Name, peptideLibrary.FilePath);
+                    var peptideLibraryNode = new PeptideLibraryTreeNode(peptideLibrary);
 
                     // CONSIDER: if available, show the cache file (*.slc) under the .blib file
                     peptideLibrariesRoot.Nodes.Add(peptideLibraryNode);
@@ -180,16 +180,23 @@ namespace pwiz.Skyline.Controls
             }
 
             // SrmDocument => ...
+            // Skyline path: document.Settings.PeptideSettings.BackgroundProteome
             var backgroundProteomeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
             backgroundProteomeNode.ImageIndex = (int)ImageId.folder;
-            backgroundProteomeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
+
+            var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
+            if (backgroundProteome != null)
+            {
+                backgroundProteomeNode.Nodes.Add(new BackgroundProteomeTreeNode(backgroundProteome));
+            }
+            else
+            {
+                backgroundProteomeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
+            }
+
             Root.Nodes.Add(backgroundProteomeNode);
 
-            AuditLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_AuditLog)
-            {
-                ImageIndex = (int)ImageId.file
-            };
-            Root.Nodes.Add(AuditLogTreeNode);
+            Root.Nodes.Add(new AuditLogTreeNode());
 
             // Expand root's immediate children so FilesTree shows a few nodes but isn't overwhelming
             Root.Expand();
@@ -220,7 +227,7 @@ namespace pwiz.Skyline.Controls
             ImageIndex = (int)FilesTree.ImageId.skyline;
         }
 
-        public string FilePath { get; set; }
+        public string FilePath { get; }
 
         public bool HasTip => true;
         
@@ -230,6 +237,7 @@ namespace pwiz.Skyline.Controls
 
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Text, rt);
             customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
             customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_ActiveDirectory, Settings.Default.ActiveDirectory, rt);
 
@@ -242,9 +250,11 @@ namespace pwiz.Skyline.Controls
     public class ReplicateTreeNode : TreeNodeMS, ITipProvider, IFilePathProvider
     {
         private readonly ChromFileInfo _chromFileInfo;
+        private readonly ChromatogramSet _chromatogramSet;
 
-        public ReplicateTreeNode(ChromFileInfo chromFileInfo)
+        public ReplicateTreeNode(ChromatogramSet chromatogramSet, ChromFileInfo chromFileInfo)
         {
+            _chromatogramSet = chromatogramSet;
             _chromFileInfo = chromFileInfo;
 
             Text = Path.GetFileName(_chromFileInfo.FilePath.GetFilePath());
@@ -253,6 +263,8 @@ namespace pwiz.Skyline.Controls
         }
 
         public string FilePath => _chromFileInfo.FilePath.GetFilePath();
+
+        public string ChromatogramName => _chromatogramSet.Name;
 
         public bool HasTip => true;
 
@@ -285,14 +297,16 @@ namespace pwiz.Skyline.Controls
 
     public class PeptideLibraryTreeNode : TreeNodeMS, ITipProvider, IFilePathProvider
     {
-        public PeptideLibraryTreeNode(string name, string filePath) : base(name)
+        private readonly LibrarySpec _librarySpec;
+
+        public PeptideLibraryTreeNode(LibrarySpec librarySpec) : base(librarySpec.Name)
         {
-            FilePath = filePath;
+            _librarySpec = librarySpec;
 
             ImageIndex = (int)FilesTree.ImageId.peptide;
         }
 
-        public string FilePath { get; }
+        public string FilePath => _librarySpec.FilePath;
 
         public bool HasTip => true;
 
@@ -302,7 +316,58 @@ namespace pwiz.Skyline.Controls
 
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, Path.GetFullPath(FilePath), rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+    }
+
+    public class BackgroundProteomeTreeNode : TreeNodeMS, ITipProvider
+    {
+        private readonly BackgroundProteome _backgroundProteome;
+
+        public BackgroundProteomeTreeNode(BackgroundProteome backgroundProteome) : base(backgroundProteome.Name)
+        {
+            _backgroundProteome = backgroundProteome;
+        }
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(_backgroundProteome.DatabasePath), rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, _backgroundProteome.DatabasePath, rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+
+    }
+
+    public class AuditLogTreeNode : TreeNodeMS, ITipProvider
+    {
+        public AuditLogTreeNode() : base(ControlsResources.FilesTree_TreeNodeLabel_AuditLog)
+        {
+            ImageIndex = (int)FilesTree.ImageId.file;
+        }
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, "<path to .skyl file goes here>", rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);

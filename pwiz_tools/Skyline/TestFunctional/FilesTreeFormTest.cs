@@ -83,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
-    // Borrowing this for now. If useful, will consolidate with FindNodeCancelTest.
+    // Borrowing for now from FindNodeCancelTest. Will consolidate if useful.
     internal static class SrmDocumentHelper
     {
         private const string ALL_AMINO_ACIDS = "ACDEFGHIKLMNPQRSTVWY";
@@ -93,7 +93,8 @@ namespace pwiz.SkylineTestFunctional
         /// in the test document and also the first three amino acids of all of the peptides
         /// in that Peptide Group
         /// </summary>
-        private static readonly List<string> PEPTIDE_GROUP_NAMES = ALL_AMINO_ACIDS.SelectMany(aa => ALL_AMINO_ACIDS.SelectMany(aa2 => ALL_AMINO_ACIDS.Select(aa3 => "" + aa + aa2 + aa3))).ToList();
+        private static readonly List<string> PEPTIDE_GROUP_NAMES = 
+            ALL_AMINO_ACIDS.SelectMany(aa => ALL_AMINO_ACIDS.SelectMany(aa2 => ALL_AMINO_ACIDS.Select(aa3 => "" + aa + aa2 + aa3))).ToList();
 
         internal static SrmDocument MakeEmptyDocument()
         {

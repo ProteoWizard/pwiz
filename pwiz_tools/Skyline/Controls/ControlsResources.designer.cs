@@ -88,6 +88,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string FilesTree_TreeNode_RenderTip_Name {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Path.
         /// </summary>
         public static string FilesTree_TreeNode_RenderTip_Path {
