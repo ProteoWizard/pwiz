@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 // Run Comet
                 var pr = new ProcessRunner();
-                var psi = new ProcessStartInfo(CruxBinary, $@"comet --output-dir ""{defaultOutputDirectory}"" --parameter-file ""{paramsFile}""")
+                var psi = new ProcessStartInfo(CruxBinary, $@"comet --overwrite T --output-dir ""{defaultOutputDirectory}"" --parameter-file ""{paramsFile}""")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false
