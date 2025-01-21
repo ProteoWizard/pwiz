@@ -67,6 +67,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
             Assert.AreEqual(4, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.ShowAuditLog();
+            });
+            WaitForConditionUI(() => SkylineWindow.AuditLogForm.Visible);
+
+            // TODO: test tooltips like MethodEditTutorialTest.ShowNodeTip
+
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() =>
             {
@@ -75,7 +83,7 @@ namespace pwiz.SkylineTestFunctional
         }
     }
 
-    // Borrowing this for now. If it proves useful, will consolidate with FindNodeCancelTest.
+    // Borrowing this for now. If useful, will consolidate with FindNodeCancelTest.
     internal static class SrmDocumentHelper
     {
         private const string ALL_AMINO_ACIDS = "ACDEFGHIKLMNPQRSTVWY";

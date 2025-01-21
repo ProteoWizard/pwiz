@@ -13,25 +13,149 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using pwiz.Skyline.Model;
+
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class FilesTreeForm : DockableFormEx
+    public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
     {
-        public FilesTreeForm(IDocumentUIContainer documentContainer)
+        private NodeTip _nodeTip;
+        private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
+
+        public FilesTreeForm()
         {
             InitializeComponent();
-
-            filesTree.InitializeTree(documentContainer);
         }
 
-        public FilesTree FilesTree { get { return filesTree; } }
+        public FilesTreeForm(SkylineWindow skylineWindow) : this()
+        {
+            SkylineWindow = skylineWindow;
+
+            // FilesTree
+            filesTree.InitializeTree(SkylineWindow);
+            filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
+            filesTree.MouseMove += FilesTree_MouseMove;
+
+            // FilesTree => context menu
+            filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
+            filesTree.ContextMenuStrip = filesTreeContextMenu;
+
+            // FilesTree => tooltips
+            _nodeTip = new NodeTip(this) { Parent = TopLevelControl };
+        }
+
+        public FilesTree FilesTree => filesTree;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public SkylineWindow SkylineWindow { get; private set; }
+
+        public void ShowAuditLog()
+        {
+            SkylineWindow.ShowAuditLog();
+        }
+
+        public void OpenContainingFolder(string folderPath)
+        {
+            Process.Start(@"explorer.exe", $@"/select, ""{folderPath}""");
+        }
+
+        public void FilesTree_MouseMove(Point location)
+        {
+            if (!_moveThreshold.Moved(location))
+                return;
+
+            _moveThreshold.Location = null;
+
+            var node = FilesTree.GetNodeAt(location) as TreeNodeMS;
+            var tipProvider = node as ITipProvider;
+
+            if (tipProvider != null && !tipProvider.HasTip)
+                tipProvider = null;
+
+            if (tipProvider != null)
+            {
+                var rectCapture = node.BoundsMS;
+                if (!rectCapture.Contains(location))
+                    _nodeTip.HideTip();
+                else
+                    _nodeTip.SetTipProvider(tipProvider, rectCapture, location);
+            }
+            else
+            {
+                _nodeTip?.HideTip();
+            }
+        }
+
+        #region ITipDisplayer implementation
+
+        public Rectangle ScreenRect => Screen.GetBounds(FilesTree);
+
+        public bool AllowDisplayTip => FilesTree.Focused;
+
+        public Rectangle RectToScreen(Rectangle r)
+        {
+            return FilesTree.RectangleToScreen(r);
+        }
+
+        #endregion
 
         protected override string GetPersistentString()
         {
             return base.GetPersistentString() + @"|" + FilesTree.GetPersistentString();
+        }
+
+        // FilesTree => display ToolTip
+        private void FilesTree_MouseMove(object sender, MouseEventArgs e)
+        {
+            FilesTree_MouseMove(e.Location);
+        }
+
+        // Any TreeNode => Open Context Menu
+        private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
+        {
+            var selectedNode = FilesTree.SelectedNode;
+
+            _nodeTip.HideTip();
+
+            if (selectedNode.GetType() == typeof(SkylineRootTreeNode))
+            {
+                openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
+            }
+            else if (selectedNode.GetType() == typeof(ReplicateTreeNode))
+            {
+                openContainingFolderMenuStripItem.Enabled = true;
+            }
+            else if (selectedNode.GetType() == typeof(PeptideLibraryTreeNode))
+            {
+                openContainingFolderMenuStripItem.Enabled = true;
+            }
+            else
+            {
+                openContainingFolderMenuStripItem.Enabled = false;
+            }
+        }
+
+        private void FilesTree_ShowContainingFolderMenuItem_Click(object sender, System.EventArgs e)
+        {
+            if (FilesTree.SelectedNode is IFilePathProvider provider)
+            {
+                OpenContainingFolder(provider.FilePath);
+            }
+        }
+
+        private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            if (ReferenceEquals(e.Node, FilesTree.AuditLogTreeNode))
+            {
+                ShowAuditLog();
+            }
         }
     }
 }

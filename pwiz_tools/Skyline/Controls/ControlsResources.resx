@@ -220,18 +220,6 @@
   <data name="FilesTree_TreeNode_RenderTip_InstrumentModel" xml:space="preserve">
 	  <value>Instrument Model</value>
   </data>
-  <data name="FilesTree_ToolStripMenuItem_RemoveFromProject" xml:space="preserve">
-	  <value>Remove From Project</value>
-  </data>
-  <data name="FilesTree_ToolStripMenuItem_OpenContainingFolder" xml:space="preserve">
-	  <value>Open Containing Folder</value>
-  </data>
-  <data name="FilesTree_ToolStripMenuItem_ShowHiddenFiles" xml:space="preserve">
-	  <value>Show Hidden Files</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_HiddenFiles" xml:space="preserve">
-	  <value>Hidden Files</value>
-  </data>
   <data name="FilesTree_TreeNodeLabel_AuditLog" xml:space="preserve">
 	  <value>Audit Log</value>
   </data>

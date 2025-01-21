@@ -3107,6 +3107,13 @@ namespace pwiz.Skyline
 
         #region FilesTree
 
+        public FilesTreeForm FilesTreeForm => _filesTreeForm;
+
+        public bool FilesTreeFormIsVisible
+        {
+            get { return _filesTreeForm != null && _filesTreeForm.Visible; }
+        }
+
         public void ShowFilesTreeForm(bool show, string persistentState = null)
         {
             if (show)
@@ -3133,7 +3140,7 @@ namespace pwiz.Skyline
             string expansionAndSelection = null;
             if (persistentString != null)
             {
-                int sepIndex = persistentString.IndexOf('|');
+                var sepIndex = persistentString.IndexOf('|');
                 if (sepIndex != -1)
                     expansionAndSelection = persistentString.Substring(sepIndex + 1);
             }
@@ -3144,28 +3151,16 @@ namespace pwiz.Skyline
             {
                 _filesTreeForm.FilesTree.RestoreExpansionAndSelection(expansionAndSelection);
             }
-            _filesTreeForm.FilesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
 
             return _filesTreeForm;
         }
-
-        public bool FilesTreeFormIsVisible => _filesTreeForm is { Visible: true };
 
         public void DestroyFilesTreeForm()
         {
             if (_filesTreeForm != null)
             {
-                _filesTreeForm.FilesTree.NodeMouseDoubleClick -= FilesTree_TreeNodeMouseDoubleClick;
                 _filesTreeForm.Close();
                 _filesTreeForm = null;
-            }
-        }
-
-        private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
-        {
-            if (ReferenceEquals(e.Node, _filesTreeForm.FilesTree.AuditLogTreeNode))
-            {
-                ShowAuditLog();
             }
         }
 

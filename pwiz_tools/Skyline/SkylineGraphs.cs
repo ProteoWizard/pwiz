@@ -592,7 +592,7 @@ namespace pwiz.Skyline
             else if (persistentString.StartsWith(typeof(FilesTreeForm).ToString()))
             {
                 // show FilesTree if it has serialized state in the .view file
-                return _filesTreeForm ?? CreateFilesTreeForm(persistentString);
+                return FilesTreeForm ?? CreateFilesTreeForm(persistentString);
             }
 
             var split = persistentString.Split('|');

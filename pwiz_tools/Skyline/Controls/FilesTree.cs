@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -24,11 +22,10 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public class FilesTree : TreeViewMS, ITipDisplayer
+    public class FilesTree : TreeViewMS
     {
         public enum ImageId
         {
@@ -40,16 +37,8 @@ namespace pwiz.Skyline.Controls
             skyline
         }
 
-        private readonly ToolStripMenuItem _openContainingFolder;
-        private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
-        private NodeTip _nodeTip;
-        private TreeNodeMS _auditLogTreeNode;
-
         public FilesTree()
         {
-            // Tooltips
-            _nodeTip = new NodeTip(this) { Parent = TopLevelControl };
-
             ImageList = new ImageList
             {
                 TransparentColor = Color.Magenta,
@@ -61,26 +50,6 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.Replicate);
             ImageList.Images.Add(Resources.Peptide);
             ImageList.Images.Add(Resources.Skyline);
-
-            // Right-click menu
-            var removeFromProject = new ToolStripMenuItem(ControlsResources.FilesTree_ToolStripMenuItem_RemoveFromProject);
-            removeFromProject.ImageTransparentColor = Color.Magenta;
-            removeFromProject.Image = Resources.Delete;
-            removeFromProject.Enabled = false;
-
-            _openContainingFolder = new ToolStripMenuItem(ControlsResources.FilesTree_ToolStripMenuItem_OpenContainingFolder);
-            _openContainingFolder.Image = Resources.Folder;
-            _openContainingFolder.Click += openContainingFolderMenuItem_Click;
-
-            var menu = new ContextMenuStrip();
-            menu.Items.AddRange(new ToolStripItem[]
-            {
-                removeFromProject,
-                new ToolStripSeparator(),
-                _openContainingFolder,
-            });
-            menu.Opening += rightClickMenu_Opening;
-            base.ContextMenuStrip = menu;
         }
 
         [Browsable(false)]
@@ -93,7 +62,7 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public TreeNodeMS AuditLogTreeNode { get { return _auditLogTreeNode; } }
+        public TreeNodeMS AuditLogTreeNode { get; private set; }
 
         public string RootNodeText()
         {
@@ -216,11 +185,11 @@ namespace pwiz.Skyline.Controls
             backgroundProteomeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
             Root.Nodes.Add(backgroundProteomeNode);
 
-            _auditLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_AuditLog)
+            AuditLogTreeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_AuditLog)
             {
                 ImageIndex = (int)ImageId.file
             };
-            Root.Nodes.Add(_auditLogTreeNode);
+            Root.Nodes.Add(AuditLogTreeNode);
 
             // Expand root's immediate children so FilesTree shows a few nodes but isn't overwhelming
             Root.Expand();
@@ -235,98 +204,6 @@ namespace pwiz.Skyline.Controls
         {
             return node != null ? node.Nodes.Count : 0;
         }
-
-        // Tooltip rendering
-        protected override void OnMouseMove(MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-
-            var pt = e.Location;
-
-            if (!_moveThreshold.Moved(pt))
-                return;
-            
-            _moveThreshold.Location = null;
-
-            var node = (TreeNodeMS)GetNodeAt(pt);
-            var tipProvider = node as ITipProvider;
-
-            if (tipProvider != null && !tipProvider.HasTip)
-                tipProvider = null;
-            
-            if (tipProvider != null)
-            {
-                var rectCapture = node.BoundsMS;
-                if (!rectCapture.Contains(pt))
-                    _nodeTip.HideTip();
-                else
-                    _nodeTip.SetTipProvider(tipProvider, rectCapture, pt);
-            }
-            else
-            {
-                _nodeTip?.HideTip();
-            }
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (_nodeTip != null)
-            {
-                _nodeTip.Dispose();
-                _nodeTip = null;
-            }
-
-            base.Dispose(disposing);
-        }
-
-        // Any TreeNode => Open Context Menu
-        private void rightClickMenu_Opening(object sender, CancelEventArgs e)
-        {
-            var selectedNode = SelectedNode;
-
-            _nodeTip.HideTip();
-
-            if (selectedNode.GetType() == typeof(SkylineRootTreeNode))
-            {
-                _openContainingFolder.Enabled = Root.FilePath != null;
-            }
-            else if (selectedNode.GetType() == typeof(ReplicateTreeNode))
-            {
-                _openContainingFolder.Enabled = true;
-            }
-            else if (selectedNode.GetType() == typeof(PeptideLibraryTreeNode))
-            {
-                _openContainingFolder.Enabled = true;
-            }
-            else
-            {
-                _openContainingFolder.Enabled = false;
-            }
-        }
-
-        // Context Menu => Open Containing Folder
-        private void openContainingFolderMenuItem_Click(object sender, EventArgs e)
-        {
-            if (SelectedNode is IFilePathProvider provider)
-            {
-                var path = provider.FilePath;
-
-                Process.Start(@"explorer.exe", $@"/select, ""{path}""");
-            }
-        }
-
-        #region ITipDisplayer implementation
-
-        public Rectangle ScreenRect => Screen.GetBounds(this);
-
-        public bool AllowDisplayTip => Focused;
-
-        public Rectangle RectToScreen(Rectangle r)
-        {
-            return RectangleToScreen(r);
-        }
-
-        #endregion
     }
 
     public interface IFilePathProvider

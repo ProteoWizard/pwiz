@@ -61,33 +61,6 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open Containing Folder.
-        /// </summary>
-        public static string FilesTree_ToolStripMenuItem_OpenContainingFolder {
-            get {
-                return ResourceManager.GetString("FilesTree_ToolStripMenuItem_OpenContainingFolder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Remove From Project.
-        /// </summary>
-        public static string FilesTree_ToolStripMenuItem_RemoveFromProject {
-            get {
-                return ResourceManager.GetString("FilesTree_ToolStripMenuItem_RemoveFromProject", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Show Hidden Files.
-        /// </summary>
-        public static string FilesTree_ToolStripMenuItem_ShowHiddenFiles {
-            get {
-                return ResourceManager.GetString("FilesTree_ToolStripMenuItem_ShowHiddenFiles", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Acquired Time.
         /// </summary>
         public static string FilesTree_TreeNode_RenderTip_AcquiredTime {
@@ -147,15 +120,6 @@ namespace pwiz.Skyline.Controls {
         public static string FilesTree_TreeNodeLabel_BackgroundProteome {
             get {
                 return ResourceManager.GetString("FilesTree_TreeNodeLabel_BackgroundProteome", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Hidden Files.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_HiddenFiles {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_HiddenFiles", resourceCulture);
             }
         }
         
