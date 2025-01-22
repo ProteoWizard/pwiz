@@ -69,6 +69,7 @@ namespace BiblioSpec
         if (!msfFile_) {
             throw BlibException(true, "Couldn't open '%s'.", msfName_);
         }
+		Verbosity::debug("Opened file '%s'. File size: %ju", msfName_, bfs::file_size(msfName_));
         // Get the schema version
         sqlite3_stmt* statement = getStmt("SELECT SoftwareVersion FROM SchemaInfo");
         if (hasNext(&statement)) {
