@@ -359,7 +359,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 new ArgumentAndValue(@"library--output_folder", OutputSpectralLibsDir),
                 new ArgumentAndValue(@"library--output_tsv--enabled", @"True"),
                 new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
-                new ArgumentAndValue(@"library--decoy", @"diann")
+                new ArgumentAndValue(@"library--decoy", @"diann"),
+                new ArgumentAndValue(@"device", @"gpu"),
             };
 
         private Dictionary<string, string> OpenSwathAssayColName =>

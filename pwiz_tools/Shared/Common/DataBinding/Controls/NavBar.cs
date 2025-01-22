@@ -311,7 +311,7 @@ namespace pwiz.Common.DataBinding.Controls
                 return;
             }
             BindingListSource.SetViewContext(ViewContext, ViewContext.GetViewInfo(viewGroup, newView));
-            if (ApplyChanges == true)
+            if (ApplyChanges)
             {
                 CustomizeView();
                 //User Must Click "Apply" each time customizing a new view
