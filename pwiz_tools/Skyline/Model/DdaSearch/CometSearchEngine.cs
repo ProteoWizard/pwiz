@@ -514,17 +514,17 @@ namespace pwiz.Skyline.Model.DdaSearch
 [COMET_ENZYME_INFO]
 0.  No_enzyme				0       -           -
 ";
-/*1.  Trypsin				1      KR           P
-2.  Trypsin/P				1      KR           -
-3.  Lys_C				1      K            P
-4.  Lys_N				0      K            -
-5.  Arg_C				1      R            P
-6.  Asp_N				0      D            -
-7.  CNBr				1      M            -
-8.  Glu_C				1      DE           P
-9.  PepsinA				1      FL           P
-10. Chymotrypsin			1      FWYL         P
-11. No_cut			1      @         @
+/*1.  Trypsin                       1      KR           P
+2.  Trypsin/P                        1      KR           -
+3.  Lys_C                      1      K            P
+4.  Lys_N                      0      K            -
+5.  Arg_C                      1      R            P
+6.  Asp_N                      0      D            -
+7.  CNBr                       1      M            -
+8.  Glu_C                      1      DE           P
+9.  PepsinA                    1      FL           P
+10. Chymotrypsin               1      FWYL         P
+11. No_cut               1      @         @
 ";*/
             
         public override void SetModifications(IEnumerable<StaticMod> fixedAndVariableModifs, int maxVariableMods_)
