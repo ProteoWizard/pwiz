@@ -62,33 +62,33 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             // ReSharper disable LocalizableElement
             AddAdditionalSetting(COMET_SETTINGS, new Setting("activation_method", "ALL", "ALL|CID|ECD|ETD+SA|ETD|PQD|HCD|IRMPD".Split('|')));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("add_Nterm_peptide", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("add_Nterm_protein", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("add_Nterm_peptide", 0.0, 0.0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("add_Nterm_protein", 0.0, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("auto_fragment_bin_tol", "false", "false|warn|fail".Split('|')));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("auto_peptide_mass_tolerance", "false", "false|warn|fail".Split('|')));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("clear_mz_range", "0.0 0.0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("clip_nterm_methionine", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("clip_nterm_methionine", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("digest_mass_range", "600.0 5000.0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("equal_I_and_L", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("explicit_deltacn", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("fragment_bin_offset", "0.4"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("fragment_bin_offset", 0.4, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("isotope_error", 0, 0, 5)); // 0=off, 1=0/1 (C13 error), 2=0/1/2, 3=0/1/2/3, 4=--8/-4/0/4/8 (for +4/+8 labeling), 5=-1/0/1/2/3.
             AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_offsets", ""));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_type_fragment", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_type_parent", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_duplicate_proteins", "20"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_fragment_charge", "3"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_type_fragment", 1, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_type_parent", 1, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_duplicate_proteins", 20, 0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_fragment_charge", 3, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_index_runtime", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_precursor_charge", 6, 1, 9));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_variable_mods_in_peptide", "5"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_intensity", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_peaks", "10"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("ms_level", "2"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_variable_mods_in_peptide", 5, 0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_intensity", 0.0, 0.0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_peaks", 10, 0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("ms_level", 2, 2));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("nucleotide_reading_frame", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("num_output_lines", "5"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("num_results", "50"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("num_output_lines", 5, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("num_results", 50, 1));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("num_threads", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("old_mods_encoding", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("old_mods_encoding", 0, 0, 1));
             /*AddAdditionalSetting(COMET_SETTINGS, new Setting("output_mzidentmlfile", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_pepxmlfile", "1"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_percolatorfile", "0"));
@@ -97,34 +97,34 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_suffix", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_txtfile", "1"));*/
             AddAdditionalSetting(COMET_SETTINGS, new Setting("override_charge", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_format", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_format", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_obo", ""));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_verbose_output", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_verbose_output", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_length_range", "1 63"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_tolerance", "3"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_units", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_tolerance", 3.0, 0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_units", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_NL_ions", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_charge", "0 0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_tolerance_type", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_tolerance_type", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("print_expect_score", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_peak", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_tolerance", "1.5"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("require_variable_mod", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_peak", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_tolerance", 1.5, 0.0));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("require_variable_mod", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("scan_range", "0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("search_enzyme2_number", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", 1, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 0, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("text_file_extension", ""));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("theoretical_fragment_ions", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_A_ions", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_B_ions", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_C_ions", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_X_ions", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Y_ions", "1"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Z1_ions", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Z_ions", "0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("theoretical_fragment_ions", 1, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_A_ions", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_B_ions", 1, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_C_ions", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", 1, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_X_ions", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Y_ions", 1, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Z1_ions", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Z_ions", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod01", "0.0 null 0 4 -1 0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod02", "0.0 null 0 4 -1 0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod03", "0.0 null 0 4 -1 0 0"));
@@ -148,6 +148,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"b,y",
             @"y",
             @"c,z",
+            @"c,z1",
         };
 
         static string CRUX_FILENAME = @"crux-4.2";
@@ -161,7 +162,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private MzTolerance _precursorMzTolerance;
         private MzTolerance _fragmentMzTolerance;
-        private string _fragmentIons;
+        private SortedSet<string> _fragmentIons;
         private Enzyme _enzyme;
         private int _ntt, _maxMissedCleavages;
         private int _maxVariableMods = 2;
@@ -663,12 +664,23 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override void SetFragmentIons(string ions)
         {
-            _fragmentIons = ions;
+            _fragmentIons = new SortedSet<string>(ions.Split(','));
+            // ReSharper disable LocalizableElement
+            string[] possibleIonTypes = { "a", "b", "c", "x", "y", "z", "z1" };
+            // ReSharper restore LocalizableElement
+            foreach (var ionType in possibleIonTypes)
+            {
+                if (_fragmentIons.Contains(ionType))
+                    AdditionalSettings[@"use_" + ionType.ToUpperInvariant() + @"_ions"].Value = 1;
+                else
+                    AdditionalSettings[@"use_" + ionType.ToUpperInvariant() + @"_ions"].Value = 0;
+            }
+
         }
 
         public override void SetMs2Analyzer(string ms2Analyzer)
         {
-            // not used by MSFragger
+            // not used by Comet
         }
 
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
