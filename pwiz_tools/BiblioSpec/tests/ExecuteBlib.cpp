@@ -70,7 +70,7 @@ int executeBlib(const vector<string>& argv)
     // listed alphabetically and then doesn't pass them in a stable order
     // hunt down the components separately: executable, options, inputs, lib
     string command; // must contain BlibBuild, BlibFilter, BlibSearch, BlibToMs2
-    string options = "-v detail "; // must start with '-'
+    string options; // must start with '-'
     vector<string> libNames; // collect so we can sort them
     const char* libExt = ".blib";
 	const char* pdbExt = ".pdb";
