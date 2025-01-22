@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public SkylineRootTreeNode Root { get; set; }
+        public SkylineRootTreeNode Root { get; private set; }
 
         public string RootNodeText()
         {
@@ -87,33 +87,32 @@ namespace pwiz.Skyline.Controls
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
             var document = DocumentContainer.DocumentUI;
-
             if (document == null)
                 return;
 
             Document = document;
 
-            // If none of the children changed, then do nothing
+            // Short circuit updates if nothing relevant changed. For now, this checks document.Children -
+            // which is the wrong part of the document to check. SrmSettings should be used instead but
+            // that breaks view state restoration (e.g. tree node expansion and selection) because
+            // SrmSettings changes multiple times during startup - while state is only restored once.
+            // So this needs a more nuanced fix.
+            //
+            // if (e.DocumentPrevious != null && ReferenceEquals(Document.Settings, e.DocumentPrevious.Settings))
+            //
             if (e.DocumentPrevious != null && ReferenceEquals(document.Children, e.DocumentPrevious.Children))
             {
                 return;
             }
 
-            // If Skyline is opening a file, empty out the tree's nodes. Handles the case where Skyline is running,
-            // showing one project and a new project is open - whose nodes should replace ones already in the tree
-            if (e.IsOpeningFile)
-            {
-                BeginUpdateMS();
-                Nodes.Clear();
-                EndUpdateMS();
-            }
+            // Rebuild FilesTree if the document changed. This is a temporary, aggressive way of configuring 
+            // the tree when something changes - ex: opening an existing .sky file or creating a new one.
+            BeginUpdateMS();
+            Nodes.Clear();
+            EndUpdateMS();
 
             if (DocumentContainer.DocumentFilePath == null)
             {
-                BeginUpdateMS();
-                Nodes.Clear(); // CONSIDER: is this necessary?
-                EndUpdateMS();
-
                 Root = new SkylineRootTreeNode(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null);
             }
             else
@@ -124,8 +123,10 @@ namespace pwiz.Skyline.Controls
             Nodes.Add(Root);
 
             // SrmDocument => <measured_results> => <replicate>^*
-            var replicatesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Replicates);
-            replicatesRoot.ImageIndex = (int)ImageId.folder;
+            var replicatesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Replicates)
+            {
+                ImageIndex = (int)ImageId.folder
+            };
             Root.Nodes.Add(replicatesRoot);
 
             if (Document.Settings.MeasuredResults != null)
@@ -157,8 +158,10 @@ namespace pwiz.Skyline.Controls
             }
 
             // SrmDocument => <peptide_libraries> => <*_library>^*
-            var peptideLibrariesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Libraries);
-            peptideLibrariesRoot.ImageIndex = (int)ImageId.folder;
+            var peptideLibrariesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Libraries)
+            {
+                ImageIndex = (int)ImageId.folder
+            };
             Root.Nodes.Add(peptideLibrariesRoot);
 
             var peptideLibrarySet = Document.Settings.PeptideSettings.Libraries.LibrarySpecs;
@@ -181,8 +184,10 @@ namespace pwiz.Skyline.Controls
 
             // SrmDocument => ...
             // Skyline path: document.Settings.PeptideSettings.BackgroundProteome
-            var backgroundProteomeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
-            backgroundProteomeNode.ImageIndex = (int)ImageId.folder;
+            var backgroundProteomeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome)
+            {
+                ImageIndex = (int)ImageId.folder
+            };
 
             var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
             if (backgroundProteome != null)
@@ -317,7 +322,7 @@ namespace pwiz.Skyline.Controls
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
             customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, Path.GetFullPath(FilePath), rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, Path.GetFullPath(FilePath ?? string.Empty), rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
@@ -352,26 +357,11 @@ namespace pwiz.Skyline.Controls
 
     }
 
-    public class AuditLogTreeNode : TreeNodeMS, ITipProvider
+    public class AuditLogTreeNode : TreeNodeMS
     {
         public AuditLogTreeNode() : base(ControlsResources.FilesTree_TreeNodeLabel_AuditLog)
         {
             ImageIndex = (int)FilesTree.ImageId.file;
-        }
-
-        public bool HasTip => true;
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, "<path to .skyl file goes here>", rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
     }
 }
