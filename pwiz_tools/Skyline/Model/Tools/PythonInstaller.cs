@@ -187,7 +187,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
 
-            var taskNodes = PythonInstallerUtil.GetPythonTaskNodes();
+            var taskNodes = PythonInstallerUtil.GetPythonTaskNodes(this.NvidiaGpuAvailable);
             var hasSeenFailure = false;
             foreach (var taskNode in taskNodes)
             {
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model.Tools
                         tasks.Add(GetPythonTask(taskNode.PythonTaskName));
                         continue;
                     }
-                    else
+                    else if (tasks.Count > 0)
                     {
                         foreach (var parentTask in taskNode.ParentNodes)
                         {
@@ -749,7 +749,7 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Returns a list of Python installation tasks in topological order, with each task as a PythonTaskNode.
         /// </summary>
-        internal static List<PythonTaskNode> GetPythonTaskNodes()
+        internal static List<PythonTaskNode> GetPythonTaskNodes(bool? haveNvidiaGpu = false)
         {
             var node1 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_python_embeddable_package, ParentNodes = null };
             var node2 = new PythonTaskNode { PythonTaskName = PythonTaskName.unzip_python_embeddable_package, ParentNodes = new List<PythonTaskNode> { node1 } };
@@ -764,7 +764,12 @@ namespace pwiz.Skyline.Model.Tools
             var node11 = new PythonTaskNode { PythonTaskName = PythonTaskName.install_cuda_library, ParentNodes = new List<PythonTaskNode> { node10 } };
             var node12 = new PythonTaskNode { PythonTaskName = PythonTaskName.download_cudnn_library, ParentNodes = new List<PythonTaskNode> { node11 } };
             var node13 = new PythonTaskNode { PythonTaskName = PythonTaskName.install_cudnn_library, ParentNodes = new List<PythonTaskNode> { node12 } };
-            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 , node10, node11, node12, node13 };
+
+            if (haveNvidiaGpu == true)
+                return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 , node10, node11, node12, node13 };
+            else
+                return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 };
+            
         }
 
         public static void CopyFiles(string fromDirectory, string toDirectory, string pattern = @"*")
