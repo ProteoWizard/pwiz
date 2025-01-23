@@ -105,7 +105,31 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
 
         public static double? CalculateLodFromTurningPointWithStdErr(LodCalculationArgs args)
         {
-            return BootstrapFiguresOfMeritCalculator.ComputeLod(args.Standards);
+            var points = args.Standards;
+            if (points.Count == 0)
+            {
+                return double.MaxValue;
+            }
+            ScoredBilinearCurve fit = ScoredBilinearCurve.FromPoints(points);
+            if (fit == null || double.IsNaN(fit.StdDevBaseline))
+            {
+                return double.MaxValue;
+            }
+            var largestConc = points.Max(pt => pt.X);
+            var lodArea = fit.BaselineHeight + fit.StdDevBaseline;
+            var smallestNonzeroConc = points.Where(pt => pt.X > 0).Select(pt => pt.X).Append(largestConc).Min();
+            double lodConc;
+            if (fit.Slope == 0)
+            {
+                lodConc = largestConc;
+            }
+            else
+            {
+                lodConc = (lodArea - fit.Intercept) / fit.Slope;
+            }
+
+            lodConc = Math.Max(smallestNonzeroConc, Math.Min(lodConc, largestConc));
+            return lodConc;
         }
 
         public static double? BlankPlusSdMultiple(LodCalculationArgs args, double sdMultiple)
