@@ -11,6 +11,7 @@ namespace pwiz.Skyline.ToolsUI
     
     public static class PythonInstallerUI
     {
+        private static bool _userNoToCuda;
         public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
@@ -18,6 +19,7 @@ namespace pwiz.Skyline.ToolsUI
             var tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment() : pythonInstaller.PendingTasks;
             pythonInstaller.NumTotalTasks = tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
+            bool abortTask = false;
             foreach (var task in tasks)
             {
                 try
@@ -26,10 +28,16 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
                         var choice = EnableNvidiaGpuDlg.ShowDialog();
-                        if (choice == DialogResult.No || choice == DialogResult.Cancel)
+                        if (choice == DialogResult.No)
+                        {
+                            _userNoToCuda = true;
+                            if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                            abortTask = true;
+                        }
+                        else if (choice == DialogResult.Cancel)
                         {
                             if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
-                            break;
+                            return choice;
                         }
                         else if (choice == DialogResult.Yes)
                         {
@@ -39,6 +47,12 @@ namespace pwiz.Skyline.ToolsUI
                             waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
                         }
 
+                    }
+                    else if (_userNoToCuda && ( task.Name == PythonTaskName.install_cuda_library || 
+                                                task.Name == PythonTaskName.download_cudnn_library || task.Name == PythonTaskName.install_cudnn_library ) )
+                    {
+                        if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                        abortTask = true;
                     }
                     else if (task.Name == PythonTaskName.enable_longpaths)
                     {
@@ -70,7 +84,8 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         throw new PythonInstallerUnsupportedTaskException(task);
                     }
-                    pythonInstaller.NumCompletedTasks++;
+                    if (!abortTask)
+                        pythonInstaller.NumCompletedTasks++;
                 }
                 catch (Exception ex)
                 {

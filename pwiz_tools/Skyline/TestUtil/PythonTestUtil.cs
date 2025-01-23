@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestUtil
                     if (TestForNvidiaGPU())
                     {
                         MultiButtonMsgDlg nvidiaDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), nvidiaDlg.Message);
+                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), nvidiaDlg.Message);
                         RunDlg<MessageDlg>(nvidiaDlg.ClickNo, okDlg =>
                         {
                             confirmDlg = okDlg;
