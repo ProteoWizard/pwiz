@@ -22,12 +22,13 @@ namespace pwiz.SkylineTestFunctional
       
         protected override void DoTest()
         {
+            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+
             PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep");
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             const string libraryWithoutIrt = "AlphapeptDeepLibraryWithoutIrt";
 
-            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = libraryWithoutIrt;

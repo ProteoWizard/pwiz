@@ -32,7 +32,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewEditor));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
-            this.btnAPPLY = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.tbxViewName = new System.Windows.Forms.TextBox();
             this.tabPageFilter = new System.Windows.Forms.TabPage();
@@ -73,37 +72,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
-            // 
-            // btnAPPLY
-            // 
-            resources.ApplyResources(this.btnAPPLY, "btnAPPLY");
-            this.btnAPPLY.DialogResult = System.Windows.Forms.DialogResult.Yes;
-            this.btnAPPLY.Name = "btnAPPLY";
-            this.btnAPPLY.Text = "Apply";
-            this.btnAPPLY.Left = this.btnOK.Left - this.btnAPPLY.Width - 5;
-            this.btnAPPLY.Top = this.btnOK.Top;
-            this.btnAPPLY.UseVisualStyleBackColor = true;
-
-            this.Resize += (sender, e) =>
-            {
-                // Adjust btnAPPLY location after resize
-                this.btnAPPLY.Left = this.btnOK.Left - this.btnAPPLY.Width - 5;
-                this.btnAPPLY.Top = this.btnOK.Top;
-            };
-
-            this.Move += (sender, e) =>
-            {
-                    this.FormLocationX = this.Location.X;
-                    this.FormLocationY = this.Location.Y;   
-            };
-
-            this.btnAPPLY.Click += (sender, e) =>
-            {
-                this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-                this.Left = this.FormLocationX;
-                this.Top = this.FormLocationY;
-            };
-
             // 
             // label2
             // 
@@ -237,7 +205,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             this.panelButtons.Controls.Add(this.btnCancel);
             this.panelButtons.Controls.Add(this.btnOK);
-            this.panelButtons.Controls.Add(this.btnAPPLY);
             resources.ApplyResources(this.panelButtons, "panelButtons");
             this.panelButtons.Name = "panelButtons";
             // 
@@ -277,12 +244,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         #endregion
 
-        private bool formMoved;
-        private int FormLocationX;
-        private int FormLocationY;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
-        private System.Windows.Forms.Button btnAPPLY;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox tbxViewName;
         private System.Windows.Forms.TabPage tabPageFilter;
