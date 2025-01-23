@@ -631,8 +631,6 @@ namespace pwiz.Skyline.Model.Tools
                 DeleteDirectory(CudaVersionDir);
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(CuDNNVersionDir))
                 DeleteDirectory(CuDNNVersionDir);
-            if (!PythonInstallerUtil.IsSignedFileOrDirectory(PythonVersionDir)) 
-                DeleteDirectory(PythonVersionDir);
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name))) 
                 DeleteDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
@@ -641,7 +639,6 @@ namespace pwiz.Skyline.Model.Tools
         {
             PythonInstallerUtil.SignDirectory(CudaVersionDir);
             PythonInstallerUtil.SignDirectory(CuDNNVersionDir);
-            PythonInstallerUtil.SignDirectory(PythonVersionDir);
             PythonInstallerUtil.SignDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
 
@@ -883,24 +880,30 @@ namespace pwiz.Skyline.Model.Tools
             }
 
         }
-
         public static bool IsSignedFileOrDirectory(string path)
         {
             return File.Exists(Path.GetFullPath(path) + SIGNATURE_EXTENSION);
         }
-
         public static void SignFile(string filePath)
         {
             if (!File.Exists(filePath)) return;
             string signatureFile = Path.GetFullPath(filePath) + SIGNATURE_EXTENSION;
-            File.WriteAllText(signatureFile, GetFileHash(filePath));
+            using (FileSaver file = new FileSaver(signatureFile))
+            {
+                File.WriteAllText(file.SafeName, GetFileHash(filePath));
+                file.Commit();
+            }
         }
-
         public static void SignDirectory(string dirPath)
         {
             if (!Directory.Exists(dirPath)) return;
+
             string signatureFile = Path.GetFullPath(dirPath) + SIGNATURE_EXTENSION;
-            File.WriteAllText(signatureFile, GetDirectoryHash(dirPath));
+            using (FileSaver file = new FileSaver(signatureFile))
+            {
+                File.WriteAllText(file.SafeName, GetDirectoryHash(dirPath));
+                file.Commit();
+            }
         }
         public static string GetDirectoryHash(string directoryPath)
         {
