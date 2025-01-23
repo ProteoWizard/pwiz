@@ -500,7 +500,6 @@ namespace pwiz.Skyline.SettingsUI
             catch (Exception)
             {
                 this.Cursor = Cursors.Default;
-                throw;
             }
 
 
