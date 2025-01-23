@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Model.Tools
                     {
                         foreach (var parentTask in taskNode.ParentNodes)
                         {
-                            if (tasks.Where(p => p.Name == parentTask.PythonTaskName).ToArray().Length > 0)
+                            if (tasks.Count > 0 && tasks.Where(p => p.Name == parentTask.PythonTaskName).ToArray().Length > 0)
                             {
                                 havePrerequisite = true;
                                 break;
