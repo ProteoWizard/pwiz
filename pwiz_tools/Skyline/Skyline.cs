@@ -111,6 +111,7 @@ namespace pwiz.Skyline
         private int _savedVersion;
         private bool _closing;
         private readonly UndoManager _undoManager;
+        private readonly UndoRedoButtons _undoRedoButtons;
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ProteinMetadataManager _proteinMetadataManager;
         private readonly IrtDbManager _irtDbManager;
@@ -142,11 +143,11 @@ namespace pwiz.Skyline
             InitializeComponent();
             InitializeMenus();
             _undoManager = new UndoManager(this);
-            var undoRedoButtons = new UndoRedoButtons(_undoManager,
+            _undoRedoButtons = new UndoRedoButtons(_undoManager,
                 EditMenu.UndoMenuItem, undoToolBarButton,
                 EditMenu.RedoMenuItem, redoToolBarButton,
                 RunUIAction);
-            undoRedoButtons.AttachEventHandlers();
+            _undoRedoButtons.AttachEventHandlers();
 
             // Setup to manage and interact with mode selector buttons in UI
             SetModeUIToolStripButtons(modeUIToolBarDropDownButton);
@@ -900,6 +901,16 @@ namespace pwiz.Skyline
                     SetActiveFile(pathOnDisk);                    
                 }
             }
+        }
+
+        public void ShowUndo(bool show = true)
+        {
+            _undoRedoButtons.ShowUndo(show);
+        }
+
+        public void ShowRedo(bool show = true)
+        {
+            _undoRedoButtons.ShowRedo(show);
         }
 
         public IUndoTransaction BeginUndo(IUndoState undoState = null)
@@ -2323,7 +2334,7 @@ namespace pwiz.Skyline
                         var tranGroupList = new List<DocNode>();
                         foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                         {
-                            var transitions = nodeTranGroup.Transitions.Take(numTransitions).ToArray();
+                            var transitions = nodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.LibInfo?.Rank).Take(numTransitions).ToArray();
                             Array.Sort(transitions, TransitionGroup.CompareTransitions);
                             tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
                         }
@@ -4064,8 +4075,12 @@ namespace pwiz.Skyline
                     if (!ImportingResultsWindow.IsUserCanceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
-                    if (!ImportingResultsWindow.HasErrors && Settings.Default.ImportResultsAutoCloseWindow)
+                    if (!ImportingResultsWindow.HasErrors &&
+                        !ImportingResultsWindow.IsProgressFrozen() &&
+                        Settings.Default.ImportResultsAutoCloseWindow)
+                    {
                         DestroyAllChromatogramsGraph();
+                    }
                 }
             }
 

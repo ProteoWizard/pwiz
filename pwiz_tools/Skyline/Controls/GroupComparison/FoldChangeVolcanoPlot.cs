@@ -756,18 +756,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             var backup = GroupComparisonDef.ColorRows.Select(r => r.Clone()).ToArray();
             using var form = new VolcanoPlotFormattingDlg(this, GroupComparisonDef.ColorRows, foldChangeRows, UpdateColorRows);
+            if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
             {
-                if (form.ShowDialog(FormEx.GetParentForm(this)) == DialogResult.OK)
-                {
-                    EditGroupComparisonDlg.ChangeGroupComparisonDef(true, GroupComparisonModel, GroupComparisonDef);
-                }
-                else
-                {
-                    EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(backup));
-                }
+                EditGroupComparisonDlg.ChangeGroupComparisonDef(true, GroupComparisonModel, GroupComparisonDef);
+            }
+            else
+            {
+                EditGroupComparisonDlg.ChangeGroupComparisonDef(false, GroupComparisonModel, GroupComparisonDef.ChangeColorRows(backup));
+            }
 
-                UpdateGraph();
-            }     
+            UpdateGraph();
         }
 
         private void UpdateColorRows(IEnumerable<MatchRgbHexColor> colorRows)
@@ -1058,6 +1056,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
         {
             get { return zedGraphControl.GraphPane.Layout; }
         }
+
+        public ZedGraphControl GraphControl { get { return zedGraphControl; } }
 
         #endregion
     }

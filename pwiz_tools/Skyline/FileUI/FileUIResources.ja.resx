@@ -659,4 +659,7 @@ Old Localized:選択したフォルダには、Agilent QQQメソッドテンプ�
   <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
     <value>Skylineドキュメント{0}の{1}からのダウンロード中にエラーが発生しました。</value>
   </data>
+  <data name="OpenFileDialogNE_OpenFileDialogNE_Open" xml:space="preserve">
+    <value>開く(&amp;O)</value>
+  </data>
 </root>

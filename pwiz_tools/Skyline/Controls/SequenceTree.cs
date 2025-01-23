@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -141,44 +142,48 @@ namespace pwiz.Skyline.Controls
 
             ImageList = new ImageList
             {
-                TransparentColor = Color.Magenta
+                TransparentColor = Color.Magenta,
+                ColorDepth = ColorDepth.Depth24Bit
             };
-            ImageList.Images.Add(Resources.Blank);
-            ImageList.Images.Add(Resources.Protein);
-            ImageList.Images.Add(Resources.Peptide);
-            ImageList.Images.Add(Resources.TransitionGroup);
-            ImageList.Images.Add(Resources.Fragment);
-            ImageList.Images.Add(Resources.PeptideLib);
-            ImageList.Images.Add(Resources.PeptideIrt);
-            ImageList.Images.Add(Resources.PeptideIrtLib);
-            ImageList.Images.Add(Resources.PeptideStandard);
-            ImageList.Images.Add(Resources.PeptideStandardLib);
-            ImageList.Images.Add(Resources.PeptideQc);
-            ImageList.Images.Add(Resources.PeptideQcLib);
-            ImageList.Images.Add(Resources.TransitionGroupLib);
-            ImageList.Images.Add(Resources.FragmentLib);
-            ImageList.Images.Add(Resources.PeptideDecoy);
-            ImageList.Images.Add(Resources.TransitionGroupDecoy);
-            ImageList.Images.Add(Resources.FragmentDecoy);
-            ImageList.Images.Add(Resources.ProteinDecoy);
-            ImageList.Images.Add(Resources.PeptideDecoyLib);
-            ImageList.Images.Add(Resources.TransitionGroupLibDecoy);
-            ImageList.Images.Add(Resources.FragmentLibDecoy);
-            ImageList.Images.Add(Resources.Molecule);
-            ImageList.Images.Add(Resources.MoleculeLib);
-            ImageList.Images.Add(Resources.MoleculeIrt);
-            ImageList.Images.Add(Resources.MoleculeIrtLib);
-            ImageList.Images.Add(Resources.MoleculeStandard);
-            ImageList.Images.Add(Resources.MoleculeStandardLib);
-            ImageList.Images.Add(Resources.MoleculeList);
-            ImageList.Images.Add(Resources.PeptideList);
-            ImageList.Images.Add(Resources.EmptyList);
+            ImageList.Images.Add(Resources.Blank);      // 1bpp
+            ImageList.Images.Add(Resources.Protein);    // 16bpp
+            ImageList.Images.Add(Resources.Peptide);    // 4bpp
+            ImageList.Images.Add(Resources.TransitionGroup); // 8bpp
+            ImageList.Images.Add(Resources.Fragment);   // 8bpp
+            ImageList.Images.Add(Resources.PeptideLib); // 4bpp
+            ImageList.Images.Add(Resources.PeptideIrt); // 4bpp
+            ImageList.Images.Add(Resources.PeptideIrtLib); // 4bpp
+            ImageList.Images.Add(Resources.PeptideStandard); // 4bpp
+            ImageList.Images.Add(Resources.PeptideStandardLib); // 4bpp
+            ImageList.Images.Add(Resources.PeptideQc);  // 4bpp
+            ImageList.Images.Add(Resources.PeptideQcLib); // 4bpp
+            ImageList.Images.Add(Resources.TransitionGroupLib); // 8bpp
+            ImageList.Images.Add(Resources.FragmentLib); // 8bpp
+            ImageList.Images.Add(Resources.PeptideDecoy); // 4bpp
+            ImageList.Images.Add(Resources.TransitionGroupDecoy); // 8bpp
+            ImageList.Images.Add(Resources.FragmentDecoy); // 8bpp
+            ImageList.Images.Add(Resources.ProteinDecoy); // 24bpp
+            ImageList.Images.Add(Resources.PeptideDecoyLib); // 4bpp
+            ImageList.Images.Add(Resources.TransitionGroupLibDecoy); // 8bpp
+            ImageList.Images.Add(Resources.FragmentLibDecoy); // 8bpp
+            ImageList.Images.Add(Resources.Molecule);   // 24bpp
+            ImageList.Images.Add(Resources.MoleculeLib); // 24bpp
+            ImageList.Images.Add(Resources.MoleculeIrt); // 24bpp
+            ImageList.Images.Add(Resources.MoleculeIrtLib); // 24bpp
+            ImageList.Images.Add(Resources.MoleculeStandard); // 24bpp
+            ImageList.Images.Add(Resources.MoleculeStandardLib); // 24bpp
+            ImageList.Images.Add(Resources.MoleculeList); // 16bpp
+            ImageList.Images.Add(Resources.PeptideList); // 16bpp
+            ImageList.Images.Add(Resources.EmptyList);  // 16bpp
 
-            StateImageList = new ImageList();
-            StateImageList.Images.Add(Resources.Peak);
-            StateImageList.Images.Add(Resources.Keep);
-            StateImageList.Images.Add(Resources.NoPeak);
-            StateImageList.Images.Add(Resources.PeakBlank);
+            StateImageList = new ImageList
+            {
+                ColorDepth = ColorDepth.Depth24Bit
+            };
+            StateImageList.Images.Add(Resources.Peak);  // 8bpp
+            StateImageList.Images.Add(Resources.Keep);  // 24bpp
+            StateImageList.Images.Add(Resources.NoPeak); // 24bpp
+            StateImageList.Images.Add(Resources.PeakBlank); // 8bpp
 
             // Add the editable node at the end
             Nodes.Add(new EmptyNode());
@@ -1195,9 +1200,9 @@ namespace pwiz.Skyline.Controls
         protected override void OnNotifyMessage(Message m)
         {
             // No erasebackground to reduce flicker
-            //if (m.Msg == (int)WinMsg.WM_ERASEBKGND)
+            //if (m.Msg == (int)User32.WinMessageType.WM_ERASEBKGND)
             //    return;
-            if (m.Msg == (int) WinMsg.WM_TIMER)
+            if (m.Msg == (int) User32.WinMessageType.WM_TIMER)
             {
                 if (_triggerLabelEdit != null && !ReferenceEquals(_triggerLabelEdit, SelectedNode))
                 {

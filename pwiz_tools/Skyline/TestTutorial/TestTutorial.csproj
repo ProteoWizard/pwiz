@@ -212,22 +212,15 @@
     <None Include="AbsoluteQuantViews.zip" />
     <None Include="AuditLogViews.zip" />
     <None Include="CEOptimizationViews.zip" />
-    <None Include="CustomReportsViews.zip" />
     <None Include="DiaViews.zip" />
-    <None Include="ExistingExperimentsViews.zip" />
-    <None Include="GroupedStudies1Views.zip" />
     <None Include="IrtViews.zip" />
     <None Include="LibraryExplorerViews.zip" />
     <None Include="MethodEditCSVs.zip" />
-    <None Include="MethodEditViews.zip" />
-    <None Include="MethodRefinementViews.zip" />
-    <None Include="Ms1FullScanFilteringViews.zip" />
     <None Include="PeakPickingViews.zip" />
     <None Include="SmallMolMethodDevCEOptViews.zip" />
     <None Include="SmallMoleculesQuantificationViews.zip" />
     <None Include="SmallMoleculeViews.zip" />
     <None Include="SRMViews.zip" />
-    <None Include="TargetedMSMSViews.zip" />
     <None Include="GroupedStudiesViews.zip" />
   </ItemGroup>
   <ItemGroup>

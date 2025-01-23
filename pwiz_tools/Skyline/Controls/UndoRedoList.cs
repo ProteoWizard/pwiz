@@ -19,8 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
@@ -200,18 +200,12 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         class ListBoxEx : ListBox
         {
-            private const int WM_VSCROLL = 0x0115;
-            private const int SB_VERT = 1;
-
-            [DllImport("user32.dll")]
-            private static extern int GetScrollPos(IntPtr hWnd, int nBar);
-
             protected override void WndProc(ref Message m)
             {
                 base.WndProc(ref m);
-                if (m.Msg == WM_VSCROLL)
+                if (m.Msg == (int)User32.WinMessageType.WM_VSCROLL)
                 {
-                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = GetScrollPos(m.HWnd, SB_VERT)};
+                    var scrollEventArgs = new ScrollEventArgs{ScrollPosition = User32.GetScrollPos(m.HWnd, Orientation.Vertical)};
                     if (Scroll != null) // For ReSharper
                         Scroll.Invoke(this, scrollEventArgs);
                 }

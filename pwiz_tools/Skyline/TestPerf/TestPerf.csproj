@@ -264,7 +264,6 @@
     <None Include="FeatureDetectionTest.zip" />
     <None Include="OrbiPrmViews.zip" />
     <None Include="PerfImportHundredsOfReplicatesTest.zip" />
-    <None Include="HiResMetabolomicsViews.zip" />
     <None Include="PerfMs3ChromatogramTest.zip" />
     <None Include="SmallMolLibrariesTutorialViews.zip" />
   </ItemGroup>

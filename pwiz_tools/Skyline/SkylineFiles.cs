@@ -3694,7 +3694,7 @@ namespace pwiz.Skyline
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
-            if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
+            if (!(PanoramaUtil.HasUploadPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
                 return false;
 
             ShareType shareType;
