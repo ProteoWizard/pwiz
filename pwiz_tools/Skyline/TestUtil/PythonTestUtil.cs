@@ -108,11 +108,10 @@ namespace pwiz.SkylineTestUtil
                         Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
                     }
 
-                    MultiButtonMsgDlg nvidiaDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                    Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), nvidiaDlg.Message);
-
                     if (TestForNvidiaGPU())
                     {
+                        MultiButtonMsgDlg nvidiaDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), nvidiaDlg.Message);
                         RunDlg<MessageDlg>(nvidiaDlg.ClickNo, okDlg =>
                         {
                             confirmDlg = okDlg;
