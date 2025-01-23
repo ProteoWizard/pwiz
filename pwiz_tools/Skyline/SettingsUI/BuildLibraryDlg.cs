@@ -94,10 +94,10 @@ namespace pwiz.Skyline.SettingsUI
         public class LearningPage : IFormView { }
 
         private const string PYTHON = @"Python";
-        public const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.2";
+        public const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.13";
         private const string ALPHAPEPTDEEP = @"alphapeptdeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
-        internal const string CARAFE_PYTHON_VERSION = @"3.9.2";
+        internal const string CARAFE_PYTHON_VERSION = @"3.9.13";
         private const string CARAFE = @"carafe";
         private const string WORKSPACES = @"workspaces";
         private const string PEPTDEEP = @"peptdeep";
@@ -306,6 +306,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     }
                     Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
+                    pythonInstaller.SignPythonEnvironment(ALPHAPEPTDEEP);
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -376,8 +377,8 @@ namespace pwiz.Skyline.SettingsUI
         
                     Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION,CARAFE, msMsDataFilePath,
                                                         trainingDataFilePath, DocumentUI);
-        
 
+                    pythonInstaller.SignPythonEnvironment(CARAFE);
                     // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
                     // TODO: if (!CreateKoinaBuilder(name, outputPath))
                     // TODO:  return false;
@@ -481,14 +482,27 @@ namespace pwiz.Skyline.SettingsUI
             
             pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady())
+            
+            this.Cursor = Cursors.WaitCursor;
+            try
             {
-                return true;
+                if (pythonInstaller.IsPythonVirtualEnvironmentReady())
+                {
+                    this.Cursor = Cursors.Default;
+                    return true;
+                }
+                else if (!createDlg)
+                {
+                    this.Cursor = Cursors.Default;
+                    return false;
+                }
             }
-            else if (!createDlg)
+            catch (Exception)
             {
-                return false;
+                this.Cursor = Cursors.Default;
+                throw;
             }
+
 
             PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
             
@@ -509,12 +523,14 @@ namespace pwiz.Skyline.SettingsUI
             var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
             var packages = new List<PythonPackage>()
             {
-                new PythonPackage {Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}"},
-                new PythonPackage {Name = @"alphabase", Version = @"1.2.1"},
-                new PythonPackage {Name = @"numpy", Version = @"1.26.4"},
-                new PythonPackage {Name = @"transformers", Version = @"4.36.1"}
-
+                new PythonPackage
+                    { Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}" },
+                new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
+                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
+                new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
+                new PythonPackage { Name = @"wheel", Version = null }
             };
+
             pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
                 new PythonInstallerTaskValidator(), CARAFE);
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
@@ -617,6 +633,7 @@ namespace pwiz.Skyline.SettingsUI
         }
         public void OkWizardPage()
         {
+            Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
                 if (ValidateBuilder(true, true))
@@ -640,7 +657,8 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = Grid.IsReady;
                 else
                     btnNext.Enabled = true;
-            }            
+            }
+            Cursor.Current = Cursors.Default;
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)

@@ -4,6 +4,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using System;
+using System.Management;
 using System.Security.Principal;
 
 namespace pwiz.SkylineTestUtil
@@ -32,6 +33,28 @@ namespace pwiz.SkylineTestUtil
             // Check if the current user is in the Administrators role
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
+        public bool TestForNvidiaGPU()
+        {
+            bool nvidiaGpu = false;
+            try
+            {
+                // Query for video controllers using WMI
+                ManagementObjectSearcher searcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_VideoController");
+
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    //  GPU information
+                    nvidiaGpu = obj[@"Name"].ToString().StartsWith(@"NVIDIA");
+                    if (nvidiaGpu) break;
+                }
+            }
+            catch (ManagementException e)
+            {
+                Console.WriteLine(@"An error occurred while querying for WMI data: " + e.Message);
+            }
+            return nvidiaGpu;
+        }
+
         public PythonTestUtil(string pythonVersion, string toolName)
         {
             _pythonVersion = pythonVersion;
@@ -82,11 +105,34 @@ namespace pwiz.SkylineTestUtil
                     }
                     else
                     {
-                        Console.WriteLine(@"Info: LongPathsEnabled registry key is set to 1");
-                        confirmDlg = WaitForOpenForm<MessageDlg>(600000);
-                        Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, confirmDlg.Message);
-                        OkDialog(confirmDlg, confirmDlg.OkDialog);
+                        Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
                     }
+
+                    MultiButtonMsgDlg nvidiaDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                    Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), nvidiaDlg.Message);
+
+                    if (TestForNvidiaGPU())
+                    {
+                        RunDlg<MessageDlg>(nvidiaDlg.ClickNo, okDlg =>
+                        {
+                            confirmDlg = okDlg;
+                            Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
+                            Console.WriteLine(@"Info: Skipping installing of Cuda/CuDNN on test node");
+                            _undoRegistry = true;
+                            okDlg.OkDialog();
+                        });
+                        if (!nvidiaDlg.IsDisposed)
+                            nvidiaDlg.Dispose();
+                    }
+                    else
+                    {
+                        Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
+                    }
+
+                    Console.WriteLine(@"Info: LongPathsEnabled registry key is set to 1");
+                    confirmDlg = WaitForOpenForm<MessageDlg>(600000);
+                    Assert.AreEqual(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment, confirmDlg.Message);
+                    OkDialog(confirmDlg, confirmDlg.OkDialog);
 
                 }, dlg => {
                     dlg.Close();
