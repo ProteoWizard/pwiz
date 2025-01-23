@@ -484,23 +484,21 @@ namespace pwiz.Skyline.SettingsUI
                 new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
             
             this.Cursor = Cursors.WaitCursor;
-            try
-            {
-                if (pythonInstaller.IsPythonVirtualEnvironmentReady())
-                {
-                    this.Cursor = Cursors.Default;
-                    return true;
-                }
-                else if (!createDlg)
-                {
-                    this.Cursor = Cursors.Default;
-                    return false;
-                }
-            }
-            catch (Exception)
+           
+            if (pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 this.Cursor = Cursors.Default;
+                return true;
             }
+            else if (!createDlg)
+            {
+                this.Cursor = Cursors.Default;
+                return false;
+            }
+     
+
+            this.Cursor = Cursors.Default;
+  
 
 
             PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
@@ -658,6 +656,7 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = true;
             }
             Cursor.Current = Cursors.Default;
+
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)
