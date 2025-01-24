@@ -408,8 +408,14 @@ namespace pwiz.Skyline.SettingsUI
                                     AddRetentionTimePredictor(buildState);
                             }
                         }));
-                        frm.Start();
-                        Assume.IsNull(Interlocked.Exchange(ref _notification, frm));
+
+                        if (!Program.FunctionalTest || !Install.IsRunningOnWindows11)
+                        {
+                            // TODO: Come up with a better solution than just not running this code on Windows 11
+                            // Showing the form causes thread and event handle leaks on Windows 11
+                            frm.Start();
+                            Assume.IsNull(Interlocked.Exchange(ref _notification, frm));
+                        }
                     }
                 }
             });

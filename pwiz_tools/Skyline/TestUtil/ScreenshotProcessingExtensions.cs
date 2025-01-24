@@ -49,12 +49,12 @@ namespace pwiz.SkylineTestUtil
         public const int CORNER_FORM_WINDOWS11 = 8;
         public const int CORNER_TOOL_WINDOW_WINDOWS11 = 4;
 
-        public static int CornerForm => IsWindows11() ? CORNER_FORM_WINDOWS11 : 0;
-        public static int CornerToolWindow => IsWindows11() ? CORNER_TOOL_WINDOW_WINDOWS11 : 0;
+        public static int CornerForm => Install.IsRunningOnWindows11 ? CORNER_FORM_WINDOWS11 : 0;
+        public static int CornerToolWindow => Install.IsRunningOnWindows11 ? CORNER_TOOL_WINDOW_WINDOWS11 : 0;
 
         public static Bitmap CleanupBorder(this Bitmap bmp, bool toolWindow = false)
         {
-            bool isWindows11 = IsWindows11();
+            bool isWindows11 = Install.IsRunningOnWindows11;
             if (!toolWindow)
             {
                 return bmp.CleanupBorder(new Rectangle(0, 0, bmp.Width, bmp.Height), isWindows11 ? CORNER_FORM_WINDOWS11 : 0);
@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestUtil
         private static Bitmap CleanupBorderInternal(this Bitmap bmp, Color color, Rectangle rect, int cornerRadius,
             Rectangle? excludeRect)
         {
-            return IsWindows11() && cornerRadius != 0
+            return Install.IsRunningOnWindows11 && cornerRadius != 0
                 ? bmp.CleanupBorder11(color, rect, cornerRadius, excludeRect)
                 : bmp.CleanupBorder10(color, rect, excludeRect);
         }
@@ -207,20 +207,6 @@ namespace pwiz.SkylineTestUtil
             path.AddArc(rect.Left, rect.Bottom - arcHeight, arcWidth, arcHeight, 90, 90); // Bottom-left corner
             path.AddLine(rect.Left, rect.Bottom - radius, rect.Left, rect.Top + radius); // Left edge
             path.CloseFigure(); // Close the path to ensure it forms a complete shape
-        }
-
-        /// <summary>
-        /// Determines if the operating system is Windows 11.
-        /// </summary>
-        private static bool IsWindows11()
-        {
-            var osVersion = Environment.OSVersion;
-            if (osVersion.Platform == PlatformID.Win32NT && osVersion.Version.Major == 10)
-            {
-                // Windows 11 has version 10.0 with a build number >= 22000
-                return osVersion.Version.Build >= 22000;
-            }
-            return false;
         }
 
         private static void AddPixel(Point point, Bitmap shotPic, IDictionary<Color, int> colorCounts)
