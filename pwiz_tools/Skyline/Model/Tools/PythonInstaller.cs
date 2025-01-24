@@ -836,12 +836,27 @@ namespace pwiz.Skyline.Model.Tools
         {
             using (var sha256 = SHA256.Create())
             {
-                using (var stream = File.OpenRead($@"\\?\{filePath}"))
+                int maxRetries = 100;
+                int retry = 0;
+
+                while (retry++ < maxRetries)
                 {
-                    var hash = sha256.ComputeHash(stream);
-                    return BitConverter.ToString(hash).Replace(@"-", "").ToLowerInvariant();
+                    try
+                    {
+                        using (var stream = File.OpenRead($@"\\?\{filePath}"))
+                        {
+                            var hash = sha256.ComputeHash(stream);
+                            return BitConverter.ToString(hash).Replace(@"-", "").ToLowerInvariant();
+                        }
+                    }
+                    catch (IOException)
+                    {
+
+                    }
                 }
             }
+
+            return @"F00F00F00";
         }
 
         public static bool IsRunningElevated()
@@ -929,14 +944,32 @@ namespace pwiz.Skyline.Model.Tools
                     int fileCount = 0;
                     for (fileCount = 0; fileCount < Math.Min(filesArray.Length, maxFilesToCheck); fileCount++)
                     {
-                        using (var fileStream = new FileStream( $@"\\?\{filesArray[fileCount]}", FileMode.Open))
+                        int maxRetries = 100;
+                        int retry = 0;
+                        
+                        //Sometimes the file is being read by another process so we retry upto 100 times
+                        while (retry++ < maxRetries)
                         {
-                            // Copy file contents to the combined stream
-                            fileStream.CopyTo(combinedStream);
-                            // Add a separator or file name to differentiate between files
-                            var separator = Encoding.UTF8.GetBytes(Path.GetFileName(filesArray[fileCount]));
-                            combinedStream.Write(separator, 0, separator.Length);
+                            try
+                            {
+                                using (var fileStream = new FileStream($@"\\?\{filesArray[fileCount]}", FileMode.Open))
+                                {
+                                    // Copy file contents to the combined stream
+                                    fileStream.CopyTo(combinedStream);
+                                    // Add a separator or file name to differentiate between files
+                                    
+                                    var separator = Encoding.UTF8.GetBytes(Path.GetFileName(filesArray[fileCount]) ?? string.Empty);
+                                    combinedStream.Write(separator, 0, separator.Length);
+                                    break;
+                                }
+                            }
+                            catch (IOException)
+                            {
+
+                            }
+
                         }
+
                     }
 
                     combinedStream.Seek(0, SeekOrigin.Begin); // Reset stream position
