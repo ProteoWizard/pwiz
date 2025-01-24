@@ -501,7 +501,7 @@ namespace pwiz.Skyline.SettingsUI
   
 
 
-            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
+            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep"), string.Format(Resources.OK));
             
             if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
             {
@@ -979,7 +979,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return radioKoinaSource.Checked; }
             set { radioKoinaSource.Checked = value; }
         }
-        public bool AlphapeptDeep
+        public bool AlphaPeptDeep
         {
             get { return radioAlphaSource.Checked; }
             set { radioAlphaSource.Checked = value; }
