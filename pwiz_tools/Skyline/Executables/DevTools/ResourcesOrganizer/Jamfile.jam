@@ -1,0 +1,64 @@
+import modules path feature ;
+
+rule build-properties ( targets + : sources * : properties * )
+{
+    local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
+
+	path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
+	path-constant CURRENT_DIR : $(SKYLINE_PATH)/Executables/DevTools/ResourcesOrganizer ;
+	path-constant OUTPUT_DIR : $(CURRENT_DIR)/ResourcesOrganizer/bin/Release ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = $(.msvcSetupScript) ;
+}
+
+rule do_resources_organizer ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_resources_organizer
+{
+    $(MSVC_CURRENT_SETUP_SCRIPT)
+    echo Building $(current-dir) ResourcesOrganizer.exe
+    msbuild $(CURRENT_DIR)\ResourcesOrganizer\ResourcesOrganizer.csproj /p:Configuration=Release;OutDir=$(OUTPUT_DIR) /nologo /verbosity:minimal
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+make ResourcesOrganizer.exe
+    : # sources
+    : # actions
+        @do_resources_organizer
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+;
+
+rule do_update_localized_resx ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_update_localized_resx
+{
+	echo Updating mergining localized resx files
+	$(CURRENT_DIR)\scripts\UpdateLocalizedResxFiles.bat
+	pushdir 
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+
+make localized_resx
+    : # sources
+    : # actions
+        @do_update_localized_resx
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <dependency>ResourcesOrganizer.exe
+	;
+
+    
