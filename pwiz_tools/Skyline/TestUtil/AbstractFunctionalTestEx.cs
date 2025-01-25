@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestUtil
             // In a test it's possible to programatically open a document while forms like
             // PeptideSettingsUI or TransitionSettingsUI are open, but this isn't possible
             // in actual UI use and will doubtless lead to confusing test behavior.
-            var unexpectedOpenForms = FindOpenForms<CommonFormEx>().Where(f => !(f is SkylineWindow)).Select(form => form.Name).ToList();
+            var unexpectedOpenForms = FindOpenForms<Form>().Where(f => f.Modal).Select(form => form.Name).ToList();
             AssertEx.AreEqual(0, unexpectedOpenForms.Count, $@"Can't open a document when other dialogs are still open: {CommonTextUtil.LineSeparate(unexpectedOpenForms)}");
 
             string documentFile = null;
