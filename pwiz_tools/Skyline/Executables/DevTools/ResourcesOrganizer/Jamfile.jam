@@ -36,18 +36,18 @@ make ResourcesOrganizer.exe
 ;
 
 ##############
-# update_localized_resx
+# UpdateLocalizedResxFiles
 # Updates the .ja and .zh-CHS resx files by reverting to English all strings not found in "LastReleaseResources.db"
 ##############
 
-rule do_update_localized_resx ( targets + : sources * : properties * )
+rule do_UpdateLocalizedResxFiles ( targets + : sources * : properties * )
 {
     return [ build-properties $(targets) : $(sources) : $(properties) ] ;
 }
 
-actions do_update_localized_resx
+actions do_UpdateLocalizedResxFiles
 {
-	echo Updating mergining localized resx files
+	echo Updating localized resx files
 	$(CURRENT_DIR)\scripts\UpdateLocalizedResxFiles.bat
 	pushdir 
     set status=%ERRORLEVEL%
@@ -55,10 +55,10 @@ actions do_update_localized_resx
 }
 
 
-make update_localized_resx
+make UpdateLocalizedResxFiles
     : # sources
     : # actions
-        @do_update_localized_resx
+        @do_UpdateLocalizedResxFiles
     : # requirements
         <link>shared:<build>no
         <conditional>@no-express-requirement
@@ -66,4 +66,4 @@ make update_localized_resx
         <dependency>ResourcesOrganizer.exe
 	;
 
-explicit update_localized_resx ;
+explicit UpdateLocalizedResxFiles ;

@@ -4,27 +4,27 @@ if %ERRORLEVEL% neq 0 (
 	goto end
 )
 
-set LASTVERSIONDB=%~dp0..\LastReleaseResources.db
+set LASTVERSIONDB=%PWIZ_ROOT%\pwiz_tools\Skyline\Translation\LastReleaseResources.db
 if not exist %LASTVERSIONDB% (
 	echo %LASTVERSIONDB% does not exist
 	set ERRORLEVEL=1
 	goto end
 )
 pushd %PWIZ_ROOT%
-call %~dp0MakeResourcesDb.bat %WORKDIR%\NewRelease.db
+call %~dp0MakeResourcesDb.bat %WORKDIR%\CurrentRelease.db
 popd
 pushd %WORKDIR%
-%RESORGANIZER% importLastVersion --db NewRelease.db %LASTVERSIONDB% --output newstrings.db --language ja zh-CHS
+%RESORGANIZER% importLastVersion --db CurrentRelease.db %LASTVERSIONDB% --output MergedResources.db --language ja zh-CHS
 if %ERRORLEVEL% neq 0 (
 	goto error
 )
-%RESORGANIZER% exportResx --db newstrings.db mergedresxfiles.zip
+%RESORGANIZER% exportResx --db MergedResources.db MergedResxFiles.zip
 if %ERRORLEVEL% neq 0 (
 	goto error
 )
 popd
 pushd %PWIZ_ROOT%
-libraries\7za.exe x -y %WORKDIR%\mergedresxfiles.zip
+libraries\7za.exe x -y %WORKDIR%\MergedResxFiles.zip
 if %ERRORLEVEL% neq 0 (
 	goto error
 )

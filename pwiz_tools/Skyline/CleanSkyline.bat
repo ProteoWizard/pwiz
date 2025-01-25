@@ -58,4 +58,5 @@ IF EXIST SkylineNightly\Properties\AssemblyInfo.cs del /q SkylineNightly\Propert
 IF EXIST SkylineNightlyShim\Properties\AssemblyInfo.cs del /q SkylineNightlyShim\Properties\AssemblyInfo.cs
 IF EXIST SkylineTester\Properties\AssemblyInfo.cs del /q SkylineTester\Properties\AssemblyInfo.cs
 IF EXIST TestRunner\Properties\AssemblyInfo.cs del /q TestRunner\Properties\AssemblyInfo.cs
+IF EXIST Translation\Scratch rmdir /s /q Translation\Scratch
 popd

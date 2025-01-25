@@ -288,6 +288,23 @@ namespace ResourcesOrganizer.ResourcesModel
             return document;
         }
 
+        public bool AnyEntriesForLanguage(string language)
+        {
+            foreach (var entry in Entries)
+            {
+                var translation = entry.GetTranslation(language);
+                if (translation != null)
+                {
+                    if (translation.Value != entry.Invariant.Value)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public ResourcesFile ImportLocalizationRecords(string language, ILookup<string, LocalizationCsvRecord> records, out int matchCount, out int changeCount)
         {
             matchCount = 0;
