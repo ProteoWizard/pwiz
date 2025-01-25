@@ -20,7 +20,7 @@ actions do_resources_organizer
 {
     $(MSVC_CURRENT_SETUP_SCRIPT)
     echo Building $(current-dir) ResourcesOrganizer.exe
-    msbuild $(CURRENT_DIR)\ResourcesOrganizer\ResourcesOrganizer.csproj /p:Configuration=Release;OutDir=$(OUTPUT_DIR) /nologo /verbosity:minimal
+    dotnet build $(CURRENT_DIR)\ResourcesOrganizer\ResourcesOrganizer.csproj /p:Configuration=Release;OutDir=$(OUTPUT_DIR) /nologo /verbosity:minimal
     set status=%ERRORLEVEL%
     exit %status%
 }
@@ -34,6 +34,11 @@ make ResourcesOrganizer.exe
         <conditional>@no-express-requirement
         <conditional>@msvc-dotnet-requirement
 ;
+
+##############
+# update_localized_resx
+# Updates the .ja and .zh-CHS resx files by reverting to English all strings not found in "LastReleaseResources.db"
+##############
 
 rule do_update_localized_resx ( targets + : sources * : properties * )
 {
@@ -50,7 +55,7 @@ actions do_update_localized_resx
 }
 
 
-make localized_resx
+make update_localized_resx
     : # sources
     : # actions
         @do_update_localized_resx
@@ -61,4 +66,4 @@ make localized_resx
         <dependency>ResourcesOrganizer.exe
 	;
 
-    
+explicit update_localized_resx ;
