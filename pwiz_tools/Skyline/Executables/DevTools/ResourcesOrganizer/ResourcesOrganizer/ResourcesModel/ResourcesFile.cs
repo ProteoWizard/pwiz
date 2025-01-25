@@ -232,6 +232,18 @@ namespace ResourcesOrganizer.ResourcesModel
             {
                 foreach (var entry in entryGroup.Reverse())
                 {
+                    if (!overrideAll && language != null)
+                    {
+                        var localizedEntry = entry.GetTranslation(language);
+                        if (localizedEntry == null)
+                        {
+                            continue;
+                        }
+                        if (localizedEntry.Issue == LocalizationIssue.NewResource && localizedEntry.Value == entry.Invariant.Value)
+                        {
+                            continue;
+                        }
+                    }
                     string? localizedText = entry.GetLocalizedText(language);
                     if (overrideAll && localizedText == null)
                     {
