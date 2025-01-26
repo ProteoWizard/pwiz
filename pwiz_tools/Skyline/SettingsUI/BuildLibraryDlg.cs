@@ -112,7 +112,7 @@ namespace pwiz.Skyline.SettingsUI
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
         public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => true;
+        private bool IsCarafeEnabled => false;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
         private string CarafePythonVirtualEnvironmentDir =>
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.SettingsUI
             get => _documentUiContainer.DocumentUI;
         }
       
-        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false)
+        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!SetupPythonEnvironmentForAlpha(createDlg))
                     {
-                        pythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
+                        if (cleanUp) pythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
                         return false;
 
                     }
@@ -633,7 +633,7 @@ namespace pwiz.Skyline.SettingsUI
             Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (ValidateBuilder(true, true))
+                if (ValidateBuilder(true, true, true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;

@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using Ionic.Zip;
+using JetBrains.Annotations;
 using Microsoft.Win32;
 using OneOf;
 using pwiz.Common.Collections;
@@ -73,7 +74,7 @@ namespace pwiz.Skyline.Model.Tools
         public string CuDNNVersionDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"cudnn", CUDNN_VERSION);
 
         public string CuDNNArchive = $@"cudnn-windows-x86_64-{CUDNN_VERSION}-archive";
-        public string CuDNNInstallDir => @"C:\Program Files\NVIDIA\CUDNN\v9.x";
+        public static string CuDNNInstallDir => @"C:\Program Files\NVIDIA\CUDNN\v9.x";
         public string CuDNNInstallerDownloadPath => Path.Combine(CuDNNVersionDir, CUDNN_INSTALLER);
 
         //private string CUDA_INSTALLER = $@"cuda_{CUDA_VERSION_FULL}_windows.exe";
@@ -125,13 +126,54 @@ namespace pwiz.Skyline.Model.Tools
         private IPythonInstallerTaskValidator TaskValidator { get; }
 
 
-        public bool CudaLibraryInstalled()
+        public static bool CudaLibraryInstalled()
         {
             string cudaPath = Environment.GetEnvironmentVariable("CUDA_PATH");
             return !string.IsNullOrEmpty(cudaPath);
         }
 
-        private bool? TestForNvidiaGPU()
+        public static bool NvidiaLibrariesInstalled()
+        {
+            bool cudaYes = CudaLibraryInstalled();
+            bool? cudnnYes = CuDNNLibraryInstalled();
+
+            return cudaYes && cudnnYes != false;
+        }
+
+        public static bool? CuDNNLibraryInstalled()
+        {
+            string targetDirectory = CuDNNInstallDir + @"\bin";
+
+            if (!Directory.Exists(targetDirectory)) return false;
+
+            string newPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) +
+                             TextUtil.SEMICOLON + targetDirectory;
+            Environment.SetEnvironmentVariable("PATH", newPath, EnvironmentVariableTarget.User);
+
+            var computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
+            bool? isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
+            if (isValid == true || isValid == null)
+            {
+                targetDirectory = CuDNNInstallDir + @"\include";
+                if (!Directory.Exists(targetDirectory)) return false;
+
+                computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
+                isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
+                if (isValid == true || isValid == null)
+                {
+                    targetDirectory = CuDNNInstallDir + @"\lib";
+                    if (!Directory.Exists(targetDirectory)) return false;
+
+                    computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
+                    isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
+                }
+
+            }
+
+            return isValid;
+        }
+
+        public static bool? TestForNvidiaGPU()
         {
             bool? nvidiaGpu = null;
             try
@@ -410,13 +452,7 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
         }
-        private void DownloadCuDNNLibrary(IProgressMonitor progressMonitor)
-        {
-            using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            if (!webClient.DownloadFileAsync(CuDNNDownloadUri, CuDNNDownloadPath, out var downloadException))
-                throw new ToolExecutionException(
-                    ToolsResources.PythonInstaller_CuDNN_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
-        }
+      
         private void DownloadCudaLibrary(IProgressMonitor progressMonitor)
         {
             using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
@@ -435,6 +471,13 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
 
+        private void DownloadCuDNNLibrary(IProgressMonitor progressMonitor)
+        {
+            using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
+            if (!webClient.DownloadFileAsync(CuDNNDownloadUri, CuDNNDownloadPath, out var downloadException))
+                throw new ToolExecutionException(
+                    ToolsResources.PythonInstaller_CuDNN_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
+        }
         private void InstallCuDNNLibrary(IProgressMonitor progressMonitor)
         {
             using var zipFile = ZipFile.Read(CuDNNDownloadPath);
@@ -491,6 +534,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             //PythonInstallerUtil.UnblockFile(PythonEmbeddablePackageDownloadPath);
             using var zipFile = ZipFile.Read(PythonEmbeddablePackageDownloadPath);
+            DeleteDirectory(PythonEmbeddablePackageExtractDir);
             zipFile.ExtractAll(PythonEmbeddablePackageExtractDir);
         }
 
@@ -631,8 +675,6 @@ namespace pwiz.Skyline.Model.Tools
                 DeleteDirectory(CudaVersionDir);
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(CuDNNVersionDir))
                 DeleteDirectory(CuDNNVersionDir);
-            if (!PythonInstallerUtil.IsSignedFileOrDirectory(PythonVersionDir)) 
-                DeleteDirectory(PythonVersionDir);
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name))) 
                 DeleteDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
@@ -650,25 +692,7 @@ namespace pwiz.Skyline.Model.Tools
             if (!Directory.Exists(targetDir))
                 return;
 
-            // Get all files in the directory
-            string[] files = Directory.GetFiles(targetDir);
-            foreach (string file in files)
-            {
-                // Delete files
-                File.SetAttributes($@"\\?\{file}", FileAttributes.Normal);
-                File.Delete($@"\\?\{file}");
-            }
-
-            // Get all subdirectories
-            string[] directories = Directory.GetDirectories(targetDir);
-            foreach (string dir in directories)
-            {
-                // Recursively delete subdirectories
-                DeleteDirectory(dir);
-            }
-
-            // Finally, delete the directory itself
-            Directory.Delete(longPath, false);
+            Directory.Delete(longPath, true);
         }
 
     }
@@ -836,27 +860,40 @@ namespace pwiz.Skyline.Model.Tools
         {
             using (var sha256 = SHA256.Create())
             {
-                int maxRetries = 100;
-                int retry = 0;
-
-                while (retry++ < maxRetries)
+                byte[] hash = { };
+                RetryAction(() =>
                 {
-                    try
+
+                    using (var stream = File.OpenRead($@"\\?\{filePath}"))
                     {
-                        using (var stream = File.OpenRead($@"\\?\{filePath}"))
-                        {
-                            var hash = sha256.ComputeHash(stream);
-                            return BitConverter.ToString(hash).Replace(@"-", "").ToLowerInvariant();
-                        }
-                    }
-                    catch (IOException)
-                    {
+                        hash = sha256.ComputeHash(stream);
 
                     }
+                });
+
+                if (!hash.IsNullOrEmpty())
+                    return BitConverter.ToString(hash).Replace(@"-", "").ToLowerInvariant();
+
+                return @"F00F00F00";
+            }
+        }
+
+        public static void RetryAction([InstantHandle] Action act, int maxRetries = 100)
+        {
+            int retry = 0;
+
+            while (retry++ < maxRetries)
+            {
+                try
+                {
+                    act();
+                    break;
+                }
+                catch (IOException)
+                {
+
                 }
             }
-
-            return @"F00F00F00";
         }
 
         public static bool IsRunningElevated()
@@ -944,32 +981,18 @@ namespace pwiz.Skyline.Model.Tools
                     int fileCount = 0;
                     for (fileCount = 0; fileCount < Math.Min(filesArray.Length, maxFilesToCheck); fileCount++)
                     {
-                        int maxRetries = 100;
-                        int retry = 0;
-                        
-                        //Sometimes the file is being read by another process so we retry upto 100 times
-                        while (retry++ < maxRetries)
-                        {
-                            try
+                        //Sometimes the file is locked by another process so we retry up to 100 times
+                        RetryAction(() => {
+                            using (var fileStream = new FileStream($@"\\?\{filesArray[fileCount]}", FileMode.Open))
                             {
-                                using (var fileStream = new FileStream($@"\\?\{filesArray[fileCount]}", FileMode.Open))
-                                {
-                                    // Copy file contents to the combined stream
-                                    fileStream.CopyTo(combinedStream);
-                                    // Add a separator or file name to differentiate between files
-                                    
-                                    var separator = Encoding.UTF8.GetBytes(Path.GetFileName(filesArray[fileCount]) ?? string.Empty);
-                                    combinedStream.Write(separator, 0, separator.Length);
-                                    break;
-                                }
+                                // Copy file contents to the combined stream
+                                fileStream.CopyTo(combinedStream);
+                                // Add a separator or file name to differentiate between files
+
+                                var separator = Encoding.UTF8.GetBytes(Path.GetFileName(filesArray[fileCount]) ?? string.Empty);
+                                combinedStream.Write(separator, 0, separator.Length);
                             }
-                            catch (IOException)
-                            {
-
-                            }
-
-                        }
-
+                        });
                     }
 
                     combinedStream.Seek(0, SeekOrigin.Begin); // Reset stream position
@@ -1193,7 +1216,7 @@ namespace pwiz.Skyline.Model.Tools
                 case PythonTaskName.download_cuda_library:
                     return ValidateDownloadCudaLibrary();
                 case PythonTaskName.install_cuda_library:
-                    return ValidateInstallCudaLibrary(pythonInstaller);
+                    return ValidateInstallCudaLibrary();
                 case PythonTaskName.download_cudnn_library:
                     return ValidateDownloadCuDNNLibrary();
                 case PythonTaskName.install_cudnn_library:
@@ -1228,7 +1251,7 @@ namespace pwiz.Skyline.Model.Tools
             };
         private bool ValidateDownloadCudaLibrary()
         {
-            if (_pythonInstaller.CudaLibraryInstalled())
+            if (PythonInstaller.CudaLibraryInstalled())
                 return true;
             if (!File.Exists(_pythonInstaller.CudaInstallerDownloadPath))
                 return false;
@@ -1238,13 +1261,15 @@ namespace pwiz.Skyline.Model.Tools
             return computeHash == storedHash;
         }
 
-        private bool ValidateInstallCudaLibrary(PythonInstaller pythonInstaller)
+        private bool ValidateInstallCudaLibrary()
         {
-            return pythonInstaller.CudaLibraryInstalled();
+            return PythonInstaller.CudaLibraryInstalled();
         }
 
         private bool ValidateDownloadCuDNNLibrary()
         {
+            if (PythonInstaller.CuDNNLibraryInstalled() != false)
+                return true;
             if (!File.Exists(_pythonInstaller.CuDNNInstallerDownloadPath))
                 return false;
             var computeHash =
@@ -1255,36 +1280,7 @@ namespace pwiz.Skyline.Model.Tools
        
         private bool? ValidateInstallCuDNNLibrary()
         {
-            string targetDirectory = _pythonInstaller.CuDNNInstallDir + @"\bin";
-            
-            if (!Directory.Exists(targetDirectory)) return false;
-          
-            string newPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) +
-                             TextUtil.SEMICOLON + targetDirectory;
-            Environment.SetEnvironmentVariable("PATH", newPath, EnvironmentVariableTarget.User);
-
-            var computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
-            bool? isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
-            if (isValid == true || isValid == null)
-            {
-                targetDirectory = _pythonInstaller.CuDNNInstallDir + @"\include";
-                if (!Directory.Exists(targetDirectory)) return false;
-
-                computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
-                isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
-                if (isValid == true || isValid == null)
-                {
-                    targetDirectory = _pythonInstaller.CuDNNInstallDir + @"\lib";
-                    if (!Directory.Exists(targetDirectory)) return false;
-
-                    computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
-                    isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
-                }
-
-            }
-            return isValid;
-        
-
+            return PythonInstaller.CuDNNLibraryInstalled();
         }
 
         private bool ValidateDownloadPythonEmbeddablePackage()
@@ -1445,6 +1441,7 @@ namespace pwiz.Skyline.Model.Tools
     {
         private OneOf<Action, Action<IProgressMonitor>> _action;
 
+        public bool IsAction => IsActionWithNoArg || IsActionWithProgressMonitor;
         public bool IsActionWithNoArg => _action.IsT0;
         public bool IsActionWithProgressMonitor => _action.IsT1;
         public Action AsActionWithNoArg => _action.AsT0;
