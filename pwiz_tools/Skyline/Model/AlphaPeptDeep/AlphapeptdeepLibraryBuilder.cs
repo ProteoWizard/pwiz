@@ -11,7 +11,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Controls.SeqNode;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
@@ -198,7 +197,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         {
                             continue;
                         }
-                        var precursor = TransitionGroupTreeNode.GetLabel(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
+                        var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
                         var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
                         var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
                         var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
@@ -218,6 +217,22 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
 
             return result;
+        }
+
+        public static string LabelPrecursor(TransitionGroup tranGroup, double precursorMz,
+            string resultsText)
+        {
+            return string.Format(@"{0}{1}{2}{3}", LabelMz(tranGroup, precursorMz),
+                Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
+                tranGroup.LabelTypeText, resultsText);
+        }
+
+        private static string LabelMz(TransitionGroup tranGroup, double precursorMz)
+        {
+            int? massShift = tranGroup.DecoyMassShift;
+            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
+            return string.Format(@"{0:F04}{1}", precursorMz - shift,
+                Transition.GetDecoyText(massShift));
         }
     }
     public class ArgumentAndValue
