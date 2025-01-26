@@ -1,4 +1,17 @@
 @setlocal
+
+if "%1" == "final" (
+	set EXPORTARGS=--overrideAll
+) 
+else if "%1" == "incremental" (
+	set EXPORTARGS=
+)
+else (
+	echo Usage %~nx0 final^|incrementa
+	set ERRORLEVEL=1
+	goto end
+)
+
 call %~dp0SetVariables.bat
 if %ERRORLEVEL% neq 0 (
 	goto end

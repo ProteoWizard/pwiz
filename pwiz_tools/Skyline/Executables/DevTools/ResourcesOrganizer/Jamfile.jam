@@ -36,29 +36,30 @@ make ResourcesOrganizer.exe
 ;
 
 ##############
-# UpdateLocalizedResxFiles
+# IncrementalUpdateResxFiles
+# Should be run when user interface changes during the development cycle
 # Updates the .ja and .zh-CHS resx files by reverting to English all strings not found in "LastReleaseResources.db"
 ##############
 
-rule do_UpdateLocalizedResxFiles ( targets + : sources * : properties * )
+rule do_IncrementalUpdateResxFiles ( targets + : sources * : properties * )
 {
     return [ build-properties $(targets) : $(sources) : $(properties) ] ;
 }
 
-actions do_UpdateLocalizedResxFiles
+actions do_IncrementalUpdateResxFiles
 {
 	echo Updating localized resx files
-	$(CURRENT_DIR)\scripts\UpdateLocalizedResxFiles.bat
+	$(CURRENT_DIR)\scripts\UpdateResxFiles.bat incremental
 	pushdir 
     set status=%ERRORLEVEL%
     exit %status%
 }
 
 
-make UpdateLocalizedResxFiles
+make IncrementalUpdateResxFiles
     : # sources
     : # actions
-        @do_UpdateLocalizedResxFiles
+        @do_IncrementalUpdateResxFiles
     : # requirements
         <link>shared:<build>no
         <conditional>@no-express-requirement
@@ -66,4 +67,42 @@ make UpdateLocalizedResxFiles
         <dependency>ResourcesOrganizer.exe
 	;
 
-explicit UpdateLocalizedResxFiles ;
+explicit IncrementalUpdateResxFiles ;
+
+##############
+# FinalUpdateResxFiles
+# Should be run after visual freeze to update the .resx files by adding comments indicating which
+# strings have been added since LastReleaseResources.db
+# After running this, fixes can be manually applied to the resx files
+##############
+
+rule do_FinalizeResxFiles ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_FinalizeResxFiles
+{
+	echo Finalizing resx files
+	$(CURRENT_DIR)\scripts\UpdateResxFiles.bat final
+	pushdir 
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+
+make FinalizeResxFiles
+    : # sources
+    : # actions
+        @do_FinalizeResxFiles
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <dependency>ResourcesOrganizer.exe
+	;
+
+explicit FinalizeResxFiles ;
+
+
+
