@@ -77,7 +77,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // btnAPPLY
             // 
             resources.ApplyResources(this.btnAPPLY, "btnAPPLY");
-            this.btnAPPLY.DialogResult = System.Windows.Forms.DialogResult.Yes;
+            this.btnAPPLY.DialogResult = System.Windows.Forms.DialogResult.None;
             this.btnAPPLY.Name = "btnAPPLY";
             this.btnAPPLY.Text = "Apply";
             this.btnAPPLY.Left = this.btnOK.Left - this.btnAPPLY.Width - 5;
@@ -277,7 +277,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         #endregion
 
-        private bool formMoved;
         private int FormLocationX;
         private int FormLocationY;
         private System.Windows.Forms.Button btnCancel;

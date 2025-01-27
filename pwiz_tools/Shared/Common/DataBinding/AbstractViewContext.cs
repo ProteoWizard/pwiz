@@ -46,7 +46,7 @@ namespace pwiz.Common.DataBinding
         
         public const string DefaultViewName = "default";
         private IList<RowSourceInfo> _rowSources;
-        protected ViewEditor _customizedViewForm = null;
+        protected ViewEditor _customizedViewForm;
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
         {
             DataSchema = dataSchema;
@@ -349,7 +349,7 @@ namespace pwiz.Common.DataBinding
         
 
             ViewInfo viewInfo = _customizedViewForm.ViewInfo;
-            if ( formResult == DialogResult.Yes)
+            if ( formResult == DialogResult.None)
             {                
                 viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(_customizedViewForm.ViewName));
              
