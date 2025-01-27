@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Python packages in virtual environment {0}.
+        ///   Looks up a localized string similar to Installing Python packages in virtual environment {0}. First installs can take up to 10-15 minutes, please be patient ....
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_ {
             get {

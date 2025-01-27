@@ -47,6 +47,7 @@ namespace pwiz.Common.DataBinding
         public const string DefaultViewName = "default";
         private IList<RowSourceInfo> _rowSources;
         public ViewEditor CustomizedViewForm { get; private set; }
+
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
         {
             DataSchema = dataSchema;
@@ -338,7 +339,6 @@ namespace pwiz.Common.DataBinding
 
         public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath)
         {
-       
             var formResult = DialogResult.None;
             
             if (CustomizedViewForm == null) 
@@ -372,6 +372,7 @@ namespace pwiz.Common.DataBinding
             CustomizedViewForm.Dispose();
             CustomizedViewForm = null;
             return viewInfo.GetViewSpec();         
+
         }
 
         public ViewSpec NewView(Control owner, ViewGroup viewPath)

@@ -112,7 +112,7 @@ namespace pwiz.Skyline.SettingsUI
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
         public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => true;
+        private bool IsCarafeEnabled => false;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
         private string CarafePythonVirtualEnvironmentDir =>
@@ -235,7 +235,7 @@ namespace pwiz.Skyline.SettingsUI
             get => _documentUiContainer.DocumentUI;
         }
       
-        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false)
+        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!SetupPythonEnvironmentForAlpha(createDlg))
                     {
-                        pythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
+                        if (cleanUp) pythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
                         return false;
 
                     }
@@ -484,6 +484,7 @@ namespace pwiz.Skyline.SettingsUI
                 new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
             
             this.Cursor = Cursors.WaitCursor;
+           
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 this.Cursor = Cursors.Default;
@@ -494,8 +495,13 @@ namespace pwiz.Skyline.SettingsUI
                 this.Cursor = Cursors.Default;
                 return false;
             }
+     
 
-            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep"), string.Format(Resources.OK));
+            this.Cursor = Cursors.Default;
+  
+
+
+            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep"), string.Format(Resources.OK));
             
             if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
             {
@@ -627,7 +633,7 @@ namespace pwiz.Skyline.SettingsUI
             Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (ValidateBuilder(true, true))
+                if (ValidateBuilder(true, true, true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
@@ -650,6 +656,7 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = true;
             }
             Cursor.Current = Cursors.Default;
+
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)
@@ -972,7 +979,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return radioKoinaSource.Checked; }
             set { radioKoinaSource.Checked = value; }
         }
-        public bool AlphapeptDeep
+        public bool AlphaPeptDeep
         {
             get { return radioAlphaSource.Checked; }
             set { radioAlphaSource.Checked = value; }

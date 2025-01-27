@@ -162,7 +162,7 @@
     <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
-    <Compile Include="AlphapeptDeepBuildLibraryTest.cs" />
+    <Compile Include="AlphapeptdeepBuildLibraryTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />

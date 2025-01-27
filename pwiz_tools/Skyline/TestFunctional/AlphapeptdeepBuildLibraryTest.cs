@@ -6,33 +6,34 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class AlphapeptDeepBuildLibraryTest : AbstractFunctionalTestEx
+    public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
         [TestMethod]
-        public void TestAlphapeptDeepBuildLibrary()
+        public void TestAlphaPeptDeepBuildLibrary()
         {
-            TestFilesZip = "TestFunctional/AlphapeptDeepBuildLibraryTest.zip";
+            TestFilesZip = "TestFunctional/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
         }
 
         private string LibraryPathWithoutIrt =>
-            TestContext.GetTestPath("TestAlphapeptDeepBuildLibrary\\LibraryWithoutIrt.blib");
+            TestContext.GetTestPath("TestAlphapeptdeepBuildLibrary\\LibraryWithoutIrt.blib");
 
         
       
         protected override void DoTest()
         {
-            PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphapeptDeep");
+            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+
+            PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep");
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
-            const string libraryWithoutIrt = "AlphapeptDeepLibraryWithoutIrt";
+            const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
 
-            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryName = libraryWithoutIrt;
                 buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
-                buildLibraryDlg.AlphapeptDeep = true;
+                buildLibraryDlg.AlphaPeptDeep = true;
             });
 
             if (!pythonUtil.InstallPython(buildLibraryDlg)) 
@@ -52,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
         }
         protected override void Cleanup()
         {
-            DirectoryEx.SafeDelete("TestAlphapeptDeepBuildLibrary");
+            DirectoryEx.SafeDelete("TestAlphapeptdeepBuildLibrary");
         }
     }
 }
