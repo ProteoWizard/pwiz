@@ -4,9 +4,9 @@ rule build-properties ( targets + : sources * : properties * )
 {
     local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
 
-	path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
-	path-constant CURRENT_DIR : $(SKYLINE_PATH)/Executables/DevTools/ResourcesOrganizer ;
-	path-constant OUTPUT_DIR : $(CURRENT_DIR)/ResourcesOrganizer/bin/Release ;
+    path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
+    path-constant CURRENT_DIR : $(SKYLINE_PATH)/Executables/DevTools/ResourcesOrganizer ;
+    path-constant OUTPUT_DIR : $(CURRENT_DIR)/ResourcesOrganizer/bin/Release ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     MSVC_CURRENT_SETUP_SCRIPT on $(targets) = $(.msvcSetupScript) ;
 }
@@ -48,9 +48,8 @@ rule do_IncrementalUpdateResxFiles ( targets + : sources * : properties * )
 
 actions do_IncrementalUpdateResxFiles
 {
-	echo Updating localized resx files
-	$(CURRENT_DIR)\scripts\UpdateResxFiles.bat incremental
-	pushdir 
+    echo Updating localized resx files
+    call $(CURRENT_DIR)\scripts\UpdateResxFiles.bat incremental
     set status=%ERRORLEVEL%
     exit %status%
 }
@@ -65,7 +64,7 @@ make IncrementalUpdateResxFiles
         <conditional>@no-express-requirement
         <conditional>@msvc-dotnet-requirement
         <dependency>ResourcesOrganizer.exe
-	;
+    ;
 
 explicit IncrementalUpdateResxFiles ;
 
@@ -83,9 +82,8 @@ rule do_FinalizeResxFiles ( targets + : sources * : properties * )
 
 actions do_FinalizeResxFiles
 {
-	echo Finalizing resx files
-	$(CURRENT_DIR)\scripts\UpdateResxFiles.bat final
-	pushdir 
+    echo Finalizing resx files
+    call $(CURRENT_DIR)\scripts\UpdateResxFiles.bat final
     set status=%ERRORLEVEL%
     exit %status%
 }
@@ -100,7 +98,7 @@ make FinalizeResxFiles
         <conditional>@no-express-requirement
         <conditional>@msvc-dotnet-requirement
         <dependency>ResourcesOrganizer.exe
-	;
+    ;
 
 explicit FinalizeResxFiles ;
 
