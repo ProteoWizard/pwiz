@@ -1,3 +1,8 @@
+using System.Linq;
+using System;
+using System.Windows.Forms;
+using NHibernate.Criterion;
+
 namespace pwiz.Common.DataBinding.Controls.Editor
 {
     partial class ViewEditor
@@ -102,6 +107,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
                 this.Left = this.FormLocationX;
                 this.Top = this.FormLocationY;
+                if (ParentControl != null)
+                    (ParentControl as NavBar).CustomizeView(true);
             };
 
             // 

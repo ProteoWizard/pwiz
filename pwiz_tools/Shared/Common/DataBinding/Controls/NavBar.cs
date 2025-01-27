@@ -38,7 +38,6 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private BindingListSource _bindingListSource;
         private string _waitingMsg;
-        public static bool ApplyChanges { get; set; }
         public NavBar()
         {
             InitializeComponent();
@@ -296,7 +295,7 @@ namespace pwiz.Common.DataBinding.Controls
             CustomizeView();
         }
 
-        public void CustomizeView()
+        public void CustomizeView(bool applyChanges = false)
         {
             var viewGroup = BindingListSource.ViewInfo.ViewGroup;
             var viewSpec = BindingListSource.ViewSpec;
@@ -311,11 +310,9 @@ namespace pwiz.Common.DataBinding.Controls
                 return;
             }
             BindingListSource.SetViewContext(ViewContext, ViewContext.GetViewInfo(viewGroup, newView));
-            if (ApplyChanges)
+            if (applyChanges)
             {
                 CustomizeView();
-                //User Must Click "Apply" each time customizing a new view
-                ApplyChanges = false;
             }
         }
 

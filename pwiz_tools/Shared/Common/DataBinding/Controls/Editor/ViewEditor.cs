@@ -64,7 +64,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             new ChooseColumnsView(), new FilterView(), // new SourceView() innaccessible
         };
 
-        public ViewEditor(IViewContext viewContext, ViewInfo viewInfo)
+        public Control ParentControl { get; private set; }
+        public ViewEditor(IViewContext viewContext, ViewInfo viewInfo, Control parent = null)
         {
             InitializeComponent();
             ViewContext = viewContext;
@@ -87,6 +88,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             AddTooltipHandler(_chooseColumnsTab.AvailableFieldsTree);
             AddTooltipHandler(_filterTab.AvailableFieldsTree);
+            ParentControl = parent;
         }
 
         public ColumnDescriptor ParentColumn { get { return ViewInfo.ParentColumn; } }
