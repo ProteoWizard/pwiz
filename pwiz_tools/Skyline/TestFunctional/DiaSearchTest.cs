@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 // run it twice to make sure logic still works
                 TestDiaUmpireSearch();
-                if (!TestContext.Properties["TestPass"].Equals("1"))
+                if (TestPass == 1)
                     TestDiaUmpireSearch();
             };
 
