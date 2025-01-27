@@ -26,6 +26,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
@@ -37,6 +38,7 @@ using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.Lib.LibraryManager;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -728,65 +730,79 @@ namespace pwiz.Skyline.SettingsUI
 
             // Libraries built for full-scan filtering can have important retention time information,
             // and the redundant libraries are more likely to be desirable for showing spectra.
-            using (var dlg = new BuildLibraryDlg(_parent))
+            using var dlg = new BuildLibraryDlg(_parent);
+            dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
+            if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                 {
-                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                    using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
+                    editLibDlg.LibraryPath = dlg.AddLibraryFile;
+                    if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        using (var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList))
-                        {
-                            editLibDlg.LibraryPath = dlg.AddLibraryFile;
-                            if (editLibDlg.ShowDialog(this) == DialogResult.OK)
-                            {
-                                _driverLibrary.List.Add(editLibDlg.LibrarySpec);
-                                _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
-                            }
-                        }
-                        return;
+                        _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
                     }
 
-                    IsBuildingLibrary = true;
-
-                    var builder = dlg.Builder;
-
-                    // assume success and cleanup later
-                    Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
-                    _driverLibrary.LoadList();
-                    var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);
-                    if (libraryIndex >= 0)
-                        listLibraries.SetItemChecked(libraryIndex, true);
-
-                    var currentForm = this;
-
-                    _libraryManager.BuildLibrary(_parent, builder, (buildState, success) =>
-                    {
-                        _parent.LibraryBuildCompleteCallback(buildState, success);
-
-                        if (!success)
-                        {
-                            if (ReportLibraryBuildFailure)
-                                Console.WriteLine(@"Library {0} build failed", builder.LibrarySpec.Name);
-
-                            _parent.Invoke(new Action(() =>
-                            {
-                                if (Settings.Default.SpectralLibraryList.Contains(builder.LibrarySpec))
-                                    Settings.Default.SpectralLibraryList.Remove(builder.LibrarySpec);
-                            }));
-
-                            // TODO: handle the case of cleaning up a PeptideSettingsUI form other than the one that launched this library build
-                            if (ReferenceEquals(currentForm, this) && !IsDisposed && !Disposing)
-                                currentForm.Invoke(new Action(() =>
-                                {
-                                    _driverLibrary.LoadList();
-                                    listLibraries.Items.Remove(builder.LibrarySpec.Name);
-                                }));
-                        }
-                        IsBuildingLibrary = false;
-                    });
+                    return;
                 }
+
+                BuildLibrary(dlg.Builder);
             }
+        }
+
+        private void BuildLibrary(ILibraryBuilder builder)
+        {
+            IsBuildingLibrary = true;
+
+            var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
+
+            bool retry;
+            do
+            {
+                using (var longWaitDlg = new LongWaitDlg(_parent))
+                {
+                    var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
+                        _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
+
+                    if (status.IsError)
+                    {
+                        if (ReportLibraryBuildFailure)
+                        {
+                            Console.WriteLine(@"Library {0} build failed", builder.LibrarySpec.Name);
+                        }
+
+                        // E.g. could not find external raw data for MaxQuant msms.txt; ask user if they want to retry with "prefer embedded spectra" option
+                        var builderLite = builder as BiblioSpecLiteBuilder;
+                        if (builderLite != null && BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(status.ErrorException))
+                        {
+                            var response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, status.ErrorException);
+                            if (response == UpdateProgressResponse.cancel)
+                                return;
+
+                            builderLite.PreferEmbeddedSpectra = response == UpdateProgressResponse.normal;
+
+                            retry = true;
+                            continue;
+                        }
+                        else
+                        {
+                            MessageDlg.ShowException(this, status.ErrorException);
+                        }
+                    }
+                    retry = false;
+                }
+            } while (retry);
+
+            _parent.CompleteLibraryBuild(this, buildState);
+
+            Settings.Default.SpectralLibraryList.Add(builder.LibrarySpec);
+            _driverLibrary.LoadList();
+            var libraryIndex = listLibraries.Items.IndexOf(builder.LibrarySpec.Name);
+            if (libraryIndex >= 0)
+                listLibraries.SetItemChecked(libraryIndex, true);
+
+            IsBuildingLibrary = false;
         }
 
         private void btnFilter_Click(object sender, EventArgs e)

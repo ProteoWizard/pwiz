@@ -567,22 +567,32 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (!BuildPepSearchLibControl.PerformDDASearch)
                         {
-                             HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
-                                if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
-                                {
-                                    MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
-                                    return;
-                                }
+                            HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f =>
+                                f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
+                            if (BuildPepSearchLibControl.SearchFilenames.Any(f =>
+                                    f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
+                            {
+                                MessageDlg.Show(this,
+                                    PeptideSearchResources
+                                        .ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
+                                return;
                             }
                         }
+                    }
 
                     var eCancel = new CancelEventArgs();
                     if (!BuildPepSearchLibControl.PerformDDASearch && !BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
                     {
-                        // Page shows error
                         if (eCancel.Cancel)
+                        {
+                            // Page has shown an error and canceled further progress
                             return;
+                        }
+                        // A failure has occurred
+                        // CONSIDER: Should this ever cause the wizard to be closed and force the user to start over?
                         CloseWizard(DialogResult.Cancel);
+                        // Not a good idea to continue once the wizard has been closed
+                        return;
                     }
 
                     // The user had the option to finish right after 

@@ -97,7 +97,6 @@ namespace pwiz.Skyline
             IUndoable,
             IDocumentUIContainer,
             IProgressMonitor,
-            ILibraryBuildNotificationContainer,
             IToolMacroProvider,
             IModifyDocumentContainer,
             IRetentionScoreSource,
@@ -119,7 +118,6 @@ namespace pwiz.Skyline
         private readonly RetentionTimeManager _retentionTimeManager;
         private readonly IonMobilityLibraryManager _ionMobilityLibraryManager;
         private readonly LibraryManager _libraryManager;
-        private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
         private readonly AutoTrainManager _autoTrainManager;
 
@@ -165,7 +163,6 @@ namespace pwiz.Skyline
             _libraryManager = new LibraryManager();
             _libraryManager.ProgressUpdateEvent += UpdateProgress;
             _libraryManager.Register(this);
-            _libraryBuildNotificationHandler = new LibraryBuildNotificationHandler(this);
 
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
@@ -4008,13 +4005,6 @@ namespace pwiz.Skyline
                     return;
             }
 
-            // TODO: replace this with more generic logic fed from IProgressMonitor
-            if (BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(x))
-            {
-                e.Response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, x);
-                return;
-            }
-
             var message = ExceptionUtil.GetMessage(x);
 
             // Drill down to see if the innermost exception was an out-of-memory exception.
@@ -4147,24 +4137,195 @@ namespace pwiz.Skyline
             ShowAllChromatogramsGraph();
         }
 
-        Point INotificationContainer.NotificationAnchor
+        public LibraryManager LibraryManager => _libraryManager;
+
+        public void CompleteLibraryBuild(Form parent, LibraryManager.BuildState buildState)
         {
-            get { return new Point(Left, statusStrip.Visible ? Bottom - statusStrip.Height : Bottom); }
+            if (!string.IsNullOrEmpty(buildState.ExtraMessage))
+            {
+                MessageDlg.Show(parent, buildState.ExtraMessage);
+            }
+
+            if (buildState.IrtStandard != null && !buildState.IrtStandard.IsEmpty)
+            {
+                // Load library
+                Library lib = null;
+                using (var longWait = new LongWaitDlg())
+                {
+                    longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_library;
+                    var status = longWait.PerformWork(parent, 800, monitor =>
+                    {
+                        lib = _libraryManager.TryGetLibrary(buildState.LibrarySpec) ??
+                              _libraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
+                        if (lib != null)
+                        {
+                            foreach (var stream in lib.ReadStreams)
+                                stream.CloseStream();
+                        }
+                    });
+                    if (status.IsCanceled)
+                        lib = null;
+                    if (status.IsError)
+                        throw status.ErrorException;
+                }
+                // Add iRTs to library
+                if (AddIrts(IrtRegressionType.DEFAULT, lib, buildState.LibrarySpec, buildState.IrtStandard, parent, true, out _))
+                    AddRetentionTimePredictor(parent, buildState);
+            }
         }
 
-        LibraryManager ILibraryBuildNotificationContainer.LibraryManager
+        public static bool AddIrts(IrtRegressionType regressionType, Library lib, LibrarySpec libSpec, IrtStandard standard, Control parent, bool useTopMostForm, out IrtStandard outStandard)
         {
-            get { return _libraryManager; }
+            outStandard = standard;
+            if (lib == null || !lib.IsLoaded || standard == null || standard.IsEmpty)
+                return false;
+
+            Control GetParent() { return useTopMostForm ? FormUtil.FindTopLevelOpenForm() ?? parent : parent; }
+
+            IRetentionTimeProvider[] irtProviders = null;
+            var isAuto = standard.IsAuto;
+            List<IrtStandard> autoStandards = null;
+            var cirtPeptides = new DbIrtPeptide[0];
+
+            using (var longWait = new LongWaitDlg())
+            {
+                longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers;
+                var standard1 = standard;
+                var status = longWait.PerformWork(GetParent(), 800, monitor =>
+                {
+                    ImportPeptideSearch.GetLibIrtProviders(lib, standard1, monitor, out irtProviders, out autoStandards, out cirtPeptides);
+                });
+                if (status.IsCanceled)
+                    return false;
+                if (status.IsError)
+                    throw status.ErrorException;
+            }
+
+            int? numCirt = null;
+            if (cirtPeptides.Length >= RCalcIrt.MIN_PEPTIDES_COUNT)
+            {
+                using (var dlg = new AddIrtStandardsDlg(cirtPeptides.Length,
+                    string.Format(
+                        Resources.LibraryBuildNotificationHandler_AddIrts__0__distinct_CiRT_peptides_were_found__How_many_would_you_like_to_use_as_iRT_standards_,
+                        cirtPeptides.Length)))
+                {
+                    if (dlg.ShowDialog(GetParent()) != DialogResult.OK)
+                        return false;
+                    numCirt = dlg.StandardCount;
+                }
+            }
+            else if (isAuto)
+            {
+                switch (autoStandards.Count)
+                {
+                    case 0:
+                        standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, IrtPeptidePicker.Pick(irtProviders, 10));
+                        break;
+                    case 1:
+                        standard = autoStandards[0];
+                        break;
+                    default:
+                        using (var selectIrtStandardDlg = new SelectIrtStandardDlg(autoStandards))
+                        {
+                            if (selectIrtStandardDlg.ShowDialog(GetParent()) != DialogResult.OK)
+                                return false;
+                            standard = selectIrtStandardDlg.Selected;
+                        }
+                        break;
+                }
+            }
+
+            ProcessedIrtAverages processed = null;
+            using (var longWait = new LongWaitDlg())
+            {
+                longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times;
+                try
+                {
+                    var status = longWait.PerformWork(GetParent(), 800, monitor =>
+                    {
+                        processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders,
+                            standard.Peptides.ToArray(), cirtPeptides, regressionType, monitor,
+                            out var newStandardPeptides);
+                        if (newStandardPeptides != null)
+                        {
+                            standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
+                        }
+                    });
+                    if (status.IsCanceled)
+                        return false;
+                    if (status.IsError)
+                        throw status.ErrorException;
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(GetParent(),
+                        TextUtil.LineSeparate(
+                            Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
+                            x.Message), x);
+                    return false;
+                }
+            }
+
+            using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
+            {
+                if (resultsDlg.ShowDialog(GetParent()) != DialogResult.OK)
+                    return false;
+            }
+
+            var recalibrate = false;
+            if (processed.CanRecalibrateStandards(standard.Peptides))
+            {
+                using (var dlg = new MultiButtonMsgDlg(
+                    TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_,
+                        Resources.LibraryGridViewDriver_AddToLibrary_This_can_improve_retention_time_alignment_under_stable_chromatographic_conditions_),
+                    MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false))
+                {
+                    recalibrate = dlg.ShowDialog(GetParent()) == DialogResult.Yes;
+                }
+            }
+
+            if (!processed.DbIrtPeptides.Any())
+                return false;
+
+            using (var longWait = new LongWaitDlg())
+            {
+                longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library;
+                try
+                {
+                    var status = longWait.PerformWork(GetParent(), 800, monitor =>
+                    {
+                        ImportPeptideSearch.CreateIrtDb(libSpec.FilePath, processed, standard.Peptides.ToArray(), recalibrate, regressionType, monitor);
+                    });
+                    if (status.IsError)
+                        throw status.ErrorException;
+                }
+                catch (Exception x)
+                {
+                    MessageDlg.ShowWithException(GetParent(),
+                        TextUtil.LineSeparate(
+                            SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
+                            x.Message), x);
+                    return false;
+                }
+            }
+            outStandard = standard;
+            return true;
         }
 
-        public Action<LibraryManager.BuildState, bool> LibraryBuildCompleteCallback
+        private void AddRetentionTimePredictor(Form parent, LibraryManager.BuildState buildState)
         {
-            get { return _libraryBuildNotificationHandler.LibraryBuildCompleteCallback; }
-        }
-
-        public void RemoveLibraryBuildNotification()
-        {
-            _libraryBuildNotificationHandler.RemoveLibraryBuildNotification();
+            var predictorName = Helpers.GetUniqueName(buildState.LibrarySpec.Name, Settings.Default.RetentionTimeList.Select(rt => rt.Name).ToArray());
+            using (var addPredictorDlg = new AddRetentionTimePredictorDlg(predictorName, buildState.LibrarySpec.FilePath, false))
+            {
+                if (addPredictorDlg.ShowDialog(parent) == DialogResult.OK)
+                {
+                    Settings.Default.RTScoreCalculatorList.Add(addPredictorDlg.Calculator);
+                    Settings.Default.RetentionTimeList.Add(addPredictorDlg.Regression);
+                    ModifyDocument(SettingsUIResources.LibraryBuildNotificationHandler_AddRetentionTimePredictor_Add_retention_time_predictor,
+                        doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
+                            predict.ChangeRetentionTime(addPredictorDlg.Regression))), AuditLogEntry.SettingsLogFunction);
+                }
+            }
         }
 
         public bool StatusContains(string format)
