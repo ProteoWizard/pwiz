@@ -1574,6 +1574,7 @@ namespace TestRunner
                     }
 
                     bool warnedPass1PerfTest = false;
+                    bool warnedPass1LeakTest = false;
                     var maxDeltas = new LeakTracking();
                     int maxIterationCount = 0;
 
@@ -1594,6 +1595,17 @@ namespace TestRunner
                                 {
                                     warnedPass1PerfTest = true;
                                     runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
+                                }
+                                continue;
+                            }
+
+                            if (test.DoNotLeakTest)
+                            {
+                                // These are specifically too lengthy to run multiple times, so not a good fit for pass 1
+                                if (!warnedPass1LeakTest)
+                                {
+                                    warnedPass1LeakTest = true;
+                                    runTests.Log("# Skipping tests with the NoIterativeLeakTesting attribute for pass 1 leak checks.\r\n");
                                 }
                                 continue;
                             }
