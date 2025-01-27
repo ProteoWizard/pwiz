@@ -644,7 +644,6 @@
   </metadata>
   <data name="textPeptide.ToolTip" xml:space="preserve">
     <value>*で始まるフィルタは表記内を検索します。例えば*PEETではPEETIDやAAPEETBが一致します。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
     <value>textPeptide</value>
