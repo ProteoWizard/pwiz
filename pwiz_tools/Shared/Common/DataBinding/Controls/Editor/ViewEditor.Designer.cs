@@ -37,6 +37,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewEditor));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
+            this.btnAPPLY = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.tbxViewName = new System.Windows.Forms.TextBox();
             this.tabPageFilter = new System.Windows.Forms.TabPage();
