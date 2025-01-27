@@ -22,7 +22,7 @@
 #include <fstream>
 #include <boost/cstdint.hpp>
 #include <pwiz/data/msdata/MSDataFile.hpp>
-#include <boost/filesystem.hpp>
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <boost/program_options.hpp>
 #include "pwiz/analysis/findmf/qtofpeakpickerfilter.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"

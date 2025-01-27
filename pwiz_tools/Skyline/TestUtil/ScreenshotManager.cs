@@ -1,10 +1,28 @@
-﻿using System;
+﻿/*
+ * Original author: Rita Chupalov <ritach .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -13,6 +31,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Util;
+using pwiz.Common.SystemUtil.PInvoke;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 
 namespace pwiz.SkylineTestUtil
@@ -96,7 +116,7 @@ namespace pwiz.SkylineTestUtil
             // The drop shadow + border are 1/2 the difference between the window width and the client rect width
             // A border width is removed to keep the border around the window
             int borderOutsideClient = SystemInformation.BorderSize.Width;
-            if (ctrl is FloatingWindow)
+            if (ctrl is FloatingWindow || ctrl.Size == ctrl.ClientRectangle.Size)
                 borderOutsideClient = 0;
             int dropShadowWidth = (width - ctrl.ClientRectangle.Width) / 2 - borderOutsideClient;
             Size imageSize;
@@ -129,21 +149,12 @@ namespace pwiz.SkylineTestUtil
             return null;
         }
 
-        [DllImport("gdi32.dll")]
-        static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-
-        private enum DeviceCap
-        {
-            VERTRES = 10,
-            DESKTOPVERTRES = 117,
-        }
-
         public static PointFactor GetScalingFactor()
         {
             using var g = Graphics.FromHwnd(IntPtr.Zero);
             IntPtr desktop = g.GetHdc();
-            int LogicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.VERTRES);
-            int PhysicalScreenHeight = GetDeviceCaps(desktop, (int)DeviceCap.DESKTOPVERTRES);
+            int LogicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.VERTRES);
+            int PhysicalScreenHeight = Gdi32Test.GetDeviceCaps(desktop, Gdi32Test.GDCFlags.DESKTOPVERTRES);
             float ScreenScalingFactor = PhysicalScreenHeight / (float)LogicalScreenHeight;
 
             return new PointFactor(ScreenScalingFactor); // 1.25 = 125%
@@ -222,11 +233,27 @@ namespace pwiz.SkylineTestUtil
                 var emf = _zedGraphControl.MasterPane.GetMetafile();
                 var bmp = new Bitmap(emf.Width, emf.Height);
                 bmp.SetResolution(emf.HorizontalResolution, emf.VerticalResolution);
-                using var g = Graphics.FromImage(bmp);
-                g.DrawImage(emf, 0, 0);
+                using (var g = Graphics.FromImage(bmp))
+                {
+                    g.DrawImage(emf, 0, 0);
+                }
+                // Need to use a consistent resolution or PNGs will differ depending on the monitor they were rendered on
+                // You can get PNGs that are pixel for pixel identical but the PNGs will differ in the pHYs blocks
+                // Original resolution on ASUS 28" monitors - a modern laptop had much higher DPI
+                // Hex values taken from binary editor for original files
+                bmp.SetResolution(DpmToDpi(0x0C13), DpmToDpi(0x0C5F));
                 return bmp;
             }
 
+            /// <summary>
+            /// Converts dots per meter (DPM) found in pHYs blocks in PNG files to DPI used in Bitmap resolution.
+            /// </summary>
+            /// <param name="dpm">A dots per meter integer</param>
+            /// <returns>A dots per inch (DPM/39.37) value</returns>
+            private float DpmToDpi(int dpm)
+            {
+                return (float)(dpm / 39.37);
+            }
         }
 
         public ScreenshotManager([NotNull] SkylineWindow skylineWindow, string tutorialPath)
@@ -381,10 +408,10 @@ namespace pwiz.SkylineTestUtil
                 focusText.Select(focusText.Text.Length, 0);
                 focusText.HideCaret();
             }
-            else if (focusControl is ComboBox { CanSelect: true } focusCombo)
+            else if (focusControl is ComboBox { DropDownStyle: ComboBoxStyle.DropDown } focusCombo)
             {
                 focusCombo.Select(0, 0);
-                focusCombo.HideCaret(); // CONSIDER: This does not seem to work
+                focusCombo.HideCaret();
             }
             else if (focusControl is TabControl focusTabControl)
             {
@@ -419,7 +446,7 @@ namespace pwiz.SkylineTestUtil
                 // Only for unprocessed window screenshots
                 // Floating windows only have a transparent titlebar border
                 var form = activeWindow as DockableForm;
-                shotPic.CleanupBorder(form is { DockState: DockState.Floating });
+                shotPic = shotPic.CleanupBorder(form is { DockState: DockState.Floating });
             }
 
             if (scale.HasValue)
@@ -451,7 +478,14 @@ namespace pwiz.SkylineTestUtil
             if (dirPath != null && !Directory.Exists(dirPath))
                 Directory.CreateDirectory(dirPath);
 
-            bmp.Save(filePath);
+            bmp.Save(filePath, ImageFormat.Png);
+        }
+
+        public MemoryStream SaveToMemory(Bitmap bmp)
+        {
+            var ms = new MemoryStream();
+            bmp.Save(ms, ImageFormat.Png);
+            return ms;
         }
     }
 }
