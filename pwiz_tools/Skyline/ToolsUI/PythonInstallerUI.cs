@@ -46,6 +46,7 @@ namespace pwiz.Skyline.ToolsUI
                             {
                                 //Download
                                 using var waitDlg = new LongWaitDlg();
+                                waitDlg.Text = string.Format(ToolsUIResources.PythonInstaller_Downloading_Cuda_Library);
                                 waitDlg.ProgressValue = 0;
                                 waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
                             }
@@ -116,6 +117,7 @@ namespace pwiz.Skyline.ToolsUI
             else if (task.IsActionWithProgressMonitor)
             {
                 using var waitDlg = new LongWaitDlg();
+                waitDlg.Message = task.InProgressMessage;
                 waitDlg.ProgressValue = 0;
                 waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
             }

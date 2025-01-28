@@ -99,8 +99,14 @@ namespace pwiz.Skyline.Model.Tools
         public string VirtualEnvironmentDir => Path.Combine(PythonVersionDir, VirtualEnvironmentName);
         public string VirtualEnvironmentPythonExecutablePath => Path.Combine(VirtualEnvironmentDir, SCRIPTS, PYTHON_EXECUTABLE);
         public List<PythonTask> PendingTasks { get; set; }
-        
+
         #region Functional testing support
+        public enum eSimulatedInstallationState
+        {
+            NONE,    // Normal tests systems will have registry set suitably
+            NAIVE    // Be able to simulate systems where Python is not installed
+        }
+        public static eSimulatedInstallationState SimulatedInstallationState { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
         public ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
@@ -223,7 +229,12 @@ namespace pwiz.Skyline.Model.Tools
             return tasks.Count == 0;
         }
 
-        
+        public void ClearPendingTasks() 
+        {
+            PendingTasks.Clear();
+        }
+
+
 
         public List<PythonTask> ValidatePythonVirtualEnvironment()
         {
@@ -1356,7 +1367,8 @@ namespace pwiz.Skyline.Model.Tools
         }
         internal static bool ValidateEnableLongpaths()
         {
-            return (int) Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
+            return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE && 
+                   (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED,0) == 1;
         }
         private bool? ValidatePipInstallPackages()
         {

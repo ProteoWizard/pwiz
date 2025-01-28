@@ -362,6 +362,9 @@
   <data name="PythonInstaller_Install_Cuda_Library" xml:space="preserve">
     <value>Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required for this feature.</value>
   </data>
+  <data name="PythonInstaller_Downloading_Cuda_Library" xml:space="preserve">
+    <value>Downloading Cuda software library...</value>
+  </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
     <value>SkylineProcessRunner timed-out after {0} milliseconds</value>
   </data>

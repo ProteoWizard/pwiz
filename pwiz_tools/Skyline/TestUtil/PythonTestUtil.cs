@@ -61,11 +61,30 @@ namespace pwiz.SkylineTestUtil
             _toolName = toolName;
 
         }
-        //[TestMethod]
+
+        public void CancelPython(BuildLibraryDlg buildLibraryDlg)
+        {
+            // Test the control path where Python is not installed, and the user is prompted to deal with admin access
+            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
+            var installPythonDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
+            //PauseTest("install offer");
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
+            CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
+            //PauseTest("back to wizard");
+            installPythonDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
+            // PauseTest("install offer again");
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
+            var needAdminDlg = ShowDialog<MessageDlg>(installPythonDlg.OkDialog); // Expect to be told about needing admin access
+            // PauseTest("need admin msg");
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, needAdminDlg.Message);
+            CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
+            // PauseTest("back to wizard");
+        }
         public bool InstallPython(BuildLibraryDlg buildLibraryDlg)
         {
+            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONE; // Normal tests systems will have registry set suitably
+     
             bool havePythonPrerequisite = false;
-
             RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
 
             if (!havePythonPrerequisite)
@@ -114,7 +133,7 @@ namespace pwiz.SkylineTestUtil
                         }
                         else
                         {
-                            Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because LongPathsEnabled is not set and have insufficient permissions to set it");
+                            Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
                         }
                     }
                     else
@@ -142,6 +161,7 @@ namespace pwiz.SkylineTestUtil
                                 Console.WriteLine(@"Info: Nvidia libraries already installed");
                             }
                             confirmDlg = WaitForOpenForm<MessageDlg>(600000);
+                            //PauseTest("Stop to check which Dialog is open");
                             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment), confirmDlg.Message);
                             OkDialog(confirmDlg, confirmDlg.OkDialog);
                             if (!confirmDlg.IsDisposed)
@@ -172,8 +192,8 @@ namespace pwiz.SkylineTestUtil
 
         private void RunNvidiaDialog(MultiButtonMsgDlg nvidiaDlg)
         {
-            MessageDlg confirmDlg = WaitForOpenForm<MessageDlg>(600000);
             nvidiaDlg.ClickNo();
+            MessageDlg confirmDlg = WaitForOpenForm<MessageDlg>(600000);
             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment),
                 confirmDlg.Message);
             confirmDlg.OkDialog();

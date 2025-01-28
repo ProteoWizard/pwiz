@@ -478,11 +478,14 @@ namespace pwiz.Skyline.SettingsUI
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
                 new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
-            }; 
-            
-            pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
-                new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
-            
+            };
+
+            if (pythonInstaller == null)
+                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
+            else
+                pythonInstaller.ClearPendingTasks();
+
+
             this.Cursor = Cursors.WaitCursor;
            
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
@@ -503,13 +506,10 @@ namespace pwiz.Skyline.SettingsUI
 
             PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep"), string.Format(Resources.OK));
             
-            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
-            {
-                return false;
-            }
-            // Install python when user clicks 'OK' here
-            else if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel || 
+                DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
             { 
+                PythonDlg.Dispose();
                 return false;
             }
 
@@ -528,8 +528,11 @@ namespace pwiz.Skyline.SettingsUI
                 new PythonPackage { Name = @"wheel", Version = null }
             };
 
-            pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(),
-                new PythonInstallerTaskValidator(), CARAFE);
+            if (pythonInstaller == null)
+                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(), CARAFE);
+            else
+                pythonInstaller.ClearPendingTasks();
+
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 return true;
@@ -540,13 +543,9 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
-            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
+            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel || DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
             {
-                return false;
-            }
-            //Install python when user clicks 'OK' here
-            else if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-            {
+                PythonDlg.Dispose();
                 return false;
             }
 

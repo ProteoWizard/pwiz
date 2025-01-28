@@ -36,6 +36,10 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.AlphaPeptDeep = true;
             });
 
+            // Test the control path where Python needs installation and is Cancelled
+            pythonUtil.CancelPython(buildLibraryDlg);
+
+            // Test the control path where Python is installable
             if (!pythonUtil.InstallPython(buildLibraryDlg)) 
                 OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
             //PauseTest();
