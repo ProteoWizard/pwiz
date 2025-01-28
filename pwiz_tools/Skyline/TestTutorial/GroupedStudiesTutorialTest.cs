@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestTutorial
         }
 
         [TestMethod,
-         NoIterativeLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestGroupedStudiesTutorialDraft()
         {
             // Set true to look at tutorial screenshots.

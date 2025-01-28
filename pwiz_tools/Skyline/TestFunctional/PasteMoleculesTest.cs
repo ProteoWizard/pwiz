@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
     public class PasteMoleculesTest : AbstractFunctionalTestEx
     {
         [TestMethod,
-         NoIterativeLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestPasteMolecules()
         {
             TestFilesZip = @"TestFunctional\PasteMoleculeTest.zip";

@@ -77,7 +77,7 @@ namespace TestRunnerLib
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
 
-            var noNightlyLeakTestAttr = RunTests.GetAttribute(testMethod, "NoIterativeLeakTestingAttribute");
+            var noNightlyLeakTestAttr = RunTests.GetAttribute(testMethod, "NoLeakTestingAttribute");
             DoNotLeakTest = noNightlyLeakTestAttr != null; // Running this multiple times would take too long
 
             var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;

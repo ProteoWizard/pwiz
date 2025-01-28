@@ -1605,7 +1605,7 @@ namespace TestRunner
                                 if (!warnedPass1LeakTest)
                                 {
                                     warnedPass1LeakTest = true;
-                                    runTests.Log("# Skipping tests with the NoIterativeLeakTesting attribute for pass 1 leak checks.\r\n");
+                                    runTests.Log("# Skipping tests with the NoLeakTesting attribute for pass 1 leak checks.\r\n");
                                 }
                                 continue;
                             }

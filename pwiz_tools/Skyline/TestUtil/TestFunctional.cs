@@ -179,11 +179,11 @@ namespace pwiz.SkylineTestUtil
     /// (e.g. memory hungry or excessively time consuming given that it has to be run many times for leak detection)
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class NoIterativeLeakTestingAttribute : Attribute
+    public sealed class NoLeakTestingAttribute : Attribute
     {
         public string Reason { get; private set; } // Reason for declaring test as unsuitable for Nightly
 
-        public NoIterativeLeakTestingAttribute(string reason)
+        public NoLeakTestingAttribute(string reason)
         {
             Reason = reason; // Usually one of the strings in TestExclusionReason
         }
