@@ -226,4 +226,7 @@
   <data name="FilesTree_TreeNode_RenderTip_Name" xml:space="preserve">
 	  <value>Name</value>
   </data>
+  <data name="FilesTree_TreeNodeLabel_ProjectFiles" xml:space="preserve">
+	  <value>Project Files</value>
+  </data>
 </root>

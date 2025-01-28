@@ -1505,7 +1505,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription, IFileModel
     {
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => LibResources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
@@ -1547,6 +1547,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return AuditLogPath.Create(FilePath); }
         }
+
+        public FileType Type { get => FileType.peptide_library; }
+
+        public string FileName { get => Name; }
 
         public string FilePath { get; private set; }
 

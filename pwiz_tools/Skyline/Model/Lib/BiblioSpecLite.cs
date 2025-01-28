@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     [XmlRoot("bibliospec_lite_library")]
-    public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
+    public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>, IFileModel
     {
         private const int FORMAT_VERSION_CACHE = 19;
         // V19 add protein/MoleculeGroupName
@@ -247,6 +247,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             get { return _librarySourceFiles.Length; }
         }
+
+        public string FileName => Name;
+        public FileType Type => FileType.peptide_library;
 
         public const string FORMAT_NAME ="BiblioSpec";
 

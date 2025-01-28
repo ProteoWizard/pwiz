@@ -160,6 +160,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project Files.
+        /// </summary>
+        public static string FilesTree_TreeNodeLabel_ProjectFiles {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNodeLabel_ProjectFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Replicates.
         /// </summary>
         public static string FilesTree_TreeNodeLabel_Replicates {

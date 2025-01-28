@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model.Results
 
     [XmlRoot("replicate")]
     [XmlRootAlias("chromatogram_group")]
-    public sealed class ChromatogramSet : XmlNamedIdElement
+    public sealed class ChromatogramSet : XmlNamedIdElement, IFileGroupModel
     {
         /// <summary>
         /// Info for all files contained in this replicate
@@ -395,6 +395,16 @@ namespace pwiz.Skyline.Model.Results
             Annotations = annotations;
             SampleType = SampleType.DEFAULT;
             SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
+        }
+
+        public FileType Type => FileType.chromatogram;
+
+        public IEnumerable<IFileModel> Files
+        {
+            get
+            {
+                return MSDataFileInfos;
+            }
         }
 
         public IList<ChromFileInfo> MSDataFileInfos
@@ -993,7 +1003,7 @@ namespace pwiz.Skyline.Model.Results
     {        
     }
 
-    public sealed class ChromFileInfo : DocNode, IPathContainer
+    public sealed class ChromFileInfo : DocNode, IPathContainer, IFileModel
     {
         public ChromFileInfo(MsDataFileUri filePath)
             : base(new ChromFileInfoId())
@@ -1207,6 +1217,10 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeFilePath(filePath);
             return this;
         }
+
+        public FileType Type { get => FileType.chromatogram; }
+        public string Name { get => FilePath.GetFileName(); }
+        string IFileModel.FilePath => FilePath.GetFilePath();
     }
 
     /// <summary>

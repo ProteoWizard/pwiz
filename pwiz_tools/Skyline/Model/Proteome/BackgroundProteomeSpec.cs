@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.DocSettings;
+using Protein = pwiz.ProteomeDatabase.API.Protein;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -36,7 +37,7 @@ namespace pwiz.Skyline.Model.Proteome
     /// as well as a path to the file on disk.
     /// </summary>
     [XmlRoot("background_proteome")]
-    public class BackgroundProteomeSpec : XmlNamedElement
+    public class BackgroundProteomeSpec : XmlNamedElement, IFileModel
     {
         public BackgroundProteomeSpec(string name, string databasePath)
             : base(name)
@@ -60,6 +61,10 @@ namespace pwiz.Skyline.Model.Proteome
         }
         
         public string DatabasePath { get; private set; }
+
+        public string FileName { get => Name; }
+        public string FilePath { get => DatabasePath; }
+        public FileType Type { get => FileType.background_proteome; }
 
         public bool IsNone
         {

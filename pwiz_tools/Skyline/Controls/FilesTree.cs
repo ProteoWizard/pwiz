@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Proteome;
-using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls
@@ -111,99 +110,98 @@ namespace pwiz.Skyline.Controls
             Nodes.Clear();
             EndUpdateMS();
 
-            if (DocumentContainer.DocumentFilePath == null)
-            {
-                Root = new SkylineRootTreeNode(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null);
-            }
-            else
-            {
-                Root = new SkylineRootTreeNode(Path.GetFileName(DocumentContainer.DocumentFilePath), DocumentContainer.DocumentFilePath);
-            }
+            var skylineFileModel = DocumentContainer.DocumentFilePath == null ? 
+                new SkylineFileModel(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null) : 
+                new SkylineFileModel(Path.GetFileName(DocumentContainer.DocumentFilePath), DocumentContainer.DocumentFilePath);
 
-            Nodes.Add(Root);
+            Root = new SkylineRootTreeNode(skylineFileModel);
 
-            // SrmDocument => <measured_results> => <replicate>^*
-            var replicatesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Replicates)
+            var chromatogramRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Replicates)
             {
                 ImageIndex = (int)ImageId.folder
             };
-            Root.Nodes.Add(replicatesRoot);
 
-            if (Document.Settings.MeasuredResults != null)
-            {
-                var chromatograms = Document.Settings.MeasuredResults.Chromatograms;
-                if (chromatograms.Count > 0)
-                {
-                    foreach (var chromatogramSet in chromatograms)
-                    {
-                        // Ex: "D_102_REP1" =>
-                        var replicate = new TreeNodeMS(chromatogramSet.Name)
-                        {
-                            ImageIndex = (int)ImageId.folder
-                        };
-                        replicatesRoot.Nodes.Add(replicate);
-
-                        foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
-                        {
-                            // Ex: "D_102_REP1.raw"
-                            var replicateFile = new ReplicateTreeNode(chromatogramSet, fileInfo);
-                            replicate.Nodes.Add(replicateFile);
-                        }
-                    }
-                }
-            }
-            else
-            {
-                replicatesRoot.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
-            }
-
-            // SrmDocument => <peptide_libraries> => <*_library>^*
             var peptideLibrariesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Libraries)
             {
                 ImageIndex = (int)ImageId.folder
             };
-            Root.Nodes.Add(peptideLibrariesRoot);
 
-            var peptideLibrarySet = Document.Settings.PeptideSettings.Libraries.LibrarySpecs;
-            if (peptideLibrarySet.Count > 0)
-            {
-                foreach (var peptideLibrary in peptideLibrarySet)
-                {
-                    // Ex: "Rat (NIST) (Rat_plasma2) (Rat_plasma)"
-                    //      * In tooltip: "rat_consensus_final_true_lib.blib"
-                    var peptideLibraryNode = new PeptideLibraryTreeNode(peptideLibrary);
-
-                    // CONSIDER: if available, show the cache file (*.slc) under the .blib file
-                    peptideLibrariesRoot.Nodes.Add(peptideLibraryNode);
-                }
-            }
-            else
-            {
-                peptideLibrariesRoot.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
-            }
-
-            // SrmDocument => ...
-            // Skyline path: document.Settings.PeptideSettings.BackgroundProteome
-            var backgroundProteomeNode = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome)
+            var backgroundProteomeRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome)
             {
                 ImageIndex = (int)ImageId.folder
             };
 
-            var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
-            if (backgroundProteome != null)
+            var projectFilesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles)
             {
-                backgroundProteomeNode.Nodes.Add(new BackgroundProteomeTreeNode(backgroundProteome));
-            }
-            else
+                ImageIndex = (int)ImageId.folder
+            };
+
+            var files = Document.Settings.Files;
+
+            foreach (var file in files)
             {
-                backgroundProteomeNode.Nodes.Add(new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_None));
+                switch (file.Type)
+                {
+                    case FileType.chromatogram:
+                    {
+                        if (!(file is IFileGroupModel group))
+                            break;
+
+                        var replicate = new TreeNodeMS(group.Name)
+                        {
+                            ImageIndex = (int)ImageId.folder
+                        };
+
+                        foreach (var fileModel in group.Files)
+                        {
+                            var replicateFile = new ReplicateTreeNode(group, fileModel);
+                            replicate.Nodes.Add(replicateFile);
+                        }
+
+                        chromatogramRoot.Nodes.Add(replicate);
+                        break;
+                    }
+                    case FileType.peptide_library:
+                    {
+                        if (!(file is IFileModel model))
+                            break;
+
+                        var peptideLibrary = new PeptideLibraryTreeNode(model);
+                        peptideLibrariesRoot.Nodes.Add(peptideLibrary);
+
+                        break;
+                    }
+                    case FileType.background_proteome:
+                    {
+                        if (!(file is IFileModel model))
+                            break;
+
+                        var backgroundProteome = new BackgroundProteomeTreeNode(model);
+                        backgroundProteomeRoot.Nodes.Add(backgroundProteome);
+                        break;
+                    }
+                }
             }
 
-            Root.Nodes.Add(backgroundProteomeNode);
+            projectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, String.Empty)));
 
-            Root.Nodes.Add(new AuditLogTreeNode());
+            Nodes.Add(Root);
 
-            // Expand root's immediate children so FilesTree shows a few nodes but isn't overwhelming
+            Root.Nodes.Add(chromatogramRoot);
+
+            if (backgroundProteomeRoot.Nodes.Count > 0)
+            {
+                Root.Nodes.Add(backgroundProteomeRoot);
+            }
+
+            if (peptideLibrariesRoot.Nodes.Count > 0)
+            {
+                Root.Nodes.Add(peptideLibrariesRoot);
+            }
+
+            Root.Nodes.Add(projectFilesRoot);
+
+            // Expand root node so some nodes visible in FilesTree
             Root.Expand();
         }
 
@@ -218,21 +216,53 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public interface IFilePathProvider
+    public class SkylineFileModel : IFileModel
     {
-        string FilePath { get; }
+        public SkylineFileModel(string name, string filePath)
+        {
+            Name = name;
+            FilePath = filePath;
+        }
+
+        public FileType Type { get => FileType.sky; }
+        public string Name { get; }
+        public string FilePath { get; }
     }
 
-    public class SkylineRootTreeNode : TreeNodeMS, ITipProvider, IFilePathProvider
+    public class AuditLogFileModel : IFileModel
     {
-        public SkylineRootTreeNode(string text, string filePath) : base(text)
+        public AuditLogFileModel(string name, string filePath)
         {
+            Name = name;
             FilePath = filePath;
+        }
 
+        public FileType Type { get => FileType.audit_log; }
+        public string Name { get; }
+        public string FilePath { get; }
+    }
+
+    public abstract class FilesTreeNode : TreeNodeMS
+    {
+        public FilesTreeNode(IFileBase model)
+        {
+            Model = model;
+            Tag = model;
+
+            Text = Model.Name;
+        }
+
+        public IFileBase Model { get; private set; }
+    }
+
+    public class SkylineRootTreeNode : FilesTreeNode, ITipProvider
+    {
+        public SkylineRootTreeNode(SkylineFileModel model) : base (model)
+        {
             ImageIndex = (int)FilesTree.ImageId.skyline;
         }
 
-        public string FilePath { get; }
+        public string FilePath { get => ((IFileModel)Model).FilePath; }
 
         public bool HasTip => true;
         
@@ -252,66 +282,46 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class ReplicateTreeNode : TreeNodeMS, ITipProvider, IFilePathProvider
+    public class ReplicateTreeNode : FilesTreeNode, ITipProvider
     {
-        private readonly ChromFileInfo _chromFileInfo;
-        private readonly ChromatogramSet _chromatogramSet;
+        private readonly string _chromatogramName;
 
-        public ReplicateTreeNode(ChromatogramSet chromatogramSet, ChromFileInfo chromFileInfo)
+        public ReplicateTreeNode(IFileGroupModel group, IFileModel model) : base(model)
         {
-            _chromatogramSet = chromatogramSet;
-            _chromFileInfo = chromFileInfo;
-
-            Text = Path.GetFileName(_chromFileInfo.FilePath.GetFilePath());
-
+            _chromatogramName = group.Name;
+    
             ImageIndex = (int)FilesTree.ImageId.replicate;
         }
 
-        public string FilePath => _chromFileInfo.FilePath.GetFilePath();
+        public string ChromatogramName => _chromatogramName;
 
-        public string ChromatogramName => _chromatogramSet.Name;
-
+        public string FilePath { get => ((IFileModel)Model).FilePath; }
+    
         public bool HasTip => true;
-
+    
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
             using var rt = new RenderTools();
-
+    
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
             customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_SampleName, Text, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, _chromFileInfo.FilePath.GetFilePath(), rt);
-
-            if (_chromFileInfo.RunStartTime != null)
-            {
-                customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_AcquiredTime, _chromFileInfo.RunStartTime.ToString(), rt); // TODO: i18n date / time?
-            }
-
-            if (_chromFileInfo.InstrumentInfoList != null && _chromFileInfo.InstrumentInfoList.Count > 0)
-            {
-                customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_InstrumentModel, _chromFileInfo.InstrumentInfoList[0].Model, rt);
-            }
-
-            // CONSIDER include annotations?
-
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
+    
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
             return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
     }
 
-    public class PeptideLibraryTreeNode : TreeNodeMS, ITipProvider, IFilePathProvider
+    public class PeptideLibraryTreeNode : FilesTreeNode, ITipProvider
     {
-        private readonly LibrarySpec _librarySpec;
-
-        public PeptideLibraryTreeNode(LibrarySpec librarySpec) : base(librarySpec.Name)
+        public PeptideLibraryTreeNode(IFileModel model) : base(model)
         {
-            _librarySpec = librarySpec;
-
             ImageIndex = (int)FilesTree.ImageId.peptide;
         }
 
-        public string FilePath => _librarySpec.FilePath;
+        public string FilePath { get => ((IFileModel)Model).FilePath; }
 
         public bool HasTip => true;
 
@@ -330,36 +340,33 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class BackgroundProteomeTreeNode : TreeNodeMS, ITipProvider
+    public class BackgroundProteomeTreeNode : FilesTreeNode, ITipProvider
     {
-        private readonly BackgroundProteome _backgroundProteome;
-
-        public BackgroundProteomeTreeNode(BackgroundProteome backgroundProteome) : base(backgroundProteome.Name)
-        {
-            _backgroundProteome = backgroundProteome;
-        }
-
+        public BackgroundProteomeTreeNode(IFileModel model) : base(model) { }
+    
+        public string FilePath { get => ((IFileModel)Model).FilePath; }
+    
         public bool HasTip => true;
-
+    
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
             using var rt = new RenderTools();
-
+    
             // draw into table and return calculated dimensions
             var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(_backgroundProteome.DatabasePath), rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, _backgroundProteome.DatabasePath, rt);
-
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
+    
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
             return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
-
+    
     }
 
-    public class AuditLogTreeNode : TreeNodeMS
+    public class AuditLogTreeNode : FilesTreeNode
     {
-        public AuditLogTreeNode() : base(ControlsResources.FilesTree_TreeNodeLabel_AuditLog)
+        public AuditLogTreeNode(IFileModel model) : base(model)
         {
             ImageIndex = (int)FilesTree.ImageId.file;
         }

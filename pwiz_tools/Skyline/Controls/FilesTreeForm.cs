@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Controls
 {
@@ -56,7 +57,7 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; private set; }
 
-        // CONSIDER: move menu actions to separate class
+        // CONSIDER: encapsulate right-click actions to a separate class
         public void ShowAuditLog()
         {
             SkylineWindow.ShowAuditLog();
@@ -155,9 +156,9 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_ShowContainingFolderMenuItem_Click(object sender, System.EventArgs e)
         {
-            if (FilesTree.SelectedNode is IFilePathProvider provider)
+            if (FilesTree.SelectedNode.Tag is IFileModel file)
             {
-                OpenContainingFolder(provider.FilePath);
+                OpenContainingFolder(file.FilePath);
             }
         }
 

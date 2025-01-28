@@ -2291,6 +2291,34 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public IEnumerable<IFileBase> Files
+        {
+            get
+            {
+                var list = new List<IFileBase>();
+
+                // *.raw
+                if (MeasuredResults?.Chromatograms != null)
+                {
+                    list.AddRange(MeasuredResults.Chromatograms);
+                }
+                
+                // *.blib
+                if (PeptideSettings?.Libraries?.LibrarySpecs != null)
+                {
+                    list.AddRange(PeptideSettings.Libraries.LibrarySpecs);
+                }
+                
+                // *.protdb
+                if (HasBackgroundProteome)
+                {
+                    list.Add(PeptideSettings.BackgroundProteome);
+                }
+                
+                return list;
+            }
+        }
     }
 
     /// <summary>
