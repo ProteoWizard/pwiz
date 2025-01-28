@@ -1,4 +1,4 @@
-﻿using System.Windows.Forms;
+using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -221,7 +221,6 @@ namespace pwiz.Skyline.Controls.Databinding
             this.dataGridViewEx1.Name = "dataGridViewEx1";
             this.dataGridViewEx1.RowTemplate.Height = 28;
             this.dataGridViewEx1.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewEx1_ColumnWidthChanged);
-            this.dataGridViewEx1.Scroll += new System.Windows.Forms.ScrollEventHandler(this.dataGridViewEx1_Scroll);
             // 
             // boundDataGridView
             // 
@@ -263,6 +262,7 @@ namespace pwiz.Skyline.Controls.Databinding
             this.boundDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.boundDataGridView_ColumnWidthChanged);
             this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
             this.boundDataGridView.Scroll += new System.Windows.Forms.ScrollEventHandler(this.boundDataGridView_Scroll);
+            this.boundDataGridView.Paint += new System.Windows.Forms.PaintEventHandler(this.boundDataGridView_Paint);
             this.boundDataGridView.Resize += new System.EventHandler(this.boundDataGridView_Resize);
             // 
             // bindingListSource

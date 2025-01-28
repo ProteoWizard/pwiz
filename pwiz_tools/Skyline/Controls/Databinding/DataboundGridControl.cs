@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -850,8 +850,20 @@ namespace pwiz.Skyline.Controls.Databinding
                 var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
                     .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
 
+                // If columns are frozen we size the property column based on visible width
                 var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
-                    .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
+                    .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
+                    .Sum(col =>
+                    {
+                        if (bindingListSource.ColumnFormats.FrozenColumnCount > 0)
+                        {
+                            return CalculateColumnVisibleWidth(boundDataGridView, col);
+                        }
+                        else
+                        {
+                            return col.Width;
+                        }
+                    });
 
                 dataGridViewEx1.Columns[@"Property"]!.Width = nonReplicateWidth;
                 foreach (DataGridViewColumn column in dataGridViewEx1.Columns)
@@ -866,6 +878,15 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 _inColumnChange = false;
             }
+        }
+
+        private int CalculateColumnVisibleWidth(DataGridView view, DataGridViewColumn column)
+        {
+            Rectangle columnRect = view.GetColumnDisplayRectangle(column.Index, false);
+            var visibleLeft = Math.Max(columnRect.Left, view.DisplayRectangle.Left);
+            var visibleRight = Math.Min(columnRect.Right, view.DisplayRectangle.Right);
+            var visibleWidth = Math.Max(0, visibleRight - visibleLeft);
+            return visibleWidth;
         }
 
         private void AlignDataBoundGridColumns(ReplicatePivotColumns replicatePivotColumns)
@@ -908,21 +929,38 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 }
 
-                var propertyWidth = dataGridViewEx1.Columns[@"Property"]!.Width;
-
                 var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
                     .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
 
                 var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
                     .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
-
+                var nonReplicateVisibleWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                    .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
+                
                 var propertyColumnRounder = new AdjustingRounder();
                 foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
                 {
                     if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
                     {
-                        var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
-                        dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
+                        // Resizing of non replicate columns behaves differently if columns are frozen.
+                        // If columns are frozen then we have to consider the visible column widths as 
+                        // the current property column width can be dependent on scrolling. 
+                        if (bindingListSource.ColumnFormats.FrozenColumnCount > 0)
+                        {
+                            var visibleWidth = CalculateColumnVisibleWidth(boundDataGridView, dataGridViewColumn);
+                            if (visibleWidth > 0)
+                            {
+                                var propertyWidthToAdd = dataGridViewEx1.Columns[@"Property"]!.Width - nonReplicateVisibleWidth;
+                                var columnRatio = (double)visibleWidth / nonReplicateVisibleWidth;
+                                dataGridViewColumn.Width += (int)propertyColumnRounder.Round(propertyWidthToAdd * columnRatio);
+                            }
+                        }
+                        else
+                        {
+                            var propertyWidth = dataGridViewEx1.Columns[@"Property"]!.Width;
+                            var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
+                            dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
+                        }
                     }
                 }
             }
@@ -938,11 +976,31 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 dataGridViewEx1.Columns[@"Property"]!.Frozen = true;
 
-                //TODO here we need to do some size calculations for when there is a mismatch in columns that are being frozen
-                // as the user scroll we need to calculate how much of the property column we show. if there is a mismatch between the frozen sizes in both. 
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                AlignPivotByReplicateGridColumns(replicatePivotColumns);
+
+            }
+            else
+            {
+                dataGridViewEx1.Columns[@"Property"]!.Frozen = false;
             }
         }
-        
+
+        private void UpdateReplicateDataGridScrollPosition(int scrollPosition)
+        {
+            // The pivot by replicate grid can resize the property column depending on frozen state.
+            // For this reason we have special logic to calculate the scroll offset based on the width offset
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+            var nonReplicateColumnsWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
+                .Sum(col => col.Width);
+            var columnWidthOffset = nonReplicateColumnsWidth - dataGridViewEx1.Columns[@"Property"]!.Width;
+            var offsetScrollPosition = scrollPosition - columnWidthOffset;
+            dataGridViewEx1.HorizontalScrollingOffset = (offsetScrollPosition > 0) ? offsetScrollPosition : 0;
+        }
+
         private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
         {
             try
@@ -1065,6 +1123,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
             AlignDataBoundGridColumns(replicatePivotColumns);
+            UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
         }
 
         private void boundDataGridView_Resize(object sender, EventArgs e)
@@ -1075,15 +1134,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
             AlignPivotByReplicateGridColumns(replicatePivotColumns);
-        }
-
-        private void dataGridViewEx1_Scroll(object sender, ScrollEventArgs e)
-        {
-            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
-            {
-                int horizontalOffset = e.NewValue;
-                boundDataGridView.HorizontalScrollingOffset = horizontalOffset;
-            }
+            UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
         }
 
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
@@ -1091,8 +1142,19 @@ namespace pwiz.Skyline.Controls.Databinding
             if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
             {
                 int horizontalOffset = e.NewValue;
-                dataGridViewEx1.HorizontalScrollingOffset = horizontalOffset;
                 UpdateReplicateDataGridFrozenState();
+                UpdateReplicateDataGridScrollPosition(horizontalOffset);
+            }
+        }
+
+        private void boundDataGridView_Paint(object sender, PaintEventArgs e)
+        {
+            // Setting the frozen state of columns can trigger a repaint of the grid.
+            // In this case we want the repaint to trigger our methods to align the grids. 
+            if (dataGridViewEx1.Columns.Count > 0)
+            {
+                UpdateReplicateDataGridFrozenState();
+                UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
             }
         }
 
@@ -1141,8 +1203,7 @@ namespace pwiz.Skyline.Controls.Databinding
             formGroup.ShowSibling(pcaPlot);
             pcaPlot.ClusterInput = CreateClusterInput();
         }
-
-        //TODO currently experimenting with this class as a way to keep columns calculations aligned across multiple rounding operations
+        
         private class AdjustingRounder
         {
             private double _roundedDifference = 0;
