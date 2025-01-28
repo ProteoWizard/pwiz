@@ -2323,6 +2323,7 @@ namespace pwiz.Skyline
                     Equals(standard.Name, commandArgs.IrtStandardName));
                 if (irtStandard == null)
                 {
+                    // TODO: This should really be an Error that causes processing to stop rather than information treated like no iRT standard was specified
                     _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_,
                         commandArgs.IrtStandardName);
                     return null;
@@ -2351,7 +2352,10 @@ namespace pwiz.Skyline
             foreach (var file in commandArgs.SearchResultsFiles)
                 _out.WriteLine(Path.GetFileName(file));
             if (!builder.BuildLibrary(progressMonitor))
+            {
+                _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_);
                 return false;
+            }
 
             if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
                 _out.WriteLine(builder.AmbiguousMatchesMessage);
@@ -2393,7 +2397,7 @@ namespace pwiz.Skyline
                             import.IrtStandard = autoStandards[0];
                             break;
                         default:
-                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
+                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
                                 IrtStandard.AUTO.Name);
                             return false;
                     }

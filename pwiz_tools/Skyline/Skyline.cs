@@ -97,7 +97,6 @@ namespace pwiz.Skyline
             IUndoable,
             IDocumentUIContainer,
             IProgressMonitor,
-            ILibraryBuildNotificationContainer,
             IToolMacroProvider,
             IModifyDocumentContainer,
             IRetentionScoreSource,
@@ -119,7 +118,6 @@ namespace pwiz.Skyline
         private readonly RetentionTimeManager _retentionTimeManager;
         private readonly IonMobilityLibraryManager _ionMobilityLibraryManager;
         private readonly LibraryManager _libraryManager;
-        private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
         private readonly AutoTrainManager _autoTrainManager;
 
@@ -165,7 +163,6 @@ namespace pwiz.Skyline
             _libraryManager = new LibraryManager();
             _libraryManager.ProgressUpdateEvent += UpdateProgress;
             _libraryManager.Register(this);
-            _libraryBuildNotificationHandler = new LibraryBuildNotificationHandler(this);
 
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
@@ -4008,13 +4005,6 @@ namespace pwiz.Skyline
                     return;
             }
 
-            // TODO: replace this with more generic logic fed from IProgressMonitor
-            if (BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(x))
-            {
-                e.Response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, x);
-                return;
-            }
-
             var message = ExceptionUtil.GetMessage(x);
 
             // Drill down to see if the innermost exception was an out-of-memory exception.
@@ -4147,25 +4137,7 @@ namespace pwiz.Skyline
             ShowAllChromatogramsGraph();
         }
 
-        Point INotificationContainer.NotificationAnchor
-        {
-            get { return new Point(Left, statusStrip.Visible ? Bottom - statusStrip.Height : Bottom); }
-        }
-
-        LibraryManager ILibraryBuildNotificationContainer.LibraryManager
-        {
-            get { return _libraryManager; }
-        }
-
-        public Action<LibraryManager.BuildState, bool> LibraryBuildCompleteCallback
-        {
-            get { return _libraryBuildNotificationHandler.LibraryBuildCompleteCallback; }
-        }
-
-        public void RemoveLibraryBuildNotification()
-        {
-            _libraryBuildNotificationHandler.RemoveLibraryBuildNotification();
-        }
+        public LibraryManager LibraryManager => _libraryManager;
 
         public bool StatusContains(string format)
         {

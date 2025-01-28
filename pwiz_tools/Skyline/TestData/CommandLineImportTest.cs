@@ -147,6 +147,7 @@ namespace pwiz.SkylineTestData
             // only check the error message up to and including "In any of the following directories:"
             string externalSpectrumFileErrorPrefix = Regex.Replace(Resources.VendorIssueHelper_ShowLibraryMissingExternalSpectrumFileError, "\\{2\\}.*", "{2}",
                 RegexOptions.Singleline);
+            AssertEx.Contains(output, SkylineResources.CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_);
             AssertEx.Contains(output, TextUtil.LineSeparate(Resources.CommandLine_ImportSearch_Creating_spectral_library_from_files_,
                 Path.GetFileName(searchFilePath)));
             AssertEx.Contains(output, string.Format(externalSpectrumFileErrorPrefix, searchFilePath, "wine yeast sampleA_2", "", BiblioSpecLiteBuilder.BiblioSpecSupportedFileExtensions));
