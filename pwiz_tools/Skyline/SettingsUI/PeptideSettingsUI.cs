@@ -807,6 +807,38 @@ namespace pwiz.Skyline.SettingsUI
             IsBuildingLibrary = false;
         }
 
+        private static bool PerformLongWork(Control parent, string text, Action<IProgressMonitor> work)
+        {
+            using var longWait = new LongWaitDlg();
+            longWait.Text = text;   // CONSIDER: Should this really be the form title or should it be the starting Message?
+            var status = longWait.PerformWork(parent, 800, work);
+            // Note that we can't trust that the status not being complete has any useful meaning here
+            if (status.IsCanceled)
+                return false;
+            if (status.IsError)
+            {
+                MessageDlg.ShowException(parent, status.ErrorException);
+                return false;
+            }
+            return true;
+        }
+
+        private static bool PerformLongWorkWithErrorMessage(Control parent, string text, string errorMessage,
+            Action<IProgressMonitor> work)
+        {
+            return PerformLongWork(parent, text, monitor =>
+            {
+                try
+                {
+                    work(monitor);
+                }
+                catch (Exception x)
+                {
+                    throw new IOException(TextUtil.LineSeparate(errorMessage, x.Message), x);
+                }
+            });
+        }
+
         public void CompleteLibraryBuild(BuildState buildState)
         {
             if (!string.IsNullOrEmpty(buildState.ExtraMessage))
@@ -818,23 +850,19 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Load library
                 Library lib = null;
-                using (var longWait = new LongWaitDlg())
-                {
-                    longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_library;
-                    var status = longWait.PerformWork(this, 800, monitor =>
-                    {
-                        lib = _libraryManager.TryGetLibrary(buildState.LibrarySpec) ??
-                              _libraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
-                        if (lib != null)
+                if (!PerformLongWork(this, SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_library, 
+                        monitor =>
                         {
-                            foreach (var stream in lib.ReadStreams)
-                                stream.CloseStream();
-                        }
-                    });
-                    if (status.IsCanceled)
-                        lib = null;
-                    if (status.IsError)
-                        throw status.ErrorException;
+                            lib = _libraryManager.TryGetLibrary(buildState.LibrarySpec) ??
+                                  _libraryManager.LoadLibrary(buildState.LibrarySpec, () => new DefaultFileLoadMonitor(monitor));
+                            if (lib != null)
+                            {
+                                foreach (var stream in lib.ReadStreams)
+                                    stream.CloseStream();
+                            }
+                        }))
+                {
+                    return;
                 }
                 // Add iRTs to library
                 if (AddIrts(IrtRegressionType.DEFAULT, lib, buildState.LibrarySpec, buildState.IrtStandard, this, true, out _))
@@ -853,18 +881,15 @@ namespace pwiz.Skyline.SettingsUI
             List<IrtStandard> autoStandards = null;
             var cirtPeptides = Array.Empty<DbIrtPeptide>();
 
-            using (var longWait = new LongWaitDlg())
+            var standard1 = standard;
+            if (!PerformLongWork(parent, SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers,
+                    monitor =>
+                    {
+                        ImportPeptideSearch.GetLibIrtProviders(lib, standard1, monitor,
+                            out irtProviders, out autoStandards, out cirtPeptides);
+                    }))
             {
-                longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Loading_retention_time_providers;
-                var standard1 = standard;
-                var status = longWait.PerformWork(parent, 800, monitor =>
-                {
-                    ImportPeptideSearch.GetLibIrtProviders(lib, standard1, monitor, out irtProviders, out autoStandards, out cirtPeptides);
-                });
-                if (status.IsCanceled)
-                    return false;
-                if (status.IsError)
-                    throw status.ErrorException;
+                return false;
             }
 
             int? numCirt = null;
@@ -900,12 +925,10 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             ProcessedIrtAverages processed = null;
-            using (var longWait = new LongWaitDlg())
-            {
-                longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times;
-                try
-                {
-                    var status = longWait.PerformWork(parent, 800, monitor =>
+            if (!PerformLongWorkWithErrorMessage(parent, 
+                    SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Processing_retention_times,
+                    Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
+                    monitor =>
                     {
                         processed = ImportPeptideSearch.ProcessRetentionTimes(numCirt, irtProviders,
                             standard.Peptides.ToArray(), cirtPeptides, regressionType, monitor,
@@ -914,20 +937,9 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             standard = new IrtStandard(XmlNamedElement.NAME_INTERNAL, null, null, newStandardPeptides);
                         }
-                    });
-                    if (status.IsCanceled)
-                        return false;
-                    if (status.IsError)
-                        throw status.ErrorException;
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(parent,
-                        TextUtil.LineSeparate(
-                            Resources.BuildPeptideSearchLibraryControl_AddIrtLibraryTable_An_error_occurred_while_processing_retention_times_,
-                            x.Message), x);
-                    return false;
-                }
+                    }))
+            {
+                return false;
             }
 
             using (var resultsDlg = new AddIrtPeptidesDlg(AddIrtPeptidesLocation.spectral_library, processed))
@@ -950,26 +962,16 @@ namespace pwiz.Skyline.SettingsUI
             if (!processed.DbIrtPeptides.Any())
                 return false;
 
-            using (var longWait = new LongWaitDlg())
-            {
-                longWait.Text = SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library;
-                try
-                {
-                    var status = longWait.PerformWork(parent, 800, monitor =>
+            if (!PerformLongWorkWithErrorMessage(parent, 
+                    SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_Adding_iRTs_to_library,
+                    SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
+                    monitor =>
                     {
-                        ImportPeptideSearch.CreateIrtDb(libSpec.FilePath, processed, standard.Peptides.ToArray(), recalibrate, regressionType, monitor);
-                    });
-                    if (status.IsError)
-                        throw status.ErrorException;
-                }
-                catch (Exception x)
-                {
-                    MessageDlg.ShowWithException(parent,
-                        TextUtil.LineSeparate(
-                            SettingsUIResources.LibraryBuildNotificationHandler_AddIrts_An_error_occurred_trying_to_add_iRTs_to_the_library_,
-                            x.Message), x);
-                    return false;
-                }
+                        ImportPeptideSearch.CreateIrtDb(libSpec.FilePath, processed, standard.Peptides.ToArray(),
+                            recalibrate, regressionType, monitor);
+                    }))
+            {
+                return false;
             }
             outStandard = standard;
             return true;

@@ -589,7 +589,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                             return;
                         }
                         // A failure has occurred
-                        // CONSIDER: Should this ever cause the wizard to be closed and force the user to start over?
+                        // CONSIDER(brendanx): This looks suspicious to me. It closes the entire wizard
+                        // when BuildPeptideSearchLibrary has failed but eCancel.Cancel is not set, which
+                        // makes it unclear if the user has seen an error message before the UI disappears.
+                        // I am not ready to dig into this further as it has been this way for years,
+                        // passing most tests. It is hard to imagine how the wizard could continue if
+                        // it fails to create a library, and it is not performing a search.
                         CloseWizard(DialogResult.Cancel);
                         // Not a good idea to continue once the wizard has been closed
                         return;
