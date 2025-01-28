@@ -1073,7 +1073,8 @@ namespace pwiz.Skyline.Controls.Databinding
         private void ResizePivotByReplicateGridToFit()
         {
             int rowLimit = 10;
-            int totalHeight = dataGridViewEx1.ColumnHeadersHeight;
+            // We also add pixels here to account for border
+            int totalHeight = dataGridViewEx1.ColumnHeadersHeight + 2;
 
             int rowCount = Math.Min(dataGridViewEx1.Rows.Count, rowLimit);
             for (int i = 0; i < rowCount; i++)
