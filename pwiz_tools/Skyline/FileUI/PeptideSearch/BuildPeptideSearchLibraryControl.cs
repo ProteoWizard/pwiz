@@ -422,7 +422,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
 
             IrtStandard outStandard = null;
-            var addedIrts = !isFeatureDetection && SkylineWindow.AddIrts(IrtRegressionType.DEFAULT,
+            var addedIrts = !isFeatureDetection && PeptideSettingsUI.AddIrts(IrtRegressionType.DEFAULT,
                 ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false, out outStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
