@@ -216,6 +216,7 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             this.dataGridViewEx1.AllowUserToAddRows = false;
             this.dataGridViewEx1.AllowUserToDeleteRows = false;
+            this.dataGridViewEx1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.dataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             resources.ApplyResources(this.dataGridViewEx1, "dataGridViewEx1");
             this.dataGridViewEx1.Name = "dataGridViewEx1";

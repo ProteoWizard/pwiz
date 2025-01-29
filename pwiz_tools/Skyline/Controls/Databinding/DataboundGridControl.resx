@@ -379,7 +379,7 @@
     <value>90</value>
   </data>
   <data name="dataGridSplitContainer.SplitterWidth" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="dataGridSplitContainer.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
