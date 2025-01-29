@@ -472,6 +472,7 @@
     <Compile Include="EditUI\EditSpectrumFilterDlg.Designer.cs">
       <DependentUpon>EditSpectrumFilterDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditUI\ImputedBounds.cs" />
     <Compile Include="EditUI\PeakImputationForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -595,7 +596,7 @@
     <Compile Include="Model\Results\Imputation\LongestCommonSequenceFinder.cs" />
     <Compile Include="Model\Results\Imputation\MoleculePeaks.cs" />
     <Compile Include="Model\Results\Imputation\PeakBounds.cs" />
-    <Compile Include="Model\Results\Imputation\PeakImputationData.cs" />
+    <Compile Include="Model\Results\Imputation\AlignmentData.cs" />
     <Compile Include="Model\Results\Imputation\RtValueType.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />

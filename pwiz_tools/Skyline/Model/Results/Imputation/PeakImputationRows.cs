@@ -14,15 +14,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
     {
         public static readonly Producer<Parameters, PeakImputationRows> PRODUCER = new Producer();
 
-        public PeakImputationRows(PeakImputationData peakImputationData, IEnumerable<MoleculePeaks> moleculePeaksList)
+        public PeakImputationRows(AlignmentData alignmentData, IEnumerable<MoleculePeaks> moleculePeaksList)
         {
-            PeakImputationData = peakImputationData;
+            AlignmentData = alignmentData;
             MoleculePeaks = ImmutableList.ValueOf(moleculePeaksList);
         }
 
         public ImmutableList<MoleculePeaks> MoleculePeaks { get; }
 
-        public PeakImputationData PeakImputationData { get; }
+        public AlignmentData AlignmentData { get; }
 
         public class Parameters : Immutable
         {
@@ -40,11 +40,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 return ChangeProp(ImClone(this), im => im.OverwriteManualPeaks = value);
             }
 
-            public double? MaxPeakWidthVariation
-            {
-                get { return Document.Settings.PeptideSettings.Imputation.MaxPeakWidthVariation; }
-            }
-
             public ImmutableList<IdentityPath> PeptideIdentityPaths { get; private set; }
 
             public Parameters ChangePeptideIdentityPaths(ImmutableList<IdentityPath> value)
@@ -57,35 +52,35 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override PeakImputationRows ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
             {
-                var peakImputationData = (PeakImputationData) inputs.Values.First();
+                var peakImputationData = (AlignmentData) inputs.Values.First();
                 var rowProducer = new RowProducer(productionMonitor, parameter, peakImputationData);
                 return new PeakImputationRows(peakImputationData, rowProducer.GetRows());
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
             {
-                yield return PeakImputationData.PRODUCER.MakeWorkOrder(
-                    new PeakImputationData.Parameters(parameter.Document));
+                yield return AlignmentData.PRODUCER.MakeWorkOrder(
+                    new AlignmentData.Parameters(parameter.Document));
             }
 
             public override string GetDescription(object workParameter)
             {
-                return "Result Rows";
+                return "Peak Imputation Results";
             }
         }
 
         private class RowProducer
         {
-            public RowProducer(ProductionMonitor productionMonitor, Parameters parameters, PeakImputationData peakImputationData)
+            public RowProducer(ProductionMonitor productionMonitor, Parameters parameters, AlignmentData alignmentData)
             {
                 ProductionMonitor = productionMonitor;
                 Parameters = parameters;
-                PeakImputationData = peakImputationData;
+                AlignmentData = alignmentData;
             }
 
             public ProductionMonitor ProductionMonitor { get; }
             public Parameters Parameters { get; }
-            public PeakImputationData PeakImputationData { get; }
+            public AlignmentData AlignmentData { get; }
             private MoleculePeaks RatePeaks(MoleculePeaks moleculePeaks)
             {
                 var peaks = new List<RatedPeak>(MarkExemplaryPeaks(moleculePeaks.Peaks));
@@ -228,8 +223,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     return Array.Empty<MoleculePeaks>();
                 }
 
-                var alignments = PeakImputationData.Alignments;
-                var chromatogramTimeRanges = PeakImputationData.ChromatogramTimeRanges;
+                var alignments = AlignmentData.Alignments;
+                var chromatogramTimeRanges = AlignmentData.ChromatogramTimeRanges;
                 Dictionary<Target, double> standardTimes = null;
                 if (alignments?.StandardTimes != null)
                 {
@@ -293,7 +288,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 .GetFileInfo(peptideChromInfo.FileId);
                             PeptideDocNode scoredMolecule = molecule;
                             bool manuallyIntegrated =
-                                PeakImputationData.IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
+                                AlignmentData.IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
                             if (manuallyIntegrated)
                             {
                                 if (!Parameters.OverwriteManualPeaks)
@@ -302,7 +297,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                 }
                             }
 
-                            var rawPeakBounds = PeakImputationData.GetRawPeakBounds(scoredMolecule,
+                            var rawPeakBounds = AlignmentData.GetRawPeakBounds(scoredMolecule,
                                 replicateIndex,
                                 peptideChromInfo.FileId);
                             var onDemandFeatureCalculator = new OnDemandFeatureCalculator(

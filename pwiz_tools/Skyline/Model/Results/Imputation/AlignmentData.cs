@@ -10,10 +10,10 @@ using pwiz.Skyline.Model.RetentionTimes;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
-    public class PeakImputationData
+    public class AlignmentData
     {
-        public static readonly Producer<Parameters, PeakImputationData> PRODUCER = new DataProducer();
-        public PeakImputationData(Parameters parameters, AlignmentResults alignmentResults, ChromatogramTimeRanges chromatogramTimeRanges)
+        public static readonly Producer<Parameters, AlignmentData> PRODUCER = new DataProducer();
+        public AlignmentData(Parameters parameters, AlignmentResults alignmentResults, ChromatogramTimeRanges chromatogramTimeRanges)
         {
             Params = parameters;
             Alignments = alignmentResults;
@@ -104,15 +104,15 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return peptideDocNode.TransitionGroups.SelectMany(tg => tg.GetSafeChromInfo(replicateIndex))
                 .Where(tgci => ReferenceEquals(tgci.FileId, fileId));
         }
-        private class DataProducer : Producer<Parameters, PeakImputationData>
+        private class DataProducer : Producer<Parameters, AlignmentData>
         {
-            public override PeakImputationData ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
+            public override AlignmentData ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
             {
                 var consensusAlignment =
                     AlignmentParameters.ALIGNMENT_PRODUCER.GetResult(inputs, parameter.GetAlignmentParameters());
                 var chromatogramTimeRanges = ChromatogramTimeRanges.PRODUCER.GetResult(inputs,
                     new ChromatogramTimeRanges.Parameter(parameter.Document.MeasuredResults, true));
-                return new PeakImputationData(parameter, consensusAlignment, chromatogramTimeRanges);
+                return new AlignmentData(parameter, consensusAlignment, chromatogramTimeRanges);
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)

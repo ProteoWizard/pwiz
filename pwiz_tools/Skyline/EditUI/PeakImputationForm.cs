@@ -59,8 +59,6 @@ namespace pwiz.Skyline.EditUI
             BindingListSource.SetViewContext(viewContext);
             _receiver = PeakImputationRows.PRODUCER.RegisterCustomer(this, ProductAvailableAction);
             _receiver.ProgressChange += ReceiverOnProgressChange;
-            comboRegressionMethod.Items.Add(AlignmentType.CONSENSUS);
-            comboRegressionMethod.Items.Add(AlignmentType.KDE);
         }
 
         private void ReceiverOnProgressChange()
@@ -95,15 +93,15 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
 
-                var document = _data.PeakImputationData.Params.Document;
-                var alignments = _data.PeakImputationData.Alignments;
+                var document = _data.AlignmentData.Params.Document;
+                var alignments = _data.AlignmentData.Alignments;
                 tbxUnalignedDocRtStdDev.Text =
-                    PeakImputationData.GetMeanRtStandardDeviation(document, null)
+                    AlignmentData.GetMeanRtStandardDeviation(document, null)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
                 tbxAlignedDocRtStdDev.Text =
-                    PeakImputationData.GetMeanRtStandardDeviation(document, alignments)
+                    AlignmentData.GetMeanRtStandardDeviation(document, alignments)
                         ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
-                tbxAvgPeakWidthCV.Text = PeakImputationData.GetAveragePeakWidthCV(document)?.ToString(Formats.CV) ??
+                tbxAvgPeakWidthCV.Text = AlignmentData.GetAveragePeakWidthCV(document)?.ToString(Formats.CV) ??
                                          string.Empty;
 
                 progressBar1.Visible = false;
@@ -214,8 +212,6 @@ namespace pwiz.Skyline.EditUI
             ComboHelper.ReplaceItems(comboRtCalculator, alignmentOptions.Cast<object>().Prepend(string.Empty));
             comboRtCalculator.SelectedItem =
                 alignmentOptions.FirstOrDefault(option => option.Name == imputationSettings.RtCalcName);
-            comboRegressionMethod.SelectedItem =
-                AlignmentType.ForName(imputationSettings.RegressionMethodName) ?? AlignmentType.KDE;
             tbxMaxPeakWidthVariation.Text = imputationSettings.MaxPeakWidthVariation?.ToString() ?? string.Empty;
             tbxRtDeviationCutoff.Text = imputationSettings.MaxRtShift?.ToString() ?? string.Empty;
 
@@ -441,7 +437,7 @@ namespace pwiz.Skyline.EditUI
                 .ChangeMaxPeakWidthVariation(GetDoubleValue(tbxMaxPeakWidthVariation, 0, null) / 100);
             if (imputationSettings.RtCalcName != null)
             {
-                imputationSettings = imputationSettings.ChangeRegressionMethodName((comboRegressionMethod.SelectedItem as AlignmentType)?.Name ?? AlignmentType.KDE.Name);
+                imputationSettings = imputationSettings.ChangeRegressionMethodName(AlignmentType.KDE.Name);
             }
 
             return imputationSettings;
@@ -569,7 +565,7 @@ namespace pwiz.Skyline.EditUI
                             {
                                 continue;
                             }
-                            var peakImputer = new PeakImputer(newDoc, _data.PeakImputationData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
+                            var peakImputer = new PeakImputer(newDoc, _data.AlignmentData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
                                 rejectedPeak.ReplicateFileInfo);
                             var bestPeakBounds =
                                 exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
@@ -778,7 +774,7 @@ namespace pwiz.Skyline.EditUI
             }
 
             var data = peakImputationForm._data;
-            if (data == null || !ReferenceEquals(document, data.PeakImputationData.Params.Document))
+            if (data == null || !ReferenceEquals(document, data.AlignmentData.Params.Document))
             {
                 return null;
             }
@@ -794,7 +790,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
-            var alignmentFunction = data.PeakImputationData.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
+            var alignmentFunction = data.AlignmentData.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
             return moleculePeaks.ExemplaryPeakBounds.ReverseAlignPreservingWidth(alignmentFunction);
         }
 
@@ -816,15 +812,6 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
 
-            var regressionMethod = comboRegressionMethod.SelectedItem as AlignmentType;
-            if (regressionMethod == AlignmentType.CONSENSUS)
-            {
-                MessageDlg.Show(this,
-                    string.Format(
-                        "Regression method {0} cannot be displayed in the Retention Time Score to Run Regression window",
-                        regressionMethod));
-                return;
-            }
             SkylineWindow.ShowRTRegressionGraphScoreToRun();
             SkylineWindow.ShowRegressionMethod(RegressionMethodRT.kde);
             SkylineWindow.ChooseCalculator(calculator.Name);

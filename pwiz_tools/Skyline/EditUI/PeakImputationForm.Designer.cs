@@ -30,8 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.comboRegressionMethod = new System.Windows.Forms.ComboBox();
-            this.lblRegressionMethod = new System.Windows.Forms.Label();
+            this.linkLabelViewRegression = new System.Windows.Forms.LinkLabel();
             this.btnImputeBoundaries = new System.Windows.Forms.Button();
             this.lblPercentPeakWidth = new System.Windows.Forms.Label();
             this.lblMinutes = new System.Windows.Forms.Label();
@@ -71,7 +70,6 @@
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
-            this.linkLabelViewRegression = new System.Windows.Forms.LinkLabel();
             this.panel1.SuspendLayout();
             this.groupBoxDocumentStatistics.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
@@ -86,8 +84,6 @@
             // panel1
             // 
             this.panel1.Controls.Add(this.linkLabelViewRegression);
-            this.panel1.Controls.Add(this.comboRegressionMethod);
-            this.panel1.Controls.Add(this.lblRegressionMethod);
             this.panel1.Controls.Add(this.btnImputeBoundaries);
             this.panel1.Controls.Add(this.lblPercentPeakWidth);
             this.panel1.Controls.Add(this.lblMinutes);
@@ -111,24 +107,16 @@
             this.panel1.Size = new System.Drawing.Size(800, 223);
             this.panel1.TabIndex = 1;
             // 
-            // comboRegressionMethod
+            // linkLabelViewRegression
             // 
-            this.comboRegressionMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRegressionMethod.FormattingEnabled = true;
-            this.comboRegressionMethod.Location = new System.Drawing.Point(170, 71);
-            this.comboRegressionMethod.Name = "comboRegressionMethod";
-            this.comboRegressionMethod.Size = new System.Drawing.Size(127, 21);
-            this.comboRegressionMethod.TabIndex = 31;
-            this.comboRegressionMethod.SelectedIndexChanged += new System.EventHandler(this.SettingsControlChanged);
-            // 
-            // lblRegressionMethod
-            // 
-            this.lblRegressionMethod.AutoSize = true;
-            this.lblRegressionMethod.Location = new System.Drawing.Point(167, 55);
-            this.lblRegressionMethod.Name = "lblRegressionMethod";
-            this.lblRegressionMethod.Size = new System.Drawing.Size(101, 13);
-            this.lblRegressionMethod.TabIndex = 30;
-            this.lblRegressionMethod.Text = "Regression method:";
+            this.linkLabelViewRegression.AutoSize = true;
+            this.linkLabelViewRegression.Location = new System.Drawing.Point(168, 55);
+            this.linkLabelViewRegression.Name = "linkLabelViewRegression";
+            this.linkLabelViewRegression.Size = new System.Drawing.Size(86, 13);
+            this.linkLabelViewRegression.TabIndex = 32;
+            this.linkLabelViewRegression.TabStop = true;
+            this.linkLabelViewRegression.Text = "View Regression";
+            this.linkLabelViewRegression.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelViewRegression_LinkClicked);
             // 
             // btnImputeBoundaries
             // 
@@ -465,7 +453,7 @@
             this.lblSdCutoff.TabIndex = 14;
             this.lblSdCutoff.Text = "Max RT shift";
             // 
-            // comboRetentionTimeAlignment
+            // comboRtCalculator
             // 
             this.comboRtCalculator.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRtCalculator.FormattingEnabled = true;
@@ -491,17 +479,6 @@
             this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
             this.imageList1.ImageSize = new System.Drawing.Size(16, 16);
             this.imageList1.TransparentColor = System.Drawing.Color.Transparent;
-            // 
-            // linkLabelViewRegression
-            // 
-            this.linkLabelViewRegression.AutoSize = true;
-            this.linkLabelViewRegression.Location = new System.Drawing.Point(167, 95);
-            this.linkLabelViewRegression.Name = "linkLabelViewRegression";
-            this.linkLabelViewRegression.Size = new System.Drawing.Size(86, 13);
-            this.linkLabelViewRegression.TabIndex = 32;
-            this.linkLabelViewRegression.TabStop = true;
-            this.linkLabelViewRegression.Text = "View Regression";
-            this.linkLabelViewRegression.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelViewRegression_LinkClicked);
             // 
             // PeakImputationForm
             // 
@@ -567,8 +544,6 @@
         private System.Windows.Forms.Label lblMinutes;
         private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label lblRegressionMethod;
-        private System.Windows.Forms.ComboBox comboRegressionMethod;
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.LinkLabel linkLabelViewRegression;
     }
