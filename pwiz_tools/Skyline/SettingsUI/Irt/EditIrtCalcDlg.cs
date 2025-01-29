@@ -999,12 +999,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private void AddSpectralLibrary(LibrarySpec librarySpec)
             {
-                var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
                 Library library = null;
                 ProcessedIrtAverages irtAverages = null;
                 try
                 {
-                    library = libraryManager.TryGetLibrary(librarySpec);
+                    library = Program.MainWindow.LibraryManager.TryGetLibrary(librarySpec);
                     using (var longWait = new LongWaitDlg())
                     {
                         longWait.Text = IrtResources.LibraryGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library;

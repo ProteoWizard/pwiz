@@ -556,11 +556,29 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required for this feature..
+        ///   Looks up a localized string similar to Downloading Cuda software library....
+        /// </summary>
+        public static string PythonInstaller_Downloading_Cuda_Library {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Downloading_Cuda_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required to install this feature..
         /// </summary>
         public static string PythonInstaller_Install_Cuda_Library {
             get {
                 return ResourceManager.GetString("PythonInstaller_Install_Cuda_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Installing Cuda software library....
+        /// </summary>
+        public static string PythonInstaller_Installing_Cuda_Library {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Installing_Cuda_Library", resourceCulture);
             }
         }
         

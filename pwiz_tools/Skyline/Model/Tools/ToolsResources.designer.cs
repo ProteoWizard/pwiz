@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading the get pip py script.
+        ///   Looks up a localized string similar to Downloading the get-pip.py script.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script {
             get {
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download the get pip py script.
+        ///   Looks up a localized string similar to Failed to download the get-pip.py script.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script {
             get {
@@ -349,7 +349,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to run the get pip py script.
+        ///   Looks up a localized string similar to Failed to run the get-pip.py script.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script {
             get {
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Running the get pip py script.
+        ///   Looks up a localized string similar to Running the get-pip.py script.
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Running_the_get_pip_py_script {
             get {
@@ -432,7 +432,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading the get pip py script.
+        ///   Looks up a localized string similar to Downloading the get-pip.py script.
         /// </summary>
         public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_the_get_pip_py_script {
             get {
@@ -472,7 +472,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download the get pip py script.
+        ///   Looks up a localized string similar to Failed to download the get-pip.py script.
         /// </summary>
         public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_the_get_pip_py_script {
             get {
@@ -502,7 +502,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to run the get pip py script.
+        ///   Looks up a localized string similar to Failed to run the get-pip.py script.
         /// </summary>
         public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_run_the_get_pip_py_script {
             get {

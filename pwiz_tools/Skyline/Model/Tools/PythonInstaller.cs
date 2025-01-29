@@ -1,4 +1,23 @@
-﻿using System;
+﻿/*
+ * Maintainer: David Shteynberg <david.shteynberg .at. proton.me>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -99,8 +118,14 @@ namespace pwiz.Skyline.Model.Tools
         public string VirtualEnvironmentDir => Path.Combine(PythonVersionDir, VirtualEnvironmentName);
         public string VirtualEnvironmentPythonExecutablePath => Path.Combine(VirtualEnvironmentDir, SCRIPTS, PYTHON_EXECUTABLE);
         public List<PythonTask> PendingTasks { get; set; }
-        
+
         #region Functional testing support
+        public enum eSimulatedInstallationState
+        {
+            NONE,    // Normal tests systems will have registry set suitably
+            NAIVE    // Be able to simulate systems where Python is not installed
+        }
+        public static eSimulatedInstallationState SimulatedInstallationState { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
         public ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
@@ -223,7 +248,12 @@ namespace pwiz.Skyline.Model.Tools
             return tasks.Count == 0;
         }
 
-        
+        public void ClearPendingTasks() 
+        {
+            PendingTasks.Clear();
+        }
+
+
 
         public List<PythonTask> ValidatePythonVirtualEnvironment()
         {
@@ -361,11 +391,11 @@ namespace pwiz.Skyline.Model.Tools
                     if (NvidiaGpuAvailable == true)
                     {
                         Directory.CreateDirectory(CudaVersionDir);
-                        var task10 = new PythonTask(InstallCudaLibrary);
-                        task10.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Installing_Cuda;
-                        task10.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Cuda;
-                        task10.Name = pythonTaskName;
-                        return task10;
+                        var task11 = new PythonTask(InstallCudaLibrary);
+                        task11.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Installing_Cuda;
+                        task11.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Cuda;
+                        task11.Name = pythonTaskName;
+                        return task11;
                     }
                     else
                     {
@@ -554,6 +584,7 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(
                     ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
             }
+            PythonInstallerUtil.SignFile(GetPipScriptDownloadPath);
         }
 
         private void RunGetPipScript(IProgressMonitor progressMonitor)
@@ -1356,7 +1387,8 @@ namespace pwiz.Skyline.Model.Tools
         }
         internal static bool ValidateEnableLongpaths()
         {
-            return (int) Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
+            return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE && 
+                   (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED,0) == 1;
         }
         private bool? ValidatePipInstallPackages()
         {

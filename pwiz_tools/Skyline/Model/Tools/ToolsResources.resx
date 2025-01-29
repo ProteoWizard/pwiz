@@ -284,13 +284,13 @@
     <value>Failed to enable search path in Python embeddable package</value>
   </data>
   <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_the_get_pip_py_script" xml:space="preserve">
-    <value>Downloading the get pip py script</value>
+    <value>Downloading the get-pip.py script</value>
   </data>
   <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_the_get_pip_py_script" xml:space="preserve">
-    <value>Failed to download the get pip py script</value>
+    <value>Failed to download the get-pip.py script</value>
   </data>
   <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_run_the_get_pip_py_script" xml:space="preserve">
-    <value>Failed to run the get pip py script</value>
+    <value>Failed to run the get-pip.py script</value>
   </data>
   <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_create_virtual_environment__0_" xml:space="preserve">
     <value>Failed to create virtual environment {0}</value>
@@ -335,10 +335,10 @@
     <value>Failed to enable search path in Python embeddable package</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script" xml:space="preserve">
-    <value>Downloading the get pip py script</value>
+    <value>Downloading the get-pip.py script</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script" xml:space="preserve">
-    <value>Failed to download the get pip py script</value>
+    <value>Failed to download the get-pip.py script</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Downloading_Cuda_Installer" xml:space="preserve">
     <value>Downloading Cuda Installer</value>
@@ -365,10 +365,10 @@
     <value>Failed to install CuDNN Library</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Running_the_get_pip_py_script" xml:space="preserve">
-    <value>Running the get pip py script</value>
+    <value>Running the get-pip.py script</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script" xml:space="preserve">
-    <value>Failed to run the get pip py script</value>
+    <value>Failed to run the get-pip.py script</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Running_pip_install__0_" xml:space="preserve">
     <value>Running pip install {0}</value>

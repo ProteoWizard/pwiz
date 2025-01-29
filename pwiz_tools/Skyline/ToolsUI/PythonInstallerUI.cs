@@ -1,4 +1,23 @@
-﻿using pwiz.Skyline.Alerts;
+﻿/*
+ * Author and Maintainer: David Shteynberg <david.shteynberg .at. proton.me>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using System;
@@ -27,10 +46,15 @@ namespace pwiz.Skyline.ToolsUI
                     if (task.Name == PythonTaskName.download_cuda_library || task.Name == PythonTaskName.install_cuda_library ||
                         task.Name == PythonTaskName.download_cudnn_library || task.Name == PythonTaskName.install_cudnn_library)
                     {
-                        if (_userNoToCuda == null)
+                        if (_userNoToCuda != true)
                         {
-                            EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
-                            var choice = EnableNvidiaGpuDlg.ShowDialog();
+                            var choice = DialogResult.None;
+                            if (EnableNvidiaGpuDlg == null)
+                            {
+                                EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
+                                choice = EnableNvidiaGpuDlg.ShowDialog();
+                            }
+                                
                             if (choice == DialogResult.No)
                             {
                                 _userNoToCuda = true;
@@ -44,8 +68,10 @@ namespace pwiz.Skyline.ToolsUI
                             }
                             else if (choice == DialogResult.Yes)
                             {
+                                _userNoToCuda = false;
                                 //Download
                                 using var waitDlg = new LongWaitDlg();
+                                waitDlg.Text = string.Format(task.InProgressMessage);
                                 waitDlg.ProgressValue = 0;
                                 waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
                             }
@@ -116,6 +142,7 @@ namespace pwiz.Skyline.ToolsUI
             else if (task.IsActionWithProgressMonitor)
             {
                 using var waitDlg = new LongWaitDlg();
+                waitDlg.Message = task.InProgressMessage;
                 waitDlg.ProgressValue = 0;
                 waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
             }
