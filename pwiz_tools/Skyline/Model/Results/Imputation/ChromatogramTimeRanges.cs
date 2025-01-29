@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override string GetDescription(object workParameter)
             {
-                return "Reading chromatogram time ranges";
+                return ImputationResources.Producer_GetDescription_Reading_chromatogram_time_ranges;
             }
         }
     }
