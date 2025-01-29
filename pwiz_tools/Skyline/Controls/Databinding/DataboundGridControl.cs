@@ -685,7 +685,7 @@ namespace pwiz.Skyline.Controls.Databinding
         public void UpdateDendrograms()
         {
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-            if (true == replicatePivotColumns?.IsPivoted())
+            if (true == replicatePivotColumns?.IsPivoted() && replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
             {
                 dataGridViewEx1.Show();
                 dataGridSplitContainer.Panel1Collapsed = false;
@@ -1133,14 +1133,17 @@ namespace pwiz.Skyline.Controls.Databinding
         }
         private void boundDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
-            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-            AlignPivotByReplicateGridColumns(replicatePivotColumns);
-            UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+            if (dataGridViewEx1.Visible)
+            {
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                AlignPivotByReplicateGridColumns(replicatePivotColumns);
+                UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+            }
         }
 
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
         {
-            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll)
+            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll && dataGridViewEx1.Visible)
             {
                 int horizontalOffset = e.NewValue;
                 UpdateReplicateDataGridFrozenState();

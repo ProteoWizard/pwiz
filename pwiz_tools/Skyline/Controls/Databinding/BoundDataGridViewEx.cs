@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.Databinding
             }
 
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(reportResults.ItemProperties);
-            if (replicatePivotColumns == null)
+            if (replicatePivotColumns == null || !replicatePivotColumns.HasConstantColumns() || !replicatePivotColumns.HasVariableColumns())
             {
                 return baseColumns;
             }

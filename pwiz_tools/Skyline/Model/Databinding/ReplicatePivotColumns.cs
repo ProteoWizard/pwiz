@@ -83,6 +83,16 @@ namespace pwiz.Skyline.Model.Databinding
             return false;
         }
 
+        public bool HasConstantColumns()
+        {
+            return GetReplicateColumnGroups().SelectMany(grouping => grouping).Any(IsConstantColumn);
+        }
+
+        public bool HasVariableColumns()
+        {
+            return GetReplicateColumnGroups().SelectMany(grouping => grouping).Any(descriptor => !IsConstantColumn(descriptor));
+        }
+
         private static Type GetRowType(ItemProperties itemProperties)
         {
             foreach (var property in itemProperties.OfType<ColumnPropertyDescriptor>())
