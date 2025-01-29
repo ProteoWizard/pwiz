@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using EnvDTE;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -31,7 +30,6 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using Peptide = pwiz.Skyline.Model.Peptide;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -208,7 +206,7 @@ namespace pwiz.Skyline.EditUI
             SetSequenceTree(SkylineWindow.SequenceTree);
             var document = SkylineWindow.DocumentUI;
             var imputationSettings = document.Settings.PeptideSettings.Imputation;
-            var alignmentOptions = RtValueType.GetChoices(document).ToList();
+            var alignmentOptions = RtValueType.GetChoicesWithCalculators(document).ToList();
             ComboHelper.ReplaceItems(comboRtCalculator, alignmentOptions.Cast<object>().Prepend(string.Empty));
             comboRtCalculator.SelectedItem =
                 alignmentOptions.FirstOrDefault(option => option.Name == imputationSettings.RtCalcName);
@@ -765,7 +763,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         public static RatedPeak.PeakBounds GetImputedPeakBounds(SrmDocument document, PeptideGroup peptideGroup,
-            Peptide peptide, ReplicateFileId replicateFileId)
+            Model.Peptide peptide, ReplicateFileId replicateFileId)
         {
             var peakImputationForm = FormUtil.OpenForms.OfType<PeakImputationForm>().FirstOrDefault();
             if (peakImputationForm == null)
@@ -803,18 +801,9 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
 
-            var calculator = (rtValueType as RtValueType.Calculator)?.RetentionScoreCalculator;
-            if (calculator == null)
-            {
-                MessageDlg.Show(this,
-                    string.Format("{0} cannot be displayed in the Retention Time Score To Run Regression window",
-                        rtValueType));
-                return;
-            }
-
             SkylineWindow.ShowRTRegressionGraphScoreToRun();
             SkylineWindow.ShowRegressionMethod(RegressionMethodRT.kde);
-            SkylineWindow.ChooseCalculator(calculator.Name);
+            SkylineWindow.ChooseCalculator(rtValueType.Name);
         }
     }
 }

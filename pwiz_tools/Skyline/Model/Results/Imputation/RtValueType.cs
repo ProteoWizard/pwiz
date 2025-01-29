@@ -4,7 +4,8 @@ using System.Linq;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Util;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
@@ -13,13 +14,33 @@ namespace pwiz.Skyline.Model.Results.Imputation
         public static readonly RtValueType PEAK_APEXES = new PeakApexes();
         public static readonly RtValueType PSM_TIMES = new PsmTimes();
 
-
+        private static ImmutableList<RtValueType> ALL = ImmutableList.ValueOf(new[] { PEAK_APEXES, PSM_TIMES });
         public static IEnumerable<RtValueType> GetChoices(SrmDocument document)
         {
-            return Properties.Settings.Default.RTScoreCalculatorList.Select(calc => new Calculator(calc))
-                .Prepend(PSM_TIMES)
-                .Prepend(PEAK_APEXES)
-                .Where(calc => calc.IsValidFor(document));
+            return ALL.Where(item => item.IsValidFor(document));
+        }
+
+        public static RetentionScoreCalculatorSpec GetRetentionScoreCalculatorSpec(SrmDocument document, string name)
+        {
+            var calculatorSpec = Settings.Default.GetCalculatorByName(name);
+            if (calculatorSpec != null)
+            {
+                return calculatorSpec;
+            }
+
+            var rtValueType = ALL.FirstOrDefault(rtValueType => rtValueType.Name == name);
+            if (rtValueType != null)
+            {
+                return rtValueType.ToRetentionScoreCalculator(document);
+            }
+
+            return null;
+        }
+
+        public static IEnumerable<RtValueType> GetChoicesWithCalculators(SrmDocument document)
+        {
+            return GetChoices(document).Concat(Properties.Settings.Default.RTScoreCalculatorList
+                .Select(calc => new Calculator(calc)));
         }
 
         public virtual bool IsValidFor(SrmDocument document)
@@ -42,7 +63,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
 
-            var calc = Properties.Settings.Default.RTScoreCalculatorList[name];
+            var calc = Settings.Default.RTScoreCalculatorList[name];
             if (calc != null)
             {
                 return new Calculator(calc);
@@ -52,6 +73,31 @@ namespace pwiz.Skyline.Model.Results.Imputation
         }
 
         public abstract string Name { get; }
+
+        public virtual RetentionScoreCalculatorSpec ToRetentionScoreCalculator(SrmDocument document)
+        {
+            var measuredRetentionTimeDictionary = new Dictionary<Target, MeasuredRetentionTime>();
+            var replicateDictionaries = ReplicateFileId.List(document.MeasuredResults)
+                .Select(replicateFileId => GetRetentionTimes(document, replicateFileId)).ToList();
+            foreach (var target in replicateDictionaries.SelectMany(dict => dict.Keys).Distinct())
+            {
+                var times = new List<double>();
+                foreach (var dict in replicateDictionaries)
+                {
+                    if (dict.TryGetValue(target, out var time))
+                    {
+                        times.Add(time);
+                    }
+                }
+
+                if (times.Count > 0)
+                {
+                    measuredRetentionTimeDictionary.Add(target, new MeasuredRetentionTime(target, times.Mean(), true));
+                }
+            }
+
+            return new DictionaryRetentionScoreCalculator(Name, ToString(), measuredRetentionTimeDictionary);
+        }
 
         public Dictionary<Target, double> GetRetentionTimes(SrmDocument document,
             ReplicateFileId replicateFileId)
@@ -104,7 +150,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override string ToString()
             {
-                return "Peak Apexes";
+                return "Average Peak Apex";
             }
 
             public override string Name
@@ -133,7 +179,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override string ToString()
             {
-                return "PSM Times";
+                return "Average PSM Time";
             }
 
             public override bool IsValidFor(SrmDocument document)
@@ -174,7 +220,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public class Calculator : RtValueType
         {
-            public Calculator(IRetentionScoreCalculator calculator)
+            public Calculator(RetentionScoreCalculatorSpec calculator)
             {
                 RetentionScoreCalculator = calculator;
             }
@@ -191,9 +237,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
 
-            public IRetentionScoreCalculator RetentionScoreCalculator
+            public RetentionScoreCalculatorSpec RetentionScoreCalculator
             {
                 get;
+            }
+
+            public override RetentionScoreCalculatorSpec ToRetentionScoreCalculator(SrmDocument document)
+            {
+                return RetentionScoreCalculator;
             }
 
             public override string ToString()

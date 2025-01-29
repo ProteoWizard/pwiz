@@ -49,6 +49,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
 using pwiz.Skyline.Model.GroupComparison;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -3407,13 +3408,27 @@ namespace pwiz.Skyline
             chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
 
             int i = 0;
-            foreach (var calculatorName in Settings.Default.RTScoreCalculatorList.Select(calc=>calc.Name).Concat(RTLinearRegressionGraphPane.ExtraCalculatorNames))
+            foreach (string calculatorName in Settings.Default.RTScoreCalculatorList.Select(calc=>calc.Name))
             {
                 var menuItem = new ToolStripMenuItem(calculatorName, null, delegate { ChooseCalculator(calculatorName);})
                 {
                     Checked = Equals(calculatorName, Settings.Default.RTCalculatorName)
                 };
                 chooseCalculatorContextMenuItem.DropDownItems.Insert(i++, menuItem);
+            }
+
+            foreach (var rtValueType in new[] { RtValueType.PEAK_APEXES, RtValueType.PSM_TIMES })
+            {
+                if (rtValueType.IsValidFor(Document))
+                {
+                    string calculatorName = rtValueType.Name;
+                    var menuItem = new ToolStripMenuItem(rtValueType.ToString(), null,
+                        delegate { ChooseCalculator(calculatorName); })
+                    {
+                        Checked = Equals(calculatorName, Settings.Default.RTCalculatorName)
+                    };
+                    chooseCalculatorContextMenuItem.DropDownItems.Insert(i++, menuItem);
+                }
             }
         }
 

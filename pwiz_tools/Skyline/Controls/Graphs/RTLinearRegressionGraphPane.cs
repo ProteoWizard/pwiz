@@ -868,7 +868,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             {
                                 MessageDlg.Show(Program.MainWindow, string.Format(
                                     GraphsResources.GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_,
-                                    tryIrtCalc.Name, tryIrtCalc.DatabasePath));
+                                    tryIrtCalc, tryIrtCalc.DatabasePath));
                                 return;
                             }
                         }
@@ -940,17 +940,40 @@ namespace pwiz.Skyline.Controls.Graphs
                 string calculatorName = Settings.Default.RTCalculatorName;
                 if (string.IsNullOrEmpty(calculatorName) && !IsRunToRun)
                     calculatorName = _calculator.Name;
-                return IsValidFor(document) &&
-                        _targetIndex == targetIndex &&
-                        _originalIndex == originalIndex &&
-                        _bestResult == bestResult &&
-                        _threshold == threshold &&
-                        _pointsType == pointsType &&
-                        _regressionMethod == regressionMethod && 
-                        (IsRunToRun || (_calculatorName == Settings.Default.RTCalculatorName &&
-                        ReferenceEquals(_calculator, Settings.Default.GetCalculatorByName(calculatorName)))) &&
-                        // Valid if refine is true, and this data requires no further refining
-                        (_refine == refine || (refine && IsRefined()));
+                if (calculatorName != _calculator.Name)
+                {
+                    return false;
+                }
+                bool valid = IsValidFor(document) &&
+                             _targetIndex == targetIndex &&
+                             _originalIndex == originalIndex &&
+                             _bestResult == bestResult &&
+                             _threshold == threshold &&
+                             _pointsType == pointsType &&
+                             _regressionMethod == regressionMethod;
+                if (!valid)
+                {
+                    return false;
+                }
+
+                if (_refine != refine)
+                {
+                    if (!refine || !IsRefined())
+                    {
+                        return false;
+                    }
+                }
+
+                var calculator = Settings.Default.GetCalculatorByName(calculatorName);
+                if (calculator != null)
+                {
+                    if (!ReferenceEquals(_calculator, calculator))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
 
             public int TargetIndex { get { return _targetIndex; } }
@@ -1442,7 +1465,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         return string.Empty;
                     }
-                    return Calculator.Name;
+                    return Calculator.ToString();
                 }
             }
 
@@ -1471,33 +1494,14 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphSummary.RectangleToScreen(r);
         }
 
-        public static ImmutableList<string> ExtraCalculatorNames =
-            ImmutableList.ValueOf(new[] { "PeakApexConsensus", "PsmTimesConsensus" });
-
         private static RetentionScoreCalculatorSpec GetCalculator(CancellationToken cancellationToken, string name, SrmDocument document)
         {
             if (name == null)
             {
                 return null;
             }
-            RtValueType rtValueType = null;
-            if (name == "PeakApexConsensus")
-            {
-                rtValueType = RtValueType.PEAK_APEXES;
-            }
-            else if (name == "PsmTimesConsensus")
-            {
-                rtValueType = RtValueType.PSM_TIMES;
-            }
 
-            if (rtValueType != null)
-            {
-                var alignmentParams = new AlignmentParameters(document, rtValueType, AlignmentType.CONSENSUS);
-                var alignmentResults = alignmentParams.GetResults(new ProductionMonitor(cancellationToken, i => { }));
-                return new ConsensusScoreCalculator(name, alignmentResults);
-            }
-
-            return Settings.Default.GetCalculatorByName(name);
+            return RtValueType.GetRetentionScoreCalculatorSpec(document, name);
         }
     }
 
