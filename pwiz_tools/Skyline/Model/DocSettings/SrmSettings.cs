@@ -2303,15 +2303,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     list.AddRange(MeasuredResults.Chromatograms);
                 }
-                
+
                 // *.blib
                 if (PeptideSettings?.Libraries?.LibrarySpecs != null)
                 {
                     list.AddRange(PeptideSettings.Libraries.LibrarySpecs);
                 }
-                
+
                 // *.protdb
-                if (HasBackgroundProteome)
+                if (PeptideSettings != null && HasBackgroundProteome)
                 {
                     list.Add(PeptideSettings.BackgroundProteome);
                 }
