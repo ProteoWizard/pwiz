@@ -736,11 +736,13 @@ bool DiaNNSpecLibReader::parseFile()
             psms_.emplace_back(psm);
         }
 
-        // insert PSMs for the current run
-        bfs::path currentRunFilepath = currentFilename;
+        // parse spectrum filename from File.Name column (really filepath)
+        bfs::path currentRunFilepath = bal::replace_all_copy(currentFilename, "\\", "/"); // backslash to slash should work on both Linux and Windows
         string currentRunFilename = currentRunFilepath.filename().string();
         if (bal::iends_with(currentRunFilename, ".dia")) // trim DIA extension if present
             currentRunFilename = currentRunFilename.substr(0, currentRunFilename.length() - 4);
+
+        // insert PSMs for the current run
         buildTables(GENERIC_QVALUE, currentRunFilename);
         processedRuns.insert(currentRun);
         currentRun.clear();
