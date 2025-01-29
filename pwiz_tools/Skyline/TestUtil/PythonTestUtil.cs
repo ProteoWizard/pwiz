@@ -1,4 +1,23 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿/*
+ * Author and maintainer: David Shteynberg <david.shteynberg .at. proton.me>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
@@ -10,7 +29,7 @@ using System.Security.Principal;
 namespace pwiz.SkylineTestUtil
 {
     [TestClass]
-    public class PythonTestUtil : AbstractFunctionalTestEx
+    public class PythonTestUtil
     {
         private string _pythonVersion
         {
@@ -66,18 +85,18 @@ namespace pwiz.SkylineTestUtil
         {
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
-            var installPythonDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
+            var installPythonDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
             //PauseTest("install offer");
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
-            CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
+            AbstractFunctionalTest.CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
             //PauseTest("back to wizard");
-            installPythonDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
+            installPythonDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
             // PauseTest("install offer again");
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
-            var needAdminDlg = ShowDialog<MessageDlg>(installPythonDlg.OkDialog); // Expect to be told about needing admin access
+            var needAdminDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(installPythonDlg.OkDialog); // Expect to be told about needing admin access
             // PauseTest("need admin msg");
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, needAdminDlg.Message);
-            CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
+            AbstractFunctionalTest.CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
             // PauseTest("back to wizard");
         }
         public bool InstallPython(BuildLibraryDlg buildLibraryDlg)
@@ -85,23 +104,23 @@ namespace pwiz.SkylineTestUtil
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONE; // Normal tests systems will have registry set suitably
      
             bool havePythonPrerequisite = false;
-            RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
+            AbstractFunctionalTest.RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
 
             if (!havePythonPrerequisite)
             {
                 MessageDlg confirmDlg = null;
                 MultiButtonMsgDlg nvidiaDlg = null;
-                RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
+                AbstractFunctionalTest.RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
                 {
                     Assert.AreEqual(string.Format(
                             ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
                             _pythonVersion, _toolName), pythonDlg.Message);
 
-                    OkDialog(pythonDlg, pythonDlg.OkDialog);
+                    AbstractFunctionalTest.OkDialog(pythonDlg, pythonDlg.OkDialog);
                     if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
                     {
                         MessageDlg longPathDlg = null;
-                        longPathDlg = WaitForOpenForm<MessageDlg>();
+                        longPathDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>();
                         Assert.AreEqual(
                             string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
                             longPathDlg.Message);
@@ -114,7 +133,7 @@ namespace pwiz.SkylineTestUtil
                                 
                                 RunLongPathsDialog(longPathDlg);
 
-                                nvidiaDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                                nvidiaDlg = AbstractFunctionalTest.WaitForOpenForm<MultiButtonMsgDlg>();
 
                                 Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
                                     nvidiaDlg.Message);
@@ -145,7 +164,7 @@ namespace pwiz.SkylineTestUtil
                         {
                             Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
 
-                            nvidiaDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                            nvidiaDlg = AbstractFunctionalTest.WaitForOpenForm<MultiButtonMsgDlg>();
                             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
                                 nvidiaDlg.Message);
                             RunNvidiaDialog(nvidiaDlg);
@@ -160,10 +179,10 @@ namespace pwiz.SkylineTestUtil
                             {
                                 Console.WriteLine(@"Info: Nvidia libraries already installed");
                             }
-                            confirmDlg = WaitForOpenForm<MessageDlg>(600000);
+                            confirmDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>(600000);
                             //PauseTest("Stop to check which Dialog is open");
                             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment), confirmDlg.Message);
-                            OkDialog(confirmDlg, confirmDlg.OkDialog);
+                            AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
                             if (!confirmDlg.IsDisposed)
                                 confirmDlg.Dispose();
 
@@ -185,15 +204,10 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
-        protected override void DoTest()
-        {
-            throw new NotImplementedException();
-        }
-
         private void RunNvidiaDialog(MultiButtonMsgDlg nvidiaDlg)
         {
             nvidiaDlg.ClickNo();
-            MessageDlg confirmDlg = WaitForOpenForm<MessageDlg>(600000);
+            MessageDlg confirmDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>(600000);
             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment),
                 confirmDlg.Message);
             confirmDlg.OkDialog();
@@ -204,10 +218,10 @@ namespace pwiz.SkylineTestUtil
         private void RunLongPathsDialog(MessageDlg longPathDlg)
         {
             Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
-            OkDialog(longPathDlg, longPathDlg.OkDialog);
+            AbstractFunctionalTest.OkDialog(longPathDlg, longPathDlg.OkDialog);
             Console.WriteLine(@"Info: Successfully set LongPathsEnabled registry key to 1");
             _undoRegistry = true;
-            MessageDlg okDlg = WaitForOpenForm<MessageDlg>();
+            MessageDlg okDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>();
             okDlg.OkDialog();
 
             if (!longPathDlg.IsDisposed)

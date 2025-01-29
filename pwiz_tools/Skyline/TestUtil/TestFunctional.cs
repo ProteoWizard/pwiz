@@ -266,7 +266,7 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.DocumentChangedEvent += OnDocumentChangedLogging;
         }
 
-        protected static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
+        protected internal static TDlg ShowDialog<TDlg>(Action act, int millis = -1) where TDlg : Form
         {
             var existingDialog = FindOpenForm<TDlg>();
             if (existingDialog != null)
@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestUtil
         /// <param name="showDlgAction">Action which runs on the UI thread and causes the dialog to be shown</param>
         /// <param name="exerciseDlgAction">Action which runs on the test thread and interacts with the dialog</param>
         /// <param name="closeDlgAction">Action which runs on the UI thread and closes the dialog</param>
-        protected static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
+        protected internal static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
         {
             bool showDlgActionCompleted = false;
             TDlg dlg = ShowDialog<TDlg>(() =>
