@@ -134,4 +134,13 @@
 	<data name="AlignmentProducer_GetDescription_Retention_time_alignment" xml:space="preserve">
 		<value>Retention time alignment</value>
 	</data>
+	<data name="Producer_GetDescription_Reading_chromatogram_time_ranges" xml:space="preserve">
+		<value>Reading chromatogram time ranges</value>
+	</data>
+	<data name="PeakApexes_ToString_Average_Peak_Apex" xml:space="preserve">
+		<value>Average Peak Apex</value>
+	</data>
+	<data name="PsmTimes_ToString_Average_PSM_Time" xml:space="preserve">
+		<value>Average PSM Time</value>
+	</data>
 </root>

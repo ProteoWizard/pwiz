@@ -3754,6 +3754,7 @@
     <EmbeddedResource Include="Model\Results\Imputation\ImputationResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>ImputationResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.ja.resx" />
     <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.resx">
