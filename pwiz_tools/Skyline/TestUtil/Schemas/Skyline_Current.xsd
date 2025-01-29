@@ -306,7 +306,15 @@
           <xs:attribute name="shared_peptides" type="xs:string" />
         </xs:complexType>
       </xs:element>
-    </xs:sequence>
+      <xs:element name="imputation" minOccurs="0" maxOccurs="1">
+	    <xs:complexType>
+		  <xs:attribute name="max_rt_shift" type="xs:double" />
+		  <xs:attribute name="max_peak_width_var" type="xs:double" />
+		  <xs:attribute name="rt_calc" type="xs:string" />
+		  <xs:attribute name="regression_method" type="xs:string" />
+	    </xs:complexType>
+	  </xs:element>
+  </xs:sequence>
   </xs:complexType>
   <!-- Transition Settings -->
   <xs:simpleType name="ion_mobility_filter_window_width_calc_type">

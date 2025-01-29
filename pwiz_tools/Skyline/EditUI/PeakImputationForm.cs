@@ -103,7 +103,7 @@ namespace pwiz.Skyline.EditUI
                                          string.Empty;
 
                 progressBar1.Visible = false;
-                if (alignments != null && cbxAlignAllGraphs.Checked)
+                if (alignments != null && AlignAllGraphs)
                 {
                     SkylineWindow.RetentionTimeTransformOp =
                         alignments.ChangeName(comboRtCalculator.SelectedItem.ToString());
@@ -762,37 +762,45 @@ namespace pwiz.Skyline.EditUI
                 (deepProgress.ProgressValue / 100.0).ToString(Formats.Percent)));
         }
 
-        public static RatedPeak.PeakBounds GetImputedPeakBounds(SrmDocument document, PeptideGroup peptideGroup,
-            Model.Peptide peptide, ReplicateFileId replicateFileId)
+        private void linkLabelViewRegression_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            var peakImputationForm = FormUtil.OpenForms.OfType<PeakImputationForm>().FirstOrDefault();
-            if (peakImputationForm == null)
-            {
-                return null;
-            }
-
-            var data = peakImputationForm._data;
-            if (data == null || !ReferenceEquals(document, data.AlignmentData.Params.Document))
-            {
-                return null;
-            }
-
-            var identityPath = new IdentityPath(peptideGroup, peptide);
-            var moleculePeaks = data.MoleculePeaks.FirstOrDefault(mp => identityPath.Equals(mp.PeptideIdentityPath));
-            if (moleculePeaks == null)
-            {
-                return null;
-            }
-
-            if (moleculePeaks.ExemplaryPeakBounds == null)
-            {
-                return null;
-            }
-            var alignmentFunction = data.AlignmentData.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
-            return moleculePeaks.ExemplaryPeakBounds.ReverseAlignPreservingWidth(alignmentFunction);
+            DisplayRetentionTimeRegression();
         }
 
-        private void linkLabelViewRegression_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        public bool AlignAllGraphs
+        {
+            get
+            {
+                return cbxAlignAllGraphs.Checked;
+            }
+            set
+            {
+                cbxAlignAllGraphs.Checked = value;
+            }
+        }
+
+        public string RtCalculatorName
+        {
+            get
+            {
+                return (comboRtCalculator.SelectedItem as RtValueType)?.Name;
+            }
+            set
+            {
+                for (int i = 0; i < comboRtCalculator.Items.Count; i++)
+                {
+                    var rtValueType = comboRtCalculator.Items[i] as RtValueType;
+                    if (value == rtValueType?.Name)
+                    {
+                        comboRtCalculator.SelectedIndex = i;
+                        return;
+                    }
+                }
+                throw new InvalidOperationException();
+            }
+        }
+
+        public void DisplayRetentionTimeRegression()
         {
             var rtValueType = comboRtCalculator.SelectedItem as RtValueType;
             if (rtValueType == null)
@@ -804,6 +812,7 @@ namespace pwiz.Skyline.EditUI
             SkylineWindow.ShowRTRegressionGraphScoreToRun();
             SkylineWindow.ShowRegressionMethod(RegressionMethodRT.kde);
             SkylineWindow.ChooseCalculator(rtValueType.Name);
+
         }
     }
 }
