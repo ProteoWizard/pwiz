@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -65,7 +83,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override string GetDescription(object workParameter)
             {
-                return "Peak Imputation Results";
+                return ImputationResources.Producer_GetDescription_Peak_Imputation_Results;
             }
         }
 
@@ -87,7 +105,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 var exemplaryPeaks = peaks.Where(peak => peak.PeakVerdict == RatedPeak.Verdict.Exemplary).ToList();
                 if (exemplaryPeaks.Count == 0)
                 {
-                    return moleculePeaks.ChangePeaks(peaks.Select(peak => peak.ChangeVerdict(RatedPeak.Verdict.Unknown, "No exemplary peaks")), null, null);
+                    return moleculePeaks.ChangePeaks(peaks.Select(peak => peak.ChangeVerdict(RatedPeak.Verdict.Unknown, ImputationResources.RowProducer_RatePeaks_No_exemplary_peaks)), null, null);
                 }
 
                 var bestPeak = exemplaryPeaks.First();
@@ -115,7 +133,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     if (firstExemplary)
                     {
                         firstExemplary = false;
-                        string opinion = string.Format("Peak score {0} is higher than all other replicates",
+                        string opinion = string.Format(ImputationResources.RowProducer_MarkExemplaryPeaks_Peak_score__0__is_higher_than_all_other_replicates,
                             peak.Score?.ToString(Formats.PEAK_SCORE));
                         yield return peak.ChangeVerdict(RatedPeak.Verdict.Exemplary, opinion);
                         continue;
@@ -124,7 +142,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     yield return peak;
                 }
             }
-            private RatedPeak.PeakBounds GetExemplaryPeakBounds(IList<RatedPeak> exemplaryPeaks)
+            private FormattablePeakBounds GetExemplaryPeakBounds(IList<RatedPeak> exemplaryPeaks)
             {
                 if (exemplaryPeaks.Count == 0)
                 {
@@ -138,16 +156,16 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     return null;
                 }
 
-                return new RatedPeak.PeakBounds(alignedPeakBounds.Average(peak => peak.StartTime),
+                return new FormattablePeakBounds(alignedPeakBounds.Average(peak => peak.StartTime),
                     alignedPeakBounds.Average(peak => peak.EndTime));
             }
             [MethodImpl(MethodImplOptions.NoOptimization)]
-            private RatedPeak MarkAcceptedPeak(PeptideDocNode peptideDocNode, RatedPeak.PeakBounds exemplaryPeakBounds, RatedPeak peak)
+            private RatedPeak MarkAcceptedPeak(PeptideDocNode peptideDocNode, FormattablePeakBounds exemplaryPeakBounds, RatedPeak peak)
             {
                 if (exemplaryPeakBounds == null)
                 {
                     return peak.ChangeVerdict(RatedPeak.Verdict.Accepted,
-                        "Adjustment not possible because no exemplary peaks found.");
+                        ImputationResources.RowProducer_MarkAcceptedPeak_Adjustment_not_possible_because_no_exemplary_peaks_found_);
                 }
 
                 peak = peak.ChangeRtShift(peak.RawPeakBounds?.MidTime - exemplaryPeakBounds.MidTime);
@@ -164,13 +182,13 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 if (!needsMoving && !needsWidthChanged)
                 {
                     return peak.ChangeVerdict(RatedPeak.Verdict.Accepted,
-                        string.Format("Retention time {0} is within {1} of {2}", peak.RawPeakBounds.MidTime.ToString(Formats.RETENTION_TIME),
+                        string.Format(ImputationResources.RowProducer_MarkAcceptedPeak_Retention_time__0__is_within__1__of__2_, peak.RawPeakBounds.MidTime.ToString(Formats.RETENTION_TIME),
                             AllowableRtShift, exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
                 }
 
                 if (false == peak.TimeIntervals?.ContainsTime((float)exemplaryPeakBounds.MidTime))
                 {
-                    var opinion = string.Format("Imputed retention time {0} is outside the chromatogram.", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME));
+                    var opinion = string.Format(ImputationResources.RowProducer_MarkAcceptedPeak_Imputed_retention_time__0__is_outside_the_chromatogram_, exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME));
                     if (peak.RawPeakBounds == null)
                     {
                         return peak.ChangeVerdict(RatedPeak.Verdict.Accepted, opinion);
@@ -181,14 +199,14 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
                 if (needsWidthChanged)
                 {
-                    var opinion = string.Format("Width {0} should be changed because more than {1} different from {2}",
+                    var opinion = string.Format(ImputationResources.RowProducer_MarkAcceptedPeak_Width__0__should_be_changed_because_more_than__1__different_from__2_,
                         peak.RawPeakBounds.Width.ToString(Formats.RETENTION_TIME),
                         MaxPeakWidthVariation.Value.ToString(Formats.Percent),
                         exemplaryPeakBounds.Width.ToString(Formats.RETENTION_TIME));
                     return peak.ChangeVerdict(RatedPeak.Verdict.NeedsAdjustment, opinion);
                 }
                 return peak.ChangeVerdict(RatedPeak.Verdict.NeedsAdjustment,
-                    string.Format("Peak should be moved to {0}", exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
+                    string.Format(ImputationResources.RowProducer_MarkAcceptedPeak_Peak_should_be_moved_to__0_, exemplaryPeakBounds.MidTime.ToString(Formats.RETENTION_TIME)));
             }
 
 

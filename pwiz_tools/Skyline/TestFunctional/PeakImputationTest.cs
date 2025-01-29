@@ -54,6 +54,11 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(linearRegressionGraphPane.IsCalculating);
                 Assert.AreEqual(RtValueType.PEAK_APEXES.ToString(), linearRegressionGraphPane.XAxis.Title.Text);
             });
+            RunUI(()=>
+            {
+                peakImputationForm.AlignAllGraphs = true;
+            });
+            WaitForGraphs();
         }
     }
 }

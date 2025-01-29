@@ -2319,7 +2319,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (_imputedBoundsReceiver.TryGetProduct(parameter, out var imputedBounds))
                         {
                             var replicateFileId = new ReplicateFileId(chromatograms.Id, GetChromFileInfoId());
-                            chromGraphPrimary.ExemplaryPeakBounds = imputedBounds.GetImputedBounds(replicateFileId, peptideIdentityPath);
+                            chromGraphPrimary.ImputedBounds = imputedBounds.GetImputedBounds(replicateFileId, peptideIdentityPath);
                         }
                     }
                 }

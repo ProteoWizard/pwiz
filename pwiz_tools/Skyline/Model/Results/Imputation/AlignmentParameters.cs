@@ -60,7 +60,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override string GetDescription(object workParameter)
             {
-                return "Retention time alignment";
+                return ImputationResources.AlignmentProducer_GetDescription_Retention_time_alignment;
             }
         }
 

@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
@@ -33,7 +51,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
         public PeakScoringModelSpec ScoringModel { get; }
 
-        public SrmDocument ImputeBoundaries(SrmDocument document, RatedPeak.PeakBounds bestPeakBounds)
+        public SrmDocument ImputeBoundaries(SrmDocument document, FormattablePeakBounds bestPeakBounds)
         {
             var peptideDocNode = (PeptideDocNode)document.FindNode(PeptideIdentityPath);
             var newPeakBounds = GetNewPeakBounds(document, peptideDocNode, bestPeakBounds);
@@ -60,8 +78,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return document;
         }
 
-        public RatedPeak.PeakBounds GetNewPeakBounds(SrmDocument document, PeptideDocNode peptideDocNode,
-            RatedPeak.PeakBounds bestPeakBounds)
+        public FormattablePeakBounds GetNewPeakBounds(SrmDocument document, PeptideDocNode peptideDocNode,
+            FormattablePeakBounds bestPeakBounds)
         {
             var chromatogramGroupInfos = LoadChromatogramGroupInfos(document, peptideDocNode).ToList();
             var timeRanges = ChromatogramTimeRanges?.GetTimeRanges(peptideDocNode);
@@ -74,12 +92,12 @@ namespace pwiz.Skyline.Model.Results.Imputation
             var candidateBoundaries = GetCandidatePeakBounds(chromatogramGroupInfos).Where(peak=>peak.MidTime >= bestPeakBounds.StartTime && peak.MidTime <= bestPeakBounds.EndTime).ToList();
             if (candidateBoundaries.Any())
             {
-                var peakBounds = new RatedPeak.PeakBounds(candidateBoundaries.Min(peak => peak.StartTime),
+                var peakBounds = new FormattablePeakBounds(candidateBoundaries.Min(peak => peak.StartTime),
                     candidateBoundaries.Max(peak => peak.EndTime));
                 if (peakBounds.Width < bestPeakBounds.Width)
                 {
                     var halfDifference = (bestPeakBounds.Width - peakBounds.Width) / 2;
-                    peakBounds = new RatedPeak.PeakBounds(peakBounds.StartTime - halfDifference,
+                    peakBounds = new FormattablePeakBounds(peakBounds.StartTime - halfDifference,
                         peakBounds.EndTime + halfDifference);
                 }
 
@@ -96,7 +114,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
             return RatedPeak.MakeValidPeakBounds(timeIntervals, bestPeakBounds);
         }
 
-        private IEnumerable<RatedPeak.PeakBounds> GetCandidatePeakBounds(IList<ChromatogramGroupInfo> chromatogramGroupInfos)
+        private IEnumerable<FormattablePeakBounds> GetCandidatePeakBounds(IList<ChromatogramGroupInfo> chromatogramGroupInfos)
         {
             if (NeedToPickPeaksAgain(chromatogramGroupInfos))
             {
@@ -113,7 +131,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                         var peak = chromatogramGroupInfo.GetTransitionPeak(iTransition, iPeak);
                         if (!peak.IsEmpty)
                         {
-                            yield return new RatedPeak.PeakBounds(peak.StartTime, peak.EndTime);
+                            yield return new FormattablePeakBounds(peak.StartTime, peak.EndTime);
                             break;
                         }
                     }

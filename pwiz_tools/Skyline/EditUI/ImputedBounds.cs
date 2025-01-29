@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
+using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -33,15 +34,15 @@ namespace pwiz.Skyline.EditUI
     {
         public static readonly Producer<Parameter, ImputedBounds> PRODUCER = new Producer();
 
-        private Dictionary<Tuple<ReplicateFileId, IdentityPath>, RatedPeak.PeakBounds> _boundsDictionary;
+        private Dictionary<Tuple<ReplicateFileId, IdentityPath>, PeakBounds> _boundsDictionary;
 
-        public RatedPeak.PeakBounds GetImputedBounds(ReplicateFileId replicateFileId, IdentityPath peptideIdentityPath)
+        public PeakBounds GetImputedBounds(ReplicateFileId replicateFileId, IdentityPath peptideIdentityPath)
         {
             _boundsDictionary.TryGetValue(Tuple.Create(replicateFileId, peptideIdentityPath), out var bounds);
             return bounds;
         }
 
-        private ImputedBounds(Dictionary<Tuple<ReplicateFileId, IdentityPath>, RatedPeak.PeakBounds> dictionary)
+        private ImputedBounds(Dictionary<Tuple<ReplicateFileId, IdentityPath>, PeakBounds> dictionary)
         {
             _boundsDictionary = dictionary;
         }
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.EditUI
         public static ImputedBounds MakeImputedBounds(SrmDocument document, IEnumerable<MoleculePeaks> moleculePeaksList,
             AlignmentData alignmentData)
         {
-            var dictionary = new Dictionary<Tuple<ReplicateFileId, IdentityPath>, RatedPeak.PeakBounds>();
+            var dictionary = new Dictionary<Tuple<ReplicateFileId, IdentityPath>, PeakBounds>();
             foreach (var moleculePeaks in moleculePeaksList)
             {
                 foreach (var chromatogramSet in document.MeasuredResults.Chromatograms)
@@ -75,8 +76,11 @@ namespace pwiz.Skyline.EditUI
                     foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
                     {
                         var replicateFileId = new ReplicateFileId(chromatogramSet.Id, chromFileInfo.FileId);
-                        var alignmentFunction = alignmentData.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
-                        dictionary.Add(Tuple.Create(replicateFileId, moleculePeaks.PeptideIdentityPath), moleculePeaks.ExemplaryPeakBounds.ReverseAlignPreservingWidth(alignmentFunction));
+                        if (!Equals(replicateFileId, moleculePeaks.BestPeak.ReplicateFileInfo.ReplicateFileId))
+                        {
+                            var alignmentFunction = alignmentData.Alignments?.GetAlignment(replicateFileId) ?? AlignmentFunction.IDENTITY;
+                            dictionary.Add(Tuple.Create(replicateFileId, moleculePeaks.PeptideIdentityPath), moleculePeaks.ExemplaryPeakBounds.ReverseAlignPreservingWidth(alignmentFunction).ToPeakBounds());
+                        }
                     }
                 }
 
@@ -124,7 +128,7 @@ namespace pwiz.Skyline.EditUI
         {
             public override ImputedBounds ProduceResult(ProductionMonitor productionMonitor, Parameter parameter, IDictionary<WorkOrder, object> inputs)
             {
-                var peakImputationRows = (PeakImputationRows) inputs.Values.OfType<PeakImputationRows>().FirstOrDefault();
+                var peakImputationRows = inputs.Values.OfType<PeakImputationRows>().FirstOrDefault();
                 if (peakImputationRows == null)
                 {
                     return null;

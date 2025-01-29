@@ -587,6 +587,12 @@
     <Compile Include="Model\Results\Imputation\AlignmentParameters.cs" />
     <Compile Include="Model\Results\Imputation\AlignmentResults.cs" />
     <Compile Include="Model\Results\Imputation\AlignmentType.cs" />
+    <Compile Include="Model\Results\Imputation\FormattablePeakBounds.cs" />
+    <Compile Include="Model\Results\Imputation\ImputationResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ImputationResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Results\Imputation\KdeAlignmentType.cs" />
     <Compile Include="Model\Results\Imputation\ChromatogramTimeRanges.cs" />
     <Compile Include="Model\Results\Imputation\PeakImputationRows.cs" />
@@ -595,7 +601,6 @@
     <Compile Include="Model\Results\Imputation\ConsensusAlignment.cs" />
     <Compile Include="Model\Results\Imputation\LongestCommonSequenceFinder.cs" />
     <Compile Include="Model\Results\Imputation\MoleculePeaks.cs" />
-    <Compile Include="Model\Results\Imputation\PeakBounds.cs" />
     <Compile Include="Model\Results\Imputation\AlignmentData.cs" />
     <Compile Include="Model\Results\Imputation\RtValueType.cs" />
     <Compile Include="Model\Results\ReplicateFileId.cs" />
@@ -3751,6 +3756,10 @@
     <EmbeddedResource Include="Model\FullScanPropertiesRes.zh-CHS.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Results\Imputation\ImputationResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>ImputationResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.ja.resx" />
     <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.resx">

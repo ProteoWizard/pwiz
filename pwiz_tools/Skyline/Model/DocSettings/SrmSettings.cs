@@ -2093,6 +2093,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            if (documentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                if (!Equals(ImputationSettings.DEFAULT, result.PeptideSettings.Imputation))
+                {
+                    result = result.ChangePeptideSettings(
+                        result.PeptideSettings.ChangeImputation(ImputationSettings.DEFAULT));
+                }
+            }
+
             return result;
         }
 

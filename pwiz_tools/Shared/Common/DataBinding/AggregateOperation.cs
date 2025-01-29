@@ -40,8 +40,8 @@ namespace pwiz.Common.DataBinding
             values => values.Mean());
 
         // TODO(nicksh): Generalize Median for non-numeric value types.
-        public static readonly AggregateOperation Median = new NumericAggregate(@"Median", () => "Median",
-            () => "Median {0}",
+        public static readonly AggregateOperation Median = new NumericAggregate(@"Median", () => DataBindingResources.AggregateOperation_Median_Median,
+            () => DataBindingResources.AggregateOperation_Median_Median__0_,
             values => values.Median());
 
         public static readonly AggregateOperation Min = new SelectOne(@"Min",

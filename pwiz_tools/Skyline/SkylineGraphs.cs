@@ -6114,7 +6114,7 @@ namespace pwiz.Skyline
                 {
                     var rect = GetFloatingRectangleForNewWindow();
                     rect.Width = Math.Max(800, rect.Width);
-                    _peakImputationForm.Show(dockPanel, GetFloatingRectangleForNewWindow());
+                    _peakImputationForm.Show(dockPanel, rect);
                 }
             }
         }

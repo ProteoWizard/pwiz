@@ -1,7 +1,25 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2023 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -10,11 +28,11 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -106,7 +124,7 @@ namespace pwiz.Skyline.EditUI
                 if (alignments != null && AlignAllGraphs)
                 {
                     SkylineWindow.RetentionTimeTransformOp =
-                        alignments.ChangeName(comboRtCalculator.SelectedItem.ToString());
+                        new AlignmentResultsRtTransformOp(comboRtCalculator.SelectedItem.ToString(), alignments);
                 }
                 else
                 {
@@ -121,7 +139,7 @@ namespace pwiz.Skyline.EditUI
                 int progressValue = 0;
                 if (deepProgress != null)
                 {
-                    tooltip = TextUtil.LineSeparate(GetProgressLines(deepProgress, string.Empty)); ;
+                    tooltip = TextUtil.LineSeparate(GetProgressLines(deepProgress, string.Empty));
                     progressValue = (int)Math.Max(0, Math.Min(10000, deepProgress.DeepProgressValue * 100));
                 }
 
@@ -135,7 +153,7 @@ namespace pwiz.Skyline.EditUI
             var error = _receiver.GetError();
             if (error != null)
             {
-                Trace.TraceWarning("Peak imputation error: {0}", error);
+                MessageDlg.ShowWithException(this, EditUIResources.PeakImputationForm_ProductAvailableAction_Peak_imputation_error, error);
             }
         }
 
@@ -277,7 +295,7 @@ namespace pwiz.Skyline.EditUI
             [InvariantDisplayName("BestPeak")]
             public Peak BestPeak { get; }
             [ChildDisplayName("Exemplary{0}")]
-            public RatedPeak.PeakBounds ExemplaryPeakBounds { get; }
+            public FormattablePeakBounds ExemplaryPeakBounds { get; }
             public int CountExemplary { get; }
             public int CountAccepted { get; }
             public int CountNeedAdjustment { get; }
@@ -307,13 +325,13 @@ namespace pwiz.Skyline.EditUI
             public ResultFile ResultFile { get; }
 
             [ChildDisplayName("Raw{0}")]
-            public RatedPeak.PeakBounds RawBounds
+            public FormattablePeakBounds RawBounds
             {
                 get { return _ratedPeak.RawPeakBounds; }
             }
 
             [ChildDisplayName("Aligned{0}")]
-            public RatedPeak.PeakBounds AlignedBounds
+            public FormattablePeakBounds AlignedBounds
             {
                 get { return _ratedPeak.AlignedPeakBounds; }
             }
@@ -396,9 +414,9 @@ namespace pwiz.Skyline.EditUI
                     switch (Verdict)
                     {
                         case RatedPeak.Verdict.NeedsAdjustment:
-                            return "Adjust Peak";
+                            return EditUIResources.Peak_Action_Adjust_Peak;
                         case RatedPeak.Verdict.NeedsRemoval:
-                            return "Remove Peak";
+                            return EditUIResources.Peak_Action_Remove_Peak;
                         default:
                             return string.Empty;
                     }
@@ -420,7 +438,7 @@ namespace pwiz.Skyline.EditUI
             }
             else
             {
-                SkylineWindow.ModifyDocument("Change imputation settings",
+                SkylineWindow.ModifyDocument(EditUIResources.PeakImputationForm_SettingsControlChanged_Change_imputation_settings,
                     doc => doc.ChangeSettings(
                         doc.Settings.ChangePeptideSettings(
                             doc.Settings.PeptideSettings.ChangeImputation(newImputationSettings))),
@@ -449,7 +467,7 @@ namespace pwiz.Skyline.EditUI
             {
                 if (!double.TryParse(text, out var doubleValue) || double.IsNaN(doubleValue))
                 {
-                    SetError(textBox, "Error: Must be a number");
+                    SetError(textBox, EditUIResources.PeakImputationForm_GetDoubleValue_Error__Must_be_a_number);
                     return null;
                 }
 
@@ -457,20 +475,20 @@ namespace pwiz.Skyline.EditUI
                 {
                     if (min > doubleValue || max < doubleValue)
                     {
-                        SetError(textBox, string.Format("Error: must be between {0} and {1}", min, max));
+                        SetError(textBox, string.Format(EditUIResources.PeakImputationForm_GetDoubleValue_Error__must_be_between__0__and__1_, min, max));
                         return null;
                     }
                 }
 
                 if (min > doubleValue)
                 {
-                    SetError(textBox, "Error: Must not be below " + min);
+                    SetError(textBox, string.Format(EditUIResources.PeakImputationForm_GetDoubleValue_Error__Must_not_be_below__0_, min));
                     return null;
                 }
 
                 if (max < doubleValue)
                 {
-                    SetError(textBox, "Error: Must not be above " + max);
+                    SetError(textBox, string.Format(EditUIResources.PeakImputationForm_GetDoubleValue_Error__Must_not_be_above__0_, max));
                     return null;
                 }
 
@@ -517,7 +535,7 @@ namespace pwiz.Skyline.EditUI
             var rows = BindingListSource.OfType<RowItem>().Select(rowItem => rowItem.Value).OfType<Row>().ToList();
             if (rows.Count == 0)
             {
-                MessageDlg.Show(this, "There are no rows");
+                MessageDlg.Show(this, EditUIResources.PeakImputationForm_ImputeBoundariesForAllRows_There_are_no_rows);
                 return;
             }
             ImputeBoundaries(rows);
@@ -528,6 +546,7 @@ namespace pwiz.Skyline.EditUI
             return ImputeBoundaries(rows, null);
         }
 
+        [SuppressMessage("ReSharper", "AccessToModifiedClosure")]
         public int ImputeBoundaries(IList<Row> rows, ICollection<ReplicateFileId> replicateFileIds)
         {
             lock (SkylineWindow.GetDocumentChangeLock())
@@ -588,7 +607,7 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 newDoc = newDoc.EndDeferSettingsChanges(originalDocument, null);
-                SkylineWindow.ModifyDocument("Impute peak boundaries", doc =>
+                SkylineWindow.ModifyDocument(EditUIResources.PeakImputationForm_ImputeBoundaries_Impute_peak_boundaries, doc =>
                 {
                     if (!ReferenceEquals(doc, originalDocument))
                     {
@@ -641,7 +660,7 @@ namespace pwiz.Skyline.EditUI
                 nameof(Row.CountExemplary),
                 nameof(Row.CountAccepted),
                 nameof(Row.CountNeedAdjustment),
-            }.Select(name=>new ColumnSpec(PropertyPath.Root.Property(name)))).SetName("Default");
+            }.Select(name=>new ColumnSpec(PropertyPath.Root.Property(name)))).SetName(EditUIResources.PeakImputationForm_GetDefaultViewSpecs_Default);
 
             var ppPeaks = PropertyPath.Root.Property(nameof(Row.Peaks)).DictionaryValues();
             var propertyPaths = new List<PropertyPath>
@@ -656,7 +675,7 @@ namespace pwiz.Skyline.EditUI
             propertyPaths.Add(ppPeaks.Property(nameof(Peak.Action)));
             yield return new ViewSpec().SetRowType(typeof(Row))
                 .SetColumns(propertyPaths.Select(pp => new ColumnSpec(pp)))
-                .SetSublistId(ppPeaks).SetName("Details");
+                .SetSublistId(ppPeaks).SetName(EditUIResources.PeakImputationForm_GetDefaultViewSpecs_Details);
         }
 
         public class ImputeButtonCell : DataGridViewButtonCell
@@ -805,7 +824,7 @@ namespace pwiz.Skyline.EditUI
             var rtValueType = comboRtCalculator.SelectedItem as RtValueType;
             if (rtValueType == null)
             {
-                MessageDlg.Show(this, "No retention time calculator selected");
+                MessageDlg.Show(this, EditUIResources.PeakImputationForm_DisplayRetentionTimeRegression_No_retention_time_calculator_selected);
                 return;
             }
 
@@ -813,6 +832,30 @@ namespace pwiz.Skyline.EditUI
             SkylineWindow.ShowRegressionMethod(RegressionMethodRT.kde);
             SkylineWindow.ChooseCalculator(rtValueType.Name);
 
+        }
+
+        private class AlignmentResultsRtTransformOp : GraphValues.IRetentionTimeTransformOp
+        {
+            private AlignmentResults _alignmentResults;
+            public AlignmentResultsRtTransformOp(string name, AlignmentResults alignmentResults)
+            {
+                Name = name;
+                _alignmentResults = alignmentResults;
+            }
+
+            public string GetAxisTitle(RTPeptideValue rtPeptideValue)
+            {
+                return string.Format(GraphsResources.RtAlignment_AxisTitleAlignedTo,
+                    GraphValues.ToLocalizedString(rtPeptideValue), Name);
+            }
+
+            public string Name { get; }
+
+
+            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction)
+            {
+                return _alignmentResults.TryGetRegressionFunction(chromFileInfoId, out regressionFunction);
+            }
         }
     }
 }
