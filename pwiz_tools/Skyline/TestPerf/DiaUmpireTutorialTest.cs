@@ -116,6 +116,15 @@ namespace TestPerf
         }
         private string RootName { get; set; }
 
+        private Image _searchLogImage;
+
+        protected override Bitmap ProcessCoverShot(Bitmap bmp)
+        {
+            var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
+            graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
+            return bmp;
+        }
+
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MZ5_UNICODE_ISSUES)]
         public void TestDiaTtofDiaUmpireTutorial()
         {
@@ -585,6 +594,12 @@ namespace TestPerf
                 });
             }
 
+            if (IsCoverShotMode)
+            {
+                // Resize the form before running or the output will not appear scrolled to the end
+                RunUI(() => importPeptideSearchDlg.Size = new Size(404, 578));  // minimum height
+            }
+
             RunUI(() =>
             {
                 // Run the search
@@ -606,6 +621,13 @@ namespace TestPerf
             finally
             {
                 File.WriteAllText("SearchControlLog.txt", importPeptideSearchDlg.SearchControl.LogText);
+            }
+
+            if (IsCoverShotMode)
+            {
+                ScreenshotManager.ActivateScreenshotForm(importPeptideSearchDlg);
+                _searchLogImage = ScreenshotManager.TakeShot(importPeptideSearchDlg);
+                Assert.IsNotNull(_searchLogImage);
             }
 
             var addIrtDlg = ShowDialog<AddIrtPeptidesDlg>(() => importPeptideSearchDlg.ClickNextButton(), 30 * 60000);//peptidesPerProteinDlg.OkDialog());
@@ -834,8 +856,13 @@ namespace TestPerf
                 });
 
                 RestoreCoverViewOnScreen();
-                /*fcGrid = WaitForOpenForm<FoldChangeGrid>();
-                fcGridControlFinal = fcGrid.DataboundGridControl;
+                
+                // No fold-change with only 2 runs
+                // CONSIDER: Could remove the fold-change floating window from the cover.view
+                var fcGrid = WaitForOpenForm<FoldChangeGrid>();
+                RunUI(FindFloatingWindow(fcGrid).Close);
+
+                /* fcGridControlFinal = fcGrid.DataboundGridControl;
                 FilterIrtProtein(fcGridControlFinal);
                 changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
                 RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);

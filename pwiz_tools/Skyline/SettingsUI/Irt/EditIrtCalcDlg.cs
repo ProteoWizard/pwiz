@@ -226,7 +226,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void btnCreateDb_Click(object sender, EventArgs e)
         {
-            if (DatabaseChanged)
+            if (!string.IsNullOrEmpty(CalcPath) && DatabaseChanged)
             {
                 var result = MultiButtonMsgDlg.Show(this, IrtResources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     MessageBoxButtons.YesNo);
@@ -999,12 +999,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private void AddSpectralLibrary(LibrarySpec librarySpec)
             {
-                var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
                 Library library = null;
                 ProcessedIrtAverages irtAverages = null;
                 try
                 {
-                    library = libraryManager.TryGetLibrary(librarySpec);
+                    library = Program.MainWindow.LibraryManager.TryGetLibrary(librarySpec);
                     using (var longWait = new LongWaitDlg())
                     {
                         longWait.Text = IrtResources.LibraryGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library;
