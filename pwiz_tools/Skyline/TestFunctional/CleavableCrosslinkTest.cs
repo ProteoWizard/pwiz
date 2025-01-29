@@ -49,9 +49,10 @@ namespace pwiz.SkylineTestFunctional
             });
             // Library build
             var buildLibrary = ShowDialog<BuildLibraryDlg>(peptideSettingsUi.ShowBuildLibraryDlg);
+            const string libraryName = "MyLibrary";
             RunUI(() =>
             {
-                buildLibrary.LibraryName = "MyLibrary";
+                buildLibrary.LibraryName = libraryName;
                 buildLibrary.LibraryPath = TestFilesDir.GetTestPath("MyLibrary.blib");
                 buildLibrary.OkWizardPage();
 
@@ -59,6 +60,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => buildLibrary.Grid.ScoreTypesLoaded);
             OkDialog(buildLibrary, buildLibrary.OkWizardPage);
+            WaitForConditionUI(() => peptideSettingsUi.PickedLibraries.Contains(libraryName));
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
             WaitForDocumentLoaded();
 
