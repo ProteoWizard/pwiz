@@ -27,10 +27,15 @@ namespace pwiz.Skyline.ToolsUI
                     if (task.Name == PythonTaskName.download_cuda_library || task.Name == PythonTaskName.install_cuda_library ||
                         task.Name == PythonTaskName.download_cudnn_library || task.Name == PythonTaskName.install_cudnn_library)
                     {
-                        if (_userNoToCuda == null)
+                        if (_userNoToCuda != true)
                         {
-                            EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
-                            var choice = EnableNvidiaGpuDlg.ShowDialog();
+                            var choice = DialogResult.None;
+                            if (EnableNvidiaGpuDlg == null)
+                            {
+                                EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
+                                choice = EnableNvidiaGpuDlg.ShowDialog();
+                            }
+                                
                             if (choice == DialogResult.No)
                             {
                                 _userNoToCuda = true;
@@ -44,9 +49,10 @@ namespace pwiz.Skyline.ToolsUI
                             }
                             else if (choice == DialogResult.Yes)
                             {
+                                _userNoToCuda = false;
                                 //Download
                                 using var waitDlg = new LongWaitDlg();
-                                waitDlg.Text = string.Format(ToolsUIResources.PythonInstaller_Downloading_Cuda_Library);
+                                waitDlg.Text = string.Format(task.InProgressMessage);
                                 waitDlg.ProgressValue = 0;
                                 waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
                             }

@@ -372,11 +372,11 @@ namespace pwiz.Skyline.Model.Tools
                     if (NvidiaGpuAvailable == true)
                     {
                         Directory.CreateDirectory(CudaVersionDir);
-                        var task10 = new PythonTask(InstallCudaLibrary);
-                        task10.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Installing_Cuda;
-                        task10.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Cuda;
-                        task10.Name = pythonTaskName;
-                        return task10;
+                        var task11 = new PythonTask(InstallCudaLibrary);
+                        task11.InProgressMessage = ToolsResources.PythonInstaller_GetPythonTask_Installing_Cuda;
+                        task11.FailureMessage = ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Cuda;
+                        task11.Name = pythonTaskName;
+                        return task11;
                     }
                     else
                     {
@@ -565,6 +565,7 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(
                     ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
             }
+            PythonInstallerUtil.SignFile(GetPipScriptDownloadPath);
         }
 
         private void RunGetPipScript(IProgressMonitor progressMonitor)

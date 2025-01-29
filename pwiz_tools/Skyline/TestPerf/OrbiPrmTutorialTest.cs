@@ -266,6 +266,7 @@ namespace TestPerf
                 buildLibraryDlg.Grid.SetScoreThreshold(0.1);
                 buildLibraryDlg.OkWizardPage();
             });
+            WaitForConditionUI(() => peptideSettingsUI.PickedLibraries.Contains(HEAVY_LIBRARY));
 
             var editListUI =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
