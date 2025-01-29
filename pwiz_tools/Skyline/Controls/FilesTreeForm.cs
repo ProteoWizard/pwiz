@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
+using System;
 
 namespace pwiz.Skyline.Controls
 {
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Controls
             filesTree.InitializeTree(SkylineWindow);
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseMove += FilesTree_MouseMove;
+            filesTree.LostFocus += FilesTree_LostFocus;
 
             // FilesTree => context menu
             filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
@@ -127,6 +129,11 @@ namespace pwiz.Skyline.Controls
         private void FilesTree_MouseMove(object sender, MouseEventArgs e)
         {
             FilesTree_MouseMove(e.Location);
+        }
+
+        private void FilesTree_LostFocus(object sender, EventArgs e)
+        {
+            _nodeTip?.HideTip();
         }
 
         // Any TreeNode => Open Context Menu
