@@ -112,7 +112,7 @@ namespace pwiz.Skyline.SettingsUI
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
         public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => false;
+        private bool IsCarafeEnabled => true;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
         private string CarafePythonVirtualEnvironmentDir =>

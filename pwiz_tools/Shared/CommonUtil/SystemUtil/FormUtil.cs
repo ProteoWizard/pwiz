@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
@@ -61,6 +62,49 @@ namespace pwiz.Common.SystemUtil
             return dialogResult;
         }
 
+        
+        /// <summary>
+        /// Shows a dialog box non-modal.
+        /// If the owner of the dialog is a popup window, then this method uses <see cref="FormUtil.FindTopLevelOwner"/> 
+        /// to find the appropriate main window to own the dialog, and after the dialog is closed, sets the focus back 
+        /// to the correct control.
+        /// </summary>
+        public static void Show(Control owner, Form dialog)
+        {
+            Form ownerForm = null;
+            if (null != owner)
+            {
+                ownerForm = owner.FindForm();
+            }
+            var topLevelOwner = FindTopLevelOwner(owner);
+            Control activeControl = null;
+            if (null != ownerForm && ownerForm.ContainsFocus)
+            {
+                activeControl = ownerForm.ActiveControl;
+                _viewEditor = dialog;
+                ownerForm.FormClosing += FormClosing;
+            }
+            dialog.Show(topLevelOwner);
+            if (null != activeControl)
+            {
+                if (ownerForm != topLevelOwner)
+                {
+                    // Put the focus first on the window which was the owner of the dialog box.
+                    // Otherwise when the ownerForm is closed, the focus will go to a different application
+                    topLevelOwner.Focus();
+                    // Then put the focus on the control which had the focus before the dialog came up
+                    activeControl.Focus();
+                }
+            }
+            
+        }
+
+        [CanBeNull] private static Form _viewEditor;
+
+        private static void FormClosing(object sender, FormClosingEventArgs eventArgs)
+        {
+            _viewEditor?.Dispose();
+        }
         /// <summary>
         /// Moves the control's X and Y coordinates according to the X and Y values.
         /// </summary>

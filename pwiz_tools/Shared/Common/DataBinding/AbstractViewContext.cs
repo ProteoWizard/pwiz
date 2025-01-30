@@ -334,24 +334,21 @@ namespace pwiz.Common.DataBinding
 
         protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control parent = null)
         {
-            return new ViewEditor(this, GetViewInfo(viewGroup, viewSpec), parent);
+            ViewEditor viewEditor = new ViewEditor(this, GetViewInfo(viewGroup, viewSpec), parent);
+            return viewEditor;
         }
 
         public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath)
         {
-            var formResult = DialogResult.None;
-            
-            if (CustomizedViewForm == null) 
+            if (CustomizedViewForm == null || CustomizedViewForm.IsDisposed) 
             { 
                 CustomizedViewForm = CreateViewEditor(viewPath, viewSpec, owner);
-                formResult = FormUtil.ShowDialog(owner, CustomizedViewForm);
             }
-    
-            
-     
-
+            if (!CustomizedViewForm.Visible)
+                FormUtil.Show(owner, CustomizedViewForm);
             ViewInfo viewInfo = CustomizedViewForm.ViewInfo;
-            if ( formResult == DialogResult.None)
+            CustomizedViewForm.BringToFront();
+            if ( CustomizedViewForm.DialogResult != DialogResult.OK)
             {                
                 viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
              
@@ -359,7 +356,7 @@ namespace pwiz.Common.DataBinding
                 var newSpec = viewInfo.GetViewSpec();
                 return viewInfo.GetViewSpec();
             }
-            else if (formResult == DialogResult.Cancel)
+            else if (CustomizedViewForm.DialogResult == DialogResult.Cancel)
             {
                 CustomizedViewForm.Dispose();
                 CustomizedViewForm = null;
@@ -368,7 +365,6 @@ namespace pwiz.Common.DataBinding
             // Consider: if save fails, reshow CustomizeViewForm?
             viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
             SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
-            //CustomizedViewForm.Hide();
             CustomizedViewForm.Dispose();
             CustomizedViewForm = null;
             return viewInfo.GetViewSpec();         

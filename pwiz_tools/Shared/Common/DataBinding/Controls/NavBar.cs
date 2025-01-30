@@ -672,5 +672,10 @@ namespace pwiz.Common.DataBinding.Controls
                 }
             }
         }
+
+        public void CustomizeView()
+        {
+            CustomizeView(false);
+        }
     }
 }

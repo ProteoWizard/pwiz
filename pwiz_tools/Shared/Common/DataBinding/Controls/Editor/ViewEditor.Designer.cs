@@ -82,7 +82,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // btnAPPLY
             // 
             resources.ApplyResources(this.btnAPPLY, "btnAPPLY");
-            this.btnAPPLY.DialogResult = System.Windows.Forms.DialogResult.None;
             this.btnAPPLY.Name = "btnAPPLY";
             this.btnAPPLY.Text = "Apply";
             this.btnAPPLY.Left = this.btnOK.Left - this.btnAPPLY.Width - 5;
@@ -105,10 +104,23 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnAPPLY.Click += (sender, e) =>
             {
                 this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-                this.Left = this.FormLocationX;
-                this.Top = this.FormLocationY;
+                this.DialogResult = DialogResult.None;
                 if (ParentControl != null)
                     (ParentControl as NavBar).CustomizeView(true);
+            };
+
+            this.btnOK.Click += (sender, e) =>
+            {
+                this.DialogResult = DialogResult.OK;
+                this.Hide();
+                if (ParentControl != null)
+                    (ParentControl as NavBar).CustomizeView();
+            };
+
+            this.btnCancel.Click += (sender, e) =>
+            {
+                this.DialogResult = DialogResult.Cancel;
+                this.Hide();
             };
 
             // 
@@ -244,6 +256,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // 
             this.panelButtons.Controls.Add(this.btnCancel);
             this.panelButtons.Controls.Add(this.btnOK);
+            this.panelButtons.Controls.Add(this.btnAPPLY);
             resources.ApplyResources(this.panelButtons, "panelButtons");
             this.panelButtons.Name = "panelButtons";
             // 
