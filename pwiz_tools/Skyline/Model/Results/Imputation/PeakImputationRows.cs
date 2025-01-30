@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
 
             public override string GetDescription(object workParameter)
             {
-                return ImputationResources.Producer_GetDescription_Peak_Imputation_Results;
+                return ImputationResources.DataProducer_GetDescription_Evaluating_peaks;
             }
         }
 

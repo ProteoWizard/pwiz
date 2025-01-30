@@ -148,12 +148,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     yield return parameter.GetAlignmentParameters().MakeWorkOrder();
                 }
             }
-
-
-            public override string GetDescription(object workParameter)
-            {
-                return ImputationResources.DataProducer_GetDescription_Evaluating_peaks;
-            }
         }
 
         public static FormattablePeakBounds GetRawPeakBounds(PeptideDocNode peptideDocNode, int replicateIndex,

@@ -106,15 +106,6 @@ namespace pwiz.Skyline.Model.Results.Imputation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Peak Imputation Results.
-        /// </summary>
-        internal static string Producer_GetDescription_Peak_Imputation_Results {
-            get {
-                return ResourceManager.GetString("Producer_GetDescription_Peak_Imputation_Results", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Reading chromatogram time ranges.
         /// </summary>
         internal static string Producer_GetDescription_Reading_chromatogram_time_ranges {

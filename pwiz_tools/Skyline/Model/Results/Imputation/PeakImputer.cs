@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                     document = document.ChangePeak(identityPath, chromatogramSet.Name,
                         ReplicateFileInfo.MsDataFileUri, null, newPeakBounds?.StartTime ?? 0,
                         newPeakBounds?.EndTime ?? 0,
-                        UserSet.IMPUTED, null,
+                        UserSet.IMPUTED, PeakIdentification.FALSE,
                         false);
                 }
                 catch (ArgumentException)
