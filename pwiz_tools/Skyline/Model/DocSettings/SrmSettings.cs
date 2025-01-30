@@ -2292,8 +2292,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        // TODO (ekoneil): placeholder, violates immutability contract. Instead, create externally and pass into constructor.
-        public Dictionary<FileType, IEnumerable<IFileBase>> Files
+        // TODO (ekoneil): placeholder, not immutable. Need to rework to update as SrmSettings changes.
+        public IDictionary<FileType, IEnumerable<IFileBase>> Files
         {
             get
             {
@@ -2317,7 +2317,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     dict[FileType.background_proteome] = ImmutableList.Singleton(PeptideSettings.BackgroundProteome);
                 }
 
-                return dict;
+                return new ImmutableDictionary<FileType, IEnumerable<IFileBase>>(dict);
             }
         }
     }
