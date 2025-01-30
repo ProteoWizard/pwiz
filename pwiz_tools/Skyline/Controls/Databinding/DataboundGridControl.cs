@@ -714,6 +714,11 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 splitContainerVertical.Panel1Collapsed = false;
                 int dendrogramTop = 0;
+                if (!dataGridSplitContainer.Panel1Collapsed)
+                {
+                    dendrogramTop += dataGridSplitContainer.Panel1.Height;
+                    dendrogramTop += dataGridSplitContainer.SplitterWidth;
+                }
                 if (!splitContainerHorizontal.Panel1Collapsed)
                 {
                     dendrogramTop += splitContainerHorizontal.Panel1.Height;
@@ -1155,7 +1160,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             // Setting the frozen state of columns can trigger a repaint of the grid.
             // In this case we want the repaint to trigger our methods to align the grids. 
-            if (dataGridViewEx1.Columns.Count > 0)
+            if (dataGridViewEx1.Visible && dataGridViewEx1.Columns.Count > 0)
             {
                 UpdateReplicateDataGridFrozenState();
                 UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
