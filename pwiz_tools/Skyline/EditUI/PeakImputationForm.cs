@@ -27,6 +27,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -538,9 +539,9 @@ namespace pwiz.Skyline.EditUI
                 longWaitDlg.PerformWork(this, 1000, broker =>
                 {
                     newDoc =
-                        ImputeBoundariesOnDocument(broker, newDoc, alignmentData, rows, replicateFileIds, out changeCount);
+                        ImputeBoundariesOnDocument(broker, newDoc, alignmentData, rows, replicateFileIds);
                 });
-                if (newDoc == null || longWaitDlg.IsCanceled || changeCount == 0)
+                if (newDoc == null || longWaitDlg.IsCanceled)
                 {
                     return 0;
                 }
@@ -559,50 +560,88 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private SrmDocument ImputeBoundariesOnDocument(ILongWaitBroker broker, SrmDocument newDoc, AlignmentData alignmentData, IList<Row> rows, ICollection<ReplicateFileId> replicateFileIds,
-            out int changeCount)
+        private SrmDocument ImputeBoundariesOnDocument(ILongWaitBroker broker, SrmDocument document, AlignmentData alignmentData, IList<Row> rows, ICollection<ReplicateFileId> replicateFileIds)
         {
-            var scoringModel = GetScoringModelToUse(newDoc);
-            changeCount = 0;
-            for (int iRow = 0; iRow < rows.Count; iRow++)
+            Dictionary<IdentityPath, PeptideDocNode> results = new Dictionary<IdentityPath, PeptideDocNode>();
+            int progress = 0;
+            ParallelEx.ForEach(rows, row =>
             {
                 if (broker.IsCanceled)
                 {
-                    return null;
+                    return;
                 }
 
-                broker.ProgressValue = 100 * iRow / rows.Count;
-                var row = rows[iRow];
-                var exemplaryBounds = row.ExemplaryPeakBounds;
-                if (exemplaryBounds == null)
+                var newNode = ImputeBoundariesForRow(document, alignmentData, row, replicateFileIds);
+                lock (results)
+                {
+                    progress++;
+                    broker.ProgressValue = 100 * progress / rows.Count;
+                    if (newNode != null)
+                    {
+                        results[row.Peptide.IdentityPath] = newNode;
+                    }
+                }
+            });
+            if (results.Count == 0)
+            {
+                return null;
+            }
+
+            var newPeptideGroupDocNodes = document.Children.ToList();
+            foreach (var grouping in results.GroupBy(kvp => kvp.Key.GetPathTo((int) SrmDocument.Level.MoleculeGroups)))
+            {
+                int iPeptideGroup = document.FindNodeIndex(grouping.Key.Child);
+                var peptideGroupDocNode = (PeptideGroupDocNode) newPeptideGroupDocNodes[iPeptideGroup];
+                var newPeptideDocNodes = peptideGroupDocNode.Children.ToList();
+                foreach (var kvp in grouping)
+                {
+                    newPeptideDocNodes[peptideGroupDocNode.FindNodeIndex(kvp.Key.Child)] = kvp.Value;
+                }
+
+                newPeptideGroupDocNodes[iPeptideGroup] = peptideGroupDocNode.ChangeChildren(newPeptideDocNodes);
+            }
+
+            return (SrmDocument) document.ChangeChildren(newPeptideGroupDocNodes);
+        }
+
+        private PeptideDocNode ImputeBoundariesForRow(SrmDocument document, AlignmentData alignmentData, Row row,
+            ICollection<ReplicateFileId> replicateFileIds)
+        {
+            var exemplaryBounds = row.ExemplaryPeakBounds;
+            if (exemplaryBounds == null)
+            {
+                return null;
+            }
+            var scoringModel = GetScoringModelToUse(document);
+            var rejectedPeaks = row.Peaks.Values
+                .Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment || peak.Verdict == RatedPeak.Verdict.NeedsRemoval)
+                .Select(peak => peak.GetRatedPeak()).ToList();
+            int changeCount = 0;
+            foreach (var rejectedPeak in rejectedPeaks)
+            {
+                if (false == replicateFileIds?.Contains(rejectedPeak.ReplicateFileInfo.ReplicateFileId))
+                {
+                    continue;
+                }
+                var peakImputer = new PeakImputer(document, alignmentData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
+                    rejectedPeak.ReplicateFileInfo);
+                var bestPeakBounds =
+                    exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
+                if (bestPeakBounds == null)
                 {
                     continue;
                 }
 
-                var rejectedPeaks = row.Peaks.Values
-                    .Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment || peak.Verdict == RatedPeak.Verdict.NeedsRemoval)
-                    .Select(peak => peak.GetRatedPeak()).ToList();
-                foreach (var rejectedPeak in rejectedPeaks)
-                {
-                    if (false == replicateFileIds?.Contains(rejectedPeak.ReplicateFileInfo.ReplicateFileId))
-                    {
-                        continue;
-                    }
-                    var peakImputer = new PeakImputer(newDoc, alignmentData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
-                        rejectedPeak.ReplicateFileInfo);
-                    var bestPeakBounds =
-                        exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
-                    if (bestPeakBounds == null)
-                    {
-                        continue;
-                    }
-
-                    newDoc = peakImputer.ImputeBoundaries(newDoc, bestPeakBounds);
-                    changeCount++;
-                }
+                document = peakImputer.ImputeBoundaries(document, bestPeakBounds);
+                changeCount++;
             }
 
-            return newDoc;
+            if (changeCount == 0)
+            {
+                return null;
+            }
+
+            return (PeptideDocNode) document.FindNode(row.Peptide.IdentityPath);
         }
 
         public bool DocumentWide
