@@ -266,6 +266,7 @@ namespace pwiz.Skyline.EditUI
                 ExemplaryCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
                 AcceptedCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
                 NeedAdjustmentCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment);
+                AlignmentStandardTime = moleculePeaks.AlignmentStandardTime;
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
@@ -277,6 +278,8 @@ namespace pwiz.Skyline.EditUI
             public int ExemplaryCount { get; }
             public int AcceptedCount { get; }
             public int NeedAdjustmentCount { get; }
+            [Format(Formats.RETENTION_TIME)]
+            public double? AlignmentStandardTime { get; private set; }
         }
 
         [InvariantDisplayName("Peak")]
