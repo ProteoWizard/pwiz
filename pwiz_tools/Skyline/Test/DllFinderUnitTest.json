@@ -1,0 +1,257 @@
+[
+  {
+    "TestName": "ThermoDllFinder finds all required DLLs",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapAstral",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\instrumentSoftwarePath"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "TestName": "ThermoDllFinder finds all required and optional DLLs in a more complex registry key",
+    "SkylineExePath": "C:\\Users\\brendanx\\AppData\\Local\\Apps\\2.0\\72O3QMMY.A0Y\\HNHQHOX0.GY4\\skyl..tion_9286511f3362df93_0018.0001_cffd08868b9826ec\\Skyline.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\ascendSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\ascendSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\ascendSoftwarePath\\Thermo.TNG.MethodXMLInterface2.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "DataAccess"
+      },
+      {
+        "SubKeyName": "OrbitrapEclipse",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Client",
+            "ProgramPath": "C:\\Thermo\\eclipseSoftwarePath"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapAscend",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\ascendSoftwarePath"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "TestName": "ThermoDllFinder finds all required DLLs with registry like MacCoss lab Stellar",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\stallarSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\stallarSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "DataAccess"
+      },
+      {
+        "SubKeyName": "Stellar",
+        "SubKeys": [
+          {
+            "SubKeyName": "1.0",
+            "ProgramPath": "C:\\Thermo\\stallarSoftwarePath"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "TestName": "ThermoDllFinder finds all required DLLs with registry like MacCoss lab Exploris",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\explorisSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\explorisSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapExploris120",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "ProgramPath": "C:\\Thermo\\exploris120SoftwarePath"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapExploris240",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Client"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapExploris480",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "ProgramPath": "C:\\Thermo\\explorisSoftwarePath"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapExplorisGC",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapIsora",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "TestName": "ThermoDllFinder finds all required DLLs with registry like MacCoss lab Exploris - paths flipped",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\explorisSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\explorisSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapExploris480",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "ProgramPath": "C:\\Thermo\\explorisSoftwarePath"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapExploris120",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "ProgramPath": "C:\\Thermo\\exploris120SoftwarePath"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapExplorisGC",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "TestName": "ThermoDllFinder no installation but required DLLs",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
+    "Files": [
+      {
+        "Path": "C:\\Program Files\\Skyline\\Method\\Thermo\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Program Files\\Skyline\\Method\\Thermo\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ]
+  },
+  {
+    "TestName": "ThermoDllFinder no installation and missing required DLL",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
+    "Files": [
+      {
+        "Path": "C:\\Program Files\\Skyline\\Method\\Thermo\\Thermo.TNG.MethodXMLFactory.dll"
+      }
+    ],
+    "ExpectException": 1
+  },
+  {
+    "TestName": "ThermoDllFinder fails if required DLL missing",
+    "SkylineExePath": "C:\\Users\\brendanx\\AppData\\Local\\Apps\\2.0\\72O3QMMY.A0Y\\HNHQHOX0.GY4\\skyl..tion_9286511f3362df93_0018.0001_cffd08868b9826ec\\Skyline.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapAstral",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\instrumentSoftwarePath"
+          }
+        ]
+      }
+    ],
+    "ExpectException": 2
+  },
+  {
+    "TestName": "ThermoDllFinder fails without Skyline.exe path",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapAstral",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\instrumentSoftwarePath"
+          }
+        ]
+      }
+    ],
+    "ExpectException": 0
+  }
+]
