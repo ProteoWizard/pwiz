@@ -267,7 +267,7 @@ namespace pwiz.Skyline.EditUI
                 ExemplaryPeakBounds = moleculePeaks.ExemplaryPeakBounds;
                 ExemplaryCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
                 AcceptedCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
-                NeedAdjustmentCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment);
+                NeedAdjustmentCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment || peak.Verdict == RatedPeak.Verdict.NeedsRemoval);
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
@@ -408,7 +408,7 @@ namespace pwiz.Skyline.EditUI
         }
         private void OnSettingsChanged()
         {
-            if (_inChange)
+            if (_inChange || Disposing)
             {
                 return;
             }

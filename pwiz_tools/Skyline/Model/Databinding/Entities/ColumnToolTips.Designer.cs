@@ -2657,6 +2657,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         
         /// <summary>
         ///   Looks up a localized string similar to Number of peak boundaries which need to be changed because they are either completely missing or outside the specified Max RT Shift and/or Max Peak Width Variation.
+        ///This includes peaks that will be removed because the imputed bounds are outside of the chromatogram time range..
         /// </summary>
         public static string NeedAdjustmentCount {
             get {

@@ -1012,7 +1012,8 @@ The areas are normalized according to the Normalization Method specified in the 
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
   <data name="NeedAdjustmentCount">
-    <value>Number of peak boundaries which need to be changed because they are either completely missing or outside the specified Max RT Shift and/or Max Peak Width Variation</value>
+    <value>Number of peak boundaries which need to be changed because they are either completely missing or outside the specified Max RT Shift and/or Max Peak Width Variation.
+This includes peaks that will be removed because the imputed bounds are outside of the chromatogram time range.</value>
   </data>
   <data name="NextAa">
     <value>The amino acid residue found immediately after the peptide in the protein sequence.</value>

@@ -1478,6 +1478,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 UserSet.FALSE,
                 UserSet.TRUE,
+                UserSet.IMPUTED,
                 UserSet.IMPORTED,
                 UserSet.REINTEGRATED,
                 UserSet.MATCHED
