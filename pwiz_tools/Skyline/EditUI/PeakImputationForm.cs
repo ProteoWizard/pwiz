@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -267,7 +268,6 @@ namespace pwiz.Skyline.EditUI
                 ExemplaryCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
                 AcceptedCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
                 NeedAdjustmentCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment);
-                AlignmentStandardTime = moleculePeaks.AlignmentStandardTime;
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
@@ -279,8 +279,6 @@ namespace pwiz.Skyline.EditUI
             public int ExemplaryCount { get; }
             public int AcceptedCount { get; }
             public int NeedAdjustmentCount { get; }
-            [Format(Formats.RETENTION_TIME)]
-            public double? AlignmentStandardTime { get; private set; }
         }
 
         [InvariantDisplayName("Peak")]
@@ -405,6 +403,10 @@ namespace pwiz.Skyline.EditUI
         }
 
         private void SettingsControlChanged(object sender, EventArgs e)
+        {
+            OnSettingsChanged();
+        }
+        private void OnSettingsChanged()
         {
             if (_inChange)
             {
@@ -654,6 +656,7 @@ namespace pwiz.Skyline.EditUI
             {
                 radioScopeDocument.Checked = value;
                 radioScopeSelection.Checked = !value;
+                OnSettingsChanged();
             }
         }
 
@@ -861,6 +864,63 @@ namespace pwiz.Skyline.EditUI
             public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction)
             {
                 return _alignmentResults.TryGetRegressionFunction(chromFileInfoId, out regressionFunction);
+            }
+        }
+
+        public int? ExemplaryCount
+        {
+            get { return string.IsNullOrEmpty(tbxExemplary.Text) ? (int?) null : int.Parse(tbxExemplary.Text); }
+        }
+
+        public int? AcceptedCount
+        {
+            get { return string.IsNullOrEmpty(tbxAccepted.Text) ? (int?)null : int.Parse(tbxAccepted.Text); }
+        }
+
+        public int? NeedAdjustmentCount
+        {
+            get { return string.IsNullOrEmpty(tbxRejected.Text) ? (int?)null : int.Parse(tbxRejected.Text); }
+        }
+
+        public int? NeedRemovalCount
+        {
+            get { return string.IsNullOrEmpty(tbxNeedsRemoval.Text) ? (int?)null : int.Parse(tbxNeedsRemoval.Text); }
+        }
+
+        public double? MaxRTDeviation
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxRtDeviationCutoff.Text)
+                    ? (double?)null
+                    : double.Parse(tbxRtDeviationCutoff.Text);
+            }
+            set
+            {
+                tbxRtDeviationCutoff.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
+                OnSettingsChanged();
+            }
+        }
+        public double? MaxPeakWidthVariation
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text)
+                    ? (double?)null
+                    : double.Parse(tbxMaxPeakWidthVariation.Text);
+            }
+            set
+            {
+                tbxMaxPeakWidthVariation.Text = value.HasValue ? value.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
+                OnSettingsChanged();
+            }
+        }
+
+        public override bool IsComplete
+        {
+            get
+            {
+                return base.IsComplete && !progressBar1.Visible;
             }
         }
     }

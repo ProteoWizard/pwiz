@@ -108,20 +108,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 }
             }
         }
-        public static bool IsManualIntegrated(PeptideDocNode peptideDocNode, int replicateIndex,
-            ChromFileInfoId fileId)
-        {
-            return EnumerateTransitionGroupChromInfos(peptideDocNode, replicateIndex, fileId)
-                .Any(transitionGroupChromInfo => transitionGroupChromInfo.UserSet == UserSet.TRUE);
-        }
-
-        private static IEnumerable<TransitionGroupChromInfo> EnumerateTransitionGroupChromInfos(
-            PeptideDocNode peptideDocNode, int replicateIndex,
-            ChromFileInfoId fileId)
-        {
-            return peptideDocNode.TransitionGroups.SelectMany(tg => tg.GetSafeChromInfo(replicateIndex))
-                .Where(tgci => ReferenceEquals(tgci.FileId, fileId));
-        }
         private class DataProducer : Producer<Parameters, AlignmentData>
         {
             public override AlignmentData ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
@@ -241,51 +227,6 @@ namespace pwiz.Skyline.Model.Results.Imputation
             }
 
             return standardDeviations.Average();
-        }
-
-        public static double? GetAveragePeakWidthCV(SrmDocument document)
-        {
-            var cvs= new List<double>();
-            foreach (var molecule in document.Molecules)
-            {
-                if (!molecule.HasResults)
-                {
-                    continue;
-                }
-
-                var widths = new List<double>();
-                for (int i = 0; i < molecule.Results.Count; i++)
-                {
-                    foreach (var group in molecule.TransitionGroups.SelectMany(tg => tg.GetSafeChromInfo(i))
-                                 .GroupBy(chromInfo => ReferenceValue.Of(chromInfo.FileId)))
-                    {
-                        var fileWidths = group
-                            .Select(chromInfo => (double?)chromInfo.EndRetentionTime - chromInfo.StartRetentionTime)
-                            .OfType<double>().ToList();
-                        if (fileWidths.Count > 0)
-                        {
-                            widths.Add(fileWidths.Average());
-                        }
-                    }
-                }
-
-                if (widths.Count > 1)
-                {
-                    var cv = widths.Variance() / widths.Mean();
-
-                    if (!double.IsNaN(cv))
-                    {
-                        cvs.Add(cv);
-                    }
-                }
-            }
-
-            if (cvs.Count == 0)
-            {
-                return null;
-            }
-
-            return cvs.Average();
         }
     }
 }
