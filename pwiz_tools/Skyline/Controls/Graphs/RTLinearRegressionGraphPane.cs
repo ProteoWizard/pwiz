@@ -683,7 +683,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private double[] _scoresRefined;
             private double[] _timesOutliers;
             private double[] _scoresOutliers;
-            private readonly string _calculatorName;
 
             private readonly RetentionScoreCalculatorSpec _calculator;
 
@@ -808,7 +807,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 _originalTimes = originalTimes != null ? originalTimes.ToArray() : null;
 
-                _calculatorName = Settings.Default.RTCalculatorName;
+                var calculatorName = Settings.Default.RTCalculatorName;
 
                 if (IsRunToRun)
                 {
@@ -824,7 +823,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    var calc = GetCalculator(token, _calculatorName, document);
+                    var calc = GetCalculator(token, calculatorName, document);
                     if (calc == null)
                     {
                         // Initialize all calculators

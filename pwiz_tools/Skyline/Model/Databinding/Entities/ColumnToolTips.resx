@@ -106,6 +106,9 @@
   <data name="Abundance">
     <value>The value for this replicate which was used to calculate the fold change. The number depends on the normalization method, and whether the fold change is being calculated at the protein or peptide level.</value>
   </data>
+  <data name="AcceptedCount">
+    <value>Number of peak boundaries which do not need to be adjusted</value>
+  </data>
   <data name="Accuracy">
     <value>Ratio of Calculated Concentration to the specified Analyte Concentration</value>
   </data>
@@ -113,8 +116,26 @@
     <value>Last time and date at which the mass spectrometer began acquiring this
 replicate data. Or #N/A if the file was imported with a version older than 1.1.</value>
   </data>
+  <data name="Action">
+    <value>Button which imputes peak boundaries for the row</value>
+  </data>
   <data name="AdjustedPValue">
     <value>P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure.</value>
+  </data>
+  <data name="AlignedBounds">
+    <value>Peak boundaries mapped using the chosen retention time calculator</value>
+  </data>
+  <data name="AlignedEndTime">
+    <value>End time of the peak boundaries using mapped using the chosen retention time calculator</value>
+  </data>
+  <data name="AlignedMidTime">
+    <value>Average of the start and end times of the peak boundaries mapped using the chosen retention time calculator</value>
+  </data>
+  <data name="AlignedStartTime">
+    <value>Start time of the peak boundaries mapped using the chosen retention time calculator</value>
+  </data>
+  <data name="AlignedWidth">
+    <value>Difference between the end and start retention times of the peak boundaries after they have been mapped using the chosen retention time calculator</value>
   </data>
   <data name="AllInfoMessage">
     <value>Detailed description of the change</value>
@@ -225,6 +246,9 @@ will be calculated using the subset of external standards with the same batch na
   <data name="BeginPos">
     <value>The zero-based position of the first (N-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available.</value>
+  </data>
+  <data name="BestPeak">
+    <value>Information about the peak boundaries from the highest scoring replicate</value>
   </data>
   <data name="BestReplicate">
     <value>True if this replicate has the highest overall peptide peak score.</value>
@@ -410,6 +434,24 @@ containing protein sequence, or #N/A if no protein sequence is available</value>
   </data>
   <data name="ExcludeFromCalibration">
     <value>Whether the results in the replicate should be excluded from the peptide's calibration curve calculation.</value>
+  </data>
+  <data name="ExemplaryCount">
+    <value>Number of peak boundaries which are used to impute the boundaries of the replicates that need adjustment</value>
+  </data>
+  <data name="ExemplaryEndTime">
+    <value>Ending retention time of the peak boundaries that will be used to impute boundaries for the rejected replicates</value>
+  </data>
+  <data name="ExemplaryMidTime">
+    <value>Average of the start and end retention times of the peak boundaries that will be used to impute boundaries for the rejected replicates</value>
+  </data>
+  <data name="ExemplaryPeakBounds">
+    <value>Peak boundaries that will be used to impute boundaries for the rejected replicates</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>Starting retention time of the peak boundaries that will be used to impute boundaries for the rejected replicates</value>
+  </data>
+  <data name="ExemplaryWidth">
+    <value>Difference between the end and start times of the peak boundaries that will be used to impute boundaries for the rejected replicates</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>The concentration of this particular molecule or peptide in this particular replicate.
@@ -738,6 +780,9 @@ The options for determining this value can be specified on the Quantification ta
   <data name="LossNeutralMass">
     <value>The total mass of all neutral losses from this fragment.</value>
   </data>
+  <data name="ManuallyIntegrated">
+    <value>True if the peak boundaries have been adjusted by a user.</value>
+  </data>
   <data name="MassErrorPPM">
     <value>The difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
   </data>
@@ -824,6 +869,9 @@ If there are no internal standard peak areas, then the median transition peak ar
   </data>
   <data name="Message">
     <value>Warning, if any, of missing values that might impact comparisons of the "Raw" value between replicates.</value>
+  </data>
+  <data name="MidTime">
+    <value>Difference between the end and start times of the peak boundaries</value>
   </data>
   <data name="Min">
     <value>Min</value>
@@ -963,6 +1011,9 @@ The areas are normalized according to the Normalization Method specified in the 
   <data name="MsLevel">
     <value>Indicates whether the result was obtained using only precursor intensities (MS Level 1) or product intensities (MS Level 2).</value>
   </data>
+  <data name="NeedAdjustmentCount">
+    <value>Number of peak boundaries which need to be changed because they are either completely missing or outside the specified Max RT Shift and/or Max Peak Width Variation</value>
+  </data>
   <data name="NextAa">
     <value>The amino acid residue found immediately after the peptide in the protein sequence.</value>
   </data>
@@ -996,6 +1047,9 @@ Unavailable when missing data impacts comparisons between replicates.</value>
   <data name="NumberOfPoints">
     <value>The number of points in the chromatogram.</value>
   </data>
+  <data name="Opinion">
+    <value>Explanatory text describing the reason that the replicate was given the Verdict that it received</value>
+  </data>
   <data name="OptCollisionEnergy">
     <value>The collision energy value corresponding to the OptStep if
 collision energy optimization is being performed</value>
@@ -1011,6 +1065,9 @@ OptStep if declustering potential optimization is being performed</value>
     <value>Optimization step value indicating distance from the default value for the
 parameter being optimized, 0 for the default parameter value, or if no optimization is
 being performed in the replicate.</value>
+  </data>
+  <data name="Peak">
+    <value>Information about the peak boundaries and replicate</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>The maximum end time of the individual peaks in the peak group.</value>
@@ -1030,6 +1087,9 @@ same precursor.</value>
   </data>
   <data name="PeakRankByLevel">
     <value>Peak area ranking in a specific replicate by MS level (i.e. MS1 and MS/MS get ranked separately)</value>
+  </data>
+  <data name="Peaks">
+    <value>List of objects which have information about peak boundaries and replicates</value>
   </data>
   <data name="PeakScores">
     <value>The features and their scores for the peak group.</value>
@@ -1355,8 +1415,14 @@ measured.</value>
   <data name="Raw">
     <value>Calculated value available even when missing data impacts comparisons between replicates.</value>
   </data>
+  <data name="RawBounds">
+    <value>Boundaries of the peak without any retention time alignment</value>
+  </data>
   <data name="RawData">
     <value>The raw (uninterpolated) chromatogram data. The chromatograms have unevenly spaced times, and the chromatograms of each transition potentially has a different number of points.</value>
+  </data>
+  <data name="RawEndTime">
+    <value>End retention time of the peak boundaries without any retention time alignment</value>
   </data>
   <data name="RawIntensities">
     <value>The intensities of the raw (uninterpolated) chromatogram.</value>
@@ -1364,14 +1430,23 @@ measured.</value>
   <data name="RawMassErrors">
     <value>The mass errors of the raw (uninterpolated) chromatogram.</value>
   </data>
+  <data name="RawMidTime">
+    <value>Difference between the Raw End Time and the Raw Start Time</value>
+  </data>
   <data name="RawNumberOfPoints">
     <value>The number of points in the raw (uninterpolated) chromatogram.</value>
   </data>
   <data name="RawSpectrumIds">
     <value>Identifiers of the spectra that contributed to the points in the raw (uninterpolated) chromatogram.</value>
   </data>
+  <data name="RawStartTime">
+    <value>Start retention time of the peak boundaries without any retention time alignment</value>
+  </data>
   <data name="RawTimes">
     <value>The retention times in the raw (uninterpolated) chromatogram.</value>
+  </data>
+  <data name="RawWidth">
+    <value>Difference between the end and start retention times of the peak boundaries without any retention time alignment</value>
   </data>
   <data name="Reason">
     <value>Reason the user gave for making the change</value>
@@ -1485,6 +1560,10 @@ file, or the file name again for other file types.</value>
   </data>
   <data name="ShapeCorrelation">
     <value>The Pearson correlation of this transition's chromatographic peak compared to the median peak shape of all of the transitions under the same precursor.</value>
+  </data>
+  <data name="ShiftFromBestPeak">
+    <value>Difference between the peak boundaries and the exemplary peak boundaries.
+This retention time difference is always calculated using retention times that have been mapped using the chosen retention score calculator</value>
   </data>
   <data name="Skewness">
     <value>A measure of the asymmetry of the chromatogram peak.</value>
@@ -1679,6 +1758,13 @@ higher than the other extent.</value>
   <data name="UTCTime">
     <value>Time at which this change was made, expressed in universal time (GMT)</value>
   </data>
+  <data name="Verdict">
+    <value>One of the following values indicating what will happen when boundaries are imputed:
+NeedsRemoval: The peak will be removed because the exemplary peak bounds are outside the retention time range of the chromatogram
+NeedsAdjustment: The peak boundaries will be adjusted to be closer to the exemplary peak bounds
+Accepted: The peak boundaries will not be changed
+Exemplary: The peak boundaries are being used to impute boundaries for the replicates with lower scores</value>
+  </data>
   <data name="Weight">
     <value>The numerical weighting for the feature assigned by the peak scoring model.</value>
   </data>
@@ -1690,5 +1776,8 @@ higher than the other extent.</value>
   </data>
   <data name="WeightedScore">
     <value>The product of the feature score and the feature weight</value>
+  </data>
+  <data name="Width">
+    <value>Difference between the end and start retention times of the peak boundaries</value>
   </data>
 </root>

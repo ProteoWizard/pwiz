@@ -126,14 +126,35 @@
   <data name="Abundance">
     <value>Abundance</value>
   </data>
+  <data name="AcceptedCount">
+    <value>Accepted Count</value>
+  </data>
   <data name="Accuracy">
     <value>Accuracy</value>
   </data>
   <data name="AcquiredTime">
     <value>Acquired Time</value>
   </data>
+  <data name="Action">
+    <value>Action</value>
+  </data>
   <data name="AdjustedPValue">
     <value>Adjusted P-Value</value>
+  </data>
+  <data name="AlignedBounds">
+    <value>Aligned Bounds</value>
+  </data>
+  <data name="AlignedEndTime">
+    <value>Aligned End Time</value>
+  </data>
+  <data name="AlignedMidTime">
+    <value>Aligned Mid Time</value>
+  </data>
+  <data name="AlignedStartTime">
+    <value>Aligned Start Time</value>
+  </data>
+  <data name="AlignedWidth">
+    <value>Aligned Width</value>
   </data>
   <data name="AllInfoMessage">
     <value>All Info Message</value>
@@ -236,6 +257,9 @@
   </data>
   <data name="BeginPos">
     <value>Begin Pos</value>
+  </data>
+  <data name="BestPeak">
+    <value>Best Peak</value>
   </data>
   <data name="BestReplicate">
     <value>Best Replicate</value>
@@ -407,6 +431,24 @@
   </data>
   <data name="ExcludeFromCalibration">
     <value>Exclude From Calibration</value>
+  </data>
+  <data name="ExemplaryCount">
+    <value>Exemplary Count</value>
+  </data>
+  <data name="ExemplaryEndTime">
+    <value>Exemplary End Time</value>
+  </data>
+  <data name="ExemplaryMidTime">
+    <value>Exemplary Mid Time</value>
+  </data>
+  <data name="ExemplaryPeakBounds">
+    <value>Exemplary Peak Bounds</value>
+  </data>
+  <data name="ExemplaryStartTime">
+    <value>Exemplary Start Time</value>
+  </data>
+  <data name="ExemplaryWidth">
+    <value>Exemplary Width</value>
   </data>
   <data name="ExplicitAnalyteConcentration">
     <value>Explicit Analyte Concentration</value>
@@ -702,6 +744,9 @@
   <data name="LossNeutralMass">
     <value>Loss Neutral Mass</value>
   </data>
+  <data name="ManuallyIntegrated">
+    <value>Manually Integrated</value>
+  </data>
   <data name="MassErrorPPM">
     <value>Mass Error PPM</value>
   </data>
@@ -782,6 +827,9 @@
   </data>
   <data name="Message">
     <value>Message</value>
+  </data>
+  <data name="MidTime">
+    <value>Mid Time</value>
   </data>
   <data name="Min">
     <value>Min</value>
@@ -912,6 +960,9 @@
   <data name="MsLevel">
     <value>MS Level</value>
   </data>
+  <data name="NeedAdjustmentCount">
+    <value>Need Adjustment Count</value>
+  </data>
   <data name="NextAa">
     <value>Next Aa</value>
   </data>
@@ -936,6 +987,9 @@
   <data name="NumberOfPoints">
     <value>Number of Points</value>
   </data>
+  <data name="Opinion">
+    <value>Opinion</value>
+  </data>
   <data name="OptCollisionEnergy">
     <value>Opt Collision Energy</value>
   </data>
@@ -947,6 +1001,9 @@
   </data>
   <data name="OptStep">
     <value>Opt Step</value>
+  </data>
+  <data name="Peak">
+    <value>Peak</value>
   </data>
   <data name="PeakGroupEndTime">
     <value>Peak Group End Time</value>
@@ -965,6 +1022,9 @@
   </data>
   <data name="PeakRankByLevel">
     <value>Peak Rank By Level</value>
+  </data>
+  <data name="Peaks">
+    <value>Peaks</value>
   </data>
   <data name="PeakScores">
     <value>Peak Scores</value>
@@ -1251,8 +1311,14 @@
   <data name="Raw">
     <value>Raw</value>
   </data>
+  <data name="RawBounds">
+    <value>Raw Bounds</value>
+  </data>
   <data name="RawData">
     <value>Raw Data</value>
+  </data>
+  <data name="RawEndTime">
+    <value>Raw End Time</value>
   </data>
   <data name="RawIntensities">
     <value>Raw Intensities</value>
@@ -1260,14 +1326,23 @@
   <data name="RawMassErrors">
     <value>Raw Mass Errors</value>
   </data>
+  <data name="RawMidTime">
+    <value>Raw Mid Time</value>
+  </data>
   <data name="RawNumberOfPoints">
     <value>Raw Number of Points</value>
   </data>
   <data name="RawSpectrumIds">
     <value>Raw Spectrum Ids</value>
   </data>
+  <data name="RawStartTime">
+    <value>Raw Start Time</value>
+  </data>
   <data name="RawTimes">
     <value>Raw Times</value>
+  </data>
+  <data name="RawWidth">
+    <value>Raw Width</value>
   </data>
   <data name="Reason">
     <value>Reason</value>
@@ -1367,6 +1442,9 @@
   </data>
   <data name="ShapeCorrelation">
     <value>Shape Correlation</value>
+  </data>
+  <data name="ShiftFromBestPeak">
+    <value>Shift From Best Peak</value>
   </data>
   <data name="Skewness">
     <value>Skewness</value>
@@ -1548,6 +1626,9 @@
   <data name="UTCTime">
     <value>UTC Time</value>
   </data>
+  <data name="Verdict">
+    <value>Verdict</value>
+  </data>
   <data name="Weight">
     <value>Weight</value>
   </data>
@@ -1560,31 +1641,7 @@
   <data name="WeightedScore">
     <value>Weighted Score</value>
   </data>
-  <data name="ExemplaryCount">
-    <value>Exemplary Count</value>
-  </data>
-  <data name="AcceptedCount">
-    <value>Accepted Count</value>
-  </data>
-  <data name="NeedAdjustmentCount">
-    <value>Need Adjustment Count</value>
-  </data>
-  <data name="ExemplaryPeakBounds">
-    <value>Exemplary Peak Bounds</value>
-  </data>
-  <data name="BestPeak">
-    <value>Best Peak</value>
-  </data>
-  <data name="RawBounds">
-    <value>Raw Bounds</value>
-  </data>
-  <data name="AlignedBounds">
-    <value>Aligned Bounds</value>
-  </data>
-  <data name="ManuallyIntegrated">
-    <value>Manually Integrated</value>
-  </data>
-  <data name="ShiftFromBestPeak">
-    <value>Shift From Best Peak</value>
+  <data name="Width">
+    <value>Width</value>
   </data>
 </root>

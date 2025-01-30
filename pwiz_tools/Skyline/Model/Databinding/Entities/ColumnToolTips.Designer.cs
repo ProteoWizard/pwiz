@@ -88,6 +88,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of peak boundaries which do not need to be adjusted.
+        /// </summary>
+        public static string AcceptedCount {
+            get {
+                return ResourceManager.GetString("AcceptedCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ratio of Calculated Concentration to the specified Analyte Concentration.
         /// </summary>
         public static string Accuracy {
@@ -107,11 +116,65 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Button which imputes peak boundaries for the row.
+        /// </summary>
+        public static string Action {
+            get {
+                return ResourceManager.GetString("Action", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to P-value adjusted for the multiple comparisons within this group comparison across the multiple peptides or proteins. The adjustment is done using the Benjamini-Hochberg procedure..
         /// </summary>
         public static string AdjustedPValue {
             get {
                 return ResourceManager.GetString("AdjustedPValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak boundaries mapped using the chosen retention time calculator.
+        /// </summary>
+        public static string AlignedBounds {
+            get {
+                return ResourceManager.GetString("AlignedBounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End time of the peak boundaries using mapped using the chosen retention time calculator.
+        /// </summary>
+        public static string AlignedEndTime {
+            get {
+                return ResourceManager.GetString("AlignedEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Average of the start and end times of the peak boundaries mapped using the chosen retention time calculator.
+        /// </summary>
+        public static string AlignedMidTime {
+            get {
+                return ResourceManager.GetString("AlignedMidTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start time of the peak boundaries mapped using the chosen retention time calculator.
+        /// </summary>
+        public static string AlignedStartTime {
+            get {
+                return ResourceManager.GetString("AlignedStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between the end and start retention times of the peak boundaries after they have been mapped using the chosen retention time calculator.
+        /// </summary>
+        public static string AlignedWidth {
+            get {
+                return ResourceManager.GetString("AlignedWidth", resourceCulture);
             }
         }
         
@@ -426,6 +489,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string BeginPos {
             get {
                 return ResourceManager.GetString("BeginPos", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Information about the peak boundaries from the highest scoring replicate.
+        /// </summary>
+        public static string BestPeak {
+            get {
+                return ResourceManager.GetString("BestPeak", resourceCulture);
             }
         }
         
@@ -952,6 +1024,60 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ExcludeFromCalibration {
             get {
                 return ResourceManager.GetString("ExcludeFromCalibration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of peak boundaries which are used to impute the boundaries of the replicates that need adjustment.
+        /// </summary>
+        public static string ExemplaryCount {
+            get {
+                return ResourceManager.GetString("ExemplaryCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ending retention time of the peak boundaries that will be used to impute boundaries for the rejected replicates.
+        /// </summary>
+        public static string ExemplaryEndTime {
+            get {
+                return ResourceManager.GetString("ExemplaryEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Average of the start and end retention times of the peak boundaries that will be used to impute boundaries for the rejected replicates.
+        /// </summary>
+        public static string ExemplaryMidTime {
+            get {
+                return ResourceManager.GetString("ExemplaryMidTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak boundaries that will be used to impute boundaries for the rejected replicates.
+        /// </summary>
+        public static string ExemplaryPeakBounds {
+            get {
+                return ResourceManager.GetString("ExemplaryPeakBounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starting retention time of the peak boundaries that will be used to impute boundaries for the rejected replicates.
+        /// </summary>
+        public static string ExemplaryStartTime {
+            get {
+                return ResourceManager.GetString("ExemplaryStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between the end and start times of the peak boundaries that will be used to impute boundaries for the rejected replicates.
+        /// </summary>
+        public static string ExemplaryWidth {
+            get {
+                return ResourceManager.GetString("ExemplaryWidth", resourceCulture);
             }
         }
         
@@ -1870,6 +1996,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to True if the peak boundaries have been adjusted by a user..
+        /// </summary>
+        public static string ManuallyIntegrated {
+            get {
+                return ResourceManager.GetString("ManuallyIntegrated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The difference between the expected and measured m/z values expressed in parts per million (PPM).
         /// </summary>
         public static string MassErrorPPM {
@@ -2115,6 +2250,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string Message {
             get {
                 return ResourceManager.GetString("Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between the end and start times of the peak boundaries.
+        /// </summary>
+        public static string MidTime {
+            get {
+                return ResourceManager.GetString("MidTime", resourceCulture);
             }
         }
         
@@ -2512,6 +2656,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Number of peak boundaries which need to be changed because they are either completely missing or outside the specified Max RT Shift and/or Max Peak Width Variation.
+        /// </summary>
+        public static string NeedAdjustmentCount {
+            get {
+                return ResourceManager.GetString("NeedAdjustmentCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The amino acid residue found immediately after the peptide in the protein sequence..
         /// </summary>
         public static string NextAa {
@@ -2593,6 +2746,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Explanatory text describing the reason that the replicate was given the Verdict that it received.
+        /// </summary>
+        public static string Opinion {
+            get {
+                return ResourceManager.GetString("Opinion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The collision energy value corresponding to the OptStep if
         ///collision energy optimization is being performed.
         /// </summary>
@@ -2629,6 +2791,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string OptStep {
             get {
                 return ResourceManager.GetString("OptStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Information about the peak boundaries and replicate.
+        /// </summary>
+        public static string Peak {
+            get {
+                return ResourceManager.GetString("Peak", resourceCulture);
             }
         }
         
@@ -2684,6 +2855,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakRankByLevel {
             get {
                 return ResourceManager.GetString("PeakRankByLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of objects which have information about peak boundaries and replicates.
+        /// </summary>
+        public static string Peaks {
+            get {
+                return ResourceManager.GetString("Peaks", resourceCulture);
             }
         }
         
@@ -3577,11 +3757,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Boundaries of the peak without any retention time alignment.
+        /// </summary>
+        public static string RawBounds {
+            get {
+                return ResourceManager.GetString("RawBounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The raw (uninterpolated) chromatogram data. The chromatograms have unevenly spaced times, and the chromatograms of each transition potentially has a different number of points..
         /// </summary>
         public static string RawData {
             get {
                 return ResourceManager.GetString("RawData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to End retention time of the peak boundaries without any retention time alignment.
+        /// </summary>
+        public static string RawEndTime {
+            get {
+                return ResourceManager.GetString("RawEndTime", resourceCulture);
             }
         }
         
@@ -3604,6 +3802,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Difference between the Raw End Time and the Raw Start Time.
+        /// </summary>
+        public static string RawMidTime {
+            get {
+                return ResourceManager.GetString("RawMidTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The number of points in the raw (uninterpolated) chromatogram..
         /// </summary>
         public static string RawNumberOfPoints {
@@ -3622,11 +3829,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Start retention time of the peak boundaries without any retention time alignment.
+        /// </summary>
+        public static string RawStartTime {
+            get {
+                return ResourceManager.GetString("RawStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The retention times in the raw (uninterpolated) chromatogram..
         /// </summary>
         public static string RawTimes {
             get {
                 return ResourceManager.GetString("RawTimes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between the end and start retention times of the peak boundaries without any retention time alignment.
+        /// </summary>
+        public static string RawWidth {
+            get {
+                return ResourceManager.GetString("RawWidth", resourceCulture);
             }
         }
         
@@ -3936,6 +4161,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string ShapeCorrelation {
             get {
                 return ResourceManager.GetString("ShapeCorrelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between the peak boundaries and the exemplary peak boundaries.
+        ///This retention time difference is always calculated using retention times that have been mapped using the chosen retention score calculator.
+        /// </summary>
+        public static string ShiftFromBestPeak {
+            get {
+                return ResourceManager.GetString("ShiftFromBestPeak", resourceCulture);
             }
         }
         
@@ -4491,6 +4726,19 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to One of the following values indicating what will happen when boundaries are imputed:
+        ///NeedsRemoval: The peak will be removed because the exemplary peak bounds are outside the retention time range of the chromatogram
+        ///NeedsAdjustment: The peak boundaries will be adjusted to be closer to the exemplary peak bounds
+        ///Accepted: The peak boundaries will not be changed
+        ///Exemplary: The peak boundaries are being used to impute boundaries for the replicates with lower scores.
+        /// </summary>
+        public static string Verdict {
+            get {
+                return ResourceManager.GetString("Verdict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The numerical weighting for the feature assigned by the peak scoring model..
         /// </summary>
         public static string Weight {
@@ -4523,6 +4771,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string WeightedScore {
             get {
                 return ResourceManager.GetString("WeightedScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between the end and start retention times of the peak boundaries.
+        /// </summary>
+        public static string Width {
+            get {
+                return ResourceManager.GetString("Width", resourceCulture);
             }
         }
     }

@@ -115,6 +115,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Action.
+        /// </summary>
+        public static string Action {
+            get {
+                return ResourceManager.GetString("Action", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Adjusted P-Value.
         /// </summary>
         public static string AdjustedPValue {
@@ -129,6 +138,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string AlignedBounds {
             get {
                 return ResourceManager.GetString("AlignedBounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Aligned End Time.
+        /// </summary>
+        public static string AlignedEndTime {
+            get {
+                return ResourceManager.GetString("AlignedEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Aligned Mid Time.
+        /// </summary>
+        public static string AlignedMidTime {
+            get {
+                return ResourceManager.GetString("AlignedMidTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Aligned Start Time.
+        /// </summary>
+        public static string AlignedStartTime {
+            get {
+                return ResourceManager.GetString("AlignedStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Aligned Width.
+        /// </summary>
+        public static string AlignedWidth {
+            get {
+                return ResourceManager.GetString("AlignedWidth", resourceCulture);
             }
         }
         
@@ -970,11 +1015,47 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exemplary End Time.
+        /// </summary>
+        public static string ExemplaryEndTime {
+            get {
+                return ResourceManager.GetString("ExemplaryEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Mid Time.
+        /// </summary>
+        public static string ExemplaryMidTime {
+            get {
+                return ResourceManager.GetString("ExemplaryMidTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Exemplary Peak Bounds.
         /// </summary>
         public static string ExemplaryPeakBounds {
             get {
                 return ResourceManager.GetString("ExemplaryPeakBounds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Start Time.
+        /// </summary>
+        public static string ExemplaryStartTime {
+            get {
+                return ResourceManager.GetString("ExemplaryStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exemplary Width.
+        /// </summary>
+        public static string ExemplaryWidth {
+            get {
+                return ResourceManager.GetString("ExemplaryWidth", resourceCulture);
             }
         }
         
@@ -2113,6 +2194,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Mid Time.
+        /// </summary>
+        public static string MidTime {
+            get {
+                return ResourceManager.GetString("MidTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Min.
         /// </summary>
         public static string Min {
@@ -2581,6 +2671,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Opinion.
+        /// </summary>
+        public static string Opinion {
+            get {
+                return ResourceManager.GetString("Opinion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Opt Collision Energy.
         /// </summary>
         public static string OptCollisionEnergy {
@@ -2613,6 +2712,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string OptStep {
             get {
                 return ResourceManager.GetString("OptStep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak.
+        /// </summary>
+        public static string Peak {
+            get {
+                return ResourceManager.GetString("Peak", resourceCulture);
             }
         }
         
@@ -2667,6 +2775,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string PeakRankByLevel {
             get {
                 return ResourceManager.GetString("PeakRankByLevel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peaks.
+        /// </summary>
+        public static string Peaks {
+            get {
+                return ResourceManager.GetString("Peaks", resourceCulture);
             }
         }
         
@@ -3544,6 +3661,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Raw End Time.
+        /// </summary>
+        public static string RawEndTime {
+            get {
+                return ResourceManager.GetString("RawEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Raw Intensities.
         /// </summary>
         public static string RawIntensities {
@@ -3558,6 +3684,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string RawMassErrors {
             get {
                 return ResourceManager.GetString("RawMassErrors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Mid Time.
+        /// </summary>
+        public static string RawMidTime {
+            get {
+                return ResourceManager.GetString("RawMidTime", resourceCulture);
             }
         }
         
@@ -3580,11 +3715,29 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Raw Start Time.
+        /// </summary>
+        public static string RawStartTime {
+            get {
+                return ResourceManager.GetString("RawStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Raw Times.
         /// </summary>
         public static string RawTimes {
             get {
                 return ResourceManager.GetString("RawTimes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Width.
+        /// </summary>
+        public static string RawWidth {
+            get {
+                return ResourceManager.GetString("RawWidth", resourceCulture);
             }
         }
         
@@ -4435,6 +4588,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Verdict.
+        /// </summary>
+        public static string Verdict {
+            get {
+                return ResourceManager.GetString("Verdict", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Weight.
         /// </summary>
         public static string Weight {
@@ -4467,6 +4629,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string WeightedScore {
             get {
                 return ResourceManager.GetString("WeightedScore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Width.
+        /// </summary>
+        public static string Width {
+            get {
+                return ResourceManager.GetString("Width", resourceCulture);
             }
         }
     }

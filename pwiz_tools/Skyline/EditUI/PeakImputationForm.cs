@@ -263,10 +263,9 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 ExemplaryPeakBounds = moleculePeaks.ExemplaryPeakBounds;
-                CountExemplary = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
-                CountAccepted = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
-                CountNeedAdjustment = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment);
-                AlignmentStandardTime = moleculePeaks.AlignmentStandardTime;
+                ExemplaryCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary);
+                AcceptedCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted);
+                NeedAdjustmentCount = Peaks.Values.Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment);
             }
 
             public Model.Databinding.Entities.Peptide Peptide { get; }
@@ -275,11 +274,9 @@ namespace pwiz.Skyline.EditUI
             public Peak BestPeak { get; }
             [ChildDisplayName("Exemplary{0}")]
             public FormattablePeakBounds ExemplaryPeakBounds { get; }
-            public int CountExemplary { get; }
-            public int CountAccepted { get; }
-            public int CountNeedAdjustment { get; }
-            [Format(Formats.RETENTION_TIME)]
-            public double? AlignmentStandardTime { get; private set; }
+            public int ExemplaryCount { get; }
+            public int AcceptedCount { get; }
+            public int NeedAdjustmentCount { get; }
         }
 
         [InvariantDisplayName("Peak")]
@@ -624,9 +621,9 @@ namespace pwiz.Skyline.EditUI
             {
                 nameof(Row.Peptide),
                 nameof(Row.BestPeak),
-                nameof(Row.CountExemplary),
-                nameof(Row.CountAccepted),
-                nameof(Row.CountNeedAdjustment),
+                nameof(Row.ExemplaryCount),
+                nameof(Row.AcceptedCount),
+                nameof(Row.NeedAdjustmentCount),
             }.Select(name=>new ColumnSpec(PropertyPath.Root.Property(name)))).SetName(EditUIResources.PeakImputationForm_GetDefaultViewSpecs_Default);
 
             var ppPeaks = PropertyPath.Root.Property(nameof(Row.Peaks)).DictionaryValues();
