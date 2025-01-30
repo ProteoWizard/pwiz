@@ -305,8 +305,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                             var chromFileInfo = document.MeasuredResults.Chromatograms[replicateIndex]
                                 .GetFileInfo(peptideChromInfo.FileId);
                             PeptideDocNode scoredMolecule = molecule;
-                            bool manuallyIntegrated =
-                                AlignmentData.IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
+                            bool manuallyIntegrated = IsManualIntegrated(molecule, replicateIndex, peptideChromInfo.FileId);
                             if (manuallyIntegrated)
                             {
                                 if (!Parameters.OverwriteManualPeaks)
@@ -314,6 +313,8 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                     continue;
                                 }
                             }
+
+                            bool alreadyImputed = IsImputed(molecule, replicateIndex, peptideChromInfo.FileId);
 
                             var rawPeakBounds = AlignmentData.GetRawPeakBounds(scoredMolecule,
                                 replicateIndex,
@@ -338,7 +339,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                                         peakGroupData.MaxEndTime == rawPeakBounds.EndTime);
                                 }
 
-                                if (matchingPeakGroup == null)
+                                if (matchingPeakGroup == null && !alreadyImputed)
                                 {
                                     matchingPeakGroup =
                                         onDemandFeatureCalculator.GetChosenPeakGroupData(molecule.TransitionGroups
@@ -366,6 +367,31 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 });
                 return moleculePeaksArray.Where(p => p != null);
             }
+        }
+        private static bool IsManualIntegrated(PeptideDocNode peptideDocNode, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            return AnyUserSet(peptideDocNode, replicateIndex, fileId, UserSet.TRUE);
+        }
+
+        private static bool IsImputed(PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfoId fileId)
+        {
+            return AnyUserSet(peptideDocNode, replicateIndex, fileId, UserSet.IMPUTED);
+        }
+
+        private static bool AnyUserSet(PeptideDocNode peptideDocNode, int replicateIndex, ChromFileInfoId fileId,
+            UserSet userSet)
+        {
+            return EnumerateTransitionGroupChromInfos(peptideDocNode, replicateIndex, fileId)
+                .Any(transitionGroupChromInfo => transitionGroupChromInfo.UserSet == userSet);
+        }
+
+        private static IEnumerable<TransitionGroupChromInfo> EnumerateTransitionGroupChromInfos(
+            PeptideDocNode peptideDocNode, int replicateIndex,
+            ChromFileInfoId fileId)
+        {
+            return peptideDocNode.TransitionGroups.SelectMany(tg => tg.GetSafeChromInfo(replicateIndex))
+                .Where(tgci => ReferenceEquals(tgci.FileId, fileId));
         }
     }
 }
