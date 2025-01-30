@@ -1560,4 +1560,31 @@
   <data name="WeightedScore">
     <value>Weighted Score</value>
   </data>
+  <data name="ExemplaryCount">
+    <value>Exemplary Count</value>
+  </data>
+  <data name="AcceptedCount">
+    <value>Accepted Count</value>
+  </data>
+  <data name="NeedAdjustmentCount">
+    <value>Need Adjustment Count</value>
+  </data>
+  <data name="ExemplaryPeakBounds">
+    <value>Exemplary Peak Bounds</value>
+  </data>
+  <data name="BestPeak">
+    <value>Best Peak</value>
+  </data>
+  <data name="RawBounds">
+    <value>Raw Bounds</value>
+  </data>
+  <data name="AlignedBounds">
+    <value>Aligned Bounds</value>
+  </data>
+  <data name="ManuallyIntegrated">
+    <value>Manually Integrated</value>
+  </data>
+  <data name="ShiftFromBestPeak">
+    <value>Shift From Best Peak</value>
+  </data>
 </root>

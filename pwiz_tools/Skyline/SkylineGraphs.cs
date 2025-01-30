@@ -6112,9 +6112,7 @@ namespace pwiz.Skyline
                 _peakImputationForm ??= CreatePeakImputationForm();
                 if (_peakImputationForm != null)
                 {
-                    var rect = GetFloatingRectangleForNewWindow();
-                    rect.Width = Math.Max(800, rect.Width);
-                    _peakImputationForm.Show(dockPanel, rect);
+                    _peakImputationForm.Show(dockPanel, GetFloatingRectangleForNewWindow());
                 }
             }
         }

@@ -23,7 +23,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using MathNet.Numerics.Statistics;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -33,7 +32,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -94,31 +92,15 @@ namespace pwiz.Skyline.EditUI
                     _rowsBindingList.ResetBindings();
                     tbxExemplary.Text = _rows.SelectMany(row => row.Peaks.Values)
                         .Count(peak => peak.Verdict == RatedPeak.Verdict.Exemplary).ToString();
-                    tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
-                    tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values).Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment).ToString();
-                    var rtShifts = _rows.SelectMany(row => row.Peaks.Values)
-                        .Where(peak => peak.ShiftFromBestPeak.HasValue)
-                        .Select(peak => Math.Abs(peak.ShiftFromBestPeak.Value)).ToList();
-                    if (rtShifts.Count == 0)
-                    {
-                        tbxMeanRtStdDev.Text = "";
-                    }
-                    else
-                    {
-                        tbxMeanRtStdDev.Text = rtShifts.Mean().ToString(Formats.RETENTION_TIME);
-                    }
+                    tbxAccepted.Text = _rows.SelectMany(row => row.Peaks.Values)
+                        .Count(peak => peak.Verdict == RatedPeak.Verdict.Accepted).ToString();
+                    tbxRejected.Text = _rows.SelectMany(row => row.Peaks.Values)
+                        .Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment).ToString();
+                    tbxNeedsRemoval.Text = _rows.SelectMany(row => row.Peaks.Values)
+                        .Count(peak => peak.Verdict == RatedPeak.Verdict.NeedsRemoval).ToString();
                 }
 
-                var document = _data.AlignmentData.Params.Document;
                 var alignments = _data.AlignmentData.Alignments;
-                tbxUnalignedDocRtStdDev.Text =
-                    AlignmentData.GetMeanRtStandardDeviation(document, null)
-                        ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
-                tbxAlignedDocRtStdDev.Text =
-                    AlignmentData.GetMeanRtStandardDeviation(document, alignments)
-                        ?.ToString(Formats.RETENTION_TIME) ?? string.Empty;
-                tbxAvgPeakWidthCV.Text = AlignmentData.GetAveragePeakWidthCV(document)?.ToString(Formats.CV) ??
-                                         string.Empty;
 
                 progressBar1.Visible = false;
                 if (alignments != null && AlignAllGraphs)
@@ -230,9 +212,6 @@ namespace pwiz.Skyline.EditUI
                 alignmentOptions.FirstOrDefault(option => option.Name == imputationSettings.RtCalcName);
             tbxMaxPeakWidthVariation.Text = imputationSettings.MaxPeakWidthVariation?.ToString() ?? string.Empty;
             tbxRtDeviationCutoff.Text = imputationSettings.MaxRtShift?.ToString() ?? string.Empty;
-
-            var scoringModel = GetScoringModelToUse(document);
-            tbxScoringModel.Text = scoringModel.Name;
             var parameters = new PeakImputationRows.Parameters(document)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked);
             if (!DocumentWide)
@@ -549,59 +528,19 @@ namespace pwiz.Skyline.EditUI
         [SuppressMessage("ReSharper", "AccessToModifiedClosure")]
         public int ImputeBoundaries(IList<Row> rows, ICollection<ReplicateFileId> replicateFileIds)
         {
+            var alignmentData = _data.AlignmentData;
             lock (SkylineWindow.GetDocumentChangeLock())
             {
                 var originalDocument = SkylineWindow.DocumentUI;
-                var newDoc = originalDocument.BeginDeferSettingsChanges();
-                var scoringModel = GetScoringModelToUse(originalDocument);
                 using var longWaitDlg = new LongWaitDlg();
                 int changeCount = 0;
-                longWaitDlg.PerformWork(this, 1000, () =>
+                SrmDocument newDoc = originalDocument.BeginDeferSettingsChanges();
+                longWaitDlg.PerformWork(this, 1000, broker =>
                 {
-                    for (int iRow = 0; iRow < rows.Count; iRow++)
-                    {
-                        if (longWaitDlg.IsCanceled)
-                        {
-                            return;
-                        }
-
-                        longWaitDlg.ProgressValue = 100 * iRow / rows.Count;
-                        var row = rows[iRow];
-                        var exemplaryBounds = row.ExemplaryPeakBounds;
-                        if (exemplaryBounds == null)
-                        {
-                            continue;
-                        }
-
-                        var rejectedPeaks = row.Peaks.Values
-                            .Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment || peak.Verdict == RatedPeak.Verdict.NeedsRemoval)
-                            .Select(peak => peak.GetRatedPeak()).ToList();
-                        foreach (var rejectedPeak in rejectedPeaks)
-                        {
-                            if (false == replicateFileIds?.Contains(rejectedPeak.ReplicateFileInfo.ReplicateFileId))
-                            {
-                                continue;
-                            }
-                            var peakImputer = new PeakImputer(newDoc, _data.AlignmentData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
-                                rejectedPeak.ReplicateFileInfo);
-                            var bestPeakBounds =
-                                exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
-                            if (bestPeakBounds == null)
-                            {
-                                continue;
-                            }
-
-                            newDoc = peakImputer.ImputeBoundaries(newDoc, bestPeakBounds);
-                            changeCount++;
-                        }
-                    }
+                    newDoc =
+                        ImputeBoundariesOnDocument(broker, newDoc, alignmentData, rows, replicateFileIds, out changeCount);
                 });
-                if (longWaitDlg.IsCanceled)
-                {
-                    return 0;
-                }
-
-                if (changeCount == 0)
+                if (newDoc == null || longWaitDlg.IsCanceled || changeCount == 0)
                 {
                     return 0;
                 }
@@ -620,22 +559,50 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private bool IsPathSelected(IdentityPath identityPath)
+        private SrmDocument ImputeBoundariesOnDocument(ILongWaitBroker broker, SrmDocument newDoc, AlignmentData alignmentData, IList<Row> rows, ICollection<ReplicateFileId> replicateFileIds,
+            out int changeCount)
         {
-            foreach (var node in SkylineWindow.SelectedNodes.Prepend(SkylineWindow.SelectedNode).OfType<SrmTreeNode>())
+            var scoringModel = GetScoringModelToUse(newDoc);
+            changeCount = 0;
+            for (int iRow = 0; iRow < rows.Count; iRow++)
             {
-                if (Equals(node.Path, identityPath))
+                if (broker.IsCanceled)
                 {
-                    return true;
+                    return null;
                 }
 
-                if (node.Path.Depth > identityPath.Depth && node.Path.GetPathTo(identityPath.Depth).Equals(identityPath))
+                broker.ProgressValue = 100 * iRow / rows.Count;
+                var row = rows[iRow];
+                var exemplaryBounds = row.ExemplaryPeakBounds;
+                if (exemplaryBounds == null)
                 {
-                    return true;
+                    continue;
+                }
+
+                var rejectedPeaks = row.Peaks.Values
+                    .Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment || peak.Verdict == RatedPeak.Verdict.NeedsRemoval)
+                    .Select(peak => peak.GetRatedPeak()).ToList();
+                foreach (var rejectedPeak in rejectedPeaks)
+                {
+                    if (false == replicateFileIds?.Contains(rejectedPeak.ReplicateFileInfo.ReplicateFileId))
+                    {
+                        continue;
+                    }
+                    var peakImputer = new PeakImputer(newDoc, alignmentData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
+                        rejectedPeak.ReplicateFileInfo);
+                    var bestPeakBounds =
+                        exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
+                    if (bestPeakBounds == null)
+                    {
+                        continue;
+                    }
+
+                    newDoc = peakImputer.ImputeBoundaries(newDoc, bestPeakBounds);
+                    changeCount++;
                 }
             }
 
-            return false;
+            return newDoc;
         }
 
         public bool DocumentWide

@@ -38,41 +38,28 @@
             this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxAlignAllGraphs = new System.Windows.Forms.CheckBox();
-            this.groupBoxDocumentStatistics = new System.Windows.Forms.GroupBox();
-            this.tbxAvgPeakWidthCV = new System.Windows.Forms.TextBox();
-            this.lblAvgPeakWidthCV = new System.Windows.Forms.Label();
-            this.tbxAlignedDocRtStdDev = new System.Windows.Forms.TextBox();
-            this.lblAligned = new System.Windows.Forms.Label();
-            this.tbxUnalignedDocRtStdDev = new System.Windows.Forms.TextBox();
-            this.lblUnaligned = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.groupBoxScope = new System.Windows.Forms.GroupBox();
             this.radioScopeDocument = new System.Windows.Forms.RadioButton();
             this.radioScopeSelection = new System.Windows.Forms.RadioButton();
-            this.tbxScoringModel = new System.Windows.Forms.TextBox();
-            this.lblScoringModel = new System.Windows.Forms.Label();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.groupBoxResults = new System.Windows.Forms.GroupBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
-            this.lblNeedRemoval = new System.Windows.Forms.Label();
-            this.tbxMeanRtStdDev = new System.Windows.Forms.TextBox();
-            this.lblMeanRtStdDev = new System.Windows.Forms.Label();
-            this.tbxExemplary = new System.Windows.Forms.TextBox();
-            this.lblExemplary = new System.Windows.Forms.Label();
-            this.tbxRejected = new System.Windows.Forms.TextBox();
-            this.lblRejected = new System.Windows.Forms.Label();
-            this.tbxAccepted = new System.Windows.Forms.TextBox();
-            this.lblAccepted = new System.Windows.Forms.Label();
             this.cbxOverwriteManual = new System.Windows.Forms.CheckBox();
             this.tbxRtDeviationCutoff = new System.Windows.Forms.TextBox();
             this.lblSdCutoff = new System.Windows.Forms.Label();
             this.comboRtCalculator = new System.Windows.Forms.ComboBox();
             this.lblRetentionTimeAlignment = new System.Windows.Forms.Label();
+            this.groupBoxResults = new System.Windows.Forms.GroupBox();
+            this.tbxExemplary = new System.Windows.Forms.TextBox();
+            this.lblExemplary = new System.Windows.Forms.Label();
+            this.tbxNeedsRemoval = new System.Windows.Forms.TextBox();
+            this.lblNeedRemoval = new System.Windows.Forms.Label();
+            this.tbxRejected = new System.Windows.Forms.TextBox();
+            this.lblRejected = new System.Windows.Forms.Label();
+            this.tbxAccepted = new System.Windows.Forms.TextBox();
+            this.lblAccepted = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.imageList1 = new System.Windows.Forms.ImageList(this.components);
             this.panel1.SuspendLayout();
-            this.groupBoxDocumentStatistics.SuspendLayout();
             this.groupBoxScope.SuspendLayout();
             this.groupBoxResults.SuspendLayout();
             this.SuspendLayout();
@@ -90,17 +77,14 @@
             this.panel1.Controls.Add(this.tbxMaxPeakWidthVariation);
             this.panel1.Controls.Add(this.label2);
             this.panel1.Controls.Add(this.cbxAlignAllGraphs);
-            this.panel1.Controls.Add(this.groupBoxDocumentStatistics);
             this.panel1.Controls.Add(this.groupBoxScope);
-            this.panel1.Controls.Add(this.tbxScoringModel);
-            this.panel1.Controls.Add(this.lblScoringModel);
             this.panel1.Controls.Add(this.progressBar1);
-            this.panel1.Controls.Add(this.groupBoxResults);
             this.panel1.Controls.Add(this.cbxOverwriteManual);
             this.panel1.Controls.Add(this.tbxRtDeviationCutoff);
             this.panel1.Controls.Add(this.lblSdCutoff);
             this.panel1.Controls.Add(this.comboRtCalculator);
             this.panel1.Controls.Add(this.lblRetentionTimeAlignment);
+            this.panel1.Controls.Add(this.groupBoxResults);
             resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
             // 
@@ -145,59 +129,9 @@
             // 
             resources.ApplyResources(this.cbxAlignAllGraphs, "cbxAlignAllGraphs");
             this.cbxAlignAllGraphs.Name = "cbxAlignAllGraphs";
+            this.toolTip1.SetToolTip(this.cbxAlignAllGraphs, resources.GetString("cbxAlignAllGraphs.ToolTip"));
             this.cbxAlignAllGraphs.UseVisualStyleBackColor = true;
             this.cbxAlignAllGraphs.CheckedChanged += new System.EventHandler(this.SettingsControlChanged);
-            // 
-            // groupBoxDocumentStatistics
-            // 
-            this.groupBoxDocumentStatistics.Controls.Add(this.tbxAvgPeakWidthCV);
-            this.groupBoxDocumentStatistics.Controls.Add(this.lblAvgPeakWidthCV);
-            this.groupBoxDocumentStatistics.Controls.Add(this.tbxAlignedDocRtStdDev);
-            this.groupBoxDocumentStatistics.Controls.Add(this.lblAligned);
-            this.groupBoxDocumentStatistics.Controls.Add(this.tbxUnalignedDocRtStdDev);
-            this.groupBoxDocumentStatistics.Controls.Add(this.lblUnaligned);
-            this.groupBoxDocumentStatistics.Controls.Add(this.label1);
-            resources.ApplyResources(this.groupBoxDocumentStatistics, "groupBoxDocumentStatistics");
-            this.groupBoxDocumentStatistics.Name = "groupBoxDocumentStatistics";
-            this.groupBoxDocumentStatistics.TabStop = false;
-            // 
-            // tbxAvgPeakWidthCV
-            // 
-            resources.ApplyResources(this.tbxAvgPeakWidthCV, "tbxAvgPeakWidthCV");
-            this.tbxAvgPeakWidthCV.Name = "tbxAvgPeakWidthCV";
-            this.tbxAvgPeakWidthCV.ReadOnly = true;
-            // 
-            // lblAvgPeakWidthCV
-            // 
-            resources.ApplyResources(this.lblAvgPeakWidthCV, "lblAvgPeakWidthCV");
-            this.lblAvgPeakWidthCV.Name = "lblAvgPeakWidthCV";
-            // 
-            // tbxAlignedDocRtStdDev
-            // 
-            resources.ApplyResources(this.tbxAlignedDocRtStdDev, "tbxAlignedDocRtStdDev");
-            this.tbxAlignedDocRtStdDev.Name = "tbxAlignedDocRtStdDev";
-            this.tbxAlignedDocRtStdDev.ReadOnly = true;
-            // 
-            // lblAligned
-            // 
-            resources.ApplyResources(this.lblAligned, "lblAligned");
-            this.lblAligned.Name = "lblAligned";
-            // 
-            // tbxUnalignedDocRtStdDev
-            // 
-            resources.ApplyResources(this.tbxUnalignedDocRtStdDev, "tbxUnalignedDocRtStdDev");
-            this.tbxUnalignedDocRtStdDev.Name = "tbxUnalignedDocRtStdDev";
-            this.tbxUnalignedDocRtStdDev.ReadOnly = true;
-            // 
-            // lblUnaligned
-            // 
-            resources.ApplyResources(this.lblUnaligned, "lblUnaligned");
-            this.lblUnaligned.Name = "lblUnaligned";
-            // 
-            // label1
-            // 
-            resources.ApplyResources(this.label1, "label1");
-            this.label1.Name = "label1";
             // 
             // groupBoxScope
             // 
@@ -223,94 +157,11 @@
             this.radioScopeSelection.UseVisualStyleBackColor = true;
             this.radioScopeSelection.Click += new System.EventHandler(this.SettingsControlChanged);
             // 
-            // tbxScoringModel
-            // 
-            resources.ApplyResources(this.tbxScoringModel, "tbxScoringModel");
-            this.tbxScoringModel.Name = "tbxScoringModel";
-            this.tbxScoringModel.ReadOnly = true;
-            this.toolTip1.SetToolTip(this.tbxScoringModel, resources.GetString("tbxScoringModel.ToolTip"));
-            // 
-            // lblScoringModel
-            // 
-            resources.ApplyResources(this.lblScoringModel, "lblScoringModel");
-            this.lblScoringModel.Name = "lblScoringModel";
-            // 
             // progressBar1
             // 
             resources.ApplyResources(this.progressBar1, "progressBar1");
             this.progressBar1.Maximum = 10000;
             this.progressBar1.Name = "progressBar1";
-            // 
-            // groupBoxResults
-            // 
-            this.groupBoxResults.Controls.Add(this.textBox1);
-            this.groupBoxResults.Controls.Add(this.lblNeedRemoval);
-            this.groupBoxResults.Controls.Add(this.tbxMeanRtStdDev);
-            this.groupBoxResults.Controls.Add(this.lblMeanRtStdDev);
-            this.groupBoxResults.Controls.Add(this.tbxExemplary);
-            this.groupBoxResults.Controls.Add(this.lblExemplary);
-            this.groupBoxResults.Controls.Add(this.tbxRejected);
-            this.groupBoxResults.Controls.Add(this.lblRejected);
-            this.groupBoxResults.Controls.Add(this.tbxAccepted);
-            this.groupBoxResults.Controls.Add(this.lblAccepted);
-            resources.ApplyResources(this.groupBoxResults, "groupBoxResults");
-            this.groupBoxResults.Name = "groupBoxResults";
-            this.groupBoxResults.TabStop = false;
-            // 
-            // textBox1
-            // 
-            resources.ApplyResources(this.textBox1, "textBox1");
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            // 
-            // lblNeedRemoval
-            // 
-            resources.ApplyResources(this.lblNeedRemoval, "lblNeedRemoval");
-            this.lblNeedRemoval.Name = "lblNeedRemoval";
-            // 
-            // tbxMeanRtStdDev
-            // 
-            resources.ApplyResources(this.tbxMeanRtStdDev, "tbxMeanRtStdDev");
-            this.tbxMeanRtStdDev.Name = "tbxMeanRtStdDev";
-            this.tbxMeanRtStdDev.ReadOnly = true;
-            // 
-            // lblMeanRtStdDev
-            // 
-            resources.ApplyResources(this.lblMeanRtStdDev, "lblMeanRtStdDev");
-            this.lblMeanRtStdDev.Name = "lblMeanRtStdDev";
-            // 
-            // tbxExemplary
-            // 
-            resources.ApplyResources(this.tbxExemplary, "tbxExemplary");
-            this.tbxExemplary.Name = "tbxExemplary";
-            this.tbxExemplary.ReadOnly = true;
-            // 
-            // lblExemplary
-            // 
-            resources.ApplyResources(this.lblExemplary, "lblExemplary");
-            this.lblExemplary.Name = "lblExemplary";
-            // 
-            // tbxRejected
-            // 
-            resources.ApplyResources(this.tbxRejected, "tbxRejected");
-            this.tbxRejected.Name = "tbxRejected";
-            this.tbxRejected.ReadOnly = true;
-            // 
-            // lblRejected
-            // 
-            resources.ApplyResources(this.lblRejected, "lblRejected");
-            this.lblRejected.Name = "lblRejected";
-            // 
-            // tbxAccepted
-            // 
-            resources.ApplyResources(this.tbxAccepted, "tbxAccepted");
-            this.tbxAccepted.Name = "tbxAccepted";
-            this.tbxAccepted.ReadOnly = true;
-            // 
-            // lblAccepted
-            // 
-            resources.ApplyResources(this.lblAccepted, "lblAccepted");
-            this.lblAccepted.Name = "lblAccepted";
             // 
             // cbxOverwriteManual
             // 
@@ -345,6 +196,69 @@
             resources.ApplyResources(this.lblRetentionTimeAlignment, "lblRetentionTimeAlignment");
             this.lblRetentionTimeAlignment.Name = "lblRetentionTimeAlignment";
             // 
+            // groupBoxResults
+            // 
+            resources.ApplyResources(this.groupBoxResults, "groupBoxResults");
+            this.groupBoxResults.Controls.Add(this.tbxExemplary);
+            this.groupBoxResults.Controls.Add(this.lblExemplary);
+            this.groupBoxResults.Controls.Add(this.tbxNeedsRemoval);
+            this.groupBoxResults.Controls.Add(this.lblNeedRemoval);
+            this.groupBoxResults.Controls.Add(this.tbxRejected);
+            this.groupBoxResults.Controls.Add(this.lblRejected);
+            this.groupBoxResults.Controls.Add(this.tbxAccepted);
+            this.groupBoxResults.Controls.Add(this.lblAccepted);
+            this.groupBoxResults.Name = "groupBoxResults";
+            this.groupBoxResults.TabStop = false;
+            this.toolTip1.SetToolTip(this.groupBoxResults, resources.GetString("groupBoxResults.ToolTip"));
+            // 
+            // tbxExemplary
+            // 
+            resources.ApplyResources(this.tbxExemplary, "tbxExemplary");
+            this.tbxExemplary.Name = "tbxExemplary";
+            this.tbxExemplary.ReadOnly = true;
+            this.toolTip1.SetToolTip(this.tbxExemplary, resources.GetString("tbxExemplary.ToolTip"));
+            // 
+            // lblExemplary
+            // 
+            resources.ApplyResources(this.lblExemplary, "lblExemplary");
+            this.lblExemplary.Name = "lblExemplary";
+            // 
+            // tbxNeedsRemoval
+            // 
+            resources.ApplyResources(this.tbxNeedsRemoval, "tbxNeedsRemoval");
+            this.tbxNeedsRemoval.Name = "tbxNeedsRemoval";
+            this.tbxNeedsRemoval.ReadOnly = true;
+            this.toolTip1.SetToolTip(this.tbxNeedsRemoval, resources.GetString("tbxNeedsRemoval.ToolTip"));
+            // 
+            // lblNeedRemoval
+            // 
+            resources.ApplyResources(this.lblNeedRemoval, "lblNeedRemoval");
+            this.lblNeedRemoval.Name = "lblNeedRemoval";
+            // 
+            // tbxRejected
+            // 
+            resources.ApplyResources(this.tbxRejected, "tbxRejected");
+            this.tbxRejected.Name = "tbxRejected";
+            this.tbxRejected.ReadOnly = true;
+            this.toolTip1.SetToolTip(this.tbxRejected, resources.GetString("tbxRejected.ToolTip"));
+            // 
+            // lblRejected
+            // 
+            resources.ApplyResources(this.lblRejected, "lblRejected");
+            this.lblRejected.Name = "lblRejected";
+            // 
+            // tbxAccepted
+            // 
+            resources.ApplyResources(this.tbxAccepted, "tbxAccepted");
+            this.tbxAccepted.Name = "tbxAccepted";
+            this.tbxAccepted.ReadOnly = true;
+            this.toolTip1.SetToolTip(this.tbxAccepted, resources.GetString("tbxAccepted.ToolTip"));
+            // 
+            // lblAccepted
+            // 
+            resources.ApplyResources(this.lblAccepted, "lblAccepted");
+            this.lblAccepted.Name = "lblAccepted";
+            // 
             // imageList1
             // 
             this.imageList1.ColorDepth = System.Windows.Forms.ColorDepth.Depth8Bit;
@@ -361,8 +275,6 @@
             this.Controls.SetChildIndex(this.databoundGridControl, 0);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            this.groupBoxDocumentStatistics.ResumeLayout(false);
-            this.groupBoxDocumentStatistics.PerformLayout();
             this.groupBoxScope.ResumeLayout(false);
             this.groupBoxScope.PerformLayout();
             this.groupBoxResults.ResumeLayout(false);
@@ -387,32 +299,20 @@
         private System.Windows.Forms.Label lblAccepted;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.Label lblExemplary;
-        private System.Windows.Forms.TextBox tbxExemplary;
-        private System.Windows.Forms.TextBox tbxScoringModel;
-        private System.Windows.Forms.Label lblScoringModel;
         private System.Windows.Forms.GroupBox groupBoxScope;
         private System.Windows.Forms.RadioButton radioScopeDocument;
         private System.Windows.Forms.RadioButton radioScopeSelection;
-        private System.Windows.Forms.GroupBox groupBoxDocumentStatistics;
-        private System.Windows.Forms.Label lblUnaligned;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox tbxAlignedDocRtStdDev;
-        private System.Windows.Forms.Label lblAligned;
-        private System.Windows.Forms.TextBox tbxUnalignedDocRtStdDev;
-        private System.Windows.Forms.TextBox tbxMeanRtStdDev;
-        private System.Windows.Forms.Label lblMeanRtStdDev;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox tbxNeedsRemoval;
         private System.Windows.Forms.Label lblNeedRemoval;
         private System.Windows.Forms.CheckBox cbxAlignAllGraphs;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
-        private System.Windows.Forms.Label lblAvgPeakWidthCV;
-        private System.Windows.Forms.TextBox tbxAvgPeakWidthCV;
         private System.Windows.Forms.Label lblPercentPeakWidth;
         private System.Windows.Forms.Label lblMinutes;
         private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.LinkLabel linkLabelViewRegression;
+        private System.Windows.Forms.TextBox tbxExemplary;
+        private System.Windows.Forms.Label lblExemplary;
     }
 }
