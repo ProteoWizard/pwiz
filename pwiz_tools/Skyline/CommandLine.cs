@@ -4226,7 +4226,14 @@ namespace pwiz.Skyline
             _exportProperties.PolarityFilter = args.ExportPolarityFilter;
             if(!HandleExceptions(args, () =>
                    {
-                       _exportProperties.ExportFile(instrument, type, args.ExportPath, _doc, args.TemplateFile);
+                       MsDataFileUri fileNameMsDataFileUri = null;
+
+                       if (args.ExportPath != null)
+                       {
+                           fileNameMsDataFileUri = new MsDataFilePath(args.ExportPath);
+                       }
+
+                       _exportProperties.ExportFile(instrument, type, fileNameMsDataFileUri, _doc, args.TemplateFile);
                    }, SkylineResources.CommandLine_ExportInstrumentFile_Error__The_file__0__could_not_be_saved___Check_that_the_specified_file_directory_exists_and_is_writeable_, 
                    args.ExportPath))
             {

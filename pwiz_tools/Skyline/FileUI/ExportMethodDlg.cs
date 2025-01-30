@@ -33,6 +33,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1145,13 +1146,19 @@ namespace pwiz.Skyline.FileUI
 
             Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
 
+            MsDataFileUri outputPathMsDataFileUri = new MsDataFilePath(outputPath);
+
+            MsDataFileUri templateNameMsDataFileUri = new MsDataFilePath(templateName);
+
+            var outputPathMsDataFileUri_Path = outputPathMsDataFileUri.GetFilePath();
+
             // Set ShowMessages property on ExportDlgProperties to true
             // so that we see the progress dialog during the export process
             var wasShowMessageValue = _exportProperties.ShowMessages;
             _exportProperties.ShowMessages = true;
             try
             {
-                _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
+                _exportProperties.ExportFile(_instrumentType, _fileType, outputPathMsDataFileUri, documentExport, templateName);
             }
             catch(UnauthorizedAccessException x)
             {

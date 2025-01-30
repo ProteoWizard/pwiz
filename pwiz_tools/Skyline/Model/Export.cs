@@ -468,8 +468,13 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public AbstractMassListExporter ExportFile(string instrumentType, ExportFileType type, string path, SrmDocument doc, string template)
+        public AbstractMassListExporter ExportFile(string instrumentType, ExportFileType type, MsDataFileUri pathMsDataFileUri, SrmDocument doc, string template)
         {
+            //  Create 'path' for local files.  Could put this under each 'case' but then need unique names
+            string path = null;
+            if (pathMsDataFileUri != null)
+                path = pathMsDataFileUri.GetFilePath();
+
             switch (instrumentType)
             {
                 case ExportInstrumentType.ABI:
@@ -595,7 +600,7 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new AbiMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
-            exporter.Export(fileName);
+            exporter.ExportUsingStringFilename(fileName);
 
             return exporter;
         }
@@ -672,7 +677,7 @@ namespace pwiz.Skyline.Model
             
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
-            exporter.Export(fileName);
+            exporter.ExportUsingStringFilename(fileName);
 
             return exporter;
         }
@@ -748,7 +753,7 @@ namespace pwiz.Skyline.Model
             exporter.AddEnergyRamp = AddEnergyRamp;
             exporter.AddTriggerReference = AddTriggerReference;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
-            exporter.Export(fileName);
+            exporter.ExportUsingStringFilename(fileName);
 
             return exporter;
         }
@@ -761,7 +766,7 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
-            exporter.Export(fileName);
+            exporter.ExportUsingStringFilename(fileName);
 
             return exporter;
         }
@@ -794,7 +799,7 @@ namespace pwiz.Skyline.Model
                 // TODO: Needs both run length and dwell time
                 exporter.DwellTime = DwellTime;
             }
-            exporter.Export(filename);
+            exporter.ExportUsingStringFilename(filename);
 
             return exporter;
         }
@@ -928,7 +933,7 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new WatersMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
-            exporter.Export(fileName);
+            exporter.ExportUsingStringFilename(fileName);
 
             return exporter;
         }
@@ -3497,7 +3502,7 @@ namespace pwiz.Skyline.Model
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
-            Export(fileName);
+            ExportUsingStringFilename(fileName);
         }
 
         // Write values separated by the field separator, and a line separator at the end.
@@ -3930,7 +3935,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             _id = 0;
-            Export(fileName);
+            ExportUsingStringFilename(fileName);
         }
     }
 
@@ -4171,7 +4176,7 @@ namespace pwiz.Skyline.Model
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
-            Export(fileName);
+            ExportUsingStringFilename(fileName);
         }
 
         // Write values separated by the field separator, and a line separator at the end.
@@ -4336,7 +4341,7 @@ namespace pwiz.Skyline.Model
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
-            Export(fileName);
+            ExportUsingStringFilename(fileName);
         }
     }
 
@@ -4464,7 +4469,7 @@ namespace pwiz.Skyline.Model
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
-            Export(fileName);
+            ExportUsingStringFilename(fileName);
         }
     }
 
@@ -4706,7 +4711,7 @@ namespace pwiz.Skyline.Model
         {
             if (!InitExport(fileName, progressMonitor))
                 return;
-            Export(fileName);
+            ExportUsingStringFilename(fileName);
         }
 
         public override bool HasHeaders { get { return true; } }

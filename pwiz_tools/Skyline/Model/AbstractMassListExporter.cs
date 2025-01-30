@@ -27,6 +27,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -163,9 +164,28 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// Export to a transition list to a file or to memory.
+        ///
+        /// Support for string for existing code that passes local file path
         /// </summary>
         /// <param name="fileName">A file on disk to export to, or null to export to memory.</param>
-        public void Export(string fileName)
+        public void ExportUsingStringFilename(string fileName)
+        {
+            MsDataFileUri fileNameMsDataFileUri = null;
+
+            if (fileName != null)
+            {
+                fileNameMsDataFileUri = new MsDataFilePath(fileName);
+            }
+
+            Export(fileNameMsDataFileUri);
+        }
+
+
+        /// <summary>
+        /// Export to a transition list to a file or to memory.
+        /// </summary>
+        /// <param name="fileNameMsDataFileUri">A file on disk to export to, or null to export to memory, or a RemoteURL.</param>
+        public void Export(MsDataFileUri fileNameMsDataFileUri)
         {
             bool single = (Strategy == ExportStrategy.Single);
             // If we are separating mixed polarities, evaluate limits separately
@@ -188,8 +208,8 @@ namespace pwiz.Skyline.Model
                                                         RequiredPeptides.TransitionCount, MaxTransitions));
                 }
             }
-
-            using (var fileIterator = new FileIterator(fileName, single && (effectivePolarityFilter != ExportPolarity.separate), IsPrecursorLimited, WriteHeaders))
+            
+            using (var fileIterator = new FileIterator(fileNameMsDataFileUri, single && (effectivePolarityFilter != ExportPolarity.separate), IsPrecursorLimited, WriteHeaders))
             {
                 MemoryOutput = fileIterator.MemoryOutput;
 
@@ -945,14 +965,14 @@ namespace pwiz.Skyline.Model
 
             private readonly SortedDictionary<double, List<StoredTransition>> _storedTransitions;
 
-            public FileIterator(string fileName, bool single, bool isPrecursorLimited, Action<TextWriter> writeHeaders)
+            public FileIterator(MsDataFileUri fileName_MsDataFileUri, bool single, bool isPrecursorLimited, Action<TextWriter> writeHeaders)
             {
-                FileName = fileName;
+                FileName_MsDataFileUri = fileName_MsDataFileUri;
                 _single = single;
                 _isPrecursorLimited = isPrecursorLimited;
                 _writeHeaders = writeHeaders;
                 _storedTransitions = new SortedDictionary<double, List<StoredTransition>>();
-                if (fileName == null)
+                if (fileName_MsDataFileUri == null || (fileName_MsDataFileUri is RemoteUrl))
                 {
                     BaseName = MEMORY_KEY_ROOT;
                     MemoryOutput = new Dictionary<string, StringBuilder>();
@@ -960,13 +980,13 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     // ReSharper disable once ConstantNullCoalescingCondition
-                    BaseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
-                        Path.GetFileNameWithoutExtension(fileName));
+                    BaseName = Path.Combine(Path.GetDirectoryName(fileName_MsDataFileUri.GetFilePath()) ?? string.Empty,
+                        Path.GetFileNameWithoutExtension(fileName_MsDataFileUri.GetFilePath()));
                 }
             }
 
             // ReSharper disable MemberCanBePrivate.Local
-            public string FileName { get; private set; }
+            public MsDataFileUri FileName_MsDataFileUri { get; private set; }
             public string BaseName { get; set; }
             public string Suffix { get; set; }
             public string PolarityText { get; set; }
@@ -984,11 +1004,11 @@ namespace pwiz.Skyline.Model
                 PolarityText = string.Empty;
                 if (_single)
                 {
-                    if (FileName != null)
+                    if (FileName_MsDataFileUri != null && (!(FileName_MsDataFileUri is RemoteUrl)))
                     {
-                        _saver = new FileSaver(FileName);
+                        _saver = new FileSaver(FileName_MsDataFileUri.GetFilePath());
                         if (!_saver.CanSave())
-                            throw new IOException(string.Format(ModelResources.FileIterator_Init_Cannot_save_to__0__, FileName));
+                            throw new IOException(string.Format(ModelResources.FileIterator_Init_Cannot_save_to__0__, FileName_MsDataFileUri.GetFilePath()));
 
                         _writer = new StreamWriter(_saver.SafeName);
                     }
@@ -1076,7 +1096,7 @@ namespace pwiz.Skyline.Model
 
                 if (MemoryOutput == null)
                 {
-                    var ext = Path.GetExtension(FileName);
+                    var ext = Path.GetExtension(FileName_MsDataFileUri.GetFilePath());
                     if (string.IsNullOrEmpty(ext))
                     {
                         ext = @".csv";
