@@ -1528,6 +1528,7 @@
       <xs:enumeration value="IMPORTED"/>
       <xs:enumeration value="REINTEGRATED"/>
       <xs:enumeration value="MATCHED"/>
+      <xs:enumeration value="IMPUTED" />
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="mass_type_type">
