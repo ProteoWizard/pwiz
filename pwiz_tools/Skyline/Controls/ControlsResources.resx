@@ -229,4 +229,7 @@
   <data name="FilesTree_TreeNodeLabel_ProjectFiles" xml:space="preserve">
 	  <value>Project Files</value>
   </data>
+  <data name="FilesTree_TreeNodeLabel_ViewFile" xml:space="preserve">
+	  <value>View File</value>
+  </data>
 </root>

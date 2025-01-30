@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -23,6 +24,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using static pwiz.Skyline.Model.Lib.EncyclopeDiaLibrary;
 
 namespace pwiz.Skyline.Controls
 {
@@ -31,10 +33,12 @@ namespace pwiz.Skyline.Controls
         private readonly TreeNodeMS _chromatogramRoot;
         private readonly TreeNodeMS _peptideLibrariesRoot;
         private readonly TreeNodeMS _backgroundProteomeRoot;
-        private readonly TreeNodeMS _projectFilesRoot;
 
-        // Used to merge the latest data model into a FilesTree. Each entry maps a file type
-        // to code that creates the TreeNode for that file type.
+        public event EventHandler NewDocument;
+
+        // Used while merging a file data model with a FilesTree. Each entry explains how to
+        // create a specific type of TreeNode given a type of file. Entries in this dict will
+        // grow as more file types are supported. 
         private static readonly Dictionary<FileType, CreateFilesTreeNode> TREE_NODE_DELEGATES =
             new Dictionary<FileType, CreateFilesTreeNode> {
                 {FileType.peptide_library, PeptideLibraryTreeNode.CreateNode},
@@ -71,7 +75,7 @@ namespace pwiz.Skyline.Controls
             _chromatogramRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Replicates);
             _peptideLibrariesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Libraries);
             _backgroundProteomeRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
-            _projectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
+            ProjectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
         }
 
         [Browsable(false)]
@@ -82,6 +86,10 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineRootTreeNode Root { get; private set; }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public TreeNodeMS ProjectFilesRoot { get; private set; }
+
         public string RootNodeText()
         {
             return Root.Text;
@@ -89,7 +97,7 @@ namespace pwiz.Skyline.Controls
 
         public void ScrollToTop()
         {
-            Nodes[0].EnsureVisible();
+            Nodes[0]?.EnsureVisible();
         }
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
@@ -129,8 +137,7 @@ namespace pwiz.Skyline.Controls
 
                 Nodes.Add(Root);
 
-                // make "project" nodes refer to files associated with the new document
-                _projectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, string.Empty)));
+                NewDocument?.Invoke(this, EventArgs.Empty);
             }
 
             var files = Document.Settings.Files;
@@ -156,7 +163,7 @@ namespace pwiz.Skyline.Controls
                 _backgroundProteomeRoot.ShowOrHide(Root);
             }
 
-            _projectFilesRoot.ShowOrHide(Root);
+            ProjectFilesRoot.ShowOrHide(Root);
         }
 
         internal delegate FilesTreeNode CreateFilesTreeNode(IFileBase model);
@@ -164,7 +171,10 @@ namespace pwiz.Skyline.Controls
         // TODO (ekoneil): uses file names as keys and assumes file names are unique. Probably not a safe assumption.
         //                 Instead, could use IIdentityContainer.Id if supported throughout the data model.
         //                 Currently (1) protein libraries and (2) background proteome do not support identity.
-        // CONSIDER: position of new nodes is not maintained when inserted into the tree. Should it be?
+        //                 No issue with this - ok to add Id().
+        // TODO (ekoneil): should folders appear in the tree when empty? Example: when there's no Background Proteome, should
+        //                 its folder be removed?
+        // TODO (ekoneil): position of new nodes is not maintained when inserted into the tree. Should it be?
         internal static void MergeNodes(IEnumerable<IFileBase> docFiles, TreeNodeCollection treeNodes)
         {
             var visitedKeys = new List<string>();
@@ -182,7 +192,7 @@ namespace pwiz.Skyline.Controls
                 // file already in tree, so update its model
                 else
                 {
-                    var matchingTreeNode = treeNodes.Find(model.Name, false)?[0] as FilesTreeNode;
+                    var matchingTreeNode = treeNodes.Find(model.Name, false)[0] as FilesTreeNode;
 
                     if (matchingTreeNode != null)
                         matchingTreeNode.Model = model;
@@ -191,7 +201,7 @@ namespace pwiz.Skyline.Controls
                 visitedKeys.Add(model.Name);
             }
 
-            // look through tree for files to remove
+            // look through tree for files now missing from the data model and remove corresponding TreeNode
             for (var i = 0; i < treeNodes.Count; i++)
             {
                 var treeNode = treeNodes[i] as FilesTreeNode;
@@ -201,8 +211,7 @@ namespace pwiz.Skyline.Controls
                     treeNodes.RemoveAt(i);
             }
 
-            // finished merging latest data model at this level. For any tree nodes
-            // with children, recursively update those nodes.
+            // finished merging latest data model at this level. Recursively update if any model has children
             for(var i = 0; i < treeNodes.Count; i++)
             {
                 var treeNode = treeNodes[i] as FilesTreeNode;
@@ -224,32 +233,6 @@ namespace pwiz.Skyline.Controls
         {
             return node != null ? node.Nodes.Count : 0;
         }
-    }
-
-    public class SkylineFileModel : IFileModel
-    {
-        public SkylineFileModel(string name, string filePath)
-        {
-            Name = name;
-            FilePath = filePath;
-        }
-
-        public FileType Type { get => FileType.sky; }
-        public string Name { get; }
-        public string FilePath { get; }
-    }
-
-    public class AuditLogFileModel : IFileModel
-    {
-        public AuditLogFileModel(string name, string filePath)
-        {
-            Name = name;
-            FilePath = filePath;
-        }
-
-        public FileType Type { get => FileType.sky_audit_log; }
-        public string Name { get; }
-        public string FilePath { get; }
     }
 
     public class FilesTreeFolderNode : TreeNodeMS
@@ -415,11 +398,95 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class AuditLogTreeNode : FilesTreeNode
+    public class AuditLogTreeNode : FilesTreeNode, ITipProvider
     {
         public AuditLogTreeNode(AuditLogFileModel model) : base(model, FilesTree.ImageId.file)
         {
         }
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            if (!(Model is IFileModel model))
+                return Size.Empty;
+
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, model.Name, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, model.FilePath, rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+    }
+
+    public class ViewFileTreeNode : FilesTreeNode, ITipProvider
+    {
+        public ViewFileTreeNode(ViewFileModel model) : base(model, FilesTree.ImageId.file)
+        {
+        }
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            if (!(Model is IFileModel model))
+                return Size.Empty;
+
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, model.Name, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, model.FilePath, rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+    }
+
+    public class SkylineFileModel : IFileModel
+    {
+        public SkylineFileModel(string name, string filePath)
+        {
+            Name = name;
+            FilePath = filePath;
+        }
+
+        public FileType Type { get => FileType.sky; }
+        public string Name { get; }
+        public string FilePath { get; }
+    }
+
+    public class AuditLogFileModel : IFileModel
+    {
+        public AuditLogFileModel(string name, string filePath)
+        {
+            Name = name;
+            FilePath = filePath;
+        }
+
+        public FileType Type { get => FileType.sky_audit_log; }
+        public string Name { get; }
+        public string FilePath { get; }
+    }
+
+    public class ViewFileModel : IFileModel
+    {
+        public ViewFileModel(string name, string filePath)
+        {
+            Name = name;
+            FilePath = filePath;
+        }
+
+        public FileType Type { get => FileType.sky_view; }
+        public string Name { get; }
+        public string FilePath { get; }
     }
 
     public static class ExtensionMethods

@@ -25,7 +25,8 @@ namespace pwiz.Skyline.Model.DocSettings
         replicates,
         replicate_file,
         sky,
-        sky_audit_log
+        sky_audit_log,
+        sky_view
     }
 
     public interface IFileBase

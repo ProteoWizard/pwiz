@@ -22,6 +22,8 @@ using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
 using System;
+using System.IO;
+using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Controls
 {
@@ -40,10 +42,10 @@ namespace pwiz.Skyline.Controls
             SkylineWindow = skylineWindow;
 
             // FilesTree
-            filesTree.InitializeTree(SkylineWindow);
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
+            filesTree.NewDocument += FilesTree_NewDocument;
 
             // FilesTree => context menu
             filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
@@ -51,6 +53,8 @@ namespace pwiz.Skyline.Controls
 
             // FilesTree => tooltips
             _nodeTip = new NodeTip(this) { Parent = TopLevelControl };
+
+            filesTree.InitializeTree(SkylineWindow);
         }
 
         public FilesTree FilesTree => filesTree;
@@ -125,6 +129,16 @@ namespace pwiz.Skyline.Controls
             return base.GetPersistentString() + @"|" + FilesTree.GetPersistentString();
         }
 
+        // Event handler to adjust FilesTree nodes related to "project" level files - ex: skyl, view, etc.
+        private void FilesTree_NewDocument(object sender, EventArgs e)
+        {
+            var auditLogFilePath = SrmDocument.GetAuditLogPath(SkylineWindow.DocumentFilePath);
+            FilesTree.ProjectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
+
+            var viewFilePath = SkylineWindow.GetViewFile(SkylineWindow.DocumentFilePath);
+            FilesTree.ProjectFilesRoot.Nodes.Add(new ViewFileTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
+        }
+
         // FilesTree => display ToolTip
         private void FilesTree_MouseMove(object sender, MouseEventArgs e)
         {
@@ -139,25 +153,25 @@ namespace pwiz.Skyline.Controls
         // Any TreeNode => Open Context Menu
         private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
-            var selectedNode = FilesTree.SelectedNode;
-
             _nodeTip.HideTip();
 
-            if (selectedNode.GetType() == typeof(SkylineRootTreeNode))
+            var model = FilesTree.SelectedNode.Tag as IFileBase;
+
+            switch (FilesTree.SelectedNode.Tag)
             {
-                openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
-            }
-            else if (selectedNode.GetType() == typeof(ReplicateSampleFileTreeNode))
-            {
-                openContainingFolderMenuStripItem.Enabled = true;
-            }
-            else if (selectedNode.GetType() == typeof(PeptideLibraryTreeNode))
-            {
-                openContainingFolderMenuStripItem.Enabled = true;
-            }
-            else
-            {
-                openContainingFolderMenuStripItem.Enabled = false;
+                case SkylineFileModel _:
+                    openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
+                    break;
+                case AuditLogFileModel _:
+                    var filePath = ((IFileModel)model).FilePath;
+                    openContainingFolderMenuStripItem.Enabled = File.Exists(filePath);
+                    break;
+                case IFileModel _:
+                    openContainingFolderMenuStripItem.Enabled = true;
+                    break;
+                default:
+                    openContainingFolderMenuStripItem.Enabled = false;
+                    break;
             }
         }
 

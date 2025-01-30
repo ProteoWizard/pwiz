@@ -178,6 +178,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to View File.
+        /// </summary>
+        public static string FilesTree_TreeNodeLabel_ViewFile {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNodeLabel_ViewFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to C-Term:.
         /// </summary>
         public static string IonTypeSelector_CTermLabel {
