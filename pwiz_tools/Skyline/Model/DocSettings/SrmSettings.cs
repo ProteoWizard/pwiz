@@ -2292,31 +2292,32 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public IEnumerable<IFileBase> Files
+        // TODO (ekoneil): placeholder, violates immutability contract. Instead, create externally and pass into constructor.
+        public Dictionary<FileType, IEnumerable<IFileBase>> Files
         {
             get
             {
-                var list = new List<IFileBase>();
+                var dict = new Dictionary<FileType, IEnumerable<IFileBase>>();
 
                 // *.raw
                 if (MeasuredResults?.Chromatograms != null)
                 {
-                    list.AddRange(MeasuredResults.Chromatograms);
+                    dict[FileType.replicates] = MeasuredResults.Chromatograms;
                 }
 
                 // *.blib
                 if (PeptideSettings?.Libraries?.LibrarySpecs != null)
                 {
-                    list.AddRange(PeptideSettings.Libraries.LibrarySpecs);
+                    dict[FileType.peptide_library] = PeptideSettings.Libraries.LibrarySpecs;
                 }
 
                 // *.protdb
                 if (PeptideSettings != null && HasBackgroundProteome)
                 {
-                    list.Add(PeptideSettings.BackgroundProteome);
+                    dict[FileType.background_proteome] = ImmutableList.Singleton(PeptideSettings.BackgroundProteome);
                 }
-                
-                return list;
+
+                return dict;
             }
         }
     }

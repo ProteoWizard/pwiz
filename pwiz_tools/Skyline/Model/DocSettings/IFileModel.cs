@@ -20,11 +20,12 @@ namespace pwiz.Skyline.Model.DocSettings
 {
     public enum FileType
     {
-        audit_log,
         background_proteome,
-        chromatogram,
         peptide_library,
-        sky
+        replicates,
+        replicate_file,
+        sky,
+        sky_audit_log
     }
 
     public interface IFileBase

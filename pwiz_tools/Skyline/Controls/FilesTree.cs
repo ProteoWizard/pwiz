@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -28,6 +28,21 @@ namespace pwiz.Skyline.Controls
 {
     public class FilesTree : TreeViewMS
     {
+        private readonly TreeNodeMS _chromatogramRoot;
+        private readonly TreeNodeMS _peptideLibrariesRoot;
+        private readonly TreeNodeMS _backgroundProteomeRoot;
+        private readonly TreeNodeMS _projectFilesRoot;
+
+        // Used to merge the latest data model into a FilesTree. Each entry maps a file type
+        // to code that creates the TreeNode for that file type.
+        private static readonly Dictionary<FileType, CreateFilesTreeNode> TREE_NODE_DELEGATES =
+            new Dictionary<FileType, CreateFilesTreeNode> {
+                {FileType.peptide_library, PeptideLibraryTreeNode.CreateNode},
+                {FileType.background_proteome, BackgroundProteomeTreeNode.CreateNode},
+                {FileType.replicates, ReplicateTreeNode.CreateNode},
+                {FileType.replicate_file, ReplicateSampleFileTreeNode.CreateNode}
+            };
+
         public enum ImageId
         {
             blank,
@@ -45,12 +60,18 @@ namespace pwiz.Skyline.Controls
                 TransparentColor = Color.Magenta,
                 ColorDepth = ColorDepth.Depth24Bit
             };
+
             ImageList.Images.Add(Resources.Blank);
             ImageList.Images.Add(Resources.Folder);
             ImageList.Images.Add(Resources.File);
             ImageList.Images.Add(Resources.Replicate);
             ImageList.Images.Add(Resources.Peptide);
             ImageList.Images.Add(Resources.Skyline);
+
+            _chromatogramRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Replicates);
+            _peptideLibrariesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Libraries);
+            _backgroundProteomeRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
+            _projectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
         }
 
         [Browsable(false)]
@@ -86,123 +107,112 @@ namespace pwiz.Skyline.Controls
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
             var document = DocumentContainer.DocumentUI;
-            if (document == null)
+            if (document == null || e == null)
                 return;
 
             Document = document;
 
-            // Short circuit updates if nothing relevant changed. For now, this checks document.Children -
-            // which is the wrong part of the document to check. SrmSettings should be used instead but
-            // that breaks view state restoration (e.g. tree node expansion and selection) because
-            // SrmSettings changes multiple times during startup - while state is only restored once.
-            // So this needs a more nuanced fix.
-            //
-            // if (e.DocumentPrevious != null && ReferenceEquals(Document.Settings, e.DocumentPrevious.Settings))
-            //
-            if (e.DocumentPrevious != null && ReferenceEquals(document.Children, e.DocumentPrevious.Children))
+            if (!ReferenceEquals(document.Id, e.DocumentPrevious?.Id))
             {
-                return;
+                // Rebuild FilesTree if the document changed. This is a temporary, aggressive way of configuring 
+                // the tree when something changes - ex: opening an existing .sky file or creating a new one.
+                BeginUpdateMS();
+                Nodes.Clear();
+                EndUpdateMS();
+
+                var skylineFileModel = DocumentContainer.DocumentFilePath == null
+                    ? new SkylineFileModel(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null)
+                    : new SkylineFileModel(Path.GetFileName(DocumentContainer.DocumentFilePath),
+                        DocumentContainer.DocumentFilePath);
+
+                Root = new SkylineRootTreeNode(skylineFileModel);
+
+                Nodes.Add(Root);
+
+                // make "project" nodes refer to files associated with the new document
+                _projectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, string.Empty)));
             }
-
-            // Rebuild FilesTree if the document changed. This is a temporary, aggressive way of configuring 
-            // the tree when something changes - ex: opening an existing .sky file or creating a new one.
-            BeginUpdateMS();
-            Nodes.Clear();
-            EndUpdateMS();
-
-            var skylineFileModel = DocumentContainer.DocumentFilePath == null ? 
-                new SkylineFileModel(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null) : 
-                new SkylineFileModel(Path.GetFileName(DocumentContainer.DocumentFilePath), DocumentContainer.DocumentFilePath);
-
-            Root = new SkylineRootTreeNode(skylineFileModel);
-
-            var chromatogramRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Replicates)
-            {
-                ImageIndex = (int)ImageId.folder
-            };
-
-            var peptideLibrariesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_Libraries)
-            {
-                ImageIndex = (int)ImageId.folder
-            };
-
-            var backgroundProteomeRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome)
-            {
-                ImageIndex = (int)ImageId.folder
-            };
-
-            var projectFilesRoot = new TreeNodeMS(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles)
-            {
-                ImageIndex = (int)ImageId.folder
-            };
 
             var files = Document.Settings.Files;
 
-            foreach (var file in files)
+            // Measured Results / Chromatograms
+            if (files.TryGetValue(FileType.replicates, out var chromatogramFileGroups))
             {
-                switch (file.Type)
+                MergeNodes(chromatogramFileGroups, _chromatogramRoot.Nodes);
+                _chromatogramRoot.ShowOrHide(Root);
+            }
+
+            // Peptide Libraries
+            if (files.TryGetValue(FileType.peptide_library, out var peptideLibraryFiles))
+            {
+                MergeNodes(peptideLibraryFiles, _peptideLibrariesRoot.Nodes);
+                _peptideLibrariesRoot.ShowOrHide(Root);
+            }
+
+            // Background Proteome
+            if (files.TryGetValue(FileType.background_proteome, out var backgroundProteomeFiles))
+            {
+                MergeNodes(backgroundProteomeFiles, _backgroundProteomeRoot.Nodes);
+                _backgroundProteomeRoot.ShowOrHide(Root);
+            }
+
+            _projectFilesRoot.ShowOrHide(Root);
+        }
+
+        internal delegate FilesTreeNode CreateFilesTreeNode(IFileBase model);
+
+        // TODO (ekoneil): uses file names as keys and assumes file names are unique. Probably not a safe assumption.
+        //                 Instead, could use IIdentityContainer.Id if supported throughout the data model.
+        //                 Currently (1) protein libraries and (2) background proteome do not support identity.
+        // CONSIDER: position of new nodes is not maintained when inserted into the tree. Should it be?
+        internal static void MergeNodes(IEnumerable<IFileBase> docFiles, TreeNodeCollection treeNodes)
+        {
+            var visitedKeys = new List<string>();
+
+            foreach (var model in docFiles)
+            {
+                // file missing from tree, so create node and add it 
+                if (!treeNodes.ContainsKey(model.Name))
                 {
-                    case FileType.chromatogram:
-                    {
-                        if (!(file is IFileGroupModel group))
-                            break;
+                    var createNodeDelegate = TREE_NODE_DELEGATES[model.Type];
 
-                        var replicate = new TreeNodeMS(group.Name)
-                        {
-                            ImageIndex = (int)ImageId.folder
-                        };
-
-                        foreach (var fileModel in group.Files)
-                        {
-                            var replicateFile = new ReplicateTreeNode(group, fileModel);
-                            replicate.Nodes.Add(replicateFile);
-                        }
-
-                        chromatogramRoot.Nodes.Add(replicate);
-                        break;
-                    }
-                    case FileType.peptide_library:
-                    {
-                        if (!(file is IFileModel model))
-                            break;
-
-                        var peptideLibrary = new PeptideLibraryTreeNode(model);
-                        peptideLibrariesRoot.Nodes.Add(peptideLibrary);
-
-                        break;
-                    }
-                    case FileType.background_proteome:
-                    {
-                        if (!(file is IFileModel model))
-                            break;
-
-                        var backgroundProteome = new BackgroundProteomeTreeNode(model);
-                        backgroundProteomeRoot.Nodes.Add(backgroundProteome);
-                        break;
-                    }
+                    var node = createNodeDelegate(model);
+                    treeNodes.Add(node);
                 }
+                // file already in tree, so update its model
+                else
+                {
+                    var matchingTreeNode = treeNodes.Find(model.Name, false)?[0] as FilesTreeNode;
+
+                    if (matchingTreeNode != null)
+                        matchingTreeNode.Model = model;
+                }
+
+                visitedKeys.Add(model.Name);
             }
 
-            projectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, String.Empty)));
-
-            Nodes.Add(Root);
-
-            Root.Nodes.Add(chromatogramRoot);
-
-            if (backgroundProteomeRoot.Nodes.Count > 0)
+            // look through tree for files to remove
+            for (var i = 0; i < treeNodes.Count; i++)
             {
-                Root.Nodes.Add(backgroundProteomeRoot);
+                var treeNode = treeNodes[i] as FilesTreeNode;
+                var nameFromTreeNode = treeNode?.Model.Name;
+
+                if (!visitedKeys.Contains(nameFromTreeNode))
+                    treeNodes.RemoveAt(i);
             }
 
-            if (peptideLibrariesRoot.Nodes.Count > 0)
+            // finished merging latest data model at this level. For any tree nodes
+            // with children, recursively update those nodes.
+            for(var i = 0; i < treeNodes.Count; i++)
             {
-                Root.Nodes.Add(peptideLibrariesRoot);
+                var treeNode = treeNodes[i] as FilesTreeNode;
+                var model = treeNode?.Model;
+
+                if (!(model is IFileGroupModel fileGroup))
+                    continue;
+
+                MergeNodes(fileGroup.Files, treeNode.Nodes);
             }
-
-            Root.Nodes.Add(projectFilesRoot);
-
-            // Expand root node so some nodes visible in FilesTree
-            Root.Expand();
         }
 
         protected override bool IsParentNode(TreeNode node)
@@ -237,29 +247,40 @@ namespace pwiz.Skyline.Controls
             FilePath = filePath;
         }
 
-        public FileType Type { get => FileType.audit_log; }
+        public FileType Type { get => FileType.sky_audit_log; }
         public string Name { get; }
         public string FilePath { get; }
     }
 
+    public class FilesTreeFolderNode : TreeNodeMS
+    {
+        public FilesTreeFolderNode(string label) : base(label)
+        {
+            ImageIndex = (int)FilesTree.ImageId.folder;
+        }
+    }
+
     public abstract class FilesTreeNode : TreeNodeMS
     {
-        public FilesTreeNode(IFileBase model)
+        public FilesTreeNode(IFileBase model, FilesTree.ImageId imageId)
         {
             Model = model;
-            Tag = model;
 
+            // Configure inherited TreeNode properties
+            Tag = model;
+            Name = Model.Name;
             Text = Model.Name;
+            ImageIndex = (int)imageId;
         }
 
-        public IFileBase Model { get; private set; }
+        // TODO: do FileTree nodes need to update view state? If so, start firing a ModelChange event.
+        public IFileBase Model { get; set; }
     }
 
     public class SkylineRootTreeNode : FilesTreeNode, ITipProvider
     {
-        public SkylineRootTreeNode(SkylineFileModel model) : base (model)
+        public SkylineRootTreeNode(SkylineFileModel model) : base (model, FilesTree.ImageId.skyline)
         {
-            ImageIndex = (int)FilesTree.ImageId.skyline;
         }
 
         public string FilePath { get => ((IFileModel)Model).FilePath; }
@@ -282,18 +303,34 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class ReplicateTreeNode : FilesTreeNode, ITipProvider
+    public class ReplicateTreeNode : FilesTreeNode
     {
-        private readonly string _chromatogramName;
-
-        public ReplicateTreeNode(IFileGroupModel group, IFileModel model) : base(model)
+        internal static ReplicateTreeNode CreateNode(IFileBase file)
         {
-            _chromatogramName = group.Name;
-    
-            ImageIndex = (int)FilesTree.ImageId.replicate;
+            if (!(file is IFileGroupModel model))
+                return null;
+
+            return new ReplicateTreeNode(model);
         }
 
-        public string ChromatogramName => _chromatogramName;
+        public ReplicateTreeNode(IFileGroupModel model) : base(model, FilesTree.ImageId.folder)
+        {
+        }
+    }
+
+    public class ReplicateSampleFileTreeNode : FilesTreeNode, ITipProvider
+    {
+        internal static ReplicateSampleFileTreeNode CreateNode(IFileBase file)
+        {
+            if (!(file is IFileModel model))
+                return null;
+
+            return new ReplicateSampleFileTreeNode(model);
+        }
+
+        public ReplicateSampleFileTreeNode(IFileModel model) : base(model, FilesTree.ImageId.replicate)
+        {
+        }
 
         public string FilePath { get => ((IFileModel)Model).FilePath; }
     
@@ -316,9 +353,16 @@ namespace pwiz.Skyline.Controls
 
     public class PeptideLibraryTreeNode : FilesTreeNode, ITipProvider
     {
-        public PeptideLibraryTreeNode(IFileModel model) : base(model)
+        internal static FilesTreeNode CreateNode(IFileBase file)
         {
-            ImageIndex = (int)FilesTree.ImageId.peptide;
+            if (!(file is IFileModel model))
+                return null; // this shouldn't happen
+
+            return new PeptideLibraryTreeNode(model);
+        }
+
+        public PeptideLibraryTreeNode(IFileModel model) : base(model, FilesTree.ImageId.peptide)
+        {
         }
 
         public string FilePath { get => ((IFileModel)Model).FilePath; }
@@ -342,7 +386,15 @@ namespace pwiz.Skyline.Controls
 
     public class BackgroundProteomeTreeNode : FilesTreeNode, ITipProvider
     {
-        public BackgroundProteomeTreeNode(IFileModel model) : base(model) { }
+        internal static FilesTreeNode CreateNode(IFileBase file)
+        {
+            if (!(file is IFileModel model))
+                return null;
+
+            return new BackgroundProteomeTreeNode(model);
+        }
+
+        public BackgroundProteomeTreeNode(IFileModel model) : base(model, FilesTree.ImageId.file) { }
     
         public string FilePath { get => ((IFileModel)Model).FilePath; }
     
@@ -361,14 +413,27 @@ namespace pwiz.Skyline.Controls
             customTable.Draw(g);
             return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
-    
     }
 
     public class AuditLogTreeNode : FilesTreeNode
     {
-        public AuditLogTreeNode(IFileModel model) : base(model)
+        public AuditLogTreeNode(AuditLogFileModel model) : base(model, FilesTree.ImageId.file)
         {
-            ImageIndex = (int)FilesTree.ImageId.file;
+        }
+    }
+
+    public static class ExtensionMethods
+    {
+        public static void ShowOrHide(this TreeNode treeNode, TreeNode root)
+        {
+            if (treeNode.Nodes.Count > 0 && !root.Nodes.Contains(treeNode))
+            {
+                root.Nodes.Add(treeNode);
+            }
+            else if (treeNode.Nodes.Count == 0 && root.Nodes.Contains(treeNode))
+            {
+                root.Nodes.Remove(treeNode);
+            }
         }
     }
 }

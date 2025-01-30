@@ -397,7 +397,7 @@ namespace pwiz.Skyline.Model.Results
             SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
         }
 
-        public FileType Type => FileType.chromatogram;
+        public FileType Type => FileType.replicates;
 
         public IEnumerable<IFileModel> Files
         {
@@ -1218,7 +1218,7 @@ namespace pwiz.Skyline.Model.Results
             return this;
         }
 
-        public FileType Type { get => FileType.chromatogram; }
+        public FileType Type { get => FileType.replicate_file; }
         public string Name { get => FilePath.GetFileName(); }
         string IFileModel.FilePath => FilePath.GetFilePath();
     }

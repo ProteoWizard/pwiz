@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls
             {
                 openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
             }
-            else if (selectedNode.GetType() == typeof(ReplicateTreeNode))
+            else if (selectedNode.GetType() == typeof(ReplicateSampleFileTreeNode))
             {
                 openContainingFolderMenuStripItem.Enabled = true;
             }
@@ -179,8 +179,12 @@ namespace pwiz.Skyline.Controls
                 case PeptideLibraryTreeNode peptideLibrary:
                     OpenLibraryExplorer(peptideLibrary.Text);
                     break;
-                case ReplicateTreeNode replicate:
-                    OpenReplicate(replicate.ChromatogramName);
+                case ReplicateSampleFileTreeNode replicate:
+                    // Replicates open using the replicate name, which is pulled from the parent tree node which
+                    // avoids adding a pointer to the parent in SrmSettings and putting a new field on the
+                    // replicate file's data model
+                    if (replicate.Parent is ReplicateTreeNode treeNodeParent)
+                        OpenReplicate(treeNodeParent.Name);
                     break;
             }
         }

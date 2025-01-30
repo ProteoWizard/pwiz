@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
-            Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+            Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
             // SCENARIO 2
             var emptyDocument = SrmDocumentHelper.MakeEmptyDocument();
@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
 
             // FilesTree should only have one set of nodes after opening a new document
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
-            Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+            Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
             RunUI(() =>
             {
