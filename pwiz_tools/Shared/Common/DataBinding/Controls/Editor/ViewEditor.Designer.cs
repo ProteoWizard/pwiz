@@ -71,6 +71,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOK
             // 
@@ -78,51 +79,14 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Name = "btnOK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnAPPLY
             // 
             resources.ApplyResources(this.btnAPPLY, "btnAPPLY");
             this.btnAPPLY.Name = "btnAPPLY";
-            this.btnAPPLY.Text = "Apply";
-            this.btnAPPLY.Left = this.btnOK.Left - this.btnAPPLY.Width - 5;
-            this.btnAPPLY.Top = this.btnOK.Top;
             this.btnAPPLY.UseVisualStyleBackColor = true;
-
-            this.Resize += (sender, e) =>
-            {
-                // Adjust btnAPPLY location after resize
-                this.btnAPPLY.Left = this.btnOK.Left - this.btnAPPLY.Width - 5;
-                this.btnAPPLY.Top = this.btnOK.Top;
-            };
-
-            this.Move += (sender, e) =>
-            {
-                    this.FormLocationX = this.Location.X;
-                    this.FormLocationY = this.Location.Y;   
-            };
-
-            this.btnAPPLY.Click += (sender, e) =>
-            {
-                this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-                this.DialogResult = DialogResult.None;
-                if (ParentControl != null)
-                    (ParentControl as NavBar).CustomizeView(true);
-            };
-
-            this.btnOK.Click += (sender, e) =>
-            {
-                this.DialogResult = DialogResult.OK;
-                this.Hide();
-                if (ParentControl != null)
-                    (ParentControl as NavBar).CustomizeView();
-            };
-
-            this.btnCancel.Click += (sender, e) =>
-            {
-                this.DialogResult = DialogResult.Cancel;
-                this.Hide();
-            };
-
+            this.btnAPPLY.Click += new System.EventHandler(this.btnAPPLY_Click);
             // 
             // label2
             // 
@@ -164,6 +128,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // toolStrip
             // 
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolButtonUndo,
             this.toolButtonRedo,
@@ -296,8 +261,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         #endregion
 
-        private int FormLocationX;
-        private int FormLocationY;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnAPPLY;

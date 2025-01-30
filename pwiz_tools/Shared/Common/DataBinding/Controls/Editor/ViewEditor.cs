@@ -43,8 +43,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private readonly ChooseColumnsTab _chooseColumnsTab;
         private readonly FilterTab _filterTab;
         private readonly SourceTab _sourceTab;
+
         private readonly List<ViewEditorWidget> _editorWidgets = new List<ViewEditorWidget>();
         // ReSharper restore PrivateFieldCanBeConvertedToLocalVariable
+
         private readonly List<KeyValuePair<ViewInfo, IList<PropertyPath>>> _undoStack;
         private int _undoIndex;
         private IList<PropertyPath> _selectedPaths = ImmutableList.Empty<PropertyPath>();
@@ -55,8 +57,13 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             set { tabPageSource = value; }
         }
 
-        public class ChooseColumnsView : IFormView {}
-        public class FilterView : IFormView {}
+        public class ChooseColumnsView : IFormView
+        {
+        }
+
+        public class FilterView : IFormView
+        {
+        }
         // public class SourceView : IFormView {}   inaccessible
 
         private static readonly IFormView[] TAB_PAGES =
@@ -65,6 +72,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         };
 
         public Control ParentControl { get; private set; }
+
         public ViewEditor(IViewContext viewContext, ViewInfo viewInfo, Control parent = null)
         {
             InitializeComponent();
@@ -75,45 +83,46 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             SetViewInfo(ViewInfo, new PropertyPath[0]);
             tbxViewName.Text = ViewSpec.Name;
             Icon = ViewContext.ApplicationIcon;
-            _chooseColumnsTab = new ChooseColumnsTab {Dock = DockStyle.Fill};
+            _chooseColumnsTab = new ChooseColumnsTab { Dock = DockStyle.Fill };
             tabPageColumns.Controls.Add(_chooseColumnsTab);
             _filterTab = new FilterTab { Dock = DockStyle.Fill };
             tabPageFilter.Controls.Add(_filterTab);
-            _sourceTab = new SourceTab{Dock = DockStyle.Fill};
+            _sourceTab = new SourceTab { Dock = DockStyle.Fill };
             tabPageSource.Controls.Add(_sourceTab);
             _editorWidgets.AddRange(new ViewEditorWidget[] { _chooseColumnsTab, _filterTab, _sourceTab });
             foreach (var tab in _editorWidgets)
             {
                 tab.SetViewEditor(this);
             }
+
             AddTooltipHandler(_chooseColumnsTab.AvailableFieldsTree);
             AddTooltipHandler(_filterTab.AvailableFieldsTree);
             ParentControl = parent;
         }
 
-        public ColumnDescriptor ParentColumn { get { return ViewInfo.ParentColumn; } }
+        public ColumnDescriptor ParentColumn
+        {
+            get { return ViewInfo.ParentColumn; }
+        }
+
         public IViewContext ViewContext { get; private set; }
         public ViewInfo OriginalViewInfo { get; private set; }
 
-        public ViewSpec ViewSpec { 
-            get
-            {
-                return ViewInfo.ViewSpec;
-            }
+        public ViewSpec ViewSpec
+        {
+            get { return ViewInfo.ViewSpec; }
         }
 
         public IEnumerable<PropertyPath> SelectedPaths
         {
-            get
-            {
-                return _selectedPaths;
-            }
+            get { return _selectedPaths; }
             set
             {
                 if (_selectedPaths.SequenceEqual(value))
                 {
                     return;
                 }
+
                 _selectedPaths = ImmutableList.ValueOf(value);
                 if (null != ViewChange)
                 {
@@ -124,14 +133,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public string ViewName
         {
-            get
-            {
-                return tbxViewName.Text;
-            }
-            set
-            {
-                tbxViewName.Text = value;
-            }
+            get { return tbxViewName.Text; }
+            set { tbxViewName.Text = value; }
         }
 
         public void SetViewInfo(ViewInfo viewInfo, IEnumerable<PropertyPath> selectedPaths)
@@ -141,7 +144,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 _inChangeView = true;
                 _undoStack.RemoveRange(_undoIndex, _undoStack.Count - _undoIndex);
-                _undoStack.Add(new KeyValuePair<ViewInfo, IList<PropertyPath>>(viewInfo, ImmutableList.ValueOf(selectedPaths ?? _selectedPaths)));
+                _undoStack.Add(new KeyValuePair<ViewInfo, IList<PropertyPath>>(viewInfo,
+                    ImmutableList.ValueOf(selectedPaths ?? _selectedPaths)));
                 ApplyViewInfo(_undoStack[_undoIndex++]);
             }
             finally
@@ -188,23 +192,18 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             // exception if the the cursor is positioned over the record selector column during loading.
         }
 
-        public ViewInfo ViewInfo
-        {
-            get; private set;
-        }
+        public ViewInfo ViewInfo { get; private set; }
 
         public bool ShowHiddenFields
         {
-            get
-            {
-                return _showHiddenFields;
-            }
+            get { return _showHiddenFields; }
             set
             {
                 if (ShowHiddenFields == value)
                 {
                     return;
                 }
+
                 _showHiddenFields = value;
                 toolButtonShowHiddenColumns.Checked = ShowHiddenFields;
                 ViewChange?.Invoke(this, new EventArgs());
@@ -213,10 +212,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public bool Alphabetical
         {
-            get
-            {
-                return _alphabetical;
-            }
+            get { return _alphabetical; }
             set
             {
                 if (Alphabetical == value)
@@ -232,10 +228,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public bool ShowSourceTab
         {
-            get
-            {
-                return tabPageSource.Parent == tabControl1;
-            }
+            get { return tabPageSource.Parent == tabControl1; }
             set
             {
                 if (ShowSourceTab == value)
@@ -279,6 +272,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return;
             }
+
             ValidateViewName(e);
         }
 
@@ -288,27 +282,33 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return;
             }
+
             var name = tbxViewName.Text;
             string errorMessage = null;
             if (string.IsNullOrEmpty(name))
             {
                 errorMessage = Resources.CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_;
             }
-            else 
+            else
             {
                 if (name != OriginalViewInfo.Name)
                 {
-                    if (ViewContext.GetViewSpecList(OriginalViewInfo.ViewGroup.Id).ViewSpecs.Any(viewSpec=>viewSpec.Name == name))
+                    if (ViewContext.GetViewSpecList(OriginalViewInfo.ViewGroup.Id).ViewSpecs
+                        .Any(viewSpec => viewSpec.Name == name))
                     {
-                        errorMessage = string.Format(Resources.ViewEditor_ValidateViewName_There_is_already_a_view_named___0___, name);
+                        errorMessage =
+                            string.Format(Resources.ViewEditor_ValidateViewName_There_is_already_a_view_named___0___,
+                                name);
                     }
                 }
             }
+
             if (errorMessage != null)
             {
                 ViewContext.ShowMessageBox(this, errorMessage, MessageBoxButtons.OK);
                 formClosingEventArgs.Cancel = true;
             }
+
             if (formClosingEventArgs.Cancel)
             {
                 tbxViewName.Focus();
@@ -321,6 +321,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return false;
             }
+
             return true;
         }
 
@@ -330,6 +331,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return;
             }
+
             try
             {
                 _inChangeView = true;
@@ -348,6 +350,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 return;
             }
+
             try
             {
                 _inChangeView = true;
@@ -368,18 +371,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public IEnumerable<ViewEditorWidget> ViewEditorWidgets
         {
-            get
-            {
-                return _editorWidgets.AsEnumerable();
-            }
+            get { return _editorWidgets.AsEnumerable(); }
         }
 
         public ChooseColumnsTab ChooseColumnsTab
         {
-            get
-            {
-                return _chooseColumnsTab;
-            }
+            get { return _chooseColumnsTab; }
         }
 
         public FilterTab FilterTab
@@ -389,14 +386,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public bool PreviewButtonVisible
         {
-            get
-            {
-                return btnPreview.Visible;
-            }
-            set
-            {
-                btnPreview.Visible = value;
-            }
+            get { return btnPreview.Visible; }
+            set { btnPreview.Visible = value; }
         }
 
         private void btnPreview_Click(object sender, EventArgs e)
@@ -411,7 +402,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ViewContext.Preview(this, viewInfo);
         }
 
-        public TabControl TabControl { get { return tabControl1; }}
+        public TabControl TabControl
+        {
+            get { return tabControl1; }
+        }
 
         public AvailableFieldsTree ActiveAvailableFieldsTree
         {
@@ -424,6 +418,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                     case 1:
                         return FilterTab.AvailableFieldsTree;
                 }
+
                 return null;
             }
         }
@@ -462,7 +457,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             else
             {
-                findColumnDlg = new FindColumnDlg {ViewEditor = this};
+                findColumnDlg = new FindColumnDlg { ViewEditor = this };
                 findColumnDlg.Show(this);
             }
         }
@@ -557,6 +552,27 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         private void toolButtonAlphabetical_Click(object sender, EventArgs e)
         {
             Alphabetical = !Alphabetical;
+        }
+
+        private void btnAPPLY_Click(object sender, EventArgs e)
+        {
+            this.StartPosition = FormStartPosition.Manual;
+            this.DialogResult = DialogResult.None;
+            (ParentControl as NavBar)?.CustomizeView(true);
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.OK;
+            this.Hide();
+            (ParentControl as NavBar)?.CustomizeView();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            this.DialogResult = DialogResult.Cancel;
+            this.Hide();
+
         }
     }
 }
