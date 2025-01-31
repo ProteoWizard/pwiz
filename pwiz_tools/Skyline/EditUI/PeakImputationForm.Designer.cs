@@ -118,7 +118,7 @@
             resources.ApplyResources(this.tbxMaxPeakWidthVariation, "tbxMaxPeakWidthVariation");
             this.tbxMaxPeakWidthVariation.Name = "tbxMaxPeakWidthVariation";
             this.toolTip1.SetToolTip(this.tbxMaxPeakWidthVariation, resources.GetString("tbxMaxPeakWidthVariation.ToolTip"));
-            this.tbxMaxPeakWidthVariation.TextChanged += new System.EventHandler(this.SettingsControlChanged);
+            this.tbxMaxPeakWidthVariation.Leave += new System.EventHandler(this.SettingsControlChanged);
             // 
             // label2
             // 

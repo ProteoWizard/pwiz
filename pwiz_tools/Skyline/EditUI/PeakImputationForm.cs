@@ -212,7 +212,7 @@ namespace pwiz.Skyline.EditUI
             ComboHelper.ReplaceItems(comboRtCalculator, alignmentOptions.Cast<object>().Prepend(string.Empty));
             comboRtCalculator.SelectedItem =
                 alignmentOptions.FirstOrDefault(option => option.Name == imputationSettings.RtCalcName);
-            tbxMaxPeakWidthVariation.Text = imputationSettings.MaxPeakWidthVariation?.ToString() ?? string.Empty;
+            tbxMaxPeakWidthVariation.Text = (imputationSettings.MaxPeakWidthVariation * 100)?.ToString() ?? string.Empty;
             tbxRtDeviationCutoff.Text = imputationSettings.MaxRtShift?.ToString() ?? string.Empty;
             var parameters = new PeakImputationRows.Parameters(document)
                 .ChangeOverwriteManualPeaks(cbxOverwriteManual.Checked);
