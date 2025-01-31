@@ -186,7 +186,7 @@ namespace pwiz.Skyline.EditUI
         private bool _inChange;
         private void OnDocumentChanged()
         {
-            if (_inChange)
+            if (_inChange || Disposing)
             {
                 return;
             }
