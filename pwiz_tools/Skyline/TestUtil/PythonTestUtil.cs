@@ -1,5 +1,5 @@
 ﻿/*
- * Author and maintainer: David Shteynberg <david.shteynberg .at. proton.me>,
+ * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -27,9 +27,7 @@ using System.Management;
 using System.Security.Principal;
 
 namespace pwiz.SkylineTestUtil
-{
-    [TestClass]
-    public class PythonTestUtil
+{ public class PythonTestUtil
     {
         private string _pythonVersion
         {
@@ -112,15 +110,13 @@ namespace pwiz.SkylineTestUtil
                 MultiButtonMsgDlg nvidiaDlg = null;
                 AbstractFunctionalTest.RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
                 {
-                    Assert.AreEqual(string.Format(
-                            ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
+                    Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
                             _pythonVersion, _toolName), pythonDlg.Message);
 
-                    AbstractFunctionalTest.OkDialog(pythonDlg, pythonDlg.OkDialog);
                     if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
                     {
-                        MessageDlg longPathDlg = null;
-                        longPathDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>();
+                        MessageDlg longPathDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog);
+
                         Assert.AreEqual(
                             string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
                             longPathDlg.Message);
@@ -131,9 +127,9 @@ namespace pwiz.SkylineTestUtil
                             {
                                 Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
                                 
-                                RunLongPathsDialog(longPathDlg);
+                                
 
-                                nvidiaDlg = AbstractFunctionalTest.WaitForOpenForm<MultiButtonMsgDlg>();
+                                nvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(RunLongPathsDialog(longPathDlg).OkDialog);
 
                                 Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
                                     nvidiaDlg.Message);
@@ -146,8 +142,10 @@ namespace pwiz.SkylineTestUtil
                                     Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
                                 else
                                     Console.WriteLine(@"Info: Nvidia libraries already installed");
-                                
-                                RunLongPathsDialog(longPathDlg);
+
+                                confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(RunLongPathsDialog(longPathDlg).OkDialog);
+                                ConfirmPythonSuccess(confirmDlg);
+
                             }
                         }
                         else
@@ -164,7 +162,7 @@ namespace pwiz.SkylineTestUtil
                         {
                             Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
 
-                            nvidiaDlg = AbstractFunctionalTest.WaitForOpenForm<MultiButtonMsgDlg>();
+                            nvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(pythonDlg.OkDialog);
                             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
                                 nvidiaDlg.Message);
                             RunNvidiaDialog(nvidiaDlg);
@@ -179,13 +177,8 @@ namespace pwiz.SkylineTestUtil
                             {
                                 Console.WriteLine(@"Info: Nvidia libraries already installed");
                             }
-                            confirmDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>(600000);
-                            //PauseTest("Stop to check which Dialog is open");
-                            Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment), confirmDlg.Message);
-                            AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
-                            if (!confirmDlg.IsDisposed)
-                                confirmDlg.Dispose();
-
+                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, 600000);
+                            ConfirmPythonSuccess(confirmDlg);
                         }
                     }
          
@@ -206,26 +199,36 @@ namespace pwiz.SkylineTestUtil
 
         private void RunNvidiaDialog(MultiButtonMsgDlg nvidiaDlg)
         {
-            nvidiaDlg.ClickNo();
-            MessageDlg confirmDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>(600000);
-            Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment),
-                confirmDlg.Message);
-            confirmDlg.OkDialog();
+            // Running as non-admin, say 'No'
+            MessageDlg confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickNo, 600000);
+            ConfirmPythonSuccess(confirmDlg);
     
             if (!nvidiaDlg.IsDisposed)
                 nvidiaDlg.Dispose();
         }
-        private void RunLongPathsDialog(MessageDlg longPathDlg)
+        private MessageDlg RunLongPathsDialog(MessageDlg longPathDlg)
         {
             Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
             AbstractFunctionalTest.OkDialog(longPathDlg, longPathDlg.OkDialog);
+            
+            MessageDlg okDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(longPathDlg.OkDialog);
+            
             Console.WriteLine(@"Info: Successfully set LongPathsEnabled registry key to 1");
             _undoRegistry = true;
-            MessageDlg okDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>();
-            okDlg.OkDialog();
 
             if (!longPathDlg.IsDisposed)
                 longPathDlg.Dispose();
+
+            return okDlg;
+        }
+
+        private void ConfirmPythonSuccess(MessageDlg confirmDlg)
+        {
+            Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment),
+                confirmDlg.Message);
+            AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
+            if (!confirmDlg.IsDisposed)
+                confirmDlg.Dispose();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿/*
- * Maintainer: David Shteynberg <david.shteynberg .at. proton.me>,
+ * Author: David Shteynberg <dshteyn .at. proteinms.net>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -478,6 +478,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
+                pr.EnableImmediateLog = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
@@ -515,6 +516,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
+                pr.EnableImmediateLog = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
@@ -597,6 +599,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
+                pr.EnableImmediateLog = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)

@@ -61,7 +61,16 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to  Accession: {0}, Name: {1}, Comment: {2}.
+        ///   Looks up a localized string similar to Building library....
+        /// </summary>
+        public static string BuildingPrecursorTable_Building_library {
+            get {
+                return ResourceManager.GetString("BuildingPrecursorTable_Building_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Accession: {0}, Name: {1}, Comment: {2}.
         /// </summary>
         public static string BuildPrecursorTable_ModificationType {
             get {
