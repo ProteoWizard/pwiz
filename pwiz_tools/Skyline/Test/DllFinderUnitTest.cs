@@ -128,7 +128,7 @@ namespace pwiz.SkylineTest
             }
 
             // All files in the test that are not starting in the destination folder are expected to be copied
-            Assert.AreEqual(testCase.Files.Count(f => !Equals(destDir, Path.GetDirectoryName(f.Path))),
+            Assert.AreEqual(testCase.ExpectedCopyCount ?? testCase.Files.Count(f => !Equals(destDir, Path.GetDirectoryName(f.Path))),
                 testServices.CopiedFiles.Count);
         }
 
@@ -307,6 +307,7 @@ namespace pwiz.SkylineTest
             public List<FileData> Files { get; set; }
             public List<RegistrySubKeyData> RegistrySubKeys { get; set; }
             public int? ExpectException { get; set; }
+            public int? ExpectedCopyCount { get; set; }
         }
 
         public class FileData
