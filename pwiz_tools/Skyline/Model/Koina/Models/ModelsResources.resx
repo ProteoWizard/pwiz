@@ -139,6 +139,9 @@
     <value>Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case.</value>
   </data>
   <data name="BuildPrecursorTable_ModificationType" xml:space="preserve">
-    <value> Accession: {0}, Name: {1}, Comment: {2}</value>
+    <value>Accession: {0}, Name: {1}, Comment: {2}</value>
+  </data>
+  <data name="BuildingPrecursorTable_Building_library" xml:space="preserve">
+    <value>Building library...</value>
   </data>
 </root>

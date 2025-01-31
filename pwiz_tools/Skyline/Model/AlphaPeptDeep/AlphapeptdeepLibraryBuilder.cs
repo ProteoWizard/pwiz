@@ -478,6 +478,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
+                pr.EnableImmediateLog = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
@@ -515,6 +516,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
+                pr.EnableImmediateLog = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
@@ -597,6 +599,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
+                pr.EnableImmediateLog = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
