@@ -304,7 +304,7 @@ namespace pwiz.Common.DataBinding.Controls
                 viewSpec = viewSpec.SetName(string.Empty);
                 viewGroup = ViewContext.DefaultViewGroup;
             }
-            var newView = ViewContext.CustomizeView(this, viewSpec, viewGroup);
+            var newView = ViewContext.CustomizeView(this, viewSpec, viewGroup, true);
             if (newView == null)
             {
                 return;
@@ -323,7 +323,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 viewGroup = ViewContext.DefaultViewGroup;
             }
-            var newView = ViewContext.CustomizeView(this, BindingListSource.ViewSpec.SetName(null), viewGroup);
+            var newView = ViewContext.CustomizeView(this, BindingListSource.ViewSpec.SetName(null), viewGroup, true);
             if (newView == null)
             {
                 return;

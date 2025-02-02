@@ -945,9 +945,9 @@ namespace pwiz.Skyline.Controls.Databinding
             return true;
         }
         public Control ParentControl { get; private set; }
-        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control owner = null )
+        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control owner = null, bool showApply = false )
         {
-            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec, owner);
+            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec, owner, showApply);
             viewEditor.Alphabetical = Settings.Default.AlphabeticalReportEditor;
             viewEditor.Closed += ViewEditorClosed;
 

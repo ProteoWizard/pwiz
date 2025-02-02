@@ -42,9 +42,9 @@ namespace pwiz.Skyline.Controls.Databinding
         public bool EnablePreview { get; set; }
 
 
-        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control owner = null)
+        protected override ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control owner = null, bool showApply = false)
         {
-            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec, owner);
+            var viewEditor = base.CreateViewEditor(viewGroup, viewSpec, owner, showApply);
             viewEditor.SetViewTransformer(new DocumentViewTransformer());
             viewEditor.AddViewEditorWidget(new PivotReplicateAndIsotopeLabelWidget {Dock = DockStyle.Left});
 #if DEBUG

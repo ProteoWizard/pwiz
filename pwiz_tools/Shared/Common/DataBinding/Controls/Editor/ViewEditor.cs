@@ -73,8 +73,10 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public Control ParentControl { get; private set; }
 
-        public ViewEditor(IViewContext viewContext, ViewInfo viewInfo, Control parent = null)
+        public bool ShowApply { get; private set; }
+        public ViewEditor(IViewContext viewContext, ViewInfo viewInfo, Control parent = null, bool showApply = false)
         {
+            ShowApply = showApply;
             InitializeComponent();
             ViewContext = viewContext;
             ViewInfo = OriginalViewInfo = viewInfo;
@@ -98,6 +100,8 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             AddTooltipHandler(_chooseColumnsTab.AvailableFieldsTree);
             AddTooltipHandler(_filterTab.AvailableFieldsTree);
             ParentControl = parent;
+            btnAPPLY.Visible = showApply;
+
         }
 
         public ColumnDescriptor ParentColumn
@@ -556,23 +560,34 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         private void btnAPPLY_Click(object sender, EventArgs e)
         {
-            this.StartPosition = FormStartPosition.Manual;
-            this.DialogResult = DialogResult.None;
-            (ParentControl as NavBar)?.CustomizeView(true);
+            StartPosition = FormStartPosition.Manual;
+            DialogResult = DialogResult.None;
+            if (ParentControl is NavBar)
+                (ParentControl as NavBar)?.CustomizeView(true);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
-            this.Hide();
-            (ParentControl as NavBar)?.CustomizeView();
+            DialogResult = DialogResult.OK;
+            Hide();
+            if (ParentControl is NavBar)
+                (ParentControl as NavBar)?.CustomizeView();
+           //if (ParentControl is ManageViewsForm)
+           //    (ParentControl as ManageViewsForm)?.EditView();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.Cancel;
-            this.Hide();
-
+            DialogResult = DialogResult.Cancel;
+            Hide();
+            if (ParentControl is NavBar)
+                (ParentControl as NavBar)?.CustomizeView();
+            if (ParentControl is ManageViewsForm)
+            {
+                (ParentControl as ManageViewsForm)?.RetractView();
+                Close();
+            }
+            Dispose();
         }
     }
 }

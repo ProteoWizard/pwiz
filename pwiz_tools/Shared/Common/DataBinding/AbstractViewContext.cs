@@ -332,48 +332,80 @@ namespace pwiz.Common.DataBinding
             Clipboard.SetDataObject(dataObject);
         }
 
-        protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control parent = null)
+        protected virtual ViewEditor CreateViewEditor(ViewGroup viewGroup, ViewSpec viewSpec, Control parent = null, bool showApply = false)
         {
-            ViewEditor viewEditor = new ViewEditor(this, GetViewInfo(viewGroup, viewSpec), parent);
+            ViewEditor viewEditor = new ViewEditor(this, GetViewInfo(viewGroup, viewSpec), parent, showApply);
             return viewEditor;
         }
 
-        public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath)
+        public virtual ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewPath,
+            bool showApply = false)
         {
-            if (CustomizedViewForm == null || CustomizedViewForm.IsDisposed) 
-            { 
-                CustomizedViewForm = CreateViewEditor(viewPath, viewSpec, owner);
+            ViewInfo viewInfo = null;
+            if (CustomizedViewForm == null || CustomizedViewForm.IsDisposed)
+            {
+                CustomizedViewForm = CreateViewEditor(viewPath, viewSpec, owner, showApply);
+                viewInfo = CustomizedViewForm.ViewInfo;
+                if (!showApply) //modal
+                    FormUtil.ShowDialog(owner, CustomizedViewForm);
             }
-            if (!CustomizedViewForm.Visible)
+
+            if (showApply && !CustomizedViewForm.Visible)
+            {
+                //non-modal 
                 FormUtil.Show(owner, CustomizedViewForm);
-            ViewInfo viewInfo = CustomizedViewForm.ViewInfo;
-            CustomizedViewForm.BringToFront();
-            if ( CustomizedViewForm.DialogResult != DialogResult.OK)
-            {                
-                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
-             
-                SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
-                var newSpec = viewInfo.GetViewSpec();
-                return viewInfo.GetViewSpec();
+
+                viewInfo = CustomizedViewForm.ViewInfo;
+                CustomizedViewForm.BringToFront();
             }
-            else if (CustomizedViewForm.DialogResult == DialogResult.Cancel)
+            
+            if (viewInfo == null)
+                viewInfo = CustomizedViewForm.ViewInfo;
+
+            if (CustomizedViewForm.DialogResult == DialogResult.Cancel)
             {
                 CustomizedViewForm.Dispose();
                 CustomizedViewForm = null;
                 return null;
             }
+            else if ( CustomizedViewForm.DialogResult != DialogResult.OK)
+            {                
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
+                SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+                var newSpec = viewInfo.GetViewSpec();
+                return viewInfo.GetViewSpec();
+            }
+            else if (!showApply && CustomizedViewForm.DialogResult == DialogResult.OK)
+            {
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
+                SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+                var newSpec = viewInfo.GetViewSpec();
+                CustomizedViewForm.Close();
+                return viewInfo.GetViewSpec();
+            }
             // Consider: if save fails, reshow CustomizeViewForm?
-            viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
+            viewInfo = new ViewInfo(viewInfo.ParentColumn,
+                viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
             SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
-            CustomizedViewForm.Dispose();
-            CustomizedViewForm = null;
-            return viewInfo.GetViewSpec();         
+
+//            if (!showApply)
+//            {
+//                CustomizedViewForm.Close();
+ //           }
+ //           else
+  //          {
+                CustomizedViewForm.Dispose();
+                CustomizedViewForm = null;
+  //          }
+
+
+            return viewInfo.GetViewSpec();
 
         }
 
-        public ViewSpec NewView(Control owner, ViewGroup viewPath)
+        public ViewSpec NewView(Control owner, ViewGroup viewPath, bool showApply = false)
         {
-            return CustomizeView(owner, GetBlankView(), viewPath);
+            return CustomizeView(owner, GetBlankView(), viewPath, showApply);
         }
 
         protected virtual ViewSpec GetBlankView()
