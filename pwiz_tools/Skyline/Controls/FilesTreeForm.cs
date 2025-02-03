@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private void FilesTree_ShowContainingFolderMenuItem(object sender, System.EventArgs e)
+        private void FilesTree_ShowContainingFolderMenuItem(object sender, EventArgs e)
         {
             if (FilesTree.SelectedNode.Tag is IFileModel file)
             {
