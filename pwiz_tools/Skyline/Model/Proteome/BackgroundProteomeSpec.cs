@@ -33,6 +33,11 @@ using Protein = pwiz.ProteomeDatabase.API.Protein;
 namespace pwiz.Skyline.Model.Proteome
 {
     /// <summary>
+    /// Identity class to allow identity equality on <see cref="BackgroundProteomeSpec"/>.
+    /// </summary>
+    public sealed class BackgroundProteomeSpecId : Identity {}
+
+    /// <summary>
     /// Class representing a background proteome database.  Background proteome databases have a name,
     /// as well as a path to the file on disk.
     /// </summary>
@@ -42,11 +47,13 @@ namespace pwiz.Skyline.Model.Proteome
         public BackgroundProteomeSpec(string name, string databasePath)
             : base(name)
         {
+            Id = new BackgroundProteomeSpecId();
             DatabasePath = databasePath;
         }
 
         protected BackgroundProteomeSpec()
         {
+            Id = new BackgroundProteomeSpecId();
         }
 
         private enum Attr
@@ -62,6 +69,7 @@ namespace pwiz.Skyline.Model.Proteome
         
         public string DatabasePath { get; private set; }
 
+        public Identity Id { get; private set; }
         public string FileName { get => Name; }
         public string FilePath { get => DatabasePath; }
         public FileType Type { get => FileType.background_proteome; }

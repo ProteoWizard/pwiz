@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -105,6 +107,9 @@ namespace pwiz.Skyline.Controls
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
         }
 
+        // TODO (ekoneil): should folders appear in the tree when empty? Example: when there's no Background Proteome, should
+        //                 its folder be removed?
+        // CONSIDER: support updating folders on document change. Ex: to show file counts in tooltips, etc.
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
             var document = DocumentContainer.DocumentUI;
@@ -164,53 +169,136 @@ namespace pwiz.Skyline.Controls
             _projectFilesRoot.ShowOrHide(Root);
         }
 
-        internal delegate FilesTreeNode CreateFilesTreeNode(IFileBase model);
+        private delegate FilesTreeNode CreateFilesTreeNode(IFileBase model);
 
-        // TODO (ekoneil): uses file names as keys and assumes file names are unique. Probably not a safe assumption.
-        //                 Instead, could use IIdentityContainer.Id if supported throughout the data model.
-        //                 Currently (1) protein libraries and (2) background proteome do not support identity.
-        //                 No issue with this - ok to add Id().
-        // TODO (ekoneil): should folders appear in the tree when empty? Example: when there's no Background Proteome, should
-        //                 its folder be removed?
-        // TODO (ekoneil): position of new nodes is not maintained when inserted into the tree. Should it be?
+        // CONSIDER: does FilesTree need to support selection like in SequenceTree / SrmTreeNode?
+        // CONSIDER: refactor for more code reuse with SrmTreeNode
         internal static void MergeNodes(IEnumerable<IFileBase> docFiles, TreeNodeCollection treeNodes)
         {
-            var visitedKeys = new List<string>();
+            // need support for lookup by index, so convert to list for now
+            var docFilesList = docFiles.ToList();
 
-            foreach (var model in docFiles)
+            IFileBase nodeDoc = null;
+
+            // Keep remaining tree nodes into a map by the identity global index.
+            var remaining = new Dictionary<int, FilesTreeNode>();
+
+            // Enumerate as many tree nodes as possible that have either an
+            // exact reference match with its corresponding DocNode in the list, or an
+            // identity match with its corresponding DocNode.
+            var i = 0;
+
+            do
             {
-                // file missing from tree, so create node and add it 
-                if (!treeNodes.ContainsKey(model.Name))
+                // Match as many document nodes to existing tree nodes as possible.
+                var count = Math.Min(docFilesList.Count, treeNodes.Count);
+                while (i < count)
                 {
-                    var createNodeDelegate = TREE_NODE_DELEGATES[model.Type];
+                    nodeDoc = docFilesList[i];
+                    var nodeTree = treeNodes[i] as FilesTreeNode;
+                    if (nodeTree == null)
+                        break;
+                    if (!ReferenceEquals(nodeTree.Model, nodeDoc))
+                    {
+                        if (ReferenceEquals(nodeTree.Model.Id, nodeDoc.Id))
+                        {
+                            nodeTree.Model = nodeDoc;
+                        }
+                        else
+                        {
+                            // If no usable equality, and not in the map of nodes already
+                            // removed, then this loop cannot continue.
+                            if (!remaining.TryGetValue(nodeDoc.Id.GlobalIndex, out nodeTree))
+                                break;
 
-                    var node = createNodeDelegate(model);
-                    treeNodes.Add(node);
+                            // Found node with the same ID, so replace its doc node, if not
+                            // reference equal to the one looked up.
+                            if (!ReferenceEquals(nodeTree.Model, nodeDoc))
+                            {
+                                nodeTree.Model = nodeDoc;
+                            }
+                            treeNodes.Insert(i, nodeTree);
+                        }
+                    }
+                    i++;
                 }
-                // file already in tree, so update its model
+
+                // Add unmatched nodes to a map by GlobalIndex, until the next
+                // document node is encountered, or all remaining nodes have been
+                // added.
+                var remove = new Dictionary<int, FilesTreeNode>();
+                for (int iRemove = i; iRemove < treeNodes.Count; iRemove++)
+                {
+                    FilesTreeNode nodeTree = treeNodes[iRemove] as FilesTreeNode;
+                    if (nodeTree == null)
+                        break;
+                    // Stop removing, if the next node in the document is encountered.
+                    if (nodeDoc != null && ReferenceEquals(nodeTree.Model.Id, nodeDoc.Id))
+                        break;
+
+                    remove.Add(nodeTree.Model.Id.GlobalIndex, nodeTree);
+                    remaining.Add(nodeTree.Model.Id.GlobalIndex, nodeTree);
+                }
+
+                // Remove the newly mapped children from the tree itself for now.
+                foreach (var node in remove.Values)
+                    node.Remove();
+            }
+            // Loop, if not all tree nodes have been removed or matched.
+            while (i < treeNodes.Count && treeNodes[i] is FilesTreeNode);
+
+            var firstInsertPosition = i;
+            var nodesToInsert = new List<TreeNode>(docFilesList.Count - firstInsertPosition);
+            // Enumerate remaining DocNodes adding to the tree either corresponding
+            // TreeNodes from the map, or creating new TreeNodes as necessary.
+            for (; i < docFilesList.Count; i++)
+            {
+                nodeDoc = docFilesList[i];
+                FilesTreeNode nodeTree;
+                if (!remaining.TryGetValue(nodeDoc.Id.GlobalIndex, out nodeTree))
+                {
+                    var createNodeDelegate = TREE_NODE_DELEGATES[nodeDoc.Type];
+                    nodeTree = createNodeDelegate(nodeDoc);
+
+                    nodesToInsert.Add(nodeTree);
+                }
                 else
                 {
-                    var matchingTreeNode = treeNodes.Find(model.Name, false)[0] as FilesTreeNode;
-
-                    if (matchingTreeNode != null)
-                        matchingTreeNode.Model = model;
+                    nodesToInsert.Add(nodeTree);
                 }
-
-                visitedKeys.Add(model.Name);
             }
 
-            // look through tree for files now missing from the data model and remove corresponding TreeNode
-            for (var i = 0; i < treeNodes.Count; i++)
+            if (firstInsertPosition == treeNodes.Count)
             {
-                var treeNode = treeNodes[i] as FilesTreeNode;
-                var nameFromTreeNode = treeNode?.Model.Name;
+                treeNodes.AddRange(nodesToInsert.ToArray());
+            }
+            else
+            {
+                for (var insertNodeIndex = 0; insertNodeIndex < nodesToInsert.Count; insertNodeIndex++)
+                {
+                    treeNodes.Insert(insertNodeIndex + firstInsertPosition, nodesToInsert[insertNodeIndex]);
+                }
+            }
 
-                if (!visitedKeys.Contains(nameFromTreeNode))
-                    treeNodes.RemoveAt(i);
+            // If necessary, update the model for these new tree nodes. This needs to be done after 
+            // the nodes have been added to the tree, because otherwise the icons may not update correctly.
+            for (var insertNodeIndex = 0; insertNodeIndex < nodesToInsert.Count; insertNodeIndex++)
+            {
+                var nodeTree = (FilesTreeNode)treeNodes[insertNodeIndex + firstInsertPosition];
+                var docNode = docFilesList[insertNodeIndex + firstInsertPosition];
+                // Best replicate display, requires that the node have correct
+                // parenting, before the text and icons can be set correctly.
+                // So, force a model change to update those values.
+                // Also, TransitionGroups and Transitions need to know their Peptide in order
+                // to display ratios, so they must be updated when their parent changes
+                if (!ReferenceEquals(docNode, nodeTree.Model))
+                {
+                    nodeTree.Model = docNode;
+                }
             }
 
             // finished merging latest data model for these nodes. Now, recursively update any nodes whose model has children
-            for(var i = 0; i < treeNodes.Count; i++)
+            for (i = 0; i < treeNodes.Count; i++)
             {
                 var treeNode = treeNodes[i] as FilesTreeNode;
                 var model = treeNode?.Model;
@@ -245,8 +333,6 @@ namespace pwiz.Skyline.Controls
     {
         public FilesTreeNode(IFileBase model, FilesTree.ImageId imageId)
         {
-            Model = model;
-
             // Configure inherited TreeNode properties
             Tag = model;
             Name = Model.Name;
@@ -254,8 +340,22 @@ namespace pwiz.Skyline.Controls
             ImageIndex = (int)imageId;
         }
 
-        // TODO: do FileTree nodes need to update view state? If so, start firing a ModelChange event.
-        public IFileBase Model { get; set; }
+        public IFileBase Model
+        {
+            get => (IFileBase)Tag;
+            set
+            {
+                Tag = value;
+
+                OnModelChanged();
+            }
+        }
+
+        protected virtual void OnModelChanged()
+        {
+            Name = Model.Name;
+            Text = Model.Name;
+        }
     }
 
     public class SkylineRootTreeNode : FilesTreeNode, ITipProvider
@@ -337,7 +437,7 @@ namespace pwiz.Skyline.Controls
         internal static FilesTreeNode CreateNode(IFileBase file)
         {
             if (!(file is IFileModel model))
-                return null; // this shouldn't happen
+                return null;
 
             return new PeptideLibraryTreeNode(model);
         }
@@ -448,14 +548,20 @@ namespace pwiz.Skyline.Controls
         }
     }
 
+    public sealed class SkylineFileModelId : Identity { };
+    public sealed class AuditLogFileModelId : Identity { };
+    public sealed class ViewFileModelId : Identity { };
+
     public class SkylineFileModel : IFileModel
     {
         public SkylineFileModel(string name, string filePath)
         {
+            Id = new SkylineFileModelId();
             Name = name;
             FilePath = filePath;
         }
 
+        public Identity Id { get; private set; }
         public FileType Type { get => FileType.sky; }
         public string Name { get; }
         public string FilePath { get; }
@@ -465,10 +571,11 @@ namespace pwiz.Skyline.Controls
     {
         public AuditLogFileModel(string name, string filePath)
         {
+            Id = new AuditLogFileModelId();
             Name = name;
             FilePath = filePath;
         }
-
+        public Identity Id { get; private set; }
         public FileType Type { get => FileType.sky_audit_log; }
         public string Name { get; }
         public string FilePath { get; }
@@ -478,10 +585,12 @@ namespace pwiz.Skyline.Controls
     {
         public ViewFileModel(string name, string filePath)
         {
+            Id = new ViewFileModelId();    
             Name = name;
             FilePath = filePath;
         }
 
+        public Identity Id { get; private set; }
         public FileType Type { get => FileType.sky_view; }
         public string Name { get; }
         public string FilePath { get; }

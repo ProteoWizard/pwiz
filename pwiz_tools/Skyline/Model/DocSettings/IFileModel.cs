@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.DocSettings
         sky_view
     }
 
-    public interface IFileBase
+    public interface IFileBase : IIdentiyContainer
     {
         FileType Type { get; }
 
