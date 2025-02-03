@@ -23,7 +23,6 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
 using System;
 using System.IO;
-using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Controls
 {
@@ -45,7 +44,6 @@ namespace pwiz.Skyline.Controls
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
-            filesTree.NewDocument += FilesTree_NewDocument;
 
             // FilesTree => context menu
             filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
@@ -129,16 +127,6 @@ namespace pwiz.Skyline.Controls
             return base.GetPersistentString() + @"|" + FilesTree.GetPersistentString();
         }
 
-        // Event handler to adjust FilesTree nodes related to "project" level files - ex: skyl, view, etc.
-        private void FilesTree_NewDocument(object sender, EventArgs e)
-        {
-            var auditLogFilePath = SrmDocument.GetAuditLogPath(SkylineWindow.DocumentFilePath);
-            FilesTree.ProjectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
-
-            var viewFilePath = SkylineWindow.GetViewFile(SkylineWindow.DocumentFilePath);
-            FilesTree.ProjectFilesRoot.Nodes.Add(new ViewFileTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
-        }
-
         // FilesTree => display ToolTip
         private void FilesTree_MouseMove(object sender, MouseEventArgs e)
         {
@@ -175,7 +163,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private void FilesTree_ShowContainingFolderMenuItem_Click(object sender, System.EventArgs e)
+        private void FilesTree_ShowContainingFolderMenuItem(object sender, System.EventArgs e)
         {
             if (FilesTree.SelectedNode.Tag is IFileModel file)
             {

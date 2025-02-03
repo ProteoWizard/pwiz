@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -24,7 +23,6 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
-using static pwiz.Skyline.Model.Lib.EncyclopeDiaLibrary;
 
 namespace pwiz.Skyline.Controls
 {
@@ -33,8 +31,7 @@ namespace pwiz.Skyline.Controls
         private readonly TreeNodeMS _chromatogramRoot;
         private readonly TreeNodeMS _peptideLibrariesRoot;
         private readonly TreeNodeMS _backgroundProteomeRoot;
-
-        public event EventHandler NewDocument;
+        private readonly TreeNodeMS _projectFilesRoot;
 
         // Used while merging a file data model with a FilesTree. Each entry explains how to
         // create a specific type of TreeNode given a type of file. Entries in this dict will
@@ -75,7 +72,7 @@ namespace pwiz.Skyline.Controls
             _chromatogramRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Replicates);
             _peptideLibrariesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Libraries);
             _backgroundProteomeRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
-            ProjectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
+            _projectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
         }
 
         [Browsable(false)]
@@ -85,10 +82,6 @@ namespace pwiz.Skyline.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineRootTreeNode Root { get; private set; }
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public TreeNodeMS ProjectFilesRoot { get; private set; }
 
         public string RootNodeText()
         {
@@ -137,7 +130,12 @@ namespace pwiz.Skyline.Controls
 
                 Nodes.Add(Root);
 
-                NewDocument?.Invoke(this, EventArgs.Empty);
+                // document changed, so re-wire project-level files
+                var auditLogFilePath = SrmDocument.GetAuditLogPath(DocumentContainer.DocumentFilePath);
+                _projectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
+
+                var viewFilePath = SkylineWindow.GetViewFile(DocumentContainer.DocumentFilePath);
+                _projectFilesRoot.Nodes.Add(new ViewFileTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
             }
 
             var files = Document.Settings.Files;
@@ -163,7 +161,7 @@ namespace pwiz.Skyline.Controls
                 _backgroundProteomeRoot.ShowOrHide(Root);
             }
 
-            ProjectFilesRoot.ShowOrHide(Root);
+            _projectFilesRoot.ShowOrHide(Root);
         }
 
         internal delegate FilesTreeNode CreateFilesTreeNode(IFileBase model);
@@ -211,7 +209,7 @@ namespace pwiz.Skyline.Controls
                     treeNodes.RemoveAt(i);
             }
 
-            // finished merging latest data model at this level. Recursively update if any model has children
+            // finished merging latest data model for these nodes. Now, recursively update any nodes whose model has children
             for(var i = 0; i < treeNodes.Count; i++)
             {
                 var treeNode = treeNodes[i] as FilesTreeNode;

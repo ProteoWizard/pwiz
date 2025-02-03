@@ -75,7 +75,7 @@ namespace pwiz.Skyline.Controls
             this.openContainingFolderMenuStripItem.Image = global::pwiz.Skyline.Properties.Resources.Folder;
             resources.ApplyResources(this.openContainingFolderMenuStripItem, "openContainingFolderMenuStripItem");
             this.openContainingFolderMenuStripItem.Name = "openContainingFolderMenuStripItem";
-            this.openContainingFolderMenuStripItem.Click += new System.EventHandler(this.FilesTree_ShowContainingFolderMenuItem_Click);
+            this.openContainingFolderMenuStripItem.Click += new System.EventHandler(this.FilesTree_ShowContainingFolderMenuItem);
             // 
             // FilesTreeForm
             // 
