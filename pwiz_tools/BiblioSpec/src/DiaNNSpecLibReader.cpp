@@ -691,7 +691,7 @@ bool DiaNNSpecLibReader::parseFile()
         reportReader.read_header(io::ignore_extra_column, "Run", "File.Name", "Protein.Group", "Precursor.Id", "Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
         char *run, *fileName, *proteinGrp, *precursorId;
         float qValue, rt, rtStart, rtStop, im;
-        string currentRun;
+        string currentRun, currentFilename;
         hasSkippedRuns = false;
         while (reportReader.read_row(run, fileName, proteinGrp, precursorId, qValue, rt, rtStart, rtStop, im))
         {
@@ -701,6 +701,7 @@ bool DiaNNSpecLibReader::parseFile()
                 if (processedRuns.count(run) > 0)
                     continue;
                 currentRun = run;
+                currentFilename = fileName;
                 setSpecFileName(run, false);  // make status output report the current spec file
             }
             else if (!bal::equals(currentRun.c_str(), run))
@@ -735,8 +736,14 @@ bool DiaNNSpecLibReader::parseFile()
             psms_.emplace_back(psm);
         }
 
+        // parse spectrum filename from File.Name column (really filepath)
+        bfs::path currentRunFilepath = bal::replace_all_copy(currentFilename, "\\", "/"); // backslash to slash should work on both Linux and Windows
+        string currentRunFilename = currentRunFilepath.filename().string();
+        if (bal::iends_with(currentRunFilename, ".dia")) // trim DIA extension if present
+            currentRunFilename = currentRunFilename.substr(0, currentRunFilename.length() - 4);
+
         // insert PSMs for the current run
-        buildTables(GENERIC_QVALUE, currentRun);
+        buildTables(GENERIC_QVALUE, currentRunFilename);
         processedRuns.insert(currentRun);
         currentRun.clear();
     }
