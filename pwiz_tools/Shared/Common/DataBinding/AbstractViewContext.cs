@@ -345,7 +345,6 @@ namespace pwiz.Common.DataBinding
             if (CustomizedViewForm == null || CustomizedViewForm.IsDisposed)
             {
                 CustomizedViewForm = CreateViewEditor(viewPath, viewSpec, owner, showApply);
-                viewInfo = CustomizedViewForm.ViewInfo;
                 if (!showApply) //modal
                     FormUtil.ShowDialog(owner, CustomizedViewForm);
             }
@@ -366,6 +365,7 @@ namespace pwiz.Common.DataBinding
             {
                 CustomizedViewForm.Dispose();
                 CustomizedViewForm = null;
+                if (owner is NavBar) ((NavBar)owner).EditLock = false;
                 return null;
             }
             else if ( CustomizedViewForm.DialogResult != DialogResult.OK)
@@ -388,16 +388,10 @@ namespace pwiz.Common.DataBinding
                 viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
             SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
 
-//            if (!showApply)
-//            {
-//                CustomizedViewForm.Close();
- //           }
- //           else
-  //          {
                 CustomizedViewForm.Dispose();
                 CustomizedViewForm = null;
-  //          }
 
+            if (owner is NavBar) ((NavBar)owner).EditLock = false;
 
             return viewInfo.GetViewSpec();
 

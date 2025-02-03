@@ -589,5 +589,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
             Dispose();
         }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            // Additional actions go here
+            if (ParentControl is NavBar) ((NavBar)ParentControl).EditLock = false;
+        }
     }
 }

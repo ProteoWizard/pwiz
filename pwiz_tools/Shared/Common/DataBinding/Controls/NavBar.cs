@@ -292,6 +292,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         void OnEditView(object sender, EventArgs eventArgs)
         {
+            EditLock = true;
             CustomizeView();
         }
 
@@ -336,9 +337,11 @@ namespace pwiz.Common.DataBinding.Controls
             ManageViews();
         }
 
+        public bool EditLock { get; set; }
         public void ManageViews()
         {
-            ViewContext.ManageViews(this);
+            if (!EditLock)
+                ViewContext.ManageViews(this);
         }
 
         void OnExport(object sender, EventArgs eventArgs)
