@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
@@ -1515,6 +1516,19 @@ namespace pwiz.Skyline.Controls
 
         private Type[] treeNodeTypes = new Type[] {typeof(SrmTreeNodeParent), typeof(PeptideGroupTreeNode), typeof(PeptideTreeNode), typeof(TransitionGroupTreeNode), typeof(TransitionTreeNode)};
 
+        public int GetNodeLevel(TreeNodeMS node)
+        {
+            if (node == null)
+                return -1;
+            return Array.IndexOf(treeNodeTypes, node.GetType());
+        }
+        public int GetNodeTypeLevel(Type nodeType)
+        {
+            if (nodeType == null)
+                return -1;
+            return Array.IndexOf(treeNodeTypes, nodeType);
+        }
+
         public int GetNodeCountRecursive(SrmTreeNode node = null)
         {
             if (node == null)
@@ -1588,54 +1602,53 @@ namespace pwiz.Skyline.Controls
                     string.Format(ControlsResources.SequenceTree_ExpansionTooLargeMessage, (newNodeCount - nodeCount), expansionLimit));
             else
             {
-                var selectedPaths = new List<List<TreeNodeMS>>();
-                foreach (var node in SelectedNodes)
-                {
-                    selectedPaths.Add(new List<TreeNodeMS>());
-                    for(var parentNode = node; parentNode != null && treeNodeTypes.Contains(parentNode.GetType()); parentNode = parentNode.Parent as TreeNodeMS)
-                        selectedPaths.Last().Add(parentNode);
-                    selectedPaths.Last().Reverse();
-                }
+                var topNode = TopNode;
+                var leveledSelection = SelectedNodes.GroupBy(GetNodeLevel)
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
 
-                foreach (var path in selectedPaths)
-                {
-                    var nodes = new List<TreeNodeMS>();
-                    for (var i = 0; i < treeNodeTypes.Length; i++)
+                BeforeExpand -= TreeViewMS_BeforeExpand;
+                for (var i = treeNodeTypes.Length - 1; i >= 0 ; i--)
+                { 
+                    if (leveledSelection.TryGetValue(i, out var selectionLevelNodes))
                     {
-                        if (i < path.Count - 1)
+                        foreach (var node in selectionLevelNodes)
                         {
-                            if (i >= level)
-                                path[i].Collapse();
-                            SelectNode(path[i], path[i].IsVisible);
-                        }
-                        else if (i == path.Count - 1)
-                        {
-                            if (i >= level)
+                            if (i > level) // if we are below the given level remove node's children from selection and collapse the node (tree grows down)
                             {
-                                path[i].Collapse();
+                                node.Nodes.OfType<TreeNodeMS>().ForEach(childNode => SelectNode(childNode, false));
+                                node.Collapse(false);
                             }
                             else
-                                path[i].Expand();
-                            
-                            SelectNode(path[i], path[i].IsVisible);
-                            nodes = path[i].Nodes.OfType<TreeNodeMS>().ToList();
-                        }
-                        else
-                        {
-                            if (i < level)
-                                nodes.ForEach(node => node.Expand());
-                            else
-                                nodes.ForEach(node => node.Collapse());
-
-                            nodes.ForEach(node => SelectNode(node, node.IsVisible));
-                            nodes = nodes.SelectMany(node => node.Nodes.OfType<TreeNodeMS>()).ToList();
+                            {
+                                if (IsParentNode(node))
+                                {
+                                    EnsureChildren(node);
+                                    node.Nodes.OfType<TreeNodeMS>().ForEach(childNode => SelectNode(childNode, true));
+                                    ExpandRecursive(node, level, true);
+                                }
+                            }
                         }
                     }
                 }
+                BeforeExpand += TreeViewMS_BeforeExpand;
+                while (GetNodeLevel(topNode as TreeNodeMS) > level)
+                    topNode = topNode.Parent;
+                TopNode = topNode;
             }
         }
         public bool LockDefaultExpansion { get; set; }
+        public void ExpandRecursive(TreeNodeMS node, int level, bool select)
+        {
+            if (!IsParentNode(node))
+                return;
+            EnsureChildren(node);
+            node.Expand();
+            node.Nodes.OfType<TreeNodeMS>().ForEach(childNode => SelectNode(childNode, select));
+            if (GetNodeLevel(node) < level)
+                node.Nodes.OfType<TreeNodeMS>().ForEach(childNode => ExpandRecursive(childNode, level, select));
+        }
     }
+
 
     public class ValidateLabelEditEventArgs : CancelEventArgs
     {

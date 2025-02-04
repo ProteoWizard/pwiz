@@ -25,6 +25,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
