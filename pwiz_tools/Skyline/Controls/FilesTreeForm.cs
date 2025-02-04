@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Controls
             SkylineWindow.OpenLibraryExplorer(libraryName);
         }
 
-        public void OpenReplicate(string name)
+        public void ActivateReplicate(string name)
         {
             SkylineWindow.ActivateReplicate(name);
         }
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Controls
                     // avoids adding a pointer to the parent in SrmSettings and putting a new field on the
                     // replicate file's data model
                     if (replicate.Parent is ReplicateTreeNode treeNodeParent)
-                        OpenReplicate(treeNodeParent.Name);
+                        ActivateReplicate(treeNodeParent.Name);
                     break;
             }
         }

@@ -95,6 +95,17 @@ namespace pwiz.Skyline.Controls
             Nodes[0]?.EnsureVisible();
         }
 
+        public TreeNode NodesForFileType(FileType type)
+        {
+            return type switch
+            {
+                FileType.replicates => _chromatogramRoot,
+                FileType.peptide_library => _peptideLibrariesRoot,
+                FileType.background_proteome => _backgroundProteomeRoot,
+                _ => null
+            };
+        }
+
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
         {
             DocumentContainer = documentUIContainer;
