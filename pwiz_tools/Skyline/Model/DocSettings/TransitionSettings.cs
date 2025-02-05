@@ -25,6 +25,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -1686,7 +1687,18 @@ namespace pwiz.Skyline.Model.DocSettings
             // CONSIDER: Maybe we should be storing a ChromSource on the transition at the time it is created, which
             // seems to be the only time we really know that a precursor ion is being created for MS1 filtering
             // or not.
-            return nodeGroup.Transitions.Count(nodeTran => !nodeTran.IsMs1 || nodeTran.HasLibInfo) >= MinIonCount;
+            if (nodeGroup.Transitions.Count(nodeTran => !nodeTran.IsMs1 || nodeTran.HasLibInfo) >= MinIonCount)
+            {
+                return true;
+            }
+
+            // Special case with feature finding where libraries don't have fragment info, just precursors
+            if (nodeGroup.HasLibInfo && nodeGroup.LibInfo.ScoreType.Equals(ScoreType.HARDKLOR_IDOTP) && nodeGroup.Transitions.All(nodeTran => nodeTran.IsMs1))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         #region Property change methods

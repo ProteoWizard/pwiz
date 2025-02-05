@@ -909,7 +909,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Add the library molecules to the document, in natural sort order
             var status = new ProgressStatus(PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document);
             progressMonitor.UpdateProgress(status);
-            Assume.AreNotEqual(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs);
+            if (Equals(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs))
+            {
+                MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_Did_not_detect_any_features___check_your_settings_and_try_again);
+            }
             var docNew = Document;
             foreach (var lib in Document.Settings.PeptideSettings.Libraries.Libraries.Where(l =>
                          !_existingLibraries.Libraries.Contains(l)))

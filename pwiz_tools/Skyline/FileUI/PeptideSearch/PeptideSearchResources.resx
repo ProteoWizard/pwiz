@@ -365,4 +365,7 @@ Click 'Retry' to try building again after placing the original spectrum files in
   <data name="SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_" xml:space="preserve">
       <value>Cannot close wizard while the search is running. Do you want to cancel the search?</value>
   </data>
+  <data name="ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_Did_not_detect_any_features___check_your_settings_and_try_again" xml:space="preserve">
+      <value>Did not detect any features - check your settings and try again</value>
+  </data>
 </root>

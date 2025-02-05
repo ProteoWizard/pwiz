@@ -2772,6 +2772,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public override string ToString()
+        {
+            return $@"{MoleculeGroupCount},{MoleculeCount},{MoleculeTransitionGroupCount},{MoleculeTransitionCount}"; // For debugging convenience, not user-facing
+        }
+
         #endregion
     }
 
