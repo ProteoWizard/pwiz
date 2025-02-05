@@ -61,7 +61,6 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; private set; }
 
-        // CONSIDER: encapsulate right-click actions to a separate class
         public void ShowAuditLog()
         {
             SkylineWindow.ShowAuditLog();

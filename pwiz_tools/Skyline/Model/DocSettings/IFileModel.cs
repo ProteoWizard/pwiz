@@ -22,6 +22,7 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         background_proteome,
         peptide_library,
+        project_files,
         replicates,
         replicate_file,
         sky,

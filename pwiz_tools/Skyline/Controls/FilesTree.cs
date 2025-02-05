@@ -95,6 +95,11 @@ namespace pwiz.Skyline.Controls
             Nodes[0]?.EnsureVisible();
         }
 
+        public void ScrollToFileType(FileType type)
+        {
+            NodesForFileType(type).EnsureVisible();
+        }
+
         public TreeNode NodesForFileType(FileType type)
         {
             return type switch
@@ -102,7 +107,8 @@ namespace pwiz.Skyline.Controls
                 FileType.replicates => _chromatogramRoot,
                 FileType.peptide_library => _peptideLibrariesRoot,
                 FileType.background_proteome => _backgroundProteomeRoot,
-                _ => null
+                FileType.project_files => _projectFilesRoot,
+                _ => new DummyNode()
             };
         }
 
