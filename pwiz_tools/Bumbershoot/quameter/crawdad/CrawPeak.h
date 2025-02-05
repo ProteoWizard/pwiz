@@ -76,6 +76,11 @@ public :
   float peak_height;
   float raw_height;
 
+  // BEG KEESH MAYO ASYMM METRIC
+  int start01_rt_idx, stop01_rt_idx;
+  // END KEESH MAYO ASYMM METRIC
+
+
   //CrawPeakMethod sup_method;
   virtual void init();
   
@@ -106,8 +111,11 @@ public :
 
   void calc_fwhm();
 
+  // BEG KEESH MAYO ASYMM METRIC
+  SlimCrawPeak(  int start_idx, int stop_idx, int peak_idx, const std::vector<float> & raw , std::vector<float> & scratch, int mz_idx = -1, 
+      int start01_idx = -1, int stop01_idx = -1);
+  // END KEESH MAYO ASYMM METRIC
 
-  SlimCrawPeak(  int start_idx, int stop_idx, int peak_idx, const std::vector<float> & raw , std::vector<float> & scratch, int mz_idx = -1 );
   ~SlimCrawPeak() {
     #ifdef DEBUG
     delcnt++;
@@ -149,6 +157,10 @@ public:
   CrawPeak() {
     //sup_method = method;
     start_rt_idx = stop_rt_idx = peak_rt_idx = mz_idx = -1;
+    // BEG KEESH MAYO ASYMM METRIC
+    start01_rt_idx = stop01_rt_idx = -1;
+    // END KEESH MAYO ASYMM METRIC
+    
     init();
   }
 
@@ -160,9 +172,11 @@ public:
 */
 
   ///Constructor taking start,stop,peak,mz indices, and a vector of intensities
+  // BEG KEESH MAYO ASYMM METRIC
   CrawPeak(  int start_idx, int stop_idx, int peak_idx, 
-	   const std::vector<float> & raw, std::vector<float> & scratch ,int mz_idx = -1 );
-
+	   const std::vector<float> & raw, std::vector<float> & scratch ,int mz_idx = -1,
+       int start01_idx = -1, int stop01_idx = -1);
+  // END KEESH MAYO ASYMM METRIC
   virtual void init();
 
 

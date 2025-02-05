@@ -106,20 +106,23 @@ namespace quameter
         }
 
     };
-
+    // BEG KEESH MAYO ASYMM METRIC
     struct Peak
     {
         double startTime;
         double endTime;
+        double start01Time;
+        double end01Time;
         double peakTime;
         double fwhm;
         double intensity;
-
-        Peak(double startTime = 0, double endTime = 0, double peakTime = 0, double fwhm = 0, double intensity = 0)
-             : startTime(startTime), endTime(endTime), peakTime(peakTime), fwhm(fwhm), intensity(intensity)
+        Peak(double startTime = 0, double endTime = 0, double peakTime = 0, double fwhm = 0, double intensity = 0,
+             double start01Time = 0, double end01Time = 0)
+             : startTime(startTime), endTime(endTime), peakTime(peakTime), fwhm(fwhm), intensity(intensity),
+            start01Time(start01Time), end01Time(end01Time)
         {}
     };
-
+    // END KEESH MAYO ASYMM METRIC
     struct nativeID {};
     struct time {};
     struct identified {};
