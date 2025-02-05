@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool CudaLibraryInstalled()
         {
-            string cudaPath = Environment.GetEnvironmentVariable("CUDA_PATH");
+            string cudaPath = Environment.GetEnvironmentVariable(@"CUDA_PATH");
             return !string.IsNullOrEmpty(cudaPath);
         }
 
@@ -171,9 +171,9 @@ namespace pwiz.Skyline.Model.Tools
 
             if (!Directory.Exists(targetDirectory)) return false;
 
-            string newPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) +
+            string newPath = Environment.GetEnvironmentVariable(@"PATH", EnvironmentVariableTarget.User) +
                              TextUtil.SEMICOLON + targetDirectory;
-            Environment.SetEnvironmentVariable("PATH", newPath, EnvironmentVariableTarget.User);
+            Environment.SetEnvironmentVariable(@"PATH", newPath, EnvironmentVariableTarget.User);
 
             var computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
             bool? isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model.Tools
                     task8.Name = pythonTaskName;
                     return task8;
                 case PythonTaskName.pip_install_packages:
-                    var task9= new PythonTask(() => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages));
+                    var task9= new PythonTask((progressMonitor) => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages, progressMonitor));
                     task9.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task9.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task9.Name = pythonTaskName;
@@ -570,7 +570,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void EnableSearchPathInPythonEmbeddablePackage()
         {
-            var files = Directory.GetFiles(PythonEmbeddablePackageExtractDir, "python*._pth");
+            var files = Directory.GetFiles(PythonEmbeddablePackageExtractDir, @"python*._pth");
             Assume.IsTrue(files.Length == 1, ToolsResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected);
             var oldFilePath = files[0];
             var newFilePath = Path.ChangeExtension(oldFilePath, @".pth");
@@ -596,7 +596,7 @@ namespace pwiz.Skyline.Model.Tools
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true) != 0)
+            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, progressMonitor) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, PIP_EXE);
@@ -604,11 +604,11 @@ namespace pwiz.Skyline.Model.Tools
 
         }
 
-        private void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages)
+        private void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, IProgressMonitor progressMonitor = null)
         {
             var cmdBuilder = new StringBuilder();
 
-
+            bool cancelled = false;
             foreach (var package in packages)
             {
                 string arg;
@@ -647,10 +647,20 @@ namespace pwiz.Skyline.Model.Tools
                     ECHO, CMD_PROCEEDING_SYMBOL);
                 cmd += cmdBuilder;
                 var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-                if (pipedProcessRunner.RunProcess(cmd, false, Writer, true) != 0)
-                    throw new ToolExecutionException(
-                        string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+               
+                if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, progressMonitor) != 0)
+                {
+                    if (progressMonitor != null && !progressMonitor.IsCanceled)
+                        throw new ToolExecutionException(
+                            string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                    cancelled = true;
+                    break;
+                }
+              
             }
+
+            if (cancelled)
+                return;
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);
             PythonInstallerUtil.SignFile(filePath+DOT_EXE);
@@ -997,7 +1007,7 @@ namespace pwiz.Skyline.Model.Tools
         }
         public static string GetDirectoryHash(string directoryPath)
         {
-            string[] filesArray = Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
+            string[] filesArray = Directory.GetFiles(directoryPath, @"*", SearchOption.AllDirectories);
             return GetFilesArrayHash(filesArray);
         }
         public static string GetFilesArrayHash(string[] filesArray, int maxFilesToCheck = 1000)
@@ -1338,21 +1348,23 @@ namespace pwiz.Skyline.Model.Tools
             if (!Directory.Exists(_pythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
             
-            var disabledPathFiles = Directory.GetFiles(_pythonInstaller.PythonEmbeddablePackageExtractDir, "python*._pth");
-            var enabledPathFiles = Directory.GetFiles(_pythonInstaller.PythonEmbeddablePackageExtractDir, "python*.pth");
+            var disabledPathFiles = Directory.GetFiles(_pythonInstaller.PythonEmbeddablePackageExtractDir, @"python*._pth");
+            var enabledPathFiles = Directory.GetFiles(_pythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth");
             var computeHash =
                 PythonInstallerUtil.GetFilesArrayHash(enabledPathFiles);
             var storedHash = TargetsAndHashes.Where(m => m.Task == PythonTaskName.enable_search_path_in_python_embeddable_package).ToArray()[0].Hash;
             return computeHash == storedHash;
         }
 
-        private bool ValidateDownloadGetPipScript()
+        private bool? ValidateDownloadGetPipScript()
         {
-            if (!File.Exists(_pythonInstaller.GetPipScriptDownloadPath))
+            var filePath = _pythonInstaller.GetPipScriptDownloadPath;
+
+            if (!File.Exists(filePath))
                 return false;
-            var computeHash = PythonInstallerUtil.GetFileHash(_pythonInstaller.GetPipScriptDownloadPath);
-            var storedHash = TargetsAndHashes.Where(m => m.Task == PythonTaskName.download_getpip_script).ToArray()[0].Hash;
-            return computeHash == storedHash;
+
+            return
+                PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
         }
 
         private bool? ValidateRunGetPipScript()

@@ -737,7 +737,7 @@ namespace pwiz.Skyline.Util
             string backupFile = FileSaver.TEMP_PREFIX + Path.GetFileName(pathDestination) + @".bak";
             string dirName = Path.GetDirectoryName(pathDestination);
             if (!string.IsNullOrEmpty(dirName))
-                backupFile = Path.Combine(dirName, backupFile);
+                backupFile = dirName != null ? Path.Combine(dirName, backupFile) : backupFile;
             // CONSIDER: Handle failure by trying a different name, or use a true temporary name?
             FileEx.SafeDelete(backupFile);
             return backupFile;
@@ -1627,8 +1627,9 @@ namespace pwiz.Skyline.Util
         /// allows for the CMD.exe process to be ran with elevated privileges</param>
         /// <param name="writer">The textwriter to which the command lines output will be written to</param>
         /// <param name="createNoWindow">Whether or not execution runs in its own window</param>
+        /// <param name="progressMonitor">Allows to Cancel</param>
         /// <returns>The exitcode of the CMD process ran with the specified arguments</returns>
-        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false)
+        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
         {
             // create GUID
             string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
@@ -1662,7 +1663,7 @@ namespace pwiz.Skyline.Util
                     // not as administrator
                     if (runAsAdministrator && win32Exception.NativeErrorCode == ERROR_CANCELLED)
                     {
-                        return RunProcess(arguments, false, writer);
+                        return RunProcess(arguments, false, writer, createNoWindow, progressMonitor);
                     }
                     throw;
                 }
@@ -1676,6 +1677,29 @@ namespace pwiz.Skyline.Util
                         while ((line = reader.ReadLine()) != null)
                         {
                             writer.WriteLine(line);
+                            // wait for process to finish
+                            if (progressMonitor != null)
+                            {
+                                if (progressMonitor.IsCanceled)
+                                {
+                                    if (!process.HasExited)
+                                    {
+                                        try
+                                        {
+                                            process.Kill();
+                                        }
+                                        catch (InvalidOperationException)
+                                        {
+
+                                        }
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
 

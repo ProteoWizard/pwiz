@@ -363,14 +363,14 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Wrapper interface for the NamedPipeProcessRunner class
         /// </summary>
-        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false);
+        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null);
     }
 
     public class SkylineProcessRunnerWrapper : ISkylineProcessRunnerWrapper
     {
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false)
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
         {
-            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer, createNoWindow);
+            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer, createNoWindow, progressMonitor);
         }
     }
 
@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Util
         public int ExitCode { get; set; }
         public string stringToWriteToWriter { get; set; }
         
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false)
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
         {
             if (!UserOkRunAsAdministrator)
             {
