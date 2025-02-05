@@ -56,6 +56,7 @@ namespace pwiz.Skyline.Controls.Databinding
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.columnDendrogramClipPanel = new System.Windows.Forms.Panel();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
             this.splitContainerVertical.Panel1.SuspendLayout();
@@ -72,6 +73,7 @@ namespace pwiz.Skyline.Controls.Databinding
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
+            this.columnDendrogramClipPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuStrip
@@ -185,7 +187,7 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             // splitContainerHorizontal.Panel1
             // 
-            this.splitContainerHorizontal.Panel1.Controls.Add(this.columnDendrogram);
+            this.splitContainerHorizontal.Panel1.Controls.Add(this.columnDendrogramClipPanel);
             // 
             // splitContainerHorizontal.Panel2
             // 
@@ -193,8 +195,8 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             // columnDendrogram
             // 
-            this.columnDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Top;
             resources.ApplyResources(this.columnDendrogram, "columnDendrogram");
+            this.columnDendrogram.DendrogramLocation = System.Windows.Forms.DockStyle.Top;
             this.columnDendrogram.Name = "columnDendrogram";
             this.columnDendrogram.RectilinearLines = true;
             // 
@@ -280,6 +282,12 @@ namespace pwiz.Skyline.Controls.Databinding
             this.navBar.Name = "navBar";
             this.navBar.ShowViewsButton = true;
             // 
+            // columnDendrogramClipPanel
+            // 
+            resources.ApplyResources(this.columnDendrogramClipPanel, "columnDendrogramClipPanel");
+            this.columnDendrogramClipPanel.Controls.Add(this.columnDendrogram);
+            this.columnDendrogramClipPanel.Name = "columnDendrogramClipPanel";
+            // 
             // DataboundGridControl
             // 
             resources.ApplyResources(this, "$this");
@@ -303,6 +311,7 @@ namespace pwiz.Skyline.Controls.Databinding
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
+            this.columnDendrogramClipPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -331,5 +340,6 @@ namespace pwiz.Skyline.Controls.Databinding
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
         private DataGridViewEx dataGridViewEx1;
         private System.Windows.Forms.SplitContainer dataGridSplitContainer;
+        private Panel columnDendrogramClipPanel;
     }
 }

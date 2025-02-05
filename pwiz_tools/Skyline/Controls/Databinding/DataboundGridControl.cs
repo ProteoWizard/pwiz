@@ -759,9 +759,12 @@ namespace pwiz.Skyline.Controls.Databinding
             List<KeyValuePair<double, double>> columnLocations = new List<KeyValuePair<double, double>>();
             Dictionary<string, int> nameToIndex = new Dictionary<string, int>();
             double currentPosition = 0 - DataGridView.HorizontalScrollingOffset;
+            var frozenColumnWidth = DataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => col.Frozen && col.Visible).Sum(col => col.Width);
             if (DataGridView.RowHeadersVisible)
             {
                 currentPosition += DataGridView.RowHeadersWidth;
+                frozenColumnWidth += DataGridView.RowHeadersWidth;
             }
             foreach (var column in DataGridView.Columns.Cast<DataGridViewColumn>())
             {
@@ -829,6 +832,9 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             columnDendrogram.SetDendrogramDatas(datas);
             splitContainerHorizontal.Panel1Collapsed = false;
+            columnDendrogramClipPanel.Bounds = new Rectangle(frozenColumnWidth, 0, Math.Max(0, splitContainerHorizontal.Panel1.Width - frozenColumnWidth),
+                splitContainerHorizontal.Panel1.Height);
+            columnDendrogram.Bounds = new Rectangle(-frozenColumnWidth, 0, splitContainerHorizontal.Panel1.Width, splitContainerHorizontal.Panel1.Height);
         }
 
         private void AlignPivotByReplicateGridColumns(ReplicatePivotColumns replicatePivotColumns)
@@ -1001,9 +1007,13 @@ namespace pwiz.Skyline.Controls.Databinding
             var nonReplicateColumnsWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
                 .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
                 .Sum(col => col.Width);
-            var columnWidthOffset = nonReplicateColumnsWidth - dataGridViewEx1.Columns[@"Property"]!.Width;
-            var offsetScrollPosition = scrollPosition - columnWidthOffset;
-            dataGridViewEx1.HorizontalScrollingOffset = (offsetScrollPosition > 0) ? offsetScrollPosition : 0;
+            var propertyColumn = dataGridViewEx1.Columns[@"Property"];
+            if (propertyColumn != null)
+            {
+                var columnWidthOffset = nonReplicateColumnsWidth - propertyColumn.Width;
+                var offsetScrollPosition = scrollPosition - columnWidthOffset;
+                dataGridViewEx1.HorizontalScrollingOffset = (offsetScrollPosition > 0) ? offsetScrollPosition : 0;
+            }
         }
 
         private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
@@ -1127,33 +1137,47 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void dataGridViewEx1_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
-            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-            AlignDataBoundGridColumns(replicatePivotColumns);
-            UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+            MainGridChanged();
         }
 
         private void boundDataGridView_Resize(object sender, EventArgs e)
         {
-            UpdateDendrograms();
+            MainGridChanged();
         }
         private void boundDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
-            if (dataGridViewEx1.Visible)
+            MainGridChanged();
+        }
+
+        private void MainGridChanged()
+        {
+            if (_inColumnChange)
             {
-                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-                AlignPivotByReplicateGridColumns(replicatePivotColumns);
-                UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+                return;
+            }
+
+            try
+            {
+                _inColumnChange = true;
+                if (dataGridViewEx1.Visible)
+                {
+                    var replicatePivotColumns =
+                        ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                    AlignPivotByReplicateGridColumns(replicatePivotColumns);
+                    UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+                }
+
+                UpdateDendrograms();
+            }
+            finally
+            {
+                _inColumnChange = false;
             }
         }
 
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
         {
-            if (e.ScrollOrientation == ScrollOrientation.HorizontalScroll && dataGridViewEx1.Visible)
-            {
-                int horizontalOffset = e.NewValue;
-                UpdateReplicateDataGridFrozenState();
-                UpdateReplicateDataGridScrollPosition(horizontalOffset);
-            }
+            MainGridChanged();
         }
 
         private void boundDataGridView_Paint(object sender, PaintEventArgs e)
