@@ -29,7 +29,6 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -52,6 +51,7 @@ using pwiz.Skyline.Util;
 //         problem.
 //using pwiz.SkylineTestUtil;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 
 
 namespace TestRunner
@@ -61,8 +61,8 @@ namespace TestRunner
         private static readonly string[] TEST_DLLS = { "Test.dll", "TestData.dll", "TestConnected.dll", "TestFunctional.dll", "TestTutorial.dll", "CommonTest.dll", "TestPerf.dll" };
 
         private static readonly string executingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en", "fr", "tr").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
-        private static readonly string[] qualityLanguages = new FindLanguages(executingDirectory, "en", "fr").Enumerate().ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
+        private static readonly string[] allLanguages = new FindLanguages(executingDirectory, "en-US", "fr-FR", "tr-TR").Enumerate().ToArray(); // Languages used in pass 1, and in pass 2 perftets
+        private static readonly string[] qualityLanguages = allLanguages.Where(l => !l.StartsWith("tr")).ToArray(); // "fr" and "tr" pretty much test the same thing, so just use fr in pass 2
 
         private const int LeakTrailingDeltas = 7;   // Number of trailing deltas to average and check against thresholds below
         // CONSIDER: Ideally these thresholds would be zero, but memory and handle retention are not stable enough to support that
@@ -246,11 +246,11 @@ namespace TestRunner
         static readonly string commandLineOptions =
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
-            "loop=0;repeat=1;pause=0;startingpage=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
+            "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
             "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
-            "demo=off;showformnames=off;showpages=off;status=off;buildcheck=0;" +
+            "demo=off;showformnames=off;status=off;buildcheck=0;" +
             "quality=off;pass0=off;pass1=off;pass2=on;" +
             "perftests=off;" +
             "retrydatadownloads=off;" +
@@ -384,7 +384,7 @@ namespace TestRunner
                     TeamCityStartTestSuite(commandLineArgs);
 
                     // Prevent system sleep.
-                    using (new SystemSleep())
+                    using (new Kernel32Test.SystemSleep())
                     {
                         // Pause before first test for profiling.
                         bool profiling = commandLineArgs.ArgAsBool("profile");
@@ -896,7 +896,7 @@ namespace TestRunner
             if (commandLineArgs.ArgAsBool("buildcheck"))
             {
                 loop = 1;
-                languages = new[] { "en" };
+                languages = new[] { "en-US" };
             }
 
             Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, pass) =>
@@ -958,7 +958,7 @@ namespace TestRunner
                 string workerNames = null;
 
                 // try to kill docker workers if process is terminated externally (e.g. SkylineTester)
-                SetConsoleCtrlHandler(c =>
+                Kernel32Test.SetConsoleCtrlHandler(c =>
                 {
                     RunTests.KillParallelWorkers(HostWorkerPid, workerNames);
                     cts.Cancel();
@@ -1285,7 +1285,19 @@ namespace TestRunner
             string value = args.ArgAsString("language");
             if (value == "all")
                 return allLanguages;
-            return value.Split(',');
+            return value.Split(',').Select(GetCanonicalLanguage).ToArray();
+        }
+
+        private static string GetCanonicalLanguage(string rawLanguage)
+        {
+            // If the raw language is a prefix of something from allLanguages, use
+            // the full name.
+            foreach (var language in allLanguages)
+            {
+                if (language.StartsWith(rawLanguage))
+                    return language;
+            }
+            return rawLanguage;
         }
 
         private static DirectoryInfo GetSkylineDirectory()
@@ -1354,14 +1366,13 @@ namespace TestRunner
             bool useVendorReaders = commandLineArgs.ArgAsBool("vendors");
             bool showStatus = commandLineArgs.ArgAsBool("status");
             bool showFormNames = commandLineArgs.ArgAsBool("showformnames");
-            bool showMatchingPages = commandLineArgs.ArgAsBool("showpages");
             bool qualityMode = commandLineArgs.ArgAsBool("quality");
             bool pass0 = commandLineArgs.ArgAsBool("pass0");
             bool pass1 = commandLineArgs.ArgAsBool("pass1");
             bool pass2 = commandLineArgs.ArgAsBool("pass2");
             int timeoutMultiplier = (int) commandLineArgs.ArgAsLong("multi");
             int pauseSeconds = (int) commandLineArgs.ArgAsLong("pause");
-            int pauseStartingPage = (int)commandLineArgs.ArgAsLong("startingpage");
+            int pauseStartingScreenshot = (int)commandLineArgs.ArgAsLong("startingshot");
             var formList = commandLineArgs.ArgAsString("form");
             if (!formList.IsNullOrEmpty())
                 perftests = true;
@@ -1376,6 +1387,12 @@ namespace TestRunner
             bool clientMode = parallelMode == "client";
             bool asNightly = offscreen && qualityMode;  // While it is possible to run quality off screen from the Quality tab, this is what we use to distinguish for treatment of perf tests
             bool coverage = commandLineArgs.ArgAsBool("coverage");
+
+            // If pausing for screenshots, make sure this process is allowed to fully activate its forms
+            if (pauseSeconds != 0)
+            {
+                Process.GetCurrentProcess().AllowSetForegroundWindow();
+            }
 
             // If running Nightly tests, remove any flagged for exclusion by the NoNightlyTesting custom attribute
             if (asNightly)
@@ -1428,7 +1445,7 @@ namespace TestRunner
                 demoMode, buildMode, offscreen, internet, useOriginalURLs, showStatus, perftests,
                 runsmallmoleculeversions, recordauditlogs, teamcityTestDecoration,
                 retrydatadownloads,
-                pauseDialogs, pauseSeconds, pauseStartingPage, useVendorReaders, timeoutMultiplier, 
+                pauseDialogs, pauseSeconds, pauseStartingScreenshot, useVendorReaders, timeoutMultiplier, 
                 results, log, verbose, clientMode);
 
             var timer = new Stopwatch();
@@ -1492,13 +1509,11 @@ namespace TestRunner
 
                 // Get list of languages
                 var languages = buildMode
-                    ? new[] { "en" }
+                    ? new[] { "en-US" }
                     : GetLanguages(commandLineArgs);
 
                 if (showFormNames)
                     runTests.Skyline.Set("ShowFormNames", true);
-                if (showMatchingPages)
-                    runTests.Skyline.Set("ShowMatchingPages", true);
 
                 var removeList = new List<TestInfo>();
 
@@ -2307,50 +2322,6 @@ Here is a list of recognized arguments:
             {
                 yield return list[i];
             }
-        }
-
-
-        [DllImport("Kernel32")]
-        private static extern bool SetConsoleCtrlHandler(ConsoleCtrlEventHandler handler, bool add);
-        private delegate bool ConsoleCtrlEventHandler(CtrlType sig);
-
-        enum CtrlType
-        {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT = 1,
-            CTRL_CLOSE_EVENT = 2,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT = 6
-        }
-    }
-
-    public class SystemSleep : IDisposable
-    {
-        private readonly EXECUTION_STATE _previousState;
-
-        public SystemSleep()
-        {
-            // Prevent system sleep.
-            _previousState = SetThreadExecutionState(
-                EXECUTION_STATE.awaymode_required |
-                EXECUTION_STATE.continuous |
-                EXECUTION_STATE.system_required);
-        }
-
-        public void Dispose()
-        {
-            SetThreadExecutionState(_previousState);
-        }
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern EXECUTION_STATE SetThreadExecutionState(EXECUTION_STATE esFlags);
-
-        [Flags]
-        private enum EXECUTION_STATE : uint
-        {
-            awaymode_required = 0x00000040,
-            continuous = 0x80000000,
-            system_required = 0x00000001
         }
     }
 }

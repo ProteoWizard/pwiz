@@ -82,8 +82,8 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(wiffpath);
     sourceFile->id = "WIFF";
-    sourceFile->name = BFS_STRING(p.leaf());
-    string location = BFS_COMPLETE(p.branch_path()).string();
+    sourceFile->name = BFS_STRING(p.filename());
+    string location = BFS_COMPLETE(p.parent_path()).string();
     if (location.empty()) location = ".";
     sourceFile->location = "file://" + location;
     sourceFile->set(MS_WIFF_nativeID_format);
@@ -98,8 +98,8 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     {
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = "WIFFSCAN";
-        sourceFile->name = BFS_STRING(wiffscan.leaf());
-        string location = BFS_COMPLETE(wiffscan.branch_path()).string();
+        sourceFile->name = BFS_STRING(wiffscan.filename());
+        string location = BFS_COMPLETE(wiffscan.parent_path()).string();
         if (location.empty()) location = ".";
         sourceFile->location = "file://" + location;
         sourceFile->set(MS_WIFF_nativeID_format);
@@ -261,7 +261,7 @@ void Reader_ABI::read(const string& filename,
             catch (exception& e)
             {
                 // TODO: make this a critical logged warning
-                cerr << "[Reader_ABI::read] Error opening run " << i << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
+                cerr << "[Reader_ABI::read] Error opening run " << i << " in " << bfs::path(filename).filename() << ":\n" << e.what() << endl;
             }
         }
     }

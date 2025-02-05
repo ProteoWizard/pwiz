@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
 
         private void Settings_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (DisplaySettings != null)
+            if (e.PropertyName == nameof(Properties.Settings.Default.CalibrationCurveOptions ))
             {
                 Update(DisplaySettings);
             }
@@ -94,12 +94,26 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
         [Browsable(false)]
         public Settings DisplaySettings { get; private set; }
 
+        private bool _inUpdate;
         public void Update(Settings displaySettings)
         {
-            DoUpdate(displaySettings);
-            GraphHelper.FormatFontSize(zedGraphControl.GraphPane, Options.FontSize);
-            zedGraphControl.AxisChange();
-            zedGraphControl.Invalidate();
+            if (_inUpdate)
+            {
+                return;
+            }
+
+            try
+            {
+                _inUpdate = true;
+                DoUpdate(displaySettings);
+                GraphHelper.FormatFontSize(zedGraphControl.GraphPane, Options.FontSize);
+                zedGraphControl.AxisChange();
+                zedGraphControl.Invalidate();
+            }
+            finally
+            {
+                _inUpdate = false;
+            }
         }
 
         public void Clear()
@@ -471,24 +485,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
             }
 
-            List<CurveItem> bootstrapCurveItems = new List<CurveItem>();
-            if (options.ShowBootstrapCurves)
-            {
-                var color = Color.FromArgb(40, Color.Teal);
-                foreach (var points in bootstrapCurves)
-                {
-                    // Only assign a title to the first curve so that only one item appears in the Legend
-                    string title = bootstrapCurveItems.Count == 0
-                        ? QuantificationStrings.CalibrationGraphControl_DoUpdate_Bootstrap_Curve
-                        : null;
-
-                    var curve = new LineItem(title, new PointPairList(points), color,
-                        SymbolType.None, options.LineWidth);
-                    maxY = Math.Max(maxY, GetMaxY(curve.Points));
-                    bootstrapCurveItems.Add(curve);
-                }
-            }
-
             if (options.ShowFiguresOfMerit)
             {
                 if (IsNumber(FiguresOfMerit.LimitOfDetection))
@@ -519,7 +515,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 }
             }
 
-            zedGraphControl.GraphPane.CurveList.AddRange(bootstrapCurveItems);
             if (labelLines.Any())
             {
                 TextObj text = new TextObj(TextUtil.LineSeparate(labelLines), .01, 0,
@@ -717,8 +712,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             showLegendContextMenuItem.Checked = Options.ShowLegend;
             showSelectionContextMenuItem.Checked = Options.ShowSelection;
             showFiguresOfMeritContextMenuItem.Checked = Options.ShowFiguresOfMerit;
-            showBootstrapCurvesContextMenuItem.Checked = Options.ShowBootstrapCurves;
-            showBootstrapCurvesContextMenuItem.Visible = HasBootstrapCurves;
             ZedGraphHelper.BuildContextMenu(sender, menuStrip, true);
             if (!menuStrip.Items.Contains(logXContextMenuItem))
             {
@@ -730,7 +723,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 menuStrip.Items.Insert(index++, showLegendContextMenuItem);
                 menuStrip.Items.Insert(index++, showSelectionContextMenuItem);
                 menuStrip.Items.Insert(index++, showFiguresOfMeritContextMenuItem);
-                menuStrip.Items.Insert(index++, showBootstrapCurvesContextMenuItem);
                 menuStrip.Items.Insert(index++, moreDisplayOptionsContextMenuItem);
                 menuStrip.Items.Insert(index++, new ToolStripSeparator());
             }
@@ -871,11 +863,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             Options = Options.ChangeSingleBatch(!Options.SingleBatch);
         }
 
-        private void showBootstrapCurvesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Options = Options.ChangeShowBootstrapCurves(!Options.ShowBootstrapCurves);
-        }
-
         private void moreDisplayOptionsContextMenuItem_Click(object sender, EventArgs e)
         {
             ShowCalibrationCurveOptions();
@@ -898,21 +885,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             }
 
             return max;
-        }
-
-        private bool HasBootstrapCurves
-        {
-            get
-            {
-                var quantificationSettings = DisplaySettings?.CalibrationCurveFitter?.QuantificationSettings;
-                if (quantificationSettings == null)
-                {
-                    return false;
-                }
-
-                return LodCalculation.TURNING_POINT_STDERR == quantificationSettings.LodCalculation &&
-                       quantificationSettings.MaxLoqCv.HasValue;
-            }
         }
         public static string QualifyCurveNameWithSurrogate(string curveName, PeptideDocNode surrogateMolecule)
         {

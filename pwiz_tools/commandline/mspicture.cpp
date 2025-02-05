@@ -382,7 +382,7 @@ int main(int argc, const char* argv[])
                 MSDataFile msd(config.filenames.at(0), &readers);
                 MSDataAnalyzer::DataInfo dataInfo(msd);
         
-                dataInfo.sourceFilename = BFS_STRING(path(config.filenames.at(0)).leaf());
+                dataInfo.sourceFilename = BFS_STRING(path(config.filenames.at(0)).filename());
                 dataInfo.outputDirectory = config.outputDirectory;
                 if (config.verbose)
                     dataInfo.log = &cout;
