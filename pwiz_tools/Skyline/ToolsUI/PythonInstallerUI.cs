@@ -100,6 +100,14 @@ namespace pwiz.Skyline.ToolsUI
                             pythonInstaller.EnableWindowsLongPaths();
                         }
                     }
+                    else if (task.Name == PythonTaskName.pip_install_packages)
+                    {
+                        using var waitDlg = new LongWaitDlg();
+                        waitDlg.Message = task.InProgressMessage;
+                        var status = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+                        if (status.IsCanceled)
+                            abortTask = true;
+                    }
                     else if (task.IsAction)
                     {
                        PerformTaskAction(parent,task);

@@ -126,13 +126,8 @@ namespace pwiz.SkylineTestUtil
                             if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
                             {
                                 Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
-                                
-                                
 
-                                nvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(RunLongPathsDialog(longPathDlg).OkDialog);
-
-                                Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
-                                    nvidiaDlg.Message);
+                                nvidiaDlg = AbstractFunctionalTest.ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library);
 
                                 RunNvidiaDialog(nvidiaDlg);
                             }
@@ -161,10 +156,9 @@ namespace pwiz.SkylineTestUtil
                         if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
                         {
                             Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
+                            
+                            nvidiaDlg = AbstractFunctionalTest.ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library);
 
-                            nvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(pythonDlg.OkDialog);
-                            Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
-                                nvidiaDlg.Message);
                             RunNvidiaDialog(nvidiaDlg);
                         }
                         else

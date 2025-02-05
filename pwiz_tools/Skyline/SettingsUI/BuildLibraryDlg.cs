@@ -486,21 +486,21 @@ namespace pwiz.Skyline.SettingsUI
                 pythonInstaller.ClearPendingTasks();
 
 
-            this.Cursor = Cursors.WaitCursor;
+            Cursor = Cursors.WaitCursor;
            
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
-                this.Cursor = Cursors.Default;
+                Cursor = Cursors.Default;
                 return true;
             }
             else if (!createDlg)
             {
-                this.Cursor = Cursors.Default;
+                Cursor = Cursors.Default;
                 return false;
             }
      
 
-            this.Cursor = Cursors.Default;
+            Cursor = Cursors.Default;
   
 
 
