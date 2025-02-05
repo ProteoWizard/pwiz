@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Util.Extensions
             {
                 try
                 {
-                    LocalizationHelper.InitThread(threadName); 
+                    LocalizationHelper.InitThread(threadName);
                     action();
                 }
                 catch (OperationCanceledException) {}
