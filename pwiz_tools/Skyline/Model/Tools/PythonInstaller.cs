@@ -749,6 +749,11 @@ namespace pwiz.Skyline.Model.Tools
                 DeleteDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
 
+        public static void DeleteToolsPythonDirectory()
+        {
+            DeleteDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python"));
+        }
+
         public void SignPythonEnvironment(string name)
         {
             PythonInstallerUtil.SignDirectory(CudaVersionDir);

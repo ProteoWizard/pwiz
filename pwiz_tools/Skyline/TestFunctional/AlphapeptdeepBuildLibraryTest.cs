@@ -42,7 +42,6 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
-
             PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep");
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);

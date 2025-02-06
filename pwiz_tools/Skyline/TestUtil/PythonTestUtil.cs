@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestUtil
         {
             _pythonVersion = pythonVersion;
             _toolName = toolName;
-
+            PythonInstaller.DeleteToolsPythonDirectory();
         }
 
         public void CancelPython(BuildLibraryDlg buildLibraryDlg)
