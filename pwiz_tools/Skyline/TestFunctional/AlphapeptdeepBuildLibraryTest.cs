@@ -61,6 +61,9 @@ namespace pwiz.SkylineTestFunctional
             // Test the control path where Python is installable
             if (!pythonUtil.InstallPython(buildLibraryDlg)) 
                 OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
+
+            Assert.IsTrue(pythonUtil.HavePythonPrerequisite(buildLibraryDlg));
+            
             //PauseTest();
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 

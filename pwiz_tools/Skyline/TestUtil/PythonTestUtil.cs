@@ -191,6 +191,13 @@ namespace pwiz.SkylineTestUtil
             return false;
         }
 
+        public bool HavePythonPrerequisite(BuildLibraryDlg buildLibraryDlg)
+        {
+            bool havePythonPrerequisite = false;
+            AbstractFunctionalTest.RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
+            return havePythonPrerequisite;
+        }
+
         private void RunNvidiaDialog(MultiButtonMsgDlg nvidiaDlg)
         {
             // Running as non-admin, say 'No'
