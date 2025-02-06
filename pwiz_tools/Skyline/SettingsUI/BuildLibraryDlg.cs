@@ -306,7 +306,6 @@ namespace pwiz.Skyline.SettingsUI
 
                     }
                     Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
-                    pythonInstaller.SignPythonEnvironment(ALPHAPEPTDEEP);
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -378,7 +377,6 @@ namespace pwiz.Skyline.SettingsUI
                     Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION,CARAFE, msMsDataFilePath,
                                                         trainingDataFilePath, DocumentUI);
 
-                    pythonInstaller.SignPythonEnvironment(CARAFE);
                     // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
                     // TODO: if (!CreateKoinaBuilder(name, outputPath))
                     // TODO:  return false;

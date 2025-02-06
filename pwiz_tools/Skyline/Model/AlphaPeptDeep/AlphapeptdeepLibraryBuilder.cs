@@ -366,11 +366,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private LibraryHelper LibraryHelper { get; set; }
 
+        private DateTime _nowTime = DateTime.UtcNow;
+        private string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
-        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP);
+        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP, TimeStamp);
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
-        private string InputFileName => INPUT + UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
+        private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
@@ -424,12 +426,16 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             return dir;
         }
-
+        public void ResetTimeStamp()
+        {
+            _nowTime = DateTime.UtcNow;
+        }
         public bool BuildLibrary(IProgressMonitor progress)
         {
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
+                ResetTimeStamp();
                 RunAlphapeptdeep(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
                 return true;

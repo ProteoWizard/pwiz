@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Model.Tools
             return cudaYes && cudnnYes != false;
         }
 
-        public static bool? CuDNNLibraryInstalled()
+        public static bool? CuDNNLibraryInstalled(bool longValidate = false)
         {
             string targetDirectory = CuDNNInstallDir + @"\bin";
 
@@ -175,27 +175,57 @@ namespace pwiz.Skyline.Model.Tools
                              TextUtil.SEMICOLON + targetDirectory;
             Environment.SetEnvironmentVariable(@"PATH", newPath, EnvironmentVariableTarget.User);
 
-            var computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
-            bool? isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
-            if (isValid == true || isValid == null)
+            if (longValidate)
             {
-                targetDirectory = CuDNNInstallDir + @"\include";
-                if (!Directory.Exists(targetDirectory)) return false;
-
-                computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
-                isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
+                var computeHash = PythonInstallerUtil.IsRunningElevated()
+                    ? PythonInstallerUtil.GetDirectoryHash(targetDirectory)
+                    : null;
+                bool? isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
                 if (isValid == true || isValid == null)
                 {
-                    targetDirectory = CuDNNInstallDir + @"\lib";
+                    targetDirectory = CuDNNInstallDir + @"\include";
                     if (!Directory.Exists(targetDirectory)) return false;
 
-                    computeHash = PythonInstallerUtil.IsRunningElevated() ? PythonInstallerUtil.GetDirectoryHash(targetDirectory) : null;
+                    computeHash = PythonInstallerUtil.IsRunningElevated()
+                        ? PythonInstallerUtil.GetDirectoryHash(targetDirectory)
+                        : null;
                     isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
+                    if (isValid == true || isValid == null)
+                    {
+                        targetDirectory = CuDNNInstallDir + @"\lib";
+                        if (!Directory.Exists(targetDirectory)) return false;
+
+                        computeHash = PythonInstallerUtil.IsRunningElevated()
+                            ? PythonInstallerUtil.GetDirectoryHash(targetDirectory)
+                            : null;
+                        isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
+                    }
+
                 }
+                return isValid;
+            }
+            else
+            {
+                bool isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
+                if (isValid)
+                {
+                    targetDirectory = CuDNNInstallDir + @"\include";
+                    if (!Directory.Exists(targetDirectory)) return false;
+
+                    isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
+                    if (isValid)
+                    {
+                        targetDirectory = CuDNNInstallDir + @"\lib";
+                        if (!Directory.Exists(targetDirectory)) return false;
+
+                        isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
+                    }
+
+                }
+                return isValid;
 
             }
 
-            return isValid;
         }
 
         public static bool? TestForNvidiaGPU()
@@ -608,7 +638,6 @@ namespace pwiz.Skyline.Model.Tools
         {
             var cmdBuilder = new StringBuilder();
 
-            bool cancelled = false;
             foreach (var package in packages)
             {
                 string arg;
@@ -653,13 +682,12 @@ namespace pwiz.Skyline.Model.Tools
                     if (progressMonitor != null && !progressMonitor.IsCanceled)
                         throw new ToolExecutionException(
                             string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
-                    cancelled = true;
                     break;
                 }
               
             }
 
-            if (cancelled)
+            if (progressMonitor != null && progressMonitor.IsCanceled)
                 return;
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);
@@ -696,6 +724,7 @@ namespace pwiz.Skyline.Model.Tools
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             if (pipedProcessRunner.RunProcess(cmd, false, Writer, true) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+            
             PythonInstallerUtil.SignDirectory(PythonEmbeddablePackageExtractDir);
 
         }
@@ -1333,14 +1362,17 @@ namespace pwiz.Skyline.Model.Tools
             return computeHash == storedHash;
         }
 
-        private bool? ValidateUnzipPythonEmbeddablePackage()
+        private bool? ValidateUnzipPythonEmbeddablePackage(bool longValidate = false)
         {
             if (!Directory.Exists(_pythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
-            
-            return
-                PythonInstallerUtil.IsSignatureValid(_pythonInstaller.PythonEmbeddablePackageExtractDir, 
-                PythonInstallerUtil.GetDirectoryHash(_pythonInstaller.PythonEmbeddablePackageExtractDir));
+
+            if (longValidate)
+                return
+                    PythonInstallerUtil.IsSignatureValid(_pythonInstaller.PythonEmbeddablePackageExtractDir, 
+                    PythonInstallerUtil.GetDirectoryHash(_pythonInstaller.PythonEmbeddablePackageExtractDir));
+
+            return PythonInstallerUtil.IsSignedFileOrDirectory(_pythonInstaller.PythonEmbeddablePackageExtractDir);
         }
 
         private bool ValidateEnableSearchPathInPythonEmbeddablePackage()
@@ -1389,20 +1421,22 @@ namespace pwiz.Skyline.Model.Tools
                 PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
         }
 
-        private bool? ValidateCreateVirtualEnvironment()
+        private bool? ValidateCreateVirtualEnvironment(bool longValidate = false)
         {
             if (!Directory.Exists(_pythonInstaller.VirtualEnvironmentDir))
                 return false;
-            
-            return
-                PythonInstallerUtil.IsSignatureValid(_pythonInstaller.VirtualEnvironmentDir, PythonInstallerUtil.GetDirectoryHash(_pythonInstaller.VirtualEnvironmentDir));
+            if (longValidate)
+                return
+                    PythonInstallerUtil.IsSignatureValid(_pythonInstaller.VirtualEnvironmentDir, PythonInstallerUtil.GetDirectoryHash(_pythonInstaller.VirtualEnvironmentDir));
+            return true;
+//            return PythonInstallerUtil.IsSignedFileOrDirectory(_pythonInstaller.VirtualEnvironmentDir);
         }
         internal static bool ValidateEnableLongpaths()
         {
             return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE && 
                    (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED,0) == 1;
         }
-        private bool? ValidatePipInstallPackages()
+        private bool? ValidatePipInstallPackages(bool longValidate = false)
         {
             if (!File.Exists(_pythonInstaller.VirtualEnvironmentPythonExecutablePath))
             {
@@ -1412,8 +1446,14 @@ namespace pwiz.Skyline.Model.Tools
             if (!Directory.Exists(_pythonInstaller.VirtualEnvironmentDir))
                 return false;
 
-            bool? signatureValid = PythonInstallerUtil.IsSignatureValid(_pythonInstaller.VirtualEnvironmentDir,
-                PythonInstallerUtil.GetDirectoryHash(_pythonInstaller.VirtualEnvironmentDir));
+            bool? signatureValid;
+           
+            if (!longValidate)
+                signatureValid = PythonInstallerUtil.IsSignedFileOrDirectory(_pythonInstaller.VirtualEnvironmentDir);
+            else
+                signatureValid = PythonInstallerUtil.IsSignatureValid(_pythonInstaller.VirtualEnvironmentDir, 
+                    PythonInstallerUtil.GetDirectoryHash(_pythonInstaller.VirtualEnvironmentDir));
+
             if (signatureValid == true || signatureValid == null)
                 return true;
 
