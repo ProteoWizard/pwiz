@@ -487,15 +487,19 @@ namespace pwiz.Skyline.SettingsUI
 
 
             Cursor = Cursors.WaitCursor;
-           
+            btnNext.Enabled = false;
+
+
             if (pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 Cursor = Cursors.Default;
+                btnNext.Enabled = true;
                 return true;
             }
             else if (!createDlg)
             {
                 Cursor = Cursors.Default;
+                btnNext.Enabled = true;
                 return false;
             }
      
@@ -510,9 +514,11 @@ namespace pwiz.Skyline.SettingsUI
                 DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
             { 
                 PythonDlg.Dispose();
+                btnNext.Enabled = true;
                 return false;
             }
 
+            btnNext.Enabled = true;
             return true;
         }
         private bool SetupPythonEnvironmentForCarafe(bool createDlg = true)

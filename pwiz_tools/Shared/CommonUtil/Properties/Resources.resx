@@ -131,6 +131,6 @@
     <value>Run command:</value>
   </data>
   <data name="ProcessRunner_Run_Working_" xml:space="preserve">
-    <value>Working on it, please wait ...</value>
+    <value>Working...</value>
   </data>
 </root>

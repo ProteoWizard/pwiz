@@ -991,7 +991,7 @@ namespace pwiz.Skyline.Model.Tools
             using (FileSaver file = new FileSaver(signatureFile))
             {
                 File.WriteAllText(file.SafeName, GetFileHash(filePath));
-                file.Commit();
+                RetryAction(() => { file.Commit(); });
             }
         }
         public static void SignDirectory(string dirPath)
@@ -1002,7 +1002,7 @@ namespace pwiz.Skyline.Model.Tools
             using (FileSaver file = new FileSaver(signatureFile))
             {
                 File.WriteAllText(file.SafeName, GetDirectoryHash(dirPath));
-                file.Commit();
+                RetryAction(() => { file.Commit(); });
             }
         }
         public static string GetDirectoryHash(string directoryPath)

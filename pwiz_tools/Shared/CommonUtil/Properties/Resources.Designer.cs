@@ -70,7 +70,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Working on it, please wait ....
+        ///   Looks up a localized string similar to Working....
         /// </summary>
         internal static string ProcessRunner_Run_Working_ {
             get {
