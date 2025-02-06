@@ -50,13 +50,13 @@ namespace pwiz.Skyline.Controls.Databinding
             this.splitContainerVertical = new System.Windows.Forms.SplitContainer();
             this.rowDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.splitContainerHorizontal = new System.Windows.Forms.SplitContainer();
+            this.columnDendrogramClipPanel = new System.Windows.Forms.Panel();
             this.columnDendrogram = new pwiz.Common.Controls.Clustering.DendrogramControl();
             this.dataGridSplitContainer = new System.Windows.Forms.SplitContainer();
-            this.dataGridViewEx1 = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.replicatePivotDataGridView = new pwiz.Skyline.Controls.DataGridViewEx();
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
-            this.columnDendrogramClipPanel = new System.Windows.Forms.Panel();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
             this.splitContainerVertical.Panel1.SuspendLayout();
@@ -66,14 +66,14 @@ namespace pwiz.Skyline.Controls.Databinding
             this.splitContainerHorizontal.Panel1.SuspendLayout();
             this.splitContainerHorizontal.Panel2.SuspendLayout();
             this.splitContainerHorizontal.SuspendLayout();
+            this.columnDendrogramClipPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).BeginInit();
             this.dataGridSplitContainer.Panel1.SuspendLayout();
             this.dataGridSplitContainer.Panel2.SuspendLayout();
             this.dataGridSplitContainer.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.replicatePivotDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).BeginInit();
-            this.columnDendrogramClipPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuStrip
@@ -193,6 +193,12 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             this.splitContainerHorizontal.Panel2.Controls.Add(this.dataGridSplitContainer);
             // 
+            // columnDendrogramClipPanel
+            // 
+            resources.ApplyResources(this.columnDendrogramClipPanel, "columnDendrogramClipPanel");
+            this.columnDendrogramClipPanel.Controls.Add(this.columnDendrogram);
+            this.columnDendrogramClipPanel.Name = "columnDendrogramClipPanel";
+            // 
             // columnDendrogram
             // 
             resources.ApplyResources(this.columnDendrogram, "columnDendrogram");
@@ -207,23 +213,23 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             // dataGridSplitContainer.Panel1
             // 
-            this.dataGridSplitContainer.Panel1.Controls.Add(this.dataGridViewEx1);
+            this.dataGridSplitContainer.Panel1.Controls.Add(this.replicatePivotDataGridView);
             this.dataGridSplitContainer.Panel1Collapsed = true;
             // 
             // dataGridSplitContainer.Panel2
             // 
             this.dataGridSplitContainer.Panel2.Controls.Add(this.boundDataGridView);
             // 
-            // dataGridViewEx1
+            // replicatePivotDataGridView
             // 
-            this.dataGridViewEx1.AllowUserToAddRows = false;
-            this.dataGridViewEx1.AllowUserToDeleteRows = false;
-            this.dataGridViewEx1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.dataGridViewEx1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            resources.ApplyResources(this.dataGridViewEx1, "dataGridViewEx1");
-            this.dataGridViewEx1.Name = "dataGridViewEx1";
-            this.dataGridViewEx1.RowTemplate.Height = 28;
-            this.dataGridViewEx1.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.dataGridViewEx1_ColumnWidthChanged);
+            this.replicatePivotDataGridView.AllowUserToAddRows = false;
+            this.replicatePivotDataGridView.AllowUserToDeleteRows = false;
+            this.replicatePivotDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.replicatePivotDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            resources.ApplyResources(this.replicatePivotDataGridView, "replicatePivotDataGridView");
+            this.replicatePivotDataGridView.Name = "replicatePivotDataGridView";
+            this.replicatePivotDataGridView.RowTemplate.Height = 28;
+            this.replicatePivotDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.replicatePivotDataGridView_ColumnWidthChanged);
             // 
             // boundDataGridView
             // 
@@ -262,10 +268,10 @@ namespace pwiz.Skyline.Controls.Databinding
             this.boundDataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.boundDataGridView.CellContextMenuStripNeeded += new System.Windows.Forms.DataGridViewCellContextMenuStripNeededEventHandler(this.boundDataGridView_CellContextMenuStripNeeded);
             this.boundDataGridView.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.boundDataGridView_ColumnHeaderMouseClick);
+            this.boundDataGridView.ColumnStateChanged += new System.Windows.Forms.DataGridViewColumnStateChangedEventHandler(this.boundDataGridView_ColumnStateChanged);
             this.boundDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.boundDataGridView_ColumnWidthChanged);
             this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
             this.boundDataGridView.Scroll += new System.Windows.Forms.ScrollEventHandler(this.boundDataGridView_Scroll);
-            this.boundDataGridView.ColumnStateChanged += new System.Windows.Forms.DataGridViewColumnStateChangedEventHandler(this.boundDataGridView_ColumnStateChanged);
             this.boundDataGridView.Resize += new System.EventHandler(this.boundDataGridView_Resize);
             // 
             // bindingListSource
@@ -281,12 +287,6 @@ namespace pwiz.Skyline.Controls.Databinding
             this.navBar.BindingListSource = this.bindingListSource;
             this.navBar.Name = "navBar";
             this.navBar.ShowViewsButton = true;
-            // 
-            // columnDendrogramClipPanel
-            // 
-            resources.ApplyResources(this.columnDendrogramClipPanel, "columnDendrogramClipPanel");
-            this.columnDendrogramClipPanel.Controls.Add(this.columnDendrogram);
-            this.columnDendrogramClipPanel.Name = "columnDendrogramClipPanel";
             // 
             // DataboundGridControl
             // 
@@ -304,14 +304,14 @@ namespace pwiz.Skyline.Controls.Databinding
             this.splitContainerHorizontal.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerHorizontal)).EndInit();
             this.splitContainerHorizontal.ResumeLayout(false);
+            this.columnDendrogramClipPanel.ResumeLayout(false);
             this.dataGridSplitContainer.Panel1.ResumeLayout(false);
             this.dataGridSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridSplitContainer)).EndInit();
             this.dataGridSplitContainer.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewEx1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.replicatePivotDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.boundDataGridView)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingListSource)).EndInit();
-            this.columnDendrogramClipPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -338,7 +338,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private Common.Controls.Clustering.DendrogramControl rowDendrogram;
         private System.Windows.Forms.SplitContainer splitContainerHorizontal;
         private Common.Controls.Clustering.DendrogramControl columnDendrogram;
-        private DataGridViewEx dataGridViewEx1;
+        private DataGridViewEx replicatePivotDataGridView;
         private System.Windows.Forms.SplitContainer dataGridSplitContainer;
         private Panel columnDendrogramClipPanel;
     }

@@ -315,34 +315,34 @@
   <data name="dataGridSplitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
-  <data name="dataGridViewEx1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+  <data name="replicatePivotDataGridView.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
-  <data name="dataGridViewEx1.Location" type="System.Drawing.Point, System.Drawing">
+  <data name="replicatePivotDataGridView.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 0</value>
   </data>
-  <data name="dataGridViewEx1.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
+  <data name="replicatePivotDataGridView.ScrollBars" type="System.Windows.Forms.ScrollBars, System.Windows.Forms">
     <value>Vertical</value>
   </data>
-  <data name="dataGridViewEx1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>703, 90</value>
+  <data name="replicatePivotDataGridView.Size" type="System.Drawing.Size, System.Drawing">
+    <value>670, 90</value>
   </data>
-  <data name="dataGridViewEx1.TabIndex" type="System.Int32, mscorlib">
+  <data name="replicatePivotDataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
-  <data name="dataGridViewEx1.Visible" type="System.Boolean, mscorlib">
+  <data name="replicatePivotDataGridView.Visible" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
-  <data name="&gt;&gt;dataGridViewEx1.Name" xml:space="preserve">
-    <value>dataGridViewEx1</value>
+  <data name="&gt;&gt;replicatePivotDataGridView.Name" xml:space="preserve">
+    <value>replicatePivotDataGridView</value>
   </data>
-  <data name="&gt;&gt;dataGridViewEx1.Type" xml:space="preserve">
+  <data name="&gt;&gt;replicatePivotDataGridView.Type" xml:space="preserve">
     <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=24.1.1.401, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;dataGridViewEx1.Parent" xml:space="preserve">
+  <data name="&gt;&gt;replicatePivotDataGridView.Parent" xml:space="preserve">
     <value>dataGridSplitContainer.Panel1</value>
   </data>
-  <data name="&gt;&gt;dataGridViewEx1.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;replicatePivotDataGridView.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="&gt;&gt;dataGridSplitContainer.Panel1.Name" xml:space="preserve">
