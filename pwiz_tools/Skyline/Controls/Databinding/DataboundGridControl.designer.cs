@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Controls.Databinding
             this.boundDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.boundDataGridView_ColumnWidthChanged);
             this.boundDataGridView.DataBindingComplete += new System.Windows.Forms.DataGridViewBindingCompleteEventHandler(this.boundDataGridView_DataBindingComplete);
             this.boundDataGridView.Scroll += new System.Windows.Forms.ScrollEventHandler(this.boundDataGridView_Scroll);
-            this.boundDataGridView.Paint += new System.Windows.Forms.PaintEventHandler(this.boundDataGridView_Paint);
+            this.boundDataGridView.ColumnStateChanged += new System.Windows.Forms.DataGridViewColumnStateChangedEventHandler(this.boundDataGridView_ColumnStateChanged);
             this.boundDataGridView.Resize += new System.EventHandler(this.boundDataGridView_Resize);
             // 
             // bindingListSource
