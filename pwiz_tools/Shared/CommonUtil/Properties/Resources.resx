@@ -130,4 +130,7 @@
   <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
     <value>Run command:</value>
   </data>
+  <data name="ProcessRunner_Run_Working_" xml:space="preserve">
+    <value>Working on it, please wait ...</value>
+  </data>
 </root>

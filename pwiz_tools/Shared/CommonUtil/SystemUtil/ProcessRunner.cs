@@ -203,7 +203,11 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            status = status.ChangeMessage(line);
+                            if (EnableImmediateLog)
+                                status = status.ChangeMessage(Resources.ProcessRunner_Run_Working_);
+                            else 
+                                status = status.ChangeMessage(line);
+                            
                             progress.UpdateProgress(status);
                         }
                     }

@@ -737,7 +737,7 @@ namespace pwiz.Skyline.Util
             string backupFile = FileSaver.TEMP_PREFIX + Path.GetFileName(pathDestination) + @".bak";
             string dirName = Path.GetDirectoryName(pathDestination);
             if (!string.IsNullOrEmpty(dirName))
-                backupFile = dirName != null ? Path.Combine(dirName, backupFile) : backupFile;
+                backupFile = Path.Combine(dirName, backupFile);
             // CONSIDER: Handle failure by trying a different name, or use a true temporary name?
             FileEx.SafeDelete(backupFile);
             return backupFile;
@@ -1671,12 +1671,47 @@ namespace pwiz.Skyline.Util
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
                 {
-                    using (var reader = new StreamReader(pipeStream))
+                    using (var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024*1024))
                     {
+                        bool readTimedOut = false;
+                        bool readSuccess;
                         string line;
-                        while ((line = reader.ReadLine()) != null)
+                        while (true)
                         {
-                            writer.WriteLine(line);
+                            readSuccess = false;
+                            line = "";
+
+                            // Start a new thread to read a line so cancellation does not wait too long
+                            Thread readThread = null;
+
+                            if (!readTimedOut)
+                            {
+                                readThread = new Thread(() =>
+                                {
+                                    line = reader.ReadLine();
+                                    readSuccess = true;
+                                });
+                                readThread.Start();
+                            }
+
+                            if (readThread != null && readThread.Join(1000))
+                            {
+                                if (readSuccess && line == null)
+                                    break;
+                                readTimedOut = false;
+                            }
+                            else if (readThread == null)
+                            {
+                                readTimedOut = false;
+                            }
+                            else
+                            {
+                                readTimedOut = true;
+                            }
+
+                            if (readSuccess && line != null)
+                                writer.WriteLine(line);
+
                             // wait for process to finish
                             if (progressMonitor != null)
                             {
@@ -1686,6 +1721,7 @@ namespace pwiz.Skyline.Util
                                     {
                                         try
                                         {
+                                            readThread?.Interrupt();
                                             process.Kill();
                                         }
                                         catch (InvalidOperationException)

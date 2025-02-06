@@ -24,6 +24,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -70,10 +71,7 @@ namespace pwiz.Skyline.ToolsUI
                             {
                                 _userNoToCuda = false;
                                 //Download
-                                using var waitDlg = new LongWaitDlg();
-                                waitDlg.Text = string.Format(task.InProgressMessage);
-                                waitDlg.ProgressValue = 0;
-                                waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+                                abortTask = !PerformTaskAction(parent, task);
                             }
                         }
                         else if (_userNoToCuda == true)
@@ -83,7 +81,7 @@ namespace pwiz.Skyline.ToolsUI
                         }
                         else
                         {
-                            PerformTaskAction(parent, task);
+                            abortTask = !PerformTaskAction(parent, task);
                         }
                     }
                     else if (task.Name == PythonTaskName.enable_longpaths)
@@ -100,17 +98,9 @@ namespace pwiz.Skyline.ToolsUI
                             pythonInstaller.EnableWindowsLongPaths();
                         }
                     }
-                    else if (task.Name == PythonTaskName.pip_install_packages)
-                    {
-                        using var waitDlg = new LongWaitDlg();
-                        waitDlg.Message = task.InProgressMessage;
-                        var status = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
-                        if (status.IsCanceled)
-                            abortTask = true;
-                    }
                     else if (task.IsAction)
                     {
-                       PerformTaskAction(parent,task);
+                        abortTask = !PerformTaskAction(parent,task, -1);
                     }
                     else
                     {
@@ -139,21 +129,33 @@ namespace pwiz.Skyline.ToolsUI
             }
             return result;
         }
-        private static void PerformTaskAction(Control parent, PythonTask task)
+
+        private static bool PerformTaskAction(Control parent, PythonTask task, int startProgress = 0)
         {
+            IProgressStatus proStatus = null;
             if (task.IsActionWithNoArg)
             {
                 using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
                 waitDlg.PerformWork(parent, 50, task.AsActionWithNoArg);
             }
-            else if (task.IsActionWithProgressMonitor)
+            else if (task.IsActionWithProgressMonitor && startProgress >= 0)
             {
                 using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
                 waitDlg.ProgressValue = 0;
-                waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+                proStatus = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
             }
+            else
+            {
+                using var waitDlg = new LongWaitDlg();
+                waitDlg.Message = task.InProgressMessage;
+                proStatus = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+            }
+            if (proStatus != null && proStatus.IsCanceled)
+                return false;
+            
+            return true;
         }
     }
 }
