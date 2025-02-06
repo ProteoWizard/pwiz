@@ -614,9 +614,18 @@ namespace pwiz.Skyline
             return HandleExceptions(commandArgs, ()=>
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
+                using var stream = File.OpenRead(commandArgs.ImportAnnotations);
+                var progressStream = new ProgressStream(stream);
+                var progressStatus = new ProgressStatus();
+                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus);
                 var modifiedDocument =
-                    documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations);
+                    documentAnnotations.ReadAnnotationsFromStream(CancellationToken.None, commandArgs.ImportAnnotations, progressStream);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
+                var warningMessage = documentAnnotations.GetWarningMessage();
+                if (warningMessage != null)
+                {
+                    _out.WriteLine(warningMessage);
+                }
             }, SkylineResources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
         }
 
