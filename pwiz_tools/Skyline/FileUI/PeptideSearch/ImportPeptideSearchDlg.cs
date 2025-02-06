@@ -911,7 +911,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             progressMonitor.UpdateProgress(status);
             if (Equals(Document.Settings.PeptideSettings.Libraries.LibrarySpecs, _existingLibraries.LibrarySpecs))
             {
-                MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_Did_not_detect_any_features___check_your_settings_and_try_again);
+                MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_No_features_detected);
+                return;
             }
             var docNew = Document;
             foreach (var lib in Document.Settings.PeptideSettings.Libraries.Libraries.Where(l =>

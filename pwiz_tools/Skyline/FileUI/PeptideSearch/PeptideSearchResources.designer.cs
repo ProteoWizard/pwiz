@@ -533,12 +533,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Did not detect any features - check your settings and try again.
+        ///   Looks up a localized string similar to No features were detected.
+        ///Check your settings and try again..
         /// </summary>
-        public static string ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_Did_not_detect_any_features___check_your_settings_and_try_again {
+        public static string ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_No_features_detected {
             get {
-                return ResourceManager.GetString("ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_Did_not_detect_any_features_" +
-                        "__check_your_settings_and_try_again", resourceCulture);
+                return ResourceManager.GetString("ImportPeptideSearchDlg_AddDetectedFeaturesToDocument_No_features_detected", resourceCulture);
             }
         }
         
