@@ -59,14 +59,17 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = string.Empty;
                     textPath.Text = string.Empty;
-                    cbxUseExplicitPeakBounds.Checked = true;
+                    comboUseExplicitPeakBounds.SelectedIndex = (int) ExplicitPeakBoundsOption.True;
                 }
                 else
                 {
                     textName.Text = _librarySpec.Name;
                     textPath.Text = _librarySpec.FilePath;
-                    cbxUseExplicitPeakBounds.Checked = _librarySpec.UseExplicitPeakBounds;
-                }                
+                    comboUseExplicitPeakBounds.SelectedIndex = (int)_librarySpec.UseExplicitPeakBounds;
+                }
+
+                comboUseExplicitPeakBounds.SelectedIndex =
+                    (int)(_librarySpec?.UseExplicitPeakBounds ?? ExplicitPeakBoundsOption.True);
             }
         }
 
@@ -106,7 +109,7 @@ namespace pwiz.Skyline.SettingsUI
                 textPath.Focus();
                 return;
             }
-            librarySpec = librarySpec.ChangeUseExplicitPeakBounds(cbxUseExplicitPeakBounds.Checked);
+            librarySpec = librarySpec.ChangeUseExplicitPeakBounds((ExplicitPeakBoundsOption) comboUseExplicitPeakBounds.SelectedIndex);
             if (librarySpec is ChromatogramLibrarySpec)
             {
                 using (var longWait = new LongWaitDlg())
@@ -268,7 +271,20 @@ namespace pwiz.Skyline.SettingsUI
             set { textPath.Text = value; }
         }
 
-        public CheckBox CbxUseExplicitPeakBounds { get { return cbxUseExplicitPeakBounds; } }
+        public ComboBox ComboUseExplicitPeakBounds { get { return comboUseExplicitPeakBounds; } }
+
+        public ExplicitPeakBoundsOption UseExplicitPeakBounds
+        {
+            get
+            {
+                return (ExplicitPeakBoundsOption)comboUseExplicitPeakBounds.SelectedIndex;
+            }
+            set
+            {
+                comboUseExplicitPeakBounds.SelectedIndex = (int)value;
+            }
+        }
+
         #endregion
     }
 }

@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(library);
             Assert.IsInstanceOfType(library, typeof(EncyclopeDiaLibrary));
             Assert.IsTrue(library.HasExplicitBounds);
-            Assert.IsTrue(library.UseExplicitPeakBounds);
+            Assert.AreEqual(ExplicitPeakBoundsOption.True, library.UseExplicitPeakBounds);
 
             // Verify that trying to generate decoys generates a warning about explicit peak bounds
             RunDlg<MultiButtonMsgDlg>(()=>SkylineWindow.ShowGenerateDecoysDlg(), dlg=>
