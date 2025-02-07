@@ -3755,7 +3755,9 @@ namespace pwiz.Skyline
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
                             using var fileStream = File.OpenRead(filename);
                             var progressStream = new ProgressStream(fileStream);
-                            progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus("Reading annotations"));
+                            progressStream.SetProgressMonitor(progressMonitor,
+                                new ProgressStatus(SkylineResources.SkylineWindow_ImportAnnotations_Reading_annotations)
+                                    .ChangePercentComplete(0));
                             newDocument = documentAnnotations.ReadAnnotationsFromStream(longWaitDlg.CancellationToken, filename, progressStream);
                             warningMessage = documentAnnotations.GetWarningMessage();
                         });
