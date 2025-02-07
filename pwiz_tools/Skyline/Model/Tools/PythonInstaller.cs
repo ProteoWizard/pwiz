@@ -594,7 +594,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             //PythonInstallerUtil.UnblockFile(PythonEmbeddablePackageDownloadPath);
             using var zipFile = ZipFile.Read(PythonEmbeddablePackageDownloadPath);
-            DeleteDirectory(PythonEmbeddablePackageExtractDir);
+            DirectoryEx.SafeDeleteLongPath(PythonEmbeddablePackageExtractDir);
             zipFile.ExtractAll(PythonEmbeddablePackageExtractDir);
         }
 
@@ -742,16 +742,16 @@ namespace pwiz.Skyline.Model.Tools
         public void CleanUpPythonEnvironment(string name)
         {
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(CudaVersionDir))
-                DeleteDirectory(CudaVersionDir);
+                DirectoryEx.SafeDeleteLongPath(CudaVersionDir);
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(CuDNNVersionDir))
-                DeleteDirectory(CuDNNVersionDir);
+                DirectoryEx.SafeDeleteLongPath(CuDNNVersionDir);
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name))) 
-                DeleteDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
+                DirectoryEx.SafeDeleteLongPath(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
 
         public static void DeleteToolsPythonDirectory()
         {
-            DeleteDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python"));
+            DirectoryEx.SafeDeleteLongPath(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python"));
         }
 
         public void SignPythonEnvironment(string name)
@@ -760,16 +760,6 @@ namespace pwiz.Skyline.Model.Tools
             PythonInstallerUtil.SignDirectory(CuDNNVersionDir);
             PythonInstallerUtil.SignDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
-
-        static void DeleteDirectory(string targetDir)
-        {
-            string longPath = $@"\\?\{targetDir}";
-            if (!Directory.Exists(targetDir))
-                return;
-
-            Directory.Delete(longPath, true);
-        }
-
     }
 
     public static class PythonInstallerUtil
