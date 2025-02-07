@@ -1367,7 +1367,7 @@ namespace pwiz.Skyline.SettingsUI
         /// Returns the appropriate set of spectrum filter pages that should be displayed in the filter editor,
         /// taking into account whether MS1 and MS2 are enabled on the full scan tab.
         /// </summary>
-        public FilterPages GetFilterPages()
+        private FilterPages GetFilterPages()
         {
             var filterPages = SpectrumFilter.GetFilterPages();
             if (filterPages.Pages.Contains(SpectrumClassFilter.GenericFilterPage))
@@ -1385,6 +1385,11 @@ namespace pwiz.Skyline.SettingsUI
                 requiredPages.Add(SpectrumClassFilter.Ms2FilterPage);
             }
 
+            return GetFilterPages(requiredPages, filterPages);
+        }
+
+        public static FilterPages GetFilterPages(List<FilterPage> requiredPages, FilterPages filterPages)
+        {
             var newPages = new List<FilterPage>();
             var newClauses = new List<FilterClause>();
             foreach (var requiredPage in requiredPages)

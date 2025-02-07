@@ -4507,6 +4507,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string TransitionFilterAndLibrariesSettings_SpectrumFilter {
+            get {
+                return ResourceManager.GetString("TransitionFilterAndLibrariesSettings_SpectrumFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquisition method.
         /// </summary>
         public static string TransitionFullScan_AcquisitionMethod {
