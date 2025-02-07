@@ -113,6 +113,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\DisposableCollection.cs" />
+    <Compile Include="Collections\ImmutableOptimizations.cs" />
+    <Compile Include="Collections\IntList.cs" />
     <Compile Include="CommonApplicationSettings.cs" />
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
     <Compile Include="Chemistry\Formula.cs" />

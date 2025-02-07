@@ -184,8 +184,11 @@ namespace pwiz.Skyline.Model.Proteome
 
                                         for (var i = 0; i < nodePepGroup.ProteinMetadata.ProteinMetadataList.Count; i++)
                                         {
-                                            var fastaSequenceOrGroup = nodePepGroup.PeptideGroup as FastaSequence;
-                                            CheckBackgroundProteome(fastaSequenceOrGroup?.FastaSequenceList[i], nodePepGroup.ProteinMetadata, i);
+                                            var fastaSequence = (nodePepGroup.PeptideGroup as FastaSequence)?.FastaSequenceList[i];
+                                            if (fastaSequence != null)
+                                            {
+                                                CheckBackgroundProteome(fastaSequence, nodePepGroup.ProteinMetadata, i);
+                                            }
                                         }
                                         nResolved++;
                                     }
