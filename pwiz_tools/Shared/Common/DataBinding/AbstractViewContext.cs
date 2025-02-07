@@ -38,6 +38,11 @@ using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding
 {
+    public class CustomizedViewHelper
+    {
+        public ViewEditor CustomizedViewEditor { get; set; }
+        public string CustomizedViewName { get; set; }
+    }
     /// <summary>
     /// Base implementation of the <see cref="IViewContext"/> interface
     /// </summary>
@@ -46,7 +51,7 @@ namespace pwiz.Common.DataBinding
         
         public const string DefaultViewName = "default";
         private IList<RowSourceInfo> _rowSources;
-        public ViewEditor CustomizedViewForm { get; private set; }
+        public CustomizedViewHelper CustomizedViewForm { get; private set; }
 
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
         {
@@ -342,54 +347,64 @@ namespace pwiz.Common.DataBinding
             bool showApply = false)
         {
             ViewInfo viewInfo = null;
-            if (CustomizedViewForm == null || CustomizedViewForm.IsDisposed)
+            
+            if (CustomizedViewForm == null)
+                CustomizedViewForm = new CustomizedViewHelper();
+
+            if (CustomizedViewForm.CustomizedViewEditor == null || CustomizedViewForm.CustomizedViewEditor.IsDisposed)
             {
-                CustomizedViewForm = CreateViewEditor(viewPath, viewSpec, owner, showApply);
+                CustomizedViewForm.CustomizedViewEditor = CreateViewEditor(viewPath, viewSpec, owner, showApply);
                 if (!showApply) //modal
-                    FormUtil.ShowDialog(owner, CustomizedViewForm);
+                    FormUtil.ShowDialog(owner, CustomizedViewForm.CustomizedViewEditor);
             }
 
-            if (showApply && !CustomizedViewForm.Visible)
+
+
+            if (showApply && !CustomizedViewForm.CustomizedViewEditor.Visible)
             {
                 //non-modal 
-                FormUtil.Show(owner, CustomizedViewForm);
+                FormUtil.Show(owner, CustomizedViewForm.CustomizedViewEditor);
 
-                viewInfo = CustomizedViewForm.ViewInfo;
-                CustomizedViewForm.BringToFront();
+                viewInfo = CustomizedViewForm.CustomizedViewEditor.ViewInfo;
+                CustomizedViewForm.CustomizedViewEditor.BringToFront();
             }
             
+            if (!CustomizedViewForm.CustomizedViewName.IsNullOrEmpty())
+                CustomizedViewForm.CustomizedViewEditor.SavedName = CustomizedViewForm.CustomizedViewName;
+            
             if (viewInfo == null)
-                viewInfo = CustomizedViewForm.ViewInfo;
+                viewInfo = CustomizedViewForm.CustomizedViewEditor.ViewInfo;
 
-            if (CustomizedViewForm.DialogResult == DialogResult.Cancel)
+            if (CustomizedViewForm.CustomizedViewEditor.DialogResult == DialogResult.Cancel)
             {
-                CustomizedViewForm.Dispose();
+                CustomizedViewForm.CustomizedViewEditor.Dispose();
                 CustomizedViewForm = null;
                 if (owner is NavBar) ((NavBar)owner).EditLock = false;
                 return null;
             }
-            else if ( CustomizedViewForm.DialogResult != DialogResult.OK)
+            else if ( CustomizedViewForm.CustomizedViewEditor.DialogResult != DialogResult.OK)
             {                
-                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.CustomizedViewEditor.ViewName));
                 SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
+                CustomizedViewForm.CustomizedViewName = viewSpec.Name;
                 var newSpec = viewInfo.GetViewSpec();
                 return viewInfo.GetViewSpec();
             }
-            else if (!showApply && CustomizedViewForm.DialogResult == DialogResult.OK)
+            else if (!showApply && CustomizedViewForm.CustomizedViewEditor.DialogResult == DialogResult.OK)
             {
-                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
+                viewInfo = new ViewInfo(viewInfo.ParentColumn, viewInfo.GetViewSpec().SetName(CustomizedViewForm.CustomizedViewEditor.ViewName));
                 SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
                 var newSpec = viewInfo.GetViewSpec();
-                CustomizedViewForm.Close();
+                CustomizedViewForm.CustomizedViewEditor.Close();
                 return viewInfo.GetViewSpec();
             }
             // Consider: if save fails, reshow CustomizeViewForm?
             viewInfo = new ViewInfo(viewInfo.ParentColumn,
-                viewInfo.GetViewSpec().SetName(CustomizedViewForm.ViewName));
+                viewInfo.GetViewSpec().SetName(CustomizedViewForm.CustomizedViewEditor.ViewName));
             SaveView(viewPath.Id, viewInfo.GetViewSpec(), viewSpec.Name);
-
-                CustomizedViewForm.Dispose();
-                CustomizedViewForm = null;
+            CustomizedViewForm.CustomizedViewName = viewSpec.Name;
+            CustomizedViewForm.CustomizedViewEditor.Dispose();
+            CustomizedViewForm.CustomizedViewEditor= null;
 
             if (owner is NavBar) ((NavBar)owner).EditLock = false;
 

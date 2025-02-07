@@ -101,6 +101,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             AddTooltipHandler(_filterTab.AvailableFieldsTree);
             ParentControl = parent;
             btnAPPLY.Visible = showApply;
+            SavedName = ViewSpec.Name;
 
         }
 
@@ -137,8 +138,14 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public string ViewName
         {
-            get { return tbxViewName.Text; }
-            set { tbxViewName.Text = value; }
+            get
+            {
+                return tbxViewName.Text;
+            }
+            set 
+            {
+                tbxViewName.Text = value;
+            }
         }
 
         public void SetViewInfo(ViewInfo viewInfo, IEnumerable<PropertyPath> selectedPaths)
@@ -269,9 +276,11 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        public string SavedName { get; set; }
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
+            SavedName = tbxViewName.Text;
             if (e.Cancel || DialogResult == DialogResult.Cancel)
             {
                 return;
@@ -280,6 +289,35 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             ValidateViewName(e);
         }
 
+        protected bool ValidateViewName(string name)
+        {
+            string errorMessage = null;
+            if (string.IsNullOrEmpty(name))
+            {
+                errorMessage = Resources.CustomizeViewForm_ValidateViewName_View_name_cannot_be_blank_;
+            }
+            else
+            {
+                if (name != OriginalViewInfo.Name)
+                {
+                    if (ViewContext.GetViewSpecList(OriginalViewInfo.ViewGroup.Id).ViewSpecs
+                        .Any(viewSpec => viewSpec.Name == name))
+                    {
+                        errorMessage =
+                            string.Format(Resources.ViewEditor_ValidateViewName_There_is_already_a_view_named___0___,
+                                name);
+                    }
+                }
+            }
+
+            if (errorMessage != null)
+            {
+                ViewContext.ShowMessageBox(this, errorMessage, MessageBoxButtons.OK);
+                tbxViewName.Focus();
+                return false;
+            }
+            return true;
+        }
         protected void ValidateViewName(FormClosingEventArgs formClosingEventArgs)
         {
             if (formClosingEventArgs.Cancel)
@@ -287,7 +325,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
                 return;
             }
 
-            var name = tbxViewName.Text;
+            var name = tbxViewName.Text.IsNullOrEmpty() ? SavedName : tbxViewName.Text;
             string errorMessage = null;
             if (string.IsNullOrEmpty(name))
             {
@@ -430,6 +468,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         public void OkDialog()
         {
             DialogResult = btnOK.DialogResult;
+           
+            //Hide();
+            //Close();
+            //if (ParentControl is NavBar)
+            //    (ParentControl as NavBar)?.CustomizeView();
+            //Dispose();
         }
 
         public void ActivatePropertyPath(PropertyPath propertyPath)
@@ -562,30 +606,51 @@ namespace pwiz.Common.DataBinding.Controls.Editor
         {
             StartPosition = FormStartPosition.Manual;
             DialogResult = DialogResult.None;
-            if (ParentControl is NavBar)
-                (ParentControl as NavBar)?.CustomizeView(true);
+            if (ValidateViewName(tbxViewName.Text))
+            {
+                SavedName = tbxViewName.Text;
+
+                if (ParentControl is NavBar)
+                    (ParentControl as NavBar)?.CustomizeView(true);
+            }
+            else
+            {
+                tbxViewName.Text = SavedName;
+            }
+
+            
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
-            Hide();
-            if (ParentControl is NavBar)
-                (ParentControl as NavBar)?.CustomizeView();
-           //if (ParentControl is ManageViewsForm)
+            if (ValidateViewName(tbxViewName.Text))
+            {
+                SavedName = tbxViewName.Text;
+
+                Hide();
+                if (ParentControl is NavBar)
+                    (ParentControl as NavBar)?.CustomizeView();
+            }
+            else
+            {
+                tbxViewName.Text = SavedName;
+            }
+            //if (ParentControl is ManageViewsForm)
            //    (ParentControl as ManageViewsForm)?.EditView();
+           //Dispose();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.Cancel;
             Hide();
+            //Close();
             if (ParentControl is NavBar)
                 (ParentControl as NavBar)?.CustomizeView();
             if (ParentControl is ManageViewsForm)
             {
                 (ParentControl as ManageViewsForm)?.RetractView();
-                Close();
             }
             Dispose();
         }

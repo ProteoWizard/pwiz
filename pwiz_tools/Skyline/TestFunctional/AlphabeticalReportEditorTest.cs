@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            const string reportName = "My Custom Report";
+            const string reportName = @"My Custom Report";
             Assert.IsFalse(Settings.Default.AlphabeticalReportEditor);
             RunUI(()=>SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = FindOpenForm<DocumentGridForm>();
@@ -91,7 +91,9 @@ namespace pwiz.SkylineTestFunctional
                 viewEditor.OkDialog();
             });
             Assert.IsTrue(Settings.Default.AlphabeticalReportEditor);
-
+            documentGrid.Dispose();
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            documentGrid = FindOpenForm<DocumentGridForm>();
             RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
             {
                 Assert.IsTrue(viewEditor.Alphabetical);
