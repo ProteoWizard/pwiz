@@ -125,6 +125,10 @@ namespace pwiz.Skyline.SettingsUI
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
         private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
 
+        private string _productPath;
+
+        public string ProductPath { get => _productPath; private set => _productPath = value; }
+
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly SkylineWindow _skylineWindow;

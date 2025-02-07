@@ -18,6 +18,8 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -62,19 +64,22 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
 
             Assert.IsTrue(pythonUtil.HavePythonPrerequisite(buildLibraryDlg));
-            
+            ILibraryBuilder builder = buildLibraryDlg.Builder;
+
             //PauseTest();
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
-
+            string libHash = PythonInstallerUtil.GetFileHash(builder.ProductLibraryPath());
+            Assert.AreEqual(@"e00e068c5751ac56ba6934c6f2bbc2e1dcc16a5713408197d1a1d528dfe7e1e8", libHash);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
             });
-            
+            //Assert.AreEqual(
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
+            
         }
         protected override void Cleanup()
         {

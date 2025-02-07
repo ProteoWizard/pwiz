@@ -1640,12 +1640,12 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="arguments">The arguments to run at the command line</param>
         /// <param name="runAsAdministrator">If true, this process will be run as administrator, which
-        /// allows for the CMD.exe process to be ran with elevated privileges</param>
+        ///     allows for the CMD.exe process to be ran with elevated privileges</param>
         /// <param name="writer">The textwriter to which the command lines output will be written to</param>
         /// <param name="createNoWindow">Whether or not execution runs in its own window</param>
-        /// <param name="progressMonitor">Allows to Cancel</param>
+        /// <param name="cancellationToken">Allows to Cancel</param>
         /// <returns>The exitcode of the CMD process ran with the specified arguments</returns>
-        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
+        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default )
         {
             // create GUID
             string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
@@ -1679,7 +1679,7 @@ namespace pwiz.Skyline.Util
                     // not as administrator
                     if (runAsAdministrator && win32Exception.NativeErrorCode == ERROR_CANCELLED)
                     {
-                        return RunProcess(arguments, false, writer, createNoWindow, progressMonitor);
+                        return RunProcess(arguments, false, writer, createNoWindow, cancellationToken);
                     }
                     throw;
                 }
@@ -1696,7 +1696,8 @@ namespace pwiz.Skyline.Util
                         {
                             readSuccess = false;
                             line = "";
-
+                            line = reader.ReadLine();
+                            /* ******
                             // Start a new thread to read a line so cancellation does not wait too long
                             Thread readThread = null;
 
@@ -1724,34 +1725,33 @@ namespace pwiz.Skyline.Util
                             {
                                 readTimedOut = true;
                             }
+                            *** */
 
-                            if (readSuccess && line != null)
+                            if (line != null)
                                 writer.WriteLine(line);
 
-                            // wait for process to finish
-                            if (progressMonitor != null)
+                          
+                            if (cancellationToken.IsCancellationRequested)
                             {
-                                if (progressMonitor.IsCanceled)
+                                if (!process.HasExited)
                                 {
-                                    if (!process.HasExited)
+                                    try
                                     {
-                                        try
-                                        {
-                                            readThread?.Interrupt();
-                                            process.Kill();
-                                        }
-                                        catch (InvalidOperationException)
-                                        {
+                                        //readThread?.Interrupt();
+                                        process.Kill();
+                                    }
+                                    catch (InvalidOperationException)
+                                    {
 
-                                        }
-                                        break;
                                     }
-                                    else
-                                    {
-                                        break;
-                                    }
+                                    break;
+                                }
+                                else
+                                {
+                                    break;
                                 }
                             }
+                            
                         }
                     }
 

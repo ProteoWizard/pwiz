@@ -24,12 +24,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
@@ -366,18 +366,69 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private LibraryHelper LibraryHelper { get; set; }
 
-        private DateTime _nowTime = DateTime.UtcNow;
-        private string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
+        private DateTime _nowTime; 
+        public string TimeStamp
+        {
+            get;
+            private set;
+        }
+
         private string PythonVirtualEnvironmentScriptsDir { get; }
-        private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
-        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP, TimeStamp);
-        private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
-        private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
-        private string InputFilePath => Path.Combine(RootDir, InputFileName);
-        private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
-        private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
-        private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
-        private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
+        public string PeptdeepExecutablePath
+        {
+            get;
+            private set;
+        }
+
+        public string RootDir
+        {
+            get;
+            private set;
+        }
+
+        public string SettingsFilePath
+        {
+            get;
+            private set;
+        }
+
+        public string InputFileName
+        {
+            get;
+            private set;
+        }
+
+        public string InputFilePath
+        {
+            get;
+            private set;
+        }
+
+        private string _outputModelsDir;
+        public string OutputModelsDir
+        {
+            get { return _outputModelsDir; }
+            private set { _outputModelsDir = value;  }
+        }
+
+        public string OutputSpectralLibsDir
+        {
+            get;
+            private set;
+        }
+
+        private string _outputSpectraLibPath;
+        public string OutputSpectraLibFilepath
+        {
+            get { return _outputSpectraLibPath; }
+            private set { _outputSpectraLibPath = value;  }
+        } 
+        public string TransformedOutputSpectraLibFilepath
+        {
+            get; 
+            private set;
+        }
+
         private SrmDocument Document { get; }
         /// <summary>
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
@@ -412,9 +463,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
         {
             Document = document;
-            Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
 
         }
@@ -426,16 +475,34 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             return dir;
         }
+
+        public string ProductLibraryPath()
+        {
+            return OutputSpectraLibFilepath;
+        }
         public void ResetTimeStamp()
         {
-            _nowTime = DateTime.UtcNow;
+            _nowTime = DateTime.Now;
+            TimeStamp = _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
+            PeptdeepExecutablePath = Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
+            RootDir = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP, TimeStamp);
+            SettingsFilePath = Path.Combine(RootDir, SETTINGS_FILE_NAME);
+            InputFileName = INPUT + UNDERSCORE + EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
+            InputFilePath = Path.Combine(RootDir, InputFileName);
+            OutputModelsDir = Path.Combine(RootDir, OUTPUT_MODELS);
+            OutputSpectralLibsDir = Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS); 
+            OutputModelsDir = Path.Combine(RootDir, OUTPUT_MODELS);
+            OutputSpectraLibFilepath = Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
+            TransformedOutputSpectraLibFilepath = Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
         }
         public bool BuildLibrary(IProgressMonitor progress)
         {
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
-                ResetTimeStamp();
+                ResetTimeStamp(); 
+                Directory.CreateDirectory(RootDir);
+                if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
                 RunAlphapeptdeep(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
                 return true;

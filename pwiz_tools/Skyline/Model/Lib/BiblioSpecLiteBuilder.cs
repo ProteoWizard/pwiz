@@ -83,8 +83,12 @@ namespace pwiz.Skyline.Model.Lib
             if (targetSequences != null)
                 TargetSequences = targetSequences.Where(t => t.IsProteomic).Select(t => t.Sequence).ToList();
         }
-
         public LibrarySpec LibrarySpec { get; private set; }
+        public string ProductLibraryPath()
+        {
+            return "";
+        }
+
         public string OutputPath { get { return LibrarySpec.FilePath; } }
 
         public LibraryBuildAction Action { get; set; }

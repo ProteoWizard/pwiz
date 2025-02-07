@@ -24,7 +24,6 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -132,30 +131,30 @@ namespace pwiz.Skyline.ToolsUI
 
         private static bool PerformTaskAction(Control parent, PythonTask task, int startProgress = 0)
         {
-            IProgressStatus proStatus = null;
+            //IProgressStatus proStatus = null;
+            using var waitDlg = new LongWaitDlg();
+    
             if (task.IsActionWithNoArg)
             {
-                using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
                 waitDlg.PerformWork(parent, 50, task.AsActionWithNoArg);
             }
             else if (task.IsActionWithProgressMonitor && startProgress >= 0)
             {
-                using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
                 waitDlg.ProgressValue = 0;
-                proStatus = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+                waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
             }
             else
             {
-                using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
-                proStatus = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
-            }
-            if (proStatus != null && proStatus.IsCanceled)
-                return false;
+                waitDlg.PerformWork(parent, 50, task.AsActionWithLongWaitBroker);
+            }   
+                
+            //if (proStatus != null && proStatus.IsCanceled)
+            //    return false;
             
-            return true;
+            return !waitDlg.IsCanceled;
         }
     }
 }

@@ -72,11 +72,11 @@ namespace pwiz.SkylineTestUtil
             return nvidiaGpu;
         }
 
-        public PythonTestUtil(string pythonVersion, string toolName)
+        public PythonTestUtil(string pythonVersion, string toolName, bool cleanSlate = false)
         {
             _pythonVersion = pythonVersion;
             _toolName = toolName;
-            PythonInstaller.DeleteToolsPythonDirectory();
+            if (cleanSlate) PythonInstaller.DeleteToolsPythonDirectory();
         }
 
         public void CancelPython(BuildLibraryDlg buildLibraryDlg)
