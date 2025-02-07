@@ -858,6 +858,15 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im => im.IsForcedIntegration = isForcedCoelution);
         }
 
+        public TransitionChromInfo ChangeTruncated(bool truncated)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SetFlag(Flags.Truncated, truncated);
+                im.SetFlag(Flags.TruncatedKnown, true);
+            });
+        }
+
         #endregion
 
         #region object overrides

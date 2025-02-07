@@ -83,7 +83,27 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? Height { get { return ChromInfo.IsEmpty ? (double?) null : ChromInfo.Height; } }
         [Format(Formats.MASS_ERROR, NullValue = TextUtil.EXCEL_NA)]
         public double? MassErrorPPM { get { return ChromInfo.MassError; } }
-        public bool? Truncated { get { return ChromInfo.IsTruncated; } }
+
+        [Importable]
+        public bool Truncated
+        {
+            get
+            {
+                return ChromInfo.IsTruncated ?? false;
+            }
+            set
+            {
+                if (value == Truncated)
+                {
+                    return;
+                }
+                ChangeChromInfo(EditDescription.SetColumn(nameof(Truncated), value), chromInfo =>
+                {
+                    return chromInfo.ChangeTruncated(value).ChangeUserSet(UserSet.TRUE);
+                });
+            }
+        }
+
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? PeakRank { get { return ChromInfo.IsEmpty ? (int?)null : ChromInfo.Rank; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]

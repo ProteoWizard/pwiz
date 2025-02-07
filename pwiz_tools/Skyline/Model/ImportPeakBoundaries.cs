@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public enum Field { modified_peptide, filename, apex_time, start_time, end_time, charge, is_decoy, sample_name, q_value, score }
+        public enum Field { modified_peptide, filename, apex_time, start_time, end_time, charge, is_decoy, sample_name, q_value, score, truncated }
 
         public static readonly int[] REQUIRED_FIELDS =
             {
@@ -182,6 +182,7 @@ namespace pwiz.Skyline.Model
                                 new[] {"SampleName", ColumnCaptions.SampleName},
                                 new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
                                 new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
+                                new[] {"Truncated", ColumnCaptions.Truncated}
                             };
                             for (var field = 0; field < currentFieldNames.Length; field++)
                             {
@@ -434,6 +435,17 @@ namespace pwiz.Skyline.Model
                     Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_start_time_, linesRead);
                 double? endTime = dataFields.GetTime(Field.end_time, timeConversionFactor,
                     Resources.PeakBoundaryImporter_Import_The_value___0___on_line__1__is_not_a_valid_end_time_, linesRead);
+                bool? truncated = null;
+                var strTruncated = dataFields.GetField(Field.truncated);
+                if (strTruncated != null)
+                {
+                    truncated = ParseBoolean(strTruncated);
+                    if (!truncated.HasValue)
+                    {
+                        throw new IOException(string.Format(
+                            @"The truncated value {0} on line {1} is invalid: must be 0 or 1.", strTruncated, line));
+                    }
+                }
 
                 // Error if only one of startTime and endTime is null
                 if (startTime == null && endTime != null)
@@ -528,6 +540,12 @@ namespace pwiz.Skyline.Model
                             docNew = docNew.ChangePeak(groupPath, nameSet, filePath,
                                 null, startTime, endTime, UserSet.IMPORTED, null, false);
                         }
+
+                        if (truncated.HasValue)
+                        {
+                            docNew = ChangeTruncated(docNew, groupPath, chromSet, fileId, truncated.Value);
+                        }
+
                         // For removing peaks that are not in the file, if removeMissing = true
                         trackAdjustedResults.Add(new ResultsKey(fileId.GlobalIndex, groupNode.Id));
                         foundSample = true;
@@ -545,6 +563,51 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(docNew, docReference))
                 Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
             return Document;
+        }
+
+        private SrmDocument ChangeTruncated(SrmDocument doc, IdentityPath groupPath, ChromatogramSet chromatogramSet,
+            ChromFileInfoId fileId, bool truncated)
+        {
+            if (!doc.MeasuredResults.TryGetChromatogramSet(chromatogramSet.Name, out _, out int replicateIndex))
+            {
+                return doc;
+            }
+            var transitionGroupDocNode = (TransitionGroupDocNode)doc.FindNode(groupPath);
+            var transitions = transitionGroupDocNode.Children.ToArray();
+            for (int iTransition = 0; iTransition < transitions.Length; iTransition++)
+            {
+                var newChromInfos = new List<TransitionChromInfo>();
+                var transitionDocNode = (TransitionDocNode) transitions[iTransition];
+                foreach (var transitionChromInfo in transitionDocNode.GetSafeChromInfo(replicateIndex))
+                {
+                    if (ReferenceEquals(fileId, transitionChromInfo.FileId))
+                    {
+                        newChromInfos.Add(transitionChromInfo.ChangeTruncated(truncated));
+                    }
+                    else
+                    {
+                        newChromInfos.Add(transitionChromInfo);
+                    }
+                }
+
+                if (newChromInfos.SequenceEqual(transitionDocNode.GetSafeChromInfo(replicateIndex)))
+                {
+                    transitions[iTransition] = transitionDocNode;
+                    continue;
+                }
+
+                transitions[iTransition] = transitionDocNode.ChangeResults(
+                    transitionDocNode.Results.ChangeAt(replicateIndex,
+                        new ChromInfoList<TransitionChromInfo>(newChromInfos)));
+            }
+
+            if (ArrayUtil.ReferencesEqual(transitionGroupDocNode.Children, transitions))
+            {
+                return doc;
+            }
+
+            transitionGroupDocNode = (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(transitions);
+            return (SrmDocument) doc.ReplaceChild(groupPath.Parent, transitionGroupDocNode);
         }
 
         /// <summary>
@@ -852,34 +915,17 @@ namespace pwiz.Skyline.Model
 
             public bool IsDecoy(long linesRead)
             {
-                bool isDecoy = false;
                 string decoyString = GetField(Field.is_decoy);
-                if (decoyString != null)
+                if (decoyString == null)
                 {
-                    int decoyNum;
-                    if (!int.TryParse(decoyString, out decoyNum))
-                    {
-                        switch (decoyString.ToLowerInvariant())
-                        {
-                            case @"false":
-                                decoyNum = 0;
-                                break;
-                            case @"true":
-                                decoyNum = 1;
-                                break;
-                            default:
-                                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_,
-                                                                    decoyString, linesRead));
-                        }
-                    }
-                    if (decoyNum != 1 && decoyNum != 0)
-                    {
-                        throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_,
-                                                            decoyString, linesRead));
-                    }
-                    isDecoy = decoyNum == 1;
+                    return false;
                 }
-                return isDecoy;
+                bool? isDecoy = ParseBoolean(decoyString);
+                if (isDecoy.HasValue)
+                {
+                    return isDecoy.Value;
+                }
+                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_The_decoy_value__0__on_line__1__is_invalid__must_be_0_or_1_, decoyString, linesRead));
             }
 
             public bool TryGetCharge(long linesRead, out Adduct charge, bool assumeProteomic)
@@ -898,5 +944,36 @@ namespace pwiz.Skyline.Model
                 return true;
             }
         }
+        private static bool? ParseBoolean(string boolStr)
+        {
+            if (int.TryParse(boolStr, out int numeric))
+            {
+                if (numeric == 1)
+                {
+                    return true;
+                }
+
+                if (numeric == 0)
+                {
+                    return false;
+                }
+
+                return null;
+            }
+
+            if (boolStr.Equals(@"false", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            if (boolStr.Equals(@"true", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return null;
+        }
+
+
     }
 }
