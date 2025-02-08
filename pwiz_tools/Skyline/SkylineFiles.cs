@@ -320,9 +320,8 @@ namespace pwiz.Skyline
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
                         using var hashingStream = new HashingStream(progressStream);
                         // Wrap stream in XmlReader so that BaseUri is known
-                        var reader = XmlReader.Create(hashingStream,
-                            new XmlReaderSettings() { IgnoreWhitespace = true },
-                            path);
+                        var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8),
+                            new XmlReaderSettings { IgnoreWhitespace = true }, path);
                         XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
                         document = (SrmDocument) ser.Deserialize(reader);
                         var skylineDocumentHash = hashingStream.Done();
