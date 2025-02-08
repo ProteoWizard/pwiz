@@ -617,7 +617,7 @@ namespace pwiz.Skyline
                 using var stream = File.OpenRead(commandArgs.ImportAnnotations);
                 using var progressStream = new ProgressStream(stream);
                 var progressStatus = new ProgressStatus();
-                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus);
+                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus, true);
                 var modifiedDocument =
                     documentAnnotations.ReadAnnotationsFromStream(CancellationToken.None, commandArgs.ImportAnnotations, progressStream);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
@@ -1412,23 +1412,23 @@ namespace pwiz.Skyline
             try
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                string hash;
-                using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
-                {
-                    // Wrap stream in XmlReader so that BaseUri is known
-                    var reader = XmlReader.Create(hashingStreamReader, 
-                        new XmlReaderSettings() { IgnoreWhitespace = true }, 
-                        skylineFile);  
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
+                using var fileStream = File.OpenRead(skylineFile);
+                using var progressStream = new ProgressStream(fileStream);
+                progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
+                var hashingStream = new HashingStream(progressStream);
+                // Wrap stream in XmlReader so that BaseUri is known
+                var reader = XmlReader.Create(hashingStream, 
+                    new XmlReaderSettings { IgnoreWhitespace = true }, 
+                    skylineFile);  
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
-                    SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
-                    if (_doc == null)
-                        return false;
+                SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
+                if (_doc == null)
+                    return false;
 
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = hashingStreamReader.Stream.Done();
-                }
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
+                var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
 

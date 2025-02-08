@@ -78,11 +78,13 @@ namespace pwiz.Common.SystemUtil
 
         public IProgressMonitor ProgressMonitor { get; private set; }
         public IProgressStatus ProgressStatus { get; set; }
+        public bool ThrowIfCancelled { get; set; }
 
-        public void SetProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus progressStatus)
+        public void SetProgressMonitor(IProgressMonitor progressMonitor, IProgressStatus progressStatus, bool throwIfCancelled)
         {
             ProgressMonitor = progressMonitor;
             ProgressStatus = progressStatus;
+            ThrowIfCancelled = throwIfCancelled;
         }
 
         private void UpdateProgress(long newPosition)
@@ -92,6 +94,10 @@ namespace pwiz.Common.SystemUtil
                 return;
             }
 
+            if (ThrowIfCancelled && ProgressMonitor.IsCanceled)
+            {
+                throw new OperationCanceledException();
+            }
             int newPercentComplete = (int)Math.Min(99, 100 * newPosition / Length);
             if (newPercentComplete != ProgressStatus.PercentComplete)
             {
