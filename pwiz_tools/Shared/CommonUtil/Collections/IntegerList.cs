@@ -1,28 +1,61 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Linq;
 
 namespace pwiz.Common.Collections
 {
-    public abstract class IntList : ImmutableList<int>
+    /// <summary>
+    /// Efficient storage of integer values.
+    /// If the values are only 0 or 1, then stored as <see cref="Bits"/>.
+    /// May also be stored as bytes, or shorts.
+    /// </summary>
+    public abstract class IntegerList : ImmutableList<int>
     {
-        public static ImmutableList<int> Of(IEnumerable<int> values)
+        public static ImmutableList<int> FromIntegers(IEnumerable<int> values)
         {
             var list = ImmutableList.ValueOf(values);
 
-            if (list.Count == 0)
+            if (list.Count <= 1)
             {
                 return list;
             }
 
-            int max = list.Max();
-            int min = list.Min();
+            int min = list[0];
+            int max = list[0];
+            foreach (var item in list.Skip(1))
+            {
+                min = Math.Min(min, item);
+                max = Math.Max(max, item);
+                if (min != max && (min < short.MinValue || max > short.MaxValue))
+                {
+                    return list;
+                }
+            }
             if (min == max)
             {
                 return new ConstantList<int>(list.Count, min);
             }
-            if (min >= 0 && max <= 1)
+            if (min == 0 && max == 1)
             {
                 return new Bits(list.Count, list.Select(v => v != 0));
             }
@@ -40,7 +73,7 @@ namespace pwiz.Common.Collections
             return list;
         }
 
-        private class Bits : IntList
+        private class Bits : IntegerList
         {
             private readonly int _count;
             private readonly BitVector32[] _bits;
@@ -86,7 +119,7 @@ namespace pwiz.Common.Collections
             }
         }
 
-        private class Bytes : IntList
+        private class Bytes : IntegerList
         {
             private readonly byte[] _bytes;
 
@@ -113,7 +146,7 @@ namespace pwiz.Common.Collections
             public override int this[int index] => _bytes[index];
         }
 
-        private class Shorts : IntList
+        private class Shorts : IntegerList
         {
             private readonly short[] _shorts;
 
@@ -138,98 +171,6 @@ namespace pwiz.Common.Collections
             }
 
             public override int this[int index] => _shorts[index];
-        }
-    }
-
-    public static class Factor
-    {
-        public static Factor<T> ToFactor<T>(this IEnumerable<T> items)
-        {
-            return ToFactorIncludingLevels(items, ImmutableList<T>.EMPTY);
-        }
-
-        public static Factor<T> ToFactorIncludingLevels<T>(this IEnumerable<T> items, ImmutableList<T> startingLevels)
-        {
-            if (items is Factor<T> factor && factor.Levels.Take(startingLevels.Count).SequenceEqual(startingLevels))
-            {
-                return factor;
-            }
-            var levelsDict = new Dictionary<ValueTuple<T>, int>();
-            foreach (var level in startingLevels)
-            {
-                levelsDict.Add(ValueTuple.Create(level), levelsDict.Count);
-            }
-            var levelIndices = new List<int>();
-            foreach (var item in items)
-            {
-                var key = ValueTuple.Create(item);
-                if (!levelsDict.TryGetValue(key, out int levelIndex))
-                {
-                    levelIndex = levelsDict.Count;
-                    levelsDict.Add(key, levelIndex);
-                }
-
-                levelIndices.Add(levelIndex);
-            }
-
-            ImmutableList<T> levels;
-            if (levelsDict.Count == startingLevels.Count)
-            {
-                levels = startingLevels;
-            }
-            else
-            {
-                levels = levelsDict.OrderBy(kvp => kvp.Value).Select(kvp => kvp.Key.Item1).ToImmutable();
-            }
-            return new Factor<T>(levels, IntList.Of(levelIndices));
-        }
-    }
-
-    public class Factor<T> : ImmutableList<T>
-    {
-        public static Factor<T> FromItems(IEnumerable<T> items)
-        {
-            var levelsDict = new Dictionary<T, int>();
-            var levelIndices = new List<int>();
-            foreach (var item in items)
-            {
-                if (!levelsDict.TryGetValue(item, out int levelIndex))
-                {
-                    levelIndex = levelsDict.Count;
-                    levelsDict.Add(item, levelIndex);
-                }
-
-                levelIndices.Add(levelIndex);
-            }
-
-            var levels = levelsDict.OrderBy(kvp => kvp.Value).Select(kvp => kvp.Key).ToImmutable();
-            return new Factor<T>(levels, IntList.Of(levelIndices));
-        }
-
-        public Factor(ImmutableList<T> levels, ImmutableList<int> levelIndices)
-        {
-            Levels = levels;
-            LevelIndices = levelIndices;
-        }
-
-        public ImmutableList<T> Levels { get; }
-        public ImmutableList<int> LevelIndices { get; }
-
-        public override int Count
-        {
-            get { return LevelIndices.Count; }
-        }
-        public override IEnumerator<T> GetEnumerator()
-        {
-            return LevelIndices.Select(i => Levels[i]).GetEnumerator();
-        }
-
-        public override T this[int index]
-        {
-            get
-            {
-                return Levels[LevelIndices[index]];
-            }
         }
     }
 }

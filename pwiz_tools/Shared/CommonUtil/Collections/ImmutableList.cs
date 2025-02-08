@@ -29,11 +29,6 @@ namespace pwiz.Common.Collections
     /// </summary>
     public static class ImmutableList
     {
-        public static ImmutableList<T> ToImmutable<T>(this IEnumerable<T> items)
-        {
-            return ValueOf(items);
-        }
-
         /// <summary>
         /// Returns an <see cref="ImmutableList{T}"/> containing the passed
         /// in items, or null if <paramref name="values"/> is null.
@@ -144,11 +139,20 @@ namespace pwiz.Common.Collections
             return new SingletonImpl(value);
         }
 
+        /// <summary>
+        /// GetHashCode implementation which cannot be overridden
+        /// in derived classes in order to preserve the semantics
+        /// that ImmutableList instances are equal if and only if
+        /// they contain the same items.
+        /// </summary>
         public sealed override int GetHashCode()
         {
             return CollectionUtil.GetHashCodeDeep(this);
         }
 
+        /// <summary>
+        /// Equals implementation which cannot be overridden.
+        /// </summary>
         public sealed override bool Equals(object o)
         {
             if (o == null)
@@ -177,6 +181,12 @@ namespace pwiz.Common.Collections
             return this.SequenceEqual(that);
         }
 
+        /// <summary>
+        /// Virtual equals implementation which is only called if the list being
+        /// compared against is the same type as this. Derived classes may override
+        /// this if they have a more efficient way of comparing against other
+        /// instances of themselves (e.g. <see cref="ConstantList{T}"/>)
+        /// </summary>
         protected virtual bool SameTypeEquals(ImmutableList<T> list)
         {
             return this.SequenceEqual(list);
@@ -401,6 +411,10 @@ namespace pwiz.Common.Collections
         }
     }
 
+    /// <summary>
+    /// Efficiently stores a list of <see cref="Nullable"/> by using
+    /// <see cref="IntegerList.Bits"/>.
+    /// </summary>
     public class NullableList<T> : ImmutableList<T?> where T : struct
     {
         private ImmutableList<int> _hasValueList;
@@ -416,8 +430,15 @@ namespace pwiz.Common.Collections
                 hasValues.Add(item.HasValue ? 1 : 0);
             }
 
-            _hasValueList = IntList.ValueOf(hasValues);
-            _values = values.ToImmutable();
+            _hasValueList = IntegerList.FromIntegers(hasValues);
+            if (typeof(T) == typeof(int))
+            {
+                _values = (ImmutableList<T>)(object)IntegerList.FromIntegers((List<int>)(object) values);
+            }
+            else
+            {
+                _values = values.ToImmutable();
+            }
         }
 
         public override int Count

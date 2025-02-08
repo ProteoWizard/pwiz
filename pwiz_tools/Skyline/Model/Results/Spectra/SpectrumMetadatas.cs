@@ -1,5 +1,23 @@
-﻿using System;
-using System.Collections;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2024 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -8,41 +26,38 @@ using pwiz.Common.Collections;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.ProtoBuf;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
+    /// <summary>
+    /// More efficient storage of a list of <see cref="SpectrumMetadata"/> objects
+    /// by storing repeated values as <see cref="Factor{T}"/> etc.
+    /// </summary>
     public class SpectrumMetadatas : AbstractReadOnlyList<SpectrumMetadata>
     {
-        private ImmutableList<double> _retentionTimes;
-        private ImmutableList<double?> _totalIonCurrents;
-        private ImmutableList<double?> _injectionTimes;
-        private ImmutableList<int> _presetScanConfigurations;
-        private ImmutableList<int[]> _scanIdInts;
-        private ImmutableList<string> _scanIdStrings;
-        private ImmutableList<string> _scanDescriptions;
-        private ImmutableList<string> _analyzers;
-        private ImmutableList<Tuple<double, double>> _scanWindows;
-        private ImmutableList<ImmutableList<PrecursorWithLevel>> _spectrumPrecursors;
-        private ImmutableList<double?> _compensationVoltages;
-        private ImmutableList<bool> _negativeCharges;
-        private ImmutableList<int> _msLevels;
+        private readonly ImmutableList<double> _retentionTimes;
+        private readonly ImmutableList<double?> _totalIonCurrents;
+        private readonly ImmutableList<double?> _injectionTimes;
+        private readonly ImmutableList<int> _presetScanConfigurations;
+        private readonly ImmutableList<ScanId> _scanIds;
+        private readonly ImmutableList<string> _scanDescriptions;
+        private readonly ImmutableList<string> _analyzers;
+        private readonly ImmutableList<Tuple<double, double>> _scanWindows;
+        private readonly ImmutableList<ImmutableList<PrecursorWithLevel>> _spectrumPrecursors;
+        private readonly ImmutableList<double?> _compensationVoltages;
+        private readonly ImmutableList<bool> _negativeCharges;
+        private readonly ImmutableList<int> _msLevels;
 
         public SpectrumMetadatas(IEnumerable<SpectrumMetadata> enumerable)
         {
             var collection = enumerable as ICollection<SpectrumMetadata> ?? enumerable.ToList();
             _retentionTimes = collection.Select(m => m.RetentionTime).ToImmutable();
-            _totalIonCurrents = ImmutableOptimizations.Nullables(collection.Select(m => m.TotalIonCurrent))
+            _totalIonCurrents = ImmutableListFactory.Nullables(collection.Select(m => m.TotalIonCurrent))
                 .MaybeConstant();
             _injectionTimes = collection.Select(m => m.InjectionTime).Nullables().MaybeConstant();
             _presetScanConfigurations =
-                IntList.ValueOf(collection.Select(m => m.PresetScanConfiguration)).MaybeConstant();
-            _scanIdInts = ImmutableList.ValueOf(collection.Select(m=>GetScanIdParts(m.Id)?.ToArray()));
-            if (_scanIdInts.Contains(null))
-            {
-                _scanIdInts = null;
-                _scanIdStrings = collection.Select(m => m.Id).ToImmutable();
-            }
+                IntegerList.FromIntegers(collection.Select(m => m.PresetScanConfiguration)).MaybeConstant();
+            _scanIds = collection.Select(m => new ScanId(m.Id)).ToImmutable();
             _scanDescriptions = collection.Select(m => m.ScanDescription).ToFactor().MaybeConstant();
             _analyzers = collection.Select(m => m.Analyzer).ToFactor().MaybeConstant();
             _scanWindows = collection.Select(GetScanWindow).ToFactor().MaybeConstant();
@@ -57,9 +72,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _retentionTimes = proto.Spectra.Select(s => s.RetentionTime).ToImmutable();
             _totalIonCurrents = proto.Spectra.Select(s => s.TotalIonCurrent).Nullables().MaybeConstant();
             _injectionTimes = proto.Spectra.Select(s => s.InjectionTime).Nullables().MaybeConstant();
-            _presetScanConfigurations = IntList.ValueOf(proto.Spectra.Select(s => s.PresetScanConfiguration));
-            var scanIdPartsList = new List<int[]>();
+            _presetScanConfigurations = IntegerList.FromIntegers(proto.Spectra.Select(s => s.PresetScanConfiguration));
             var precursors = new List<PrecursorWithLevel>();
+            precursors.Insert(0, default); // Make looking up by one-based index easier
             foreach (var protoPrecursor in proto.Precursors)
             {
                 var spectrumPrecursor = new SpectrumPrecursor(new SignedMz(protoPrecursor.TargetMz));
@@ -76,36 +91,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
                 precursors.Add(new PrecursorWithLevel(protoPrecursor.MsLevel, spectrumPrecursor));
             }
-            foreach (var spectrum in proto.Spectra)
-            {
-                if (!string.IsNullOrEmpty(spectrum.ScanIdText))
-                {
-                    break;
-                }
-                scanIdPartsList.Add(spectrum.ScanIdParts.ToArray());
-            }
-
-            if (scanIdPartsList.Count == proto.Spectra.Count)
-            {
-                _scanIdInts = scanIdPartsList.ToImmutable();
-            }
-            else
-            {
-                var scanIdStrings = new List<string>();
-                foreach (var spectrum in proto.Spectra)
-                {
-                    if (string.IsNullOrEmpty(spectrum.ScanIdText))
-                    {
-                        scanIdStrings.Add(MakeScanId(spectrum.ScanIdParts));
-                    }
-                    else
-                    {
-                        scanIdStrings.Add(spectrum.ScanIdText);
-                    }
-                }
-                _scanIdStrings = scanIdStrings.ToImmutable();
-            }
-
+            _scanIds = proto.Spectra.Select(spectrum=>new ScanId(spectrum)).ToImmutable();
             _scanDescriptions = ToFactor(proto.ScanDescriptions, proto.Spectra.Select(s => s.ScanDescriptionIndex));
             _analyzers = ToFactor(proto.Analyzers, proto.Spectra.Select(s => s.AnalyzerIndex));
             _scanWindows = ToFactor(proto.ScanWindows.Select(sw => Tuple.Create(sw.LowerLimit, sw.UpperLimit)),
@@ -113,27 +99,27 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _compensationVoltages = proto.Spectra.Select(s => s.CompensationVoltage).Nullables().MaybeConstant();
             _negativeCharges = proto.Spectra.Select(s => s.NegativeCharge).Booleans();
             var msLevels = new List<int>();
-            var spectrumPrecursors = new List<ImmutableList<PrecursorWithLevel>>();
+            var spectrumPrecursorsList = new List<ImmutableList<PrecursorWithLevel>>();
             foreach (var spectrum in proto.Spectra)
             {
-                spectrumPrecursors.Add(spectrum.PrecursorIndex.Select(i => precursors[i]).ToImmutable());
+                var spectrumPrecursors = spectrum.PrecursorIndex.Select(i => precursors[i]).ToImmutable();
+                spectrumPrecursorsList.Add(spectrumPrecursors);
                 var msLevel = spectrum.MsLevel;
                 if (msLevel == 0)
                 {
-                    msLevel = spectrum.PrecursorIndex.Select(p => proto.Precursors[p].MsLevel + 1).Prepend(1).Max();
+                    msLevel = spectrumPrecursors.Select(p=>p.MsLevel).Prepend(1).Max();
                 }
                 msLevels.Add(msLevel);
             }
-            _spectrumPrecursors = spectrumPrecursors.ToFactor().MaybeConstant();
-            _msLevels = IntList.ValueOf(msLevels);
+            _spectrumPrecursors = spectrumPrecursorsList.ToFactor().MaybeConstant();
+            _msLevels = IntegerList.FromIntegers(msLevels);
         }
 
         public override SpectrumMetadata this[int index]
         {
             get
             {
-                var scanId = _scanIdStrings?[index] ?? MakeScanId(_scanIdInts[index]);
-                var spectrumMetadata = new SpectrumMetadata(scanId, _retentionTimes[index])
+                var spectrumMetadata = new SpectrumMetadata(_scanIds[index].ToString(), _retentionTimes[index])
                     .ChangeAnalyzer(_analyzers[index])
                     .ChangeCompensationVoltage(_compensationVoltages[index])
                     .ChangeInjectionTime(_injectionTimes[index])
@@ -164,7 +150,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public ResultFileMetaDataProto ToProto()
         {
             var proto = new ResultFileMetaDataProto();
-            var analyzerFactor = ToFactorIncludeNull(_analyzers);
+            var analyzerFactor = ToFactorWithNull(_analyzers);
             proto.Analyzers.AddRange(analyzerFactor.Levels.Skip(1));
             var precursors = ToDistinctList(_spectrumPrecursors.SelectMany(l => l));
             proto.Precursors.AddRange(precursors.Select(p => new ResultFileMetaDataProto.Types.Precursor
@@ -175,9 +161,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 IsolationWindowUpper = p.Precursor.IsolationWindowUpperWidth ?? 0,
                 TargetMz = p.Precursor.PrecursorMz
             }));
-            var scanDescriptions = ToFactorIncludeNull(_scanDescriptions);
+            var scanDescriptions = ToFactorWithNull(_scanDescriptions);
             proto.ScanDescriptions.AddRange(scanDescriptions.Levels.Skip(1));
-            var scanWindows = ToFactorIncludeNull(_scanWindows);
+            var scanWindows = ToFactorWithNull(_scanWindows);
             foreach (var scanWindow in scanWindows.Levels.Skip(1))
             {
                 proto.ScanWindows.Add(new ResultFileMetaDataProto.Types.ScanWindow
@@ -199,37 +185,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     PrecursorIndex = { _spectrumPrecursors[index].Select(precursors.IndexOf) },
                     ScanDescriptionIndex = scanDescriptions.LevelIndices[index],
                     ScanWindowIndex = scanWindows.LevelIndices[index],
-                    ScanIdText = _scanIdStrings?.ElementAtOrDefault(index) ?? string.Empty,
-                    ScanIdParts = { _scanIdInts[index] ?? Array.Empty<int>() },
                     CompensationVoltage = _compensationVoltages[index]
                 };
+                _scanIds[index].SetInProto(spectrum);
                 proto.Spectra.Add(spectrum);
             }
 
             return proto;
         }
 
-        private IEnumerable<int> GetScanIdParts(string scanId)
-        {
-            var parts = scanId.Split('.');
-            var intParts = new List<int>();
-            foreach (var part in parts)
-            {
-                if (!int.TryParse(part, out int intPart))
-                {
-                    return null;
-                }
-
-                if (!Equals(part, intPart.ToString(CultureInfo.InvariantCulture)))
-                {
-                    return null;
-                }
-
-                intParts.Add(intPart);
-            }
-
-            return intParts;
-        }
 
         private string MakeScanId(IEnumerable<int> parts)
         {
@@ -259,9 +223,9 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return new SpectrumMetadatas(proto);
         }
 
-        private static Factor<T> ToFactorIncludeNull<T>(ImmutableList<T> list) where T : class
+        private static Factor<T> ToFactorWithNull<T>(ImmutableList<T> list) where T : class
         {
-            return Factor.ToFactorIncludingLevels(list, ImmutableList.Singleton((T)null));
+            return Factor<T>.FromItemsWithLevels(list, ImmutableList.Singleton((T)null));
         }
 
         private DistinctList<T> ToDistinctList<T>(IEnumerable<T> items)
@@ -278,8 +242,10 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private ImmutableList<T> ToFactor<T>(IEnumerable<T> zeroBasedLevels, IEnumerable<int> oneBasedIndexes)
             where T : class
         {
-            var levels = zeroBasedLevels.Prepend(null).ToImmutable();
-            var indexes = IntList.ValueOf(oneBasedIndexes);
+            var levels = zeroBasedLevels
+                .Prepend(null)
+                .ToImmutable();
+            var indexes = IntegerList.FromIntegers(oneBasedIndexes);
             return new Factor<T>(levels, indexes).MaybeConstant();
         }
 
@@ -316,7 +282,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return CollectionUtil.GetHashCodeDeep(this);
         }
 
-        struct PrecursorWithLevel
+        private struct PrecursorWithLevel
         {
             public PrecursorWithLevel(int msLevel, SpectrumPrecursor spectrumPrecursor)
             {
@@ -326,6 +292,81 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             public int MsLevel { get; }
             public SpectrumPrecursor Precursor { get; }
+        }
+
+        private struct ScanId
+        {
+            private object _value; // either string or IList<int>
+
+            public ScanId(string s)
+            {
+                var parts = GetScanIdParts(s);
+                if (parts == null)
+                {
+                    _value = s;
+                }
+                else
+                {
+                    _value = IntegerList.FromIntegers(parts);
+                }
+            }
+
+            public ScanId(ResultFileMetaDataProto.Types.SpectrumMetadata spectrumMetadataProto)
+            {
+                if (spectrumMetadataProto.ScanIdParts.Count > 0)
+                {
+                    _value = IntegerList.FromIntegers(spectrumMetadataProto.ScanIdParts);
+                }
+                else
+                {
+                    _value = spectrumMetadataProto.ScanIdText;
+                }
+            }
+
+            public override string ToString()
+            {
+                if (_value is IList<int> parts)
+                {
+                    return string.Join(@".", parts);
+                }
+
+                return _value as string ?? string.Empty;
+            }
+
+            public void SetInProto(ResultFileMetaDataProto.Types.SpectrumMetadata spectrumMetadataProto)
+            {
+                if (_value is IList<int> parts)
+                {
+                    spectrumMetadataProto.ScanIdParts.AddRange(parts);
+                }
+                else
+                {
+                    spectrumMetadataProto.ScanIdText = _value as string ?? string.Empty;
+                }
+            }
+
+            private static IList<int> GetScanIdParts(string scanId)
+            {
+                var parts = scanId.Split('.');
+                var intParts = new List<int>();
+                foreach (var part in parts)
+                {
+                    if (!int.TryParse(part, out int intPart))
+                    {
+                        return null;
+                    }
+
+                    if (!Equals(part, intPart.ToString(CultureInfo.InvariantCulture)))
+                    {
+                        return null;
+                    }
+
+                    intParts.Add(intPart);
+                }
+
+                return intParts;
+            }
+
         }
     }
 }
