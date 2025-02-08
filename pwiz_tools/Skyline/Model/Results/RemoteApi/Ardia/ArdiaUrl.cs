@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             var response = client.GetAsync(presignedUrl, HttpCompletionOption.ResponseHeadersRead, openMsDataFileParams.CancellationToken).Result;
             response.EnsureSuccessStatusCode();
             var responseStream = response.Content.ReadAsStreamAsync().Result;
-            var progressStream = new ProgressStream(responseStream, RawSize ?? 1);
+            using var progressStream = new ProgressStream(responseStream, RawSize ?? 1);
             using (var fileStream = new FileStream(rawFilepath, FileMode.CreateNew))
             {
                 if (p.ProgressMonitor != null)

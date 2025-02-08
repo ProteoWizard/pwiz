@@ -615,7 +615,7 @@ namespace pwiz.Skyline
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
                 using var stream = File.OpenRead(commandArgs.ImportAnnotations);
-                var progressStream = new ProgressStream(stream);
+                using var progressStream = new ProgressStream(stream);
                 var progressStatus = new ProgressStatus();
                 progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus);
                 var modifiedDocument =
