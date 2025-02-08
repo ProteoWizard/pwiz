@@ -638,75 +638,62 @@ namespace pwiz.Skyline.Model.Tools
         private void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, ILongWaitBroker broker = null)
         {
             var cmdBuilder = new StringBuilder();
-            bool cancelled = false;
-            foreach (var package in packages)
+            CancellationToken cancelToken = CancellationToken.None;
+
+            try
             {
-                string arg;
-                cmdBuilder.Clear();
-                cmdBuilder.Append(pythonExecutablePath)
-                    .Append(SPACE)
-                    .Append(PYTHON_MODULE_OPTION)
-                    .Append(SPACE)
-                    .Append(PIP)
-                    .Append(SPACE)
-                    .Append(INSTALL)
-                    .Append(SPACE);
-                if (package.Version.IsNullOrEmpty())
+                foreach (var package in packages)
                 {
-                    arg = package.Name;
-                }
-                else if (package.Version.StartsWith(GIT))
-                {
-                    arg = package.Version;
-                    arg = TextUtil.Quote(arg);
-                }
-                else
-                {
-                    arg = package.Name + EQUALS + package.Version;
-                    arg = TextUtil.Quote(arg);
-                }
-
-                
-                cmdBuilder.Append(arg).Append(SPACE);
-
-                var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO,
-                    cmdBuilder, CMD_PROCEEDING_SYMBOL);
-                cmd += string.Format(
-                    ToolsResources
-                        .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
-                    ECHO, CMD_PROCEEDING_SYMBOL);
-                cmd += cmdBuilder;
-                var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-
-                CancellationToken cancelToken = CancellationToken.None;
-                cancelled = false;
-                if (broker != null)
-                {
-                    broker.CancellationToken.Register(() =>
+                    string arg;
+                    cmdBuilder.Clear();
+                    cmdBuilder.Append(pythonExecutablePath)
+                        .Append(SPACE)
+                        .Append(PYTHON_MODULE_OPTION)
+                        .Append(SPACE)
+                        .Append(PIP)
+                        .Append(SPACE)
+                        .Append(INSTALL)
+                        .Append(SPACE);
+                    if (package.Version.IsNullOrEmpty())
                     {
-                        try
-                        {
-                            // Cancelled
-                            cancelled = true;
-                        }
-                        catch (Exception)
-                        {
-                            // Ignore
-                        }
-                    });
-                }
+                        arg = package.Name;
+                    }
+                    else if (package.Version.StartsWith(GIT))
+                    {
+                        arg = package.Version;
+                        arg = TextUtil.Quote(arg);
+                    }
+                    else
+                    {
+                        arg = package.Name + EQUALS + package.Version;
+                        arg = TextUtil.Quote(arg);
+                    }
 
-                if (pipedProcessRunner.RunProcess(cmd, false, Writer,  true, cancelToken) != 0)
-                {
-                    if (!cancelled) 
-                        throw new ToolExecutionException(
-                            string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
-                    break;
+
+                    cmdBuilder.Append(arg).Append(SPACE);
+
+                    var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO,
+                        cmdBuilder, CMD_PROCEEDING_SYMBOL);
+                    cmd += string.Format(
+                        ToolsResources
+                            .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
+                        ECHO, CMD_PROCEEDING_SYMBOL);
+                    cmd += cmdBuilder;
+                    var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
+
+                    if (broker != null) cancelToken = broker.CancellationToken;
+                    if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
+                    {
+                        throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
+                                                            cmdBuilder));
+    
+                    }
                 }
             }
-
-            if (cancelled)
+            catch 
+            {
                 return;
+            }
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);
             PythonInstallerUtil.SignFile(filePath+DOT_EXE);

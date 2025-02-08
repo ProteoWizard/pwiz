@@ -365,7 +365,6 @@ namespace pwiz.Skyline.Util
         /// Wrapper interface for the NamedPipeProcessRunner class
         /// </summary>
         int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default);
-
     }
 
     public class SkylineProcessRunnerWrapper : ISkylineProcessRunnerWrapper
@@ -374,7 +373,6 @@ namespace pwiz.Skyline.Util
         {
             return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer, createNoWindow, cancellationToken);
         }
-   
     }
 
     // The test Named PipeProcess Runner allows us to simulate running NamedPipeProcessRunner.exe

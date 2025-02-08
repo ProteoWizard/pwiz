@@ -1687,72 +1687,37 @@ namespace pwiz.Skyline.Util
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
                 {
-                    using (var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024*1024))
+
+                    try
                     {
-                        bool readTimedOut = false;
-                        bool readSuccess;
-                        string line;
-                        while (true)
+                        var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024 * 1024);
+                        var thisThread = Thread.CurrentThread;
+                        using var registration = cancellationToken.Register(o =>
                         {
-                            readSuccess = false;
-                            line = "";
-                            line = reader.ReadLine();
-                            /* ******
-                            // Start a new thread to read a line so cancellation does not wait too long
-                            Thread readThread = null;
-
-                            if (!readTimedOut)
-                            {
-                                readThread = new Thread(() =>
-                                {
-                                    line = reader.ReadLine();
-                                    readSuccess = true;
-                                });
-                                readThread.Start();
-                            }
-
-                            if (readThread != null && readThread.Join(1000))
-                            {
-                                if (readSuccess && line == null)
-                                    break;
-                                readTimedOut = false;
-                            }
-                            else if (readThread == null)
-                            {
-                                readTimedOut = false;
-                            }
-                            else
-                            {
-                                readTimedOut = true;
-                            }
-                            *** */
-
-                            if (line != null)
-                                writer.WriteLine(line);
-
-                          
-                            if (cancellationToken.IsCancellationRequested)
-                            {
-                                if (!process.HasExited)
-                                {
-                                    try
-                                    {
-                                        //readThread?.Interrupt();
-                                        process.Kill();
-                                    }
-                                    catch (InvalidOperationException)
-                                    {
-
-                                    }
-                                    break;
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            }
-                            
+                            thisThread.Interrupt();
+                        }, null);
+                        while (reader.ReadLine() is { } line)
+                        {
+                            writer.WriteLine(line);
                         }
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        if (cancellationToken.IsCancellationRequested && !process.HasExited)
+                        {
+                            try
+                            {
+                                process.Kill();
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                // Ignore
+                            }
+                        }
+                        // If cancellation was requested then throw the OperationCancelledException
+                        cancellationToken.ThrowIfCancellationRequested();
+                        // Otherwise, throw the ThreadInterruptedException
+                        throw;
                     }
 
                     while (!processFinished)
