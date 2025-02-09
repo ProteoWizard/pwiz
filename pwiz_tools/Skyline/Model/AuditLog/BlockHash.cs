@@ -19,7 +19,6 @@
 using System;
 using System.IO;
 using System.Security.Cryptography;
-using NHibernate.Hql.Ast.ANTLR.Tree;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
