@@ -682,6 +682,5 @@
   </data>
   <data name="StaticMod_DoValidate_Isotope_modifications_may_not_be_variable_" xml:space="preserve">
     <value>同位体修飾は可変修飾ではありません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>
