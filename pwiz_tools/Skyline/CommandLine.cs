@@ -1415,7 +1415,7 @@ namespace pwiz.Skyline
                 using var fileStream = File.OpenRead(skylineFile);
                 using var progressStream = new ProgressStream(fileStream);
                 progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
-                var hashingStream = new HashingStream(progressStream);
+                using var hashingStream = new HashingStream(progressStream, true);
                 // Wrap stream in XmlReader so that BaseUri is known
                 var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8), 
                     new XmlReaderSettings { IgnoreWhitespace = true }, 
