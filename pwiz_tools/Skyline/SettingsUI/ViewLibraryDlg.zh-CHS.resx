@@ -644,7 +644,6 @@
   </metadata>
   <data name="textPeptide.ToolTip" xml:space="preserve">
     <value>以 * 开头的过滤器将在描述中进行搜索，例如 *PEET 将匹配 PEETID 和 AAPEETB</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textPeptide.Name" xml:space="preserve">
     <value>textPeptide</value>
