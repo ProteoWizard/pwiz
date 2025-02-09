@@ -208,5 +208,8 @@ namespace pwiz.Skyline.Model.Koina
         {
             get { return null; }
         }
+
+        public string BuilderLibraryPath => BuildOutput;
+
     }
 }

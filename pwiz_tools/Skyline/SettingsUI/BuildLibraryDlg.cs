@@ -85,6 +85,8 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
+        public void ResetBuilder() => Builder = null;
+
         public MultiButtonMsgDlg PythonDlg { get; private set; }
         
         public enum Pages { properties, files, learning }
@@ -235,13 +237,19 @@ namespace pwiz.Skyline.SettingsUI
             get => _documentUiContainer.DocumentUI;
         }
       
-        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false)
+        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false, bool newBuilder = false)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))
                 return false;
 
             string outputPath = textPath.Text;
+
+            if (newBuilder && Builder != null)
+            {
+                ResetBuilder();
+            }
+
             if (string.IsNullOrEmpty(outputPath))
             {
                 _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
@@ -305,7 +313,13 @@ namespace pwiz.Skyline.SettingsUI
                         return false;
 
                     }
-                    Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
+
+                    if (Builder == null && newBuilder)
+                    {
+                        Builder = new AlphapeptdeepLibraryBuilder(name, outputPath,
+                            AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
+                        BuilderLibFilepath = Builder.BuilderLibraryPath;
+                    }
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -373,13 +387,13 @@ namespace pwiz.Skyline.SettingsUI
                         return false;
                     }
 
-        
-                    Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION,CARAFE, msMsDataFilePath,
-                                                        trainingDataFilePath, DocumentUI);
+                    if (Builder == null && newBuilder)
+                    {
+                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE,
+                            msMsDataFilePath, trainingDataFilePath, DocumentUI);
+                        BuilderLibFilepath = Builder.BuilderLibraryPath;
 
-                    // TODO: Create AlphapeptdeepLibraryBuilder class with everything necessary to build a library
-                    // TODO: if (!CreateKoinaBuilder(name, outputPath))
-                    // TODO:  return false;
+                    }
                 }
                 else
                 {
@@ -408,19 +422,32 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
 
-                    Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
+                    if (Builder == null && newBuilder)
                     {
-                        Action = LibraryBuildAction,
-                        IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
-                        KeepRedundant = LibraryKeepRedundant,
-                        ScoreThresholdsByFile = thresholdsByFile,
-                        Id = Helpers.MakeId(textName.Text),
-                        IrtStandard = _driverStandards.SelectedItem,
-                        PreferEmbeddedSpectra = PreferEmbeddedSpectra
-                    };
+                        Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(),
+                            targetPeptidesChosen)
+                        {
+                            Action = LibraryBuildAction,
+                            IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
+                            KeepRedundant = LibraryKeepRedundant,
+                            ScoreThresholdsByFile = thresholdsByFile,
+                            Id = Helpers.MakeId(textName.Text),
+                            IrtStandard = _driverStandards.SelectedItem,
+                            PreferEmbeddedSpectra = PreferEmbeddedSpectra
+                        };
+                        BuilderLibFilepath = Builder.BuilderLibraryPath;
+                    }
                 }
             }
             return true;
+        }
+
+        private string _libFilepath;
+
+        public string BuilderLibFilepath
+        {
+            get => _libFilepath;
+            set => _libFilepath = value;
         }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
@@ -453,8 +480,18 @@ namespace pwiz.Skyline.SettingsUI
                 KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
                 // Still construct the library builder, otherwise a user might configure Koina
                 // incorrectly, causing the build to silently fail
+                if (Builder != null)
+                {
+                    ResetBuilder();
+                }
+
                 Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
-                    peptidesPerPrecursor, precursors, nce);
+                        peptidesPerPrecursor, precursors, nce);
+                
+                BuilderLibFilepath = Builder.BuilderLibraryPath;
+
+                
+
             }
             catch (Exception ex)
             {
@@ -636,14 +673,14 @@ namespace pwiz.Skyline.SettingsUI
             Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (ValidateBuilder(true, true, true))
+                if (ValidateBuilder(true, true, true, true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
                     DialogResult = DialogResult.OK;
                 }
             }
-            else if (ValidateBuilder(false, true))
+            else if (ValidateBuilder(false, true, false, true))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
@@ -659,7 +696,6 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = true;
             }
             Cursor.Current = Cursors.Default;
-
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)

@@ -603,6 +603,8 @@ namespace pwiz.Skyline.Model.Lib
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>
         LibrarySpec LibrarySpec { get; }
+
+        string BuilderLibraryPath { get; }
     }
 
     public enum LibraryRedundancy { best, all, all_redundant }

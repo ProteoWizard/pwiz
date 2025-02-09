@@ -18,6 +18,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -42,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
-            PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep");
+            PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
@@ -57,6 +58,8 @@ namespace pwiz.SkylineTestFunctional
             // Test the control path where Python needs installation and is Cancelled
             pythonUtil.CancelPython(buildLibraryDlg);
 
+            //PauseTest();
+
             // Test the control path where Python is installable
             if (!pythonUtil.InstallPython(buildLibraryDlg)) 
                 OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
@@ -64,10 +67,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(pythonUtil.HavePythonPrerequisite(buildLibraryDlg));
             
             //PauseTest();
+
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
-
-
+            string libHash = PythonInstallerUtil.GetFileHash(buildLibraryDlg.BuilderLibFilepath);
+            string storedHash = "2b31dec24e3a22bf2807769864ec6d7045236be32a9f78e0548e62975afe7318";
+            
+            Assert.AreEqual(storedHash, libHash);
+           
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
