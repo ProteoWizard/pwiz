@@ -787,8 +787,7 @@ namespace pwiz.SkylineTestFunctional
                 new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
             };
             var programContainer = new ProgramPathContainer(PYTHON, VERSION);
-            return new PythonInstaller(
-                programContainer, packages, new TextBoxStreamWriterHelper(), taskValidator, @"test");
+            return new PythonInstaller(programContainer, packages, new TextBoxStreamWriterHelper(), taskValidator, @"test");
         }
 
         private static string CreateFile(string dir, string fileName, string content = "")

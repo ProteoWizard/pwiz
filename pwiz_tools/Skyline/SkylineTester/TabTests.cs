@@ -107,7 +107,7 @@ namespace SkylineTester
             if (GetTestList().Length > 0)
                 args.Append(" perftests=on"); // In case any perf tests were explicitly selected - no harm if they weren't
 
-            if (MainWindow.RunParallel.Checked)
+            if (MainWindow.RunParallel.Checked && GetTestCount() > 1) // No need for parallel on a single test
             {
                 // CONSIDER: Should we add a checkbox for this?
                 // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
@@ -160,11 +160,23 @@ namespace SkylineTester
             return MainWindow.TestsTree.Find(text.Trim(), position);
         }
 
-        public static string GetTestList()
+        private static List<string> GetAllCheckedTests()
         {
             var testList = new List<string>();
             foreach (TreeNode node in MainWindow.TestsTree.Nodes[0].Nodes)
                 GetCheckedTests(node, testList, MainWindow.SkipCheckedTests.Checked);
+            return testList;
+        }
+
+        public static int GetTestCount()
+        {
+            var testList = GetAllCheckedTests();
+            return (testList.Count == 0) ? int.MaxValue : testList.Count; // No selection implies all should be run
+        }
+
+        public static string GetTestList()
+        {
+            var testList = GetAllCheckedTests();
             if (testList.Count == 0)
                 return "";
             var testListFile = Path.Combine(MainWindow.RootDir, "SkylineTester test list.txt");

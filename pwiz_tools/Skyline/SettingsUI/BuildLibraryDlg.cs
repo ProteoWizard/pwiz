@@ -127,6 +127,10 @@ namespace pwiz.Skyline.SettingsUI
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
         private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
 
+        private string _productPath;
+
+        public string ProductPath { get => _productPath; private set => _productPath = value; }
+
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly SkylineWindow _skylineWindow;
@@ -222,7 +226,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public ILibraryBuilder Builder { get; internal set; }
+        public static ILibraryBuilder Builder { get; internal set; }
 
         public IEnumerable<string> InputFileNames
         {
@@ -524,8 +528,7 @@ namespace pwiz.Skyline.SettingsUI
             Cursor = Cursors.WaitCursor;
             btnNext.Enabled = false;
 
-
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady())
+            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
             {
                 Cursor = Cursors.Default;
                 btnNext.Enabled = true;
@@ -537,22 +540,46 @@ namespace pwiz.Skyline.SettingsUI
                 btnNext.Enabled = true;
                 return false;
             }
-     
 
-            Cursor = Cursors.Default;
-  
+            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
+            {
 
+                PythonDlg = new MultiButtonMsgDlg(
+                    string.Format(
+                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
+                        ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep"), string.Format(Resources.OK));
+                if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    PythonDlg.Dispose();
+                    PythonInstallerUI.Dispose();
+                    Cursor = Cursors.Default;
+                    btnNext.Enabled = true;
+                    return false;
+                }
+                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+                {
+                    if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
+                    PythonInstallerUI.Dispose();
+                    Cursor = Cursors.Default;
+                    btnNext.Enabled = true;
+                    return false;
+                }
+                PythonInstallerUI.Dispose();
 
-            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep"), string.Format(Resources.OK));
-            
-            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel || 
-                DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-            { 
-                PythonDlg.Dispose();
-                btnNext.Enabled = true;
-                return false;
             }
+            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
+            {
+                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+                {
+                    PythonInstallerUI.Dispose();
+                    Cursor = Cursors.Default;
+                    btnNext.Enabled = true;
+                    return false;
+                }
+                PythonInstallerUI.Dispose();
 
+            }
+            Cursor = Cursors.Default;
             btnNext.Enabled = true;
             return true;
         }
@@ -574,7 +601,7 @@ namespace pwiz.Skyline.SettingsUI
             else
                 pythonInstaller.ClearPendingTasks();
 
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady())
+            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
             {
                 return true;
             }
@@ -583,13 +610,32 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            PythonDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
-            if (PythonDlg.ShowDialog(this) == DialogResult.Cancel || DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
-                PythonDlg.Dispose();
-                return false;
-            }
 
+                PythonDlg = new MultiButtonMsgDlg(
+                    string.Format(
+                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
+                        CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
+                if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    PythonDlg.Dispose();
+                    PythonInstallerUI.Dispose();
+                    return false;
+                }
+            }
+            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
+            {
+                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+                {
+                    PythonDlg.Dispose();
+                    PythonInstallerUI.Dispose();
+                    return false;
+                }
+                PythonInstallerUI.Dispose();
+
+            }
+            if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
             return true;
        
         }

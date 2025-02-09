@@ -756,7 +756,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 Cursor.Current = Cursors.Default;
 
-                BuildLibrary(dlg.Builder);
+                BuildLibrary(BuildLibraryDlg.Builder);
             }
         }
 

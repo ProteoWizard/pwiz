@@ -175,6 +175,22 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for automated nightly leak testing
+    /// (e.g. memory hungry or excessively time consuming given that it has to be run many times for leak detection)
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoLeakTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for Nightly
+
+        public NoLeakTestingAttribute(string reason)
+        {
+            Reason = reason; // Usually one of the strings in TestExclusionReason
+        }
+
+    }
+
+    /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
     /// Perf tests (long running, huge-data-downloading) should be declared
     /// in the TestPerf namespace, where they receive special handling so as
@@ -412,7 +428,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         /// <param name="showDlgAction">Action which causes the dialog to be shown</param>
         /// <param name="exerciseDlgAction">Action which can do some things and then must close the dialog.</param>
-        protected static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
+        protected internal static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
             [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction)
             where TDlg : Form
         {

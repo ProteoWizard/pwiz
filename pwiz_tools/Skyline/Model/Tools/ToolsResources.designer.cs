@@ -89,6 +89,24 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed setting up Nvidia GPU Libraries.
+        /// </summary>
+        public static string NvidiaInstaller_Failed_Setup_Nvidia_Libraries {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Failed_Setup_Nvidia_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Setting up Nvidia GPU Libraries.
+        /// </summary>
+        public static string NvidiaInstaller_Setup_Nvidia_Libraries {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Setup_Nvidia_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ProgramPathCollectors must have a program name.
         /// </summary>
         public static string ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name {

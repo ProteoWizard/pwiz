@@ -1189,4 +1189,7 @@ Do you want to save the document now?</value>
   <data name="CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_" xml:space="preserve">
       <value>Error: Failed to build the spectral library.</value>
   </data>
+  <data name="SkylineWindow_ImportAnnotations_Reading_annotations" xml:space="preserve">
+	  <value>Reading annotations</value>
+  </data>
 </root>

@@ -23,8 +23,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using System;
-using System.Management;
-using System.Security.Principal;
+using pwiz.Skyline.Model;
 
 namespace pwiz.SkylineTestUtil
 { public class PythonTestUtil
@@ -39,52 +38,25 @@ namespace pwiz.SkylineTestUtil
         }
 
         private bool _undoRegistry;
-        public static bool IsRunningElevated()
-        {
-            // Get current user's Windows identity
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
 
-            // Convert identity to WindowsPrincipal to check for roles
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
+        public const int WAIT_TIME = 15 * 60 * 1000;
 
-            // Check if the current user is in the Administrators role
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
-        }
-        public bool HaveNvidiaGPU()
-        {
-            bool nvidiaGpu = false;
-            try
-            {
-                // Query for video controllers using WMI
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_VideoController");
-
-                foreach (ManagementObject obj in searcher.Get())
-                {
-                    //  GPU information
-                    nvidiaGpu = obj[@"Name"].ToString().StartsWith(@"NVIDIA");
-                    if (nvidiaGpu) break;
-                }
-            }
-            catch (ManagementException e)
-            {
-                Console.WriteLine(@"An error occurred while querying for WMI data: " + e.Message);
-            }
-            return nvidiaGpu;
-        }
-
-        public PythonTestUtil(string pythonVersion, string toolName, bool cleanSlate = false)
+        public PythonTestUtil(string pythonVersion, string toolName, bool cleanSlate)
         {
             _pythonVersion = pythonVersion;
             _toolName = toolName;
             if (cleanSlate)
-                PythonInstaller.DeleteToolsPythonDirectory();
+                AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
         }
-
+        /// <summary>
+        /// Pretends Python needs installation then Cancels Python install
+        /// </summary>
+        /// <param name="buildLibraryDlg">Build Library dialog</param>
         public void CancelPython(BuildLibraryDlg buildLibraryDlg)
         {
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
-            var installPythonDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
+            MultiButtonMsgDlg installPythonDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
             //PauseTest("install offer");
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
             AbstractFunctionalTest.CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
@@ -92,23 +64,69 @@ namespace pwiz.SkylineTestUtil
             installPythonDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
             // PauseTest("install offer again");
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
-            var needAdminDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(installPythonDlg.OkDialog); // Expect to be told about needing admin access
-            // PauseTest("need admin msg");
+
+            AbstractFunctionalTest.OkDialog(installPythonDlg, installPythonDlg.OkDialog);
+            var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>(); // Cannot open AlertDlg when another AlertDlg is open, must close first then wait to open another
+
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, needAdminDlg.Message);
-            AbstractFunctionalTest.CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
+            AbstractFunctionalTest.CancelDialog(needAdminDlg , needAdminDlg.CancelDialog); 
+           
+            
+            // PauseTest("need admin msg");
             // PauseTest("back to wizard");
         }
+
+        public void InstallPythonTestNvidia(BuildLibraryDlg buildLibraryDlg)
+        {
+            // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
+            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
+
+            //Test for LongPaths not set and admin
+            if (PythonInstaller.IsRunningElevated() && !PythonInstallerTaskValidator.ValidateEnableLongpaths())
+            {
+                AlertDlg adminDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect request for elevated privileges 
+                AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, adminDlg.Message);
+                AbstractFunctionalTest.OkDialog(adminDlg, adminDlg.OkDialog);
+            }
+            else if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
+            {
+                Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
+            }
+
+            MultiButtonMsgDlg installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect the offer to installNvidia
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
+                installNvidiaDlg.Message);
+            AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.CancelDialog);
+            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
+                installNvidiaDlg.Message);
+            AbstractFunctionalTest.OkDialog(installNvidiaDlg, installNvidiaDlg.ClickYes);
+            var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
+            AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
+                needAdminDlg.Message);
+            AbstractFunctionalTest.CancelDialog(needAdminDlg, () => needAdminDlg.CancelDialog()); // Expect the offer to installNvidia
+            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
+                installNvidiaDlg.Message);
+            AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
+        }
+
+        /// <summary>
+        /// Pretends no NVIDIA hardware then Installs Python, returns true if Python installer ran (successful or not), false otherwise
+        /// </summary>
+        /// <param name="buildLibraryDlg">Build Library</param>
+        /// <returns></returns>
         public bool InstallPython(BuildLibraryDlg buildLibraryDlg)
         {
-            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONE; // Normal tests systems will have registry set suitably
-     
+            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Normal tests systems will have registry set suitably
+
             bool havePythonPrerequisite = false;
+
             AbstractFunctionalTest.RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
 
             if (!havePythonPrerequisite)
             {
-                MessageDlg confirmDlg = null;
-                MultiButtonMsgDlg nvidiaDlg = null;
+                AlertDlg confirmDlg = null;
                 AbstractFunctionalTest.RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
                 {
                     Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
@@ -116,33 +134,16 @@ namespace pwiz.SkylineTestUtil
 
                     if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
                     {
-                        MessageDlg longPathDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog);
+                        AlertDlg longPathDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog);
 
-                        Assert.AreEqual(
-                            string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
+                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
                             longPathDlg.Message);
 
-                        if (IsRunningElevated())
+                        if (PythonInstaller.IsRunningElevated())
                         {
-                            if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
-                            {
-                                Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
+                            confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
+                            ConfirmPythonSuccess(confirmDlg);
 
-                                nvidiaDlg = AbstractFunctionalTest.ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library);
-
-                                RunNvidiaDialog(nvidiaDlg);
-                            }
-                            else
-                            {
-                                if (PythonInstaller.TestForNvidiaGPU() != true) 
-                                    Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
-                                else
-                                    Console.WriteLine(@"Info: Nvidia libraries already installed");
-
-                                confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(RunLongPathsDialog(longPathDlg).OkDialog);
-                                ConfirmPythonSuccess(confirmDlg);
-
-                            }
                         }
                         else
                         {
@@ -152,29 +153,10 @@ namespace pwiz.SkylineTestUtil
                     else
                     {
                         Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
+                        AbstractFunctionalTest.OkDialog(pythonDlg, pythonDlg.OkDialog);
+                        confirmDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>(WAIT_TIME);
+                        ConfirmPythonSuccess(confirmDlg);
 
-
-                        if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
-                        {
-                            Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
-                            
-                            nvidiaDlg = AbstractFunctionalTest.ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library);
-
-                            RunNvidiaDialog(nvidiaDlg);
-                        }
-                        else
-                        {
-                            if (PythonInstaller.TestForNvidiaGPU() != true)
-                            {
-                                Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
-                            }
-                            else
-                            {
-                                Console.WriteLine(@"Info: Nvidia libraries already installed");
-                            }
-                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, 600000);
-                            ConfirmPythonSuccess(confirmDlg);
-                        }
                     }
          
 
@@ -191,7 +173,11 @@ namespace pwiz.SkylineTestUtil
 
             return false;
         }
-
+        /// <summary>
+        /// Checks for Python prerequisite
+        /// </summary>
+        /// <param name="buildLibraryDlg">Build Library dialog</param>
+        /// <returns></returns>
         public bool HavePythonPrerequisite(BuildLibraryDlg buildLibraryDlg)
         {
             bool havePythonPrerequisite = false;
@@ -199,15 +185,100 @@ namespace pwiz.SkylineTestUtil
             return havePythonPrerequisite;
         }
 
-        private void RunNvidiaDialog(MultiButtonMsgDlg nvidiaDlg)
+        public bool HaveNvidiaSoftware()
         {
-            // Running as non-admin, say 'No'
-            MessageDlg confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickNo, 600000);
-            ConfirmPythonSuccess(confirmDlg);
-    
+            return PythonInstaller.NvidiaLibrariesInstalled();
+        }
+
+        public bool HaveNvidiaHardware()
+        {
+            return PythonInstaller.TestForNvidiaGPU() == true;
+        }
+        /// <summary>
+        /// Runs Nvidia Dialog
+        /// </summary>
+        /// <param name="nvidiaDlg">Nvidia Detected Dialog</param>
+        /// <param name="pythonDlg">Python Installer Dialog</param>
+        /// <param name="clickNo">true clicks No, false clicks Yes, null clicks Cancel to Nvidia Detected Dialog</param>
+        private void RunNvidiaDialog(MultiButtonMsgDlg nvidiaDlg, MultiButtonMsgDlg pythonDlg, bool? clickNo = true)
+        {
+            if (clickNo == true)
+            {
+                
+                // Say 'No'
+                AbstractFunctionalTest.RunLongDlg<AlertDlg>(nvidiaDlg.ClickNo, confirmDlg =>
+                {
+
+                }, confirmDlg => {
+                    ConfirmPythonSuccess(confirmDlg);
+                });
+            }
+            else if (clickNo == false)
+            {
+                // Say 'Yes'
+                AbstractFunctionalTest.RunLongDlg<AlertDlg>(nvidiaDlg.ClickYes, confirmDlg =>
+                {
+
+                }, confirmDlg => {
+                    ConfirmPythonSuccess(confirmDlg);
+                });
+            }
+            else // clickNo == null
+            {
+                // Say 'Cancel'
+                AbstractFunctionalTest.RunLongDlg<AlertDlg>(nvidiaDlg.ClickCancel, confirmDlg =>
+                {
+
+                }, confirmDlg => {
+                    ConfirmPythonSuccess(confirmDlg);
+                });
+
+            }
+
             if (!nvidiaDlg.IsDisposed)
                 nvidiaDlg.Dispose();
         }
+
+        /// <summary>
+        /// Helps with Nvidia GPU Detections
+        /// </summary>
+        /// <param name="pythonDlg">Python set up is required dialog</param>
+        /// <param name="nvidiaClickNo">What to tell Nvidia Dialog: Yes=install, No=don't install, null=cancel operation</param>
+        private void NvidiaTestHelper( MultiButtonMsgDlg pythonDlg, bool? nvidiaClickNo)
+        {
+            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT;
+            if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
+            {
+                Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
+
+                MultiButtonMsgDlg nvidiaDlg = AbstractFunctionalTest.ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library, WAIT_TIME);
+
+                RunNvidiaDialog(nvidiaDlg, pythonDlg, nvidiaClickNo);
+
+            }
+            else
+            {
+                if (PythonInstaller.TestForNvidiaGPU() != true)
+                    Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
+                else
+                    Console.WriteLine(@"Info: Nvidia libraries already installed");
+                AbstractFunctionalTest.OkDialog(pythonDlg, pythonDlg.OkDialog);
+                //Not cancelled
+                var confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
+                ConfirmPythonSuccess(confirmDlg);
+
+            }
+
+
+
+
+        }
+
+        /// <summary>
+        /// Tries to set EnableLongPaths
+        /// </summary>
+        /// <param name="longPathDlg">EnableLongPaths registry dialog</param>
+        /// <returns></returns>
         private MessageDlg RunLongPathsDialog(MessageDlg longPathDlg)
         {
             Console.WriteLine(@"Info: Trying to set LongPathsEnabled registry key to 1");
@@ -224,13 +295,49 @@ namespace pwiz.SkylineTestUtil
             return okDlg;
         }
 
-        private void ConfirmPythonSuccess(MessageDlg confirmDlg)
+        /// <summary>
+        /// Confirms Python installation success
+        /// </summary>
+        /// <param name="confirmDlg">Message dialog success</param>
+        private void ConfirmPythonSuccess(AlertDlg confirmDlg)
         {
-            Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment),
+            ConfirmPython(confirmDlg);
+        }
+        /// <summary>
+        /// Confirms Python installation failure
+        /// </summary>
+        /// <param name="confirmDlg">Message dialog failed</param>
+        private void ConfirmPythonFailed(AlertDlg confirmDlg)
+        {
+            ConfirmPython(confirmDlg, false);
+        }
+
+        /// <summary>
+        /// Confirms Python installation
+        /// </summary>
+        /// <param name="confirmDlg">Alert dialog </param>
+        /// <param name="confirmSuccess">true for success, false for failure</param>
+        private void ConfirmPython(AlertDlg confirmDlg, bool confirmSuccess = true)
+        {
+            var expectMsg = string.Format(ToolsUIResources
+                .PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
+            if (confirmSuccess)
+                expectMsg = string.Format(ToolsUIResources
+                    .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
+
+            Assert.AreEqual(expectMsg, confirmDlg.Message);
+            AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
+        }
+
+        /// <summary>
+        /// Second dialog after Nvidia is detected to direct user to admin instructions for setting up Nvidia
+        /// </summary>
+        /// <param name="confirmDlg">Message dialog to the user with admin instructions</param>
+        private void ConfirmInstallNvidiaBatMessage(MessageDlg confirmDlg)
+        {
+            AssertEx.AreComparableStrings(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
                 confirmDlg.Message);
             AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
-            if (!confirmDlg.IsDisposed)
-                confirmDlg.Dispose();
         }
     }
 }

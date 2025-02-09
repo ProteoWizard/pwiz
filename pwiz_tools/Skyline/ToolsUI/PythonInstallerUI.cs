@@ -21,60 +21,86 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
-using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.ToolsUI
 {
     
     public static class PythonInstallerUI
     {
-        private static bool? _userNoToCuda;
+        private static string _userAnswerToCuda;
         public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
-            DialogResult result;
+            var result = DialogResult.OK;
             var tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment() : pythonInstaller.PendingTasks;
+            _userAnswerToCuda = null;
             pythonInstaller.NumTotalTasks = tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
+            List<PythonTask> abortedTasks = new List<PythonTask>();
             bool abortTask = false;
             foreach (var task in tasks)
             {
                 try
                 {
-                    if (task.Name == PythonTaskName.download_cuda_library || task.Name == PythonTaskName.install_cuda_library ||
+                    if (task.Name == PythonTaskName.setup_nvidia_libraries || task.Name == PythonTaskName.download_cuda_library || task.Name == PythonTaskName.install_cuda_library ||
                         task.Name == PythonTaskName.download_cudnn_library || task.Name == PythonTaskName.install_cudnn_library)
                     {
-                        if (_userNoToCuda != true)
+                        if (_userAnswerToCuda != @"No")
                         {
                             var choice = DialogResult.None;
-                            if (EnableNvidiaGpuDlg == null)
-                            {
-                                EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
-                                choice = EnableNvidiaGpuDlg.ShowDialog();
-                            }
-                                
+                            EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
+
+                            choice = EnableNvidiaGpuDlg.ShowDialog();
                             if (choice == DialogResult.No)
                             {
-                                _userNoToCuda = true;
+                                _userAnswerToCuda = @"No";
                                 if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                                 abortTask = true;
                             }
                             else if (choice == DialogResult.Cancel)
                             {
+                                if (!EnableNvidiaGpuDlg.IsDisposed) EnableNvidiaGpuDlg.Dispose();
                                 if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                                 return choice;
                             }
                             else if (choice == DialogResult.Yes)
                             {
-                                _userNoToCuda = false;
+                                _userAnswerToCuda = @"Yes";
+                                pythonInstaller.WriteInstallNvidiaBatScript();
+                                AlertDlg adminMessageDlg =
+                                    new AlertDlg(
+                                        string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
+                                            PythonInstaller.InstallNvidiaLibrariesBat), MessageBoxButtons.OKCancel);
+                                
+                                //if (!PythonInstaller.IsRunningElevated())
+                                 //   adminMessageDlg.FindButton(DialogResult.OK).Enabled = false;
+
+                                var nvidiaChoice = adminMessageDlg.ShowDialog();
                                 //Download
-                                abortTask = !PerformTaskAction(parent, task);
+                                if (nvidiaChoice == DialogResult.Cancel)
+                                {
+                                    _userAnswerToCuda = @"Cancel";
+                                    if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
+                                    if (!EnableNvidiaGpuDlg.IsDisposed) EnableNvidiaGpuDlg.Dispose();
+                                    if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                                    return nvidiaChoice;
+                                }
+                                else if (nvidiaChoice == DialogResult.OK)
+                                {
+                                    // Attempt to run
+                                    abortTask = !PerformTaskAction(parent, task);
+                                }
+                                if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
                             }
+                            if (!EnableNvidiaGpuDlg.IsDisposed) EnableNvidiaGpuDlg.Dispose();
+
                         }
-                        else if (_userNoToCuda == true)
+                        else if (_userAnswerToCuda == @"No")
                         {
                             if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                             abortTask = true;
@@ -86,9 +112,12 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     else if (task.Name == PythonTaskName.enable_longpaths)
                     {
-                        var choice = MessageDlg.Show(parent, string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), false, MessageBoxButtons.OKCancel);
+                        AlertDlg adminMessageDlg =
+                            new AlertDlg(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), MessageBoxButtons.OKCancel);
+                        var choice = adminMessageDlg.ShowDialog();
                         if (choice == DialogResult.Cancel)
                         {
+                            if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
                             if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                             return choice;
                         }
@@ -97,17 +126,25 @@ namespace pwiz.Skyline.ToolsUI
                             // Attempt to enable Windows Long Paths
                             pythonInstaller.EnableWindowsLongPaths();
                         }
+                        if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
                     }
                     else if (task.IsAction)
                     {
-                        abortTask = !PerformTaskAction(parent,task, -1);
+                        abortTask = !PerformTaskAction(parent,task);
                     }
                     else
                     {
                         throw new PythonInstallerUnsupportedTaskException(task);
                     }
                     if (!abortTask)
+                    {
                         pythonInstaller.NumCompletedTasks++;
+                    }
+                    else
+                    {
+                        abortedTasks.Add(task);
+                        return DialogResult.Cancel;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -116,46 +153,106 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");
-            if (pythonInstaller.NumCompletedTasks == pythonInstaller.NumTotalTasks)
+            if (_resultAlertDlg != null && ! _resultAlertDlg.IsDisposed) _resultAlertDlg.Dispose();
+
+            pythonInstaller.CheckPendingTasks();
+
+            if (pythonInstaller.HavePythonTasks)
             {
-                pythonInstaller.PendingTasks.Clear();
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
-                result = DialogResult.OK;
+                if (pythonInstaller.IsPythonVirtualEnvironmentReady(abortedTasks))
+                {
+                    if (pythonInstaller.NumTotalTasks == pythonInstaller.NumCompletedTasks &&
+                        pythonInstaller.NumCompletedTasks > 0)
+                    {
+                        _resultAlertDlg =
+                            new AlertDlg(
+                                ToolsUIResources
+                                    .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment,
+                                MessageBoxButtons.OK);
+                        _resultAlertDlg.ShowDialog();
+                    }
+
+                    pythonInstaller.PendingTasks.Clear();
+                    result = DialogResult.OK;
+                }
+                else if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
+                {
+                    _resultAlertDlg =
+                        new AlertDlg(
+                            ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment,
+                            MessageBoxButtons.OK);
+                    _resultAlertDlg.ShowDialog();
+                    result = DialogResult.Cancel;
+                }
+                else
+                {
+                    result = DialogResult.OK;
+                }
             }
-            else
+
+            if (pythonInstaller.HaveNvidiaTasks)
             {
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
-                result = DialogResult.Cancel;
+                if (PythonInstaller.TestForNvidiaGPU() == true)
+                {
+                    if (_userAnswerToCuda == @"Yes")
+                    {
+                        if (pythonInstaller.IsNvidiaEnvironmentReady(abortedTasks))
+                        {
+                            _resultAlertDlg =
+                                new AlertDlg(
+                                    ToolsUIResources.NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia,
+                                    MessageBoxButtons.OK);
+                            _resultAlertDlg.ShowDialog();
+                            pythonInstaller.PendingTasks.Clear();
+                            result = DialogResult.OK;
+                        }
+                        else
+                        {
+                            _resultAlertDlg =
+                                new AlertDlg(
+                                    ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia,
+                                    MessageBoxButtons.OK);
+                            _resultAlertDlg.ShowDialog();
+                        }
+                    }
+                }
             }
+
             return result;
         }
-
+        public static void Dispose()
+        {
+            if (_resultAlertDlg != null && !_resultAlertDlg.IsDisposed)
+            {
+                _resultAlertDlg.Dispose();
+            }
+        }
+        private static AlertDlg _resultAlertDlg;
         private static bool PerformTaskAction(Control parent, PythonTask task, int startProgress = 0)
         {
-            IProgressStatus proStatus = null;
+            //IProgressStatus proStatus = null;
+            using var waitDlg = new LongWaitDlg();
             if (task.IsActionWithNoArg)
             {
-                using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
                 waitDlg.PerformWork(parent, 50, task.AsActionWithNoArg);
             }
-            else if (task.IsActionWithProgressMonitor && startProgress >= 0)
+            else if (task.IsActionWithProgressMonitor)
             {
-                using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
-                waitDlg.ProgressValue = 0;
-                proStatus = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
+                waitDlg.ProgressValue = startProgress;
+                waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
             }
             else
             {
-                using var waitDlg = new LongWaitDlg();
                 waitDlg.Message = task.InProgressMessage;
-                proStatus = waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
-            }
-            if (proStatus != null && proStatus.IsCanceled)
-                return false;
+                waitDlg.PerformWork(parent, 50, task.AsActionWithLongWaitBroker);
+            }   
+                
+            //if (proStatus != null && proStatus.IsCanceled)
+            //    return false;
             
-            return true;
+            return !waitDlg.IsCanceled;
         }
     }
 }

@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -35,7 +36,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1189,40 +1189,6 @@ namespace pwiz.Skyline.Util
 
 
 
-    /// <summary>
-    /// Utility class to update progress while reading a Skyline document.
-    /// </summary>
-    public sealed class HashingStreamReaderWithProgress : StreamReader
-    {
-        private readonly IProgressMonitor _progressMonitor;
-        private IProgressStatus _status;
-        private long _totalChars;
-        private long _charsRead;
-
-        public HashingStreamReaderWithProgress(string path, IProgressMonitor progressMonitor)
-            : base(HashingStream.CreateReadStream(path), Encoding.UTF8)
-        {
-            _progressMonitor = progressMonitor;
-            _status = new ProgressStatus(Path.GetFileName(path));
-            _totalChars = new FileInfo(PathEx.SafePath(path)).Length;
-        }
-
-        public HashingStream Stream
-        {
-            get { return (HashingStream) BaseStream; }
-        }
-
-        public override int Read(char[] buffer, int index, int count)
-        {
-            if (_progressMonitor.IsCanceled)
-                throw new OperationCanceledException();
-            var byteCount = base.Read(buffer, index, count);
-            _charsRead += byteCount;
-            _status = _status.UpdatePercentCompleteProgress(_progressMonitor, _charsRead, _totalChars);
-            return byteCount;
-        }
-    }
-
     public sealed class StringListReader : TextReader
     {
         private readonly IList<string> _lines;
@@ -1635,33 +1601,63 @@ namespace pwiz.Skyline.Util
     public static class SkylineProcessRunner
     {
         /// <summary>
+        /// Kill a process, and all of its children, grandchildren, etc.
+        /// </summary>
+        /// <param name="pid">Process ID.</param>
+        private static void KillProcessAndDescendants(int pid)
+        {
+            // Cannot close 'system idle process'.
+            if (pid == 0)
+            {
+                return;
+            }
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher
+                (@"Select * From Win32_Process Where ParentProcessID=" + pid);
+            ManagementObjectCollection moc = searcher.Get();
+            foreach (ManagementObject mo in moc)
+            {
+                KillProcessAndDescendants(Convert.ToInt32(mo[@"ProcessID"]));
+            }
+            try
+            {
+                Process proc = Process.GetProcessById(pid);
+                if (!proc.HasExited)
+                    proc.Kill();
+            }
+            catch (ArgumentException)
+            {
+                // Process already exited.
+            }
+        }
+
+        /// <summary>
         /// Runs the SkylineProcessRunner executable file with the given arguments. These arguments
         /// are passed to CMD.exe within the NamedPipeProcessRunner
         /// </summary>
         /// <param name="arguments">The arguments to run at the command line</param>
         /// <param name="runAsAdministrator">If true, this process will be run as administrator, which
-        /// allows for the CMD.exe process to be ran with elevated privileges</param>
+        ///     allows for the CMD.exe process to be ran with elevated privileges</param>
         /// <param name="writer">The textwriter to which the command lines output will be written to</param>
         /// <param name="createNoWindow">Whether or not execution runs in its own window</param>
-        /// <param name="progressMonitor">Allows to Cancel</param>
+        /// <param name="cancellationToken">Allows to Cancel</param>
         /// <returns>The exitcode of the CMD process ran with the specified arguments</returns>
-        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
+        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default )
         {
             // create GUID
             string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
             var startInfo = new ProcessStartInfo
-                {
-                    CreateNoWindow = createNoWindow,
-                    UseShellExecute = !createNoWindow,
-                    FileName = GetSkylineProcessRunnerExePath(),
-                    Arguments = guidSuffix + @" " + arguments,
-                };
+            {
+                CreateNoWindow = createNoWindow,
+                UseShellExecute = !createNoWindow,
+                FileName = GetSkylineProcessRunnerExePath(),
+                Arguments = guidSuffix + @" " + arguments,
+            };
                 
             if (runAsAdministrator)
                 startInfo.Verb = @"runas";
 
             var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
-
+            int processID = -1;
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))
@@ -1671,6 +1667,7 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     process.Start();
+                    processID = process.Id;
                 }
                 catch (System.ComponentModel.Win32Exception win32Exception)
                 {
@@ -1679,7 +1676,7 @@ namespace pwiz.Skyline.Util
                     // not as administrator
                     if (runAsAdministrator && win32Exception.NativeErrorCode == ERROR_CANCELLED)
                     {
-                        return RunProcess(arguments, false, writer, createNoWindow, progressMonitor);
+                        return RunProcess(arguments, false, writer, createNoWindow, cancellationToken);
                     }
                     throw;
                 }
@@ -1687,72 +1684,16 @@ namespace pwiz.Skyline.Util
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
                 {
-                    using (var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024*1024))
+                    var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024 * 1024);
+
+                    using var registration = cancellationToken.Register(o =>
                     {
-                        bool readTimedOut = false;
-                        bool readSuccess;
-                        string line;
-                        while (true)
-                        {
-                            readSuccess = false;
-                            line = "";
+                        KillProcessAndDescendants(process.Id);
+                    }, null);
 
-                            // Start a new thread to read a line so cancellation does not wait too long
-                            Thread readThread = null;
-
-                            if (!readTimedOut)
-                            {
-                                readThread = new Thread(() =>
-                                {
-                                    line = reader.ReadLine();
-                                    readSuccess = true;
-                                });
-                                readThread.Start();
-                            }
-
-                            if (readThread != null && readThread.Join(1000))
-                            {
-                                if (readSuccess && line == null)
-                                    break;
-                                readTimedOut = false;
-                            }
-                            else if (readThread == null)
-                            {
-                                readTimedOut = false;
-                            }
-                            else
-                            {
-                                readTimedOut = true;
-                            }
-
-                            if (readSuccess && line != null)
-                                writer.WriteLine(line);
-
-                            // wait for process to finish
-                            if (progressMonitor != null)
-                            {
-                                if (progressMonitor.IsCanceled)
-                                {
-                                    if (!process.HasExited)
-                                    {
-                                        try
-                                        {
-                                            readThread?.Interrupt();
-                                            process.Kill();
-                                        }
-                                        catch (InvalidOperationException)
-                                        {
-
-                                        }
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
+                    while (reader.ReadLine() is { } line)
+                    {
+                        writer.WriteLine(line);
                     }
 
                     while (!processFinished)

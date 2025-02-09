@@ -785,6 +785,11 @@
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Model\Tools\PythonInstaller.cs" />
+    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
@@ -875,11 +880,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ListsResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Model\ModelResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -897,6 +897,11 @@
       <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\PythonInstallerUI.cs" />
+    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsUIResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -952,11 +957,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EntitiesResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Optimization\OptimizationResources.Designer.cs">
       <AutoGen>True</AutoGen>

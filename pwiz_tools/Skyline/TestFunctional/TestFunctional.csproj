@@ -162,7 +162,6 @@
     <Compile Include="AlertDlgTest.cs" />
     <Compile Include="AlignedIdTimesTest.cs" />
     <Compile Include="AlphabeticalReportEditorTest.cs" />
-    <Compile Include="AlphapeptdeepBuildLibraryTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
@@ -232,6 +231,7 @@
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
+    <Compile Include="SequenceTreeExpandCollapseTest.cs" />
     <Compile Include="SequenceTreeRatioTest.cs" />
     <Compile Include="SkipZoomScansTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />

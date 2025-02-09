@@ -24,12 +24,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
@@ -367,7 +367,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private LibraryHelper LibraryHelper { get; set; }
 
-        private readonly DateTime _nowTime;
+        private static readonly DateTime _nowTime = DateTime.Now;
+
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
@@ -379,6 +380,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
         private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
+
         private SrmDocument Document { get; }
         /// <summary>
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
@@ -411,22 +413,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
-        {
-            _nowTime = DateTime.Now;
-            Document = document;
+        {            Document = document;
             Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
-
-        }
-        private static string CreateDirIfNotExist(string dir)
-        {
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            return dir;
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
