@@ -304,7 +304,6 @@
   </data>
   <data name="Server_GetKey___anonymous_" xml:space="preserve">
     <value> （匿名）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Server_ReadXml_A_Panorama_server_must_be_specified" xml:space="preserve">
     <value>Panoramaサーバーを指定しなければなりません。</value>
@@ -335,14 +334,11 @@
   </data>
   <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_text___1___" xml:space="preserve">
     <value>テキスト「{1}」内の質量オフセットとして「{0}」を解析できません</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_Would_you_like_to_go_to_Panorama_" xml:space="preserve">
     <value>Panoramaに移動しますか？</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AbstractPanoramaPublishClient_UploadSharedZipFile_An_import_error_occurred_on_the_Panorama_server__0__" xml:space="preserve">
     <value>Panoramaサーバー{0}でインポートエラーが発生しました。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>
