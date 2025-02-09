@@ -59,7 +59,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = string.Empty;
                     textPath.Text = string.Empty;
-                    comboUseExplicitPeakBounds.SelectedIndex = (int) ExplicitPeakBoundsOption.True;
+                    comboUseExplicitPeakBounds.SelectedIndex = (int) ExplicitPeakBoundsOption.@true;
                 }
                 else
                 {
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 comboUseExplicitPeakBounds.SelectedIndex =
-                    (int)(_librarySpec?.UseExplicitPeakBounds ?? ExplicitPeakBoundsOption.True);
+                    (int)(_librarySpec?.UseExplicitPeakBounds ?? ExplicitPeakBoundsOption.@true);
             }
         }
 
