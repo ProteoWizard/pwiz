@@ -79,6 +79,7 @@
             this.editSpectrumFilterMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator30 = new System.Windows.Forms.ToolStripSeparator();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peakImputationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -215,7 +216,8 @@
             this.groupApplyToByToolStripMenuItem,
             this.removePeakToolStripMenuItem,
             this.toolStripSeparator1,
-            this.synchronizedIntegrationToolStripMenuItem});
+            this.synchronizedIntegrationToolStripMenuItem,
+            this.peakImputationToolStripMenuItem});
             this.integrationToolStripMenuItem.Name = "integrationToolStripMenuItem";
             resources.ApplyResources(this.integrationToolStripMenuItem, "integrationToolStripMenuItem");
             // 
@@ -433,6 +435,12 @@
             resources.ApplyResources(this.manageResultsMenuItem, "manageResultsMenuItem");
             this.manageResultsMenuItem.Click += new System.EventHandler(this.manageResultsMenuItem_Click);
             // 
+            // peakImputationToolStripMenuItem
+            // 
+            this.peakImputationToolStripMenuItem.Name = "peakImputationToolStripMenuItem";
+            resources.ApplyResources(this.peakImputationToolStripMenuItem, "peakImputationToolStripMenuItem");
+            this.peakImputationToolStripMenuItem.Click += new System.EventHandler(this.peakImputationToolStripMenuItem_Click);
+            // 
             // EditMenu
             // 
             resources.ApplyResources(this, "$this");
@@ -498,5 +506,6 @@
         private System.Windows.Forms.ToolStripMenuItem synchronizedIntegrationToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem editSpectrumFilterMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem peakImputationToolStripMenuItem;
     }
 }

@@ -698,18 +698,30 @@ namespace pwiz.Skyline.Model.DocSettings
                     regressionFunction = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
                     break;
                 case RegressionMethodRT.kde:
-                    if (stat.Length <= 1)
+                {
+                    var x = stat.CopyList();
+                    var y = statRT.CopyList();
+                    if (x.Contains(calculator.UnknownScore))
+                    {
+                        y = Enumerable.Range(0, x.Length).Where(i => !calculator.UnknownScore.Equals(x[i]))
+                            .Select(i => y[i]).ToArray();
+                        x = Enumerable.Range(0, x.Length).Where(i => !calculator.UnknownScore.Equals(x[i]))
+                            .Select(i => x[i]).ToArray();
+                    }
+
+                    if (x.Length <= 1)
                     {
                         return null;
                     }
-                    var kdeAligner = new KdeAligner();
-                    kdeAligner.Train(stat.CopyList(), statRT.CopyList(), token);
 
+                    var kdeAligner = new KdeAligner();
+                    kdeAligner.Train(x, y, token);
                     kdeAligner.GetSmoothedValues(out var xArr, out var ySmoothed);
                     regressionFunction =
                         new PiecewiseLinearRegressionFunction(xArr, ySmoothed, kdeAligner.GetRmsd());
                     stat = new Statistics(ySmoothed);
                     break;
+                }
                 case RegressionMethodRT.log:
                     regressionFunction = new LogRegression(stat.CopyList(), statRT.CopyList(), true);
                     stat = new Statistics(peptideScores.Select(x => regressionFunction.GetY(x)));

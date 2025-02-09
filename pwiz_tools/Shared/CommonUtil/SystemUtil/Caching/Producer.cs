@@ -58,6 +58,10 @@ namespace pwiz.Common.SystemUtil.Caching
             return Array.Empty<WorkOrder>();
         }
 
+        public virtual string GetDescription(object workParameter)
+        {
+            return null;
+        }
     }
 
     public abstract class Producer<TParameter, TResult> : Producer, IProducer<TParameter, TResult>

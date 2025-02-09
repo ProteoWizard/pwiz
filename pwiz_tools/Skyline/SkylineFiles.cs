@@ -360,7 +360,7 @@ namespace pwiz.Skyline
                     if (!SrmDocument.IsSkylineFile(path, out var explained))
                     {
                         exception = new IOException(
-                            explained); // Offer a more helpful explanation than that from the failed XML parser
+                            explained, x); // Offer a more helpful explanation than that from the failed XML parser
                     }
                 }
             }
@@ -3742,16 +3742,22 @@ namespace pwiz.Skyline
         {
             try
             {
+                string warningMessage = null;
                 lock (GetDocumentChangeLock())
                 {
                     var originalDocument = Document;
                     ModifiedDocument newDocument = null;
+
                     using (var longWaitDlg = new LongWaitDlg(this))
                     {
-                        longWaitDlg.PerformWork(this, 1000, broker =>
+                        longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                         {
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
-                            newDocument = documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                            using var fileStream = File.OpenRead(filename);
+                            var progressStream = new ProgressStream(fileStream);
+                            progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus("Reading annotations"));
+                            newDocument = documentAnnotations.ReadAnnotationsFromStream(longWaitDlg.CancellationToken, filename, progressStream);
+                            warningMessage = documentAnnotations.GetWarningMessage();
                         });
                     }
                     if (newDocument != null)
@@ -3760,11 +3766,17 @@ namespace pwiz.Skyline
                             DocumentModifier.FromResult(originalDocument, newDocument));
                     }
                 }
+
+                if (warningMessage != null)
+                {
+                    MessageDlg.Show(this, warningMessage, true);
+                }
             }
             catch (Exception exception)
             {
                 MessageDlg.ShowException(this, exception);
             }
+            
         }
 
         public void ImportAnnotations(TextReader reader, MessageInfo messageInfo)

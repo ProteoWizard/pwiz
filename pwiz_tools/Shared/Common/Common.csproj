@@ -239,6 +239,11 @@
     <Compile Include="DataBinding\Controls\QuickFilterForm.Designer.cs">
       <DependentUpon>QuickFilterForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataBinding\DataBindingResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DataBindingResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="DataBinding\DataPropertyDescriptor.cs" />
     <Compile Include="DataBinding\DataSchemaLocalizer.cs" />
     <Compile Include="DataBinding\ColumnCaption.cs" />
@@ -529,6 +534,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\QuickFilterForm.zh-CHS.resx">
       <DependentUpon>QuickFilterForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\DataBindingResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>DataBindingResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.ja.resx">
       <DependentUpon>Resources.resx</DependentUpon>

@@ -133,10 +133,17 @@ namespace pwiz.Skyline.Model.Lib
 
     internal class DictionaryRetentionScoreCalculator : RetentionScoreCalculatorSpec
     {
+        private string _caption;
         public DictionaryRetentionScoreCalculator(string name, IDictionary<Target, MeasuredRetentionTime> retentionTimes)
             : base(name)
         {
             RetentionTimes = retentionTimes;
+        }
+
+        public DictionaryRetentionScoreCalculator(string name, string caption,
+            IDictionary<Target, MeasuredRetentionTime> retentionTimes) : this(name, retentionTimes)
+        {
+            _caption = caption;
         }
 
         public IDictionary<Target, MeasuredRetentionTime> RetentionTimes { get; private set; }
@@ -163,6 +170,11 @@ namespace pwiz.Skyline.Model.Lib
         public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
             return ChooseRegressionPeptides(peptides, out _);
+        }
+
+        public override string ToString()
+        {
+            return _caption ?? Name;
         }
     }
 }
