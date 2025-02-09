@@ -763,6 +763,7 @@ namespace pwiz.Skyline.Model
             {
                 // Make sure peptide standards lists are up to date
                 docClone.Settings = docClone.Settings.CachePeptideStandards(Children, docClone.Children);
+
                 // Note protein metadata readiness
                 docClone.IsProteinMetadataPending = docClone.CalcIsProteinMetadataPending();
             }

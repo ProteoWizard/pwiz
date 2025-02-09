@@ -1152,7 +1152,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Adduct.EMPTY, true).Select(typedSequence => typedSequence.ModifiedSequence);
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                if (library == null || !library.UseExplicitPeakBounds)
+                if (library == null || library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.False)
                 {
                     continue;
                 }
@@ -1165,6 +1165,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 if (peakBoundaries != null)
                 {
+                    if (library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.Sometimes)
+                    {
+                        if (peakBoundaries.IsEmpty)
+                        {
+                            return null;
+                        }
+                    }
                     return peakBoundaries;
                 }
             }

@@ -2429,7 +2429,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool AnyExplicitPeakBounds()
         {
-            return Libraries.Any(lib => lib is { UseExplicitPeakBounds: true, HasExplicitBounds: true });
+            return Libraries.Any(library => library != null && library.UseExplicitPeakBounds != ExplicitPeakBoundsOption.False && library.HasExplicitBounds);
         }
 
         #endregion
