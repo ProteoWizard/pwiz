@@ -21,8 +21,6 @@
 import modules generate-version ;
 if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
-	build-project-if-exists Executables/DevTools/ResourcesOrganizer ;
-
     import path feature errors regex notfile ;
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
@@ -595,7 +593,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
             # note: we build TestTutorial.dll in do_skyline_build, but it takes too long to run in a Jam build
-            <dependency>Executables/DevTools/ResourcesOrganizer
         ;
 
     make SkylineTester.zip
