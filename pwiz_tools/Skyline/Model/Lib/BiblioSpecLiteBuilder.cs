@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
-        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.True)
+        public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.@true)
         {
             LibrarySpec = new BiblioSpecLiteSpec(name, outputPath, useExplicitPeakBounds);
 

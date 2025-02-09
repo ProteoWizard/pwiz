@@ -624,6 +624,11 @@ namespace pwiz.Skyline.Model.Lib
 
         public ExplicitPeakBoundsOption UseExplicitPeakBounds { get; private set; }
 
+        public Library ChangeUseExplicitPeakBounds(ExplicitPeakBoundsOption option)
+        {
+            return ChangeProp(ImClone(this), im => im.UseExplicitPeakBounds = option);
+        }
+
         /// <summary>
         /// Creates the appropriate library spec for this library, given a path
         /// to the library.
@@ -1010,7 +1015,7 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             FileNameHint = reader.GetAttribute(ATTR.file_name_hint);
-            UseExplicitPeakBounds = reader.GetEnumAttribute(ATTR.use_explicit_peak_bounds, ExplicitPeakBoundsOption.True);
+            UseExplicitPeakBounds = reader.GetEnumAttribute(ATTR.use_explicit_peak_bounds, ExplicitPeakBoundsOption.@true);
         }
 
         public override void WriteXml(XmlWriter writer)
@@ -1018,7 +1023,7 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeIfString(ATTR.file_name_hint, FileNameHint);
-            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, ExplicitPeakBoundsOption.True);
+            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, ExplicitPeakBoundsOption.@true);
         }
 
         #endregion
@@ -1543,7 +1548,7 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        protected LibrarySpec(string name, string path, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.True)
+        protected LibrarySpec(string name, string path, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.@true)
             : base(name)
         {
             FilePath = path;
@@ -1589,7 +1594,7 @@ namespace pwiz.Skyline.Model.Lib
                 var lines = new List<string>();
                 lines.Add(GetLibraryTypeName());
                 lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
-                if (UseExplicitPeakBounds != ExplicitPeakBoundsOption.True) 
+                if (UseExplicitPeakBounds != ExplicitPeakBoundsOption.@true) 
                 {
                     // TODO: "Sometimes"
                     lines.Add(LibResources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
@@ -1603,7 +1608,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             protected override IEnumerable<object> _values
             {
-                get { yield return ExplicitPeakBoundsOption.True; }
+                get { yield return ExplicitPeakBoundsOption.@true; }
             }
         }
 
@@ -1653,7 +1658,7 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             FilePath = reader.GetAttribute(ATTR.file_path);
-            UseExplicitPeakBounds = reader.GetEnumAttribute(ATTR.use_explicit_peak_bounds, ExplicitPeakBoundsOption.True);
+            UseExplicitPeakBounds = reader.GetEnumAttribute(ATTR.use_explicit_peak_bounds, ExplicitPeakBoundsOption.@true);
             // Consume tag
             reader.Read();
         }
@@ -1669,7 +1674,7 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.file_path, FilePath);
-            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, ExplicitPeakBoundsOption.True);
+            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, ExplicitPeakBoundsOption.@true);
         }
 
         #endregion
@@ -1711,9 +1716,9 @@ namespace pwiz.Skyline.Model.Lib
 
     public enum ExplicitPeakBoundsOption
     {
-        True,
-        False,
-        Sometimes
+        @true,
+        @false,
+        unless_missing
     }
 
     /// <summary>

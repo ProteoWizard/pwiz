@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model
             }
 
             string name = Path.GetFileNameWithoutExtension(docFilePath);
-            return new BiblioSpecLiteBuilder(name, outputPath, SearchFilenames, null, isFeatureDetection ? ExplicitPeakBoundsOption.False : ExplicitPeakBoundsOption.True)
+            return new BiblioSpecLiteBuilder(name, outputPath, SearchFilenames, null, isFeatureDetection ? ExplicitPeakBoundsOption.@false : ExplicitPeakBoundsOption.@true)
             {
                 Action = libraryBuildAction,
                 KeepRedundant = true,

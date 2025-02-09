@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
-        public BiblioSpecLiteSpec(string name, string path, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.True)
+        public BiblioSpecLiteSpec(string name, string path, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.@true)
             : base(name, path, useExplicitPeakBounds)
         {
         }

@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForDocumentLoaded();
             RunUI(() => SkylineWindow.SaveDocument());
             
-            Assert.AreEqual(ExplicitPeakBoundsOption.True, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0].UseExplicitPeakBounds);
+            Assert.AreEqual(ExplicitPeakBoundsOption.@true, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0].UseExplicitPeakBounds);
 
             peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editLibraryList = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettings.EditLibraryList);
@@ -83,15 +83,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 Assert.IsTrue(editLibraryDlg.ComboUseExplicitPeakBounds.Enabled);
-                Assert.AreEqual(ExplicitPeakBoundsOption.True, editLibraryDlg.UseExplicitPeakBounds);
-                editLibraryDlg.UseExplicitPeakBounds = ExplicitPeakBoundsOption.False;
+                Assert.AreEqual(ExplicitPeakBoundsOption.@true, editLibraryDlg.UseExplicitPeakBounds);
+                editLibraryDlg.UseExplicitPeakBounds = ExplicitPeakBoundsOption.@false;
             });
             OkDialog(editLibraryDlg, editLibraryDlg.OkDialog);
             OkDialog(editLibraryList, editLibraryList.OkDialog);
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             WaitForDocumentLoaded();
-            Assert.AreEqual(ExplicitPeakBoundsOption.False, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0].UseExplicitPeakBounds);
+            Assert.AreEqual(ExplicitPeakBoundsOption.@false, SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0].UseExplicitPeakBounds);
 
             var manageResultsDialog = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             RunUI(()=>manageResultsDialog.RemoveAllReplicates());
