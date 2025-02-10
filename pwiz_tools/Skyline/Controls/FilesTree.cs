@@ -100,6 +100,15 @@ namespace pwiz.Skyline.Controls
             NodesForFileType(type).EnsureVisible();
         }
 
+        public void CollapseNodesForFileType(FileType type)
+        {
+            var root = NodesForFileType(type);
+            foreach (TreeNode node in root.Nodes)
+            {
+                node.Collapse(true);
+            }
+        }
+
         public TreeNode NodesForFileType(FileType type)
         {
             return type switch
