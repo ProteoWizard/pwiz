@@ -119,14 +119,12 @@
   </resheader>
   <data name="Abort" xml:space="preserve">
     <value>终止</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>取消</value>
   </data>
   <data name="Ignore" xml:space="preserve">
     <value>忽略</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="No" xml:space="preserve">
     <value>否</value>
