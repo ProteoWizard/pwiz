@@ -18,8 +18,10 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -37,51 +39,88 @@ namespace pwiz.SkylineTestFunctional
 
         private string LibraryPathWithoutIrt =>
             TestContext.GetTestPath("TestAlphapeptdeepBuildLibrary\\LibraryWithoutIrt.blib");
+        private string LibraryPathWithIrt =>
+            TestContext.GetTestPath("TestAlphapeptdeepBuildLibrary\\LibraryWithIrt.blib");
 
-        
-      
+        private string StoredHashWithoutIrt = "2b31dec24e3a22bf2807769864ec6d7045236be32a9f78e0548e62975afe7318";
+
+        private string StoredHashWithIrt = "F00F00F00";
+
+        private PythonTestUtil pythonTestUtil;
+
         protected override void DoTest()
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
-            PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
-            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+            
+            pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
+
+            
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
+            const string libraryWithIrt = "AlphaPeptDeepLibraryWithIrt";
 
-            RunUI(() =>
-            {
-                buildLibraryDlg.LibraryName = libraryWithoutIrt;
-                buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
-                buildLibraryDlg.AlphaPeptDeep = true;
-            });
+            // test without iRT
+            AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, StoredHashWithoutIrt, false);
+            // test with iRT
+            AlphapeptdeepBuildLibrary(libraryWithIrt, LibraryPathWithIrt, StoredHashWithIrt, true);
 
-            // Test the control path where Python needs installation and is Cancelled
-            pythonUtil.CancelPython(buildLibraryDlg);
-
-            //PauseTest();
-
-            // Test the control path where Python is installable
-            if (!pythonUtil.InstallPython(buildLibraryDlg)) 
-                OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
-
-            Assert.IsTrue(pythonUtil.HavePythonPrerequisite(buildLibraryDlg));
-            
-            //PauseTest();
-
-            OkDialog(peptideSettings, peptideSettings.OkDialog);
-
-            string libHash = PythonInstallerUtil.GetFileHash(buildLibraryDlg.BuilderLibFilepath);
-            string storedHash = "2b31dec24e3a22bf2807769864ec6d7045236be32a9f78e0548e62975afe7318";
-            
-            Assert.AreEqual(storedHash, libHash);
-           
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
+                spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
             });
-            
+
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
+        }
+
+        /// <summary>
+        /// Test takes goes through building of a Library by AlphaPeptDeep with or without iRT
+        /// </summary>
+        /// <param name="libraryName">Name of the library to build</param>
+        /// <param name="libraryPath">Path of the library to build</param>
+        /// <param name="storedHash">checksum of the library to build</param>
+        /// <param name="withIrt">flag to indicate building with iRT peptides</param>
+        private void AlphapeptdeepBuildLibrary( string libraryName, string libraryPath, string storedHash, bool withIrt)
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibraryDlg.LibraryName = libraryName;
+                buildLibraryDlg.LibraryPath = libraryPath;
+                buildLibraryDlg.AlphaPeptDeep = true;
+                if (withIrt) buildLibraryDlg.IrtStandard = IrtStandard.PIERCE;
+            });
+
+            // Test the control path where Python needs installation and is Cancelled
+            pythonTestUtil.CancelPython(buildLibraryDlg);
+
+            //PauseTest();
+
+            // Test the control path where Python is installable
+            if (!pythonTestUtil.InstallPython(buildLibraryDlg)) 
+                OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
+
+            Assert.IsTrue(pythonTestUtil.HavePythonPrerequisite(buildLibraryDlg));
+            if (withIrt)
+            {
+                var addIrtPeptidesDlg = WaitForOpenForm<AddIrtPeptidesDlg>();
+                OkDialog(addIrtPeptidesDlg, addIrtPeptidesDlg.OkDialog);
+                var addRetentionTimePredictorDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
+                OkDialog(addRetentionTimePredictorDlg, addRetentionTimePredictorDlg.NoDialog);
+            }
+
+            //PauseTest();
+
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
+
+            // Test the hash of the created library matches
+            string libHash = PythonInstallerUtil.GetFileHash(buildLibraryDlg.BuilderLibFilepath);
+            
+            Assert.AreEqual(storedHash, libHash);
+           
+
         }
         protected override void Cleanup()
         {
