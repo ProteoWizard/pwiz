@@ -179,7 +179,6 @@
   </data>
   <data name="btnDown.Text" xml:space="preserve">
     <value>下へ</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="toolStrip1.Location" type="System.Drawing.Point, System.Drawing">
     <value>126, 0</value>

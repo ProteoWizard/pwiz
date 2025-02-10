@@ -50,6 +50,8 @@ IF EXIST Executables\Installer\FileList64.txt del /q Executables\Installer\FileL
 IF EXIST Executables\Hardklor\obj rmdir /s /q Executables\Hardklor\obj
 IF EXIST Executables\Hardklor\x64 rmdir /s /q Executables\Hardklor\x64
 IF EXIST Executables\SkylineBatch\SkylineBatch\Properties\AssemblyInfo.cs del /q Executables\SkylineBatch\SkylineBatch\Properties\AssemblyInfo.cs
+IF EXIST Executables\DevTools\ResourcesOrganizer\ResourcesOrganizer\obj rmdir /s /q Executables\DevTools\ResourcesOrganizer\ResourcesOrganizer\obj 
+IF EXIST Executables\DevTools\ResourcesOrganizer\ResourcesOrganizer\bin rmdir /s /q Executables\DevTools\ResourcesOrganizer\ResourcesOrganizer\bin
 IF EXIST Executables\DevTools\TutorialLocalizer\obj rmdir /s /q Executables\DevTools\TutorialLocalizer\obj 
 IF EXIST Executables\DevTools\TutorialLocalizer\bin rmdir /s /q Executables\DevTools\TutorialLocalizer\bin
 IF EXIST Properties\AssemblyInfo.cs del /q Properties\AssemblyInfo.cs
@@ -58,4 +60,5 @@ IF EXIST SkylineNightly\Properties\AssemblyInfo.cs del /q SkylineNightly\Propert
 IF EXIST SkylineNightlyShim\Properties\AssemblyInfo.cs del /q SkylineNightlyShim\Properties\AssemblyInfo.cs
 IF EXIST SkylineTester\Properties\AssemblyInfo.cs del /q SkylineTester\Properties\AssemblyInfo.cs
 IF EXIST TestRunner\Properties\AssemblyInfo.cs del /q TestRunner\Properties\AssemblyInfo.cs
+IF EXIST Translation\Scratch rmdir /s /q Translation\Scratch
 popd
