@@ -21,6 +21,7 @@ using System.Net.Http;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -166,61 +167,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         }
 
         // adapted from https://stackoverflow.com/a/57439154/638445
-        public class ProgressStream : Stream
-        {
-            private Stream _input;
-            private long _length;
-            private long _position;
-            public event EventHandler<ProgressEventArgs> UpdateProgress;
-
-            public ProgressStream(Stream input) : this(input, input.Length)
-            {
-            }
-
-            public ProgressStream(Stream input, long expectedSize)
-            {
-                _input = input;
-                _length = expectedSize;
-            }
-
-            public override void Flush()
-            {
-                _input.Flush();
-            }
-
-            public override long Seek(long offset, SeekOrigin origin)
-            {
-                return _input.Seek(offset, origin);
-            }
-
-            public override void SetLength(long value)
-            {
-                _input.SetLength(value);
-            }
-
-            public override int Read(byte[] buffer, int offset, int count)
-            {
-                int n = _input.Read(buffer, offset, count);
-                _position += n;
-                UpdateProgress?.Invoke(this, new ProgressEventArgs((1.0f * _position) / _length));
-                return n;
-            }
-
-            public override void Write(byte[] buffer, int offset, int count)
-            {
-                throw new NotImplementedException();
-            }
-
-            public override bool CanRead => true;
-            public override bool CanSeek => false;
-            public override bool CanWrite => false;
-            public override long Length => _length;
-            public override long Position
-            {
-                get { return _position; }
-                set { throw new NotImplementedException(); }
-            }
-        }
 
         public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams)
         {
@@ -248,20 +194,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             var response = client.GetAsync(presignedUrl, HttpCompletionOption.ResponseHeadersRead, openMsDataFileParams.CancellationToken).Result;
             response.EnsureSuccessStatusCode();
             var responseStream = response.Content.ReadAsStreamAsync().Result;
-            using (var progressStream = new ProgressStream(responseStream, RawSize ?? 1))
+            using var progressStream = new ProgressStream(responseStream, RawSize ?? 1);
+            if (p.ProgressMonitor != null)
+            {
+                progressStream.SetProgressMonitor(p.ProgressMonitor, p.ProgressStatus, false);
+            }
             using (var fileStream = new FileStream(rawFilepath, FileMode.CreateNew))
             {
-                void ProgressStream_OnUpdateProgress(object sender, ProgressEventArgs e)
-                {
-                    var newPercentComplete = Math.Min(99, (int) Math.Round(e.Progress * 100));
-                    if (newPercentComplete - p.ProgressStatus.PercentComplete < 1)
-                        return;
-                    p.ProgressStatus = p.ProgressStatus.ChangePercentComplete(newPercentComplete);
-                    p.ProgressMonitor.UpdateProgress(p.ProgressStatus);
-                }
-
-                if (p.ProgressMonitor != null)
-                    progressStream.UpdateProgress += ProgressStream_OnUpdateProgress;
                 progressStream.CopyToAsync(fileStream, 1 << 16, openMsDataFileParams.CancellationToken).Wait();
             }
 
@@ -278,4 +217,5 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                     ignoreZeroIntensityPoints: p.IgnoreZeroIntensityPoints, preferOnlyMsLevel: p.PreferOnlyMs1 ? 1 : 0);
         }
     }
+
 }
