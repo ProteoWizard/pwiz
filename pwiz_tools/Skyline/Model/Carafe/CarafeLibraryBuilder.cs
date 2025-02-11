@@ -182,6 +182,11 @@ namespace pwiz.Skyline.Model.Carafe
             return modList;
         }
 
+        public string ProductLibraryPath()
+        {
+            return CarafeOutputLibraryFilePath;
+        }
+
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,

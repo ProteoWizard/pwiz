@@ -134,7 +134,7 @@ namespace pwiz.Skyline.Controls
         public void PerformWork(Control parent, int delayMillis, Action performWork)
         {
             var indefiniteWaitBroker = new IndefiniteWaitBroker(performWork);
-            PerformWork(parent, delayMillis, indefiniteWaitBroker.PerformWork);
+            PerformWork(parent, delayMillis, indefiniteWaitBroker.PerformWork, CancellationToken.None);
         }
 
         public IProgressStatus PerformWork(Control parent, int delayMillis, Action<IProgressMonitor> performWork)
@@ -146,7 +146,8 @@ namespace pwiz.Skyline.Controls
             return progressWaitBroker.Status;
         }
 
-        public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
+
+        public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork, CancellationToken cancellationToken = default)
         {
             _startTime = DateTime.UtcNow; // Said to be 117x faster than Now and this is for a delta
             _parentForm = parent;
@@ -160,7 +161,7 @@ namespace pwiz.Skyline.Controls
                 }
 //                Action<Action<ILongWaitBroker>> runner = RunWork;
 //                _result = runner.BeginInvoke(performWork, runner.EndInvoke, null);
-                ActionUtil.RunAsync(() => RunWork(performWork));
+                ActionUtil.RunAsync(() => RunWork(performWork, cancellationToken));
 
                 // Wait as long as the caller wants before showing the progress
                 // animation to the user.
@@ -248,7 +249,7 @@ namespace pwiz.Skyline.Controls
         }
 
 
-        private void RunWork(Action<ILongWaitBroker> performWork)
+        private void RunWork(Action<ILongWaitBroker> performWork, CancellationToken cancellationToken)
         {
             try
             {

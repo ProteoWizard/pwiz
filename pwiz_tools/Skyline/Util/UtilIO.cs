@@ -1640,12 +1640,12 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="arguments">The arguments to run at the command line</param>
         /// <param name="runAsAdministrator">If true, this process will be run as administrator, which
-        /// allows for the CMD.exe process to be ran with elevated privileges</param>
+        ///     allows for the CMD.exe process to be ran with elevated privileges</param>
         /// <param name="writer">The textwriter to which the command lines output will be written to</param>
         /// <param name="createNoWindow">Whether or not execution runs in its own window</param>
-        /// <param name="progressMonitor">Allows to Cancel</param>
+        /// <param name="cancellationToken">Allows to Cancel</param>
         /// <returns>The exitcode of the CMD process ran with the specified arguments</returns>
-        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
+        public static int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default )
         {
             // create GUID
             string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
@@ -1679,7 +1679,7 @@ namespace pwiz.Skyline.Util
                     // not as administrator
                     if (runAsAdministrator && win32Exception.NativeErrorCode == ERROR_CANCELLED)
                     {
-                        return RunProcess(arguments, false, writer, createNoWindow, progressMonitor);
+                        return RunProcess(arguments, false, writer, createNoWindow, cancellationToken);
                     }
                     throw;
                 }
@@ -1687,72 +1687,37 @@ namespace pwiz.Skyline.Util
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
                 {
-                    using (var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024*1024))
+
+                    try
                     {
-                        bool readTimedOut = false;
-                        bool readSuccess;
-                        string line;
-                        while (true)
+                        var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024 * 1024);
+                        var thisThread = Thread.CurrentThread;
+                        using var registration = cancellationToken.Register(o =>
                         {
-                            readSuccess = false;
-                            line = "";
-
-                            // Start a new thread to read a line so cancellation does not wait too long
-                            Thread readThread = null;
-
-                            if (!readTimedOut)
+                            thisThread.Interrupt();
+                        }, null);
+                        while (reader.ReadLine() is { } line)
+                        {
+                            writer.WriteLine(line);
+                        }
+                    }
+                    catch (ThreadInterruptedException)
+                    {
+                        if (cancellationToken.IsCancellationRequested && !process.HasExited)
+                        {
+                            try
                             {
-                                readThread = new Thread(() =>
-                                {
-                                    line = reader.ReadLine();
-                                    readSuccess = true;
-                                });
-                                readThread.Start();
+                                process.Kill();
                             }
-
-                            if (readThread != null && readThread.Join(1000))
+                            catch (InvalidOperationException)
                             {
-                                if (readSuccess && line == null)
-                                    break;
-                                readTimedOut = false;
-                            }
-                            else if (readThread == null)
-                            {
-                                readTimedOut = false;
-                            }
-                            else
-                            {
-                                readTimedOut = true;
-                            }
-
-                            if (readSuccess && line != null)
-                                writer.WriteLine(line);
-
-                            // wait for process to finish
-                            if (progressMonitor != null)
-                            {
-                                if (progressMonitor.IsCanceled)
-                                {
-                                    if (!process.HasExited)
-                                    {
-                                        try
-                                        {
-                                            readThread?.Interrupt();
-                                            process.Kill();
-                                        }
-                                        catch (InvalidOperationException)
-                                        {
-
-                                        }
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        break;
-                                    }
-                                }
+                                // Ignore
                             }
                         }
+                        // If cancellation was requested then throw the OperationCancelledException
+                        cancellationToken.ThrowIfCancellationRequested();
+                        // Otherwise, throw the ThreadInterruptedException
+                        throw;
                     }
 
                     while (!processFinished)

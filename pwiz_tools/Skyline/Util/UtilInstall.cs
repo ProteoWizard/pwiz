@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Tools;
@@ -363,14 +364,14 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Wrapper interface for the NamedPipeProcessRunner class
         /// </summary>
-        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null);
+        int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default);
     }
 
     public class SkylineProcessRunnerWrapper : ISkylineProcessRunnerWrapper
     {
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, CancellationToken cancellationToken = default)
         {
-            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer, createNoWindow, progressMonitor);
+            return SkylineProcessRunner.RunProcess(arguments, runAsAdministrator, writer, createNoWindow, cancellationToken);
         }
     }
 
@@ -384,7 +385,7 @@ namespace pwiz.Skyline.Util
         public int ExitCode { get; set; }
         public string stringToWriteToWriter { get; set; }
         
-        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer, bool createNoWindow = false, IProgressMonitor progressMonitor = null)
+        public int RunProcess(string arguments, bool runAsAdministrator, TextWriter writer,  bool createNoWindow = false, CancellationToken cancellationToken = default)
         {
             if (!UserOkRunAsAdministrator)
             {

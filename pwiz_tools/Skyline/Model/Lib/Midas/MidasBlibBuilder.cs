@@ -91,6 +91,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
             }
         }
 
+        public string ProductLibraryPath()
+        {
+            return _library.FilePath;
+
+        }
         public LibrarySpec LibrarySpec { get { return _libSpec; } }
     }
 }

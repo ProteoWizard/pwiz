@@ -21,7 +21,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -33,6 +32,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
         {
+            pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
             TestFilesZip = "TestFunctional/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
         }
@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
 
         private string StoredHashWithoutIrt = "2b31dec24e3a22bf2807769864ec6d7045236be32a9f78e0548e62975afe7318";
 
-        private string StoredHashWithIrt = "F00F00F00";
+        private string StoredHashWithIrt = "2b31dec24e3a22bf2807769864ec6d7045236be32a9f78e0548e62975afe7318";
 
         private PythonTestUtil pythonTestUtil;
 
@@ -52,16 +52,15 @@ namespace pwiz.SkylineTestFunctional
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
             
-            pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
 
             
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
             const string libraryWithIrt = "AlphaPeptDeepLibraryWithIrt";
 
             // test without iRT
-            AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, StoredHashWithoutIrt, false);
+            AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, StoredHashWithoutIrt, null,true);
             // test with iRT
-            AlphapeptdeepBuildLibrary(libraryWithIrt, LibraryPathWithIrt, StoredHashWithIrt, true);
+            AlphapeptdeepBuildLibrary(libraryWithIrt, LibraryPathWithIrt, StoredHashWithIrt, IrtStandard.PIERCE);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
@@ -79,8 +78,9 @@ namespace pwiz.SkylineTestFunctional
         /// <param name="libraryName">Name of the library to build</param>
         /// <param name="libraryPath">Path of the library to build</param>
         /// <param name="storedHash">checksum of the library to build</param>
-        /// <param name="withIrt">flag to indicate building with iRT peptides</param>
-        private void AlphapeptdeepBuildLibrary( string libraryName, string libraryPath, string storedHash, bool withIrt)
+        /// <param name="iRTtype">iRT standard type</param>
+        /// <param name="cancelPython">press Cancel on Python</param>
+        private void AlphapeptdeepBuildLibrary( string libraryName, string libraryPath, string storedHash, IrtStandard iRTtype = null, bool cancelPython = false)
         {
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
@@ -90,11 +90,12 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.LibraryName = libraryName;
                 buildLibraryDlg.LibraryPath = libraryPath;
                 buildLibraryDlg.AlphaPeptDeep = true;
-                if (withIrt) buildLibraryDlg.IrtStandard = IrtStandard.PIERCE;
+                if (iRTtype != null) buildLibraryDlg.IrtStandard = iRTtype;
             });
 
-            // Test the control path where Python needs installation and is Cancelled
-            pythonTestUtil.CancelPython(buildLibraryDlg);
+            // Test the control path where Python needs installation and is
+            if (cancelPython)
+                pythonTestUtil.CancelPython(buildLibraryDlg);
 
             //PauseTest();
 
@@ -103,13 +104,6 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(buildLibraryDlg,buildLibraryDlg.OkWizardPage);
 
             Assert.IsTrue(pythonTestUtil.HavePythonPrerequisite(buildLibraryDlg));
-            if (withIrt)
-            {
-                var addIrtPeptidesDlg = WaitForOpenForm<AddIrtPeptidesDlg>();
-                OkDialog(addIrtPeptidesDlg, addIrtPeptidesDlg.OkDialog);
-                var addRetentionTimePredictorDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
-                OkDialog(addRetentionTimePredictorDlg, addRetentionTimePredictorDlg.NoDialog);
-            }
 
             //PauseTest();
 

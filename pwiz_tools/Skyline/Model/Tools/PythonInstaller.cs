@@ -28,6 +28,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
 using Ionic.Zip;
 using JetBrains.Annotations;
 using Microsoft.Win32;
@@ -343,7 +344,7 @@ namespace pwiz.Skyline.Model.Tools
             return tasks;
         }
 
-        private PythonTask GetPythonTask(PythonTaskName pythonTaskName)
+        private PythonTask GetPythonTask(PythonTaskName pythonTaskName) 
         {
             switch (pythonTaskName)
             {
@@ -366,7 +367,7 @@ namespace pwiz.Skyline.Model.Tools
                     task3.Name = pythonTaskName;
                     return task3;
                 case PythonTaskName.enable_longpaths:
-                    var task4 = new PythonTask(() => EnableWindowsLongPaths());
+                    var task4 = new PythonTask(EnableWindowsLongPaths);
                     task4.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task4.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task4.Name = pythonTaskName;
@@ -398,7 +399,7 @@ namespace pwiz.Skyline.Model.Tools
                     task8.Name = pythonTaskName;
                     return task8;
                 case PythonTaskName.pip_install_packages:
-                    var task9= new PythonTask((progressMonitor) => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages, progressMonitor));
+                    var task9= new PythonTask((longWaitBroker) => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages, longWaitBroker));
                     task9.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task9.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task9.Name = pythonTaskName;
@@ -626,7 +627,7 @@ namespace pwiz.Skyline.Model.Tools
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, progressMonitor) != 0)
+            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, PIP_EXE);
@@ -634,61 +635,65 @@ namespace pwiz.Skyline.Model.Tools
 
         }
 
-        private void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, IProgressMonitor progressMonitor = null)
+        private void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, ILongWaitBroker broker = null)
         {
             var cmdBuilder = new StringBuilder();
+            CancellationToken cancelToken = CancellationToken.None;
 
-            foreach (var package in packages)
+            try
             {
-                string arg;
-                cmdBuilder.Clear();
-                cmdBuilder.Append(pythonExecutablePath)
-                    .Append(SPACE)
-                    .Append(PYTHON_MODULE_OPTION)
-                    .Append(SPACE)
-                    .Append(PIP)
-                    .Append(SPACE)
-                    .Append(INSTALL)
-                    .Append(SPACE);
-                if (package.Version.IsNullOrEmpty())
+                foreach (var package in packages)
                 {
-                    arg = package.Name;
-                }
-                else if (package.Version.StartsWith(GIT))
-                {
-                    arg = package.Version;
-                    arg = TextUtil.Quote(arg);
-                }
-                else
-                {
-                    arg = package.Name + EQUALS + package.Version;
-                    arg = TextUtil.Quote(arg);
-                }
+                    string arg;
+                    cmdBuilder.Clear();
+                    cmdBuilder.Append(pythonExecutablePath)
+                        .Append(SPACE)
+                        .Append(PYTHON_MODULE_OPTION)
+                        .Append(SPACE)
+                        .Append(PIP)
+                        .Append(SPACE)
+                        .Append(INSTALL)
+                        .Append(SPACE);
+                    if (package.Version.IsNullOrEmpty())
+                    {
+                        arg = package.Name;
+                    }
+                    else if (package.Version.StartsWith(GIT))
+                    {
+                        arg = package.Version;
+                        arg = TextUtil.Quote(arg);
+                    }
+                    else
+                    {
+                        arg = package.Name + EQUALS + package.Version;
+                        arg = TextUtil.Quote(arg);
+                    }
 
-                
-                cmdBuilder.Append(arg).Append(SPACE);
 
-                var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO,
-                    cmdBuilder, CMD_PROCEEDING_SYMBOL);
-                cmd += string.Format(
-                    ToolsResources
-                        .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
-                    ECHO, CMD_PROCEEDING_SYMBOL);
-                cmd += cmdBuilder;
-                var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-               
-                if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, progressMonitor) != 0)
-                {
-                    if (progressMonitor != null && !progressMonitor.IsCanceled)
-                        throw new ToolExecutionException(
-                            string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
-                    break;
+                    cmdBuilder.Append(arg).Append(SPACE);
+
+                    var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO,
+                        cmdBuilder, CMD_PROCEEDING_SYMBOL);
+                    cmd += string.Format(
+                        ToolsResources
+                            .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
+                        ECHO, CMD_PROCEEDING_SYMBOL);
+                    cmd += cmdBuilder;
+                    var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
+
+                    if (broker != null) cancelToken = broker.CancellationToken;
+                    if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
+                    {
+                        throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
+                                                            cmdBuilder));
+    
+                    }
                 }
-              
             }
-
-            if (progressMonitor != null && progressMonitor.IsCanceled)
+            catch 
+            {
                 return;
+            }
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);
             PythonInstallerUtil.SignFile(filePath+DOT_EXE);
@@ -1518,13 +1523,14 @@ namespace pwiz.Skyline.Model.Tools
 
     public class PythonTask
     {
-        private OneOf<Action, Action<IProgressMonitor>> _action;
-
-        public bool IsAction => IsActionWithNoArg || IsActionWithProgressMonitor;
+        private OneOf<Action, Action<IProgressMonitor>, Action<ILongWaitBroker>> _action;
+        public bool IsAction => IsActionWithNoArg || IsActionWithProgressMonitor || IsActionWithLongWaitBroker;
         public bool IsActionWithNoArg => _action.IsT0;
         public bool IsActionWithProgressMonitor => _action.IsT1;
+        public bool IsActionWithLongWaitBroker => _action.IsT2;
         public Action AsActionWithNoArg => _action.AsT0;
         public Action<IProgressMonitor> AsActionWithProgressMonitor => _action.AsT1;
+        public Action<ILongWaitBroker> AsActionWithLongWaitBroker => _action.AsT2;
 
         public Type ActionType
         {
@@ -1532,7 +1538,8 @@ namespace pwiz.Skyline.Model.Tools
             {
                 return _action.Match(
                     t0 => t0.GetType(),
-                    t1 => t1.GetType());
+                    t1 => t1.GetType(),
+                    t2 => t2.GetType());
             }
         }
 
@@ -1548,6 +1555,11 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         public PythonTask(Action<IProgressMonitor> action)
+        {
+            _action = action;
+        }
+
+        public PythonTask(Action<ILongWaitBroker> action)
         {
             _action = action;
         }
