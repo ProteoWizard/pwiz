@@ -1600,9 +1600,13 @@ namespace pwiz.Skyline.Model.Lib
                 var allRetentionTimes = new List<ImmutableList<double>>();
                 for (int iFile = 0; iFile < LibraryFiles.Count; iFile++)
                 {
-                    var retentionTimes = targetGroup
-                        .SelectMany(spectrumInfo => spectrumInfo.RetentionTimesByFileId.GetTimes(iFile)).OrderBy(t => t).ToList();
-                    allRetentionTimes.Add(ImmutableList.ValueOf(retentionTimes));
+                    var fileRetentionTimes = new List<double>();
+                    foreach (var spectrumInfo in targetGroup)
+                    {
+                        var fileId = _librarySourceFiles[iFile].Id;
+                        fileRetentionTimes.AddRange(spectrumInfo.RetentionTimesByFileId.GetTimes(fileId));
+                    }
+                    allRetentionTimes.Add(ImmutableList.ValueOf(fileRetentionTimes));
                 }
                 entries.Add(ImmutableList.ValueOf(allRetentionTimes));
             }
