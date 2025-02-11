@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Controls
         private readonly TreeNodeMS _peptideLibrariesRoot;
         private readonly TreeNodeMS _backgroundProteomeRoot;
         private readonly TreeNodeMS _projectFilesRoot;
+        private FileSystemWatcher _fileSystemWatcher;
 
         // Used while merging a file data model with a FilesTree. Each entry explains how to
         // create a specific type of TreeNode given a type of file. Entries in this dict will
@@ -51,7 +52,9 @@ namespace pwiz.Skyline.Controls
             blank,
             folder,
             file,
+            file_missing,
             replicate,
+            replicate_sample_file,
             peptide,
             skyline
         }
@@ -67,7 +70,9 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.Blank);
             ImageList.Images.Add(Resources.Folder);
             ImageList.Images.Add(Resources.File);
+            ImageList.Images.Add(Resources.MissingFile);
             ImageList.Images.Add(Resources.Replicate);
+            ImageList.Images.Add(Resources.DataProcessing);
             ImageList.Images.Add(Resources.Peptide);
             ImageList.Images.Add(Resources.Skyline);
 
@@ -133,8 +138,8 @@ namespace pwiz.Skyline.Controls
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
         }
 
-        // TODO (ekoneil): should folders appear in the tree when empty? Example: when there's no Background Proteome, should
-        //                 its folder be removed?
+        // TODO (ekoneil): should folders appear in the tree when empty?
+        //                 Example: when there's no Background Proteome, should its folder be removed?
         // CONSIDER: support updating folders on document change. Ex: to show file counts in tooltips, etc.
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
@@ -146,16 +151,32 @@ namespace pwiz.Skyline.Controls
 
             if (!ReferenceEquals(document.Id, e.DocumentPrevious?.Id))
             {
-                // Rebuild FilesTree if the document changed. This is a temporary, aggressive way of configuring 
-                // the tree when something changes - ex: opening an existing .sky file or creating a new one.
+                // The document changed, so rebuild FilesTree starting at the root
                 BeginUpdateMS();
                 Nodes.Clear();
                 EndUpdateMS();
 
-                var skylineFileModel = DocumentContainer.DocumentFilePath == null
-                    ? new SkylineFileModel(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null)
-                    : new SkylineFileModel(Path.GetFileName(DocumentContainer.DocumentFilePath),
-                        DocumentContainer.DocumentFilePath);
+                SkylineFileModel skylineFileModel;
+                if (DocumentContainer.DocumentFilePath == null)
+                {
+                    // TODO: initialize FileSystemWatcher when a new document is saved?
+                    skylineFileModel = new SkylineFileModel(ControlsResources.FilesTree_TreeNodeLabel_NewDocument, null);
+                }
+                else
+                {
+                    skylineFileModel = new SkylineFileModel(Path.GetFileName(DocumentContainer.DocumentFilePath), DocumentContainer.DocumentFilePath);
+
+                    _fileSystemWatcher ??= new FileSystemWatcher();
+
+                    _fileSystemWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
+                    _fileSystemWatcher.SynchronizingObject = this;
+                    _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName;
+                    _fileSystemWatcher.IncludeSubdirectories = true;
+                    _fileSystemWatcher.EnableRaisingEvents = true;
+                    _fileSystemWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
+                    _fileSystemWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
+                    _fileSystemWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
+                }
 
                 Root = new SkylineRootTreeNode(skylineFileModel);
 
@@ -163,10 +184,10 @@ namespace pwiz.Skyline.Controls
 
                 // document changed, so re-wire project-level files
                 var auditLogFilePath = SrmDocument.GetAuditLogPath(DocumentContainer.DocumentFilePath);
-                _projectFilesRoot.Nodes.Add(new AuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
+                _projectFilesRoot.Nodes.Add(new SkylineAuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
 
                 var viewFilePath = SkylineWindow.GetViewFile(DocumentContainer.DocumentFilePath);
-                _projectFilesRoot.Nodes.Add(new ViewFileTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
+                _projectFilesRoot.Nodes.Add(new SkylineViewFileTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
             }
 
             var files = Document.Settings.Files;
@@ -345,6 +366,28 @@ namespace pwiz.Skyline.Controls
         {
             return node != null ? node.Nodes.Count : 0;
         }
+
+        protected override void Dispose(bool disposing)
+        {
+            _fileSystemWatcher?.Dispose();
+
+            base.Dispose(disposing);
+        }
+
+        private void FilesTree_ProjectDirectory_OnDeleted(object sender, FileSystemEventArgs e)
+        {
+            FilesTreeNode.FileDeleted(Root, e.Name);
+        }
+
+        private void FilesTree_ProjectDirectory_OnCreated(object sender, FileSystemEventArgs e)
+        {
+            FilesTreeNode.FileCreated(Root, e.Name);
+        }
+
+        private void FilesTree_ProjectDirectory_OnRenamed(object sender, RenamedEventArgs e)
+        {
+            FilesTreeNode.FileRenamed(Root, e.OldName, e.Name);
+        }
     }
 
     public class FilesTreeFolderNode : TreeNodeMS
@@ -359,12 +402,15 @@ namespace pwiz.Skyline.Controls
     {
         public FilesTreeNode(IFileBase model, FilesTree.ImageId imageId)
         {
-            // Configure inherited TreeNode properties
+            // Set TreeNode properties
             Tag = model;
             Name = Model.Name;
             Text = Model.Name;
             ImageIndex = (int)imageId;
+            OriginalImageIndex = (int)imageId;
         }
+
+        public int OriginalImageIndex { get; private set; }
 
         public IFileBase Model
         {
@@ -377,10 +423,71 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        public virtual void FileAvailable()
+        {
+            ImageIndex = OriginalImageIndex;
+        }
+
+        public virtual void FileMissing()
+        {
+            ImageIndex = (int)FilesTree.ImageId.file_missing;
+        }
+
         protected virtual void OnModelChanged()
         {
             Name = Model.Name;
             Text = Model.Name;
+        }
+
+        private static TreeNode FindTreeNodeForFileName(TreeNode node, string name)
+        {
+            if (node.Tag != null && typeof(IFileModel).IsAssignableFrom(node.Tag.GetType()))
+            {
+                if (((IFileModel)node.Tag).Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    return node;
+                }
+            }
+
+            foreach (TreeNode n in node.Nodes)
+            {
+                var result = FindTreeNodeForFileName(n, name);
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
+
+        internal static void FileDeleted(TreeNode root, string name)
+        {
+            var treeNode = FindTreeNodeForFileName(root, name) as FilesTreeNode;
+            treeNode?.FileMissing();
+        }
+
+        internal static void FileCreated(TreeNode root, string name)
+        {
+            // Look for a tree node associated with the new file name. If Files Tree isn't aware
+            // of a file with that name, ignore the event.
+            var treeNode = FindTreeNodeForFileName(root, name) as FilesTreeNode;
+            treeNode?.FileAvailable();
+        }
+
+        internal static void FileRenamed(TreeNode root, string oldName, string newName)
+        {
+            // Look for a tree node with the file's previous name. If a node with that name is found
+            // treat the file as missing. 
+            if (FindTreeNodeForFileName(root, oldName) is FilesTreeNode treeNode)
+            {
+                treeNode.FileMissing();
+            }
+            // Now, look for a tree node with the new file name. If found, a file was restored with
+            // a name Files Tree is aware of, so mark the file as available.
+            else
+            {
+                treeNode = FindTreeNodeForFileName(root, newName) as FilesTreeNode;
+                treeNode?.FileAvailable();
+            }
         }
     }
 
@@ -420,7 +527,7 @@ namespace pwiz.Skyline.Controls
             return new ReplicateTreeNode(model);
         }
 
-        public ReplicateTreeNode(IFileGroupModel model) : base(model, FilesTree.ImageId.folder)
+        public ReplicateTreeNode(IFileGroupModel model) : base(model, FilesTree.ImageId.replicate)
         {
         }
     }
@@ -435,7 +542,7 @@ namespace pwiz.Skyline.Controls
             return new ReplicateSampleFileTreeNode(model);
         }
 
-        public ReplicateSampleFileTreeNode(IFileModel model) : base(model, FilesTree.ImageId.replicate)
+        public ReplicateSampleFileTreeNode(IFileModel model) : base(model, FilesTree.ImageId.replicate_sample_file)
         {
         }
 
@@ -522,9 +629,9 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class AuditLogTreeNode : FilesTreeNode, ITipProvider
+    public class SkylineAuditLogTreeNode : FilesTreeNode, ITipProvider
     {
-        public AuditLogTreeNode(AuditLogFileModel model) : base(model, FilesTree.ImageId.file)
+        public SkylineAuditLogTreeNode(AuditLogFileModel model) : base(model, FilesTree.ImageId.file)
         {
         }
 
@@ -548,9 +655,9 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class ViewFileTreeNode : FilesTreeNode, ITipProvider
+    public class SkylineViewFileTreeNode : FilesTreeNode, ITipProvider
     {
-        public ViewFileTreeNode(ViewFileModel model) : base(model, FilesTree.ImageId.file)
+        public SkylineViewFileTreeNode(ViewFileModel model) : base(model, FilesTree.ImageId.file)
         {
         }
 

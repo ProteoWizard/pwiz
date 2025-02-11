@@ -150,11 +150,9 @@ namespace pwiz.Skyline.Controls
                     openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
                     break;
                 case AuditLogFileModel _:
+                case IFileModel _:
                     var filePath = ((IFileModel)model).FilePath;
                     openContainingFolderMenuStripItem.Enabled = File.Exists(filePath);
-                    break;
-                case IFileModel _:
-                    openContainingFolderMenuStripItem.Enabled = true;
                     break;
                 default:
                     openContainingFolderMenuStripItem.Enabled = false;
@@ -174,7 +172,7 @@ namespace pwiz.Skyline.Controls
         {
             switch (e.Node)
             {
-                case AuditLogTreeNode _:
+                case SkylineAuditLogTreeNode _:
                     ShowAuditLog();
                     break;
                 case PeptideLibraryTreeNode peptideLibrary:
