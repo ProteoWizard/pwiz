@@ -1692,11 +1692,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 return true;
             }
 
-            // Special case with feature finding where libraries don't have fragment info, just precursors - so a minumum
-            // fragment count isn't applicable. Only current scenario for this is the Hardklor-based feature finding.
-            // N.B. there is a possibility of the feature finder eventually supporting fragment ions, in which case this needs
-            // to be revisited.
-            if (nodeGroup.HasLibInfo && nodeGroup.LibInfo.ScoreType.Equals(ScoreType.HARDKLOR_IDOTP) && nodeGroup.Transitions.All(nodeTran => nodeTran.IsMs1))
+            // Special case with libraries that don't have fragment info, just precursors - so a minimum
+            // fragment count isn't applicable.
+            // (Only current scenario for this is the Hardklor-based feature finding.)
+            if (nodeGroup.LibraryMayBePrecursorsOnly && nodeGroup.Transitions.All(nodeTran => nodeTran.IsMs1))
             {
                 return true;
             }
