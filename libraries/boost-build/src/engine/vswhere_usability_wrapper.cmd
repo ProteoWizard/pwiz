@@ -5,6 +5,7 @@
 :: See accompanying file LICENSE at https://github.com/node4good/windows-autoconf
 :: Forked from version: 1.15.4
 
+@ECHO ON
 @if not defined DEBUG_HELPER @ECHO OFF
 setlocal
 set "InstallerPath=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer"
