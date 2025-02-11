@@ -20,9 +20,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using pwiz.Skyline.Model.DocSettings;
 using System;
-using System.IO;
 
 namespace pwiz.Skyline.Controls
 {
@@ -142,29 +140,31 @@ namespace pwiz.Skyline.Controls
         {
             _nodeTip.HideTip();
 
-            var model = FilesTree.SelectedNode.Tag as IFileBase;
-
-            switch (FilesTree.SelectedNode.Tag)
+            switch (FilesTree.SelectedNode)
             {
-                case SkylineFileModel _:
+                case SkylineRootTreeNode _:
                     openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
                     break;
-                case AuditLogFileModel _:
-                case IFileModel _:
-                    var filePath = ((IFileModel)model).FilePath;
-                    openContainingFolderMenuStripItem.Enabled = File.Exists(filePath);
+                case SkylineAuditLogTreeNode _:
+                case ReplicateSampleFileTreeNode _:
+                    if (!(FilesTree.SelectedNode is FilesTreeNode treeNode))
+                        break;
+
+                    // only offer the option if the file currently exists and isn't removed or deleted
+                    openContainingFolderMenuStripItem.Enabled = treeNode.LocalFileExists(); 
                     break;
+                // TODO: Replicates folder => add item for Manage Results menu
                 default:
-                    openContainingFolderMenuStripItem.Enabled = false;
+                    openContainingFolderMenuStripItem.Visible = false;
                     break;
             }
         }
 
         private void FilesTree_ShowContainingFolderMenuItem(object sender, EventArgs e)
         {
-            if (FilesTree.SelectedNode.Tag is IFileModel file)
+            if (FilesTree.SelectedNode is FilesTreeNode treeNode)
             {
-                OpenContainingFolder(file.FilePath);
+                OpenContainingFolder(treeNode.LocalFilePath);
             }
         }
 

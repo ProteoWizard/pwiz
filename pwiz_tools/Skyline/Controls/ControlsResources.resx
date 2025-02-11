@@ -235,4 +235,7 @@
   <data name="FilesTree_TreeNodeLabel_ViewFile" xml:space="preserve">
 	  <value>View File</value>
   </data>
+  <data name="FilesTree_TreeNode_RenderTip_LocalPath" xml:space="preserve">
+	  <value>Local Path</value>
+  </data>
 </root>

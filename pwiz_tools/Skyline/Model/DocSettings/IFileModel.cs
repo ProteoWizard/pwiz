@@ -18,16 +18,23 @@ using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
+    /// <summary>
+    /// Enum representing Skyline file types.
+    /// https://skyline.ms/wiki/home/software/Skyline/page.view?name=file-types
+    /// </summary>
     public enum FileType
     {
-        background_proteome,
-        peptide_library,
-        project_files,
-        replicates,
-        replicate_file,
-        sky,
-        sky_audit_log,
-        sky_view
+        background_proteome,        // .protdb
+        ion_mobility_library,       // .imsdb
+        optimization_library,       // .optdb
+        peptide_library,            // .blib
+        project_files,              // <placeholder representing the project files folder>
+        replicates,                 // <replicate from .sky>
+        replicate_file,             // <replicate sample files> including .raw, etc
+        retention_score_calculator, // .irtdb
+        sky,                        // .sky    
+        sky_audit_log,              // .skyl
+        sky_view                    // .sky.view
     }
 
     public interface IFileBase

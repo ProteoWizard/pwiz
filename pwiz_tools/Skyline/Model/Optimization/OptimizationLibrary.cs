@@ -29,8 +29,13 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Optimization
 {
+    /// <summary>
+    /// Identity class to allow identity equality on <see cref="OptimizationLibrary"/>.
+    /// </summary>
+    public sealed class OptimizationLibraryId : Identity { }
+
     [XmlRoot("optimized_library")]
-    public class OptimizationLibrary : XmlNamedElement, IAuditLogComparable
+    public class OptimizationLibrary : XmlNamedElement, IAuditLogComparable, IFileModel
     {
         public static readonly OptimizationLibrary NONE = new OptimizationLibrary(@"None", string.Empty);
 
@@ -39,6 +44,7 @@ namespace pwiz.Skyline.Model.Optimization
         public OptimizationLibrary(string name, string databasePath)
             : base(name)
         {
+            Id = new OptimizationLibraryId();
             DatabasePath = databasePath;
         }
 
@@ -186,6 +192,7 @@ namespace pwiz.Skyline.Model.Optimization
         /// </summary>
         private OptimizationLibrary()
         {
+            Id = new OptimizationLibraryId();
         }
 
         enum ATTR
@@ -253,5 +260,9 @@ namespace pwiz.Skyline.Model.Optimization
         {
             get { return ReferenceEquals(this, NONE) ? LogMessage.NONE : base.AuditLogText; }
         }
+
+        public Identity Id { get; }
+        public FileType Type { get => FileType.optimization_library; }
+        public string FilePath { get => DatabasePath; }
     }
 }

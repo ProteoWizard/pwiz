@@ -2317,6 +2317,24 @@ namespace pwiz.Skyline.Model.DocSettings
                     dict[FileType.background_proteome] = ImmutableList.Singleton(PeptideSettings.BackgroundProteome);
                 }
 
+                // *.irtdb
+                if (PeptideSettings != null && HasRTCalcPersisted)
+                {
+                        dict[FileType.retention_score_calculator] = ImmutableList.Singleton(PeptideSettings.Prediction.RetentionTime.Calculator);
+                }
+
+                // *.optdb
+                if (HasOptimizationLibraryPersisted)
+                {
+                    dict[FileType.optimization_library] = ImmutableList.Singleton(TransitionSettings.Prediction.OptimizedLibrary);
+                }
+
+                // *.imsdb
+                if (HasIonMobilityLibraryPersisted)
+                {
+                    dict[FileType.ion_mobility_library] = ImmutableList.Singleton(TransitionSettings.IonMobilityFiltering.IonMobilityLibrary);
+                }
+
                 return new ImmutableDictionary<FileType, IEnumerable<IFileBase>>(dict);
             }
         }
