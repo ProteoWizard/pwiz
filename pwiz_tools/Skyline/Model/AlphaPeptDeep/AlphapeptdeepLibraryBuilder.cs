@@ -415,17 +415,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             _nowTime = DateTime.Now;
             Document = document;
+            Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+            if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
 
-        }
-        private static string CreateDirIfNotExist(string dir)
-        {
-            if (!Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            return dir;
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
