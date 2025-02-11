@@ -467,13 +467,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
 
         public void OkDialog()
         {
-            DialogResult = btnOK.DialogResult;
-           
-            //Hide();
-            //Close();
-            //if (ParentControl is NavBar)
-            //    (ParentControl as NavBar)?.CustomizeView();
-            //Dispose();
+            btnOK_Click();
         }
 
         public void ActivatePropertyPath(PropertyPath propertyPath)
@@ -621,7 +615,7 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
+        private void btnOK_Click(object sender = null, EventArgs e = null)
         {
             DialogResult = DialogResult.OK;
             if (ValidateViewName(tbxViewName.Text))
