@@ -315,6 +315,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot expand because the number of nodes in the expansion is {0} and it exceeds the limit of {1}.
+        /// </summary>
+        public static string SequenceTree_ExpansionTooLargeMessage {
+            get {
+                return ResourceManager.GetString("SequenceTree_ExpansionTooLargeMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Targets by Accession.
         /// </summary>
         public static string SequenceTreeForm_UpdateTitle_Targets_by_Accession {
