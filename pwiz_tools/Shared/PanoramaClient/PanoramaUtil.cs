@@ -229,13 +229,15 @@ namespace pwiz.PanoramaClient
 
         public static LabKeyError GetErrorFromWebException(WebException e)
         {
-            if (e == null || e.Response == null) return null;
-            
-            // A WebException is usually thrown if the response status code is something other than 200
-            // We could still have a LabKey error in the JSON response. For example, when we get a 404
-            // response when trying to upload to a folder that does not exist. The response contains a 
-            // LabKey error like "No such folder or workbook..."
-            return GetIfErrorInResponse(e.Response);
+            if (e == null) return null;
+            using (var r = e.Response)
+            {
+                // A WebException is usually thrown if the response status code is something other than 200
+                // We could still have a LabKey error in the JSON response. For example, when we get a 404
+                // response when trying to upload to a folder that does not exist. The response contains a 
+                // LabKey error like "No such folder or workbook..."
+                return GetIfErrorInResponse(r);
+            }
         }
 
         public static LabKeyError GetIfErrorInResponse(JObject jsonResponse)
