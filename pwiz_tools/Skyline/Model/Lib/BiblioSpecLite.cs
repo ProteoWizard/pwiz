@@ -1590,6 +1590,26 @@ namespace pwiz.Skyline.Model.Lib
             return base.TryGetRetentionTimes(filePath, out retentionTimes);
         }
 
+        public override FileTargetMatrix<ImmutableList<double>> GetAllRetentionTimes()
+        {
+            var targets = new List<Target>();
+            var entries = new List<ImmutableList<ImmutableList<double>>>();
+            foreach (var targetGroup in _libraryEntries.GroupBy(entry => entry.Key.Target))
+            {
+                targets.Add(targetGroup.Key);
+                var allRetentionTimes = new List<ImmutableList<double>>();
+                for (int iFile = 0; iFile < LibraryFiles.Count; iFile++)
+                {
+                    var retentionTimes = targetGroup
+                        .SelectMany(spectrumInfo => spectrumInfo.RetentionTimesByFileId.GetTimes(iFile)).OrderBy(t => t).ToList();
+                    allRetentionTimes.Add(ImmutableList.ValueOf(retentionTimes));
+                }
+                entries.Add(ImmutableList.ValueOf(allRetentionTimes));
+            }
+
+            return new FileTargetMatrix<ImmutableList<double>>(LibraryFiles.Select(file=>new RetentionTimeSource(file, Name)), targets, entries);
+        }
+
         public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<Target> peptideSequences, ref int? iFile)
         {
             if (!iFile.HasValue)

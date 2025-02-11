@@ -65,43 +65,28 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static string IsNotLoadedExplained(SrmSettings srmSettings)
         {
-            if (!srmSettings.PeptideSettings.Libraries.IsLoaded)
-            {
-                return null;
-            }
-            var documentRetentionTimes = srmSettings.DocumentRetentionTimes;
-            var availableSources = ListAvailableRetentionTimeSources(srmSettings);
-            var resultSources = ListSourcesForResults(srmSettings.MeasuredResults, availableSources);
-            if (!Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys))
-            {
-                return @"DocumentRetentionTimes: !Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys)";
-            }
-            if (documentRetentionTimes.FileAlignments.IsEmpty)
-            {
-                return null;
-            }
-            if (!Equals(availableSources, documentRetentionTimes.RetentionTimeSources))
-            {
-                return @"DocumentRetentionTimes: !Equals(availableSources, documentRetentionTimes.RetentionTimeSources)";
-            }
             return null;
         }
 
         public static string IsNotLoadedExplained(SrmDocument document)
         {
+            return null;
             return IsNotLoadedExplained(document.Settings);
         }
 
         public static bool IsLoaded(SrmDocument document)
         {
-            return IsNotLoadedExplained(document) == null;
+            return true;
         }
 
         public static SrmDocument RecalculateAlignments(SrmDocument document, IProgressMonitor progressMonitor)
         {
+            return document;
+#if false
             var newSources = ListAvailableRetentionTimeSources(document.Settings);
             var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
             var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
+            
             var newFileAlignments = new List<KeyValuePair<int, FileRetentionTimeAlignments>>();
             var pairsToAlign = GetPairsToAlign(newResultsSources, document.MeasuredResults, newSources);
             using var cancellationTokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled);
@@ -143,43 +128,54 @@ namespace pwiz.Skyline.Model.RetentionTimes
             Debug.Assert(IsLoaded(newDocument));
             progressMonitor.UpdateProgress(progressStatus.Complete());
             return newDocument;
+#endif
         }
 
-        private static FileRetentionTimeAlignments CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, 
-            HashSet<Tuple<string, string>> pairsToAlign,
-            CancellationToken cancellationToken)
-        {
-            var targetTimes = libraryRetentionTimes.Find(dataFileName);
-            if (targetTimes == null)
-            {
-                return null;
-            }
-            var alignments = new List<RetentionTimeAlignment>();
-            foreach (var entry in libraryRetentionTimes)
-            {
-                if (dataFileName == entry.Key)
-                {
-                    continue;
-                }
+        // private static FileRetentionTimeAlignments CalculateFileRetentionTimeAlignments(
+        //     string dataFileName, FileTargetMatrix<double?> libraryRetentionTimes, 
+        //     HashSet<Tuple<string, string>> pairsToAlign,
+        //     CancellationToken cancellationToken)
+        // {
+        //     int targetIndex = libraryRetentionTimes.IndexOfFile(dataFileName);
+        //     if (targetIndex < 0)
+        //     {
+        //         return null;
+        //     }
+        //
+        //     var targetTimes = GetMeasuredRetentionTimes(libraryRetentionTimes, targetIndex);
+        //     var alignments = new List<RetentionTimeAlignment>();
+        //     for (int iSource = 0; iSource < libraryRetentionTimes.FileNames.Count; iSource++)
+        //     {
+        //         if (iSource == targetIndex)
+        //         {
+        //             continue;
+        //         }
+        //         var entry = libraryRetentionTimes.FileNames[iSource];
+        //         if (!pairsToAlign.Contains(Tuple.Create(dataFileName, entry.Name)) &&
+        //             !pairsToAlign.Contains(Tuple.Create(entry.Name, dataFileName)))
+        //         {
+        //             continue;
+        //         }
+        //         var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, GetMeasuredRetentionTimes(libraryRetentionTimes, iSource),
+        //             REFINEMENT_THRESHOLD, RegressionMethodRT.linear, cancellationToken);
+        //         if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
+        //             !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHOLD))
+        //         {
+        //             continue;
+        //         }
+        //         var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
+        //         if (regressionLine != null)
+        //             alignments.Add(new RetentionTimeAlignment(entry.Name, regressionLine));
+        //     }
+        //     return new FileRetentionTimeAlignments(dataFileName, alignments);
+        // }
 
-                if (!pairsToAlign.Contains(Tuple.Create(dataFileName, entry.Key)) &&
-                    !pairsToAlign.Contains(Tuple.Create(entry.Key, dataFileName)))
-                {
-                    continue;
-                }
-                var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
-                    REFINEMENT_THRESHOLD, RegressionMethodRT.linear, cancellationToken);
-                if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
-                    !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHOLD))
-                {
-                    continue;
-                }
-                var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
-                if (regressionLine != null)
-                    alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
-            }
-            return new FileRetentionTimeAlignments(dataFileName, alignments);
+        private static Dictionary<Target, MeasuredRetentionTime> GetMeasuredRetentionTimes(
+            FileTargetMatrix<double?> matrix, int fileIndex)
+        {
+            return Enumerable.Range(0, matrix.Targets.Count).Where(i => matrix.Entries[fileIndex][i].HasValue)
+                .ToDictionary(i => matrix.Targets[i],
+                    i => new MeasuredRetentionTime(matrix.Targets[i], matrix.Entries[fileIndex][i].Value, true));
         }
 
         public ResultNameMap<FileRetentionTimeAlignments> FileAlignments { get; private set; }
@@ -228,25 +224,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
         public void ReadXml(XmlReader reader)
         {
-            if (RetentionTimeSources != null || FileAlignments != null)
-            {
-                throw new InvalidOperationException();
-            }
-            var sources = new List<RetentionTimeSource>();
-            var fileAlignments = new List<FileRetentionTimeAlignments>();
-            if (reader.IsEmptyElement)
-            {
-                reader.Read();
-            }
-            else
-            {
-                reader.Read();
-                reader.ReadElements(sources);
-                reader.ReadElements(fileAlignments);
-                reader.ReadEndElement();
-            }
-            RetentionTimeSources = ResultNameMap.FromNamedElements(sources);
-            FileAlignments = ResultNameMap.FromNamedElements(fileAlignments);
+            reader.Skip();
         }
 
         public void WriteXml(XmlWriter writer)
@@ -289,28 +267,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             return ResultNameMap.FromNamedElements(sources);
         }
-        public static ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> ReadAllRetentionTimes(SrmDocument document, ResultNameMap<RetentionTimeSource> sources)
-        {
-            var allRetentionTimes = new Dictionary<string, IDictionary<Target, MeasuredRetentionTime>>();
-            foreach (var source in sources)
-            {
-                var library = document.Settings.PeptideSettings.Libraries.GetLibrary(source.Value.Library);
-                if (null == library)
-                {
-                    continue;
-                }
-                LibraryRetentionTimes libraryRetentionTimes;
-                if (!library.TryGetRetentionTimes(MsDataFileUri.Parse(source.Value.Name), out libraryRetentionTimes))
-                {
-                    continue;
-                }
-
-                allRetentionTimes.Add(source.Key,
-                    ConvertToMeasuredRetentionTimes(libraryRetentionTimes.GetFirstRetentionTimes()));
-            }
-            return ResultNameMap.FromDictionary(allRetentionTimes);
-        }
-
         public static Dictionary<Target, MeasuredRetentionTime> ConvertToMeasuredRetentionTimes(IEnumerable<KeyValuePair<Target, double>> retentionTimes)
         {
             var dictionary = new Dictionary<Target, MeasuredRetentionTime>();

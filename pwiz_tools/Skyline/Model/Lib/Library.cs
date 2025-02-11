@@ -775,6 +775,11 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if retention time information was retrieved successfully</returns>
         public abstract bool TryGetRetentionTimes(MsDataFileUri filePath, out LibraryRetentionTimes retentionTimes);
 
+        public virtual FileTargetMatrix<ImmutableList<double>> GetAllRetentionTimes()
+        {
+            return FileTargetMatrix<ImmutableList<double>>.EMPTY;
+        }
+
         /// <summary>
         /// Attempts to get retention time information for all of the
         /// (sequence, charge) pairs identified from a specific file by index.

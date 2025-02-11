@@ -107,10 +107,6 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 {
                     calcs = calcs.Where(calc => !calc.IsMs1Score);
                 }
-                if (document.Settings.DocumentRetentionTimes.IsEmpty)
-                {
-                    calcs = calcs.Where(calc => !(calc is LegacyIdentifiedCountCalc));
-                }
             }
             return FeatureCalculators.FromCalculators(calcs);
         }

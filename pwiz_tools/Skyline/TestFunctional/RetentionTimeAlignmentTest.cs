@@ -80,15 +80,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(precursorWithTwoIds.Results[0][0].IsIdentified);
             Assert.IsTrue(precursorWithTwoIds.Results[1][0].IsIdentified);
 
-            var documentRetentionTimes = document.Settings.DocumentRetentionTimes;
-            var alignedTo1 = documentRetentionTimes.FileAlignments.Find("S_1");
-            var alignedTo10 = documentRetentionTimes.FileAlignments.Find("S_10");
-            var af10To1 = alignedTo1.RetentionTimeAlignments.Find("S_10");
-            var af1To10 = alignedTo10.RetentionTimeAlignments.Find("S_1");
+            var allRetentionTimes = document.Settings.PeptideSettings.Libraries.GetAllRetentionTimes();
+            var af10To1 = allRetentionTimes.GetRegression("S_1", "S_10");
+            var af1To10= allRetentionTimes.GetRegression("S_10", "S_1");
             // Verify that the slopes and intercepts are reciprocals of each other.
             // We can only verify this with very coarse precision
-            Assert.AreEqual(af10To1.RegressionLine.Slope, 1/af1To10.RegressionLine.Slope, .03);
-            Assert.AreEqual(af10To1.RegressionLine.Intercept, -af1To10.RegressionLine.Intercept * af10To1.RegressionLine.Slope, 1);
+            Assert.AreEqual(af10To1.Slope, 1/af1To10.Slope, .03);
+            Assert.AreEqual(af10To1.Intercept, -af1To10.Intercept * af10To1.Slope, 1);
 
             var alignedRetentionTimes10To1 = AlignedRetentionTimes.AlignLibraryRetentionTimes(
                 document.Settings.GetRetentionTimes("S_1").GetFirstRetentionTimes(),
@@ -101,11 +99,11 @@ namespace pwiz.SkylineTestFunctional
                 DocumentRetentionTimes.REFINEMENT_THRESHOLD, 
                 RegressionMethodRT.linear, CancellationToken.None);
             var regressionLine10To1 = (RegressionLineElement) alignedRetentionTimes10To1.RegressionRefined.Conversion;
-            Assert.AreEqual(af10To1.RegressionLine.Slope, regressionLine10To1.Slope);
-            Assert.AreEqual(af10To1.RegressionLine.Intercept, regressionLine10To1.Intercept);
+            Assert.AreEqual(af10To1.Slope, regressionLine10To1.Slope);
+            Assert.AreEqual(af10To1.Intercept, regressionLine10To1.Intercept);
             var regressionLine1To10 = (RegressionLineElement) alignedRetentionTimes1To10.RegressionRefined.Conversion;
-            Assert.AreEqual(af1To10.RegressionLine.Slope, regressionLine1To10.Slope);
-            Assert.AreEqual(af1To10.RegressionLine.Intercept, regressionLine1To10.Intercept);
+            Assert.AreEqual(af1To10.Slope, regressionLine1To10.Slope);
+            Assert.AreEqual(af1To10.Intercept, regressionLine1To10.Intercept);
 
 
             // Verify that the generated chromatogram is of the expected length around the actual or aligned ID's

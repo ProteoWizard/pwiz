@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -95,7 +94,6 @@ namespace pwiz.Skyline.Model.Results
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
             string basename = MSDataFilePath.GetFileNameWithoutExtension();
-            FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
         }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
@@ -116,7 +114,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private MsDataFileUri MSDataFilePath { get; set; }
-        private RetentionTimeAlignmentIndexes FileAlignmentIndices { get; set; }
 
         private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
@@ -699,9 +696,7 @@ namespace pwiz.Skyline.Model.Results
             bool isAlignedTimes = (retentionTimes.Length == 0);
             if (isAlignedTimes)
             {
-                retentionTimes = _document.Settings.GetAlignedRetentionTimes(FileAlignmentIndices,
-                                                                             lookupSequence,
-                                                                             lookupMods);
+                retentionTimes = _document.Settings.GetAlignedRetentionTimes(MSDataFilePath, lookupSequence, lookupMods);
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;

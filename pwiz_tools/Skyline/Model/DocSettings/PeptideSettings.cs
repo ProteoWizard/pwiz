@@ -1916,6 +1916,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private ImmutableList<LibrarySpec> _librarySpecs;
         private ImmutableList<Library> _libraries;
         private ImmutableList<Library> _disconnectedLibraries;
+        private AllRetentionTimes _allRetentionTimes;
 
         public PeptideLibraries(PeptidePick pick, PeptideRankId rankId, int? peptideCount,
             bool hasDocLib, IList<LibrarySpec> librarySpecs, IList<Library> libraries)
@@ -2110,6 +2111,34 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        public AllRetentionTimes GetAllRetentionTimes()
+        {
+            lock (this)
+            {
+                if (_allRetentionTimes == null)
+                {
+                    var matrices = new List<FileTargetMatrix<ImmutableList<double>>>();
+                    foreach (var lib in Libraries)
+                    {
+                        if (true != lib?.IsLoaded)
+                        {
+                            continue;
+                        }
+
+                        var matrix = lib.GetAllRetentionTimes();
+                        if (matrix != null)
+                        {
+                            matrices.Add(matrix);
+                        }
+                    }
+
+                    _allRetentionTimes = new AllRetentionTimes(
+                        FileTargetMatrix<ImmutableList<double>>.MergeAll(matrices));
+                }
+                return _allRetentionTimes;
+            }
+        }
+
         /// <summary>
         /// Retrieve library ion mobility info for this particular file, if any
         /// </summary>
@@ -2292,12 +2321,18 @@ namespace pwiz.Skyline.Model.DocSettings
                                       {
                                           im.Libraries = new Library[prop.Count];
                                       }
+
+                                      im._allRetentionTimes = null;
                                   });
         }        
 
         public PeptideLibraries ChangeLibraries(IList<Library> prop)
         {
-            return ChangeProp(ImClone(this), im => im.Libraries = prop);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Libraries = prop;
+                im._allRetentionTimes = null;
+            });
         }
 
         public PeptideLibraries ChangeLibraries(IList<LibrarySpec> specs, IList<Library> libs)
@@ -2307,6 +2342,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                   {
                                       im.LibrarySpecs = specs;
                                       im.Libraries = libs;
+                                      im._allRetentionTimes = null;
                                   });
         }
 
@@ -2327,8 +2363,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im =>
             {
                 im._disconnectedLibraries = _libraries;
-                im.Libraries = new Library[0];
-                im.LibrarySpecs = new LibrarySpec[0];
+                im.Libraries = Array.Empty<Library>();
+                im.LibrarySpecs = Array.Empty<LibrarySpec>();
+                im._allRetentionTimes = null;
             });
         }
 

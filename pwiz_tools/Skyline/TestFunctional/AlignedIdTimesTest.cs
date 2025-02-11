@@ -54,14 +54,6 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.ShowOtherRunPeptideIDTimes(true);
             });
             WaitForGraphs();
-            var documentRetentionTimes = SkylineWindow.Document.Settings.DocumentRetentionTimes;
-
-            // Replicate "REF-DIRP2-028_051" only has retention times for one peptide so it has no alignments to the other replicates
-            var fileAlignment51 =
-                documentRetentionTimes.FileAlignments.Find("TRX_Phase2_Pelt-P04_Ast_Neo_REF-DIRP2-028_051");
-            Assert.IsNotNull(fileAlignment51);
-            Assert.AreEqual(0, fileAlignment51.RetentionTimeAlignments.Count);
-
             RunUI(() =>
             {
                 foreach (var graphChromatogram in SkylineWindow.GraphChromatograms)

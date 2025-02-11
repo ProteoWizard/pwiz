@@ -232,10 +232,6 @@ namespace pwiz.Skyline.Model
             LibraryManager.Register(this);
             Register(LibraryManager);
 
-            RetentionTimeManager = new RetentionTimeManager();
-            RetentionTimeManager.Register(this);
-            Register(RetentionTimeManager);
-
             IonMobilityManager = new IonMobilityLibraryManager();
             IonMobilityManager.Register(this);
             Register(IonMobilityManager);
@@ -253,8 +249,6 @@ namespace pwiz.Skyline.Model
 
         public LibraryManager LibraryManager { get; private set; }
 
-        public RetentionTimeManager RetentionTimeManager { get; private set; }
-
         public IonMobilityLibraryManager IonMobilityManager { get; private set; }
 
         public IrtDbManager IrtDbManager { get; private set; }
@@ -268,7 +262,6 @@ namespace pwiz.Skyline.Model
 
             ChromatogramManager.ResetProgress(Document);
             LibraryManager.ResetProgress(Document);
-            RetentionTimeManager.ResetProgress(Document);
             IonMobilityManager.ResetProgress(Document);
             IrtDbManager.ResetProgress(Document);
         }

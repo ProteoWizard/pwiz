@@ -392,16 +392,16 @@ namespace pwiz.Skyline.EditUI
 
             public static IEnumerable<ChromFileInfo> GetAlignChromFileInfos(SrmSettings settings)
             {
-                if (!settings.HasResults || settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+                if (!settings.HasResults)
                     yield break;
 
-                var chromFileInfos = settings.MeasuredResults.Chromatograms.SelectMany(chromSet => chromSet.MSDataFileInfos).ToArray();
-                foreach (var name in settings.DocumentRetentionTimes.FileAlignments.Select(alignment => alignment.Key))
-                {
-                    var chromFileInfo = chromFileInfos.FirstOrDefault(info => name.Equals(FileDisplayName(info)));
-                    if (chromFileInfo != null)
-                        yield return chromFileInfo;
-                }
+                // var chromFileInfos = settings.MeasuredResults.Chromatograms.SelectMany(chromSet => chromSet.MSDataFileInfos).ToArray();
+                // foreach (var name in settings.DocumentRetentionTimes.FileAlignments.Select(alignment => alignment.Key))
+                // {
+                //     var chromFileInfo = chromFileInfos.FirstOrDefault(info => name.Equals(FileDisplayName(info)));
+                //     if (chromFileInfo != null)
+                //         yield return chromFileInfo;
+                // }
             }
 
             private static string FileDisplayName(IPathContainer chromFileInfo)

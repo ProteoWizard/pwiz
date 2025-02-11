@@ -271,50 +271,50 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         private void UpdateCombo()
         {
-            var documentRetentionTimes = Document.Settings.DocumentRetentionTimes;
-            var newItems = documentRetentionTimes.RetentionTimeSources.Values.Select(retentionTimeSource=>new DataFileKey(retentionTimeSource)).ToArray();
-            if (newItems.SequenceEqual(comboAlignAgainst.Items.Cast<DataFileKey>()))
-            {
-                return;
-            }
-            var selectedIndex = comboAlignAgainst.SelectedIndex;
-            comboAlignAgainst.Items.Clear();
-            comboAlignAgainst.Items.AddRange(newItems.Cast<object>().ToArray());
-            ComboHelper.AutoSizeDropDown(comboAlignAgainst);
-            bool updateRows = true;
-            if (comboAlignAgainst.Items.Count > 0)
-            {
-                if (selectedIndex < 0)
-                {
-                    if (SkylineWindow.SelectedResultsIndex >= 0 && Document.Settings.HasResults)
-                    {
-                        var chromatogramSet =
-                            Document.Settings.MeasuredResults.Chromatograms[SkylineWindow.SelectedResultsIndex];
-                        foreach (var msDataFileInfo in chromatogramSet.MSDataFileInfos)
-                        {
-                            var retentionTimeSource = documentRetentionTimes.RetentionTimeSources.Find(msDataFileInfo);
-                            if (retentionTimeSource == null)
-                            {
-                                continue;
-                            }
-                            selectedIndex =
-                                newItems.IndexOf(
-                                    dataFileKey => Equals(retentionTimeSource, dataFileKey.RetentionTimeSource));
-                            break;
-                        }
-                    }
-                }
-
-                selectedIndex = Math.Min(comboAlignAgainst.Items.Count - 1,
-                    Math.Max(0, selectedIndex));
-                if (comboAlignAgainst.SelectedIndex != selectedIndex)
-                {
-                    comboAlignAgainst.SelectedIndex = selectedIndex;
-                    updateRows = false; // because the selection change will cause an update
-                }
-            }
-            if (updateRows)
-                UpdateRows();
+            // var documentRetentionTimes = Document.Settings.DocumentRetentionTimes;
+            // var newItems = documentRetentionTimes.RetentionTimeSources.Values.Select(retentionTimeSource=>new DataFileKey(retentionTimeSource)).ToArray();
+            // if (newItems.SequenceEqual(comboAlignAgainst.Items.Cast<DataFileKey>()))
+            // {
+            //     return;
+            // }
+            // var selectedIndex = comboAlignAgainst.SelectedIndex;
+            // comboAlignAgainst.Items.Clear();
+            // comboAlignAgainst.Items.AddRange(newItems.Cast<object>().ToArray());
+            // ComboHelper.AutoSizeDropDown(comboAlignAgainst);
+            // bool updateRows = true;
+            // if (comboAlignAgainst.Items.Count > 0)
+            // {
+            //     if (selectedIndex < 0)
+            //     {
+            //         if (SkylineWindow.SelectedResultsIndex >= 0 && Document.Settings.HasResults)
+            //         {
+            //             var chromatogramSet =
+            //                 Document.Settings.MeasuredResults.Chromatograms[SkylineWindow.SelectedResultsIndex];
+            //             foreach (var msDataFileInfo in chromatogramSet.MSDataFileInfos)
+            //             {
+            //                 var retentionTimeSource = documentRetentionTimes.RetentionTimeSources.Find(msDataFileInfo);
+            //                 if (retentionTimeSource == null)
+            //                 {
+            //                     continue;
+            //                 }
+            //                 selectedIndex =
+            //                     newItems.IndexOf(
+            //                         dataFileKey => Equals(retentionTimeSource, dataFileKey.RetentionTimeSource));
+            //                 break;
+            //             }
+            //         }
+            //     }
+            //
+            //     selectedIndex = Math.Min(comboAlignAgainst.Items.Count - 1,
+            //         Math.Max(0, selectedIndex));
+            //     if (comboAlignAgainst.SelectedIndex != selectedIndex)
+            //     {
+            //         comboAlignAgainst.SelectedIndex = selectedIndex;
+            //         updateRows = false; // because the selection change will cause an update
+            //     }
+            // }
+            // if (updateRows)
+            //     UpdateRows();
         }
 
         private IList<DataRow> GetRows()
@@ -324,16 +324,16 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return new DataRow[0];
             }
-            var documentRetentionTimes = Document.Settings.DocumentRetentionTimes;
             var dataRows = new List<DataRow>();
-            foreach (var retentionTimeSource in documentRetentionTimes.RetentionTimeSources.Values)
-            {
-                if (targetKey.Value.RetentionTimeSource.Name == retentionTimeSource.Name)
-                {
-                    continue;
-                }
-                dataRows.Add(new DataRow(Document.Settings, targetKey.Value.RetentionTimeSource, retentionTimeSource));
-            }
+            // var documentRetentionTimes = Document.Settings.DocumentRetentionTimes;
+            // foreach (var retentionTimeSource in documentRetentionTimes.RetentionTimeSources.Values)
+            // {
+            //     if (targetKey.Value.RetentionTimeSource.Name == retentionTimeSource.Name)
+            //     {
+            //         continue;
+            //     }
+            //     dataRows.Add(new DataRow(Document.Settings, targetKey.Value.RetentionTimeSource, retentionTimeSource));
+            // }
             return dataRows;
         }
 
@@ -341,20 +341,20 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public DataRow(SrmSettings settings, RetentionTimeSource target, RetentionTimeSource timesToAlign) : this()
             {
-                DocumentRetentionTimes = settings.DocumentRetentionTimes;
-                Target = target;
-                Source = timesToAlign;
-                Assume.IsNotNull(target, @"target");
-                Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, @"DocumentRetentionTimes.FileAlignments");
-                var fileAlignment = DocumentRetentionTimes.FileAlignments.Find(target.Name);
-                if (fileAlignment != null)
-                {
-                    Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, @"fileAlignment.RetentionTimeAlignments");
-                    Assume.IsNotNull(Source, @"Source");
-                    Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
-                }
-                TargetTimes = GetFirstRetentionTimes(settings, target);
-                SourceTimes = GetFirstRetentionTimes(settings, timesToAlign);
+                // DocumentRetentionTimes = settings.DocumentRetentionTimes;
+                // Target = target;
+                // Source = timesToAlign;
+                // Assume.IsNotNull(target, @"target");
+                // Assume.IsNotNull(DocumentRetentionTimes.FileAlignments, @"DocumentRetentionTimes.FileAlignments");
+                // var fileAlignment = DocumentRetentionTimes.FileAlignments.Find(target.Name);
+                // if (fileAlignment != null)
+                // {
+                //     Assume.IsNotNull(fileAlignment.RetentionTimeAlignments, @"fileAlignment.RetentionTimeAlignments");
+                //     Assume.IsNotNull(Source, @"Source");
+                //     Alignment = fileAlignment.RetentionTimeAlignments.Find(Source.Name);
+                // }
+                // TargetTimes = GetFirstRetentionTimes(settings, target);
+                // SourceTimes = GetFirstRetentionTimes(settings, timesToAlign);
             }
 
             internal DocumentRetentionTimes DocumentRetentionTimes { get; private set; }

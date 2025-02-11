@@ -3479,8 +3479,7 @@ namespace pwiz.Skyline
                     };
                 items.Insert(iInsert++, menuItem);
             }
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+            if (null != chromFileInfoId && DocumentUI.Settings.HasResults && DocumentUI.Settings.AnyRetentionTimes)
             {
                 foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
                 {

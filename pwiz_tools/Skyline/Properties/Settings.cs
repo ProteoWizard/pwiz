@@ -36,7 +36,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.IonMobility;
@@ -3163,8 +3162,7 @@ namespace pwiz.Skyline.Properties
                     TransitionFullScan.DEFAULT,
                     TransitionIonMobilityFiltering.EMPTY
                 ),
-                DataSettings.DEFAULT,
-                DocumentRetentionTimes.EMPTY
+                DataSettings.DEFAULT
             );
 
         public static string DefaultName

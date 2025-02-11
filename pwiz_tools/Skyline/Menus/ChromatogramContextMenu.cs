@@ -107,9 +107,8 @@ namespace pwiz.Skyline.Menus
                 menuStrip.Items.Insert(iInsert++, retentionTimePredContextMenuItem);
             }
             rawTimesContextMenuItem.Checked = set.ChromShowRawTimes;
-            bool alignedTimes = settings.HasAlignedTimes();
-            bool unalignedTimes = settings.HasUnalignedTimes();
-            if (peptideIdTimes || alignedTimes || unalignedTimes)
+            if (!settings.PeptideSettings.Libraries.GetAllRetentionTimes().Matrix.IsEmpty)
+
             {
                 menuStrip.Items.Insert(iInsert++, peptideIDTimesContextMenuItem);
                 peptideIDTimesContextMenuItem.DropDownItems.Clear();
@@ -120,14 +119,10 @@ namespace pwiz.Skyline.Menus
                     idTimesMatchingContextMenuItem.Checked = set.ShowPeptideIdTimes;
                     peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesMatchingContextMenuItem);
                 }
-                if (settings.HasAlignedTimes())
-                {
-                    idTimesAlignedContextMenuItem.Checked = set.ShowAlignedPeptideIdTimes;
-                    peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesAlignedContextMenuItem);
-                }
+                idTimesAlignedContextMenuItem.Checked = set.ShowAlignedPeptideIdTimes;
+                peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesAlignedContextMenuItem);
                 if (settings.HasUnalignedTimes())
                 {
-
                     idTimesOtherContextMenuItem.Checked = set.ShowUnalignedPeptideIdTimes;
                     peptideIDTimesContextMenuItem.DropDownItems.Add(idTimesOtherContextMenuItem);
                 }
@@ -255,7 +250,7 @@ namespace pwiz.Skyline.Menus
                 items.Insert(iInsert++, menuItem);
             }
             if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+                !DocumentUI.Settings.PeptideSettings.Libraries.GetAllRetentionTimes().Matrix.IsEmpty)
             {
                 foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
                 {

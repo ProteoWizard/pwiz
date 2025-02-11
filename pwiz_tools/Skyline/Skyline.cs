@@ -115,7 +115,6 @@ namespace pwiz.Skyline
         private readonly ProteinMetadataManager _proteinMetadataManager;
         private readonly IrtDbManager _irtDbManager;
         private readonly OptimizationDbManager _optDbManager;
-        private readonly RetentionTimeManager _retentionTimeManager;
         private readonly IonMobilityLibraryManager _ionMobilityLibraryManager;
         private readonly LibraryManager _libraryManager;
         private readonly ChromatogramManager _chromatogramManager;
@@ -176,9 +175,6 @@ namespace pwiz.Skyline
             _optDbManager = new OptimizationDbManager();
             _optDbManager.ProgressUpdateEvent += UpdateProgress;
             _optDbManager.Register(this);
-            _retentionTimeManager = new RetentionTimeManager();
-            _retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
-            _retentionTimeManager.Register(this);
             _ionMobilityLibraryManager = new IonMobilityLibraryManager();
             _ionMobilityLibraryManager.ProgressUpdateEvent += UpdateProgress;
             _ionMobilityLibraryManager.Register(this);
@@ -425,11 +421,6 @@ namespace pwiz.Skyline
         public OptimizationDbManager OptDbManager
         {
             get { return _optDbManager; }
-        }
-
-        public RetentionTimeManager RetentionTimeManager
-        {
-            get { return _retentionTimeManager; }
         }
 
         public IonMobilityLibraryManager IonMobilityLibraryManager
@@ -1123,7 +1114,6 @@ namespace pwiz.Skyline
             _chromatogramManager.ProgressUpdateEvent -= UpdateProgress;
             _irtDbManager.ProgressUpdateEvent -= UpdateProgress;
             _optDbManager.ProgressUpdateEvent -= UpdateProgress;
-            _retentionTimeManager.ProgressUpdateEvent -= UpdateProgress;
             _ionMobilityLibraryManager.ProgressUpdateEvent -= UpdateProgress;
             _proteinMetadataManager.ProgressUpdateEvent -= UpdateProgress;
             _autoTrainManager.ProgressUpdateEvent -= UpdateProgress;
