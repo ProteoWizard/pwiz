@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>420, 523</value>
+    <value>420, 540</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -190,7 +190,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>339, 523</value>
+    <value>339, 540</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -778,7 +778,7 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="gbParsimonyOptions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 177</value>
+    <value>12, 194</value>
   </data>
   <data name="gbParsimonyOptions.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 201</value>
@@ -829,7 +829,7 @@
     <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;rbFASTA.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="rbBackgroundProteome.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -859,7 +859,7 @@
     <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;rbBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="comboBackgroundProteome.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -883,7 +883,7 @@
     <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;comboBackgroundProteome.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="tbxFastaTargets.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -895,7 +895,7 @@
     <value>0, 0, 0, 0</value>
   </data>
   <data name="tbxFastaTargets.Size" type="System.Drawing.Size, System.Drawing">
-    <value>399, 20</value>
+    <value>401, 20</value>
   </data>
   <data name="tbxFastaTargets.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -910,7 +910,7 @@
     <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;tbxFastaTargets.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>5</value>
   </data>
   <data name="browseFastaTargetsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -919,7 +919,7 @@
     <value>NoControl</value>
   </data>
   <data name="browseFastaTargetsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>405, 21</value>
+    <value>407, 21</value>
   </data>
   <data name="browseFastaTargetsBtn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
@@ -943,7 +943,7 @@
     <value>proteinSourcePanel</value>
   </data>
   <data name="&gt;&gt;browseFastaTargetsBtn.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>4</value>
   </data>
   <data name="dgvAssociateResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
@@ -952,7 +952,7 @@
     <value>True</value>
   </metadata>
   <data name="headerColumn.HeaderText" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <metadata name="mappedColumn.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -973,7 +973,7 @@
     <value>Targets</value>
   </data>
   <data name="dgvAssociateResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 403</value>
+    <value>12, 420</value>
   </data>
   <data name="dgvAssociateResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 89</value>
@@ -1003,7 +1003,7 @@
     <value>NoControl</value>
   </data>
   <data name="lblResults.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 385</value>
+    <value>12, 402</value>
   </data>
   <data name="lblResults.Size" type="System.Drawing.Size, System.Drawing">
     <value>132, 13</value>
@@ -1063,7 +1063,7 @@
     <value>0</value>
   </data>
   <data name="dataGridViewTextBoxColumn1.HeaderText" xml:space="preserve">
-    <value></value>
+    <value />
   </data>
   <data name="dataGridViewTextBoxColumn1.Width" type="System.Int32, mscorlib">
     <value>85</value>
@@ -1093,7 +1093,7 @@
     <value>RightToLeft</value>
   </data>
   <data name="panelStatusBarResult.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 497</value>
+    <value>12, 514</value>
   </data>
   <data name="panelStatusBarResult.Size" type="System.Drawing.Size, System.Drawing">
     <value>483, 20</value>
@@ -1116,11 +1116,41 @@
   <data name="proteinSourcePanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <data name="cbRememberLastChoice.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbRememberLastChoice.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbRememberLastChoice.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 103</value>
+  </data>
+  <data name="cbRememberLastChoice.Size" type="System.Drawing.Size, System.Drawing">
+    <value>131, 17</value>
+  </data>
+  <data name="cbRememberLastChoice.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="cbRememberLastChoice.Text" xml:space="preserve">
+    <value>Remember last choice</value>
+  </data>
+  <data name="&gt;&gt;cbRememberLastChoice.Name" xml:space="preserve">
+    <value>cbRememberLastChoice</value>
+  </data>
+  <data name="&gt;&gt;cbRememberLastChoice.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbRememberLastChoice.Parent" xml:space="preserve">
+    <value>proteinSourcePanel</value>
+  </data>
+  <data name="&gt;&gt;cbRememberLastChoice.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="proteinSourcePanel.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 55</value>
   </data>
   <data name="proteinSourcePanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 116</value>
+    <value>483, 133</value>
   </data>
   <data name="proteinSourcePanel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1144,7 +1174,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>507, 558</value>
+    <value>507, 575</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>468, 554</value>
@@ -1159,7 +1189,7 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.337, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;headerColumn.Name" xml:space="preserve">
     <value>headerColumn</value>
@@ -1219,6 +1249,6 @@
     <value>AssociateProteinsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.ModeUIInvariantFormEx, Skyline-daily, Version=24.1.1.337, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

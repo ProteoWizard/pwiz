@@ -93,11 +93,15 @@ namespace pwiz.SkylineTestFunctional
 
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
-            TestDialog(ImportType.FASTA);
+            TestDialog(ImportType.FASTA, setRememberLastChoice: true);
 
             // test again without needing to set the FASTA
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
-            TestDialog(ImportType.FASTA);
+            TestDialog(ImportType.FASTA, setRememberLastChoice: false, expectRememberLastChoice: true);
+
+            // test again after unchecking remember last choice, will need to set FASTA again
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AssociateProteinsTest.sky")));
+            TestDialog(ImportType.FASTA, expectRememberLastChoice: false);
         }
 
         /// <summary>
@@ -126,15 +130,28 @@ namespace pwiz.SkylineTestFunctional
         /// makes sure correct number of matches were found
         /// unchecks all boxes to make sure apply button disables
         /// </summary>
-        private void TestDialog(ImportType type, int? initialPeptideCount = null)
+        private void TestDialog(ImportType type, int? initialPeptideCount = null, bool? setRememberLastChoice = null, bool expectRememberLastChoice = false)
         {
             initialPeptideCount = initialPeptideCount ?? SkylineWindow.Document.PeptideCount;
             AssociateProteinsDlg associateProteinsDlg;
             if (type == ImportType.FASTA)
             {
                 associateProteinsDlg = ShowDialog<AssociateProteinsDlg>(SkylineWindow.ShowAssociateProteinsDlg);
-                if (Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
-                    RunUI(() => associateProteinsDlg.FastaFileName = _fastaFile);
+                RunUI(() =>
+                {
+                    if (expectRememberLastChoice)
+                    {
+                        Assert.IsFalse(Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty());
+                        Assert.AreEqual(_fastaFile, associateProteinsDlg.FastaFileName);
+                    }
+                    else
+                    {
+                        associateProteinsDlg.FastaFileName = _fastaFile;
+                    }
+
+                    if (setRememberLastChoice != null)
+                        associateProteinsDlg.RememberLastUsedProteinAssociationSource = setRememberLastChoice.Value;
+                });
             }
             else if (type == ImportType.OVERRIDE)
             {

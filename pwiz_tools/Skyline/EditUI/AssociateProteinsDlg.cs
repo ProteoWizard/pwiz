@@ -78,7 +78,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
             _document = document;
-            _reuseLastFasta = reuseLastFasta;
+            _reuseLastFasta = reuseLastFasta && Settings.Default.RememberLastProteinAssociationSource;
             _statusBarResultFormat = string.Format(@"{{0}} {0}, {{1}} {1}, {{2}} {2}, {{3}} {3}",
                 Resources.AnnotationDef_AnnotationTarget_Proteins,
                 Resources.AnnotationDef_AnnotationTarget_Peptides,
@@ -100,6 +100,8 @@ namespace pwiz.Skyline.EditUI
             SelectedSharedPeptides = peptideSettings.ProteinAssociationSettings?.SharedPeptides ?? ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
             MinPeptidesPerProtein = peptideSettings.ProteinAssociationSettings?.MinPeptidesPerProtein ?? 1;
             comboSharedPeptides.SelectedIndexChanged += comboParsimony_SelectedIndexChanged;
+
+            RememberLastUsedProteinAssociationSource = Settings.Default.RememberLastProteinAssociationSource;
 
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
             _driverBackgroundProteome.LoadList(peptideSettings.BackgroundProteome.Name);
@@ -446,6 +448,18 @@ namespace pwiz.Skyline.EditUI
                 UseBackgroundProteome();
         }
 
+        private void cbRememberLastChoice_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbRememberLastChoice.Checked &&
+                tbxFastaTargets.Text.IsNullOrEmpty() &&
+                !Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
+            {
+                tbxFastaTargets.Text = Settings.Default.LastProteinAssociationFastaFilepath;
+            }
+
+            Settings.Default.RememberLastProteinAssociationSource = cbRememberLastChoice.Checked;
+        }
+
         private void tbxFastaTargets_TextChanged(object sender, EventArgs e)
         {
             UseFastaFile(tbxFastaTargets.Text);
@@ -601,6 +615,12 @@ namespace pwiz.Skyline.EditUI
         {
             get => SelectedSharedPeptides == ProteinAssociation.SharedPeptides.Removed;
             set => SetRepeatedDuplicatePeptides(RemoveRepeatedPeptides, value);
+        }
+
+        public bool RememberLastUsedProteinAssociationSource
+        {
+            get => cbRememberLastChoice.Checked;
+            set => cbRememberLastChoice.Checked = value;
         }
 
         public bool IsOkEnabled
