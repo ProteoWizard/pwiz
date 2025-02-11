@@ -172,9 +172,14 @@ namespace pwiz.Skyline.Model.Tools
 
             if (!Directory.Exists(targetDirectory)) return false;
 
-            string newPath = Environment.GetEnvironmentVariable(@"PATH", EnvironmentVariableTarget.User) +
-                             TextUtil.SEMICOLON + targetDirectory;
-            Environment.SetEnvironmentVariable(@"PATH", newPath, EnvironmentVariableTarget.User);
+            string newPath = Environment.GetEnvironmentVariable(@"PATH");
+
+            if (newPath != null && !newPath.Contains(targetDirectory))
+            {
+                newPath += TextUtil.SEMICOLON + targetDirectory;
+                Environment.SetEnvironmentVariable(@"PATH", newPath, EnvironmentVariableTarget.User);
+            }
+
 
             if (longValidate)
             {
