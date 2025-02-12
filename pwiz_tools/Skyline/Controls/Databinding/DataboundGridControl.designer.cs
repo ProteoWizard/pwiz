@@ -1,4 +1,4 @@
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -79,7 +79,6 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             // contextMenuStrip
             // 
-            this.contextMenuStrip.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.sortAscendingToolStripMenuItem,
             this.sortDescendingToolStripMenuItem,
@@ -231,7 +230,6 @@ namespace pwiz.Skyline.Controls.Databinding
             this.colReplicateProperty});
             resources.ApplyResources(this.replicatePivotDataGridView, "replicatePivotDataGridView");
             this.replicatePivotDataGridView.Name = "replicatePivotDataGridView";
-            this.replicatePivotDataGridView.RowTemplate.Height = 28;
             this.replicatePivotDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.replicatePivotDataGridView_ColumnWidthChanged);
             // 
             // boundDataGridView
