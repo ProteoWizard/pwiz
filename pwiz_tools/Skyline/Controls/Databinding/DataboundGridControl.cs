@@ -884,9 +884,10 @@ namespace pwiz.Skyline.Controls.Databinding
 
             foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
             {
+                var replicateColumnsRounder = new AdjustingRounder();
+                DataGridViewColumn lastColumn = null;
                 foreach (var column in grouping)
                 {
-                    var replicateColumndRounder = new AdjustingRounder();
                     foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
                     {
                         if (dataGridViewColumn.DataPropertyName == column.Name)
@@ -894,10 +895,16 @@ namespace pwiz.Skyline.Controls.Databinding
                             if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
                             {
                                 var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
-                                dataGridViewColumn.Width = (int)replicateColumndRounder.Round(replicatePivotDataGridView.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
+                                var widthToAdd = (int)replicateColumnsRounder.Round(replicatePivotDataGridView.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
+                                dataGridViewColumn.Width = widthToAdd;
+                                lastColumn = dataGridViewColumn;
                             }
                         }
                     }
+                }
+                if (lastColumn != null)
+                {
+                    lastColumn.Width -= replicateColumnsRounder.RoundRemainder();
                 }
             }
 
@@ -910,6 +917,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
                 
             var propertyColumnRounder = new AdjustingRounder();
+            DataGridViewColumn lastPropertyColumn = null;
             foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
             {
                 if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
@@ -925,6 +933,7 @@ namespace pwiz.Skyline.Controls.Databinding
                             var propertyWidthToAdd = replicatePivotDataGridView.Columns[@"Property"]!.Width - nonReplicateVisibleWidth;
                             var columnRatio = (double)visibleWidth / nonReplicateVisibleWidth;
                             dataGridViewColumn.Width += (int)propertyColumnRounder.Round(propertyWidthToAdd * columnRatio);
+                            lastPropertyColumn = dataGridViewColumn;
                         }
                     }
                     else
@@ -932,8 +941,13 @@ namespace pwiz.Skyline.Controls.Databinding
                         var propertyWidth = replicatePivotDataGridView.Columns[@"Property"]!.Width;
                         var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
                         dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
+                        lastPropertyColumn = dataGridViewColumn;
                     }
                 }
+            }
+            if (lastPropertyColumn != null)
+            {
+                lastPropertyColumn.Width -= propertyColumnRounder.RoundRemainder();
             }
         }
 
@@ -1179,6 +1193,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     var replicatePivotColumns =
                         ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
                     UpdateReplicateDataGridFrozenState();
+                    ResizePivotByReplicateGridToFit();
                     AlignPivotByReplicateGridColumns(replicatePivotColumns);
                     UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
                 }
@@ -1225,6 +1240,8 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        public DataGridViewEx ReplicatePivotDataGridView { get { return replicatePivotDataGridView; } }
+
         public void ShowPcaPlot()
         {
             var formGroup = FormGroup.FromControl(this);
@@ -1249,8 +1266,7 @@ namespace pwiz.Skyline.Controls.Databinding
         
         private class AdjustingRounder
         {
-            private double _roundedDifference = 0;
-
+            private double _roundedDifference;
             public double Round(double value)
             {
                 double roundedValue = Math.Round(value);
@@ -1258,7 +1274,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 if (_roundedDifference + difference >= 1)
                 {
-                    roundedValue -= 1; 
+                    roundedValue -= 1;
                     difference = roundedValue - value;
                 }
                 else if (_roundedDifference + difference <= -1)
@@ -1266,10 +1282,21 @@ namespace pwiz.Skyline.Controls.Databinding
                     roundedValue += 1;
                     difference = roundedValue - value;
                 }
-
                 _roundedDifference += difference;
-
                 return roundedValue;
+            }
+            
+            public int RoundRemainder()
+            {
+                // Allows for ignoring potential insignificant floating point deviations from calculations
+                if (Math.Abs(_roundedDifference) < 1e-10)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return _roundedDifference > 0 ? 1 : -1;
+                }
             }
         }
     }

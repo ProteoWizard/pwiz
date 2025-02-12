@@ -619,6 +619,11 @@ namespace pwiz.Common.DataBinding.Controls
             get { return navBarButtonViews; }
         }
 
+        public ToolStripSplitButton FreezeColumnsSplitButton
+        {
+            get { return navBarButtonFreezeColumns; }
+        }
+
         public int Separator2Position => bindingNavigatorSeparator2.Bounds.Left;
 
         private void navBarButtonFreezeColumns_ButtonClick(object sender, EventArgs e)
