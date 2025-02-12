@@ -447,7 +447,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
         var subFolders = folder[@"children"].Children();
         foreach (var subFolder in subFolders)
         {
-            if (!PanoramaUtil.CheckReadPermissions(subFolder))
+            if (!PanoramaUtil.HasReadPermissions(subFolder))
             {
                 // Do not add the folder if user does not have read permissions in the folder. 
                 // Any subfolders, even if they have read permissions, will also not be added.
@@ -461,7 +461,7 @@ public class LKContainerBrowser : PanoramaFolderBrowser
 
             var hasTargetedMsModule = PanoramaUtil.HasTargetedMsModule(subFolder);
             // User can only upload to folders where TargetedMS is an active module.
-            var canUpload = hasTargetedMsModule && PanoramaUtil.CheckInsertPermissions(subFolder);
+            var canUpload = hasTargetedMsModule && PanoramaUtil.HasUploadPermissions(subFolder);
 
             if (requireUploadPerms && folderNode.Nodes.Count == 0 && !canUpload)
             {
