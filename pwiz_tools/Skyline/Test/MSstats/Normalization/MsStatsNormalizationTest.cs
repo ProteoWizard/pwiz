@@ -79,7 +79,9 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             {
                 Assume.IsTrue(asSmallMolecules);
                 return;
-            } 
+            }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetNoNormalization_dataProcessedData.csv")));
             VerifyAbundances(testDocument, asSmallMolecules, expected,
                 transitionChromInfo =>
@@ -118,6 +120,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                 Assume.IsTrue(asSmallMolecules);
                 return;
             }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var expectedResults = MsStatsTestUtil.ReadExpectedResults(typeof(MsStatsNormalizationTest),
                 "BrudererSubsetNoNormalization_TestingResult.csv");
             GroupComparisonDef groupComparisonDef = new GroupComparisonDef("test")
@@ -150,6 +154,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                 Assume.IsTrue(asSmallMolecules);
                 return;
             }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var chromatograms = testDocument.Settings.MeasuredResults.Chromatograms;
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetEqualizeMedians_dataProcessedData.csv")));
             NormalizationData normalizationData = NormalizationData.GetNormalizationData(testDocument, false, null);
@@ -203,6 +209,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                 Assume.IsTrue(asSmallMolecules);
                 return;
             }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var expectedResults = MsStatsTestUtil.ReadExpectedResults(typeof(MsStatsNormalizationTest),
                 "BrudererSubsetEqualizeMedians_TestingResult.csv");
             GroupComparisonDef groupComparisonDef = new GroupComparisonDef("test")
@@ -318,6 +326,58 @@ namespace pwiz.SkylineTest.MSstats.Normalization
         {
             return typeof (MsStatsNormalizationTest).Assembly
                 .GetManifestResourceStream(typeof (MsStatsNormalizationTest), name);
+        }
+
+        private SrmDocument RemoveTruncatedPeaks(SrmDocument document)
+        {
+            var moleculeGroups = new List<PeptideGroupDocNode>();
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                var molecules = new List<PeptideDocNode>();
+                foreach (var molecule in moleculeGroup.Molecules)
+                {
+                    var transitionGroups = new List<TransitionGroupDocNode>();
+                    foreach (var transitionGroup in molecule.TransitionGroups)
+                    {
+                        var transitions = new List<TransitionDocNode>();
+                        foreach (var transition in transitionGroup.Transitions)
+                        {
+                            transitions.Add(transition.ChangeResults(RemoveTruncated(transition.Results)));
+                        }
+                        transitionGroups.Add((TransitionGroupDocNode)transitionGroup.ChangeChildren(transitions.ToArray()));
+                    }
+                    molecules.Add((PeptideDocNode) molecule.ChangeChildren(transitionGroups.ToArray()));
+                }
+                moleculeGroups.Add((PeptideGroupDocNode)moleculeGroup.ChangeChildren(molecules.ToArray()));
+            }
+
+            return (SrmDocument) document.ChangeChildren(moleculeGroups.ToArray());
+        }
+
+        private Results<TransitionChromInfo> RemoveTruncated(Results<TransitionChromInfo> results)
+        {
+            if (results == null)
+            {
+                return null;
+            }
+
+            var list = new List<ChromInfoList<TransitionChromInfo>>();
+            for (int i = 0; i < results.Count; i++)
+            {
+                var chromInfos = new List<TransitionChromInfo>();
+                foreach (var chromInfo in results[i])
+                {
+                    if (chromInfo.IsTruncated != true)
+                    {
+                        chromInfos.Add(chromInfo);
+                        continue;
+                    }
+                    chromInfos.Add(new TransitionChromInfo(chromInfo.FileId, chromInfo.OptimizationStep, ChromPeak.EMPTY, chromInfo.IonMobility, chromInfo.Annotations, UserSet.TRUE));
+                }
+                list.Add(new ChromInfoList<TransitionChromInfo>(chromInfos));
+            }
+
+            return new Results<TransitionChromInfo>(list);
         }
 
         Dictionary<DataProcessedRowKey, double?> ReadDataProcessedRows(TextReader reader)
