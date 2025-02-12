@@ -196,13 +196,14 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     bpcMs1_->times.reserve(count / 2);
     bpcMs1_->intensities.reserve(count / 2);
 
+    size_t maxNumScans = sqlite::query(db, "SELECT MAX(NumScans) FROM Frames").begin()->get<sqlite3_int64>(0);
     if (!combineIonMobilitySpectra)
     {
         // get anticipated scan count
         std::string queryNonEmpty = queryFrameCount + queryMsFilter + " AND NumPeaks > 0";
         size_t countNonEmpty = sqlite::query(db, queryNonEmpty.c_str()).begin()->get<sqlite3_int64>(0);
-        size_t nScans = sqlite::query(db, "SELECT MAX(NumScans) FROM Frames").begin()->get<sqlite3_int64>(0);
-        spectra_.reserve(countNonEmpty * nScans);
+        
+        spectra_.reserve(countNonEmpty * maxNumScans);
     }
 
     string queryCalibrations = "SELECT MAX(TimsCalibration) FROM Frames";
@@ -219,7 +220,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         " ORDER BY Id"; // we currently depend on indexing the frames_ vector by Id (which so far has always been sorted by time)
     sqlite::query q(db, querySelect.c_str());
 
-    int maxNumScans = 0;
     vector<TimsFramePtr> representativeFrameByCalibrationIndex(calibrationsCount); // the first frame for each calibration index
 
     for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
@@ -253,8 +253,6 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         if (numPeaks == 0)
             continue;
 
-        maxNumScans = max(maxNumScans, numScans);
-
         optional<uint64_t> parentId(row.get<optional<sqlite3_int64> >(++idx));
         optional<double> precursorMz(row.get<optional<double> >(++idx));
         optional<double> isolationWidth(row.get<optional<double> >(++idx));
@@ -283,7 +281,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 
     // pre-cache scan number to 1/k0 mapping for each calibration (and also the inverse, for 1/k0 filtering, which is why it has to be done here instead of on-demand)
     vector<double> scanNumbers(maxNumScans+1);
-    for (int i = 0; i <= maxNumScans; ++i)
+    for (size_t i = 0; i <= maxNumScans; ++i)
         scanNumbers[i] = i;
     for (size_t i = 0; i < oneOverK0ByScanNumberByCalibration_.size(); ++i)
     {
@@ -298,6 +296,41 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     bool isDiaPasef = !isDdaPasef && db.has_table("DiaFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM DiaFrameMsMsInfo").begin()->get<int>(0) > 0;
     bool isPrmPasef = !isDdaPasef && !isDiaPasef && db.has_table("PrmFrameMsMsInfo") && sqlite::query(db, "SELECT COUNT(*) FROM PrmFrameMsMsInfo").begin()->get<int>(0) > 0;
     hasPASEFData_ = isDdaPasef | isDiaPasef | isPrmPasef;
+
+    // for diagonalPASEF, build a map of scan number to isolation m/z for each window group
+    if (isDiaPasef)
+    {
+        string checkDiagPasefSql = "SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup";
+        sqlite::query checkDiagPasefQuery(db, checkDiagPasefSql.c_str());
+        int countMaxIsolationMzPerGroup = checkDiagPasefQuery.begin()->get<sqlite3_int64>(0);
+        isDiagonalPASEF_ = maxNumScans - countMaxIsolationMzPerGroup < 10; // heuristic from Bruker based on MCC email 2/11/2025
+
+        if (isDiagonalPASEF_)
+        {
+            string queryIsolationWindowGroupCount = "SELECT COUNT(*) FROM DiaFrameMsMsWindowGroups";
+            size_t isolationWindowGroupCount = sqlite::query(db, queryIsolationWindowGroupCount.c_str()).begin()->get<sqlite3_int64>(0);
+            isolationMzByScanNumberByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
+
+            string queryMaxScanNum = "SELECT MAX(ScanNumEnd) FROM DiaFrameMsMsWindows";
+            size_t maxScanNum = sqlite::query(db, queryMaxScanNum.c_str()).begin()->get<sqlite3_int64>(0);
+
+            string queryWindows = "SELECT WindowGroup, IsolationMz, ScanNumBegin, ScanNumEnd FROM DiaFrameMsMsWindows";
+            sqlite::query q(db, queryWindows.c_str());
+
+            for (auto itr = q.begin(); itr != q.end(); ++itr)
+            {
+                sqlite::query::rows row = *itr;
+                int windowGroup, scanBegin, scanEnd;
+                double isolationMz;
+                row.getter() >> windowGroup >> isolationMz >> scanBegin >> scanEnd;
+
+                auto& isolationMzByScanNumber = isolationMzByScanNumberByWindowGroup_[windowGroup - 1];
+                isolationMzByScanNumber.resize(maxScanNum);
+                for (; scanBegin < scanEnd; ++scanBegin)
+                    isolationMzByScanNumber[scanBegin] = isolationMz;
+            }
+        }
+    }
 
     string pasefIsolationMzFilter;
     if (hasPASEFData_ && !isolationMzFilter_.empty())
@@ -356,9 +389,15 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
             string querySql = "SELECT Frame, MIN(ScanNumBegin), MAX(ScanNumEnd), IsolationMz, IsolationWidth, AVG(CollisionEnergy), f.WindowGroup "
                               "FROM DiaFrameMsMsInfo f "
                               "JOIN DiaFrameMsMsWindows w ON w.WindowGroup=f.WindowGroup " +
-                              pasefIsolationMzFilter +
-                              "GROUP BY Frame, IsolationMz, IsolationWidth "
-                              "ORDER BY Frame, ScanNumBegin";
+                              pasefIsolationMzFilter;
+
+            if (isDiagonalPASEF_)
+                querySql += "GROUP BY Frame "
+                            "ORDER BY Frame, ScanNumBegin";
+            else
+                querySql += "GROUP BY Frame, IsolationMz, IsolationWidth "
+                            "ORDER BY Frame, ScanNumBegin";
+
             sqlite::query q(db, querySql.c_str());
             DiaPasefIsolationInfo info;
             for (sqlite::query::iterator itr = q.begin(); itr != q.end(); ++itr)
@@ -593,6 +632,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
 bool TimsDataImpl::hasMSData() const { return true; }
 bool TimsDataImpl::hasLCData() const { return false; }
 bool TimsDataImpl::hasPASEFData() const { return hasPASEFData_; }
+bool TimsDataImpl::isDiagonalPASEF() const { return isDiagonalPASEF_; }
 
 bool TimsDataImpl::canConvertOneOverK0AndCCS() const { return true; }
 
@@ -782,7 +822,8 @@ std::pair<double, double> TimsSpectrum::getIonMobilityRange() const
 }
 
 
-void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const
+void TimsSpectrum::getCombinedSpectrumData(BinaryData<double>& mz, BinaryData<double>& intensities, BinaryData<double>& mobilities,
+                                           BinaryData<double>& isolationWindowStart, BinaryData<double>& isolationWindowEnd, bool sortAndJitter) const
 {
     auto& storage = frame_.timsDataImpl_.tdfStorage_;
     
@@ -804,24 +845,56 @@ void TimsSpectrum::getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, p
         return;
     double* itr = &intensities[0];
     double* itr2 = &mobilities[0];
-    for (int i = 0; i <= range; ++i)
+
+    if (frame_.msLevel_ > 1 && frame_.timsDataImpl_.isDiagonalPASEF())
     {
-        auto intensityCounts = frameProxy.getScanY(i);
-        for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr, ++itr2)
+        isolationWindowStart.resize(intensities.size());
+        isolationWindowEnd.resize(intensities.size());
+        const auto& isolationMzByScanNumber = frame_.timsDataImpl_.isolationMzByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
+        double* itr3 = &isolationWindowStart[0];
+        double* itr4 = &isolationWindowEnd[0];
+        for (int i = 0; i <= range; ++i)
         {
-            *itr = intensityCounts[j];
-            *itr2 = frame_.oneOverK0_[scanBegin_ + i];
-            /*if (*itr2 < 0.0001 || *itr2 > 2)
-                throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
-                                    " j=" + lexical_cast<string>(j) +
-                                    " scanBegin_=" + lexical_cast<string>(scanBegin_));*/
+            auto intensityCounts = frameProxy.getScanY(i);
+            for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr, ++itr2, ++itr3, ++itr4)
+            {
+                *itr = intensityCounts[j];
+                *itr2 = frame_.oneOverK0_[scanBegin_ + i];
+                *itr3 = isolationMzByScanNumber[scanBegin_ + i] - getIsolationWidth() / 2;
+                *itr4 = isolationMzByScanNumber[scanBegin_ + i] + getIsolationWidth() / 2;
+                /*if (*itr2 < 0.0001 || *itr2 > 2)
+                    throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
+                                        " j=" + lexical_cast<string>(j) +
+                                        " scanBegin_=" + lexical_cast<string>(scanBegin_));*/
+            }
         }
+
+        if (!sortAndJitter)
+            return;
+
+        sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities, isolationWindowStart, isolationWindowEnd });
     }
+    else
+    {
+        for (int i = 0; i <= range; ++i)
+        {
+            auto intensityCounts = frameProxy.getScanY(i);
+            for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr, ++itr2)
+            {
+                *itr = intensityCounts[j];
+                *itr2 = frame_.oneOverK0_[scanBegin_ + i];
+                /*if (*itr2 < 0.0001 || *itr2 > 2)
+                    throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
+                                        " j=" + lexical_cast<string>(j) +
+                                        " scanBegin_=" + lexical_cast<string>(scanBegin_));*/
+            }
+        }
 
-    if (!sortAndJitter)
-        return;
+        if (!sortAndJitter)
+            return;
 
-    sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities });
+        sort_together(mz, vector<boost::iterator_range<BinaryData<double>::iterator>> { intensities, mobilities });
+    }
 
     // add jitter to identical m/z values (which come from different mobility bins)
     for (size_t i = 1; i < mz.size(); ++i)

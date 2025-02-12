@@ -231,7 +231,8 @@ struct PWIZ_API_DECL MSSpectrum
     virtual boost::optional<int> getMaldiChip() const { return boost::optional<int>(); }
     virtual boost::optional<std::string> getMaldiSpotName() const { return boost::optional<std::string>(); }
 
-    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const { }
+    virtual void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+                                         pwiz::util::BinaryData<double>& isolationWindowStart, pwiz::util::BinaryData<double>& isolationWindowEnd, bool sortAndJitter) const { }
     virtual size_t getCombinedSpectrumDataSize() const { return 0; }
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const { return pwiz::util::IntegerSet(); }
 
@@ -303,6 +304,9 @@ struct PWIZ_API_DECL CompassData
 
     /// returns true if the source is TIMS PASEF data
     virtual bool hasPASEFData() const { return false; }
+
+    /// returns true if the source is TIMS diagonal PASEF data (combined spectra will have isolation m/z arrays)
+    virtual bool isDiagonalPASEF() const { return false; }
 
     virtual bool canConvertOneOverK0AndCCS() const { return false; }
     virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const { return 0; }

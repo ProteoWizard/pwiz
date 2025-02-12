@@ -152,7 +152,8 @@ public:
     virtual double oneOverK0() const;
     virtual std::pair<double, double> getIonMobilityRange() const; // Gets the measured IM range
 
-    void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities, bool sortAndJitter) const;
+    void getCombinedSpectrumData(pwiz::util::BinaryData<double>& mz, pwiz::util::BinaryData<double>& intensities, pwiz::util::BinaryData<double>& mobilities,
+                                 pwiz::util::BinaryData<double>& isolationWindowStart, pwiz::util::BinaryData<double>& isolationWindowEnd, bool sortAndJitter) const;
     size_t getCombinedSpectrumDataSize() const;
     virtual pwiz::util::IntegerSet getMergedScanNumbers() const;
 
@@ -245,6 +246,9 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns true if the source is TIMS PASEF data
     virtual bool hasPASEFData() const;
 
+    /// returns true if the source is TIMS diagonal PASEF data (combined spectra will have isolation m/z arrays)
+    virtual bool isDiagonalPASEF() const;
+
     virtual bool canConvertOneOverK0AndCCS() const;
 
     virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const;
@@ -309,11 +313,13 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
     vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
     vector<vector<double>> oneOverK0ByScanNumberByCalibration_;
+    vector<vector<double>> isolationMzByScanNumberByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
     ChromatogramPtr tic_, ticMs1_, bpc_, bpcMs1_;
 
     int64_t currentFrameId_; // used for cacheing frame contents
+    bool isDiagonalPASEF_;
 
-    protected:
+protected:
     friend struct TimsFrame;
     friend struct TimsSpectrum;
     TimsBinaryDataPtr tdfStoragePtr_;

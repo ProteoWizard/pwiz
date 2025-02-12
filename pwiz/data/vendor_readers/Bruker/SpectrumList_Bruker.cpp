@@ -426,7 +426,27 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                 arrayType.units = MS_Vs_cm_2;
                 mobility->cvParams.emplace_back(arrayType);
 
-                spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, config_.sortAndJitter);
+                if (msLevel > 1 && compassDataPtr_->isDiagonalPASEF())
+                {
+                    BinaryDataArrayPtr isolationMzStart(new BinaryDataArray);
+                    result->binaryDataArrayPtrs.push_back(isolationMzStart);
+                    arrayType = MS_scanning_quadrupole_position_lower_bound_m_z_array;
+                    arrayType.units = MS_m_z;
+                    isolationMzStart->cvParams.emplace_back(arrayType);
+
+                    BinaryDataArrayPtr isolationMzEnd(new BinaryDataArray);
+                    result->binaryDataArrayPtrs.push_back(isolationMzEnd);
+                    arrayType = MS_scanning_quadrupole_position_upper_bound_m_z_array;
+                    arrayType.units = MS_m_z;
+                    isolationMzEnd->cvParams.emplace_back(arrayType);
+
+                    spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, isolationMzStart->data, isolationMzEnd->data, config_.sortAndJitter);
+                }
+                else
+                {
+                    BinaryData<double> isolationMzStart, isolationMzEnd;
+                    spectrum->getCombinedSpectrumData(mz, intensity, mobility->data, isolationMzStart, isolationMzEnd, config_.sortAndJitter);
+                }
             }
             else
             {
