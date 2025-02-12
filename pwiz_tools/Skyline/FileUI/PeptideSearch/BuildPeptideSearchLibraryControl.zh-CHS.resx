@@ -129,7 +129,7 @@
     <value>6, 42</value>
   </data>
   <data name="radioDIA.Size" type="System.Drawing.Size, System.Drawing">
-    <value>369, 17</value>
+    <value>84, 17</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioDIA.TabIndex" type="System.Int32, mscorlib">
@@ -143,7 +143,6 @@
   </metadata>
   <data name="radioDIA.ToolTip" xml:space="preserve">
     <value>来自 DDA MS/MS 的库谱图与来自单独 DIA 运行的色谱图</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
     <value>radioDIA</value>
@@ -177,7 +176,6 @@
   </data>
   <data name="radioPRM.ToolTip" xml:space="preserve">
     <value>来自相同 PRM 运行的库谱图和色谱图</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioPRM.Name" xml:space="preserve">
     <value>radioPRM</value>
@@ -211,7 +209,6 @@
   </data>
   <data name="radioDDA.ToolTip" xml:space="preserve">
     <value>来自 DDA MS/MS 的库谱图与来自 MS1 的色谱图</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioDDA.Name" xml:space="preserve">
     <value>radioDDA</value>
@@ -273,7 +270,6 @@
   <data name="radioButtonNewLibrary.ToolTip" xml:space="preserve">
     <value>从搜索到的
 TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioButtonNewLibrary.Name" xml:space="preserve">
     <value>radioButtonNewLibrary</value>
@@ -355,7 +351,6 @@ TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</val
   </data>
   <data name="tbxLibraryPath.ToolTip" xml:space="preserve">
     <value>以可识别的格式提供的现有库的路径，如 BiblioSpec .blib、EncyclopeDIA .elib、SpectraST .sqt</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;tbxLibraryPath.Name" xml:space="preserve">
     <value>tbxLibraryPath</value>
@@ -472,7 +467,7 @@ TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</val
     <value>gridSearchFiles</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=24.1.1.263, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -527,7 +522,6 @@ TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</val
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
     <value>选择一组已知的 iRT 标准肽段，用于保留时间归一化。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
@@ -564,7 +558,6 @@ TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</val
   </data>
   <data name="cbIncludeAmbiguousMatches.ToolTip" xml:space="preserve">
     <value>选中将保留与多个肽段匹配的谱图。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -601,7 +594,6 @@ TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</val
   </data>
   <data name="cbFilterForDocumentPeptides.ToolTip" xml:space="preserve">
     <value>选中将仅过滤文档中的肽段。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>
