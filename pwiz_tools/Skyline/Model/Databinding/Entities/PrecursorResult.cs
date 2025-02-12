@@ -116,6 +116,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? AverageMassErrorPPM { get { return ChromInfo.MassError; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? CountTruncated { get { return ChromInfo.Truncated; } }
+        [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
+        public double? ProportionTruncated { get { return ChromInfo.TruncatedProportion; } }
         public PeakIdentification Identified { get { return ChromInfo.Identified; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? LibraryDotProduct { get { return ChromInfo.LibraryDotProduct; } }
