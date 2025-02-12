@@ -1123,7 +1123,7 @@
     <value>NoControl</value>
   </data>
   <data name="cbRememberLastChoice.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 103</value>
+    <value>3, 107</value>
   </data>
   <data name="cbRememberLastChoice.Size" type="System.Drawing.Size, System.Drawing">
     <value>131, 17</value>
