@@ -35,6 +35,8 @@ namespace pwiz.Skyline.Controls
         private readonly TreeNodeMS _peptideLibrariesRoot;
         private readonly TreeNodeMS _backgroundProteomeRoot;
         private readonly TreeNodeMS _projectFilesRoot;
+        private readonly TreeNodeMS _irtRoot;
+        private readonly TreeNodeMS _imsdbRoot;
         private readonly FileSystemWatcher _fileSystemWatcher;
 
         // Used while merging a file data model with a FilesTree. Each entry explains how to
@@ -45,7 +47,9 @@ namespace pwiz.Skyline.Controls
                 {FileType.peptide_library, PeptideLibraryTreeNode.CreateNode},
                 {FileType.background_proteome, BackgroundProteomeTreeNode.CreateNode},
                 {FileType.replicates, ReplicateTreeNode.CreateNode},
-                {FileType.replicate_file, ReplicateSampleFileTreeNode.CreateNode}
+                {FileType.replicate_file, ReplicateSampleFileTreeNode.CreateNode},
+                {FileType.retention_score_calculator, RetentionScoreCalculatorFileTreeNode.CreateNode},
+                {FileType.ion_mobility_library, IonMobilityLibraryFileTreeNode.CreateNode}
             };
 
         public enum ImageId
@@ -81,6 +85,8 @@ namespace pwiz.Skyline.Controls
             _peptideLibrariesRoot = new PeptideLibrariesFolderNode();
             _backgroundProteomeRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
             _projectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
+            _irtRoot = new FilesTreeFolderNode(SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator);
+            _imsdbRoot = new FilesTreeFolderNode(SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library);
 
             _fileSystemWatcher = new FileSystemWatcher();
         }
@@ -194,12 +200,12 @@ namespace pwiz.Skyline.Controls
 
             var files = Document.Settings.Files;
 
-            // Measured Results / Chromatograms
-            ConnectDocToTree(files, FileType.replicates, _chromatogramRoot);
-            ConnectDocToTree(files, FileType.peptide_library, _peptideLibrariesRoot);
-            ConnectDocToTree(files, FileType.background_proteome, _backgroundProteomeRoot);
-
-            // TODO: UI support for .irtdb, .optdb, .imsdb
+            // TODO: support .optdb
+            ConnectDocToTree(files, FileType.replicates, _chromatogramRoot);                
+            ConnectDocToTree(files, FileType.peptide_library, _peptideLibrariesRoot);       // .blib
+            ConnectDocToTree(files, FileType.background_proteome, _backgroundProteomeRoot); // .protdb
+            ConnectDocToTree(files, FileType.retention_score_calculator, _irtRoot);         // .irtdb
+            ConnectDocToTree(files, FileType.ion_mobility_library, _imsdbRoot);             // .imsdb
 
             _projectFilesRoot.ShowOrHide(Root);
         }
@@ -632,6 +638,82 @@ namespace pwiz.Skyline.Controls
             var customTable = new TableDesc();
             customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
             customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, Path.GetFullPath(FilePath ?? string.Empty), rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+    }
+
+    public class RetentionScoreCalculatorFileTreeNode : FilesTreeNode, ITipProvider
+    {
+        internal static FilesTreeNode CreateNode(string documentPath, IFileBase file)
+        {
+            if (!(file is IFileModel model))
+                return null;
+
+            var localFilePath = FindExistingInPossibleLocations(documentPath, model.FilePath);
+
+            return new RetentionScoreCalculatorFileTreeNode(model, localFilePath);
+        }
+
+        public RetentionScoreCalculatorFileTreeNode(IFileModel model, string localFilePath) : base(model, FilesTree.ImageId.file)
+        {
+            LocalFilePath = localFilePath;
+        }
+
+        public string FilePath { get => ((IFileModel)Model).FilePath; }
+
+        public override string LocalFilePath { get; }
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+    }
+
+    public class IonMobilityLibraryFileTreeNode : FilesTreeNode, ITipProvider
+    {
+        internal static FilesTreeNode CreateNode(string documentPath, IFileBase file)
+        {
+            if (!(file is IFileModel model))
+                return null;
+
+            var localFilePath = FindExistingInPossibleLocations(documentPath, model.FilePath);
+
+            return new IonMobilityLibraryFileTreeNode(model, localFilePath);
+        }
+
+        public IonMobilityLibraryFileTreeNode(IFileModel model, string localFilePath) : base(model, FilesTree.ImageId.file)
+        {
+            LocalFilePath = localFilePath;
+        }
+
+        public string FilePath { get => ((IFileModel)Model).FilePath; }
+
+        public override string LocalFilePath { get; }
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);

@@ -161,14 +161,19 @@ namespace pwiz.Skyline.Controls
                     openContainingFolderMenuStripItem.Visible = true;
                     openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
                     break;
-                case SkylineAuditLogTreeNode _:
+                case BackgroundProteomeTreeNode _:
                 case ReplicateSampleFileTreeNode _:
                 case PeptideLibraryTreeNode _:
+                case RetentionScoreCalculatorFileTreeNode _:
+                case IonMobilityLibraryFileTreeNode _:
+                case SkylineAuditLogTreeNode _:
+                case SkylineViewFileTreeNode _:
                     if (!(FilesTree.SelectedNode is FilesTreeNode treeNode))
                         break;
 
                     manageResultsToolStripMenuItem.Visible = false;
                     libraryExplorerToolStripMenuItem.Visible = false;
+
                     // only offer the option if the file currently exists and isn't removed or deleted
                     openContainingFolderMenuStripItem.Visible = true;
                     openContainingFolderMenuStripItem.Enabled = treeNode.LocalFileExists(); 
