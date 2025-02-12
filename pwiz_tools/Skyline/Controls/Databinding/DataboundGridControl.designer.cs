@@ -57,6 +57,7 @@ namespace pwiz.Skyline.Controls.Databinding
             this.boundDataGridView = new pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx();
             this.bindingListSource = new pwiz.Common.DataBinding.Controls.BindingListSource(this.components);
             this.navBar = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.colReplicateProperty = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.contextMenuStrip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerVertical)).BeginInit();
             this.splitContainerVertical.Panel1.SuspendLayout();
@@ -226,6 +227,8 @@ namespace pwiz.Skyline.Controls.Databinding
             this.replicatePivotDataGridView.AllowUserToDeleteRows = false;
             this.replicatePivotDataGridView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.replicatePivotDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.replicatePivotDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colReplicateProperty});
             resources.ApplyResources(this.replicatePivotDataGridView, "replicatePivotDataGridView");
             this.replicatePivotDataGridView.Name = "replicatePivotDataGridView";
             this.replicatePivotDataGridView.RowTemplate.Height = 28;
@@ -288,6 +291,11 @@ namespace pwiz.Skyline.Controls.Databinding
             this.navBar.Name = "navBar";
             this.navBar.ShowViewsButton = true;
             // 
+            // colReplicateProperty
+            // 
+            resources.ApplyResources(this.colReplicateProperty, "colReplicateProperty");
+            this.colReplicateProperty.Name = "colReplicateProperty";
+            // 
             // DataboundGridControl
             // 
             resources.ApplyResources(this, "$this");
@@ -341,5 +349,6 @@ namespace pwiz.Skyline.Controls.Databinding
         private DataGridViewEx replicatePivotDataGridView;
         private System.Windows.Forms.SplitContainer dataGridSplitContainer;
         private Panel columnDendrogramClipPanel;
+        private DataGridViewTextBoxColumn colReplicateProperty;
     }
 }

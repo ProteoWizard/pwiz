@@ -50,7 +50,6 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _dataGridViewPasteHandler;
         private bool _inColumnChange;
-        private bool _populatingReplicateGrid;
 
         public DataboundGridControl()
         {
@@ -850,7 +849,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 });
 
-            replicatePivotDataGridView.Columns[@"Property"]!.Width = nonReplicateWidth;
+            colReplicateProperty.Width = nonReplicateWidth;
             foreach (DataGridViewColumn column in replicatePivotDataGridView.Columns)
             {
                 if (replicateTotalWidthMap.TryGetValue(column.Name, out var replicateTotalWidth))
@@ -930,7 +929,7 @@ namespace pwiz.Skyline.Controls.Databinding
                         var visibleWidth = CalculateColumnVisibleWidth(boundDataGridView, dataGridViewColumn);
                         if (visibleWidth > 0)
                         {
-                            var propertyWidthToAdd = replicatePivotDataGridView.Columns[@"Property"]!.Width - nonReplicateVisibleWidth;
+                            var propertyWidthToAdd = colReplicateProperty.Width - nonReplicateVisibleWidth;
                             var columnRatio = (double)visibleWidth / nonReplicateVisibleWidth;
                             dataGridViewColumn.Width += (int)propertyColumnRounder.Round(propertyWidthToAdd * columnRatio);
                             lastPropertyColumn = dataGridViewColumn;
@@ -938,7 +937,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                     else
                     {
-                        var propertyWidth = replicatePivotDataGridView.Columns[@"Property"]!.Width;
+                        var propertyWidth = colReplicateProperty.Width;
                         var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
                         dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
                         lastPropertyColumn = dataGridViewColumn;
@@ -955,11 +954,11 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             if (bindingListSource.ColumnFormats.FrozenColumnCount > 0)
             {
-                replicatePivotDataGridView.Columns[@"Property"]!.Frozen = true;
+                colReplicateProperty.Frozen = true;
             }
             else
             {
-                replicatePivotDataGridView.Columns[@"Property"]!.Frozen = false;
+                colReplicateProperty.Frozen = false;
             }
         }
 
@@ -973,82 +972,70 @@ namespace pwiz.Skyline.Controls.Databinding
             var nonReplicateColumnsWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
                 .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
                 .Sum(col => col.Width);
-            var propertyColumn = replicatePivotDataGridView.Columns[@"Property"];
-            if (propertyColumn != null)
-            {
-                var columnWidthOffset = nonReplicateColumnsWidth - propertyColumn.Width;
-                var offsetScrollPosition = scrollPosition - columnWidthOffset;
-                replicatePivotDataGridView.HorizontalScrollingOffset = (offsetScrollPosition > 0) ? offsetScrollPosition : 0;
-            }
+            var columnWidthOffset = nonReplicateColumnsWidth - colReplicateProperty.Width;
+            var offsetScrollPosition = scrollPosition - columnWidthOffset;
+            replicatePivotDataGridView.HorizontalScrollingOffset = (offsetScrollPosition > 0) ? offsetScrollPosition : 0;
         }
 
         private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
         {
-            try
+            var readOnlyCellColor = Color.FromArgb(245, 245, 245);
+
+            // Clear existing data
+            replicatePivotDataGridView.Columns.Clear();
+            replicatePivotDataGridView.Rows.Clear();
+
+            // Add a column for property names
+            replicatePivotDataGridView.Columns.Add(colReplicateProperty);
+
+            var rowPropertyPaths = new List<PropertyPath>();
+
+            // Iterate through item properties to create columns and rows
+            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
             {
-                _populatingReplicateGrid = true;
-                var readOnlyCellColor = Color.FromArgb(245, 245, 245);
+                var resultKey = group.Key;
+                var replicateName = resultKey.ReplicateName;
 
-                // Clear existing data
-                replicatePivotDataGridView.Columns.Clear();
-                replicatePivotDataGridView.Rows.Clear();
-
-                // Add a column for property names
-                var propertyColumnName = @"Property";
-                replicatePivotDataGridView.Columns.Add(propertyColumnName, propertyColumnName);
-
-                var rowPropertyPaths = new List<PropertyPath>();
-
-                // Iterate through item properties to create columns and rows
-                foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+                // Add a column for the replicate name if it doesn't already exist
+                if (!replicatePivotDataGridView.Columns.Contains(replicateName))
                 {
-                    var resultKey = group.Key;
-                    var replicateName = resultKey.ReplicateName;
+                    replicatePivotDataGridView.Columns.Add(replicateName, replicateName);
+                }
 
-                    // Add a column for the replicate name if it doesn't already exist
-                    if (!replicatePivotDataGridView.Columns.Contains(replicateName))
+                foreach (var column in group)
+                {
+                    if (!replicatePivotColumns.IsConstantColumn(column))
                     {
-                        replicatePivotDataGridView.Columns.Add(replicateName, replicateName);
+                        continue;
                     }
 
-                    foreach (var column in group)
+                    var propertyPath = column.DisplayColumn.PropertyPath;
+                    int iRow = rowPropertyPaths.IndexOf(propertyPath);
+
+                    if (iRow < 0)
                     {
-                        if (!replicatePivotColumns.IsConstantColumn(column))
-                        {
-                            continue;
-                        }
+                        // Add a new row if the property path is not found
+                        iRow = replicatePivotDataGridView.Rows.Add();
+                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].Value = propertyPath.Name;
+                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].ReadOnly = true;
+                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].Style.BackColor = readOnlyCellColor;
+                        rowPropertyPaths.Add(propertyPath);
+                    }
 
-                        var propertyPath = column.DisplayColumn.PropertyPath;
-                        int iRow = rowPropertyPaths.IndexOf(propertyPath);
+                    // Get the value for the current column
+                    var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
+                        .FirstOrDefault(v => v != null);
 
-                        if (iRow < 0)
-                        {
-                            // Add a new row if the property path is not found
-                            iRow = replicatePivotDataGridView.Rows.Add();
-                            replicatePivotDataGridView.Rows[iRow].Cells[propertyColumnName].Value = propertyPath.Name;
-                            replicatePivotDataGridView.Rows[iRow].Cells[propertyColumnName].ReadOnly = true;
-                            replicatePivotDataGridView.Rows[iRow].Cells[propertyColumnName].Style.BackColor = readOnlyCellColor;
-                            rowPropertyPaths.Add(propertyPath);
-                        }
-
-                        // Get the value for the current column
-                        var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
-                            .FirstOrDefault(v => v != null);
-
-                        // Set the cell value for the replicate column
-                        replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Value = value;
-                        replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
-                        if (column.IsReadOnly)
-                        {
-                            replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Style.BackColor = readOnlyCellColor;
-                        }
+                    // Set the cell value for the replicate column
+                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Value = value;
+                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
+                    if (column.IsReadOnly)
+                    {
+                        replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Style.BackColor = readOnlyCellColor;
                     }
                 }
             }
-            finally
-            {
-                _populatingReplicateGrid = false;
-            }
+            
         }
 
         private void ResizePivotByReplicateGridToFit()
@@ -1070,7 +1057,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void replicatePivotDataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            if (_populatingReplicateGrid)
+            if (_inColumnChange)
             {
                 return;
             }

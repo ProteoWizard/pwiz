@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
         private const string replicatePivotNoConstantPropertyViewName = "Replicate Pivot No Constant Property";
        
         [TestMethod]
-        public void TestPivotEditor()
+        public void TestReplicatePivotGrid()
         {
             TestFilesZip = @"TestFunctional\ReplicatePivotGridTest.zip";
             RunFunctionalTest();
@@ -130,7 +130,7 @@ namespace pwiz.SkylineTestFunctional
 
             return replicateGridView.Columns
                 .Cast<DataGridViewColumn>()
-                .Where(col => !"Property".Equals(col.Name))
+                .Where(col => !"colReplicateProperty".Equals(col.Name))
                 .ToDictionary(col => col.Name, col => onlyVisibleWidth ? CalculateColumnVisibleWidth(replicateGridView, col) : col.Width);
         }
 
@@ -156,8 +156,8 @@ namespace pwiz.SkylineTestFunctional
         {
             var replicateGridView = documentGrid.DataboundGridControl.ReplicatePivotDataGridView;
             return onlyVisibleWidth ? 
-                CalculateColumnVisibleWidth(replicateGridView, documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Columns[@"Property"]!) 
-                : documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Columns[@"Property"]!.Width;
+                CalculateColumnVisibleWidth(replicateGridView, documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Columns[@"colReplicateProperty"]!) 
+                : documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Columns[@"colReplicateProperty"]!.Width;
         }
 
         private int GetMainGridPropertyColumnsWidth(DocumentGridForm documentGrid, bool onlyVisibleWidth = false)

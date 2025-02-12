@@ -315,6 +315,12 @@
   <data name="dataGridSplitContainer.Orientation" type="System.Windows.Forms.Orientation, System.Windows.Forms">
     <value>Horizontal</value>
   </data>
+  <metadata name="colReplicateProperty.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="colReplicateProperty.HeaderText" xml:space="preserve">
+    <value>Property</value>
+  </data>
   <data name="replicatePivotDataGridView.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
     <value>Fill</value>
   </data>
@@ -599,6 +605,12 @@
   </data>
   <data name="&gt;&gt;bindingListSource.Type" xml:space="preserve">
     <value>pwiz.Common.DataBinding.Controls.BindingListSource, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;colReplicateProperty.Name" xml:space="preserve">
+    <value>colReplicateProperty</value>
+  </data>
+  <data name="&gt;&gt;colReplicateProperty.Type" xml:space="preserve">
+    <value>System.Windows.Forms.DataGridViewTextBoxColumn, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>DataboundGridControl</value>
