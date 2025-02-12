@@ -40,7 +40,9 @@ namespace pwiz.Skyline.Controls
             this.filesTree = new pwiz.Skyline.Controls.FilesTree();
             this.panel1 = new System.Windows.Forms.Panel();
             this.filesTreeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.manageResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openContainingFolderMenuStripItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.libraryExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.filesTreeContextMenu.SuspendLayout();
             this.SuspendLayout();
@@ -66,9 +68,17 @@ namespace pwiz.Skyline.Controls
             // filesTreeContextMenu
             // 
             this.filesTreeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.libraryExplorerToolStripMenuItem,
+            this.manageResultsToolStripMenuItem,
             this.openContainingFolderMenuStripItem});
             this.filesTreeContextMenu.Name = "contextMenuStrip1";
             resources.ApplyResources(this.filesTreeContextMenu, "filesTreeContextMenu");
+            // 
+            // manageResultsToolStripMenuItem
+            // 
+            resources.ApplyResources(this.manageResultsToolStripMenuItem, "manageResultsToolStripMenuItem");
+            this.manageResultsToolStripMenuItem.Name = "manageResultsToolStripMenuItem";
+            this.manageResultsToolStripMenuItem.Click += new System.EventHandler(this.FilesTree_ManageResultsMenuItem);
             // 
             // openContainingFolderMenuStripItem
             // 
@@ -76,6 +86,12 @@ namespace pwiz.Skyline.Controls
             resources.ApplyResources(this.openContainingFolderMenuStripItem, "openContainingFolderMenuStripItem");
             this.openContainingFolderMenuStripItem.Name = "openContainingFolderMenuStripItem";
             this.openContainingFolderMenuStripItem.Click += new System.EventHandler(this.FilesTree_ShowContainingFolderMenuItem);
+            // 
+            // libraryExplorerToolStripMenuItem
+            // 
+            resources.ApplyResources(this.libraryExplorerToolStripMenuItem, "libraryExplorerToolStripMenuItem");
+            this.libraryExplorerToolStripMenuItem.Name = "libraryExplorerToolStripMenuItem";
+            this.libraryExplorerToolStripMenuItem.Click += new System.EventHandler(this.FilesTree_LibraryExplorerMenuItem);
             // 
             // FilesTreeForm
             // 
@@ -99,5 +115,7 @@ namespace pwiz.Skyline.Controls
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ContextMenuStrip filesTreeContextMenu;
         private System.Windows.Forms.ToolStripMenuItem openContainingFolderMenuStripItem;
+        private System.Windows.Forms.ToolStripMenuItem manageResultsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem libraryExplorerToolStripMenuItem;
     }
 }

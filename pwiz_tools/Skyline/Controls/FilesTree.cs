@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls
         private readonly TreeNodeMS _peptideLibrariesRoot;
         private readonly TreeNodeMS _backgroundProteomeRoot;
         private readonly TreeNodeMS _projectFilesRoot;
-        private FileSystemWatcher _fileSystemWatcher;
+        private readonly FileSystemWatcher _fileSystemWatcher;
 
         // Used while merging a file data model with a FilesTree. Each entry explains how to
         // create a specific type of TreeNode given a type of file. Entries in this dict will
@@ -77,10 +77,12 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.Peptide);
             ImageList.Images.Add(Resources.Skyline);
 
-            _chromatogramRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Replicates);
-            _peptideLibrariesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_Libraries);
+            _chromatogramRoot = new ReplicatesFolderNode();
+            _peptideLibrariesRoot = new PeptideLibrariesFolderNode();
             _backgroundProteomeRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
             _projectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
+
+            _fileSystemWatcher = new FileSystemWatcher();
         }
 
         [Browsable(false)]
@@ -168,8 +170,6 @@ namespace pwiz.Skyline.Controls
                 {
                     skylineFileModel = new SkylineFileModel(Path.GetFileName(DocumentContainer.DocumentFilePath), DocumentContainer.DocumentFilePath);
 
-                    _fileSystemWatcher ??= new FileSystemWatcher();
-
                     _fileSystemWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
                     _fileSystemWatcher.SynchronizingObject = this;
                     _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName;
@@ -195,29 +195,22 @@ namespace pwiz.Skyline.Controls
             var files = Document.Settings.Files;
 
             // Measured Results / Chromatograms
-            if (files.TryGetValue(FileType.replicates, out var chromatogramFileGroups))
-            {
-                MergeNodes(DocumentContainer.DocumentFilePath, chromatogramFileGroups, _chromatogramRoot.Nodes);
-                _chromatogramRoot.ShowOrHide(Root);
-            }
-
-            // Peptide Libraries
-            if (files.TryGetValue(FileType.peptide_library, out var peptideLibraryFiles))
-            {
-                MergeNodes(DocumentContainer.DocumentFilePath, peptideLibraryFiles, _peptideLibrariesRoot.Nodes);
-                _peptideLibrariesRoot.ShowOrHide(Root);
-            }
-
-            // Background Proteome
-            if (files.TryGetValue(FileType.background_proteome, out var backgroundProteomeFiles))
-            {
-                MergeNodes(DocumentContainer.DocumentFilePath, backgroundProteomeFiles, _backgroundProteomeRoot.Nodes);
-                _backgroundProteomeRoot.ShowOrHide(Root);
-            }
+            ConnectDocToTree(files, FileType.replicates, _chromatogramRoot);
+            ConnectDocToTree(files, FileType.peptide_library, _peptideLibrariesRoot);
+            ConnectDocToTree(files, FileType.background_proteome, _backgroundProteomeRoot);
 
             // TODO: UI support for .irtdb, .optdb, .imsdb
 
             _projectFilesRoot.ShowOrHide(Root);
+        }
+
+        private void ConnectDocToTree(IDictionary<FileType, IEnumerable<IFileBase>> dictionary, FileType fileType, TreeNode root)
+        {
+            if (dictionary.TryGetValue(fileType, out var files))
+            {
+                MergeNodes(DocumentContainer.DocumentFilePath, files, root.Nodes);
+                root.ShowOrHide(Root);
+            }
         }
 
         private delegate FilesTreeNode CreateFilesTreeNode(string documentPath, IFileBase model);
@@ -400,6 +393,16 @@ namespace pwiz.Skyline.Controls
         {
             ImageIndex = (int)FilesTree.ImageId.folder;
         }
+    }
+
+    public class ReplicatesFolderNode : FilesTreeFolderNode
+    {
+        public ReplicatesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_Replicates) { }
+    }
+
+    public class PeptideLibrariesFolderNode : FilesTreeFolderNode
+    {
+        public PeptideLibrariesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_Libraries) { }
     }
 
     public abstract class FilesTreeNode : TreeNodeMS

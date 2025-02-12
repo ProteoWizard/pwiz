@@ -16,11 +16,11 @@
 
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using System;
 
 namespace pwiz.Skyline.Controls
 {
@@ -142,20 +142,39 @@ namespace pwiz.Skyline.Controls
 
             switch (FilesTree.SelectedNode)
             {
+                // Folder Nodes
+                case ReplicatesFolderNode _:
+                    manageResultsToolStripMenuItem.Visible = true;
+                    manageResultsToolStripMenuItem.Enabled = true;
+                    libraryExplorerToolStripMenuItem.Visible = false;
+                    openContainingFolderMenuStripItem.Visible = false;
+                    break;
+                case PeptideLibrariesFolderNode _:
+                    manageResultsToolStripMenuItem.Visible = false;
+                    libraryExplorerToolStripMenuItem.Visible = true;
+                    openContainingFolderMenuStripItem.Visible = false;
+                    break;
+                // File Nodes
                 case SkylineRootTreeNode _:
+                    manageResultsToolStripMenuItem.Visible = false;
+                    libraryExplorerToolStripMenuItem.Visible = false;
+                    openContainingFolderMenuStripItem.Visible = true;
                     openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
                     break;
                 case SkylineAuditLogTreeNode _:
                 case ReplicateSampleFileTreeNode _:
+                case PeptideLibraryTreeNode _:
                     if (!(FilesTree.SelectedNode is FilesTreeNode treeNode))
                         break;
 
+                    manageResultsToolStripMenuItem.Visible = false;
+                    libraryExplorerToolStripMenuItem.Visible = false;
                     // only offer the option if the file currently exists and isn't removed or deleted
+                    openContainingFolderMenuStripItem.Visible = true;
                     openContainingFolderMenuStripItem.Enabled = treeNode.LocalFileExists(); 
                     break;
-                // TODO: Replicates folder => add item for Manage Results menu
                 default:
-                    openContainingFolderMenuStripItem.Visible = false;
+                    e.Cancel = true;
                     break;
             }
         }
@@ -186,6 +205,16 @@ namespace pwiz.Skyline.Controls
                         ActivateReplicate(treeNodeParent.Name);
                     break;
             }
+        }
+
+        private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
+        {
+            SkylineWindow.ManageResults();
+        }
+
+        private void FilesTree_LibraryExplorerMenuItem(object sender, EventArgs e) 
+        {
+            SkylineWindow.ViewSpectralLibraries();
         }
     }
 }
