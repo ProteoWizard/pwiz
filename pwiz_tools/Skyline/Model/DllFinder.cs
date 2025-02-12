@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model
         bool Exists(string path);
         DateTime GetLastWriteTime(string path);
         void Copy(string srcFile, string destFile);
+        void Delete(string file);
 
         IDisposable GetRootKey();
         IDisposable OpenSubKey(IDisposable key, string subKeyName);
@@ -66,6 +67,11 @@ namespace pwiz.Skyline.Model
         public void Copy(string srcFile, string destFile)
         {
             File.Copy(srcFile, destFile, true);
+        }
+
+        public void Delete(string file)
+        {
+            File.Delete(file);
         }
 
         public IDisposable GetRootKey()
@@ -152,11 +158,17 @@ namespace pwiz.Skyline.Model
             {
                 string library = dllDependency.DllFileName;
                 string srcFile = Path.Combine(instrumentSoftwarePath, library);
+                string destFile = Path.Combine(DestinationDir, library);
                 bool srcExists = Services.Exists(srcFile);
                 if (!srcExists)
                 {
                     if (!dllDependency.IsRequired)
+                    {
+                        // Avoid a mismatch between required and optional DLLs
+                        if (Services.Exists(destFile))
+                            Services.Delete(destFile);
                         continue;
+                    }
 
                     throw new IOException(
                         string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_,
@@ -164,7 +176,6 @@ namespace pwiz.Skyline.Model
                 }
                 // If destination file does not exist or has a different modification time from
                 // the source, then copy the source file from the installation.
-                string destFile = Path.Combine(DestinationDir, library);
                 if (!Services.Exists(destFile) || !Equals(Services.GetLastWriteTime(destFile), Services.GetLastWriteTime(srcFile)))
                     Services.Copy(srcFile, destFile);
             }
@@ -217,24 +228,35 @@ namespace pwiz.Skyline.Model
                 if (keyPath == null)
                     continue;
 
-                // If the path for the key contains all the necessary DLLs return it
-                if (ContainsDependencyLibraries(keyPath))
-                    return keyPath;
+                // If the path for the key does not contain the necessary DLLs keep looking
+                if (!ContainsDependencyLibraries(keyPath.Path))
+                    continue;
+                // Return the first full installation with the DLLs
+                if (keyPath.IsFull)
+                    return keyPath.Path;
                 // Otherwise, if the current best path is null, use this one
-                path ??= keyPath;
+                path ??= keyPath.Path;
             }
 
             return path;
         }
 
-        private string GetMachineProgramPath(IDisposable versionKey)
+        private class ProgramPath
+        {
+            public string Path;
+            public bool IsFull;
+        }
+
+        private ProgramPath GetMachineProgramPath(IDisposable versionKey)
         {
             if (versionKey == null)
                 return null;
-            var installTypeObject = Services.GetValue(versionKey, @"InstallType");
-            if (installTypeObject != null && Equals(@"Client", installTypeObject.ToString()))
+            string programPath = Services.GetValue(versionKey, @"ProgramPath");
+            if (string.IsNullOrEmpty(programPath))
                 return null;
-            return Services.GetValue(versionKey, @"ProgramPath");
+            var installTypeObject = Services.GetValue(versionKey, @"InstallType");
+            bool full = installTypeObject is @"Full";
+            return new ProgramPath { Path = programPath, IsFull = full };
         }
 
         private IDisposable GetFirstSubKey(IDisposable parentKey)

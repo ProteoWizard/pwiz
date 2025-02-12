@@ -1188,8 +1188,8 @@ namespace pwiz.Skyline.Model
 
         protected void EnsureLibraries()
         {
-            var dllFinder = new ThermoDllFinder();
-            dllFinder.EnsureDlls();
+            // var dllFinder = new ThermoDllFinder();
+            // dllFinder.EnsureDlls();
         }
     }
 
@@ -4951,7 +4951,7 @@ namespace pwiz.Skyline.Model
                         CreateNoWindow = true,
                         UseShellExecute = false,
                         // Common directory includes the directory separator
-                        WorkingDirectory = dirWork + @"\\",
+                        WorkingDirectory = dirWork + @"\",
                         Arguments = string.Join(@" ", argv.ToArray()),
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,

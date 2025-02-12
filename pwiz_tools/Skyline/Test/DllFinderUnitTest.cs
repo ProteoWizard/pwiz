@@ -208,6 +208,16 @@ namespace pwiz.SkylineTest
                 CopiedFiles.Add(new CopiedFile(srcFile, destFile));
             }
 
+            public void Delete(string file)
+            {
+                // Throw an exception if trying to copy a non-existent file
+                if (!_filesByPath.TryGetValue(file, out var f))
+                    throw new FileNotFoundException($"Deleted file not found: {file}");
+
+                // Store the fact that this file deletion happened.
+                CopiedFiles.Add(new CopiedFile(file, string.Empty));
+            }
+
             public IDisposable GetRootKey()
             {
                 return _rootKey;
