@@ -539,7 +539,7 @@ namespace pwiz.Skyline.Model.GroupComparison
                         peptideQuantifier.MeasuredLabelTypes = ImmutableList.Singleton(selector.LabelType);
                     }
                     foreach (var quantityEntry in peptideQuantifier.GetTransitionIntensities(SrmDocument.Settings,
-                                 replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks).Where(kvp=>!kvp.Value.Truncated))
+                                 replicateEntry.Key, ComparisonDef.UseZeroForMissingPeaks))
                     {
                         var dataRowDetails = new DataRowDetails
                         {

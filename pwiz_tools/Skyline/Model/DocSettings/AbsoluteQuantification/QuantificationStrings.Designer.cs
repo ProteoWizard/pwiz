@@ -189,12 +189,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to One or more transitions are missing or truncated..
+        ///   Looks up a localized string similar to One or more transitions are missing..
         /// </summary>
-        public static string CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_ {
+        public static string CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_ {
             get {
                 return ResourceManager.GetString("CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missin" +
-                        "g_or_truncated_", resourceCulture);
+                        "g_", resourceCulture);
             }
         }
         
@@ -309,12 +309,12 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The selected replicate has missing or truncated transitions.
+        ///   Looks up a localized string similar to The selected replicate has missing transitions.
         /// </summary>
-        public static string CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions {
+        public static string CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_transitions {
             get {
-                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_tru" +
-                        "ncated_transitions", resourceCulture);
+                return ResourceManager.GetString("CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_transi" +
+                        "tions", resourceCulture);
             }
         }
         

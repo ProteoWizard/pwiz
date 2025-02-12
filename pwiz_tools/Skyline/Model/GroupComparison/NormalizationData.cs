@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.GroupComparison
             TransitionDocNode transition, int replicateIndex, TransitionChromInfo chromInfo)
         {
             return PeptideQuantifier.GetArea(parameters.TreatMissingValuesAsZero, parameters.QValueCutoff,
-                false, transitionGroup, transition, replicateIndex, chromInfo);
+                transitionGroup, transition, replicateIndex, chromInfo);
         }
 
         public class Parameters

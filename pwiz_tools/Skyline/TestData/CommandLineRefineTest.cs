@@ -338,7 +338,7 @@ namespace pwiz.SkylineTestData
             };
             var output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 43, 0, 43, 248, output);
+            IsDocumentState(OutPath, 48, 0, 45, 0, 45, 259, output);
 
             // Verify only fold change cutoff works
             args.RemoveAt(0);
@@ -347,7 +347,7 @@ namespace pwiz.SkylineTestData
             parts.RemoveAt(0);
             output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 20, 0, 20, 114, output);
+            IsDocumentState(OutPath, 48, 0, 21, 0, 21, 118, output);
 
             // Verify only p value cutoff works
             pValueCutoff = 0.08.ToString(CultureInfo.CurrentCulture);
@@ -355,7 +355,7 @@ namespace pwiz.SkylineTestData
             parts[0] = PropertyNames.RefinementSettings_AdjustedPValueCutoff;
             output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 103, 0, 103, 597, output);
+            IsDocumentState(OutPath, 48, 0, 103, 0, 103, 596, output);
 
             // Verify the union of two group comparisons works
             pValueCutoff = 0.05.ToString(CultureInfo.CurrentCulture);
@@ -368,7 +368,7 @@ namespace pwiz.SkylineTestData
             parts.Add(PropertyNames.RefinementSettings_FoldChangeCutoff);
             output = Run(args.ToArray());
             AssertEx.Contains(output, parts.ToArray());
-            IsDocumentState(OutPath, 48, 0, 44, 0, 44, 255, output);
+            IsDocumentState(OutPath, 48, 0, 45, 0, 45, 259, output);
         }
 
         //        [TestMethod]

@@ -223,7 +223,7 @@
   <data name="CalibrationCurveFitter_ConcentrationRatioText_Concentration_Ratio_to__0_" xml:space="preserve">
     <value>相对于{0}的浓度比</value>
   </data>
-  <data name="CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_or_truncated_" xml:space="preserve">
+  <data name="CalibrationCurveFitter_GetQuantificationResult_One_or_more_transitions_are_missing_" xml:space="preserve">
     <value>一个或多个离子对缺失或被截短。</value>
   </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_The_selected_replicate_has_missing_or_truncated_transitions" xml:space="preserve">

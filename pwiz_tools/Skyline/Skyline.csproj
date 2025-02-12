@@ -3750,20 +3750,28 @@
       <DependentUpon>SpectrumPropertiesResx.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx" />
+    <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.ja.resx">
+      <DependentUpon>QuantificationStrings.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>QuantificationStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.zh-CHS.resx" />
-    <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.ja.resx" />
+    <EmbeddedResource Include="Model\DocSettings\AbsoluteQuantification\QuantificationStrings.zh-CHS.resx">
+      <DependentUpon>QuantificationStrings.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.ja.resx">
+      <DependentUpon>GroupComparisonStrings.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>GroupComparisonStrings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx" />
+    <EmbeddedResource Include="Model\GroupComparison\GroupComparisonStrings.zh-CHS.resx">
+      <DependentUpon>GroupComparisonStrings.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\Koina\KoinaResources.ja.resx">
       <DependentUpon>KoinaResources.resx</DependentUpon>
       <SubType>Designer</SubType>
