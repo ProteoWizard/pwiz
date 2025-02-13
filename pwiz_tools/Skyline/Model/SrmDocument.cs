@@ -763,10 +763,10 @@ namespace pwiz.Skyline.Model
             {
                 // Make sure peptide standards lists are up to date
                 docClone.Settings = docClone.Settings.CachePeptideStandards(Children, docClone.Children);
-            }
 
-            // Note protein metadata readiness
-            docClone.IsProteinMetadataPending = docClone.CalcIsProteinMetadataPending();
+                // Note protein metadata readiness
+                docClone.IsProteinMetadataPending = docClone.CalcIsProteinMetadataPending();
+            }
 
             // If iRT standards have changed, reset auto-calculated conversion to make sure they are
             // updated on a background thread
