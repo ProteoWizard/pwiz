@@ -167,7 +167,8 @@ namespace pwiz.Skyline.Controls
                 case RetentionScoreCalculatorFileTreeNode _:
                 case IonMobilityLibraryFileTreeNode _:
                 case SkylineAuditLogTreeNode _:
-                case SkylineViewFileTreeNode _:
+                case SkylineViewTreeNode _:
+                case SkylineChromatogramCacheTreeNode _:
                     if (!(FilesTree.SelectedNode is FilesTreeNode treeNode))
                         break;
 

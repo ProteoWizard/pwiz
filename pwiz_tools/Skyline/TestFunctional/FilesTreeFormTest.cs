@@ -268,9 +268,10 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => projectFilesRoot.IsVisible);
 
-            Assert.AreEqual(2, projectFilesRoot.Nodes.Count);
+            Assert.AreEqual(3, projectFilesRoot.Nodes.Count);
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(ControlsResources.FilesTree_TreeNodeLabel_AuditLog));
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(ControlsResources.FilesTree_TreeNodeLabel_ViewFile));
+            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(ControlsResources.FilesTree_TreeNodeLabel_ChromatogramCache));
 
             // Project Files => Audit Log Action
             RunUI(() =>

@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls
@@ -195,7 +196,15 @@ namespace pwiz.Skyline.Controls
                 _projectFilesRoot.Nodes.Add(new SkylineAuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
 
                 var viewFilePath = SkylineWindow.GetViewFile(DocumentContainer.DocumentFilePath);
-                _projectFilesRoot.Nodes.Add(new SkylineViewFileTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
+                _projectFilesRoot.Nodes.Add(new SkylineViewTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
+
+                // CONSIDER: is this the correct way to get the path to a .skyd file?
+                //           is there a back compat consideration when there were per-replicate cache files?
+                var skydFilePath = ChromatogramCache.FinalPathForName(DocumentContainer.DocumentFilePath, null);
+                if (File.Exists(skydFilePath))
+                {
+                    _projectFilesRoot.Nodes.Add(new SkylineChromatogramCacheTreeNode(new ChromatogramCacheFileModel(ControlsResources.FilesTree_TreeNodeLabel_ChromatogramCache, skydFilePath)));
+                }
             }
 
             var files = Document.Settings.Files;
@@ -785,11 +794,37 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class SkylineViewFileTreeNode : FilesTreeNode, ITipProvider
+    public class SkylineViewTreeNode : FilesTreeNode, ITipProvider
     {
-        public SkylineViewFileTreeNode(ViewFileModel model) : base(model, FilesTree.ImageId.file)
+        public SkylineViewTreeNode(ViewFileModel model) : base(model, FilesTree.ImageId.file)
         {
         }
+
+        public override string LocalFilePath => (Model as IFileModel)?.FilePath;
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            if (!(Model is IFileModel model))
+                return Size.Empty;
+
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, model.Name, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, model.FilePath, rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
+        }
+    }
+
+    public class SkylineChromatogramCacheTreeNode : FilesTreeNode, ITipProvider
+    {
+        public SkylineChromatogramCacheTreeNode(ChromatogramCacheFileModel model) : base(model, FilesTree.ImageId.file) { }
 
         public override string LocalFilePath => (Model as IFileModel)?.FilePath;
 
@@ -816,6 +851,7 @@ namespace pwiz.Skyline.Controls
     public sealed class SkylineFileModelId : Identity { };
     public sealed class AuditLogFileModelId : Identity { };
     public sealed class ViewFileModelId : Identity { };
+    public sealed class ChromatogramCacheModelId : Identity { };
 
     public class SkylineFileModel : IFileModel
     {
@@ -842,6 +878,20 @@ namespace pwiz.Skyline.Controls
         }
         public Identity Id { get; private set; }
         public FileType Type { get => FileType.sky_audit_log; }
+        public string Name { get; }
+        public string FilePath { get; }
+    }
+    
+    public class ChromatogramCacheFileModel : IFileModel
+    {
+        public ChromatogramCacheFileModel(string name, string filePath)
+        {
+            Id = new ChromatogramCacheModelId();
+            Name = name;
+            FilePath = filePath;
+        }
+        public Identity Id { get; private set; }
+        public FileType Type { get => FileType.sky_chromatogram_cache; }
         public string Name { get; }
         public string FilePath { get; }
     }

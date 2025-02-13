@@ -238,4 +238,7 @@
   <data name="FilesTree_TreeNode_RenderTip_LocalPath" xml:space="preserve">
 	  <value>Local Path</value>
   </data>
+  <data name="FilesTree_TreeNodeLabel_ChromatogramCache" xml:space="preserve">
+      <value>Chromatogram Cache</value>
+  </data>
 </root>

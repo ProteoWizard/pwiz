@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Model.DocSettings
         retention_score_calculator, // .irtdb
         sky,                        // .sky    
         sky_audit_log,              // .skyl
+        sky_chromatogram_cache,     // .skyd
         sky_view                    // .sky.view
     }
 

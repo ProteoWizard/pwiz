@@ -142,6 +142,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Chromatogram Cache.
+        /// </summary>
+        public static string FilesTree_TreeNodeLabel_ChromatogramCache {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNodeLabel_ChromatogramCache", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Libraries.
         /// </summary>
         public static string FilesTree_TreeNodeLabel_Libraries {
