@@ -35,7 +35,6 @@ using Microsoft.Win32;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -169,7 +168,7 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool NvidiaLibrariesInstalled()
         {
-            if (SimulatedInstallationState != eSimulatedInstallationState.NAIVE)
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA)
                 return false;
 
             bool cudaYes = CudaLibraryInstalled();
@@ -249,7 +248,7 @@ namespace pwiz.Skyline.Model.Tools
         public void WriteInstallNvidiaBatScript()
         {
             FileEx.SafeDelete(InstallNvidiaLibrariesBat);
-            File.WriteAllText(InstallNvidiaLibrariesBat, string.Format(ToolsUIResources.NvidiaInstaller_Batch_script, CUDA_VERSION, CUDNN_VERSION));
+            File.WriteAllText(InstallNvidiaLibrariesBat, string.Format(ModelResources.NvidiaInstaller_Batch_script, CUDA_VERSION, CUDNN_VERSION));
         }
 
         public static bool? TestForNvidiaGPU()
@@ -1361,7 +1360,7 @@ namespace pwiz.Skyline.Model.Tools
         
         private bool ValidateDownloadCudaLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
                 return false;
 
             if (PythonInstaller.CudaLibraryInstalled())
@@ -1376,7 +1375,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateInstallCudaLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
                 return false;
 
             return PythonInstaller.CudaLibraryInstalled();
@@ -1384,7 +1383,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateDownloadCuDNNLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
                 return false;
 
             if (PythonInstaller.CuDNNLibraryInstalled() != false)
@@ -1399,7 +1398,7 @@ namespace pwiz.Skyline.Model.Tools
        
         private bool? ValidateInstallCuDNNLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
                 return false;
 
             return PythonInstaller.CuDNNLibraryInstalled();
