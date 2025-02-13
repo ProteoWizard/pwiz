@@ -950,6 +950,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var viewEditor = base.CreateViewEditor(viewGroup, viewSpec, owner, showApply);
             viewEditor.Alphabetical = Settings.Default.AlphabeticalReportEditor;
             viewEditor.Closed += ViewEditorClosed;
+            viewEditor.VisibleChanged += ViewEditorClosed;
 
             if (owner != null)
             {

@@ -630,9 +630,6 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             {
                 tbxViewName.Text = SavedName;
             }
-            //if (ParentControl is ManageViewsForm)
-           //    (ParentControl as ManageViewsForm)?.EditView();
-           //Dispose();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
