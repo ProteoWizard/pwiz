@@ -349,7 +349,7 @@ namespace ZedGraph
             if (labelLength < _densityGridSize.Width - 4)
                 gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength, _densityGridSize.Height - 1);
             else 
-                gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength/2, _densityGridSize.Height - 1);
+                gridRect = new Rectangle(labelLength / 2 + 1, 0, _densityGridSize.Width - labelLength/2 - 1, _densityGridSize.Height - 1);
             var points = new List<Point>();
 
             GetPointMarkerRectangle(targetPoint, out var targetMarkerRect);
