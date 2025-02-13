@@ -27,10 +27,10 @@ namespace pwiz.Skyline.Model.DocSettings
         background_proteome,        // .protdb
         ion_mobility_library,       // .imsdb
         optimization_library,       // .optdb
-        peptide_library,            // .blib
-        project_files,              // <placeholder representing the project files folder>
-        replicates,                 // <replicate from .sky>
-        replicate_file,             // <replicate sample files> including .raw, etc
+        peptide_library,            // library type (cache type, if any) - .blib (.slc), .lib, .clib, .hlf (.slc), .msp (.slc), .sptxt (.splc), .elib
+        project_files,              // virtual folder - placeholder representing the project files folder
+        replicates,                 // virtual file - replicate from .sky
+        replicate_file,             // .raw, .mzml, .wiff, more (see @DataSourceUtil)
         retention_score_calculator, // .irtdb
         sky,                        // .sky    
         sky_audit_log,              // .skyl

@@ -523,10 +523,21 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        // TODO: SkylineFiles uses this approach for some files. But does the same approach work for replicate sample files?
+        /// SkylineFiles uses this approach to locate file paths found in SrmSettings. It starts with
+        /// the given path but those paths may be set on others machines. If not available locally, use
+        /// <see cref="PathEx.FindExistingRelativeFile"/> to search for the file locally.
+        ///
+        /// <param name="relativeFilePath">Usually the SrmDocument path.</param>
+        /// <param name="file"></param>
+        ///
+        /// TODO: is this the same search algorithm used for replicate sample files?
         internal static string FindExistingInPossibleLocations(string relativeFilePath, string file)
         {
-            return File.Exists(file) ? file : PathEx.FindExistingRelativeFile(relativeFilePath, file);
+            if (File.Exists(file) || Directory.Exists(file))
+            {
+                return file;
+            }
+            else return PathEx.FindExistingRelativeFile(relativeFilePath, file);
         }
     }
 
@@ -597,6 +608,12 @@ namespace pwiz.Skyline.Controls
         public string FilePath { get => ((IFileModel)Model).FilePath; }
 
         public override string LocalFilePath { get; }
+
+        internal override bool LocalFileExists()
+        {
+            return File.Exists(LocalFilePath) || 
+                   Directory.Exists(LocalFilePath); // directory check needed because some replicate samples are actually directories
+        }
 
         public bool HasTip => true;
     
