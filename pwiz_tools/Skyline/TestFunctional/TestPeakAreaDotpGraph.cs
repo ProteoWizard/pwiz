@@ -57,10 +57,12 @@ namespace pwiz.SkylineTestFunctional
             var propertyDialog = ShowDialog<AreaChartPropertyDlg>(SkylineWindow.ShowAreaPropertyDlg);
             RunUI(() =>
             {
+                propertyDialog.SetShowCutoffProperty(true);
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, "asdf");
                 propertyDialog.OkDialog();  // Does not dismiss the form
-                Assert.IsNotNull(propertyDialog.GetRdotpErrorText());
-                propertyDialog.SetShowCutoffProperty(true);
+                var rdotpErrorText = propertyDialog.GetRdotpErrorText();
+                Assert.IsNotNull(rdotpErrorText);
+                Assert.AreNotEqual(string.Empty, rdotpErrorText);
                 propertyDialog.SetDotpCutoffValue(AreaExpectedValue.ratio_to_label, (0.9).ToString(CultureInfo.CurrentCulture));
             });
             OkDialog(propertyDialog, propertyDialog.OkDialog);

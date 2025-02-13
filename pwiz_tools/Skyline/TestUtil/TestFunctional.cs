@@ -1946,12 +1946,14 @@ namespace pwiz.SkylineTestUtil
 
         public static void CancelDialog(Form form, Action cancelAction)
         {
+            Assert.IsTrue(IsFormOpen(form));
             RunUI(cancelAction);
             WaitForClosedForm(form);
         }
 
         public static void OkDialog(Form form, Action okAction)
         {
+            Assert.IsTrue(IsFormOpen(form));
             RunUI(okAction);
             WaitForClosedForm(form);
         }
