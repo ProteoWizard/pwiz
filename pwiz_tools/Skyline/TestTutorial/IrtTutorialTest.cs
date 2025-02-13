@@ -301,7 +301,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<EditRTDlg>("Edit Retention Time Predictor form");   // Edit retention time predictor form
 
                 OkDialog(regressionDlg, regressionDlg.OkDialog);
-                OkDialog(peptideSettingsUI1, peptideSettingsUI2.OkDialog);
+                OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
                 // Make sure iRT calculator is loaded
                 WaitForDocumentChangeLoaded(docPre);
             }

@@ -2766,9 +2766,12 @@ namespace pwiz.SkylineTestFunctional
                     OkDialog(testImportDlg, testImportDlg.OkDialog);
                     DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage
                 }
-            
-                // Import the list
-                OkDialog(testImportDlg, testImportDlg.OkDialog);
+                else
+                {
+                    // Import the list
+                    OkDialog(testImportDlg, testImportDlg.OkDialog);
+                }
+
                 if (pass == 1)
                 {
                     DismissAutoManageDialog();  // Say no to the offer to set new nodes to automanage

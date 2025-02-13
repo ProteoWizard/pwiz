@@ -374,11 +374,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(multiBtnMsgDlgSample.Message.Contains(SAMPLE_TOOL.PackageName));
             if (sampleSuccess)
             {
-                OkDialog(multiBtnMsgDlgNested, multiBtnMsgDlgSample.Btn0Click);
+                OkDialog(multiBtnMsgDlgSample, multiBtnMsgDlgSample.Btn0Click);
             }
             else
             {
-                OkDialog(multiBtnMsgDlgNested, multiBtnMsgDlgSample.BtnCancelClick);
+                OkDialog(multiBtnMsgDlgSample, multiBtnMsgDlgSample.BtnCancelClick);
             }
             return WaitForOpenForm<MessageDlg>();
         }

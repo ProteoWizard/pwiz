@@ -471,8 +471,6 @@ namespace pwiz.SkylineTestTutorial
             RestoreViewOnScreen(21);
             RunUIForScreenShot(() => SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0));
             PauseForScreenShot("Main window");
-
-            OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
         }
 
         private void LimitXAxis(ViewLibraryDlg viewLibraryDlg)

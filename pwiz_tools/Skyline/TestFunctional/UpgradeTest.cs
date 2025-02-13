@@ -84,7 +84,7 @@ namespace pwiz.SkylineTestFunctional
             var noUpgradeDlg = ShowDialog<UpgradeDlg>(SkylineWindow.CheckForUpdate);
             Assert.IsFalse(noUpgradeDlg.UpdateFound);
             Assert.IsFalse(noUpgradeDlg.CheckAtStartup);
-            OkDialog(upgradeDlg, noUpgradeDlg.AcceptButton.PerformClick);
+            OkDialog(noUpgradeDlg, noUpgradeDlg.AcceptButton.PerformClick);
         }
     }
 
