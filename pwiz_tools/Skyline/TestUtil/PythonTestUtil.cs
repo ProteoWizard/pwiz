@@ -25,6 +25,7 @@ using pwiz.Skyline.ToolsUI;
 using System;
 using System.Management;
 using System.Security.Principal;
+using pwiz.Skyline.Model;
 
 namespace pwiz.SkylineTestUtil
 { public class PythonTestUtil
@@ -141,7 +142,7 @@ namespace pwiz.SkylineTestUtil
                             {
                                 MultiButtonMsgDlg nvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(pythonDlg.OkDialog);
 
-                                Assert.AreEqual(string.Format(ToolsUIResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
+                                Assert.AreEqual(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
                                     nvidiaDlg.Message);
 
                                 confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, 600000);
@@ -150,7 +151,7 @@ namespace pwiz.SkylineTestUtil
                             else if (nvidiaClickNo == true)
                             {
                                 MultiButtonMsgDlg nvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(pythonDlg.OkDialog);
-                                Assert.AreEqual(string.Format(ToolsUIResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
+                                Assert.AreEqual(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
                                     nvidiaDlg.Message);
                             }
 
@@ -172,7 +173,7 @@ namespace pwiz.SkylineTestUtil
 
                             confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, 600000);
 
-                            Assert.AreEqual(string.Format(ToolsUIResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()), confirmDlg.Message);
+                            Assert.AreEqual(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()), confirmDlg.Message);
                             AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
                             ConfirmPythonSuccess(confirmDlg);
                         }
@@ -335,7 +336,7 @@ namespace pwiz.SkylineTestUtil
         /// <param name="confirmDlg">Message dialog to the user with admin instructions</param>
         private void ConfirmInstallNvidiaBatMessage(MessageDlg confirmDlg)
         {
-            AssertEx.AreComparableStrings(string.Format(ToolsUIResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
+            AssertEx.AreComparableStrings(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
                 confirmDlg.Message);
             AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
         }

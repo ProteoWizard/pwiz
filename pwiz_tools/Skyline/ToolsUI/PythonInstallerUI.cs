@@ -24,6 +24,7 @@ using System;
 using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.ToolsUI
                             {
                                 _userNoToCuda = false;
                                 pythonInstaller.WriteInstallNvidiaBatScript();
-                                var nvidiaChoice = MessageDlg.Show(parent, string.Format(ToolsUIResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.InstallNvidiaLibrariesBat), false, MessageBoxButtons.OKCancel);
+                                var nvidiaChoice = MessageDlg.Show(parent, string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.InstallNvidiaLibrariesBat), false, MessageBoxButtons.OKCancel);
                                 //Download
                                 if (nvidiaChoice == DialogResult.Cancel)
                                 {
