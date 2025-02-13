@@ -361,6 +361,8 @@ namespace pwiz.SkylineTestFunctional
                 importSpectralLibDlg.Source = SpectralLibrarySource.settings; // Simulate user selecting 1st radio button
             });
             OkDialog(importSpectralLibDlg, importSpectralLibDlg.OkDialog); // User clicks OK 
+            importSpectralLibDlg = 
+                ShowDialog<ImportIonMobilityFromSpectralLibraryDlg>(ionMobilityLibraryDlg.ImportFromSpectralLibrary);
             RunUI(() =>
             {
                 importSpectralLibDlg.Source = SpectralLibrarySource.file; // Simulate user selecting 2nd radio button

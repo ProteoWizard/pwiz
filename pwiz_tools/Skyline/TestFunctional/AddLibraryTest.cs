@@ -70,7 +70,6 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(addPredictorDlg, addPredictorDlg.OkDialog);
-            OkDialog(addLibDlg, addLibDlg.OkDialog);
             OkDialog(libListDlg, libListDlg.OkDialog);
 
             // Check retention time predictor

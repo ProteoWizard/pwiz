@@ -499,10 +499,14 @@ namespace pwiz.SkylineTestFunctional
 
                         Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
 
-                        configureToolsDlg.RemoveAllTools();
-                        // Now the tool list is empty.
-                        Assert.IsFalse(configureToolsDlg.btnRemove.Enabled);
                     });
+                configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+                RunUI(() =>
+                {
+                    configureToolsDlg.RemoveAllTools();
+                    // Now the tool list is empty.
+                    Assert.IsFalse(configureToolsDlg.btnRemove.Enabled);
+                });
                 OkDialog(configureToolsDlg, configureToolsDlg.OkDialog);
                 RunUI(() =>
                     {

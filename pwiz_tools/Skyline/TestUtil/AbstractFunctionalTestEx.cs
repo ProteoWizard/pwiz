@@ -926,7 +926,6 @@ namespace pwiz.SkylineTestUtil
             });
             var filterPeptidesDlg = WaitForOpenForm<FilterMatchedPeptidesDlg>();
             ShowAndDismissDlg<MultiButtonMsgDlg>(filterPeptidesDlg.OkDialog, addLibraryPepsDlg => { addLibraryPepsDlg.Btn1Click(); });
-            OkDialog(filterPeptidesDlg, filterPeptidesDlg.OkDialog);
 
             var docAfterAdd = WaitForDocumentChange(docBefore);
 
