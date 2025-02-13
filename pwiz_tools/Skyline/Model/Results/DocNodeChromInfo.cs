@@ -465,6 +465,7 @@ namespace pwiz.Skyline.Model.Results
                    other.BackgroundAreaFragment.Equals(BackgroundAreaFragment) &&
                    other.Height.Equals(Height) &&
                    other.Truncated.Equals(Truncated) &&
+                   other.TruncatedProportion.Equals(TruncatedProportion) &&
                    other.Identified.Equals(Identified) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.IsotopeDotProduct.Equals(IsotopeDotProduct) &&
@@ -503,6 +504,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (BackgroundAreaFragment.HasValue ? BackgroundAreaFragment.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Height.HasValue ? Height.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
+                result = (result*397) ^ (TruncatedProportion.HasValue ? TruncatedProportion.Value.GetHashCode() : 0);
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
