@@ -78,7 +78,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     addIrtStandardsToDocumentDlg.BtnYesClick();
                 });
-            }, peptideSettingsUi=>{});
+            });
             Assert.AreEqual(CIRT_STANDARD_COUNT, SkylineWindow.Document.PeptideCount);
             RunUI(() =>
             {
@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     addIrtStandardsToDocumentDlg.BtnYesClick();
                 });
-            }, peptideSettingsUi => { });
+            });
             Assert.AreEqual(DOC_STANDARD_COUNT, SkylineWindow.Document.PeptideCount);
         }
 

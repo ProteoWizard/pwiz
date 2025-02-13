@@ -367,7 +367,7 @@ namespace pwiz.SkylineTestFunctional
 
 
             // Close the spectral library explorer
-            OkDialog(_viewLibUI , _viewLibUI.CancelDialog);
+            CloseLibraryExplorer();
         }
 
         private void TestBasicFunctionality()
@@ -850,7 +850,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.IsTrue(_viewLibUI.ChangeSelectedPeptide("YLX[+16.0]EEDEDAYKK++")));
 
             // Close the Library Explorer dialog
-            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+            CloseLibraryExplorer();
         }
 
         private void OkayAllModificationsDlg()
@@ -896,7 +896,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 AssertEx.AreComparableStrings(expectError, errWin.Message);
                 OkDialog(errWin, errWin.OkDialog);
-                OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+                CloseLibraryExplorer();
                 return;
             }
 
@@ -968,7 +968,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(confirmAdd, confirmAdd.BtnYesClick);
             WaitForDocumentLoaded();
 
-            OkDialog(_viewLibUI , _viewLibUI.CancelDialog);
+            CloseLibraryExplorer();
             if (isNIST)
             {
                 AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 74, 222, 14358); // Was 666, from when we only took top N ranked by intensity then mz, but now we take that or all annotated
@@ -1146,7 +1146,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
             // Relaunch explorer without modification matching
-            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+            CloseLibraryExplorer();
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(YEAST));
             var matchedPepModsDlg = WaitForOpenForm<AddModificationsDlg>();
             OkDialog(matchedPepModsDlg, matchedPepModsDlg.CancelDialog);
@@ -1167,7 +1167,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => _pepList.SelectedIndex != -1);
             WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
 
-            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+            CloseLibraryExplorer();
         }
 
         private void TestTooltip()
@@ -1184,7 +1184,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(pep1.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
                 Assert.AreEqual(pep3.GetMzParts().Count, 0); // In mz range so should not have red mz out of range tooltip
             });
-            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+            CloseLibraryExplorer();
             RelaunchLibExplorer(true, false, PHOSPHO_LIB); // No ExplicitMods selected
             RunUI(() =>
             {
@@ -1216,14 +1216,14 @@ namespace pwiz.SkylineTestFunctional
                 var pep4 = _viewLibUI.GetTipProvider(3);
                 Assert.AreEqual(pep4.GetMzParts().Count, 0);  // not out of bounds
             });
-            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+            CloseLibraryExplorer();
         }
 
         private void RelaunchLibExplorer(bool showModsDlg, bool okAll, string libName)
         {
             if (_viewLibUI != null)
             {
-                OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+                CloseLibraryExplorer();
             }
             _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(libName));
             if (showModsDlg)
@@ -1335,6 +1335,12 @@ namespace pwiz.SkylineTestFunctional
             {
                 Assert.IsTrue(SkylineWindow.Document.Peptides.Contains(nodePep));
             }
+        }
+
+        private void CloseLibraryExplorer()
+        {
+            OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+            _viewLibUI = null;
         }
     }
 }

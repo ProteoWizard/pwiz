@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
                     openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_1.mzML"));
                     openDataSourceDialog.Open();
                 });
-            }, dlg=>{});
+            });
             WaitForDocumentLoaded();
 
             // Copy the .skyd file: we will use it later in the test
@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestFunctional
                     openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_1.mzML"));
                     openDataSourceDialog.Open();
                 });
-            }, dlg=>{});
+            });
             WaitForDocumentLoaded();
 
             // Import "S_2.mzML"
@@ -104,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
                     openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_2.mzML"));
                     openDataSourceDialog.Open();
                 });
-            }, dlg => { });
+            });
             WaitForDocumentLoaded();
 
             double extractionWidth30K = GetExtractionWidth("S_2");
@@ -145,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
                     openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_2.mzML"));
                     openDataSourceDialog.Open();
                 });
-            }, dlg => { });
+            });
             WaitForDocumentLoaded();
             var extractionWidth10K = GetExtractionWidth("S_2");
             Assert.AreNotEqual(extractionWidth30K, extractionWidth10K);
@@ -174,7 +174,7 @@ namespace pwiz.SkylineTestFunctional
                     openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_2.mzML"));
                     openDataSourceDialog.Open();
                 });
-            }, dlg => { });
+            });
             WaitForDocumentLoaded();
             // Extraction width is still the old value because the old chromatograms were used
             Assert.AreEqual(extractionWidth10K, GetExtractionWidth("S_2"));
@@ -196,7 +196,7 @@ namespace pwiz.SkylineTestFunctional
                     openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_2.mzML"));
                     openDataSourceDialog.Open();
                 });
-            }, dlg => { });
+            });
             WaitForDocumentLoaded();
             
             // Extraction width has the new value now
@@ -234,7 +234,7 @@ namespace pwiz.SkylineTestFunctional
                     openDataSourceDialog.SelectFile(TestFilesDir.GetTestPath("S_2.mzML"));
                     openDataSourceDialog.Open();
                 });
-            }, dlg => { });
+            });
             WaitForDocumentLoaded();
             Assert.AreEqual(extractionWidth10K, GetExtractionWidth("S_2"));
         }

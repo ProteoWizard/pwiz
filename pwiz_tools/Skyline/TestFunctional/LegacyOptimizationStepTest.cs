@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
                         .ChangeDiscardUnmatchedChromatograms(false);
                     minimizeResultsDlg.MinimizeToFile(TestFilesDir.GetTestPath("CurrentVersion.sky"));
                 });
-            }, dlg => { });
+            });
             WaitForDocumentLoaded();
             Assert.AreEqual(CacheFormatVersion.CURRENT, SkylineWindow.Document.MeasuredResults.CacheVersion);
             string v22_2SharedFile = TestFilesDir.GetTestPath("Version22_2.sky.zip");

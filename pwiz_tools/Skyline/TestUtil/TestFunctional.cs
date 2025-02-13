@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestUtil
         /// <param name="showDlgAction">Action which runs on the UI thread and causes the dialog to be shown</param>
         /// <param name="exerciseDlgAction">Action which runs on the test thread and interacts with the dialog</param>
         /// <param name="closeDlgAction">Action which runs on the UI thread and closes the dialog</param>
-        protected static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction) where TDlg : Form
+        protected static void RunLongDlg<TDlg>([InstantHandle] Action showDlgAction, [InstantHandle] Action<TDlg> exerciseDlgAction, Action<TDlg> closeDlgAction = null) where TDlg : Form
         {
             bool showDlgActionCompleted = false;
             TDlg dlg = ShowDialog<TDlg>(() =>
@@ -421,7 +421,11 @@ namespace pwiz.SkylineTestUtil
                 showDlgActionCompleted = true;
             });
             exerciseDlgAction(dlg);
-            OkDialog(dlg, ()=>closeDlgAction(dlg));
+            if (closeDlgAction != null)
+            {
+                OkDialog(dlg, () => closeDlgAction(dlg));
+            }
+            WaitForClosedForm(dlg);
             WaitForConditionUI(() => showDlgActionCompleted);
         }
 
