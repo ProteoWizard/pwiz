@@ -1069,6 +1069,8 @@ namespace pwiz.Skyline.Controls.GroupComparison
             get { return zedGraphControl.GraphPane.Layout; }
         }
 
+        public ZedGraphControl GraphControl { get { return zedGraphControl; } }
+
         #endregion
     }
 }

@@ -20,6 +20,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
@@ -32,6 +33,8 @@ namespace pwiz.SkylineTestConnected
     [TestClass]
     public class KoinaBuildLibraryTest : AbstractFunctionalTest
     {
+        private bool RecordData => false;
+
         [TestMethod, NoParallelTesting(TestExclusionReason.DOCKER_ROOT_CERTS)]
         public void TestKoinaBuildLibrary()
         {
@@ -39,13 +42,25 @@ namespace pwiz.SkylineTestConnected
             {
                 return;
             }
+
             RunFunctionalTest();
         }
 
         private string LibraryPathWithoutIrt => TestContext.GetTestPath("TestKoinaBuildLibrary\\LibraryWithoutIrt.blib");
         private string LibraryPathWithIrt => TestContext.GetTestPath("TestKoinaBuildLibrary\\LibraryWithIrt.blib");
+        private string ExpectedQueriesJsonFilepath => TestContext.GetProjectDirectory("TestConnected/KoinaBuildLibraryTest.data/koinaQueries.json");
 
         protected override void DoTest()
+        {
+            KoinaConstants.CACHE_PREV_PREDICTION = false;
+            using (new FakeKoina(RecordData, ExpectedQueriesJsonFilepath))
+            {
+                TestInner();
+            }
+            KoinaConstants.CACHE_PREV_PREDICTION = true;
+        }
+
+        void TestInner()
         {
             var toolsOptionsUi = ShowDialog<ToolOptionsUI>(SkylineWindow.ShowToolOptionsUI);
             RunUI(()=>
@@ -95,6 +110,9 @@ namespace pwiz.SkylineTestConnected
             var addRetentionTimePredictorDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
             OkDialog(addRetentionTimePredictorDlg, addRetentionTimePredictorDlg.NoDialog);
             OkDialog(peptideSettings, peptideSettings.OkDialog);
+
+            if (RecordData)
+                return;
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
