@@ -537,6 +537,38 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to @echo off
+        ///setlocal enabledelayedexpansion
+        ///
+        ///:: Set paths and URIs (you need to define these)
+        ///set &quot;CudaVersion={0}&quot;
+        ///set &quot;CudaInstaller=cuda_%CudaVersion%_windows_network.exe&quot;
+        ///set &quot;CudaDownloadUri=https://developer.download.nvidia.com/compute/cuda/%CudaVersion%/network_installers/%CudaInstaller%&quot;
+        ///set &quot;CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%&quot;
+        ///
+        ///set &quot;CuDNNVersion={1}&quot;
+        ///set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
+        ///set &quot;CuDNNDownloadUri=https://developer.download.nvidia. [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string NvidiaInstaller_Batch_script {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Batch_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+        ///    {0}
+        ///	
+        ///	Would you like to continue?.
+        /// </summary>
+        public static string NvidiaInstaller_Requesting_Administrator_elevation {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Requesting_Administrator_elevation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python {0} set up is required for {1}, click &apos;OK&apos; to proceed..
         /// </summary>
         public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required {
@@ -565,7 +597,7 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required to install this feature..
+        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda and CuDNN Nvidia libraries? Elevated privileges are required to install this feature..
         /// </summary>
         public static string PythonInstaller_Install_Cuda_Library {
             get {

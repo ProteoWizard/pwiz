@@ -35,6 +35,7 @@ using Microsoft.Win32;
 using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -103,6 +104,13 @@ namespace pwiz.Skyline.Model.Tools
         public string CudaDownloadPath => Path.Combine(CudaVersionDir, CudaInstallerDownloadPath);
         public Uri CuDNNDownloadUri => new Uri(CUDNN_INSTALLER_URL + CUDNN_INSTALLER);
         public string CuDNNDownloadPath => Path.Combine(CuDNNVersionDir, CuDNNInstallerDownloadPath);
+
+        public static string InstallNvidiaLibrariesBat =>
+            Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), "InstallNvidiaLibraries.bat");
+        public static string GetInstallNvidiaLibrariesBat()
+        {
+            return InstallNvidiaLibrariesBat;
+        }
         public bool? NvidiaGpuAvailable { get; internal set; }
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
@@ -123,8 +131,9 @@ namespace pwiz.Skyline.Model.Tools
         #region Functional testing support
         public enum eSimulatedInstallationState
         {
-            NONE,    // Normal tests systems will have registry set suitably
-            NAIVE    // Be able to simulate systems where Python is not installed
+            NONE,       // Normal tests systems will have registry set suitably
+            NAIVE,      // Be able to simulate systems where Python is not installed
+            NONVIDIA    // Simulate no Nvidia
         }
         public static eSimulatedInstallationState SimulatedInstallationState { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
@@ -160,6 +169,9 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool NvidiaLibrariesInstalled()
         {
+            if (SimulatedInstallationState != eSimulatedInstallationState.NAIVE)
+                return false;
+
             bool cudaYes = CudaLibraryInstalled();
             bool? cudnnYes = CuDNNLibraryInstalled();
 
@@ -234,6 +246,12 @@ namespace pwiz.Skyline.Model.Tools
 
         }
 
+        public void WriteInstallNvidiaBatScript()
+        {
+            FileEx.SafeDelete(InstallNvidiaLibrariesBat);
+            File.WriteAllText(InstallNvidiaLibrariesBat, string.Format(ToolsUIResources.NvidiaInstaller_Batch_script, CUDA_VERSION, CUDNN_VERSION));
+        }
+
         public static bool? TestForNvidiaGPU()
         {
             bool? nvidiaGpu = null;
@@ -281,7 +299,22 @@ namespace pwiz.Skyline.Model.Tools
         public bool IsPythonVirtualEnvironmentReady()
         {
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
-            return tasks.Count == 0;
+            
+            if (SimulatedInstallationState != eSimulatedInstallationState.NONVIDIA)
+            {
+                return tasks.Count == 0;
+            }
+            else if (tasks.Any(task => 
+                         !( task.Name == PythonTaskName.download_cuda_library 
+                           || task.Name == PythonTaskName.install_cuda_library 
+                           || task.Name == PythonTaskName.download_cudnn_library 
+                           || task.Name == PythonTaskName.install_cudnn_library)))
+            {
+                return tasks.Count == 0;
+            }
+
+            return true;
+
         }
 
         public void ClearPendingTasks() 
@@ -872,10 +905,11 @@ namespace pwiz.Skyline.Model.Tools
             var node13 = new PythonTaskNode { PythonTaskName = PythonTaskName.install_cudnn_library, ParentNodes = new List<PythonTaskNode> { node12 } };
 
             if (haveNvidiaGpu == true)
-                return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 , node10, node11, node12, node13 };
-            else
-                return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 };
+                return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9, node10, node11, node12, node13 };
             
+            return new List<PythonTaskNode> { node1, node2, node3, node4, node5, node6, node7, node8, node9 };
+
+
         }
 
         public static void CopyFiles(string fromDirectory, string toDirectory, string pattern = @"*")
@@ -1324,8 +1358,12 @@ namespace pwiz.Skyline.Model.Tools
                 new PythonTaskAndHash(PythonTaskName.install_cudnn_library, @"ABCD123")
 
             };
+        
         private bool ValidateDownloadCudaLibrary()
         {
+            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+                return false;
+
             if (PythonInstaller.CudaLibraryInstalled())
                 return true;
             if (!File.Exists(_pythonInstaller.CudaInstallerDownloadPath))
@@ -1338,11 +1376,17 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateInstallCudaLibrary()
         {
+            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+                return false;
+
             return PythonInstaller.CudaLibraryInstalled();
         }
 
         private bool ValidateDownloadCuDNNLibrary()
         {
+            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+                return false;
+
             if (PythonInstaller.CuDNNLibraryInstalled() != false)
                 return true;
             if (!File.Exists(_pythonInstaller.CuDNNInstallerDownloadPath))
@@ -1355,6 +1399,9 @@ namespace pwiz.Skyline.Model.Tools
        
         private bool? ValidateInstallCuDNNLibrary()
         {
+            if (PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE)
+                return false;
+
             return PythonInstaller.CuDNNLibraryInstalled();
         }
 

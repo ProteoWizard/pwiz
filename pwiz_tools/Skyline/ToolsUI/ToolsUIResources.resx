@@ -360,13 +360,69 @@
     <value>Administrative privileges are required to complete the installation, consult with your system administrator if necessary.  Would you like to continue?</value>
   </data>
   <data name="PythonInstaller_Install_Cuda_Library" xml:space="preserve">
-    <value>Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda Library? Elevated privileges are required to install this feature.</value>
+    <value>Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda and CuDNN Nvidia libraries? Elevated privileges are required to install this feature.</value>
   </data>
   <data name="PythonInstaller_Downloading_Cuda_Library" xml:space="preserve">
     <value>Downloading Cuda software library...</value>
   </data>
   <data name="PythonInstaller_Installing_Cuda_Library" xml:space="preserve">
     <value>Installing Cuda software library...</value>
+  </data>
+  <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+    <value>Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+    {0}
+	
+	Would you like to continue?</value>
+  </data>
+  <data name="NvidiaInstaller_Batch_script" xml:space="preserve">
+    <value>&#64;echo off
+setlocal enabledelayedexpansion
+
+:: Set paths and URIs (you need to define these)
+set &quot;CudaVersion={0}&quot;
+set &quot;CudaInstaller=cuda_%CudaVersion%_windows_network.exe&quot;
+set &quot;CudaDownloadUri=https://developer.download.nvidia.com/compute/cuda/%CudaVersion%/network_installers/%CudaInstaller%&quot;
+set &quot;CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%&quot;
+
+set &quot;CuDNNVersion={1}&quot;
+set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
+set &quot;CuDNNDownloadUri=https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/%CuDNNArchive%.zip&quot;
+set &quot;CuDNNDownloadPath=%USERPROFILE%\Downloads\%CuDNNArchive%.zip&quot;
+set &quot;CuDNNVersionDir=%USERPROFILE%\Downloads\cudnn\%CuDNNVersion%&quot;
+set &quot;CuDNNInstallDir=C:\Program Files\NVIDIA\CUDNN\v9.x&quot;
+
+:: Download CUDA Library
+echo Downloading CUDA Library...
+powershell -Command &quot;Invoke-WebRequest -Uri &apos;%CudaDownloadUri%&apos; -OutFile &apos;%CudaDownloadPath%&apos;&quot;
+
+:: Install CUDA Library
+echo Installing CUDA Library...
+&quot;%CudaDownloadPath%&quot;
+
+:: Download cuDNN Library
+echo Downloading cuDNN Library...
+powershell -Command &quot;Invoke-WebRequest -Uri &apos;%CuDNNDownloadUri%&apos; -OutFile &apos;%CuDNNDownloadPath%&apos;&quot;
+
+:: Install cuDNN Library
+echo Installing cuDNN Library...
+
+:: Extract cuDNN zip
+powershell Expand-Archive -Path &quot;%CuDNNDownloadPath%&quot; -DestinationPath &quot;%CuDNNVersionDir%&quot; -Force
+
+:: Create necessary directories (this might require admin rights)
+mkdir &quot;%CuDNNInstallDir%\bin&quot; 2>NUL
+mkdir &quot;%CuDNNInstallDir%\include&quot; 2>NUL
+mkdir &quot;%CuDNNInstallDir%\lib&quot; 2>NUL
+
+:: Copy files (you&apos;ll need to adjust permissions)
+xcopy &quot;%CuDNNVersionDir%\%CuDNNArchive%\bin\cudnn*.dll&quot; &quot;%CuDNNInstallDir%\bin&quot; /Y /I
+xcopy &quot;%CuDNNVersionDir%\%CuDNNArchive%\include\cudnn*.h&quot; &quot;%CuDNNInstallDir%\include&quot; /Y /I
+xcopy &quot;%CuDNNVersionDir%\%CuDNNArchive%\lib\x64\cudnn*.lib&quot; &quot;%CuDNNInstallDir%\lib&quot; /Y /I
+
+REM echo Installation complete&#33;
+
+endlocal
+pause</value>
   </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
     <value>SkylineProcessRunner timed-out after {0} milliseconds</value>

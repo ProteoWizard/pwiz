@@ -36,6 +36,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             DialogResult result;
             var tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment() : pythonInstaller.PendingTasks;
+            _userNoToCuda = null;
             pythonInstaller.NumTotalTasks = tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
             bool abortTask = false;
@@ -49,12 +50,8 @@ namespace pwiz.Skyline.ToolsUI
                         if (_userNoToCuda != true)
                         {
                             var choice = DialogResult.None;
-                            if (EnableNvidiaGpuDlg == null)
-                            {
-                                EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
-                                choice = EnableNvidiaGpuDlg.ShowDialog();
-                            }
-                                
+                            EnableNvidiaGpuDlg = new MultiButtonMsgDlg(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), DialogResult.Yes.ToString(), DialogResult.No.ToString(), true);
+                            choice = EnableNvidiaGpuDlg.ShowDialog();
                             if (choice == DialogResult.No)
                             {
                                 _userNoToCuda = true;
@@ -69,8 +66,19 @@ namespace pwiz.Skyline.ToolsUI
                             else if (choice == DialogResult.Yes)
                             {
                                 _userNoToCuda = false;
+                                pythonInstaller.WriteInstallNvidiaBatScript();
+                                var nvidiaChoice = MessageDlg.Show(parent, string.Format(ToolsUIResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.InstallNvidiaLibrariesBat), false, MessageBoxButtons.OKCancel);
                                 //Download
-                                abortTask = !PerformTaskAction(parent, task);
+                                if (nvidiaChoice == DialogResult.Cancel)
+                                {
+                                    _userNoToCuda = true;
+                                    if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                                }
+                                else if (nvidiaChoice == DialogResult.OK)
+                                {
+                                    // Attempt to run
+                                    abortTask = !PerformTaskAction(parent, task);
+                                }
                             }
                         }
                         else if (_userNoToCuda == true)
