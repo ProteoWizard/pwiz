@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
@@ -1600,6 +1601,36 @@ namespace pwiz.Skyline.Util
     public static class SkylineProcessRunner
     {
         /// <summary>
+        /// Kill a process, and all of its children, grandchildren, etc.
+        /// </summary>
+        /// <param name="pid">Process ID.</param>
+        private static void KillProcessAndDescendants(int pid)
+        {
+            // Cannot close 'system idle process'.
+            if (pid == 0)
+            {
+                return;
+            }
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher
+                (@"Select * From Win32_Process Where ParentProcessID=" + pid);
+            ManagementObjectCollection moc = searcher.Get();
+            foreach (ManagementObject mo in moc)
+            {
+                KillProcessAndDescendants(Convert.ToInt32(mo[@"ProcessID"]));
+            }
+            try
+            {
+                Process proc = Process.GetProcessById(pid);
+                if (!proc.HasExited)
+                    proc.Kill();
+            }
+            catch (ArgumentException)
+            {
+                // Process already exited.
+            }
+        }
+
+        /// <summary>
         /// Runs the SkylineProcessRunner executable file with the given arguments. These arguments
         /// are passed to CMD.exe within the NamedPipeProcessRunner
         /// </summary>
@@ -1615,18 +1646,18 @@ namespace pwiz.Skyline.Util
             // create GUID
             string guidSuffix = string.Format(@"-{0}", Guid.NewGuid());
             var startInfo = new ProcessStartInfo
-                {
-                    CreateNoWindow = createNoWindow,
-                    UseShellExecute = !createNoWindow,
-                    FileName = GetSkylineProcessRunnerExePath(),
-                    Arguments = guidSuffix + @" " + arguments,
-                };
+            {
+                CreateNoWindow = createNoWindow,
+                UseShellExecute = !createNoWindow,
+                FileName = GetSkylineProcessRunnerExePath(),
+                Arguments = guidSuffix + @" " + arguments,
+            };
                 
             if (runAsAdministrator)
                 startInfo.Verb = @"runas";
 
             var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
-
+            int processID = -1;
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))
@@ -1636,6 +1667,7 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     process.Start();
+                    processID = process.Id;
                 }
                 catch (System.ComponentModel.Win32Exception win32Exception)
                 {
@@ -1652,37 +1684,16 @@ namespace pwiz.Skyline.Util
                 var namedPipeServerConnector = new NamedPipeServerConnector();
                 if (namedPipeServerConnector.WaitForConnection(pipeStream, pipeName))
                 {
+                    var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024 * 1024);
 
-                    try
+                    using var registration = cancellationToken.Register(o =>
                     {
-                        var reader = new StreamReader(pipeStream, new UTF8Encoding(false, true), true, 1024 * 1024);
-                        var thisThread = Thread.CurrentThread;
-                        using var registration = cancellationToken.Register(o =>
-                        {
-                            thisThread.Interrupt();
-                        }, null);
-                        while (reader.ReadLine() is { } line)
-                        {
-                            writer.WriteLine(line);
-                        }
-                    }
-                    catch (ThreadInterruptedException)
+                        KillProcessAndDescendants(process.Id);
+                    }, null);
+
+                    while (reader.ReadLine() is { } line)
                     {
-                        if (cancellationToken.IsCancellationRequested && !process.HasExited)
-                        {
-                            try
-                            {
-                                process.Kill();
-                            }
-                            catch (InvalidOperationException)
-                            {
-                                // Ignore
-                            }
-                        }
-                        // If cancellation was requested then throw the OperationCancelledException
-                        cancellationToken.ThrowIfCancellationRequested();
-                        // Otherwise, throw the ThreadInterruptedException
-                        throw;
+                        writer.WriteLine(line);
                     }
 
                     while (!processFinished)

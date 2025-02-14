@@ -24,7 +24,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestFunctional
+namespace TestPerf
 {
     [TestClass]
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx

@@ -722,7 +722,7 @@ namespace pwiz.Skyline.Model.Tools
                     if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
                     {
                         throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
-                                                            cmdBuilder));
+                            cmdBuilder));
     
                     }
                 }

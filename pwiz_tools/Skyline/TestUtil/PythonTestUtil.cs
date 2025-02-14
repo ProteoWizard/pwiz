@@ -40,6 +40,8 @@ namespace pwiz.SkylineTestUtil
         }
 
         private bool _undoRegistry;
+
+        public const int WAIT_TIME = 15 * 60 * 1000;
         public static bool IsRunningElevated()
         {
             // Get current user's Windows identity
@@ -145,7 +147,7 @@ namespace pwiz.SkylineTestUtil
                                 Assert.AreEqual(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
                                     nvidiaDlg.Message);
 
-                                confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, 600000);
+                                confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, WAIT_TIME);
                                 ConfirmPythonSuccess(confirmDlg);
                             }
                             else if (nvidiaClickNo == true)
@@ -171,7 +173,7 @@ namespace pwiz.SkylineTestUtil
                             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
                                 nvidiaDlg.Message);
 
-                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, 600000);
+                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, WAIT_TIME);
 
                             Assert.AreEqual(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()), confirmDlg.Message);
                             AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
@@ -179,7 +181,7 @@ namespace pwiz.SkylineTestUtil
                         }
                         else if (nvidiaClickNo == true)
                         {
-                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, 600000);
+                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
                             ConfirmPythonSuccess(confirmDlg);
                         }
                     }
@@ -220,20 +222,20 @@ namespace pwiz.SkylineTestUtil
             if (clickNo == true)
             {
                 // Say 'No'
-                MessageDlg confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickNo, 600000);
+                MessageDlg confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickNo, WAIT_TIME);
                 ConfirmPythonSuccess(confirmDlg);
             }
             else if (clickNo == false)
             {
                 // Say 'Yes'
-                MessageDlg confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, 600000);
+                MessageDlg confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, WAIT_TIME);
                 ConfirmInstallNvidiaBatMessage(confirmDlg);
             }
             else // clickNo == null
             {
                 // Say 'Cancel'
                 AbstractFunctionalTest.OkDialog(nvidiaDlg, nvidiaDlg.ClickCancel);
-                // confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickCancel, 600000);
+                // confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickCancel, WAIT_TIME);
                 //ConfirmPythonFailed(confirmDlg);
             }
     
@@ -253,7 +255,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
 
-                MultiButtonMsgDlg nvidiaDlg = AbstractFunctionalTest.ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library);
+                MultiButtonMsgDlg nvidiaDlg = AbstractFunctionalTest.ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library, WAIT_TIME);
 
                 RunNvidiaDialog(nvidiaDlg, pythonDlg, nvidiaClickNo);
             }
@@ -265,7 +267,7 @@ namespace pwiz.SkylineTestUtil
                     Console.WriteLine(@"Info: Nvidia libraries already installed");
 
                 //Not cancelled
-                var confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, 600000);
+                var confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
                 ConfirmPythonSuccess(confirmDlg);
 
             }
