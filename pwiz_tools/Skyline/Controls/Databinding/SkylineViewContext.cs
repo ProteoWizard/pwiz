@@ -18,7 +18,9 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -26,6 +28,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -125,6 +128,73 @@ namespace pwiz.Skyline.Controls.Databinding
                 ChangeDocumentViewSpecList(viewSpecList => viewSpecList.RenameView(oldName, newName));
             }
             return true;
+        }
+
+        protected override void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+            BindingListSource bindingListSource, char separator)
+        {
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            if (true == replicatePivotColumns?.IsPivoted() && replicatePivotColumns.HasConstantColumns() &&
+                replicatePivotColumns.HasVariableColumns())
+            {
+                var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
+
+                var headerLineKey = @"Property";
+                var orderedPropertyLines = new OrderedDictionary { {headerLineKey, new List<string> { headerLineKey } } };
+
+                foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+                {
+                    // Add replicate to header line
+                    ((List<string>)orderedPropertyLines[headerLineKey]).Add(group.Key.ReplicateName);
+
+                    foreach (var column in group)
+                    {
+                        if (!replicatePivotColumns.IsConstantColumn(column))
+                        {
+                            continue;
+                        }
+
+                        var propertyName = column.DisplayColumn.PropertyPath.Name;
+                        if (!orderedPropertyLines.Contains(propertyName))
+                        {
+                            orderedPropertyLines[propertyName] = new List<string> { propertyName };
+                        }
+
+                        // Add value to property line
+                        var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(item => column.GetValue(item) != null);
+                        var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
+                        var propertyLine = (List<string>)orderedPropertyLines[propertyName];
+                        propertyLine.Add(formattedValue);
+                    }
+                }
+
+                foreach (var line in orderedPropertyLines.Values)
+                {
+                    bool first = true;
+                    foreach (var lineItem in (List<string>)line)
+                    {
+                        if (!first)
+                        {
+                            writer.Write(separator);
+                        }
+                        first = false;
+                        writer.Write(lineItem);
+                    }
+                    writer.WriteLine();
+                }
+                writer.WriteLine();
+
+                var filteredColumnDescriptors = bindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
+                    .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor));
+                var filteredItemProperties = new ItemProperties(filteredColumnDescriptors);
+
+                IProgressStatus status = new ProgressStatus(string.Format(Resources.SkylineViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
+                WriteDataWithStatus(progressMonitor, ref status, writer, new RowItemEnumerator(bindingListSource.Cast<RowItem>(), filteredItemProperties, bindingListSource.ColumnFormats), separator);
+            }
+            else
+            {
+                base.WriteData(progressMonitor, writer, bindingListSource, separator);
+            }
         }
 
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)

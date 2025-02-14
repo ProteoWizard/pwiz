@@ -9649,6 +9649,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Writing {0} rows.
+        /// </summary>
+        internal static string SkylineViewContext_WriteData_Writing__0__rows {
+            get {
+                return ResourceManager.GetString("SkylineViewContext_WriteData_Writing__0__rows", resourceCulture);
+            }
+        }
+		
+        /// <summary>
         ///   Looks up a localized string similar to Add Fold Change.
         /// </summary>
         public static string SkylineWindow_AddGroupComparison_Add_Fold_Change {

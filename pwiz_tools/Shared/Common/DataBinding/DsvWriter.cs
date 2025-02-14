@@ -85,8 +85,8 @@ namespace pwiz.Common.DataBinding
             }
             writer.WriteLine();
         }
-
-        protected virtual string GetFormattedValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)
+        
+        public virtual string GetFormattedValue(RowItem rowItem, PropertyDescriptor propertyDescriptor)
         {
             CultureInfo oldCulture = Thread.CurrentThread.CurrentCulture;
             CultureInfo oldUiCulture = Thread.CurrentThread.CurrentUICulture;
