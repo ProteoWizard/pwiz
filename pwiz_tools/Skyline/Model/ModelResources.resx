@@ -473,54 +473,61 @@
 	Would you like to continue?</value>
   </data>
   <data name="NvidiaInstaller_Batch_script" xml:space="preserve">
-    <value>&#64;echo off
+    <value><![CDATA[
+@echo off
 setlocal enabledelayedexpansion
 
 :: Set paths and URIs (you need to define these)
-set &quot;CudaVersion={0}&quot;
-set &quot;CudaInstaller=cuda_%CudaVersion%_windows_network.exe&quot;
-set &quot;CudaDownloadUri=https://developer.download.nvidia.com/compute/cuda/%CudaVersion%/network_installers/%CudaInstaller%&quot;
-set &quot;CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%&quot;
+set "CudaVersion={0}"
+set "CudaInstaller=cuda_%CudaVersion%_windows_network.exe"
+set "CudaDownloadUri=https://developer.download.nvidia.com/compute/cuda/%CudaVersion%/network_installers/%CudaInstaller%"
+set "CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%"
 
-set &quot;CuDNNVersion={1}&quot;
-set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
-set &quot;CuDNNDownloadUri=https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/%CuDNNArchive%.zip&quot;
-set &quot;CuDNNDownloadPath=%USERPROFILE%\Downloads\%CuDNNArchive%.zip&quot;
-set &quot;CuDNNVersionDir=%USERPROFILE%\Downloads\cudnn\%CuDNNVersion%&quot;
-set &quot;CuDNNInstallDir=C:\Program Files\NVIDIA\CUDNN\v9.x&quot;
+set "CuDNNVersion={1}"
+set "CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive"
+set "CuDNNDownloadUri=https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/%CuDNNArchive%.zip"
+set "CuDNNDownloadPath=%USERPROFILE%\Downloads\%CuDNNArchive%.zip"
+set "CuDNNVersionDir=%USERPROFILE%\Downloads\cudnn\%CuDNNVersion%"
+set "CuDNNInstallDir=C:\Program Files\NVIDIA\CUDNN\v9.x"
 
 :: Download CUDA Library
 echo Downloading CUDA Library...
-powershell -Command &quot;Invoke-WebRequest -Uri &apos;%CudaDownloadUri%&apos; -OutFile &apos;%CudaDownloadPath%&apos;&quot;
+powershell -Command "Invoke-WebRequest -Uri '%CudaDownloadUri%' -OutFile '%CudaDownloadPath%'"
 
 :: Install CUDA Library
 echo Installing CUDA Library...
-&quot;%CudaDownloadPath%&quot;
+"%CudaDownloadPath%"
 
 :: Download cuDNN Library
 echo Downloading cuDNN Library...
-powershell -Command &quot;Invoke-WebRequest -Uri &apos;%CuDNNDownloadUri%&apos; -OutFile &apos;%CuDNNDownloadPath%&apos;&quot;
+powershell -Command "Invoke-WebRequest -Uri '%CuDNNDownloadUri%' -OutFile '%CuDNNDownloadPath%'"
 
 :: Install cuDNN Library
 echo Installing cuDNN Library...
 
 :: Extract cuDNN zip
-powershell Expand-Archive -Path &quot;%CuDNNDownloadPath%&quot; -DestinationPath &quot;%CuDNNVersionDir%&quot; -Force
+powershell Expand-Archive -Path "%CuDNNDownloadPath%" -DestinationPath "%CuDNNVersionDir%" -Force
 
 :: Create necessary directories (this might require admin rights)
-mkdir &quot;%CuDNNInstallDir%\bin&quot; 2>NUL
-mkdir &quot;%CuDNNInstallDir%\include&quot; 2>NUL
-mkdir &quot;%CuDNNInstallDir%\lib&quot; 2>NUL
+mkdir "%CuDNNInstallDir%\bin" 2>NUL
+mkdir "%CuDNNInstallDir%\include" 2>NUL
+mkdir "%CuDNNInstallDir%\lib" 2>NUL
 
-:: Copy files (you&apos;ll need to adjust permissions)
-xcopy &quot;%CuDNNVersionDir%\%CuDNNArchive%\bin\cudnn*.dll&quot; &quot;%CuDNNInstallDir%\bin&quot; /Y /I
-xcopy &quot;%CuDNNVersionDir%\%CuDNNArchive%\include\cudnn*.h&quot; &quot;%CuDNNInstallDir%\include&quot; /Y /I
-xcopy &quot;%CuDNNVersionDir%\%CuDNNArchive%\lib\x64\cudnn*.lib&quot; &quot;%CuDNNInstallDir%\lib&quot; /Y /I
+:: Copy files (you'll need to adjust permissions)
+xcopy "%CuDNNVersionDir%\%CuDNNArchive%\bin\cudnn*.dll" "%CuDNNInstallDir%\bin" /Y /I
+xcopy "%CuDNNVersionDir%\%CuDNNArchive%\include\cudnn*.h" "%CuDNNInstallDir%\include" /Y /I
+xcopy "%CuDNNVersionDir%\%CuDNNArchive%\lib\x64\cudnn*.lib" "%CuDNNInstallDir%\lib" /Y /
 
-REM echo Installation complete&#33;
+set "PS_COMMAND=$oldPath = $env:Path -split ';' | Where-Object {{ $_ -ne '%CuDNNInstallDir%\bin' }}; $env:Path = $oldPath -join ';' ; $env:Path = '%CuDNNInstallDir%\bin' + $env:Path ; [Environment]::SetEnvironmentVariable("Path", $env:Path, [System.EnvironmentVariableTarget]::Machine) "
+
+:: Run PowerShell to set PATH
+powershell -NoLogo -NoProfile -Command "%PS_COMMAND%"
+
+REM echo Installation complete!
 
 endlocal
-pause</value>
+pause]]>
+  </value>
   </data>
   <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>The precursor m/z {0} is not measureable with your current instrument settings.</value>

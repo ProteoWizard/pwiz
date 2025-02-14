@@ -553,6 +553,7 @@ namespace pwiz.Skyline.SettingsUI
                 DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
             { 
                 PythonDlg.Dispose();
+                PythonInstallerUI.Dispose();
                 btnNext.Enabled = true;
                 return false;
             }
@@ -591,6 +592,7 @@ namespace pwiz.Skyline.SettingsUI
             if (PythonDlg.ShowDialog(this) == DialogResult.Cancel || DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
             {
                 PythonDlg.Dispose();
+                PythonInstallerUI.Dispose();
                 return false;
             }
 

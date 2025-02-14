@@ -1179,7 +1179,8 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to @echo off
+        ///   Looks up a localized string similar to 
+        ///@echo off
         ///setlocal enabledelayedexpansion
         ///
         ///:: Set paths and URIs (you need to define these)
@@ -1190,7 +1191,7 @@ namespace pwiz.Skyline.Model {
         ///
         ///set &quot;CuDNNVersion={1}&quot;
         ///set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
-        ///set &quot;CuDNNDownloadUri=https://developer.download.nvidia. [rest of string was truncated]&quot;;.
+        ///set &quot;CuDNNDownloadUri=https://developer.download.nvidi [rest of string was truncated]&quot;;.
         /// </summary>
         public static string NvidiaInstaller_Batch_script {
             get {

@@ -117,6 +117,7 @@ namespace pwiz.Skyline.Model.Tools
         public List<PythonPackage> PythonPackages { get; }
         public string PythonEmbeddablePackageFileName => PythonEmbeddablePackageFileBaseName + DOT_ZIP;
         public Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
+        [System.Diagnostics.DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
         public string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
         public Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
@@ -162,13 +163,17 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool CudaLibraryInstalled()
         {
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA ||
+                SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
+                return false;
             string cudaPath = Environment.GetEnvironmentVariable(@"CUDA_PATH");
             return !string.IsNullOrEmpty(cudaPath);
         }
 
         public static bool NvidiaLibrariesInstalled()
         {
-            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA)
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA ||
+                SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
                 return false;
 
             bool cudaYes = CudaLibraryInstalled();
@@ -179,6 +184,10 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool? CuDNNLibraryInstalled(bool longValidate = false)
         {
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA ||
+                SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
+                return false;
+
             string targetDirectory = CuDNNInstallDir + @"\bin";
 
             if (!Directory.Exists(targetDirectory)) return false;
@@ -223,20 +232,20 @@ namespace pwiz.Skyline.Model.Tools
             }
             else
             {
-                bool isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
+                bool isValid = Directory.Exists(targetDirectory); //PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
                 if (isValid)
                 {
                     targetDirectory = CuDNNInstallDir + @"\include";
                     if (!Directory.Exists(targetDirectory)) return false;
 
-                    isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
-                    if (isValid)
-                    {
+                    //isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
+                    //if (isValid)
+                    //{
                         targetDirectory = CuDNNInstallDir + @"\lib";
                         if (!Directory.Exists(targetDirectory)) return false;
 
-                        isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
-                    }
+                        //isValid = PythonInstallerUtil.IsSignedFileOrDirectory(targetDirectory);
+                    //}
 
                 }
                 return isValid;
@@ -1360,7 +1369,8 @@ namespace pwiz.Skyline.Model.Tools
         
         private bool ValidateDownloadCudaLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA || 
+                PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
 
             if (PythonInstaller.CudaLibraryInstalled())
@@ -1375,7 +1385,8 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateInstallCudaLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA ||
+                PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
 
             return PythonInstaller.CudaLibraryInstalled();
@@ -1383,7 +1394,8 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateDownloadCuDNNLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA ||
+                PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
 
             if (PythonInstaller.CuDNNLibraryInstalled() != false)
@@ -1398,7 +1410,8 @@ namespace pwiz.Skyline.Model.Tools
        
         private bool? ValidateInstallCuDNNLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA)
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA ||
+                PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
 
             return PythonInstaller.CuDNNLibraryInstalled();
@@ -1406,9 +1419,10 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateDownloadPythonEmbeddablePackage()
         {
-            if (!File.Exists(_pythonInstaller.PythonEmbeddablePackageDownloadPath))
+            var pythonFilePath = _pythonInstaller.PythonEmbeddablePackageDownloadPath;
+            if (!File.Exists(pythonFilePath))
                 return false;
-            var computeHash = PythonInstallerUtil.GetFileHash(_pythonInstaller.PythonEmbeddablePackageDownloadPath);
+            var computeHash = PythonInstallerUtil.GetFileHash(pythonFilePath);
             var storedHash = TargetsAndHashes.Where(m => m.Task == PythonTaskName.download_python_embeddable_package).ToArray()[0].Hash;
             return computeHash == storedHash;
         }

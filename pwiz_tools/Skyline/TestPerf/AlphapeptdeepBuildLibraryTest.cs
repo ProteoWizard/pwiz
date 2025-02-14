@@ -64,6 +64,7 @@ namespace TestPerf
             // test without iRT
             AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, StoredHashWithoutIrt, null, true, null); //Cancel
             AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, StoredHashWithoutIrt, null, false, null);
+            AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, StoredHashWithoutIrt, null, false, false);
             AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, StoredHashWithoutIrt);
 
 

@@ -124,20 +124,39 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");
+            if (_resultAlertDlg != null && ! _resultAlertDlg.IsDisposed) _resultAlertDlg.Dispose();
+
             if (pythonInstaller.NumCompletedTasks == pythonInstaller.NumTotalTasks)
             {
                 pythonInstaller.PendingTasks.Clear();
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
+                _resultAlertDlg =
+                    new AlertDlg(
+                        ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment,
+                        MessageBoxButtons.OK);
+                _resultAlertDlg.ShowDialog();
                 result = DialogResult.OK;
             }
             else
             {
-                MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
+                _resultAlertDlg =
+                    new AlertDlg(
+                        ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment,
+                        MessageBoxButtons.OK);
+                _resultAlertDlg.ShowDialog();
                 result = DialogResult.Cancel;
             }
             return result;
         }
 
+        public static void Dispose()
+        {
+            if (_resultAlertDlg != null && !_resultAlertDlg.IsDisposed)
+            {
+                _resultAlertDlg.Dispose();
+            }
+        }
+
+        private static AlertDlg _resultAlertDlg;
         private static bool PerformTaskAction(Control parent, PythonTask task, int startProgress = 0)
         {
             //IProgressStatus proStatus = null;

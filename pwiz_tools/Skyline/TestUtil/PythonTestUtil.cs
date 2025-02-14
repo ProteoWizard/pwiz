@@ -123,7 +123,7 @@ namespace pwiz.SkylineTestUtil
 
             if (!havePythonPrerequisite)
             {
-                MessageDlg confirmDlg = null;
+                AlertDlg confirmDlg = null;
                 AbstractFunctionalTest.RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
                 {
                     Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
@@ -147,7 +147,7 @@ namespace pwiz.SkylineTestUtil
                                 Assert.AreEqual(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
                                     nvidiaDlg.Message);
 
-                                confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, WAIT_TIME);
+                                confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(nvidiaDlg.ClickYes, WAIT_TIME);
                                 ConfirmPythonSuccess(confirmDlg);
                             }
                             else if (nvidiaClickNo == true)
@@ -173,7 +173,7 @@ namespace pwiz.SkylineTestUtil
                             Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library),
                                 nvidiaDlg.Message);
 
-                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickYes, WAIT_TIME);
+                            confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(nvidiaDlg.ClickYes, WAIT_TIME);
 
                             Assert.AreEqual(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()), confirmDlg.Message);
                             AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestUtil
                         }
                         else if (nvidiaClickNo == true)
                         {
-                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
+                            confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
                             ConfirmPythonSuccess(confirmDlg);
                         }
                     }
@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestUtil
             if (clickNo == true)
             {
                 // Say 'No'
-                MessageDlg confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(nvidiaDlg.ClickNo, WAIT_TIME);
+                AlertDlg confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(nvidiaDlg.ClickNo, WAIT_TIME);
                 ConfirmPythonSuccess(confirmDlg);
             }
             else if (clickNo == false)
@@ -261,13 +261,13 @@ namespace pwiz.SkylineTestUtil
             }
             else
             {
-                if (PythonInstaller.TestForNvidiaGPU() != true) 
+                if (PythonInstaller.TestForNvidiaGPU() != true)
                     Console.WriteLine(@"Info: NVIDIA GPU *NOT* DETECTED on test node");
                 else
                     Console.WriteLine(@"Info: Nvidia libraries already installed");
-
+                AbstractFunctionalTest.OkDialog(pythonDlg, pythonDlg.OkDialog);
                 //Not cancelled
-                var confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
+                var confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
                 ConfirmPythonSuccess(confirmDlg);
 
             }
@@ -302,7 +302,7 @@ namespace pwiz.SkylineTestUtil
         /// Confirms Python installation success
         /// </summary>
         /// <param name="confirmDlg">Message dialog success</param>
-        private void ConfirmPythonSuccess(MessageDlg confirmDlg)
+        private void ConfirmPythonSuccess(AlertDlg confirmDlg)
         {
             ConfirmPython(confirmDlg);
         }
@@ -310,7 +310,7 @@ namespace pwiz.SkylineTestUtil
         /// Confirms Python installation failure
         /// </summary>
         /// <param name="confirmDlg">Message dialog failed</param>
-        private void ConfirmPythonFailed(MessageDlg confirmDlg)
+        private void ConfirmPythonFailed(AlertDlg confirmDlg)
         {
             ConfirmPython(confirmDlg, false);
         }
@@ -318,9 +318,9 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Confirms Python installation
         /// </summary>
-        /// <param name="confirmDlg">Message dialog</param>
+        /// <param name="confirmDlg">Alert dialog </param>
         /// <param name="confirmSuccess">true for success, false for failure</param>
-        private void ConfirmPython(MessageDlg confirmDlg, bool confirmSuccess = true)
+        private void ConfirmPython(AlertDlg confirmDlg, bool confirmSuccess = true)
         {
             var expectMsg = string.Format(ToolsUIResources
                 .PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
