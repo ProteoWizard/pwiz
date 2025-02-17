@@ -54,7 +54,8 @@ namespace pwiz.SkylineTestFunctional
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
         private bool ReportLibraryBuildFailures { get; set; }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestLibraryBuild()
         {
             TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
