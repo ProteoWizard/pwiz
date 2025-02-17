@@ -614,9 +614,18 @@ namespace pwiz.Skyline
             return HandleExceptions(commandArgs, ()=>
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
+                using var stream = File.OpenRead(commandArgs.ImportAnnotations);
+                using var progressStream = new ProgressStream(stream);
+                var progressStatus = new ProgressStatus();
+                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus, true);
                 var modifiedDocument =
-                    documentAnnotations.ReadAnnotationsFromFile(CancellationToken.None, commandArgs.ImportAnnotations);
+                    documentAnnotations.ReadAnnotationsFromStream(CancellationToken.None, commandArgs.ImportAnnotations, progressStream);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
+                var warningMessage = documentAnnotations.GetWarningMessage();
+                if (warningMessage != null)
+                {
+                    _out.WriteLine(warningMessage);
+                }
             }, SkylineResources.CommandLine_ImportAnnotations_Error__Failed_while_reading_annotations_);
         }
 
@@ -1403,23 +1412,23 @@ namespace pwiz.Skyline
             try
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                string hash;
-                using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
-                {
-                    // Wrap stream in XmlReader so that BaseUri is known
-                    var reader = XmlReader.Create(hashingStreamReader, 
-                        new XmlReaderSettings() { IgnoreWhitespace = true }, 
-                        skylineFile);  
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
+                using var fileStream = File.OpenRead(skylineFile);
+                using var progressStream = new ProgressStream(fileStream);
+                progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
+                using var hashingStream = new HashingStream(progressStream, true);
+                // Wrap stream in XmlReader so that BaseUri is known
+                var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8), 
+                    new XmlReaderSettings { IgnoreWhitespace = true }, 
+                    skylineFile);  
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
-                    SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
-                    if (_doc == null)
-                        return false;
+                SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
+                if (_doc == null)
+                    return false;
 
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = hashingStreamReader.Stream.Done();
-                }
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
+                var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
 
@@ -2323,6 +2332,7 @@ namespace pwiz.Skyline
                     Equals(standard.Name, commandArgs.IrtStandardName));
                 if (irtStandard == null)
                 {
+                    // TODO: This should really be an Error that causes processing to stop rather than information treated like no iRT standard was specified
                     _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_,
                         commandArgs.IrtStandardName);
                     return null;
@@ -2351,7 +2361,10 @@ namespace pwiz.Skyline
             foreach (var file in commandArgs.SearchResultsFiles)
                 _out.WriteLine(Path.GetFileName(file));
             if (!builder.BuildLibrary(progressMonitor))
+            {
+                _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_);
                 return false;
+            }
 
             if (!string.IsNullOrEmpty(builder.AmbiguousMatchesMessage))
                 _out.WriteLine(builder.AmbiguousMatchesMessage);
@@ -2393,7 +2406,7 @@ namespace pwiz.Skyline
                             import.IrtStandard = autoStandards[0];
                             break;
                         default:
-                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
+                            _out.WriteLine(SkylineResources.CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_,
                                 IrtStandard.AUTO.Name);
                             return false;
                     }

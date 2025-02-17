@@ -143,7 +143,6 @@
   </data>
   <data name="CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file" xml:space="preserve">
     <value>为通过 --background-proteome-file 导入的 protdb 命名</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_DwellTime_The_dwell_time__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>驻留时间 {0} 必须在 {1} 和 {2} 之间。</value>
@@ -193,7 +192,6 @@
   </data>
   <data name="CommandArgs_ParseExcludeObject_Error__Attempting_to_exclude_an_unknown_object_name___0____Try_one_of_the_following_" xml:space="preserve">
     <value>错误：试图排除未知对象名称“{0}”。尝试下面的一种方法：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_PrimaryTransitionCount_The_primary_transition_count__0__must_be_between__1__and__2__" xml:space="preserve">
     <value>主要离子对计数 {0} 必须在 {1} 和 {2} 之间。</value>
@@ -245,7 +243,6 @@
   </data>
   <data name="CommandLine_ExportAnnotations_Error__Failure_attempting_to_save_annotations_file__0__" xml:space="preserve">
     <value>错误：保存注释文件 {0} 失败。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportChromatograms_Chromatograms_file__0__exported_successfully_" xml:space="preserve">
     <value>色谱图文件{0}导出成功。</value>
@@ -297,7 +294,6 @@
   </data>
   <data name="CommandLine_ExportInstrumentFile_The_folder__0__does_not_appear_to_contain_an_Agilent_MassHunter_12_method_template__The_folder_is_expected_to_have_a__m_extension_" xml:space="preserve">
     <value>文件夹 {0} 似乎不包含 Agilent MassHunter 12 方法模板。该文件夹的扩展名应为 .m。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Warning__Max_transitions_per_injection_must_be_set_to_some_value_between__0__and__1__for_export_strategies__protein__and__buckets__and_for_scheduled_methods__You_specified__3___Defaulting_to__2__" xml:space="preserve">
     <value>警告：每次注射的最大离子对数必须针对导出策略“蛋白质”和“存储桶”以及预定的方法设定为 {0} 和 {1} 之间的某个数值。您指定了 {3}。默认设置为 {2}。</value>
@@ -334,11 +330,9 @@
   </data>
   <data name="CommandLine_ExportMProphetFeatures_Error__Failure_attempting_to_save_mProphet_features_file__0__" xml:space="preserve">
     <value>错误：试图保存 mProphet 特征文件 {0} 失败。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_ExportSpecLib_Error__Failure_attempting_to_save_spectral_library_file__0__" xml:space="preserve">
     <value>错误：试图保存谱图库文件 {0} 失败。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_FindBackgroundProteome_Warning__Could_not_find_the_background_proteome_file__0__" xml:space="preserve">
     <value>警告：无法找到背景蛋白质组文件{0}。</value>
@@ -391,7 +385,7 @@
   <data name="CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__" xml:space="preserve">
     <value>警告：无法找到结果文件“{0}”</value>
   </data>
-  <data name="CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
+  <data name="CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
     <value>iRT 标准设置为 {0}，但找到多个 iRT 标准。必须明确设置 iRT 标准。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
@@ -508,7 +502,6 @@
   </data>
   <data name="CommandLine_SetAnnotations_" xml:space="preserve">
     <value>错误：已有标题为“{0}”的注释。请使用 --annotation-conflict-resolution= &lt;overwrite | skip&gt;。未添加标题为“{0}”的注释。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetFilterSettings_Error__Failed_attempting_to_change_the_transition_filter_settings_" xml:space="preserve">
     <value>错误：尝试更改离子对过滤设置失败。</value>
@@ -536,11 +529,9 @@
   </data>
   <data name="CommandLine_SetPeptideDigestSettings_Error__Failed_attempting_to_change_the_peptide_digestion_settings_" xml:space="preserve">
     <value>错误：尝试更改肽段酶解设置失败。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetPeptideFilterSettings_Error__Failed_attempting_to_change_the_peptide_filter_settings_" xml:space="preserve">
     <value>错误：尝试更改肽段过滤设置失败。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetPredictTranSettings_Error__Failed_attempting_to_change_the_transition_prediction_settings_" xml:space="preserve">
     <value>错误：尝试更改离子对预测设置失败。</value>
@@ -957,23 +948,18 @@
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Downloading_file__0_" xml:space="preserve">
     <value>正在下载文件 {0}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Loading_remote_server_folders" xml:space="preserve">
     <value>正在加载远程服务器文件夹</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_No_Panorama_servers_were_found_" xml:space="preserve">
     <value>找不到 Panorama 服务器。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Open_From_Panorama" xml:space="preserve">
     <value>从 Panorama 打开</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_OpenFromPanorama_Press__Add__to_add_a_new_server_" xml:space="preserve">
     <value>按“添加”以添加新服务器。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read" xml:space="preserve">
     <value>压缩文件{0}不可读。</value>
@@ -1094,11 +1080,9 @@
   </data>
   <data name="SkylineWindow_ShowPublishDlg_Document_cannot_be_uploaded_to_a_Panorama_server_without_a_user_account_" xml:space="preserve">
     <value>没有用户帐户，文档无法上传到 Panorama 服务器。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_Edit_existing" xml:space="preserve">
     <value>编辑现有</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_Press_Continue_to_use_the_server_of_your_choice_" xml:space="preserve">
     <value>按下“继续”，以使用您选择的服务器。</value>
@@ -1159,49 +1143,38 @@
   </data>
   <data name="ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___" xml:space="preserve">
     <value>值“{0}”对参数 {1} 无效，因为该参数要求使用逗号分隔的注释目标列表 {2}。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowPublishDlg_Press__Edit_existing__to_add_user_account_information_for_an_existing_server_" xml:space="preserve">
     <value>按“编辑现有”为现有服务器添加用户帐户信息。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_SetPeptideModSettings_Error__Failed_attempting_to_change_the_peptide_modification_settings_" xml:space="preserve">
     <value>错误：尝试更改肽段修饰设置失败。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_The_document_must_be_fully_loaded_before_performing_feature_detection_" xml:space="preserve">
     <value>必须完全加载文档，然后才能检测特征。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_performing_feature_detection_" xml:space="preserve">
     <value>您必须在保存此文档后才能检测特征。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowPublishDlg__0__is_not_a_valid_file_name_for_uploading_to_Panorama_" xml:space="preserve">
     <value>{0} 不是有效文件名，无法上传到 Panorama。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandLine_AssociateProteins_Associating_peptides_with_proteins" xml:space="preserve">
     <value>正在关联肽段与蛋白质</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire" xml:space="preserve">
     <value>DIA 和 DIA-Umpire</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowRunPeptideSearchDlg_Run_Peptide_Search" xml:space="preserve">
     <value>运行肽段搜索</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowRunPeptideSearchDlg_You_must_save_this_document_before_running_a_peptide_search_" xml:space="preserve">
     <value>必须保存此文档，然后才能搜索肽段。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SkylineWindow_ShowRunPeptideSearchDlg_The_document_must_be_fully_loaded_before_running_a_peptide_search_" xml:space="preserve">
     <value>在运行肽段搜索之前，必须完全加载文档。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs" xml:space="preserve">
     <value>DIA 去卷积后得到的单母离子 MS/MS 谱图库，以及来自于相同运行的原始 DIA 谱图的色谱图</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>
