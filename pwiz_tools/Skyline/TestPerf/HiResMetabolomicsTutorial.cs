@@ -277,7 +277,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                     RunUI(() =>
                     {
-                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification - 2;
+                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification;
                         peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR_THROUGH_ZERO;
                         peptideSettingsUI.QuantNormalizationMethod =
                             new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);

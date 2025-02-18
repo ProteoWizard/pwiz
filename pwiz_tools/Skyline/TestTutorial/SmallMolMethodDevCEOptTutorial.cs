@@ -365,7 +365,7 @@ namespace pwiz.SkylineTestTutorial
                     RunUI(() =>
                     {
                         // ReSharper disable once RedundantCast
-                        peptideSettingsUI.SelectedTab = (PeptideSettingsUI.TABS)3;
+                        peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Quantification;
                         peptideSettingsUI.QuantRegressionFit = RegressionFit.LINEAR;
                         peptideSettingsUI.QuantNormalizationMethod =
                             new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);

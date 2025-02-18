@@ -265,7 +265,7 @@ namespace pwiz.SkylineTestTutorial
             
             // Peptide Quantitification Settings p. 16
             peptideSettingsUi = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            RunUI(() => peptideSettingsUi.SelectedTab = (PeptideSettingsUI.TABS)5);
+            RunUI(() => peptideSettingsUi.SelectedTab = PeptideSettingsUI.TABS.Quantification);
             const string quantUnits = "fmol/ul";
             RunUI(() =>
             {
@@ -273,7 +273,7 @@ namespace pwiz.SkylineTestTutorial
                 peptideSettingsUi.QuantNormalizationMethod = new NormalizationMethod.RatioToLabel(IsotopeLabelType.heavy);
                 peptideSettingsUi.QuantUnits = quantUnits;
             });
-            PauseForScreenShot("Peptide Settings Quantification Tab", 16);
+            PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Peptide Settings Quantification Tab", 16);
             OkDialog(peptideSettingsUi, peptideSettingsUi.OkDialog);
 
             // Specify analyte concentrations of external standards

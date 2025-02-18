@@ -271,11 +271,12 @@ namespace pwiz.SkylineTestUtil
             Assert.IsNotNull(dlg);
 
             // Making sure if the form has a visible icon it's Skyline release icon, not daily one.
-            if (IsPauseForScreenShots && dlg.ShowIcon)
-            {
-                if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
-                    RunUI(() => dlg.Icon = Resources.Skyline_Release1);
-            }
+            // Not necessary in a release build
+            // if (IsPauseForScreenShots && dlg.ShowIcon)
+            // {
+            //     if (ReferenceEquals(dlg, SkylineWindow) || dlg.Icon.Handle != SkylineWindow.Icon.Handle)
+            //         RunUI(() => dlg.Icon = Resources.Skyline_Release1);
+            // }
             return dlg;
         }
 

@@ -852,7 +852,7 @@ namespace TestPerf
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
             var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
-            PauseForScreenShot("mProphet model form", screenshotPage++);
+            PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form", screenshotPage++);
             ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
 
             OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
