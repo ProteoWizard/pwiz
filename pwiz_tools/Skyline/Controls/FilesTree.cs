@@ -21,7 +21,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -33,38 +32,27 @@ namespace pwiz.Skyline.Controls
 {
     public class FilesTree : TreeViewMS
     {
-        private readonly FolderNode _replicatesRoot;
-        private readonly FolderNode _peptideLibrariesRoot;
-        private readonly FolderNode _backgroundProteomeRoot;
-        private readonly FolderNode _projectFilesRoot;
-        private readonly FolderNode _irtRoot;
-        private readonly FolderNode _imsdbRoot;
-
-        private readonly FileSystemWatcher _fileSystemWatcher;
-
         // Used while merging a file data model with a FilesTree. Each entry explains how to
         // create a specific type of TreeNode given a type of file. Entries in this dict will
         // grow as more file types are supported. 
         private static readonly Dictionary<FileType, CreateFilesTreeNode> TREE_NODE_DELEGATES =
             new Dictionary<FileType, CreateFilesTreeNode> {
-                {FileType.peptide_library, PeptideLibraryTreeNode.CreateNode},
-                {FileType.background_proteome, BackgroundProteomeTreeNode.CreateNode},
                 {FileType.replicates, ReplicateTreeNode.CreateNode},
                 {FileType.replicate_file, ReplicateSampleFileTreeNode.CreateNode},
+                {FileType.peptide_library, PeptideLibraryTreeNode.CreateNode},
+                {FileType.background_proteome, BackgroundProteomeTreeNode.CreateNode},
                 {FileType.retention_score_calculator, RetentionScoreCalculatorFileTreeNode.CreateNode},
                 {FileType.ion_mobility_library, IonMobilityLibraryFileTreeNode.CreateNode}
             };
 
-        // Used to keep folder nodes in proper order. This only applies to level 1 children of FilesTree.
-        private static readonly IDictionary<Type, int> TREE_NODE_SORT_ORDER = 
-            new ImmutableDictionary<Type, int>(new Dictionary<Type, int> {
-                {typeof(ReplicatesFolderNode), 0},
-                {typeof(PeptideLibrariesFolderNode), 1},
-                {typeof(BackgroundProteomeFolderNode), 2},
-                {typeof(IrtFolderNode), 3},
-                {typeof(ImsdbFolderNode), 4},
-                {typeof(ProjectFilesFolderNode), 5}
-            });
+        private readonly FolderNode _replicatesFolder;
+        private readonly FolderNode _peptideLibrariesFolder;
+        private readonly FolderNode _backgroundProteomeFolder;
+        private readonly FolderNode _irtFolder;
+        private readonly FolderNode _imsdbFolder;
+        private readonly FolderNode _projectFilesFolder;
+
+        private readonly FileSystemWatcher _fileSystemWatcher;
 
         public enum ImageId
         {
@@ -95,12 +83,18 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.Peptide);
             ImageList.Images.Add(Resources.Skyline);
 
-            _replicatesRoot = new ReplicatesFolderNode();
-            _peptideLibrariesRoot = new PeptideLibrariesFolderNode();
-            _backgroundProteomeRoot = new BackgroundProteomeFolderNode();
-            _irtRoot = new IrtFolderNode();
-            _imsdbRoot = new ImsdbFolderNode();
-            _projectFilesRoot = new ProjectFilesFolderNode();
+            _replicatesFolder = 
+                FolderNode.Create(FolderType.replicates, ControlsResources.FilesTree_TreeNodeLabel_Replicates, 0);
+            _peptideLibrariesFolder = 
+                FolderNode.Create(FolderType.peptide_libraries, ControlsResources.FilesTree_TreeNodeLabel_Libraries, 1);
+            _backgroundProteomeFolder =
+                FolderNode.Create(FolderType.background_proteome, ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome, 2);
+            _irtFolder =
+                FolderNode.Create(FolderType.retention_score_calculator, SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator, 3);
+            _imsdbFolder =
+                FolderNode.Create(FolderType.ion_mobility_library, SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library, 4);
+            _projectFilesFolder =
+                FolderNode.Create(FolderType.project_files, ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles, 5);
 
             _fileSystemWatcher = new FileSystemWatcher();
         }
@@ -123,28 +117,28 @@ namespace pwiz.Skyline.Controls
             Nodes[0]?.EnsureVisible();
         }
 
-        public void ScrollToFileType(FileType type)
+        public void ScrollToFolder(FolderType type)
         {
-            NodesForFileType(type).EnsureVisible();
+            Folder(type).EnsureVisible();
         }
 
-        public void CollapseNodesForFileType(FileType type)
+        public void CollapseNodesForFolder(FolderType type)
         {
-            var root = NodesForFileType(type);
+            var root = Folder(type);
             foreach (TreeNode node in root.Nodes)
             {
                 node.Collapse(true);
             }
         }
 
-        public TreeNode NodesForFileType(FileType type)
+        public TreeNode Folder(FolderType type)
         {
             return type switch
             {
-                FileType.replicates => _replicatesRoot,
-                FileType.peptide_library => _peptideLibrariesRoot,
-                FileType.background_proteome => _backgroundProteomeRoot,
-                FileType.project_files => _projectFilesRoot,
+                FolderType.replicates => _replicatesFolder,
+                FolderType.peptide_libraries => _peptideLibrariesFolder,
+                FolderType.background_proteome => _backgroundProteomeFolder,
+                FolderType.project_files => _projectFilesFolder,
                 _ => new DummyNode()
             };
         }
@@ -177,7 +171,7 @@ namespace pwiz.Skyline.Controls
                 // The document changed, so rebuild FilesTree starting at the root
                 BeginUpdateMS();
                 Nodes.Clear();
-                _projectFilesRoot.Nodes.Clear();
+                _projectFilesFolder.Nodes.Clear();
                 EndUpdateMS();
 
                 SkylineFileModel skylineFileModel;
@@ -206,32 +200,32 @@ namespace pwiz.Skyline.Controls
 
                 // document changed, so re-wire project-level files
                 var auditLogFilePath = SrmDocument.GetAuditLogPath(DocumentContainer.DocumentFilePath);
-                _projectFilesRoot.Nodes.Add(new SkylineAuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
+                _projectFilesFolder.Nodes.Add(new SkylineAuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
 
                 var viewFilePath = SkylineWindow.GetViewFile(DocumentContainer.DocumentFilePath);
-                _projectFilesRoot.Nodes.Add(new SkylineViewTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
+                _projectFilesFolder.Nodes.Add(new SkylineViewTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
 
                 // CONSIDER: is this the correct way to get the path to a .skyd file?
                 //           is there a back compat consideration when there were per-replicate cache files?
                 var skydFilePath = ChromatogramCache.FinalPathForName(DocumentContainer.DocumentFilePath, null);
                 if (File.Exists(skydFilePath))
                 {
-                    _projectFilesRoot.Nodes.Add(new SkylineChromatogramCacheTreeNode(new ChromatogramCacheFileModel(ControlsResources.FilesTree_TreeNodeLabel_ChromatogramCache, skydFilePath)));
+                    _projectFilesFolder.Nodes.Add(new SkylineChromatogramCacheTreeNode(new ChromatogramCacheFileModel(ControlsResources.FilesTree_TreeNodeLabel_ChromatogramCache, skydFilePath)));
                 }
             }
 
             var files = Document.Settings.Files;
 
             // TODO: support .optdb
-            ConnectFilesOfTypeToTree(files, FileType.replicates, _replicatesRoot);
-            ConnectFilesOfTypeToTree(files, FileType.peptide_library, _peptideLibrariesRoot);       // .blib
-            ConnectFilesOfTypeToTree(files, FileType.background_proteome, _backgroundProteomeRoot); // .protdb
-            ConnectFilesOfTypeToTree(files, FileType.retention_score_calculator, _irtRoot);         // .irtdb
-            ConnectFilesOfTypeToTree(files, FileType.ion_mobility_library, _imsdbRoot);             // .imsdb
-            AddOrRemove(_projectFilesRoot);
+            ConnectFilesOfTypeToTree(files, FileType.replicates, _replicatesFolder);
+            ConnectFilesOfTypeToTree(files, FileType.peptide_library, _peptideLibrariesFolder);       // .blib
+            ConnectFilesOfTypeToTree(files, FileType.background_proteome, _backgroundProteomeFolder); // .protdb
+            ConnectFilesOfTypeToTree(files, FileType.retention_score_calculator, _irtFolder);         // .irtdb
+            ConnectFilesOfTypeToTree(files, FileType.ion_mobility_library, _imsdbFolder);             // .imsdb
+            AddOrRemove(_projectFilesFolder);
 
-            var expandedNodes = CountExpandedTreeNodes(Root);
-            if (expandedNodes == 0)
+            var expandedNodes = IsAnyNodeExpanded(Root);
+            if (!expandedNodes)
             {
                 Root.Expand();
                 foreach (TreeNode child in Root.Nodes)
@@ -275,24 +269,26 @@ namespace pwiz.Skyline.Controls
             Root.Nodes.Insert(insertAt, node);
         }
 
-        private int Compare(FolderNode a, FolderNode b)
+        private static int Compare(FolderNode a, FolderNode b)
         {
-            return TREE_NODE_SORT_ORDER[a.GetType()].CompareTo(TREE_NODE_SORT_ORDER[b.GetType()]);
+            return a.CompareTo(b);
         }
 
-        private static int CountExpandedTreeNodes(TreeNode parent)
+        private static bool IsAnyNodeExpanded(TreeNode node)
         {
-            var count = parent.IsExpanded ? 1 : 0;
+            if (node.IsExpanded)
+                return true;
 
-            foreach (TreeNode child in parent.Nodes)
+            foreach (TreeNode child in node.Nodes)
             {
-                count += CountExpandedTreeNodes(child);
+                if (IsAnyNodeExpanded(child))
+                    return true;
             }
 
-            return count;
+            return false;
         }
 
-        private delegate FilesTreeNode CreateFilesTreeNode(string documentPath, IFileBase model);
+        public delegate FileNode CreateFilesTreeNode(string documentPath, IFileBase model);
 
         // CONSIDER: does FilesTree need to support selection like in SequenceTree / SrmTreeNode?
         // CONSIDER: refactor for more code reuse with SrmTreeNode
@@ -304,7 +300,7 @@ namespace pwiz.Skyline.Controls
             IFileBase nodeDoc = null;
 
             // Keep remaining tree nodes into a map by the identity global index.
-            var remaining = new Dictionary<int, FilesTreeNode>();
+            var remaining = new Dictionary<int, FileNode>();
 
             // Enumerate as many tree nodes as possible that have either an
             // exact reference match with its corresponding DocNode in the list, or an
@@ -318,7 +314,7 @@ namespace pwiz.Skyline.Controls
                 while (i < count)
                 {
                     nodeDoc = docFilesList[i];
-                    var nodeTree = treeNodes[i] as FilesTreeNode;
+                    var nodeTree = treeNodes[i] as FileNode;
                     if (nodeTree == null)
                         break;
                     if (!ReferenceEquals(nodeTree.Model, nodeDoc))
@@ -349,10 +345,10 @@ namespace pwiz.Skyline.Controls
                 // Add unmatched nodes to a map by GlobalIndex, until the next
                 // document node is encountered, or all remaining nodes have been
                 // added.
-                var remove = new Dictionary<int, FilesTreeNode>();
+                var remove = new Dictionary<int, FileNode>();
                 for (int iRemove = i; iRemove < treeNodes.Count; iRemove++)
                 {
-                    FilesTreeNode nodeTree = treeNodes[iRemove] as FilesTreeNode;
+                    FileNode nodeTree = treeNodes[iRemove] as FileNode;
                     if (nodeTree == null)
                         break;
                     // Stop removing, if the next node in the document is encountered.
@@ -368,7 +364,7 @@ namespace pwiz.Skyline.Controls
                     node.Remove();
             }
             // Loop, if not all tree nodes have been removed or matched.
-            while (i < treeNodes.Count && treeNodes[i] is FilesTreeNode);
+            while (i < treeNodes.Count && treeNodes[i] is FileNode);
 
             var firstInsertPosition = i;
             var nodesToInsert = new List<TreeNode>(docFilesList.Count - firstInsertPosition);
@@ -377,7 +373,7 @@ namespace pwiz.Skyline.Controls
             for (; i < docFilesList.Count; i++)
             {
                 nodeDoc = docFilesList[i];
-                FilesTreeNode nodeTree;
+                FileNode nodeTree;
                 if (!remaining.TryGetValue(nodeDoc.Id.GlobalIndex, out nodeTree))
                 {
                     var createNodeDelegate = TREE_NODE_DELEGATES[nodeDoc.Type];
@@ -407,7 +403,7 @@ namespace pwiz.Skyline.Controls
             // the nodes have been added to the tree, because otherwise the icons may not update correctly.
             for (var insertNodeIndex = 0; insertNodeIndex < nodesToInsert.Count; insertNodeIndex++)
             {
-                var nodeTree = (FilesTreeNode)treeNodes[insertNodeIndex + firstInsertPosition];
+                var nodeTree = (FileNode)treeNodes[insertNodeIndex + firstInsertPosition];
                 var docNode = docFilesList[insertNodeIndex + firstInsertPosition];
                 // Best replicate display, requires that the node have correct
                 // parenting, before the text and icons can be set correctly.
@@ -423,7 +419,7 @@ namespace pwiz.Skyline.Controls
             // finished merging latest data model for these nodes. Now, recursively update any nodes whose model has children
             for (i = 0; i < treeNodes.Count; i++)
             {
-                var treeNode = treeNodes[i] as FilesTreeNode;
+                var treeNode = treeNodes[i] as FileNode;
                 var model = treeNode?.Model;
 
                 if (!(model is IFileGroupModel fileGroup))
@@ -452,68 +448,88 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_ProjectDirectory_OnDeleted(object sender, FileSystemEventArgs e)
         {
-            FilesTreeNode.FileDeleted(Root, e.Name);
+            FileNode.FileDeleted(Root, e.Name);
         }
 
         private void FilesTree_ProjectDirectory_OnCreated(object sender, FileSystemEventArgs e)
         {
-            FilesTreeNode.FileCreated(Root, e.Name);
+            FileNode.FileCreated(Root, e.Name);
         }
 
         private void FilesTree_ProjectDirectory_OnRenamed(object sender, RenamedEventArgs e)
         {
-            FilesTreeNode.FileRenamed(Root, e.OldName, e.Name);
+            FileNode.FileRenamed(Root, e.OldName, e.Name);
         }
     }
 
-    public abstract class FolderNode : TreeNodeMS
+    public enum FolderType
     {
-        public FolderNode(string label) : base(label)
-        {
-            ImageIndex = (int)FilesTree.ImageId.folder;
-        }
-    }
-
-    public class ReplicatesFolderNode : FolderNode
-    {
-        public ReplicatesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_Replicates) { }
-    }
-
-    public class PeptideLibrariesFolderNode : FolderNode
-    {
-        public PeptideLibrariesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_Libraries) { }
-    }
-
-    public class BackgroundProteomeFolderNode : FolderNode
-    {
-        public BackgroundProteomeFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome) { }
-    }
-
-    public class IrtFolderNode : FolderNode
-    {
-        public IrtFolderNode() : base(SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator) { }
-    }
-
-    public class ImsdbFolderNode : FolderNode
-    {
-        public ImsdbFolderNode() : base(SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library) { }
-    }
-
-    public class ProjectFilesFolderNode : FolderNode
-    {
-        public ProjectFilesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles) { }
+        replicates,
+        peptide_libraries,
+        background_proteome,
+        retention_score_calculator,
+        ion_mobility_library,
+        project_files
     }
 
     public abstract class FilesTreeNode : TreeNodeMS
     {
-        public FilesTreeNode(IFileBase model, FilesTree.ImageId imageId)
+        internal FilesTreeNode(string label, FilesTree.ImageId imageAvailable, FilesTree.ImageId imageMissing) :
+            base(label)
         {
-            // Set TreeNode properties
+            ImageAvailable = (int)imageAvailable;
+            ImageMissing = (int)imageMissing;
+
+            ImageIndex = ImageAvailable;
+        }
+        public int ImageAvailable { get; private set; }
+
+        public int ImageMissing { get; private set; }
+    }
+
+    public class FolderNode : FilesTreeNode, IComparable
+    {
+        public static FolderNode Create(FolderType type, string label, int sortOrder, 
+            FilesTree.ImageId imageAvailable = FilesTree.ImageId.folder, FilesTree.ImageId imageMissing = FilesTree.ImageId.file_missing)
+        {
+            var folderNode = new FolderNode(label, imageAvailable, imageMissing)
+            {
+                Name = label,
+                FolderType = type,
+                SortOrder = sortOrder,
+            };
+
+            return folderNode;
+        }
+
+        internal FolderNode(string label, FilesTree.ImageId imageAvailable, FilesTree.ImageId imageMissing) :
+            base(label, imageAvailable, imageMissing)
+        {
+        }
+
+        public FolderType FolderType { get; private set; }
+
+        // Keeps folder nodes in proper order. Only applies to level 1 children of FilesTree.
+        public int SortOrder { get; private set; }
+
+        public int CompareTo(object obj)
+        {
+            return obj switch
+            {
+                null => 1,
+                FolderNode otherFolderNode => SortOrder.CompareTo(otherFolderNode.SortOrder),
+                _ => 0
+            };
+        }
+    }
+
+    public abstract class FileNode : FilesTreeNode
+    {
+        protected FileNode(IFileBase model, FilesTree.ImageId imageAvailable, FilesTree.ImageId imageMissing = FilesTree.ImageId.file_missing) :
+            base(model.Name, imageAvailable, imageMissing)
+        {
             Tag = model;
             Name = Model.Name;
-            Text = Model.Name;
-            OriginalImageIndex = (int)imageId;
-            ImageIndex = (int)imageId;
         }
 
         public abstract string LocalFilePath { get; }
@@ -536,34 +552,12 @@ namespace pwiz.Skyline.Controls
 
         internal virtual void FileAvailable()
         {
-            ImageIndex = OriginalImageIndex;
-
-            var parent = Parent;
-            do
-            {
-                if (parent.GetType() == typeof(FilesTreeNode))
-                {
-                    parent.ImageIndex = ((FilesTreeNode)parent).OriginalImageIndex;
-                }
-                else
-                {
-                    parent.ImageIndex = (int)FilesTree.ImageId.folder;
-                }
-            
-                parent = parent.Parent;
-            } while (parent.GetType() != typeof(SkylineRootTreeNode));
+            ImageIndex = ImageAvailable;
         }
 
         internal virtual void FileMissing()
         {
-            ImageIndex = (int)FilesTree.ImageId.file_missing;
-
-            var parent = Parent;
-            do
-            {
-                parent.ImageIndex = (int)FilesTree.ImageId.file_missing;
-                parent = parent.Parent;
-            } while (parent.GetType() != typeof(SkylineRootTreeNode));
+            ImageIndex = ImageMissing;
         }
 
         protected virtual void OnModelChanged()
@@ -576,13 +570,11 @@ namespace pwiz.Skyline.Controls
             else FileMissing();
         }
 
-        private int OriginalImageIndex { get; }
-
         private static TreeNode FindTreeNodeForFileName(TreeNode node, string name)
         {
-            if (node.Tag != null && typeof(IFileModel).IsAssignableFrom(node.Tag.GetType()))
+            if (node.Tag is IFileModel model)
             {
-                if (((IFileModel)node.Tag).Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                if (model.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
                 {
                     return node;
                 }
@@ -600,52 +592,23 @@ namespace pwiz.Skyline.Controls
 
         internal static void FileDeleted(TreeNode root, string name)
         {
-            var treeNode = FindTreeNodeForFileName(root, name) as FilesTreeNode;
-            if (treeNode == null)
-                return;
-
-            treeNode.FileMissing();
-
-            // var parent = treeNode.Parent;
-            // do
-            // {
-            //     parent.ImageIndex = (int)FilesTree.ImageId.file_missing;
-            //     parent = parent.Parent;
-            // } while (parent.GetType() != typeof(SkylineRootTreeNode));
+            var treeNode = FindTreeNodeForFileName(root, name) as FileNode;
+            treeNode?.FileMissing();
         }
 
         internal static void FileCreated(TreeNode root, string name)
         {
             // Look for a tree node associated with the new file name. If Files Tree isn't aware
             // of a file with that name, ignore the event.
-            var treeNode = FindTreeNodeForFileName(root, name) as FilesTreeNode;
-
-            if (treeNode == null)
-                return;
-
-            treeNode.FileAvailable();
-
-            // var parent = treeNode.Parent;
-            // do
-            // {
-            //     if (parent.GetType() == typeof(FilesTreeNode))
-            //     {
-            //         parent.ImageIndex = ((FilesTreeNode)parent).OriginalImageIndex;
-            //     }
-            //     else
-            //     {
-            //         parent.ImageIndex = (int)FilesTree.ImageId.folder;
-            //     }
-            //
-            //     parent = parent.Parent;
-            // } while (parent.GetType() != typeof(SkylineRootTreeNode));
+            var treeNode = FindTreeNodeForFileName(root, name) as FileNode;
+            treeNode?.FileAvailable();
         }
 
         internal static void FileRenamed(TreeNode root, string oldName, string newName)
         {
             // Look for a tree node with the file's previous name. If a node with that name is found
             // treat the file as missing. 
-            if (FindTreeNodeForFileName(root, oldName) is FilesTreeNode treeNode)
+            if (FindTreeNodeForFileName(root, oldName) is FileNode treeNode)
             {
                 treeNode.FileMissing();
             }
@@ -653,7 +616,7 @@ namespace pwiz.Skyline.Controls
             // a name Files Tree is aware of, so mark the file as available.
             else
             {
-                treeNode = FindTreeNodeForFileName(root, newName) as FilesTreeNode;
+                treeNode = FindTreeNodeForFileName(root, newName) as FileNode;
                 treeNode?.FileAvailable();
             }
         }
@@ -676,9 +639,10 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class SkylineRootTreeNode : FilesTreeNode, ITipProvider
+    public class SkylineRootTreeNode : FileNode, ITipProvider
     {
-        public SkylineRootTreeNode(SkylineFileModel model) : base (model, FilesTree.ImageId.skyline)
+        public SkylineRootTreeNode(SkylineFileModel model) : 
+            base (model, FilesTree.ImageId.skyline)
         {
         }
 
@@ -704,7 +668,7 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class ReplicateTreeNode : FilesTreeNode
+    public class ReplicateTreeNode : FileNode
     {
         internal static ReplicateTreeNode CreateNode(string documentPath, IFileBase file)
         {
@@ -714,7 +678,8 @@ namespace pwiz.Skyline.Controls
             return new ReplicateTreeNode(model);
         }
 
-        public ReplicateTreeNode(IFileGroupModel model) : base(model, FilesTree.ImageId.replicate)
+        public ReplicateTreeNode(IFileGroupModel model) : 
+            base(model, FilesTree.ImageId.replicate)
         {
         }
 
@@ -723,7 +688,7 @@ namespace pwiz.Skyline.Controls
         internal override bool LocalFileExists() { return true; }
     }
 
-    public class ReplicateSampleFileTreeNode : FilesTreeNode, ITipProvider
+    public class ReplicateSampleFileTreeNode : FileNode, ITipProvider
     {
         internal static ReplicateSampleFileTreeNode CreateNode(string documentPath, IFileBase file)
         {
@@ -735,7 +700,8 @@ namespace pwiz.Skyline.Controls
             return new ReplicateSampleFileTreeNode(model, localFilePath);
         }
 
-        public ReplicateSampleFileTreeNode(IFileModel model, string localFilePath) : base(model, FilesTree.ImageId.replicate_sample_file)
+        public ReplicateSampleFileTreeNode(IFileModel model, string localFilePath) : 
+            base(model, FilesTree.ImageId.replicate_sample_file)
         {
             LocalFilePath = localFilePath;
         }
@@ -746,8 +712,9 @@ namespace pwiz.Skyline.Controls
 
         internal override bool LocalFileExists()
         {
+            // includes a directory check because some replicate samples are actually directories (*.d)
             return File.Exists(LocalFilePath) || 
-                   Directory.Exists(LocalFilePath); // directory check needed because some replicate samples are actually directories
+                   Directory.Exists(LocalFilePath); 
         }
 
         public bool HasTip => true;
@@ -768,9 +735,9 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class PeptideLibraryTreeNode : FilesTreeNode, ITipProvider
+    public class PeptideLibraryTreeNode : FileNode, ITipProvider
     {
-        internal static FilesTreeNode CreateNode(string documentPath, IFileBase file)
+        internal static FileNode CreateNode(string documentPath, IFileBase file)
         {
             if (!(file is IFileModel model))
                 return null;
@@ -780,7 +747,8 @@ namespace pwiz.Skyline.Controls
             return new PeptideLibraryTreeNode(model, localFilePath);
         }
 
-        public PeptideLibraryTreeNode(IFileModel model, string localFilePath) : base(model, FilesTree.ImageId.peptide)
+        public PeptideLibraryTreeNode(IFileModel model, string localFilePath) : 
+            base(model, FilesTree.ImageId.peptide)
         {
             LocalFilePath = localFilePath;
         }
@@ -806,9 +774,9 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class RetentionScoreCalculatorFileTreeNode : FilesTreeNode, ITipProvider
+    public class RetentionScoreCalculatorFileTreeNode : FileNode, ITipProvider
     {
-        internal static FilesTreeNode CreateNode(string documentPath, IFileBase file)
+        internal static FileNode CreateNode(string documentPath, IFileBase file)
         {
             if (!(file is IFileModel model))
                 return null;
@@ -818,7 +786,8 @@ namespace pwiz.Skyline.Controls
             return new RetentionScoreCalculatorFileTreeNode(model, localFilePath);
         }
 
-        public RetentionScoreCalculatorFileTreeNode(IFileModel model, string localFilePath) : base(model, FilesTree.ImageId.file)
+        public RetentionScoreCalculatorFileTreeNode(IFileModel model, string localFilePath) : 
+            base(model, FilesTree.ImageId.file)
         {
             LocalFilePath = localFilePath;
         }
@@ -844,9 +813,9 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class IonMobilityLibraryFileTreeNode : FilesTreeNode, ITipProvider
+    public class IonMobilityLibraryFileTreeNode : FileNode, ITipProvider
     {
-        internal static FilesTreeNode CreateNode(string documentPath, IFileBase file)
+        internal static FileNode CreateNode(string documentPath, IFileBase file)
         {
             if (!(file is IFileModel model))
                 return null;
@@ -856,7 +825,8 @@ namespace pwiz.Skyline.Controls
             return new IonMobilityLibraryFileTreeNode(model, localFilePath);
         }
 
-        public IonMobilityLibraryFileTreeNode(IFileModel model, string localFilePath) : base(model, FilesTree.ImageId.file)
+        public IonMobilityLibraryFileTreeNode(IFileModel model, string localFilePath) : 
+            base(model, FilesTree.ImageId.file)
         {
             LocalFilePath = localFilePath;
         }
@@ -882,9 +852,9 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class BackgroundProteomeTreeNode : FilesTreeNode, ITipProvider
+    public class BackgroundProteomeTreeNode : FileNode, ITipProvider
     {
-        internal static FilesTreeNode CreateNode(string documentPath, IFileBase file)
+        internal static FileNode CreateNode(string documentPath, IFileBase file)
         {
             if (!(file is IFileModel model))
                 return null;
@@ -894,7 +864,8 @@ namespace pwiz.Skyline.Controls
             return new BackgroundProteomeTreeNode(model, localFilePath);
         }
 
-        public BackgroundProteomeTreeNode(IFileModel model, string localFilePath) : base(model, FilesTree.ImageId.file)
+        public BackgroundProteomeTreeNode(IFileModel model, string localFilePath) : 
+            base(model, FilesTree.ImageId.file)
         {
             LocalFilePath = localFilePath;
         }
@@ -920,9 +891,10 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class SkylineAuditLogTreeNode : FilesTreeNode, ITipProvider
+    public class SkylineAuditLogTreeNode : FileNode, ITipProvider
     {
-        public SkylineAuditLogTreeNode(AuditLogFileModel model) : base(model, FilesTree.ImageId.file) { }
+        public SkylineAuditLogTreeNode(AuditLogFileModel model) : 
+            base(model, FilesTree.ImageId.file) { }
 
         public override string LocalFilePath => (Model as IFileModel)?.FilePath;
 
@@ -946,9 +918,10 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class SkylineViewTreeNode : FilesTreeNode, ITipProvider
+    public class SkylineViewTreeNode : FileNode, ITipProvider
     {
-        public SkylineViewTreeNode(ViewFileModel model) : base(model, FilesTree.ImageId.file)
+        public SkylineViewTreeNode(ViewFileModel model) : 
+            base(model, FilesTree.ImageId.file)
         {
         }
 
@@ -974,9 +947,10 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class SkylineChromatogramCacheTreeNode : FilesTreeNode, ITipProvider
+    public class SkylineChromatogramCacheTreeNode : FileNode, ITipProvider
     {
-        public SkylineChromatogramCacheTreeNode(ChromatogramCacheFileModel model) : base(model, FilesTree.ImageId.file) { }
+        public SkylineChromatogramCacheTreeNode(ChromatogramCacheFileModel model) : 
+            base(model, FilesTree.ImageId.file) { }
 
         public override string LocalFilePath => (Model as IFileModel)?.FilePath;
 

@@ -28,7 +28,6 @@ namespace pwiz.Skyline.Model.DocSettings
         ion_mobility_library,       // .imsdb
         optimization_library,       // .optdb
         peptide_library,            // library type (cache type, if any) - .blib (.slc), .lib, .clib, .hlf (.slc), .msp (.slc), .sptxt (.splc), .elib (.elibc)
-        project_files,              // virtual folder - placeholder representing the project files folder
         replicates,                 // virtual file - replicate from .sky
         replicate_file,             // .raw, .mzml, .wiff, more (see @DataSourceUtil)
         retention_score_calculator, // .irtdb

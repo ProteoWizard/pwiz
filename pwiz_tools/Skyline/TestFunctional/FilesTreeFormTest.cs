@@ -145,12 +145,12 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChange(doc);
 
             Assert.AreEqual(newName, doc.Settings.MeasuredResults.Chromatograms[3].Name);
-            Assert.AreEqual(newName, SkylineWindow.FilesTree.NodesForFileType(FileType.replicates).Nodes[3].Name);
+            Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder(FolderType.replicates).Nodes[3].Name);
 
             CheckReplicateEquivalence(42);
 
             // Selecting replicate should update selected index / graphs
-            var replicateName = SkylineWindow.FilesTree.NodesForFileType(FileType.replicates).Nodes[4].Name;
+            var replicateName = SkylineWindow.FilesTree.Folder(FolderType.replicates).Nodes[4].Name;
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.ActivateReplicate(replicateName);
@@ -206,9 +206,9 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                SkylineWindow.FilesTree.CollapseNodesForFileType(FileType.replicates);
+                SkylineWindow.FilesTree.CollapseNodesForFolder(FolderType.replicates);
 
-                var replicateNodes = SkylineWindow.FilesTree.NodesForFileType(FileType.replicates);
+                var replicateNodes = SkylineWindow.FilesTree.Folder(FolderType.replicates);
                 replicateNodes.Nodes[1].Expand();
                 replicateNodes.Nodes[7].Expand();
                 replicateNodes.Nodes[11].Expand();
@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                var replicateNodes = SkylineWindow.FilesTree.NodesForFileType(FileType.replicates);
+                var replicateNodes = SkylineWindow.FilesTree.Folder(FolderType.replicates);
                 // Check expanded nodes
                 Assert.IsTrue(replicateNodes.Nodes[1].IsExpanded);
                 Assert.IsTrue(replicateNodes.Nodes[7].IsExpanded);
@@ -237,11 +237,11 @@ namespace pwiz.SkylineTestFunctional
             //
             // Peptide Libraries
             //
-            Assert.AreEqual(2, SkylineWindow.FilesTree.NodesForFileType(FileType.peptide_library)?.Nodes.Count);
+            Assert.AreEqual(2, SkylineWindow.FilesTree.Folder(FolderType.peptide_libraries)?.Nodes.Count);
             Assert.AreEqual("Rat (NIST) (Rat_plasma2) (Rat_plasma)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             Assert.AreEqual("Rat (GPM) (Rat_plasma2) (Rat_plasma)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
 
-            var peptideLibraryName = SkylineWindow.FilesTree.NodesForFileType(FileType.peptide_library)?.Nodes[0].Name;
+            var peptideLibraryName = SkylineWindow.FilesTree.Folder(FolderType.peptide_libraries)?.Nodes[0].Name;
             Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name, peptideLibraryName);
             RunUI(() => SkylineWindow.FilesTreeForm.OpenLibraryExplorer(peptideLibraryName));
             var libraryDlg = WaitForOpenForm<ViewLibraryDlg>();
@@ -256,15 +256,15 @@ namespace pwiz.SkylineTestFunctional
             //
             // Background Proteome (folder not visible for this .sky file)
             //
-            Assert.IsFalse(SkylineWindow.FilesTree.NodesForFileType(FileType.background_proteome).IsVisible);
+            Assert.IsFalse(SkylineWindow.FilesTree.Folder(FolderType.background_proteome).IsVisible);
 
             //
             // Project Files
             //
-            var projectFilesRoot = SkylineWindow.FilesTree.NodesForFileType(FileType.project_files);
+            var projectFilesRoot = SkylineWindow.FilesTree.Folder(FolderType.project_files);
             RunUI(() =>
             {
-                SkylineWindow.FilesTree.ScrollToFileType(FileType.project_files);
+                SkylineWindow.FilesTree.ScrollToFolder(FolderType.project_files);
             });
             WaitForConditionUI(() => projectFilesRoot.IsVisible);
 
@@ -290,7 +290,7 @@ namespace pwiz.SkylineTestFunctional
         private static void CheckReplicateEquivalence(int expectedCount)
         {
             var docNodes = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
-            var treeNodes = SkylineWindow.FilesTree.NodesForFileType(FileType.replicates).Nodes;
+            var treeNodes = SkylineWindow.FilesTree.Folder(FolderType.replicates).Nodes;
 
             Assert.IsNotNull(docNodes);
             Assert.IsNotNull(treeNodes);
@@ -299,7 +299,7 @@ namespace pwiz.SkylineTestFunctional
 
             for (var i = 0; i < docNodes.Count; i++)
             {
-                Assert.AreEqual(docNodes[i].Id, ((FilesTreeNode)treeNodes[i]).Model.Id);
+                Assert.AreEqual(docNodes[i].Id, ((FileNode)treeNodes[i]).Model.Id);
                 Assert.AreEqual(docNodes[i].Name, treeNodes[i].Name);
             }
         }

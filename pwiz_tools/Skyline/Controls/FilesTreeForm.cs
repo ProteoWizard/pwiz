@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Controls
 {
@@ -145,50 +146,32 @@ namespace pwiz.Skyline.Controls
             _nodeTip?.HideTip();
         }
 
-        // Any TreeNode => Open Context Menu
+        // TreeNode => Open Context Menu
         private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
             _nodeTip.HideTip();
 
             switch (FilesTree.SelectedNode)
             {
-                // Folder Nodes
-                case ReplicatesFolderNode _:
+                case FolderNode folder when folder.FolderType == FolderType.replicates:
                     manageResultsToolStripMenuItem.Visible = true;
                     manageResultsToolStripMenuItem.Enabled = true;
                     libraryExplorerToolStripMenuItem.Visible = false;
                     openContainingFolderMenuStripItem.Visible = false;
-                    break;
-                case PeptideLibrariesFolderNode _:
+                    return;
+                case FolderNode folder when folder.FolderType == FolderType.peptide_libraries:
                     manageResultsToolStripMenuItem.Visible = false;
                     libraryExplorerToolStripMenuItem.Visible = true;
                     openContainingFolderMenuStripItem.Visible = false;
-                    break;
-                // File Nodes
-                case SkylineRootTreeNode _:
-                    manageResultsToolStripMenuItem.Visible = false;
-                    libraryExplorerToolStripMenuItem.Visible = false;
-                    openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = FilesTree.Root.FilePath != null;
-                    break;
-                case BackgroundProteomeTreeNode _:
-                case ReplicateSampleFileTreeNode _:
-                case PeptideLibraryTreeNode _:
-                case RetentionScoreCalculatorFileTreeNode _:
-                case IonMobilityLibraryFileTreeNode _:
-                case SkylineAuditLogTreeNode _:
-                case SkylineViewTreeNode _:
-                case SkylineChromatogramCacheTreeNode _:
-                    if (!(FilesTree.SelectedNode is FilesTreeNode treeNode))
-                        break;
-
+                    return;
+                case FileNode file when file.Model.Type != FileType.replicates:
                     manageResultsToolStripMenuItem.Visible = false;
                     libraryExplorerToolStripMenuItem.Visible = false;
 
                     // only offer the option if the file currently exists and isn't removed or deleted
                     openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = treeNode.LocalFileExists(); 
-                    break;
+                    openContainingFolderMenuStripItem.Enabled = file.LocalFileExists();
+                    return;
                 default:
                     e.Cancel = true;
                     break;
@@ -197,7 +180,7 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_ShowContainingFolderMenuItem(object sender, EventArgs e)
         {
-            if (FilesTree.SelectedNode is FilesTreeNode treeNode)
+            if (FilesTree.SelectedNode is FileNode treeNode)
             {
                 OpenContainingFolder(treeNode.LocalFilePath);
             }
@@ -217,8 +200,8 @@ namespace pwiz.Skyline.Controls
                     // Replicates open using the replicate name, which is pulled from the parent tree node which
                     // avoids adding a pointer to the parent in SrmSettings and putting a new field on the
                     // replicate file's data model
-                    if (replicate.Parent is ReplicateTreeNode treeNodeParent)
-                        ActivateReplicate(treeNodeParent.Name);
+                    if (replicate.Parent is ReplicateTreeNode parent)
+                        ActivateReplicate(parent.Name);
                     break;
             }
         }
