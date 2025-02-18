@@ -1016,7 +1016,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         // Add a new row if the property path is not found
                         iRow = replicatePivotDataGridView.Rows.Add();
-                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].Value = propertyPath.Name;
+                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].Value = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
                         replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].ReadOnly = true;
                         replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].Style.BackColor = readOnlyCellColor;
                         rowPropertyPaths.Add(propertyPath);
