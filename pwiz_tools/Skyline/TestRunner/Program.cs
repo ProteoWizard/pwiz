@@ -1408,6 +1408,15 @@ namespace TestRunner
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
+            else
+            {
+                // Take advantage of the extra time available in perftest runs to do the leak tests we
+                // skip in regular nightlies - but skip leak tests covered in regular nightlies
+                foreach (var test in unfilteredTestList)
+                {
+                    test.DoNotLeakTest = !test.DoNotLeakTest;
+                }
+            }
 
             // If this is a nightly run, check the SKYLINE_NIGHTLY_TEST_EXCLUSIONS env var 
             HandleNightlyTestExclusions(testList, unfilteredTestList, log, asNightly);
@@ -1415,15 +1424,6 @@ namespace TestRunner
             // Even if we have been told to run perftests, if none are in the list
             // then make sure we don't chat about perf tests in the log
             perftests &= testList.Any(t => t.IsPerfTest);
-
-            // Select one test marked as "DoNotLeakTest" and leak test it anyway
-            var noLeakTests = testList.Where(test => test.DoNotLeakTest).ToList();
-            TestInfo leakTestOverride = null;
-            if (noLeakTests.Count > 0)
-            {
-                leakTestOverride = noLeakTests[DateTime.Now.DayOfYear % noLeakTests.Count];
-                leakTestOverride.DoNotLeakTest = false; // Allow this test to run in leak test cycle
-            }
 
             if (buildMode)
             {
@@ -1584,10 +1584,6 @@ namespace TestRunner
                             // These are  too lengthy to run multiple times for leak testing, so not a good fit for pass 1
                             // But it's a shame to skip them entirely, so we'll run one of them in pass 1 each day
                             runTests.Log("# Tests with NoLeakTesting attribute are skipped in pass 1 but prioritized in pass 2.\r\n");
-                            if (leakTestOverride != null)
-                            {
-                                runTests.Log($"# One such test is actually run in pass 1 on a rotating basis, today it's {leakTestOverride.TestMethod.Name}.\r\n");
-                            }
                         }
                         if (testList.Any(t => t.IsPerfTest))
                         {
