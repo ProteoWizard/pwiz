@@ -1089,7 +1089,7 @@ namespace pwiz.Skyline.Model.Results
             // recorded values, where the intensity is higher than the other extent
             // by more than 1% of the peak height.
             _flagValues |= FlagValues.peak_truncation_known;
-            const double truncationTolerance = 0.01;
+            const double truncationTolerance = 0.25;
             double deltaIntensityExtents = (intensities[peak.EndIndex] - intensities[peak.StartIndex]) / Height;
             if ((peak.StartIndex == 0 && deltaIntensityExtents < -truncationTolerance) ||
                 (peak.EndIndex == times.Count - 1 && deltaIntensityExtents > truncationTolerance))
