@@ -79,6 +79,16 @@ namespace pwiz.Skyline.Controls
             SkylineWindow.ActivateReplicate(name);
         }
 
+        public void ShowManageResultsDialog()
+        {
+            SkylineWindow.ManageResults();
+        }
+
+        public void ShowSpectralLibrariesDialog()
+        {
+            SkylineWindow.ViewSpectralLibraries();
+        }
+
         public void FilesTree_MouseMove(Point location)
         {
             if (!_moveThreshold.Moved(location))
@@ -215,12 +225,12 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
         {
-            SkylineWindow.ManageResults();
+            ShowManageResultsDialog();
         }
 
         private void FilesTree_LibraryExplorerMenuItem(object sender, EventArgs e) 
         {
-            SkylineWindow.ViewSpectralLibraries();
+            ShowSpectralLibrariesDialog();
         }
     }
 }

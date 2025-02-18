@@ -33,12 +33,12 @@ namespace pwiz.Skyline.Controls
 {
     public class FilesTree : TreeViewMS
     {
-        private readonly FilesTreeFolderNode _replicatesRoot;
-        private readonly FilesTreeFolderNode _peptideLibrariesRoot;
-        private readonly FilesTreeFolderNode _backgroundProteomeRoot;
-        private readonly FilesTreeFolderNode _projectFilesRoot;
-        private readonly FilesTreeFolderNode _irtRoot;
-        private readonly FilesTreeFolderNode _imsdbRoot;
+        private readonly FolderNode _replicatesRoot;
+        private readonly FolderNode _peptideLibrariesRoot;
+        private readonly FolderNode _backgroundProteomeRoot;
+        private readonly FolderNode _projectFilesRoot;
+        private readonly FolderNode _irtRoot;
+        private readonly FolderNode _imsdbRoot;
 
         private readonly FileSystemWatcher _fileSystemWatcher;
 
@@ -65,7 +65,6 @@ namespace pwiz.Skyline.Controls
                 {typeof(ImsdbFolderNode), 4},
                 {typeof(ProjectFilesFolderNode), 5}
             });
-
 
         public enum ImageId
         {
@@ -242,7 +241,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private void ConnectFilesOfTypeToTree(IDictionary<FileType, IEnumerable<IFileBase>> files, FileType fileType, FilesTreeFolderNode folder)
+        private void ConnectFilesOfTypeToTree(IDictionary<FileType, IEnumerable<IFileBase>> files, FileType fileType, FolderNode folder)
         {
             if (files.TryGetValue(fileType, out var filesOfType))
             {
@@ -251,7 +250,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private void AddOrRemove(FilesTreeFolderNode folder)
+        private void AddOrRemove(FolderNode folder)
         {
             if (folder.Nodes.Count == 0 && Root.Nodes.Contains(folder))
                 Root.Nodes.Remove(folder);
@@ -259,14 +258,14 @@ namespace pwiz.Skyline.Controls
                 InsertInOrder(folder);
         }
 
-        private void InsertInOrder(FilesTreeFolderNode node)
+        private void InsertInOrder(FolderNode node)
         {
             var start = 0;
             var end = Root.Nodes.Count;
             while (start < end)
             {
                 var middle = (start + end) / 2;
-                if (Compare(Root.Nodes[middle] as FilesTreeFolderNode, node) <= 0)
+                if (Compare(Root.Nodes[middle] as FolderNode, node) <= 0)
                     start = middle + 1;
                 else end = middle;
 
@@ -276,7 +275,7 @@ namespace pwiz.Skyline.Controls
             Root.Nodes.Insert(insertAt, node);
         }
 
-        private int Compare(FilesTreeFolderNode a, FilesTreeFolderNode b)
+        private int Compare(FolderNode a, FolderNode b)
         {
             return TREE_NODE_SORT_ORDER[a.GetType()].CompareTo(TREE_NODE_SORT_ORDER[b.GetType()]);
         }
@@ -467,40 +466,40 @@ namespace pwiz.Skyline.Controls
         }
     }
 
-    public class FilesTreeFolderNode : TreeNodeMS
+    public abstract class FolderNode : TreeNodeMS
     {
-        public FilesTreeFolderNode(string label) : base(label)
+        public FolderNode(string label) : base(label)
         {
             ImageIndex = (int)FilesTree.ImageId.folder;
         }
     }
 
-    public class ReplicatesFolderNode : FilesTreeFolderNode
+    public class ReplicatesFolderNode : FolderNode
     {
         public ReplicatesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_Replicates) { }
     }
 
-    public class PeptideLibrariesFolderNode : FilesTreeFolderNode
+    public class PeptideLibrariesFolderNode : FolderNode
     {
         public PeptideLibrariesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_Libraries) { }
     }
 
-    public class BackgroundProteomeFolderNode : FilesTreeFolderNode
+    public class BackgroundProteomeFolderNode : FolderNode
     {
         public BackgroundProteomeFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome) { }
     }
 
-    public class IrtFolderNode : FilesTreeFolderNode
+    public class IrtFolderNode : FolderNode
     {
         public IrtFolderNode() : base(SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator) { }
     }
 
-    public class ImsdbFolderNode : FilesTreeFolderNode
+    public class ImsdbFolderNode : FolderNode
     {
         public ImsdbFolderNode() : base(SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library) { }
     }
 
-    public class ProjectFilesFolderNode : FilesTreeFolderNode
+    public class ProjectFilesFolderNode : FolderNode
     {
         public ProjectFilesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles) { }
     }
@@ -538,11 +537,33 @@ namespace pwiz.Skyline.Controls
         internal virtual void FileAvailable()
         {
             ImageIndex = OriginalImageIndex;
+
+            var parent = Parent;
+            do
+            {
+                if (parent.GetType() == typeof(FilesTreeNode))
+                {
+                    parent.ImageIndex = ((FilesTreeNode)parent).OriginalImageIndex;
+                }
+                else
+                {
+                    parent.ImageIndex = (int)FilesTree.ImageId.folder;
+                }
+            
+                parent = parent.Parent;
+            } while (parent.GetType() != typeof(SkylineRootTreeNode));
         }
 
         internal virtual void FileMissing()
         {
             ImageIndex = (int)FilesTree.ImageId.file_missing;
+
+            var parent = Parent;
+            do
+            {
+                parent.ImageIndex = (int)FilesTree.ImageId.file_missing;
+                parent = parent.Parent;
+            } while (parent.GetType() != typeof(SkylineRootTreeNode));
         }
 
         protected virtual void OnModelChanged()
@@ -580,7 +601,17 @@ namespace pwiz.Skyline.Controls
         internal static void FileDeleted(TreeNode root, string name)
         {
             var treeNode = FindTreeNodeForFileName(root, name) as FilesTreeNode;
-            treeNode?.FileMissing();
+            if (treeNode == null)
+                return;
+
+            treeNode.FileMissing();
+
+            // var parent = treeNode.Parent;
+            // do
+            // {
+            //     parent.ImageIndex = (int)FilesTree.ImageId.file_missing;
+            //     parent = parent.Parent;
+            // } while (parent.GetType() != typeof(SkylineRootTreeNode));
         }
 
         internal static void FileCreated(TreeNode root, string name)
@@ -588,7 +619,26 @@ namespace pwiz.Skyline.Controls
             // Look for a tree node associated with the new file name. If Files Tree isn't aware
             // of a file with that name, ignore the event.
             var treeNode = FindTreeNodeForFileName(root, name) as FilesTreeNode;
-            treeNode?.FileAvailable();
+
+            if (treeNode == null)
+                return;
+
+            treeNode.FileAvailable();
+
+            // var parent = treeNode.Parent;
+            // do
+            // {
+            //     if (parent.GetType() == typeof(FilesTreeNode))
+            //     {
+            //         parent.ImageIndex = ((FilesTreeNode)parent).OriginalImageIndex;
+            //     }
+            //     else
+            //     {
+            //         parent.ImageIndex = (int)FilesTree.ImageId.folder;
+            //     }
+            //
+            //     parent = parent.Parent;
+            // } while (parent.GetType() != typeof(SkylineRootTreeNode));
         }
 
         internal static void FileRenamed(TreeNode root, string oldName, string newName)
