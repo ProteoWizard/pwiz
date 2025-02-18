@@ -157,9 +157,21 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         public void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+            if (e.PropertyName == nameof(Settings.Default.GroupComparisonAvoidLabelOverlap))
+            {
+                try
+                {
+                    Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
+                    Settings.Default.GroupComparisonSuspendLabelLayout = false;
+                }
+                finally
+                {
+                    Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+                }
+                _labelsLayout = null;
                 GraphSummary.UpdateUI();
-            else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
+            }
+            else if (e.PropertyName == nameof(Settings.Default.GroupComparisonSuspendLabelLayout))
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {
@@ -364,14 +376,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 UpdateAxes();
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
-                if (Settings.Default.GroupComparisonSuspendLabelLayout)
-                {
-                    AdjustLabelSpacings(_labeledPoints, _labelsLayout);
-                    _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
-                }
+                AdjustLabelSpacings(_labeledPoints, _labelsLayout);
+                _labelsLayout = GraphSummary.GraphControl.GraphPane.Layout?.PointsLayout;
             }
             else
-                DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale, GraphSummary.GraphControl.GraphPane.Rect.Height);
+            {
+                EnableLabelLayout = false;
+                DotPlotUtil.AdjustLabelLocations(_labeledPoints, GraphSummary.GraphControl.GraphPane.YAxis.Scale,
+                    GraphSummary.GraphControl.GraphPane.Rect.Height);
+            }
         }
 
         private void this_AxisChangeEvent(GraphPane pane)
