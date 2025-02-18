@@ -537,6 +537,24 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to set up Nvidia libraries.
+        /// </summary>
+        public static string NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully set up Nvidia libraries.
+        /// </summary>
+        public static string NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python {0} set up is required for {1}, click &apos;OK&apos; to proceed..
         /// </summary>
         public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required {

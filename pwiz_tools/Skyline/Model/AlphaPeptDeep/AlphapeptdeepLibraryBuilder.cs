@@ -367,7 +367,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private LibraryHelper LibraryHelper { get; set; }
 
-        private readonly DateTime _nowTime;
+        private static readonly DateTime _nowTime = DateTime.Now;
+
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
@@ -412,14 +413,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
-        {
-            _nowTime = DateTime.Now;
-            Document = document;
+        {            Document = document;
             Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
-
         }
 
         public bool BuildLibrary(IProgressMonitor progress)

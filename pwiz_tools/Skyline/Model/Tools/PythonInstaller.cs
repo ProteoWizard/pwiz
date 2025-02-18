@@ -117,7 +117,7 @@ namespace pwiz.Skyline.Model.Tools
         public List<PythonPackage> PythonPackages { get; }
         public string PythonEmbeddablePackageFileName => PythonEmbeddablePackageFileBaseName + DOT_ZIP;
         public Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
-        [System.Diagnostics.DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         public string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
         public string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
         public Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
@@ -132,8 +132,9 @@ namespace pwiz.Skyline.Model.Tools
         public enum eSimulatedInstallationState
         {
             NONE,       // Normal tests systems will have registry set suitably
-            NAIVE,      // Be able to simulate systems where Python is not installed
-            NONVIDIA    // Simulate no Nvidia
+            NAIVE,      // Simulate system where Python is not installed and Nvidia Hardware not present
+            NONVIDIAHARD,    // Simulate Nvidia Hardware not present 
+            NONVIDIASOFT     // Simulate Python is installed, Nvidia Hardware present, Nvidia Software not present
         }
         public static eSimulatedInstallationState SimulatedInstallationState { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
@@ -163,7 +164,8 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool CudaLibraryInstalled()
         {
-            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA ||
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD || 
+                SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT ||
                 SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
                 return false;
             string cudaPath = Environment.GetEnvironmentVariable(@"CUDA_PATH");
@@ -172,7 +174,8 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool NvidiaLibrariesInstalled()
         {
-            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA ||
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD ||
+                SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT ||
                 SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
                 return false;
 
@@ -184,7 +187,8 @@ namespace pwiz.Skyline.Model.Tools
 
         public static bool? CuDNNLibraryInstalled(bool longValidate = false)
         {
-            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIA ||
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD ||
+                SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT ||
                 SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
                 return false;
 
@@ -257,11 +261,23 @@ namespace pwiz.Skyline.Model.Tools
         public void WriteInstallNvidiaBatScript()
         {
             FileEx.SafeDelete(InstallNvidiaLibrariesBat);
-            File.WriteAllText(InstallNvidiaLibrariesBat, string.Format(ModelResources.NvidiaInstaller_Batch_script, CUDA_VERSION, CUDNN_VERSION));
+            string resourceString = ModelResources.NvidiaInstaller_Batch_script;
+            resourceString = resourceString.Replace(@"{{0}}", CUDA_VERSION);
+            resourceString = resourceString.Replace(@"{{1}}", CUDNN_VERSION);
+            File.WriteAllText(InstallNvidiaLibrariesBat, resourceString);
         }
 
+        /// <summary>
+        /// False means NONVIDIA hardware, true means NVIDIA hardware, null means don't know
+        /// </summary>
+        /// <returns></returns>
         public static bool? TestForNvidiaGPU()
         {
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD || SimulatedInstallationState == eSimulatedInstallationState.NAIVE) 
+                return false;
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)  //Also assume we have NVIDIA card when we assume we don't have NVIDIA software
+                return true;
+
             bool? nvidiaGpu = null;
             try
             {
@@ -285,6 +301,7 @@ namespace pwiz.Skyline.Model.Tools
         public PythonInstaller(ProgramPathContainer pythonPathContainer, IEnumerable<PythonPackage> packages,
             TextWriter writer, IPythonInstallerTaskValidator taskValidator, string virtualEnvironmentName)
         {
+            //SimulatedInstallationState = eSimulatedInstallationState.NONVIDIASOFT;
             PythonVersion = pythonPathContainer.ProgramVersion;
             Writer = writer;
             TaskValidator = taskValidator;
@@ -304,25 +321,48 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        public bool IsPythonVirtualEnvironmentReady()
+
+        public bool IsNvidiaEnvironmentReady(List<PythonTask> abortedTasks = null)
         {
-            var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD)
+                return true;
+
+            if (abortedTasks == null && SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)
+                return false;
             
-            if (SimulatedInstallationState != eSimulatedInstallationState.NONVIDIA)
-            {
-                return tasks.Count == 0;
-            }
-            else if (tasks.Any(task => 
-                         !( task.Name == PythonTaskName.download_cuda_library 
-                           || task.Name == PythonTaskName.install_cuda_library 
-                           || task.Name == PythonTaskName.download_cudnn_library 
-                           || task.Name == PythonTaskName.install_cudnn_library)))
-            {
-                return tasks.Count == 0;
-            }
+            var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
 
-            return true;
+            if (abortedTasks != null && abortedTasks.Count > 0) tasks = abortedTasks;
 
+            if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
+                return true;
+
+            return !tasks.Any(task =>
+                (task.Name == PythonTaskName.download_cuda_library
+                 || task.Name == PythonTaskName.install_cuda_library
+                 || task.Name == PythonTaskName.download_cudnn_library
+                 || task.Name == PythonTaskName.install_cudnn_library));
+        }
+
+        public bool IsPythonVirtualEnvironmentReady(List<PythonTask> abortedTasks = null)
+        {
+            if (SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
+                return false;
+            if (abortedTasks == null && SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)
+                return true;
+
+            var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
+
+            if (abortedTasks != null && abortedTasks.Count > 0) tasks = abortedTasks;
+
+            if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
+                return true;
+
+            return !tasks.Any(task =>
+                (task.Name != PythonTaskName.download_cuda_library
+                 && task.Name != PythonTaskName.install_cuda_library
+                 && task.Name != PythonTaskName.download_cudnn_library
+                 && task.Name != PythonTaskName.install_cudnn_library));
         }
 
         public void ClearPendingTasks() 
@@ -800,9 +840,11 @@ namespace pwiz.Skyline.Model.Tools
                 DirectoryEx.SafeDeleteLongPath(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
 
-        public static void DeleteToolsPythonDirectory()
+        public static bool DeleteToolsPythonDirectory()
         {
             DirectoryEx.SafeDeleteLongPath(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python"));
+            if (Directory.Exists(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python"))) return false;
+            return true;
         }
 
         public void SignPythonEnvironment(string name)
@@ -1369,14 +1411,16 @@ namespace pwiz.Skyline.Model.Tools
         
         private bool ValidateDownloadCudaLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA || 
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD)
+                return true;
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT || 
                 PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
-
             if (PythonInstaller.CudaLibraryInstalled())
                 return true;
             if (!File.Exists(_pythonInstaller.CudaInstallerDownloadPath))
                 return false;
+
             var computeHash =
                 PythonInstallerUtil.GetFileHash(_pythonInstaller.CudaInstallerDownloadPath);
             var storedHash = TargetsAndHashes.Where(m => m.Task == PythonTaskName.download_cuda_library).ToArray()[0].Hash;
@@ -1385,7 +1429,9 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateInstallCudaLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA ||
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD)
+                return true;
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT ||
                 PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
 
@@ -1394,14 +1440,16 @@ namespace pwiz.Skyline.Model.Tools
 
         private bool ValidateDownloadCuDNNLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA ||
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD)
+                return true;
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT ||
                 PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
-
             if (PythonInstaller.CuDNNLibraryInstalled() != false)
                 return true;
             if (!File.Exists(_pythonInstaller.CuDNNInstallerDownloadPath))
                 return false;
+           
             var computeHash =
                 PythonInstallerUtil.GetFileHash(_pythonInstaller.CuDNNInstallerDownloadPath);
             var storedHash = TargetsAndHashes.Where(m => m.Task == PythonTaskName.download_cudnn_library).ToArray()[0].Hash;
@@ -1410,7 +1458,9 @@ namespace pwiz.Skyline.Model.Tools
        
         private bool? ValidateInstallCuDNNLibrary()
         {
-            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIA ||
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD)
+                return true;
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT ||
                 PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE)
                 return false;
 

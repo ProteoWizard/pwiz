@@ -412,7 +412,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         /// <param name="showDlgAction">Action which causes the dialog to be shown</param>
         /// <param name="exerciseDlgAction">Action which can do some things and then must close the dialog.</param>
-        protected static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
+        protected internal static void RunDlg<TDlg>([InstantHandle] Action showDlgAction,
             [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction)
             where TDlg : Form
         {

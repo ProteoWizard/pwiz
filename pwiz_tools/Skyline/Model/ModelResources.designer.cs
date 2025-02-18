@@ -1191,7 +1191,7 @@ namespace pwiz.Skyline.Model {
         ///
         ///set &quot;CuDNNVersion={1}&quot;
         ///set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
-        ///set &quot;CuDNNDownloadUri=https://developer.download.nvidi [rest of string was truncated]&quot;;.
+        ///set &quot;CuDNNDownloadUri=https://developer [rest of string was truncated]&quot;;.
         /// </summary>
         public static string NvidiaInstaller_Batch_script {
             get {

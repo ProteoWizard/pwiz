@@ -897,6 +897,11 @@
       <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="ToolsUI\PythonInstallerUI.cs" />
+    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsUIResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -952,11 +957,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>EntitiesResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Optimization\OptimizationResources.Designer.cs">
       <AutoGen>True</AutoGen>
