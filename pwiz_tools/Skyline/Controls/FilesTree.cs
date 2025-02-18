@@ -21,6 +21,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -32,12 +33,13 @@ namespace pwiz.Skyline.Controls
 {
     public class FilesTree : TreeViewMS
     {
-        private readonly TreeNodeMS _chromatogramRoot;
-        private readonly TreeNodeMS _peptideLibrariesRoot;
-        private readonly TreeNodeMS _backgroundProteomeRoot;
-        private readonly TreeNodeMS _projectFilesRoot;
-        private readonly TreeNodeMS _irtRoot;
-        private readonly TreeNodeMS _imsdbRoot;
+        private readonly FilesTreeFolderNode _replicatesRoot;
+        private readonly FilesTreeFolderNode _peptideLibrariesRoot;
+        private readonly FilesTreeFolderNode _backgroundProteomeRoot;
+        private readonly FilesTreeFolderNode _projectFilesRoot;
+        private readonly FilesTreeFolderNode _irtRoot;
+        private readonly FilesTreeFolderNode _imsdbRoot;
+
         private readonly FileSystemWatcher _fileSystemWatcher;
 
         // Used while merging a file data model with a FilesTree. Each entry explains how to
@@ -52,6 +54,18 @@ namespace pwiz.Skyline.Controls
                 {FileType.retention_score_calculator, RetentionScoreCalculatorFileTreeNode.CreateNode},
                 {FileType.ion_mobility_library, IonMobilityLibraryFileTreeNode.CreateNode}
             };
+
+        // Used to keep folder nodes in proper order. This only applies to level 1 children of FilesTree.
+        private static readonly IDictionary<Type, int> TREE_NODE_SORT_ORDER = 
+            new ImmutableDictionary<Type, int>(new Dictionary<Type, int> {
+                {typeof(ReplicatesFolderNode), 0},
+                {typeof(PeptideLibrariesFolderNode), 1},
+                {typeof(BackgroundProteomeFolderNode), 2},
+                {typeof(IrtFolderNode), 3},
+                {typeof(ImsdbFolderNode), 4},
+                {typeof(ProjectFilesFolderNode), 5}
+            });
+
 
         public enum ImageId
         {
@@ -82,12 +96,12 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.Peptide);
             ImageList.Images.Add(Resources.Skyline);
 
-            _chromatogramRoot = new ReplicatesFolderNode();
+            _replicatesRoot = new ReplicatesFolderNode();
             _peptideLibrariesRoot = new PeptideLibrariesFolderNode();
-            _backgroundProteomeRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome);
-            _projectFilesRoot = new FilesTreeFolderNode(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles);
-            _irtRoot = new FilesTreeFolderNode(SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator);
-            _imsdbRoot = new FilesTreeFolderNode(SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library);
+            _backgroundProteomeRoot = new BackgroundProteomeFolderNode();
+            _irtRoot = new IrtFolderNode();
+            _imsdbRoot = new ImsdbFolderNode();
+            _projectFilesRoot = new ProjectFilesFolderNode();
 
             _fileSystemWatcher = new FileSystemWatcher();
         }
@@ -128,7 +142,7 @@ namespace pwiz.Skyline.Controls
         {
             return type switch
             {
-                FileType.replicates => _chromatogramRoot,
+                FileType.replicates => _replicatesRoot,
                 FileType.peptide_library => _peptideLibrariesRoot,
                 FileType.background_proteome => _backgroundProteomeRoot,
                 FileType.project_files => _projectFilesRoot,
@@ -210,22 +224,73 @@ namespace pwiz.Skyline.Controls
             var files = Document.Settings.Files;
 
             // TODO: support .optdb
-            ConnectDocToTree(files, FileType.replicates, _chromatogramRoot);                
-            ConnectDocToTree(files, FileType.peptide_library, _peptideLibrariesRoot);       // .blib
-            ConnectDocToTree(files, FileType.background_proteome, _backgroundProteomeRoot); // .protdb
-            ConnectDocToTree(files, FileType.retention_score_calculator, _irtRoot);         // .irtdb
-            ConnectDocToTree(files, FileType.ion_mobility_library, _imsdbRoot);             // .imsdb
+            ConnectFilesOfTypeToTree(files, FileType.replicates, _replicatesRoot);
+            ConnectFilesOfTypeToTree(files, FileType.peptide_library, _peptideLibrariesRoot);       // .blib
+            ConnectFilesOfTypeToTree(files, FileType.background_proteome, _backgroundProteomeRoot); // .protdb
+            ConnectFilesOfTypeToTree(files, FileType.retention_score_calculator, _irtRoot);         // .irtdb
+            ConnectFilesOfTypeToTree(files, FileType.ion_mobility_library, _imsdbRoot);             // .imsdb
+            AddOrRemove(_projectFilesRoot);
 
-            _projectFilesRoot.ShowOrHide(Root);
+            var expandedNodes = CountExpandedTreeNodes(Root);
+            if (expandedNodes == 0)
+            {
+                Root.Expand();
+                foreach (TreeNode child in Root.Nodes)
+                {
+                    child.Expand();
+                }
+            }
         }
 
-        private void ConnectDocToTree(IDictionary<FileType, IEnumerable<IFileBase>> dictionary, FileType fileType, TreeNode root)
+        private void ConnectFilesOfTypeToTree(IDictionary<FileType, IEnumerable<IFileBase>> files, FileType fileType, FilesTreeFolderNode folder)
         {
-            if (dictionary.TryGetValue(fileType, out var files))
+            if (files.TryGetValue(fileType, out var filesOfType))
             {
-                MergeNodes(DocumentContainer.DocumentFilePath, files, root.Nodes);
-                root.ShowOrHide(Root);
+                MergeNodes(DocumentContainer.DocumentFilePath, filesOfType, folder.Nodes);
+                AddOrRemove(folder);
             }
+        }
+
+        private void AddOrRemove(FilesTreeFolderNode folder)
+        {
+            if (folder.Nodes.Count == 0 && Root.Nodes.Contains(folder))
+                Root.Nodes.Remove(folder);
+            else if (folder.Nodes.Count > 0 && !Root.Nodes.Contains(folder))
+                InsertInOrder(folder);
+        }
+
+        private void InsertInOrder(FilesTreeFolderNode node)
+        {
+            var start = 0;
+            var end = Root.Nodes.Count;
+            while (start < end)
+            {
+                var middle = (start + end) / 2;
+                if (Compare(Root.Nodes[middle] as FilesTreeFolderNode, node) <= 0)
+                    start = middle + 1;
+                else end = middle;
+
+            }
+            var insertAt = start;
+
+            Root.Nodes.Insert(insertAt, node);
+        }
+
+        private int Compare(FilesTreeFolderNode a, FilesTreeFolderNode b)
+        {
+            return TREE_NODE_SORT_ORDER[a.GetType()].CompareTo(TREE_NODE_SORT_ORDER[b.GetType()]);
+        }
+
+        private static int CountExpandedTreeNodes(TreeNode parent)
+        {
+            var count = parent.IsExpanded ? 1 : 0;
+
+            foreach (TreeNode child in parent.Nodes)
+            {
+                count += CountExpandedTreeNodes(child);
+            }
+
+            return count;
         }
 
         private delegate FilesTreeNode CreateFilesTreeNode(string documentPath, IFileBase model);
@@ -418,6 +483,26 @@ namespace pwiz.Skyline.Controls
     public class PeptideLibrariesFolderNode : FilesTreeFolderNode
     {
         public PeptideLibrariesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_Libraries) { }
+    }
+
+    public class BackgroundProteomeFolderNode : FilesTreeFolderNode
+    {
+        public BackgroundProteomeFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome) { }
+    }
+
+    public class IrtFolderNode : FilesTreeFolderNode
+    {
+        public IrtFolderNode() : base(SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator) { }
+    }
+
+    public class ImsdbFolderNode : FilesTreeFolderNode
+    {
+        public ImsdbFolderNode() : base(SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library) { }
+    }
+
+    public class ProjectFilesFolderNode : FilesTreeFolderNode
+    {
+        public ProjectFilesFolderNode() : base(ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles) { }
     }
 
     public abstract class FilesTreeNode : TreeNodeMS
@@ -926,20 +1011,5 @@ namespace pwiz.Skyline.Controls
         public FileType Type { get => FileType.sky_view; }
         public string Name { get; }
         public string FilePath { get; }
-    }
-
-    public static class ExtensionMethods
-    {
-        public static void ShowOrHide(this TreeNode treeNode, TreeNode root)
-        {
-            if (treeNode.Nodes.Count > 0 && !root.Nodes.Contains(treeNode))
-            {
-                root.Nodes.Add(treeNode);
-            }
-            else if (treeNode.Nodes.Count == 0 && root.Nodes.Contains(treeNode))
-            {
-                root.Nodes.Remove(treeNode);
-            }
-        }
     }
 }
