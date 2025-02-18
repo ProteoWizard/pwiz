@@ -2772,6 +2772,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public override string ToString()
+        {
+            // For debugging convenience, not user-facing
+            // These are the same values in the same order used to summarize the document in the UI (lower right corner of Skyline window).
+            // That's also the same values and order as used in CheckDocumentState() calls.
+            // This is terse by design, for ease of display in debugger.
+            return $@"{MoleculeGroupCount},{MoleculeCount},{MoleculeTransitionGroupCount},{MoleculeTransitionCount}"; 
+        }
+
         #endregion
     }
 
