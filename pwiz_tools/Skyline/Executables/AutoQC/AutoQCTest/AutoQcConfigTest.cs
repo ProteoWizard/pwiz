@@ -124,6 +124,7 @@ namespace AutoQCTest
                     "testFolder"),
                 TextUtil.LineSeparate("The username and password could not be authenticated with the panorama server.",
                     "Error: The remote server returned an error: (401) Unauthorized.",
+                    "The email address and password you entered did not match any accounts on file.",
                     "URL: https://panoramaweb.org/security/home/ensureLogin.view"));
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", string.Empty, "testPassword", "testFolder"),
                 "The Panorama login email cannot be empty. Please specify a Panorama login email.");
@@ -131,6 +132,7 @@ namespace AutoQCTest
                 new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", "not_the_password", "testFolder"),
                 TextUtil.LineSeparate("The username and password could not be authenticated with the panorama server.",
                     "Error: The remote server returned an error: (401) Unauthorized.",
+                    "The email address and password you entered did not match any accounts on file.",
                     "URL: https://panoramaweb.org/security/home/ensureLogin.view"));
             TestInvalidPanoramaSettings(new PanoramaSettings(true, "https://panoramaweb.org/", "testEmail", string.Empty, "testFolder"),
                 "The Panorama user password cannot be empty. Please specify a Panorama user password.");

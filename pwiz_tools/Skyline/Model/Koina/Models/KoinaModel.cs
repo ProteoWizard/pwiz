@@ -874,7 +874,7 @@ namespace pwiz.Skyline.Model.Koina.Models
         /// <returns>A list of string representations of the sequence</returns>
         public static string[] DecodeSequences(InferInputTensor tensor)
         {
-            return DecodeSequences2(tensor).Select(s => s.FullNames).ToArray();
+            return DecodeSequences2(tensor).Select(s => s.MonoisotopicMasses).ToArray();
 
             /*var n = tensor.TensorShape.Dim[0].Size;
             var result = new string[n];
@@ -933,22 +933,7 @@ namespace pwiz.Skyline.Model.Koina.Models
             var result = new int[tensor.Shape[0]];
             for (int i = 0; i < tensor.Shape[0]; ++i)
             {
-                result[i] = -1;
-                for (int j = 0; j < tensor.Shape[1]; ++j)
-                {
-                    if (tensor.Contents.Fp32Contents[i * KoinaConstants.PRECURSOR_CHARGES + j] == 1.0f)
-                    {
-                        result[i] = j + 1;
-                        break;
-                    }
-                }
-
-                if (result[i] == -1)
-                {
-                    var charges = tensor.Contents.Fp32Contents.Skip(i * KoinaConstants.PRECURSOR_CHARGES).Take(KoinaConstants.PRECURSOR_CHARGES);
-                    throw new KoinaException(string.Format(@"[{0}] is not a valid one-hot encoded charge", string.Join(
-                        @", ", charges)));
-                }
+                result[i] = tensor.Contents.IntContents[i];
             }
 
             return result;

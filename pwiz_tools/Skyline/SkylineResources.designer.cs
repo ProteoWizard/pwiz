@@ -949,12 +949,21 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly..
+        ///   Looks up a localized string similar to Error: Failed to build the spectral library..
         /// </summary>
-        public static string CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_ {
+        public static string CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_ {
             get {
-                return ResourceManager.GetString("CommandLine_ImportSearchInternal_iRT_standard_set_to__0___but_multiple_iRT_standa" +
-                        "rds_were_found__iRT_standard_must_be_set_explicitly_", resourceCulture);
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: iRT standard set to {0}, but multiple iRT standards were found. iRT standard must be set explicitly..
+        /// </summary>
+        public static string CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT" +
+                        "_standards_were_found__iRT_standard_must_be_set_explicitly_", resourceCulture);
             }
         }
         
@@ -2087,6 +2096,15 @@ namespace pwiz.Skyline {
         public static string SkylineWindow_ImportAnnotations_Import_Annotations {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportAnnotations_Import_Annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reading annotations.
+        /// </summary>
+        public static string SkylineWindow_ImportAnnotations_Reading_annotations {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportAnnotations_Reading_annotations", resourceCulture);
             }
         }
         

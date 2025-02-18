@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -189,12 +189,6 @@
   <data name="showFiguresOfMeritContextMenuItem.Text" xml:space="preserve">
     <value>Show Figures of Merit</value>
   </data>
-  <data name="showBootstrapCurvesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>197, 22</value>
-  </data>
-  <data name="showBootstrapCurvesContextMenuItem.Text" xml:space="preserve">
-    <value>Show Bootstrap Curves</value>
-  </data>
   <data name="moreDisplayOptionsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>197, 22</value>
   </data>
@@ -259,12 +253,6 @@
     <value>showFiguresOfMeritContextMenuItem</value>
   </data>
   <data name="&gt;&gt;showFiguresOfMeritContextMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;showBootstrapCurvesContextMenuItem.Name" xml:space="preserve">
-    <value>showBootstrapCurvesContextMenuItem</value>
-  </data>
-  <data name="&gt;&gt;showBootstrapCurvesContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;moreDisplayOptionsContextMenuItem.Name" xml:space="preserve">
