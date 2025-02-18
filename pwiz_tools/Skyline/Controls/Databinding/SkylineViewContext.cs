@@ -18,9 +18,7 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -28,7 +26,6 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Xml.Serialization;
-using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -139,46 +136,49 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
 
-                var headerLineKey = @"Property";
-                var orderedPropertyLines = new OrderedDictionary { {headerLineKey, new List<string> { headerLineKey } } };
-
+                var headerLine = new List<string> { @"Property" };
+                var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
+                var propertyLines = new List<List<string>> { headerLine };
                 foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
                 {
                     // Add replicate to header line
-                    ((List<string>)orderedPropertyLines[headerLineKey]).Add(group.Key.ReplicateName);
+                    headerLine.Add(group.Key.ReplicateName);
 
                     foreach (var column in group)
                     {
                         if (!replicatePivotColumns.IsConstantColumn(column))
-                        {
+                        {   
                             continue;
                         }
 
-                        var propertyName = column.DisplayColumn.PropertyPath.Name;
-                        if (!orderedPropertyLines.Contains(propertyName))
+                        var propertyPath = column.DisplayColumn.PropertyPath;
+                        if (!propertyLineDictionary.ContainsKey(propertyPath))
                         {
-                            orderedPropertyLines[propertyName] = new List<string> { propertyName };
+                            var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                            var newRow = new List<string> { propertyDisplayName };
+                            propertyLineDictionary[propertyPath] = newRow;
+                            propertyLines.Add(newRow);
                         }
 
                         // Add value to property line
                         var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(item => column.GetValue(item) != null);
                         var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
-                        var propertyLine = (List<string>)orderedPropertyLines[propertyName];
+                        var propertyLine = propertyLineDictionary[propertyPath];
                         propertyLine.Add(formattedValue);
                     }
                 }
 
-                foreach (var line in orderedPropertyLines.Values)
+                foreach (var line in propertyLines)
                 {
                     bool first = true;
-                    foreach (var lineItem in (List<string>)line)
+                    foreach (var lineItem in line)
                     {
                         if (!first)
                         {
                             writer.Write(separator);
                         }
                         first = false;
-                        writer.Write(lineItem);
+                        writer.Write(DsvWriter.ToDsvField(separator, lineItem));
                     }
                     writer.WriteLine();
                 }
