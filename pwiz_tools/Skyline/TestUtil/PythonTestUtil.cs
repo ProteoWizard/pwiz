@@ -23,8 +23,6 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using System;
-using System.Security.Principal;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 
 namespace pwiz.SkylineTestUtil
@@ -42,17 +40,7 @@ namespace pwiz.SkylineTestUtil
         private bool _undoRegistry;
 
         public const int WAIT_TIME = 15 * 60 * 1000;
-        public static bool IsRunningElevated()
-        {
-            // Get current user's Windows identity
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
 
-            // Convert identity to WindowsPrincipal to check for roles
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
-
-            // Check if the current user is in the Administrators role
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
-        }
         public PythonTestUtil(string pythonVersion, string toolName, bool cleanSlate = true)
         {
             _pythonVersion = pythonVersion;
@@ -92,7 +80,7 @@ namespace pwiz.SkylineTestUtil
         {
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-            MultiButtonMsgDlg installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to installNvidia
+            MultiButtonMsgDlg installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect the offer to installNvidia
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.CancelDialog);
@@ -103,23 +91,19 @@ namespace pwiz.SkylineTestUtil
             var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
             AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                 needAdminDlg.Message);
-            AbstractFunctionalTest.CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
-            var resultDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
-            AssertEx.AreEqual(ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia, resultDlg.Message);
-            AbstractFunctionalTest.OkDialog(resultDlg, resultDlg.OkDialog);
-            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to installNvidia
+            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => needAdminDlg.CancelDialog()); // Expect the offer to installNvidia
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
-            resultDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
+            var resultDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
             AssertEx.AreEqual(ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia, resultDlg.Message);
             return resultDlg;
         }
+
         /// <summary>
         /// Pretends no NVIDIA hardware then Installs Python, returns true if Python installer ran (successful or not), false otherwise
         /// </summary>
         /// <param name="buildLibraryDlg">Build Library</param>
-        /// <param name="nvidiaClickNo">true clicks No, false clicks Yes, null clicks Cancel to Nvidia Detected Dialog</param>
         /// <returns></returns>
         public bool InstallPython(BuildLibraryDlg buildLibraryDlg)
         {
@@ -144,7 +128,7 @@ namespace pwiz.SkylineTestUtil
                         Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
                             longPathDlg.Message);
 
-                        if (IsRunningElevated())
+                        if (PythonInstaller.IsRunningElevated())
                         {
                             confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
                             ConfirmPythonSuccess(confirmDlg);

@@ -470,7 +470,9 @@
     <value>Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
     {0}
 	
-	Would you like to continue?</value>
+	    Would you like to continue?
+	
+	Hint: Running Skyline &apos;As Administrator&apos; will enable the &apos;OK&apos; button on this dialog, &apos;OK&apos; activates installation of Nvidia libraries...</value>
   </data>
   <data name="NvidiaInstaller_Batch_script" xml:space="preserve">
     <value><![CDATA[

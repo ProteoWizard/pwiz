@@ -161,6 +161,9 @@ namespace pwiz.Skyline.Model.Tools
         internal TextWriter Writer { get; }
         private IPythonInstallerTaskValidator TaskValidator { get; }
 
+        public bool HavePythonTasks { get; private set;}
+        public bool HaveNvidiaTasks { get; private set; }
+
 
         public static bool CudaLibraryInstalled()
         {
@@ -267,6 +270,18 @@ namespace pwiz.Skyline.Model.Tools
             File.WriteAllText(InstallNvidiaLibrariesBat, resourceString);
         }
 
+        public static bool IsRunningElevated()
+        {
+            // Get current user's Windows identity
+            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+
+            // Convert identity to WindowsPrincipal to check for roles
+            WindowsPrincipal principal = new WindowsPrincipal(identity);
+
+            // Check if the current user is in the Administrators role
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
         /// <summary>
         /// False means NONVIDIA hardware, true means NVIDIA hardware, null means don't know
         /// </summary>
@@ -370,6 +385,30 @@ namespace pwiz.Skyline.Model.Tools
             PendingTasks.Clear();
         }
 
+        public void CheckPendingTasks()
+        {
+            var tasks = PendingTasks;
+            HavePythonTasks = false;
+            HaveNvidiaTasks = false;
+
+            if (tasks.Any(task =>
+                    (task.Name != PythonTaskName.download_cuda_library
+                     && task.Name != PythonTaskName.install_cuda_library
+                     && task.Name != PythonTaskName.download_cudnn_library
+                     && task.Name != PythonTaskName.install_cudnn_library)))
+            {
+                HavePythonTasks = true;
+            }
+
+            if (tasks.Any(task =>
+                    (task.Name == PythonTaskName.download_cuda_library
+                     || task.Name == PythonTaskName.install_cuda_library
+                     || task.Name == PythonTaskName.download_cudnn_library
+                     || task.Name == PythonTaskName.install_cudnn_library)))
+            {
+                HaveNvidiaTasks = true;
+            }
+        }
 
 
         public List<PythonTask> ValidatePythonVirtualEnvironment()
