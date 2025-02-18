@@ -156,6 +156,7 @@ namespace pwiz.SkylineTestUtil
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
         public const string DOCKER_ROOT_CERTS = "Docker runners do not yet have access to the root certificates needed for Koina";
+        public const string MSAMANDA_MEMORY_ISSUES = "In-process MSAmanda causes memory corruption on some test machines";
     }
 
     /// <summary>

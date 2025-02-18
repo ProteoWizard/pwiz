@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override bool Run(CancellationTokenSource tokenSource, IProgressStatus status)
         {
             _progressStatus = status;
-
+Console.WriteLine(@"running MSAmanda"); // TODO don't let this debug cruft into master
             _success = true;
             try
             {

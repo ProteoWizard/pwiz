@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            OpenDocument(documentPath);
             if (AsSmallMolecules)
             {
                 ConvertDocumentToSmallMolecules();
@@ -427,7 +427,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath("test_opt_nl.sky");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            OpenDocument(documentPath);
 
             var docCurrent = SkylineWindow.Document;
 
@@ -464,7 +464,7 @@ namespace pwiz.SkylineTestFunctional
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath(@"covdata\cov_optimization_part.sky");
             string wiffFile = TestFilesDir.GetTestPath(@"covdata\wiff\041115 BG_sky Test Round 1.wiff");
-            RunUI(() => SkylineWindow.OpenFile(documentPath));
+            OpenDocument(documentPath);
             if (AsSmallMolecules)
             {
                 ConvertDocumentToSmallMolecules();

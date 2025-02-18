@@ -27,7 +27,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
-    public class AgilentCeOptimizationTest : AbstractFunctionalTest
+    public class AgilentCeOptimizationTest : AbstractFunctionalTestEx
     {
         [TestMethod]
         public void TestAgilentCeOptimization()
@@ -38,10 +38,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            RunUI(() =>
-            { 
-                SkylineWindow.OpenFile(TestFilesDir.GetTestPath("AgilentCeTest.sky"));
-            });
+            OpenDocument(TestFilesDir.GetTestPath("AgilentCeTest.sky"));
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResults=>{
                 importResults.OptimizationName = ExportOptimize.CE;
                 importResults.NamedPathSets = new[]
