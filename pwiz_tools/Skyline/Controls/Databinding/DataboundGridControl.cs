@@ -1139,8 +1139,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 _inColumnChange = true;
                 var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-                if (true == replicatePivotColumns?.IsPivoted() && replicatePivotColumns.HasConstantColumns() &&
-                    replicatePivotColumns.HasVariableColumns())
+                if (replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
                 {
                     replicatePivotDataGridView.Show();
                     dataGridSplitContainer.Panel1Collapsed = false;

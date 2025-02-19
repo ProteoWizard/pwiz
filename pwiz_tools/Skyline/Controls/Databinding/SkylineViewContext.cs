@@ -131,11 +131,11 @@ namespace pwiz.Skyline.Controls.Databinding
             BindingListSource bindingListSource, char separator)
         {
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-            if (true == replicatePivotColumns?.IsPivoted() && replicatePivotColumns.HasConstantColumns() &&
-                replicatePivotColumns.HasVariableColumns())
+            if (replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
             {
                 var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
 
+                // Build up data rows for replicate pivot properties
                 var headerLine = new List<string> { @"Property" };
                 var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
                 var propertyLines = new List<List<string>> { headerLine };
@@ -168,22 +168,14 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 }
 
+                // Write pivot replicate data
                 foreach (var line in propertyLines)
                 {
-                    bool first = true;
-                    foreach (var lineItem in line)
-                    {
-                        if (!first)
-                        {
-                            writer.Write(separator);
-                        }
-                        first = false;
-                        writer.Write(DsvWriter.ToDsvField(separator, lineItem));
-                    }
-                    writer.WriteLine();
+                    dsvWriter.WriteRowValues(writer, line.AsEnumerable());
                 }
                 writer.WriteLine();
 
+                // Write main data rows with filtered item properties
                 var filteredColumnDescriptors = bindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
                     .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor));
                 var filteredItemProperties = new ItemProperties(filteredColumnDescriptors);
