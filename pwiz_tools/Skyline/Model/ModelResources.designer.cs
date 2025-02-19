@@ -1203,9 +1203,9 @@ namespace pwiz.Skyline.Model {
         ///   Looks up a localized string similar to Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
         ///    {0}
         ///	
-        ///	    Would you like to continue?
+        ///        Would you like to continue?
         ///	
-        ///	Hint: Running Skyline &apos;As Administrator&apos; will enable the &apos;OK&apos; button on this dialog, &apos;OK&apos; activates installation of Nvidia libraries....
+        ///	Hint: Clicking &apos;OK&apos; activates installation of Nvidia libraries....
         /// </summary>
         public static string NvidiaInstaller_Requesting_Administrator_elevation {
             get {

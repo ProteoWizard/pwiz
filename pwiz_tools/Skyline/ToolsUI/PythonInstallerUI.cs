@@ -47,7 +47,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 try
                 {
-                    if (task.Name == PythonTaskName.download_cuda_library || task.Name == PythonTaskName.install_cuda_library ||
+                    if (task.Name == PythonTaskName.setup_nvidia_libraries || task.Name == PythonTaskName.download_cuda_library || task.Name == PythonTaskName.install_cuda_library ||
                         task.Name == PythonTaskName.download_cudnn_library || task.Name == PythonTaskName.install_cudnn_library)
                     {
                         if (_userAnswerToCuda != @"No")
@@ -76,15 +76,19 @@ namespace pwiz.Skyline.ToolsUI
                                     new AlertDlg(
                                         string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                                             PythonInstaller.InstallNvidiaLibrariesBat), MessageBoxButtons.OKCancel);
-                                if (!PythonInstaller.IsRunningElevated())
-                                    adminMessageDlg.FindButton(DialogResult.OK).Enabled = false;
+                                
+                                //if (!PythonInstaller.IsRunningElevated())
+                                 //   adminMessageDlg.FindButton(DialogResult.OK).Enabled = false;
 
                                 var nvidiaChoice = adminMessageDlg.ShowDialog();
                                 //Download
                                 if (nvidiaChoice == DialogResult.Cancel)
                                 {
                                     _userAnswerToCuda = @"Cancel";
+                                    if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
+                                    if (!EnableNvidiaGpuDlg.IsDisposed) EnableNvidiaGpuDlg.Dispose();
                                     if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                                    return nvidiaChoice;
                                 }
                                 else if (nvidiaChoice == DialogResult.OK)
                                 {
@@ -189,23 +193,26 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (PythonInstaller.TestForNvidiaGPU() == true)
                 {
-                    if (pythonInstaller.IsNvidiaEnvironmentReady(abortedTasks))
+                    if (_userAnswerToCuda == @"Yes")
                     {
-                        _resultAlertDlg =
-                            new AlertDlg(
-                                ToolsUIResources.NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia,
-                                MessageBoxButtons.OK);
-                        _resultAlertDlg.ShowDialog();
-                        pythonInstaller.PendingTasks.Clear();
-                        result = DialogResult.OK;
-                    }
-                    else
-                    {
-                        _resultAlertDlg =
-                            new AlertDlg(
-                                ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia,
-                                MessageBoxButtons.OK);
-                        _resultAlertDlg.ShowDialog();
+                        if (pythonInstaller.IsNvidiaEnvironmentReady(abortedTasks))
+                        {
+                            _resultAlertDlg =
+                                new AlertDlg(
+                                    ToolsUIResources.NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia,
+                                    MessageBoxButtons.OK);
+                            _resultAlertDlg.ShowDialog();
+                            pythonInstaller.PendingTasks.Clear();
+                            result = DialogResult.OK;
+                        }
+                        else
+                        {
+                            _resultAlertDlg =
+                                new AlertDlg(
+                                    ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia,
+                                    MessageBoxButtons.OK);
+                            _resultAlertDlg.ShowDialog();
+                        }
                     }
                 }
             }

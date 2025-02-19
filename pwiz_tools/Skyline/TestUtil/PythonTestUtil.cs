@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestUtil
             // PauseTest("back to wizard");
         }
 
-        public AlertDlg InstallPythonTestNvidia(BuildLibraryDlg buildLibraryDlg)
+        public void InstallPythonTestNvidia(BuildLibraryDlg buildLibraryDlg)
         {
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
@@ -84,20 +84,18 @@ namespace pwiz.SkylineTestUtil
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.CancelDialog);
-            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage());
+            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.OkDialog(installNvidiaDlg, installNvidiaDlg.ClickYes);
             var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
             AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                 needAdminDlg.Message);
-            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => needAdminDlg.CancelDialog()); // Expect the offer to installNvidia
+            AbstractFunctionalTest.CancelDialog(needAdminDlg, () => needAdminDlg.CancelDialog()); // Expect the offer to installNvidia
+            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
-            var resultDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
-            AssertEx.AreEqual(ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia, resultDlg.Message);
-            return resultDlg;
         }
 
         /// <summary>

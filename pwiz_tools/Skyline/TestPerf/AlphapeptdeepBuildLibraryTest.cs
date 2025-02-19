@@ -73,14 +73,10 @@ namespace TestPerf
             if (!_pythonTestUtil.HavePythonPrerequisite(_buildLibraryDlg))
             {
                 _pythonTestUtil.CancelPython(_buildLibraryDlg);
+                
+
+                _pythonTestUtil.InstallPythonTestNvidia(_buildLibraryDlg);
                 WaitForClosedForm<LongWaitDlg>();
-
-
-
-                nvidiaResult = _pythonTestUtil.InstallPythonTestNvidia(_buildLibraryDlg);
-                RunUI(() => { nvidiaResult.OkDialog(); });
-                WaitForClosedForm<LongWaitDlg>();
-
 
                 //_pythonTestUtil.InstallPython(_buildLibraryDlg);
                 //WaitForClosedForm<LongWaitDlg>();

@@ -244,6 +244,12 @@
   <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run" xml:space="preserve">
     <value>This tool requires an Active Replicate Name to run</value>
   </data>
+	<data name="NvidiaInstaller_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>Setting up Nvidia GPU Libraries</value>
+  </data>
+  <data name="NvidiaInstaller_Failed_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>Failed setting up Nvidia GPU Libraries</value>
+  </data>
   <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
     <value>Installing Packages</value>
   </data>

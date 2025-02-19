@@ -555,6 +555,15 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Setting up Nvidia GPU Computation.
+        /// </summary>
+        public static string NvidiaInstaller_Setup_Nvidia_Libraries {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Setup_Nvidia_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python {0} set up is required for {1}, click &apos;OK&apos; to proceed..
         /// </summary>
         public static string PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required {
@@ -583,7 +592,7 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by installing the Cuda and CuDNN Nvidia libraries? Elevated privileges are required to install this feature..
+        ///   Looks up a localized string similar to Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature..
         /// </summary>
         public static string PythonInstaller_Install_Cuda_Library {
             get {

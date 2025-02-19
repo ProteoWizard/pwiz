@@ -785,6 +785,11 @@
     <Compile Include="Model\Results\Scoring\FeatureScores.cs" />
     <Compile Include="Model\Results\Scoring\ScoreQValueMap.cs" />
     <Compile Include="Model\Tools\PythonInstaller.cs" />
+    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ToolsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\TransitionLossMap.cs" />
     <Compile Include="Properties\MetadataRuleSetList.cs" />
     <Compile Include="Properties\RemoteAccountList.cs" />
@@ -874,11 +879,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ListsResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Tools\ToolsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ToolsResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\ModelResources.Designer.cs">
       <AutoGen>True</AutoGen>
