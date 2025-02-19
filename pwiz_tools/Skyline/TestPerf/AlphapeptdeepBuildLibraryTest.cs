@@ -18,7 +18,6 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Tools;
@@ -34,7 +33,7 @@ namespace TestPerf
         [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
         {
-            _pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
+            _pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep");
             TestFilesZip = "TestFunctional/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
         }
@@ -69,7 +68,6 @@ namespace TestPerf
                 _buildLibraryDlg.AlphaPeptDeep = true;
             });
 
-            AlertDlg nvidiaResult;
             if (!_pythonTestUtil.HavePythonPrerequisite(_buildLibraryDlg))
             {
                 _pythonTestUtil.CancelPython(_buildLibraryDlg);
