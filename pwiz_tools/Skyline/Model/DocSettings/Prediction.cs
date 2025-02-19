@@ -1147,11 +1147,17 @@ namespace pwiz.Skyline.Model.DocSettings
         RetentionScoreProvider ScoreProvider { get; }
     }
 
-    public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator
+    /// <summary>
+    /// Identity class to allow identity equality on <see cref="RetentionScoreCalculatorSpec"/>.
+    /// </summary>
+    public sealed class RetentionScoreCalculatorSpecId : Identity { }
+
+    public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator, IFileModel
     {
         protected RetentionScoreCalculatorSpec(string name)
             : base(name)
         {
+            Id = new RetentionScoreCalculatorSpecId();
         }
 
         public abstract double? ScoreSequence(Target sequence);
@@ -1194,6 +1200,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         protected RetentionScoreCalculatorSpec()
         {
+            Id = new RetentionScoreCalculatorSpecId();
         }
 
         #endregion
@@ -1204,6 +1211,10 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
         #endregion
+
+        public Identity Id { get; }
+        public FileType Type { get => FileType.retention_score_calculator; }
+        public string FilePath { get => PersistencePath; }
     }
 
     public interface IRetentionScoreSource

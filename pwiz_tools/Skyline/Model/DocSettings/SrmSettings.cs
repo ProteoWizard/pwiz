@@ -2291,6 +2291,53 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        // TODO (ekoneil): placeholder, not immutable. Need to rework to update as SrmSettings changes.
+        public IDictionary<FileType, IEnumerable<IFileBase>> Files
+        {
+            get
+            {
+                var dict = new Dictionary<FileType, IEnumerable<IFileBase>>();
+
+                // *.raw
+                if (MeasuredResults?.Chromatograms != null)
+                {
+                    dict[FileType.replicates] = MeasuredResults.Chromatograms;
+                }
+
+                // *.blib
+                if (PeptideSettings?.Libraries?.LibrarySpecs != null)
+                {
+                    dict[FileType.peptide_library] = PeptideSettings.Libraries.LibrarySpecs;
+                }
+
+                // *.protdb
+                if (PeptideSettings != null && HasBackgroundProteome)
+                {
+                    dict[FileType.background_proteome] = ImmutableList.Singleton(PeptideSettings.BackgroundProteome);
+                }
+
+                // *.irtdb
+                if (PeptideSettings != null && HasRTCalcPersisted)
+                {
+                        dict[FileType.retention_score_calculator] = ImmutableList.Singleton(PeptideSettings.Prediction.RetentionTime.Calculator);
+                }
+
+                // *.optdb
+                if (HasOptimizationLibraryPersisted)
+                {
+                    dict[FileType.optimization_library] = ImmutableList.Singleton(TransitionSettings.Prediction.OptimizedLibrary);
+                }
+
+                // *.imsdb
+                if (HasIonMobilityLibraryPersisted)
+                {
+                    dict[FileType.ion_mobility_library] = ImmutableList.Singleton(TransitionSettings.IonMobilityFiltering.IonMobilityLibrary);
+                }
+
+                return new ImmutableDictionary<FileType, IEnumerable<IFileBase>>(dict);
+            }
+        }
     }
 
     /// <summary>
