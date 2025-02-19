@@ -127,6 +127,68 @@ namespace pwiz.Skyline.Controls.Databinding
             return true;
         }
 
+        protected override void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+            BindingListSource bindingListSource, char separator)
+        {
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            if (replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
+            {
+                var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
+
+                // Build up data rows for replicate pivot properties
+                var headerLine = new List<string> { @"Property" };
+                var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
+                var propertyLines = new List<List<string>> { headerLine };
+                foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+                {
+                    // Add replicate to header line
+                    headerLine.Add(group.Key.ReplicateName);
+
+                    foreach (var column in group)
+                    {
+                        if (!replicatePivotColumns.IsConstantColumn(column))
+                        {   
+                            continue;
+                        }
+
+                        var propertyPath = column.DisplayColumn.PropertyPath;
+                        if (!propertyLineDictionary.ContainsKey(propertyPath))
+                        {
+                            var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                            var newRow = new List<string> { propertyDisplayName };
+                            propertyLineDictionary[propertyPath] = newRow;
+                            propertyLines.Add(newRow);
+                        }
+
+                        // Add value to property line
+                        var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(item => column.GetValue(item) != null);
+                        var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
+                        var propertyLine = propertyLineDictionary[propertyPath];
+                        propertyLine.Add(formattedValue);
+                    }
+                }
+
+                // Write pivot replicate data
+                foreach (var line in propertyLines)
+                {
+                    dsvWriter.WriteRowValues(writer, line.AsEnumerable());
+                }
+                writer.WriteLine();
+
+                // Write main data rows with filtered item properties
+                var filteredColumnDescriptors = bindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
+                    .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor));
+                var filteredItemProperties = new ItemProperties(filteredColumnDescriptors);
+
+                IProgressStatus status = new ProgressStatus(string.Format(Resources.SkylineViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
+                WriteDataWithStatus(progressMonitor, ref status, writer, new RowItemEnumerator(bindingListSource.Cast<RowItem>(), filteredItemProperties, bindingListSource.ColumnFormats), separator);
+            }
+            else
+            {
+                base.WriteData(progressMonitor, writer, bindingListSource, separator);
+            }
+        }
+
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
         {
             Settings.Default.PersistedViews.SetViewSpecList(viewGroup, viewSpecList);
