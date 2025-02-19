@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestUtil
 
         public const int WAIT_TIME = 15 * 60 * 1000;
 
-        public PythonTestUtil(string pythonVersion, string toolName, bool cleanSlate = true)
+        public PythonTestUtil(string pythonVersion, string toolName, bool cleanSlate)
         {
             _pythonVersion = pythonVersion;
             _toolName = toolName;

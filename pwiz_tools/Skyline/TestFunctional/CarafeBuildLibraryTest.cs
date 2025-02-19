@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
         private string LibraryPathWithoutIrt => TestContext.GetTestPath("TestCarafeBuildLibrary\\LibraryWithoutIrt.blib");
         protected override void DoTest()
         {
-            PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.CARAFE_PYTHON_VERSION, @"Carafe");
+            PythonTestUtil pythonUtil = new PythonTestUtil(BuildLibraryDlg.CARAFE_PYTHON_VERSION, @"Carafe", true);
             var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
             const string libraryWithoutIrt = @"CarafeLibraryWithoutIrt";
