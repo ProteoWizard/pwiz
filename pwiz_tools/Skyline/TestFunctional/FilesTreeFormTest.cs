@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                SkylineWindow.FilesTree.CollapseNodesForFolder(FolderType.replicates);
+                SkylineWindow.FilesTree.CollapseNodesInFolder(FolderType.replicates);
 
                 var replicateNodes = SkylineWindow.FilesTree.Folder(FolderType.replicates);
                 replicateNodes.Nodes[1].Expand();

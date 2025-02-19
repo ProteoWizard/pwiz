@@ -241,4 +241,7 @@
   <data name="FilesTree_TreeNodeLabel_ChromatogramCache" xml:space="preserve">
       <value>Chromatogram Cache</value>
   </data>
+  <data name="FilesTree_RenderTip_FileName" xml:space="preserve">
+      <value>File Name</value>
+  </data>
 </root>
