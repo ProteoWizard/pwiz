@@ -88,6 +88,33 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to find file.
+        /// </summary>
+        public static string FilesTree_TreeNode_RenderTip_FileMissing {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_FileMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File Name.
+        /// </summary>
+        public static string FilesTree_TreeNode_RenderTip_FileName {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_FileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File Path.
+        /// </summary>
+        public static string FilesTree_TreeNode_RenderTip_FilePath {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_FilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Instrument Model.
         /// </summary>
         public static string FilesTree_TreeNode_RenderTip_InstrumentModel {
@@ -111,15 +138,6 @@ namespace pwiz.Skyline.Controls {
         public static string FilesTree_TreeNode_RenderTip_Name {
             get {
                 return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_Name", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Path.
-        /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_Path {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_Path", resourceCulture);
             }
         }
         

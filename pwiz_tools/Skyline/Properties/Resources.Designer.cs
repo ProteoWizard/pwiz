@@ -661,6 +661,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap AuditLog {
+            get {
+                object obj = ResourceManager.GetObject("AuditLog", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The library built successfully. Spectra matching the following peptides had multiple ambiguous peptide matches and were excluded:.
         /// </summary>
         public static string BiblioSpecLiteBuilder_AmbiguousMatches_The_library_built_successfully__Spectra_matching_the_following_peptides_had_multiple_ambiguous_peptide_matches_and_were_excluded_ {
@@ -910,6 +920,16 @@ namespace pwiz.Skyline.Properties {
         public static string CachedLibrary_WarnInvalidEntries_ {
             get {
                 return ResourceManager.GetString("CachedLibrary_WarnInvalidEntries_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap CacheFile {
+            get {
+                object obj = ResourceManager.GetObject("CacheFile", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         
@@ -11797,6 +11817,16 @@ namespace pwiz.Skyline.Properties {
         public static string VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError {
             get {
                 return ResourceManager.GetString("VendorIssueHelper_ShowLibraryMissingExternalSpectrumFilesError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap ViewFile {
+            get {
+                object obj = ResourceManager.GetObject("ViewFile", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

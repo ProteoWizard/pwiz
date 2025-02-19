@@ -150,10 +150,10 @@ namespace pwiz.SkylineTestFunctional
             CheckReplicateEquivalence(42);
 
             // Selecting replicate should update selected index / graphs
-            var replicateName = SkylineWindow.FilesTree.Folder(FolderType.replicates).Nodes[4].Name;
+            var sampleFileNode = SkylineWindow.FilesTree.Folder(FolderType.replicates).Nodes[4].Nodes[0] as FilesTreeNode;
             RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.ActivateReplicate(replicateName);
+                SkylineWindow.FilesTreeForm.ActivateReplicate(sampleFileNode);
             });
             WaitForGraphs();
             RunUI(() => Assert.AreEqual(4, SkylineWindow.SelectedResultsIndex));

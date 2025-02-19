@@ -63,7 +63,10 @@ namespace pwiz.Skyline.Controls
             replicate,
             replicate_sample_file,
             peptide,
-            skyline
+            skyline,
+            audit_log,
+            cache_file,
+            view_file
         }
 
         public FilesTree()
@@ -82,6 +85,9 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.DataProcessing);
             ImageList.Images.Add(Resources.Peptide);
             ImageList.Images.Add(Resources.Skyline);
+            ImageList.Images.Add(Resources.AuditLog);
+            ImageList.Images.Add(Resources.CacheFile);
+            ImageList.Images.Add(Resources.ViewFile);
 
             _replicatesFolder = 
                 FolderNode.Create(FolderType.replicates, ControlsResources.FilesTree_TreeNodeLabel_Replicates, 0);
@@ -144,6 +150,25 @@ namespace pwiz.Skyline.Controls
                 _ => new DummyFilesTreeNode()
             };
         }
+
+        public void FileDeleted(string fileName)
+        {
+            FileNode.FileDeleted(Root, fileName);
+            UpdateNodeStates();
+        }
+
+        public void FileCreated(string fileName)
+        {
+            FileNode.FileCreated(Root, fileName);
+            UpdateNodeStates();
+        }
+
+        public void FileRenamed(string oldFileName, string newFileName)
+        {
+            FileNode.FileRenamed(Root, oldFileName, newFileName);
+            UpdateNodeStates();
+        }
+
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
         {
@@ -225,6 +250,8 @@ namespace pwiz.Skyline.Controls
             ConnectFilesOfTypeToTree(files, FileType.retention_score_calculator, _irtFolder);         // .irtdb
             ConnectFilesOfTypeToTree(files, FileType.ion_mobility_library, _imsdbFolder);             // .imsdb
             AddOrRemove(_projectFilesFolder);
+
+            UpdateNodeStates();
 
             var expandedNodes = IsAnyNodeExpanded(Root);
             if (!expandedNodes)
@@ -467,20 +494,17 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_ProjectDirectory_OnDeleted(object sender, FileSystemEventArgs e)
         {
-            FileNode.FileDeleted(Root, e.Name);
-            UpdateNodeStates();
+            FileDeleted(e.Name);
         }
 
         private void FilesTree_ProjectDirectory_OnCreated(object sender, FileSystemEventArgs e)
         {
-            FileNode.FileCreated(Root, e.Name);
-            UpdateNodeStates();
+            FileCreated(e.Name);
         }
 
         private void FilesTree_ProjectDirectory_OnRenamed(object sender, RenamedEventArgs e)
         {
-            FileNode.FileRenamed(Root, e.OldName, e.Name);
-            UpdateNodeStates();
+            FileRenamed(e.OldName, e.Name);
         }
     }
 
@@ -596,7 +620,11 @@ namespace pwiz.Skyline.Controls
 
         public FileState FileState { get; protected set; }
 
-        // CONSIDER: add FileName to IFileModel
+        public string FilePath { get => (Model as IFileModel)?.FilePath; }
+
+        public abstract string LocalFilePath { get; }
+
+        // CONSIDER: add FileName to IFileModel?
         public virtual string FileName
         {
             get
@@ -605,8 +633,6 @@ namespace pwiz.Skyline.Controls
                 return Path.GetFileName(model?.FilePath);
             }
         }
-
-        public abstract string LocalFilePath { get; }
 
         public IFileBase Model
         {
@@ -640,8 +666,33 @@ namespace pwiz.Skyline.Controls
             Text = Model.Name;
 
             var isAnyFileMissing = IsAnyFileMissing(this);
-            // CONSIDER: rely on FileState? Or just check the file system?
+            // CONSIDER: rely on FileState or just check the file system?
             ImageIndex = isAnyFileMissing ? ImageMissing : ImageAvailable;
+        }
+
+        public bool HasTip => true;
+
+        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            using var rt = new RenderTools();
+
+            // draw into table and return calculated dimensions
+            var customTable = new TableDesc();
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Name, rt);
+
+            if (!LocalFileExists())
+            {
+                var font = rt.FontBold;
+                customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_FileMissing, string.Empty, rt);
+                font = rt.FontNormal;
+            }
+
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
+            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
+
+            var size = customTable.CalcDimensions(g);
+            customTable.Draw(g);
+            return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
 
         private static TreeNode FindTreeNodeForFileName(TreeNode node, string name)
@@ -717,31 +768,12 @@ namespace pwiz.Skyline.Controls
         public SkylineRootTreeNode(SkylineFileModel model) : 
             base (model, FilesTree.ImageId.skyline) { }
 
-        public string FilePath => ((IFileModel)Model).FilePath;
-
         public override string LocalFilePath => FilePath;
-
-        public bool HasTip => true;
 
         public override void OnModelChanged()
         {
             Name = Model.Name;
             Text = Model.Name;
-        }
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Text, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_ActiveDirectory, Settings.Default.ActiveDirectory, rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
     }
 
@@ -758,8 +790,8 @@ namespace pwiz.Skyline.Controls
         public ReplicateTreeNode(IFileGroupModel model) : 
             base(model, FilesTree.ImageId.replicate) { }
 
-        // CONSIDER: ReplicateTreeNodes are virtual files and don't represent an actual file on disk / network. 
-        //           so consider adding a VirtualFileNode subclass
+        // CONSIDER: ReplicateTreeNodes are virtual files and don't represent an actual
+        //           file on disk / network. So consider adding a VirtualFileNode subclass
         public override string FileName { get => Name;}
 
         public override string LocalFilePath { get => null; }
@@ -785,31 +817,12 @@ namespace pwiz.Skyline.Controls
             FileState = localFilePath != null ? FileState.available : FileState.missing;
         }
 
-        public string FilePath { get => ((IFileModel)Model).FilePath; }
-
         public override string LocalFilePath { get; }
 
         internal override bool LocalFileExists()
         {
-            // includes a directory check because some replicate samples are actually directories (*.d)
+            // includes a directory check because some replicate samples live in nested directories (*.d)
             return File.Exists(LocalFilePath) || Directory.Exists(LocalFilePath); 
-        }
-
-        public bool HasTip => true;
-    
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            using var rt = new RenderTools();
-    
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_SampleName, Text, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_LocalPath, LocalFilePath, rt);
-    
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
     }
 
@@ -831,26 +844,7 @@ namespace pwiz.Skyline.Controls
             FileState = localFilePath != null ? FileState.available : FileState.missing;
         }
 
-        public string FilePath { get => ((IFileModel)Model).FilePath; }
-
         public override string LocalFilePath { get; }
-
-        public bool HasTip => true;
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Name, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_RenderTip_FileName, Path.GetFileName(FilePath), rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, Path.GetFullPath(FilePath ?? string.Empty), rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
     }
 
     public class RetentionScoreCalculatorFileTreeNode : FileNode, ITipProvider
@@ -861,7 +855,6 @@ namespace pwiz.Skyline.Controls
                 return null;
 
             var localFilePath = FindExistingInPossibleLocations(documentPath, model.FilePath);
-
             return new RetentionScoreCalculatorFileTreeNode(model, localFilePath);
         }
 
@@ -872,25 +865,7 @@ namespace pwiz.Skyline.Controls
             FileState = localFilePath != null ? FileState.available : FileState.missing;
         }
 
-        public string FilePath { get => ((IFileModel)Model).FilePath; }
-
         public override string LocalFilePath { get; }
-
-        public bool HasTip => true;
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
     }
 
     public class IonMobilityLibraryFileTreeNode : FileNode, ITipProvider
@@ -901,7 +876,6 @@ namespace pwiz.Skyline.Controls
                 return null;
 
             var localFilePath = FindExistingInPossibleLocations(documentPath, model.FilePath);
-
             return new IonMobilityLibraryFileTreeNode(model, localFilePath);
         }
 
@@ -912,25 +886,7 @@ namespace pwiz.Skyline.Controls
             FileState = localFilePath != null ? FileState.available : FileState.missing;
         }
 
-        public string FilePath { get => ((IFileModel)Model).FilePath; }
-
         public override string LocalFilePath { get; }
-
-        public bool HasTip => true;
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
     }
 
     public class BackgroundProteomeTreeNode : FileNode, ITipProvider
@@ -941,7 +897,6 @@ namespace pwiz.Skyline.Controls
                 return null;
 
             var localFilePath = FindExistingInPossibleLocations(documentPath, model.FilePath);
-
             return new BackgroundProteomeTreeNode(model, localFilePath);
         }
 
@@ -952,112 +907,34 @@ namespace pwiz.Skyline.Controls
             FileState = localFilePath != null ? FileState.available : FileState.missing;
         }
 
-        public string FilePath { get => ((IFileModel)Model).FilePath; }
-
         public override string LocalFilePath { get; }
-
-        public bool HasTip => true;
-    
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            using var rt = new RenderTools();
-    
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, Path.GetFileName(FilePath), rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, FilePath, rt);
-    
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
     }
 
     public class SkylineAuditLogTreeNode : FileNode, ITipProvider
     {
         public SkylineAuditLogTreeNode(AuditLogFileModel model) : 
-            base(model, FilesTree.ImageId.file) { }
+            base(model, FilesTree.ImageId.audit_log) { }
 
         public override string LocalFilePath => (Model as IFileModel)?.FilePath;
-
-        public bool HasTip => true;
-
-        public override void OnModelChanged()
-        {
-            ImageIndex = ImageAvailable;
-        }
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            if (!(Model is IFileModel model))
-                return Size.Empty;
-
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, model.Name, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, model.FilePath, rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
     }
 
     public class SkylineViewTreeNode : FileNode, ITipProvider
     {
         public SkylineViewTreeNode(ViewFileModel model) : 
-            base(model, FilesTree.ImageId.file) { }
+            base(model, FilesTree.ImageId.view_file) { }
 
         public override string LocalFilePath => (Model as IFileModel)?.FilePath;
-
-        public bool HasTip => true;
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            if (!(Model is IFileModel model))
-                return Size.Empty;
-
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, model.Name, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, model.FilePath, rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
     }
 
     public class SkylineChromatogramCacheTreeNode : FileNode, ITipProvider
     {
         public SkylineChromatogramCacheTreeNode(ChromatogramCacheFileModel model) : 
-            base(model, FilesTree.ImageId.file) { }
+            base(model, FilesTree.ImageId.cache_file) { }
 
         public override string LocalFilePath => (Model as IFileModel)?.FilePath;
-
-        public bool HasTip => true;
-
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
-        {
-            if (!(Model is IFileModel model))
-                return Size.Empty;
-
-            using var rt = new RenderTools();
-
-            // draw into table and return calculated dimensions
-            var customTable = new TableDesc();
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Name, model.Name, rt);
-            customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_Path, model.FilePath, rt);
-
-            var size = customTable.CalcDimensions(g);
-            customTable.Draw(g);
-            return new Size((int)size.Width + 4, (int)size.Height + 4);
-        }
     }
+
+    #region Project File Models
 
     public sealed class SkylineFileModelId : Identity { };
     public sealed class AuditLogFileModelId : Identity { };
@@ -1121,4 +998,6 @@ namespace pwiz.Skyline.Controls
         public string Name { get; }
         public string FilePath { get; }
     }
+
+    #endregion
 }

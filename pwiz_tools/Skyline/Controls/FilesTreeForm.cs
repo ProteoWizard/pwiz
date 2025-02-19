@@ -65,9 +65,12 @@ namespace pwiz.Skyline.Controls
             SkylineWindow.ShowAuditLog();
         }
 
-        public void OpenContainingFolder(string folderPath)
+        public void OpenContainingFolder(TreeNode selectedNode)
         {
-            Process.Start(@"explorer.exe", $@"/select, ""{folderPath}""");
+            if (FilesTree.SelectedNode is FileNode fileNode)
+            {
+                Process.Start(@"explorer.exe", $@"/select,""{fileNode.LocalFilePath}""");
+            }
         }
 
         public void OpenLibraryExplorer(string libraryName)
@@ -75,9 +78,13 @@ namespace pwiz.Skyline.Controls
             SkylineWindow.OpenLibraryExplorer(libraryName);
         }
 
-        public void ActivateReplicate(string name)
+        public void ActivateReplicate(FilesTreeNode node)
         {
-            SkylineWindow.ActivateReplicate(name);
+            // Replicates open using the replicate name, which is pulled from the parent tree node which
+            // avoids adding a pointer to the parent in SrmSettings and adding a new field on the
+            // replicate file's data model
+            if (node.Parent is ReplicateTreeNode parent)
+                SkylineWindow.ActivateReplicate(parent.Name);
         }
 
         public void ShowManageResultsDialog()
@@ -178,14 +185,6 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private void FilesTree_ShowContainingFolderMenuItem(object sender, EventArgs e)
-        {
-            if (FilesTree.SelectedNode is FileNode treeNode)
-            {
-                OpenContainingFolder(treeNode.LocalFilePath);
-            }
-        }
-
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             switch (e.Node)
@@ -197,13 +196,14 @@ namespace pwiz.Skyline.Controls
                     OpenLibraryExplorer(peptideLibrary.Text);
                     break;
                 case ReplicateSampleFileTreeNode replicate:
-                    // Replicates open using the replicate name, which is pulled from the parent tree node which
-                    // avoids adding a pointer to the parent in SrmSettings and putting a new field on the
-                    // replicate file's data model
-                    if (replicate.Parent is ReplicateTreeNode parent)
-                        ActivateReplicate(parent.Name);
+                    ActivateReplicate(replicate);
                     break;
             }
+        }
+
+        private void FilesTree_ShowContainingFolderMenuItem(object sender, EventArgs e)
+        {
+            OpenContainingFolder(FilesTree.SelectedNode);
         }
 
         private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
