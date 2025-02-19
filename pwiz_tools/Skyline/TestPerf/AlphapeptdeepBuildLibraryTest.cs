@@ -33,7 +33,7 @@ namespace TestPerf
         [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
         {
-            _pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep");
+            _pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
             TestFilesZip = "TestFunctional/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
         }
