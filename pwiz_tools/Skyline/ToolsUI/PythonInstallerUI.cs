@@ -143,6 +143,7 @@ namespace pwiz.Skyline.ToolsUI
                     else
                     {
                         abortedTasks.Add(task);
+                        return DialogResult.Cancel;
                     }
                 }
                 catch (Exception ex)
