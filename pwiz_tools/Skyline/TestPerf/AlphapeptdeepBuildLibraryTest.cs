@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
@@ -24,6 +25,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using static pwiz.Skyline.FileUI.PeptideSearch.ImportPeptideSearchDlg;
 
 namespace TestPerf
 {
@@ -34,7 +36,7 @@ namespace TestPerf
         public void TestAlphaPeptDeepBuildLibrary()
         {
             _pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
-            TestFilesZip = "TestFunctional/AlphapeptdeepBuildLibraryTest.zip";
+            TestFilesZip = "TestPerf/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
         }
 
@@ -133,15 +135,18 @@ namespace TestPerf
                         AbstractFunctionalTest.WaitForClosedForm<LongWaitDlg>();
                     }
 
-                //PauseTest({
-                TestResultingLib(storedHash);
+                //PauseTest();
+                //TestResultingLibByHash(storedHash);
+                TestResultingLibByValues();
+
             }
             else
             {
                 AbstractFunctionalTest.RunLongDlg<LongWaitDlg>(_buildLibraryDlg.OkWizardPage, WaitForClosedForm, dlg => { 
                 });
 
-                TestResultingLib(storedHash);
+                //TestResultingLibByHash(storedHash);
+                TestResultingLibByValues();
             }
             
         }
@@ -150,7 +155,19 @@ namespace TestPerf
             DirectoryEx.SafeDelete("TestAlphapeptdeepBuildLibrary");
         }
 
-        private void TestResultingLib(string storedHash)
+        private void TestResultingLibByValues()
+        {
+            string product = _buildLibraryDlg.BuilderLibFilepath;
+            string answer = TestFilesDir.GetTestPath(@"predict.speclib.tsv");
+            using (var answerReader = new StreamReader(answer))
+            {
+                using (var productReader = new StreamReader(product))
+                {
+                    AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1e-6);
+                }
+            }
+        }
+        private void TestResultingLibByHash(string storedHash)
         {
             Assert.IsTrue(_pythonTestUtil.HavePythonPrerequisite(_buildLibraryDlg));
 
