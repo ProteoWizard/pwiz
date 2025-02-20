@@ -71,6 +71,12 @@ namespace pwiz.Common.DataBinding.Controls.Editor
             }
         }
 
+        public void RetractView()
+        {
+            chooseViewsControl1.SelectView("");
+            Remove(false);
+        }
+
         private void BtnRemoveOnClick(object sender, EventArgs e)
         {
             Remove(true);
