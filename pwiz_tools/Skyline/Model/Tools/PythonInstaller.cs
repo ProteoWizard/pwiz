@@ -110,11 +110,11 @@ namespace pwiz.Skyline.Model.Tools
         {
             return InstallNvidiaLibrariesBat;
         }
-        public static bool? NvidiaGpuAvailable { get; internal set; }
+        public bool? NvidiaGpuAvailable { get; internal set; }
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
         public string PythonVersion { get; }
-        public static List<PythonPackage> PythonPackages { get; set; }
+        public List<PythonPackage> PythonPackages { get; }
         public string PythonEmbeddablePackageFileName => PythonEmbeddablePackageFileBaseName + DOT_ZIP;
         public Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -136,18 +136,7 @@ namespace pwiz.Skyline.Model.Tools
             NONVIDIAHARD,    // Simulate Nvidia Hardware not present 
             NONVIDIASOFT     // Simulate Python is installed, Nvidia Hardware present, Nvidia Software not present
         }
-
-        private static eSimulatedInstallationState _simulatedInstallationState;
-        public static eSimulatedInstallationState SimulatedInstallationState
-        {
-            get { return _simulatedInstallationState; }
-            set
-            {
-                _simulatedInstallationState = value;
-                TestForNvidiaGPU();
-            }
-        }
-
+        public static eSimulatedInstallationState SimulatedInstallationState { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
         public ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
@@ -297,15 +286,12 @@ namespace pwiz.Skyline.Model.Tools
         /// False means NONVIDIA hardware, true means NVIDIA hardware, null means don't know
         /// </summary>
         /// <returns></returns>
-        public static bool? TestForNvidiaGPU(IEnumerable<PythonPackage> packages = null)
+        public static bool? TestForNvidiaGPU()
         {
             if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD || SimulatedInstallationState == eSimulatedInstallationState.NAIVE) 
                 return false;
-            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)
-            {
-                NvidiaGpuAvailable = true; 
+            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)  //Also assume we have NVIDIA card when we assume we don't have NVIDIA software
                 return true;
-            } //Also assume we have NVIDIA card when we assume we don't have NVIDIA software
 
             bool? nvidiaGpu = null;
             try
@@ -324,17 +310,6 @@ namespace pwiz.Skyline.Model.Tools
             {
                 Console.WriteLine(@"An error occurred while querying for WMI data: " + e.Message);
             }
-
-            NvidiaGpuAvailable = nvidiaGpu;
-            PythonPackages = packages?.ToList();
-
-            if (NvidiaGpuAvailable == true)
-            {
-                PythonPackages?.Add(new PythonPackage { Name = @"wheel", Version = null });
-                PythonPackages?.Add(new PythonPackage { Name = @"nvidia-cudnn-cu12", Version = null });
-                PythonPackages?.Add(new PythonPackage { Name = @"torch --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null });
-            }
-
             return nvidiaGpu;
         }
         
@@ -349,9 +324,16 @@ namespace pwiz.Skyline.Model.Tools
             PendingTasks = new List<PythonTask>();
             Directory.CreateDirectory(PythonRootDir);
             Directory.CreateDirectory(PythonVersionDir);
+           
+            NvidiaGpuAvailable = TestForNvidiaGPU();
+            PythonPackages = packages.ToList();
 
-            TestForNvidiaGPU();
-
+            if (NvidiaGpuAvailable == true)
+            {
+                PythonPackages.Add(new PythonPackage { Name = @"wheel", Version = null });
+                PythonPackages.Add(new PythonPackage { Name = @"nvidia-cudnn-cu12", Version = null });
+                PythonPackages.Add(new PythonPackage { Name = @"torch --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null });
+            }
         }
 
 
@@ -445,7 +427,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
             }
 
-            var taskNodes = PythonInstallerUtil.GetPythonTaskNodes(PythonInstaller.NvidiaGpuAvailable);
+            var taskNodes = PythonInstallerUtil.GetPythonTaskNodes(this.NvidiaGpuAvailable);
             var hasSeenFailure = false;
             foreach (var taskNode in taskNodes)
             {
@@ -825,7 +807,7 @@ namespace pwiz.Skyline.Model.Tools
             var cmdBuilder = new StringBuilder();
             CancellationToken cancelToken = CancellationToken.None;
 
-            if (packages != null) try
+            try
             {
                 foreach (var package in packages)
                 {
@@ -1736,7 +1718,7 @@ namespace pwiz.Skyline.Model.Tools
                 packageToVersionMap.Add(words[0], words[1]);
             }
 
-            foreach (var package in PythonInstaller.PythonPackages)
+            foreach (var package in _pythonInstaller.PythonPackages)
             {
                 if (!packageToVersionMap.ContainsKey(package.Name))
                 {
