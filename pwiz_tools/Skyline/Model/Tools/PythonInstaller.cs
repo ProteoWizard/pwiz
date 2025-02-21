@@ -110,7 +110,22 @@ namespace pwiz.Skyline.Model.Tools
         {
             return InstallNvidiaLibrariesBat;
         }
-        public bool? NvidiaGpuAvailable { get; internal set; }
+
+        private bool? _NvidiaGpuAvailable;
+        public bool? NvidiaGpuAvailable
+        {
+            get
+            {
+                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT) return true;
+                return _NvidiaGpuAvailable;
+            }
+
+            internal set
+            {
+                _NvidiaGpuAvailable = value;
+            }
+        }
+
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
         public string PythonVersion { get; }

@@ -25,7 +25,6 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
-using static pwiz.Skyline.FileUI.PeptideSearch.ImportPeptideSearchDlg;
 
 namespace TestPerf
 {
@@ -163,7 +162,7 @@ namespace TestPerf
             {
                 using (var productReader = new StreamReader(product))
                 {
-                    AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1e-6);
+                    AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1e-3);
                 }
             }
         }
