@@ -25,7 +25,6 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
-using static pwiz.Skyline.FileUI.PeptideSearch.ImportPeptideSearchDlg;
 
 namespace TestPerf
 {

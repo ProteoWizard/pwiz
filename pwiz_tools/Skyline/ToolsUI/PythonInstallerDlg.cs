@@ -78,7 +78,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             this.labelDescription.Text = $@"This tool requires Python {Installer.PythonVersion} and the following packages. A dedicated python virtual environment {Installer.VirtualEnvironmentName} will be created for the tool. Click the ""Install"" button to start installation.";
             var packagesStringBuilder = new StringBuilder();
-            foreach (var package in Installer.PythonPackages)
+            foreach (var package in PythonInstaller.PythonPackages)
             {
                 packagesStringBuilder.Append(HYPHEN + SPACE + package.Name);
                 if (package.Version != null)
