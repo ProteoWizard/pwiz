@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestUtil
 
         protected int TestPass
         {
-            get { return Convert.ToInt32(TestContext.Properties["TestPass"]); }
+            get { return (int) TestContext.GetLongValue("TestPass", 0); }
             set { TestContext.Properties["TestPass"] = value.ToString(); }
         }
 
