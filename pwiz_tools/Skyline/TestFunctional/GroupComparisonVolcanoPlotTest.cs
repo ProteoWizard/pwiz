@@ -22,7 +22,13 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Controls.Databinding.RowActions;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.SkylineTestUtil;
@@ -43,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(@"Rat_plasma.sky");
-
+            RemoveTruncatedPeaks();
             // Create new group comparison
             CreateGroupComparison("Test Group Comparison", "Condition", "Healthy", "Diseased");
             var grid = ShowDialog<FoldChangeGrid>(() => SkylineWindow.ShowGroupComparisonWindow("Test Group Comparison"));
@@ -210,6 +216,48 @@ namespace pwiz.SkylineTestFunctional
                 action(d);
                 d.OkDialog();
             });
+        }
+
+        public static void RemoveTruncatedPeaks()
+        {
+            RunUI(()=>
+            {
+                SkylineWindow.ShowDocumentGrid(true);
+            });
+            var documentGrid = FindOpenForm<DocumentGridForm>();
+            RunDlg<ViewEditor>(documentGrid.NavBar.CustomizeView, viewEditor =>
+            {
+                viewEditor.ViewName = "TruncatedPeaks";
+                viewEditor.ChooseColumnsTab.RemoveColumns(0, viewEditor.ChooseColumnsTab.ColumnCount);
+                var truncatedPropertyPath = PropertyPath.Root
+                    .Property(nameof(SkylineDocument.Proteins)).LookupAllItems()
+                    .Property(nameof(Protein.Peptides)).LookupAllItems()
+                    .Property(nameof(Peptide.Precursors)).LookupAllItems()
+                    .Property(nameof(Precursor.Transitions)).LookupAllItems()
+                    .Property(nameof(Transition.Results)).DictionaryValues()
+                    .Property(nameof(TransitionResult.Truncated));
+                viewEditor.ChooseColumnsTab.AvailableFieldsTree.SelectColumn(truncatedPropertyPath);
+                viewEditor.ChooseColumnsTab.AddSelectedColumn();
+                viewEditor.OkDialog();
+            });
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunDlg<QuickFilterForm>(() => documentGrid.QuickFilter(documentGrid.DataGridView.Columns[0]),
+                quickFilterForm =>
+                {
+                    quickFilterForm.SetFilterOperation(0, FilterOperations.OP_EQUALS);
+                    quickFilterForm.SetFilterOperand(0, true.ToString());
+                    quickFilterForm.OkDialog();
+                });
+            WaitForConditionUI(() => documentGrid.IsComplete);
+            RunUI(() =>
+            {
+                documentGrid.DataGridView.SelectAll();
+            });
+            RunDlg<MultiButtonMsgDlg>(()=>RemovePeaksAction.Precursors.RemovePeaks(SkylineWindow.Document.DocumentType, documentGrid.DataGridView), dlg=>
+            {
+                dlg.ClickOk();
+            });
+
         }
     }
 }

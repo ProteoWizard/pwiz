@@ -152,7 +152,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 var transitionDocNode = transition.DocNode;
                 var chromInfo = transitionDocNode.Results[replicate.ReplicateIndex].FirstOrDefault();
-                if (chromInfo == null || chromInfo.IsEmpty || chromInfo.IsTruncated.GetValueOrDefault())
+                if (chromInfo == null || chromInfo.IsEmpty)
                 {
                     continue;
                 }

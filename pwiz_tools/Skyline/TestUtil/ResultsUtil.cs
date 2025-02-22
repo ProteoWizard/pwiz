@@ -134,6 +134,63 @@ namespace pwiz.SkylineTestUtil
             }
             return document.ChangeSettingsNoDiff(document.Settings.ChangeMeasuredResults(newMeasuredResults));
         }
+
+        /// <summary>
+        /// Remove all peaks from the document where "Truncated" is true.
+        /// As of Skyline 25.1, truncated peaks are still included in group comparison and calibration curve calculations.
+        /// Removing all truncated peaks will cause the calculated values to be the same as in Skyline 24.1.
+        /// </summary>
+        public static SrmDocument RemoveTruncatedPeaks(SrmDocument document)
+        {
+            var moleculeGroups = new List<PeptideGroupDocNode>();
+            foreach (var moleculeGroup in document.MoleculeGroups)
+            {
+                var molecules = new List<PeptideDocNode>();
+                foreach (var molecule in moleculeGroup.Molecules)
+                {
+                    var transitionGroups = new List<TransitionGroupDocNode>();
+                    foreach (var transitionGroup in molecule.TransitionGroups)
+                    {
+                        var transitions = new List<TransitionDocNode>();
+                        foreach (var transition in transitionGroup.Transitions)
+                        {
+                            transitions.Add(transition.ChangeResults(RemoveTruncatedResults(transition.Results)));
+                        }
+                        transitionGroups.Add((TransitionGroupDocNode)transitionGroup.ChangeChildren(transitions.ToArray()));
+                    }
+                    molecules.Add((PeptideDocNode)molecule.ChangeChildren(transitionGroups.ToArray()));
+                }
+                moleculeGroups.Add((PeptideGroupDocNode)moleculeGroup.ChangeChildren(molecules.ToArray()));
+            }
+
+            return (SrmDocument)document.ChangeChildren(moleculeGroups.ToArray());
+        }
+
+        private static Results<TransitionChromInfo> RemoveTruncatedResults(Results<TransitionChromInfo> results)
+        {
+            if (results == null)
+            {
+                return null;
+            }
+
+            var list = new List<ChromInfoList<TransitionChromInfo>>();
+            for (int i = 0; i < results.Count; i++)
+            {
+                var chromInfos = new List<TransitionChromInfo>();
+                foreach (var chromInfo in results[i])
+                {
+                    if (chromInfo.IsTruncated != true)
+                    {
+                        chromInfos.Add(chromInfo);
+                        continue;
+                    }
+                    chromInfos.Add(new TransitionChromInfo(chromInfo.FileId, chromInfo.OptimizationStep, ChromPeak.EMPTY, chromInfo.IonMobility, chromInfo.Annotations, UserSet.TRUE));
+                }
+                list.Add(new ChromInfoList<TransitionChromInfo>(chromInfos));
+            }
+
+            return new Results<TransitionChromInfo>(list);
+        }
     }
 
     public class DocResultsState

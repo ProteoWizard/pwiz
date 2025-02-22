@@ -330,54 +330,7 @@ namespace pwiz.SkylineTest.MSstats.Normalization
 
         private SrmDocument RemoveTruncatedPeaks(SrmDocument document)
         {
-            var moleculeGroups = new List<PeptideGroupDocNode>();
-            foreach (var moleculeGroup in document.MoleculeGroups)
-            {
-                var molecules = new List<PeptideDocNode>();
-                foreach (var molecule in moleculeGroup.Molecules)
-                {
-                    var transitionGroups = new List<TransitionGroupDocNode>();
-                    foreach (var transitionGroup in molecule.TransitionGroups)
-                    {
-                        var transitions = new List<TransitionDocNode>();
-                        foreach (var transition in transitionGroup.Transitions)
-                        {
-                            transitions.Add(transition.ChangeResults(RemoveTruncated(transition.Results)));
-                        }
-                        transitionGroups.Add((TransitionGroupDocNode)transitionGroup.ChangeChildren(transitions.ToArray()));
-                    }
-                    molecules.Add((PeptideDocNode) molecule.ChangeChildren(transitionGroups.ToArray()));
-                }
-                moleculeGroups.Add((PeptideGroupDocNode)moleculeGroup.ChangeChildren(molecules.ToArray()));
-            }
-
-            return (SrmDocument) document.ChangeChildren(moleculeGroups.ToArray());
-        }
-
-        private Results<TransitionChromInfo> RemoveTruncated(Results<TransitionChromInfo> results)
-        {
-            if (results == null)
-            {
-                return null;
-            }
-
-            var list = new List<ChromInfoList<TransitionChromInfo>>();
-            for (int i = 0; i < results.Count; i++)
-            {
-                var chromInfos = new List<TransitionChromInfo>();
-                foreach (var chromInfo in results[i])
-                {
-                    if (chromInfo.IsTruncated != true)
-                    {
-                        chromInfos.Add(chromInfo);
-                        continue;
-                    }
-                    chromInfos.Add(new TransitionChromInfo(chromInfo.FileId, chromInfo.OptimizationStep, ChromPeak.EMPTY, chromInfo.IonMobility, chromInfo.Annotations, UserSet.TRUE));
-                }
-                list.Add(new ChromInfoList<TransitionChromInfo>(chromInfos));
-            }
-
-            return new Results<TransitionChromInfo>(list);
+            return ResultsUtil.RemoveTruncatedPeaks(document);
         }
 
         Dictionary<DataProcessedRowKey, double?> ReadDataProcessedRows(TextReader reader)

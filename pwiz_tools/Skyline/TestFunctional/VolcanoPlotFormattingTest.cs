@@ -20,12 +20,17 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -233,8 +238,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            RemoveTruncatedPeaks(TestFilesDir.GetTestPath("Rat_plasma.sky"));
             OpenDocument(@"Rat_plasma.sky");
-
             if (IsLayoutTest)
             {
                 var foldChangeForm = FormUtil.OpenForms.OfType<FoldChangeVolcanoPlot>().FirstOrDefault();
@@ -529,6 +534,22 @@ namespace pwiz.SkylineTestFunctional
             public MatchExpression Expected { get; private set; }
             public string Expression { get; private set; }
             public Type ExceptionType { get; private set; }
+        }
+
+        private void RemoveTruncatedPeaks(string path)
+        {
+            var xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+            SrmDocument modifiedDocument;
+            using (var stream = File.OpenRead(path))
+            {
+                var originalDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
+                modifiedDocument = ResultsUtil.RemoveTruncatedPeaks(originalDocument);
+            }
+            using (var writer = new XmlTextWriter(File.Open(path, FileMode.Create), Encoding.UTF8))
+            {
+                writer.Formatting = Formatting.Indented;
+                xmlSerializer.Serialize(writer, modifiedDocument);
+            }
         }
     }
 }
