@@ -103,7 +103,10 @@ namespace pwiz.SkylineTestFunctional
             };
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -116,7 +119,10 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -130,7 +136,10 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsFragger()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
