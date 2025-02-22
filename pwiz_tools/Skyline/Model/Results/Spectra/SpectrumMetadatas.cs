@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             var spectrumPrecursorsList = new List<ImmutableList<PrecursorWithLevel>>();
             foreach (var spectrum in proto.Spectra)
             {
-                var spectrumPrecursors = spectrum.PrecursorIndex.Select(i => precursors[i]).ToImmutable();
+                var spectrumPrecursors = spectrum.PrecursorIndex.Select(i => precursors[i - 1]).ToImmutable();
                 spectrumPrecursorsList.Add(spectrumPrecursors);
                 var msLevel = spectrum.MsLevel;
                 if (msLevel == 0)
@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     InjectionTime = _injectionTimes[index],
                     PresetScanConfiguration = _presetScanConfigurations[index],
                     AnalyzerIndex = analyzerFactor.LevelIndices[index],
-                    PrecursorIndex = { _spectrumPrecursors[index].Select(precursors.IndexOf) },
+                    PrecursorIndex = { _spectrumPrecursors[index].Select(p=>precursors.IndexOf(p) + 1) },
                     ScanDescriptionIndex = scanDescriptions.LevelIndices[index],
                     ScanWindowIndex = scanWindows.LevelIndices[index],
                     CompensationVoltage = _compensationVoltages[index]
