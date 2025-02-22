@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private IDocumentUIContainer _documentContainer;
         private string _groupComparisonName;
         private Form _owner;
+        protected bool _dataChanged = true;
         public FoldChangeForm()
         {
             InitializeComponent();
@@ -86,7 +87,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
             {
                 if (null != _documentContainer)
                 {
-                    FoldChangeBindingSource = FindOrCreateBindingSource(_documentContainer, _groupComparisonName);
+                    var newBindingSource = FindOrCreateBindingSource(_documentContainer, _groupComparisonName);
+                    _dataChanged = newBindingSource != FoldChangeBindingSource;
+                    FoldChangeBindingSource = newBindingSource;
                     if (IsHandleCreated)
                     {
                         FoldChangeBindingSource.AddRef();

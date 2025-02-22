@@ -39,7 +39,8 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class RescoreInPlaceTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestRescoreInPlace()
         {
             TestFilesZip = @"TestFunctional\RescoreInPlaceTest.zip";

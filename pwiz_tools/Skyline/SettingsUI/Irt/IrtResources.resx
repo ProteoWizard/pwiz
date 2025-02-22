@@ -389,6 +389,6 @@
     <value>{0} CiRT peptides were found, but a valid regression could not be calculated.</value>
   </data>
   <data name="CalibrationGridViewDriver_PickPeptides__0__CiRT_peptides_were_found_and_a_regression_was_calculated_using__1__of_them__but_they_did_not_sufficiently_span_the_retention_time_range__2_0____to__3_0____minutes_" xml:space="preserve">
-	  <value>{0} CiRT peptides were found and a regression was calculated using {1} of them, but they did not sufficiently span the retention time range {2:0.#} to {3:0.#} minutes:</value>
+    <value>{0} CiRT peptides were found and a regression was calculated using {1} of them, but they did not sufficiently span the retention time range {2:0.#} to {3:0.#} minutes:</value>
   </data>
 </root>
