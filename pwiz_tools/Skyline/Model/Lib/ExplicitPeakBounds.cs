@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Lib
         public bool TryGetValue(TKey key, out ExplicitPeakBounds value)
         {
             int index = IndexOfKey(key);
-            if (index <= 0)
+            if (index < 0)
             {
                 value = null;
                 return false;
@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Model.Lib
         private int IndexOfKey(TKey key)
         {
             int i = CollectionUtil.BinarySearch(_keys, key);
-            return i <= 0 ? -1 : i;
+            return i < 0 ? -1 : i;
         }
 
         private ExplicitPeakBounds GetExplicitPeakBoundsAt(int index)
