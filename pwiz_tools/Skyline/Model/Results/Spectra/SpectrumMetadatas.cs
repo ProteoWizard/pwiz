@@ -74,7 +74,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
             _injectionTimes = proto.Spectra.Select(s => s.InjectionTime).Nullables().MaybeConstant();
             _presetScanConfigurations = IntegerList.FromIntegers(proto.Spectra.Select(s => s.PresetScanConfiguration));
             var precursors = new List<PrecursorWithLevel>();
-            precursors.Insert(0, default); // Make looking up by one-based index easier
             foreach (var protoPrecursor in proto.Precursors)
             {
                 var spectrumPrecursor = new SpectrumPrecursor(new SignedMz(protoPrecursor.TargetMz));
@@ -107,7 +106,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 var msLevel = spectrum.MsLevel;
                 if (msLevel == 0)
                 {
-                    msLevel = spectrumPrecursors.Select(p=>p.MsLevel).Prepend(1).Max();
+                    msLevel = spectrumPrecursors.Select(p=>p.MsLevel + 1).Prepend(1).Max();
                 }
                 msLevels.Add(msLevel);
             }
