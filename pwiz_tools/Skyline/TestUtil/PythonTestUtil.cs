@@ -80,6 +80,19 @@ namespace pwiz.SkylineTestUtil
         {
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
+
+            //Test for LongPaths not set and admin
+            if (PythonInstaller.IsRunningElevated() && !PythonInstallerTaskValidator.ValidateEnableLongpaths())
+            {
+                AlertDlg adminDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect request for elevated privileges 
+                AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, adminDlg.Message);
+                AbstractFunctionalTest.OkDialog(adminDlg, adminDlg.OkDialog);
+            }
+            else if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
+            {
+                Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
+            }
+
             MultiButtonMsgDlg installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect the offer to installNvidia
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
