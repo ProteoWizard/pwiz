@@ -1582,8 +1582,9 @@ namespace TestRunner
                         if (testList.Any(t => t.DoNotLeakTest))
                         {
                             // These are  too lengthy to run multiple times for leak testing, so not a good fit for pass 1
-                            // But it's a shame to skip them entirely, so we'll run one of them in pass 1 each day
+                            // But it's a shame to skip them entirely, so we flip the attribute so they run on perf test machines
                             runTests.Log("# Tests with NoLeakTesting attribute are skipped in pass 1 but prioritized in pass 2.\r\n");
+                            runTests.Log("# Note that systems running perf tests invert the NoLeakTesting attribute to ensure overall coverage.\r\n");
                         }
                         if (testList.Any(t => t.IsPerfTest))
                         {
@@ -1780,7 +1781,8 @@ namespace TestRunner
                                     }
                                     break;
                                 }
-                                if (!runTests.Run(test, pass, testNumber, dmpDir, false))
+                                if (!runTests.Run(test, pass, testNumber, dmpDir, false) || // Test failed, don't rerun
+                                    RunOnceTestNames.Contains(test.TestMethod.Name)) // No point in running certain tests more than once
                                 {
                                     removeList.Add(test);
                                     i = languages.Length - 1;   // Don't run other languages.
