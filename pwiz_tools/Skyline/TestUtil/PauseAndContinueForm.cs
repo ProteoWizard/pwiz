@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestUtil
                 RunUI(_ownerForm, RefreshAndShow);
                 Monitor.Wait(_pauseLock, timeout ?? -1);
             }
-            ClipboardEx.UseInternalClipboard(true);
+            ClipboardEx.UseInternalClipboard();
             RunUI(Program.MainWindow, () => Program.MainWindow.UseKeysOverride = true);
 
             // Record that the screenshot happened in the console output to make
