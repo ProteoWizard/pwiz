@@ -34,6 +34,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             OpenDocument(@"Rat_plasma.sky");
+            RunUI(()=>SkylineWindow.ModifyDocument("Remove truncated peaks", ResultsUtil.RemoveTruncatedPeaks));
 
             CreateGroupComparison("Test Group Comparison", "Condition", "Healthy", "Diseased");
 
