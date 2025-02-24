@@ -642,37 +642,43 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class WebClientWithCredentials : UTF8WebClient
+    public class LabkeySessionWebClient : UTF8WebClient
     {
         private CookieContainer _cookies = new CookieContainer();
         private string _csrfToken;
         private readonly Uri _serverUri;
     
-        private static string LABKEY_CSRF = @"X-LABKEY-CSRF";
+        private const string LABKEY_CSRF = @"X-LABKEY-CSRF";
     
-        public WebClientWithCredentials(Uri serverUri, string username, string password)
+        public LabkeySessionWebClient(PanoramaServer server)
         {
-            // Add the Authorization header
-            Headers.Add(HttpRequestHeader.Authorization, PanoramaServer.GetBasicAuthHeader(username, password));
-            _serverUri = serverUri;
+            if (server == null)
+            {
+                throw new ArgumentNullException(nameof(server));
+            }
+            // Add the Authorization header only if a username and password is provided. Otherwise, the request will fail.
+            // Prior to LK 24.11 a call that failed authentication would proceed as an unauthenticated user
+            if (server.HasUserAccount())
+            {
+                Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
+            }
+
+            _serverUri = server.URI;
         }
 
         protected override WebRequest GetWebRequest(Uri address)
         {
             var request = base.GetWebRequest(address);
-    
-            var httpWebRequest = request as HttpWebRequest;
-            if (httpWebRequest != null)
+
+            if (request is HttpWebRequest httpWebRequest)
             {
                 httpWebRequest.CookieContainer = _cookies;
     
-                if (request.Method == PanoramaUtil.FORM_POST)
+                if (request.Method == PanoramaUtil.FORM_POST && !string.IsNullOrEmpty(_csrfToken))
                 {
-                    if (!string.IsNullOrEmpty(_csrfToken))
-                    {
-                        // All POST requests to LabKey Server will be checked for a CSRF token
-                        request.Headers.Add(LABKEY_CSRF, _csrfToken);
-                    }
+                    // All POST requests to LabKey Server will be checked for a CSRF token
+                    request.Headers.Add(LABKEY_CSRF, _csrfToken);
+
                 }
             }
             return request;
@@ -681,8 +687,7 @@ namespace pwiz.PanoramaClient
         protected override WebResponse GetWebResponse(WebRequest request)
         {
             var response = base.GetWebResponse(request);
-            var httpResponse = response as HttpWebResponse;
-            if (httpResponse != null)
+            if (response is HttpWebResponse httpResponse)
             {
                 GetCsrfToken(httpResponse, request.RequestUri);
             }
@@ -742,10 +747,10 @@ namespace pwiz.PanoramaClient
         }
     }
 
-    public class NonStreamBufferingWebClient : WebClientWithCredentials
+    public class NonStreamBufferingWebClient : LabkeySessionWebClient
     {
-        public NonStreamBufferingWebClient(Uri serverUri, string username, string password)
-            : base(serverUri, username, password)
+        public NonStreamBufferingWebClient(PanoramaServer server)
+            : base(server)
         {
         }
 

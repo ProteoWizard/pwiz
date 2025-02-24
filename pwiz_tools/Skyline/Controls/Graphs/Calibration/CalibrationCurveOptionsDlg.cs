@@ -24,7 +24,6 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
             cbxSingleBatch.Checked = options.SingleBatch;
             cbxShowLegend.Checked = options.ShowLegend;
             cbxShowFiguresOfMerit.Checked = options.ShowFiguresOfMerit;
-            cbxShowBootstrapCurves.Checked = options.ShowBootstrapCurves;
         }
 
         public void OkDialog()
@@ -37,8 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs.Calibration
                 .ChangeDisplaySampleTypes(checkedListBoxSampleTypes.CheckedItems.OfType<SampleType>())
                 .ChangeSingleBatch(cbxSingleBatch.Checked)
                 .ChangeShowLegend(cbxShowLegend.Checked)
-                .ChangeShowFiguresOfMerit(cbxShowFiguresOfMerit.Checked)
-                .ChangeShowBootstrapCurves(cbxShowBootstrapCurves.Checked);
+                .ChangeShowFiguresOfMerit(cbxShowFiguresOfMerit.Checked);
             Properties.Settings.Default.CalibrationCurveOptions = options;
             DialogResult = DialogResult.OK;
         }

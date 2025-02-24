@@ -1049,10 +1049,6 @@
   </data>
   <data name="label2.Text" xml:space="preserve">
     <value>変換設定</value>
-    <comment>Needs Review:English text changed
-Old English:Adjust Conversion Settings
-Current English:Conversion Settings
-Old Localized:変換設定を調整</comment>
   </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
@@ -1137,10 +1133,6 @@ Old Localized:変換設定を調整</comment>
   </data>
   <data name="lblSearchSettings.Text" xml:space="preserve">
     <value>検索設定</value>
-    <comment>Needs Review:English text changed
-Old English:Adjust Search Settings
-Current English:Search Settings
-Old Localized:検索設定の調整</comment>
   </data>
   <data name="&gt;&gt;lblSearchSettings.Name" xml:space="preserve">
     <value>lblSearchSettings</value>

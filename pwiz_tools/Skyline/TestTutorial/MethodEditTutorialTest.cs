@@ -51,7 +51,8 @@ namespace pwiz.SkylineTestTutorial
         private const string YEAST_ATLAS = "Yeast (Atlas)"; // Not L10N
         private const string YEAST_GPM = "Yeast (GPM)"; // Not L10N
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -94,15 +95,6 @@ namespace pwiz.SkylineTestTutorial
                     peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Library;
                     peptideSettingsUI1.PickedLibraries = new[] { YEAST_ATLAS };
                 });
-            WaitForOpenForm<PeptideSettingsUI>();   // To show Library tab for Forms testing
-            // Make sure the build complete notification is removed first since it has problems when the preview form is around
-            if (IsPauseForScreenShots)
-            {
-                WaitForConditionUI(() => FindOpenForm<BuildLibraryNotification>() != null);
-                Thread.Sleep(200);  // Can hang if the remove happens too quickly
-                RunUI(SkylineWindow.RemoveLibraryBuildNotification);
-                WaitForConditionUI(() => FindOpenForm<BuildLibraryNotification>() == null);
-            }
             PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab"); // Not L10N
 
             RunUI(() => peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Digest);
