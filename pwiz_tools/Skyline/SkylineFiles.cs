@@ -315,18 +315,16 @@ namespace pwiz.Skyline
                     longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        string skylineDocumentHash;
-                        using (var hashingStreamReader = new HashingStreamReaderWithProgress(path, progressMonitor))
-                        {
-                            // Wrap stream in XmlReader so that BaseUri is known
-                            var reader = XmlReader.Create(hashingStreamReader,
-                                new XmlReaderSettings() { IgnoreWhitespace = true },
-                                path);
-
-                            XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
-                            document = (SrmDocument) ser.Deserialize(reader);
-                            skylineDocumentHash = hashingStreamReader.Stream.Done();
-                        }
+                        using var fileStream = File.OpenRead(path);
+                        using var progressStream = new ProgressStream(fileStream);
+                        progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
+                        using var hashingStream = new HashingStream(progressStream, true);
+                        // Wrap stream in XmlReader so that BaseUri is known
+                        var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8),
+                            new XmlReaderSettings { IgnoreWhitespace = true }, path);
+                        XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
+                        document = (SrmDocument) ser.Deserialize(reader);
+                        var skylineDocumentHash = hashingStream.Done();
 
                         try
                         {
@@ -360,7 +358,7 @@ namespace pwiz.Skyline
                     if (!SrmDocument.IsSkylineFile(path, out var explained))
                     {
                         exception = new IOException(
-                            explained); // Offer a more helpful explanation than that from the failed XML parser
+                            explained, x); // Offer a more helpful explanation than that from the failed XML parser
                     }
                 }
             }
@@ -3694,7 +3692,7 @@ namespace pwiz.Skyline
             if (folders?[@"path"] == null || !folderPath.Contains(Uri.EscapeUriString(folders[@"path"].ToString())))
                 return false;
 
-            if (!(PanoramaUtil.CheckInsertPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
+            if (!(PanoramaUtil.HasUploadPermissions(folders) && PanoramaUtil.HasTargetedMsModule(folders)))
                 return false;
 
             ShareType shareType;
@@ -3742,16 +3740,24 @@ namespace pwiz.Skyline
         {
             try
             {
+                string warningMessage = null;
                 lock (GetDocumentChangeLock())
                 {
                     var originalDocument = Document;
                     ModifiedDocument newDocument = null;
+
                     using (var longWaitDlg = new LongWaitDlg(this))
                     {
-                        longWaitDlg.PerformWork(this, 1000, broker =>
+                        longWaitDlg.PerformWork(this, 1000, progressMonitor =>
                         {
                             var documentAnnotations = new DocumentAnnotations(originalDocument);
-                            newDocument = documentAnnotations.ReadAnnotationsFromFile(broker.CancellationToken, filename);
+                            using var fileStream = File.OpenRead(filename);
+                            using var progressStream = new ProgressStream(fileStream);
+                            progressStream.SetProgressMonitor(progressMonitor,
+                                new ProgressStatus(SkylineResources.SkylineWindow_ImportAnnotations_Reading_annotations)
+                                    .ChangePercentComplete(0), true);
+                            newDocument = documentAnnotations.ReadAnnotationsFromStream(longWaitDlg.CancellationToken, filename, progressStream);
+                            warningMessage = documentAnnotations.GetWarningMessage();
                         });
                     }
                     if (newDocument != null)
@@ -3760,11 +3766,17 @@ namespace pwiz.Skyline
                             DocumentModifier.FromResult(originalDocument, newDocument));
                     }
                 }
+
+                if (warningMessage != null)
+                {
+                    MessageDlg.Show(this, warningMessage, true);
+                }
             }
             catch (Exception exception)
             {
                 MessageDlg.ShowException(this, exception);
             }
+            
         }
 
         public void ImportAnnotations(TextReader reader, MessageInfo messageInfo)

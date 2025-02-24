@@ -195,9 +195,9 @@ namespace pwiz.PanoramaClient
 
     public class PanoramaRequestHelper : AbstractRequestHelper
     {
-        private readonly WebClientWithCredentials _client;
+        private readonly LabkeySessionWebClient _client;
         
-        public PanoramaRequestHelper(WebClientWithCredentials webClient)
+        public PanoramaRequestHelper(LabkeySessionWebClient webClient)
         {
             _client = webClient;
         }

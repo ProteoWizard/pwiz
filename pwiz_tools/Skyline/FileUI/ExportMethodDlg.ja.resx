@@ -1738,11 +1738,9 @@ Skylineで制御されないトランジション値に対しては、単一の�
   <data name="cbExportSciexOSQuantMethod.Text" xml:space="preserve">
     <value>SCIEX OS 
  Quantメソッドを作成(&amp;O)</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="cbExportSciexOSQuantMethod.ToolTip" xml:space="preserve">
     <value>SCIEX OS Quantと互換性のある分析メソッドを、Analyst取得メソッドと同じディレクトリに同じベース名でエクスポートします。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbExportSciexOSQuantMethod.Name" xml:space="preserve">
     <value>cbExportSciexOSQuantMethod</value>
@@ -1776,7 +1774,6 @@ Skylineで制御されないトランジション値に対しては、単一の�
   </data>
   <data name="labelXICWidth.Text" xml:space="preserve">
     <value>XIC幅（Da）：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelXICWidth.Name" xml:space="preserve">
     <value>labelXICWidth</value>

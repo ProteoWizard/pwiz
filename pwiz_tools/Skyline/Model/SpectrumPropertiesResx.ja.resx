@@ -123,14 +123,12 @@
   </data>
   <data name="Description_Adduct" xml:space="preserve">
     <value>選択したイオンの付加物</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Description_FileName" xml:space="preserve">
     <value>ファイル名およびスペクトルの元データとなるファイルへのフルパス</value>
   </data>
   <data name="Description_Formula" xml:space="preserve">
     <value>選択したイオンの中性化学式</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Description_IdFileName" xml:space="preserve">
     <value>ファイル名およびターゲットイオンがスペクトルに一致したファイルへのフルパス</value>
@@ -170,7 +168,6 @@
   </data>
   <data name="Formula" xml:space="preserve">
     <value>分子式</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="IdFileName" xml:space="preserve">
     <value>IDファイル名</value>

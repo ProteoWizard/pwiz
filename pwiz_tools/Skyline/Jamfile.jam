@@ -273,7 +273,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         REM docker > nul 2>&1
         REM if ERRORLEVEL 1 (
             echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
-            $(OUTPUT_PATH)TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll,TestConnected.dll $(.teamcity-test-decoration)
+            $(OUTPUT_PATH)TestRunner.exe log=TestFunctional.log buildcheck=1 test=TestFunctional.dll $(.teamcity-test-decoration)
             set status=%ERRORLEVEL%
         REM ) ELSE (
         REM    echo Functional testing Skyline in $(CONFIGURATION:L) configuration with $(WORKERS) Docker workers...
@@ -281,7 +281,26 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         REM )
         exit %status%
     }
-    
+
+    rule do_skyline_test_connected ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_connected
+    {
+        $(MSVC_CURRENT_SETUP_SCRIPT)
+        chcp 437
+        echo Building Skyline TestConnected in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);MSBuildAssemblyName=$(TARGET_NAME) /t:TestConnected /nologo /verbosity:minimal
+        IF ERRORLEVEL 1 exit %ERRORLEVEL%
+
+        echo Running Skyline's remote connection tests (TestConnected) in $(CONFIGURATION:L) configuration...
+        $(OUTPUT_PATH)TestRunner.exe log=TestConnected.log buildcheck=1 test=TestConnected.dll $(.teamcity-test-decoration)
+        set status=%ERRORLEVEL%
+        exit %status%
+    }
+
     rule do_skyline_test_passed ( targets + : sources * : properties * )
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
@@ -550,7 +569,19 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
-        
+
+    make TestConnected
+        : # sources
+        : # actions
+            @do_skyline_test_connected
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+
     make Skyline.passed
         : # sources
         : # actions

@@ -81,8 +81,8 @@ namespace pwiz.SkylineTestFunctional
                 DocumentPath = "TestVariableWindowDiaUmpire.sky",
                 SearchFiles = new[]
                 {
-                    "collinsb_I180316_001_SW-A-subset.mz5",
-                    "collinsb_I180316_002_SW-B-subset.mz5"
+                    "collinsb_I180316_001_SW-A-subset.mzML",
+                    "collinsb_I180316_002_SW-B-subset.mzML"
                 },
                 FastaPath = "collinsb_I180316.fasta",
                 PrecursorMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
@@ -103,7 +103,10 @@ namespace pwiz.SkylineTestFunctional
             };
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -116,7 +119,10 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -130,7 +136,10 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsFragger()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -151,7 +160,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 // run it twice to make sure logic still works
                 TestDiaUmpireSearch();
-                TestDiaUmpireSearch();
+                if (TestPass == 1)
+                    TestDiaUmpireSearch();
             };
 
             RunFunctionalTest();
@@ -209,8 +219,8 @@ namespace pwiz.SkylineTestFunctional
                 DocumentPath = "TestVariableWindowMsFragger.sky",
                 SearchFiles = new[]
                 {
-                    "collinsb_I180316_001_SW-A-subset.mz5",
-                    "collinsb_I180316_002_SW-B-subset.mz5"
+                    "collinsb_I180316_001_SW-A-subset.mzML",
+                    "collinsb_I180316_002_SW-B-subset.mzML"
                 },
                 FastaPath = "collinsb_I180316.fasta",
 

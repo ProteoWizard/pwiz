@@ -51,7 +51,8 @@ namespace pwiz.SkylineTestTutorial
         private const string YEAST_ATLAS = "Yeast (Atlas)"; // Not L10N
         private const string YEAST_GPM = "Yeast (GPM)"; // Not L10N
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestMethodEditTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -94,16 +95,7 @@ namespace pwiz.SkylineTestTutorial
                     peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Library;
                     peptideSettingsUI1.PickedLibraries = new[] { YEAST_ATLAS };
                 });
-            WaitForOpenForm<PeptideSettingsUI>();   // To show Library tab for Forms testing
-            // Make sure the build complete notification is removed first since it has problems when the preview form is around
-            if (IsPauseForScreenShots)
-            {
-                WaitForConditionUI(() => FindOpenForm<BuildLibraryNotification>() != null);
-                Thread.Sleep(200);  // Can hang if the remove happens too quickly
-                RunUI(SkylineWindow.RemoveLibraryBuildNotification);
-                WaitForConditionUI(() => FindOpenForm<BuildLibraryNotification>() == null);
-            }
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 4); // Not L10N
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab"); // Not L10N
 
             RunUI(() => peptideSettingsUI1.SelectedTab = PeptideSettingsUI.TABS.Digest);
             WaitForOpenForm<PeptideSettingsUI>();   // To show Digestion tab for Forms testing
@@ -119,11 +111,11 @@ namespace pwiz.SkylineTestTutorial
             });
             AddFastaToBackgroundProteome(buildBackgroundProteomeDlg, TestFilesDirs[0].GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta"), 61);
             RunUI(buildBackgroundProteomeDlg.SelToEndBackgroundProteomePath);
-            PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome form", 5); // Not L10N
+            PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome form"); // Not L10N
 
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
 
-            PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab", 6); // Not L10N
+            PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab"); // Not L10N
 
             var docB = SkylineWindow.Document;
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
@@ -178,7 +170,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Size = new Size(1035, 511);
             });
             RestoreViewOnScreen(07);
-            PauseForScreenShot("Main window", 7); // Not L10N
+            PauseForScreenShot("Main window"); // Not L10N
 
             RunUI(() =>
             {
@@ -187,7 +179,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.SelectedNode =
                     SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Nodes[1];
             });
-            PauseForScreenShot("Main window showing effect of selection on Library Match graph", 8); // Not L10N
+            PauseForScreenShot("Main window showing effect of selection on Library Match graph"); // Not L10N
 
             CheckTransitionCount("VDIIANDQGNR", 3); // Not L10N
 
@@ -202,16 +194,16 @@ namespace pwiz.SkylineTestTutorial
                         transitionSettingsUI.FragmentTypes = "y, b"; // Not L10N
                     });
                 WaitForOpenForm<TransitionSettingsUI>();   // To show Filter tab for Forms testing
-                PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab", 9); // Not L10N
+                PauseForScreenShot<TransitionSettingsUI.FilterTab>("Transition Settings - Filter tab"); // Not L10N
                 RunUI(() =>
                     {
                         transitionSettingsUI.SelectedTab = TransitionSettingsUI.TABS.Library;
                         transitionSettingsUI.IonCount = 5;
                     });
-                PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab", 10); // Not L10N
+                PauseForScreenShot<TransitionSettingsUI.LibraryTab>("Transition Settings - Library tab"); // Not L10N
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
             }
-            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 11, null,
+            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", null,
                 bmp => ClipTargets(bmp)); // Not L10N
 
             if (IsCoverShotMode)
@@ -251,7 +243,7 @@ namespace pwiz.SkylineTestTutorial
                         peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
                         peptideSettingsUI.PickedLibraries = new[] {YEAST_ATLAS, YEAST_GPM};
                     });
-                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 12); // Not L10N
+                PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab"); // Not L10N
                 OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 Assert.IsTrue(WaitForCondition(
                     () =>
@@ -300,7 +292,7 @@ namespace pwiz.SkylineTestTutorial
                     pasteProteinsDlg.SelectCell(17, 0);
                     pasteProteinsDlg.SetColumnWidths(-1, 220, 500, 0, 0, 0, 0);
                 });
-                PauseForScreenShot<PasteDlg.ProteinListTab>("Insert Protein List - For Screenshot, select last (empty) item in list", 14); // Not L10N
+                PauseForScreenShot<PasteDlg.ProteinListTab>("Insert Protein List - For Screenshot, select last (empty) item in list"); // Not L10N
                 OkDialog(pasteProteinsDlg, pasteProteinsDlg.OkDialog);
             }
 
@@ -330,7 +322,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SequenceTree.Nodes[0].Text = @"Primary Peptides");
             FindNode("TLTAQSMQNSTQSAPNK"); // Not L10N
-            PauseForScreenShot("Main window", 16); // Not L10N
+            PauseForScreenShot("Main window"); // Not L10N
 
             using (new CheckDocumentState(35, 70, 70, 338, null, true))
             {
@@ -342,7 +334,7 @@ namespace pwiz.SkylineTestTutorial
                     pastePeptidesDlg.SelectCell(12, 0);
                     pastePeptidesDlg.Height = 437;
                 });
-                PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List -  For screenshot, select last (empty) line in list", 17); // Not L10N
+                PauseForScreenShot<PasteDlg.PeptideListTab>("Insert Peptide List -  For screenshot, select last (empty) line in list"); // Not L10N
                 OkDialog(pastePeptidesDlg, pastePeptidesDlg.OkDialog);
             }
 
@@ -354,7 +346,7 @@ namespace pwiz.SkylineTestTutorial
                                              findPeptideDlg.FindNext();
                                              findPeptideDlg.Close();
                                          });
-            PauseForGraphScreenShot("Library Match graph metafile", SkylineWindow.GraphSpectrum, 18); // Not L10N
+            PauseForGraphScreenShot("Library Match graph metafile", SkylineWindow.GraphSpectrum); // Not L10N
 
             using (new CheckDocumentState(35, 64, 64, 320, null, true))
             {
@@ -362,7 +354,7 @@ namespace pwiz.SkylineTestTutorial
                 PauseForForm(typeof(RefineDlg.DocumentTab));
                 RunUI(() => refineDlg.MinTransitions = 5);
                 OkDialog(refineDlg, refineDlg.OkDialog);
-                PauseForScreenShot("29/35 prot 50/64 pep 50/64 prec 246/320 tran", 18, null,
+                PauseForScreenShot("29/35 prot 50/64 pep 50/64 prec 246/320 tran", null,
                     ClipSelectionStatus); // Not L10N
             }
 
@@ -385,7 +377,7 @@ namespace pwiz.SkylineTestTutorial
                         uniquePeptidesDlg.SplitHeight = 58;
                         uniquePeptidesDlg.Height = 292;
                     });
-                PauseForScreenShot<UniquePeptidesDlg>("Unique Peptides form", 19); // Not L10N
+                PauseForScreenShot<UniquePeptidesDlg>("Unique Peptides form"); // Not L10N
                 var oldDoc = SkylineWindow.Document;
                 OkDialog(uniquePeptidesDlg, uniquePeptidesDlg.OkDialog);
                 RunUI(() => Assert.AreSame(oldDoc, SkylineWindow.DocumentUI));
@@ -393,12 +385,12 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Protein Name Auto-Completion
-            TestAutoComplete("ybl087", 0, 20, 51); // Not L10N
+            TestAutoComplete("ybl087", 0, true, 51); // Not L10N
             var peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YBL087C", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
             // Protein Description Auto-Completion
-            TestAutoComplete("eft2", 0, 20, 83); // Sorting logic puts this at the 0th entry in the list - Not L10N
+            TestAutoComplete("eft2", 0, true, 83); // Sorting logic puts this at the 0th entry in the list - Not L10N
             peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
             Assert.AreEqual("YDR385W", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
@@ -407,7 +399,7 @@ namespace pwiz.SkylineTestTutorial
             var peptides = new List<PeptideDocNode>(Program.ActiveDocument.Peptides);
             Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [770, 785]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
             RestoreViewOnScreen(21);
-            PauseForScreenShot<SequenceTreeForm>("(fig. 1) - Added targets", 21, null,
+            PauseForScreenShot<SequenceTreeForm>("(fig. 1) - Added targets", null,
                 bmp => ClipTargets(bmp, 10, true, true)); // Not L10N
 
             // Pop-up Pick-Lists, p. 21
@@ -425,7 +417,7 @@ namespace pwiz.SkylineTestTutorial
                         pickList.SetItemChecked(8, true, true);
                         pickList.AutoManageChildren = false; // TODO: Because calling SetItemChecked does not do this
                     });
-                PauseForScreenShot<PopupPickList>("(fig. 2) - YBL087C Peptides picklist", 21); // Not L10N
+                PauseForScreenShot<PopupPickList>("(fig. 2) - YBL087C Peptides picklist"); // Not L10N
                 RunUI(pickList.OnOk);
             }
 
@@ -450,7 +442,7 @@ namespace pwiz.SkylineTestTutorial
                         pickList1.SetItemChecked(4, true);
                         pickList1.SetItemChecked(6, true, true);
                     });
-                PauseForScreenShot<PopupPickList>("b ++ filtered picklist", 22); // Not L10N
+                PauseForScreenShot<PopupPickList>("b ++ filtered picklist"); // Not L10N
                 RunUI(pickList1.OnOk);
             }
 
@@ -466,8 +458,8 @@ namespace pwiz.SkylineTestTutorial
             });
 
             FindNode(string.Format("L [b5] - {0:F04}+", 484.3130)); // Not L10N - may be localized " (rank 3)"
-            ShowNodeTip("YBL087C", 23);
-            ShowNodeTip(string.Format("{0:F04}+++", 672.6716), 23);
+            ShowNodeTip("YBL087C", true);
+            ShowNodeTip(string.Format("{0:F04}+++", 672.6716), true);
             ShowNodeTip(null);
 
             // Preparing to Measure, p. 25
@@ -489,7 +481,7 @@ namespace pwiz.SkylineTestTutorial
                 exportDialog.IgnoreProteins = true;
                 exportDialog.MaxTransitions = 75;
             });
-            PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form", 25); // Not L10N
+            PauseForScreenShot<ExportMethodDlg.TransitionListView>("Export Transition List form"); // Not L10N
             
             const string basename = "Yeast_list"; //  Not L10N
             OkDialog(exportDialog, () => exportDialog.OkDialog(TestFilesDirs[0].GetTestPath(basename)));  // write Yeast_list_000n.csv
@@ -521,7 +513,7 @@ namespace pwiz.SkylineTestTutorial
             });
         }
 
-        private void ShowNodeTip(string nodeText, int? pageNumPause = null)
+        private void ShowNodeTip(string nodeText, bool pause = false)
         {
             RunUI(() =>
             {
@@ -541,9 +533,9 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForConditionUI(NodeTip.TipDelayMs * 10, () => SkylineWindow.SequenceTree.IsTipVisible);
 
-            if (pageNumPause != null)
+            if (pause)
             {
-                PauseForScreenShot<ScreenForm>("Tip for " + nodeText, pageNumPause.Value, null,
+                PauseForScreenShot<ScreenForm>("Tip for " + nodeText, null,
                     bmp =>
                     {
                         var cropRect = SkylineWindow.SequenceTree.TipRect;
@@ -583,7 +575,7 @@ namespace pwiz.SkylineTestTutorial
             SetClipboardTextUI(File.ReadAllText(TestFilesDirs[0].GetTestPath(filepath)));
         }
 
-        private void TestAutoComplete(string text, int index, int? pageNum = null, int aboveAutoComplete = 0)
+        private void TestAutoComplete(string text, int index, bool pause = false, int aboveAutoComplete = 0)
         {
             var doc = WaitForDocumentLoaded();
             RunUI(() =>
@@ -595,17 +587,32 @@ namespace pwiz.SkylineTestTutorial
             });
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
             Assert.IsNotNull(statementCompletionForm);
-            if (pageNum != null)
+            if (pause)
             {
                 RunUI(() => SkylineWindow.SequenceTree.StatementCompletionEditBox.SelectWithoutChoosing(0));
-                PauseForScreenShot<ScreenForm>("Auto-complete " + text, pageNum.Value, null,
+                PauseForScreenShot<ScreenForm>("Auto-complete " + text, null,
                     bmp =>
                     {
-                        var completeRect = FindOpenForm<StatementCompletionForm>().Bounds;
-                        var skylineRect = SkylineWindow.Bounds;
+                        var completeRect = statementCompletionForm.Bounds;
+                        var skylineRect = ScreenshotManager.GetFramedWindowBounds(SkylineWindow);
+                        bmp = bmp.CleanupBorder(skylineRect, ScreenshotProcessingExtensions.CornerForm, completeRect);
+
                         int top = completeRect.Top - aboveAutoComplete;
-                        int bottom = Math.Max(skylineRect.Bottom - 7, completeRect.Bottom);
-                        var cropRect = new Rectangle(skylineRect.Left + 7, top, 735,  bottom - top);
+                        int bottom = Math.Max(skylineRect.Bottom, completeRect.Bottom);
+                        var cropRect = new Rectangle(skylineRect.Left, top, 735,  bottom - top);
+                        if (skylineRect.Bottom < bottom)
+                        {
+                            var bmpClipped = ClipRegionAndEraseBackground(bmp,
+                                new Control[] { statementCompletionForm, SkylineWindow },
+                                Array.Empty<ToolStripDropDown>(),
+                                Color.White);
+
+                            // The final clipping expects a full screen bitmap
+                            var bmpNew = new Bitmap(bmp.Width, bmp.Height);
+                            using var g = Graphics.FromImage(bmpNew);
+                            g.DrawImageUnscaled(bmpClipped, skylineRect.X, skylineRect.Y);
+                            bmp = bmpNew;
+                        }
                         return ClipBitmap(bmp, cropRect);
                     });
             }

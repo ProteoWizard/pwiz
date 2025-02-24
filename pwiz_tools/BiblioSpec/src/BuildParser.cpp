@@ -102,7 +102,7 @@ void BuildParser::setSpecFileName(
     {
         try
         {
-            if (bfs::exists(bfs::complete(specfilepath.parent_path(), filepath_)))
+            if (bfs::exists(bfs::absolute(specfilepath.parent_path(), filepath_)))
             {
                 localDirectories.insert(localDirectories.begin(), specfilepath.parent_path().string());
             }
@@ -195,8 +195,7 @@ void BuildParser::setSpecFileName
 {
     curSpecFileName_.clear();
     if( checkFile ){
-        ifstream file(specfile.c_str());
-        if(!file.good()) {
+        if(!boost::filesystem::exists(specfile)) {
             throw BlibException(true, "Could not open spectrum file '%s' for search results file '%s'.", 
                                 specfile.c_str(), fullFilename_.c_str());
         }

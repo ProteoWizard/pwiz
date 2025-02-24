@@ -88,8 +88,7 @@ namespace pwiz.Skyline.Model.Results
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
             string basename = MSDataFilePath.GetFileNameWithoutExtension();
-            var fileAlignments = document.Settings.DocumentRetentionTimes.FileAlignments.Find(basename);
-            FileAlignmentIndices = new RetentionTimeAlignmentIndices(fileAlignments);
+            FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
         }
 
         public InjectionGroup InjectionGroup { get; }
@@ -112,7 +111,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private MsDataFileUri MSDataFilePath { get; set; }
-        private RetentionTimeAlignmentIndices FileAlignmentIndices { get; set; }
+        private RetentionTimeAlignmentIndexes FileAlignmentIndices { get; set; }
 
         private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 

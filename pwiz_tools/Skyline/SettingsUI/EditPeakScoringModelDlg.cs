@@ -1184,6 +1184,18 @@ namespace pwiz.Skyline.SettingsUI
             set { tabControl1.SelectTab(value); }
         }
 
+        #region screenshot helpers
+
+        public Control GraphsControl => tabControl1;
+        public Control SelectedGraphControl => tabControl1.TabPages[tabControl1.SelectedIndex];
+
+        public void ShowFindButton(bool show)
+        {
+            findPeptidesButton.Visible = show;
+        }
+
+        #endregion
+
         public SimpleGridViewDriver<PeakCalculatorWeight> PeakCalculatorsGrid
         {
             get { return _gridViewDriver; }

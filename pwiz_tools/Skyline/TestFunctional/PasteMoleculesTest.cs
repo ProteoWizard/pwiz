@@ -49,7 +49,8 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PasteMoleculesTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestPasteMolecules()
         {
             TestFilesZip = @"TestFunctional\PasteMoleculeTest.zip";
@@ -148,6 +149,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var docEmpty = NewDocument();
             TestSimilarMzIsotopes();
+            TestIsotopeLabelsInInChi();
             TestNotes();
             TestAutoManage();
             TestErrors();
@@ -1477,6 +1479,16 @@ namespace pwiz.SkylineTestFunctional
             // Deal with implied adducts for which we support synonyms (this caused trouble with use of a dictionary in parser code, since synonyms yield identical mz matches) 
             var text = "moleculename\tmolecularformula\tprecursormz\nMyMol\tC40H23NO6\t658.1507"; // This m/z results from [M+FA-H], but we also accept [M+HCOO] as a synonym for that
             TestError(text, String.Empty, null); // Should load with no problem
+            NewDocument();
+        }
+
+        private void TestIsotopeLabelsInInChi()
+        {
+            // Deal with isotope labels declared in inchi
+            var text = "moleculename\tmolecularformula\tprecursormz\tinchi\nMyMol\tC8H8O\t126.076345\t1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1D3,2C13,4C14"; // "i1D3,2C13,4C14"means Labeled with 3 H', C' at position 2 and C" at position 4
+            TestError(text, String.Empty, null); // Should load with no problem
+            var adduct = SkylineWindow.Document.MoleculeTransitions.First().Transition.Adduct;
+            AssertEx.AreEqual("[M3H2C13C14+]", adduct.ToString());
             NewDocument();
         }
 

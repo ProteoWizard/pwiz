@@ -97,9 +97,9 @@ void fillInMetadata(const string& rawpath, MBIFile* rawdata, MSData& msd)
     bfs::path sourcePath(rawpath);
 
     SourceFilePtr sourceFile(new SourceFile);
-    sourceFile->id = BFS_STRING(sourcePath.leaf());
-    sourceFile->name = BFS_STRING(sourcePath.leaf());
-    sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.branch_path()));
+    sourceFile->id = BFS_STRING(sourcePath.filename());
+    sourceFile->name = BFS_STRING(sourcePath.filename());
+    sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.parent_path()));
     sourceFile->set(MS_Mobilion_MBI_nativeID_format);
     sourceFile->set(MS_Mobilion_MBI_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
@@ -182,8 +182,6 @@ void Reader_Mobilion::read(const string& filename,
         auto utf8CharAsString = [](string::const_iterator ch, string::const_iterator end) { string utf8; while (ch != end && *ch < 0) { utf8 += *ch; ++ch; }; return utf8; };
         throw ReaderFail(string("[Reader_Mobilion::read()] Mobilion API does not support Unicode in filepaths ('") + utf8CharAsString(unicodeCharItr, filename.end()) + "')");
     }
-
-    boost::lock_guard<boost::mutex> lock(processWideHdf5Mutex); // mutex unlocks when out of scope or when exception thrown (during destruction)
 
     MBIFilePtr rawdata(new MBIFileWrapper(filename.c_str()));
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Mobilion(result, rawdata, config));
