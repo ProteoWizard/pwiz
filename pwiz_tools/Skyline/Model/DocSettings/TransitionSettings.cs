@@ -101,6 +101,73 @@ namespace pwiz.Skyline.Model.DocSettings
             return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz);
         }
 
+        public IList<IFileGroupModel> Files { get; private set; }
+
+        private IList<IFileBase> FilesAndFoldersByType(FileType fileType)
+        {
+            if (Files == null)
+                return null;
+
+            foreach (var item in Files)
+            {
+                if (item?.Type == fileType)
+                    return item.FilesAndFolders;
+            }
+
+            return null;
+        }
+
+        // TODO: FIXUP SrmSettings. Move these here and put simple aliases in SrmSettings
+        //           Copied these checks from SrmSettings because they're needed to correctly build the
+        //           file system. Consider moving them here permanently to improve encapsulation and loose coupling.
+        public bool HasDriftTimePrediction { get { return IonMobilityFiltering != null && IonMobilityFiltering.IonMobilityLibrary != null; } }
+
+        public bool HasIonMobilityLibraryPersisted
+        {
+            get
+            {
+                return HasDriftTimePrediction &&
+                       IonMobilityFiltering.IonMobilityLibrary != null &&
+                       !IonMobilityFiltering.IonMobilityLibrary.IsNone &&
+                       IonMobilityFiltering.IonMobilityLibrary.FilePath != null;
+            }
+        }
+
+        public bool HasOptimizationLibrary { get { return Prediction != null && Prediction.OptimizedLibrary != null && !Prediction.OptimizedLibrary.IsNone; } }
+
+        public bool HasOptimizationLibraryPersisted { get { return HasOptimizationLibrary && Prediction.OptimizedLibrary.PersistencePath != null; } }
+
+        private void UpdateFileLists()
+        {
+            // *.imsdb
+            IFileGroupModel newIonMobilityLibrary = null;
+            if (HasIonMobilityLibraryPersisted) 
+            {
+                newIonMobilityLibrary = new BasicFileGroupModel(FileType.folder_ion_mobility_library, null, IonMobilityFiltering.IonMobilityLibrary);
+            }
+
+            // *.optdb
+            IFileGroupModel newOptimizationLibrary = null;
+            if (HasOptimizationLibraryPersisted)
+            {
+                newOptimizationLibrary = new BasicFileGroupModel(FileType.folder_optimization_library, null, Prediction.OptimizedLibrary);
+            }
+
+            if (!ArrayUtil.ReferencesEqual(newOptimizationLibrary?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_optimization_library)) ||
+                !ArrayUtil.ReferencesEqual(newIonMobilityLibrary?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_ion_mobility_library)))
+            {
+                var newFileGroupModel = new List<IFileGroupModel>();
+
+                if (newOptimizationLibrary != null)
+                    newFileGroupModel.Add(newOptimizationLibrary);
+
+                if (newIonMobilityLibrary != null)
+                    newFileGroupModel.Add(newIonMobilityLibrary);
+
+                Files = MakeReadOnly(newFileGroupModel); 
+            }
+        }
+
         #region Property change methods
 
         public TransitionSettings ChangePrediction(TransitionPrediction prop)
@@ -150,6 +217,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private TransitionSettings()
         {
+            UpdateFileLists();
         }
 
         void IValidating.Validate()
@@ -174,6 +242,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(
                     DocSettingsResources.TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan);
             }
+
+            UpdateFileLists();
         }
 
         public static TransitionSettings Deserialize(XmlReader reader)

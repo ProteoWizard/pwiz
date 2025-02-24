@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -28,13 +29,20 @@ namespace pwiz.Skyline.Model.DocSettings
         ion_mobility_library,       // .imsdb
         optimization_library,       // .optdb
         peptide_library,            // library type (cache type, if any) - .blib (.slc), .lib, .clib, .hlf (.slc), .msp (.slc), .sptxt (.splc), .elib (.elibc)
-        replicates,                 // virtual file - replicate from .sky
-        replicate_file,             // .raw, .mzml, .wiff, more (see @DataSourceUtil)
+        replicate,                  // virtual file containing replicate_sample_file(s)
+        replicate_sample,           // .raw, .mzml, .wiff, more (see @DataSourceUtil)
         retention_score_calculator, // .irtdb
         sky,                        // .sky    
         sky_audit_log,              // .skyl
         sky_chromatogram_cache,     // .skyd
-        sky_view                    // .sky.view
+        sky_view,                   // .sky.view
+        folder,
+        folder_replicates,
+        folder_peptide_libraries,
+        folder_background_proteome,
+        folder_retention_score_calculator,
+        folder_ion_mobility_library,
+        folder_optimization_library
     }
 
     public interface IFileBase
@@ -46,13 +54,85 @@ namespace pwiz.Skyline.Model.DocSettings
         string Name { get; }
     }
 
-    public interface IFileGroupModel : IFileBase
-    {
-        IEnumerable<IFileModel> Files { get; }
-    }
-
     public interface IFileModel : IFileBase
     {
         string FilePath { get; }
+    }
+    
+    public interface IFileGroupModel : IFileBase
+    {
+        IList<IFileModel> Files { get; }
+
+        IList<IFileGroupModel> Folders { get; }
+
+        IList<IFileBase> FilesAndFolders { get; }
+
+        IFileGroupModel FileGroupForType(FileType type);
+
+        bool HasFilesOrFolders();
+    }
+
+    // TODO: use a factory so can be built incrementally ensuring immutability and non-null'ness without all the boilerplate
+    public class BasicFileGroupModel : IFileGroupModel
+    {
+        private class BasicFileGroupModelId : Identity { }
+
+        public BasicFileGroupModel(FileType type, string name, IList<IFileGroupModel> folders) : this(type, name, null, folders) { }
+
+        public BasicFileGroupModel(FileType type, string name, IList<IFileModel> files) : this(type, name, files, null) { }
+
+        public BasicFileGroupModel(FileType type, string name, IFileModel file) : this(type, name, ImmutableList.Singleton(file), null) { }
+
+        public BasicFileGroupModel(FileType type, string name, IList<IFileModel> files, IList<IFileGroupModel> folders) {
+            Id = new BasicFileGroupModelId();
+            Type = type;
+            Name = name;
+            Files = ImmutableList.ValueOf(files);
+            Folders = ImmutableList.ValueOf(folders);
+
+            FilesAndFolders = new List<IFileBase>();
+
+            if (Files != null)
+                FilesAndFolders.AddRange(Files);
+            
+            if (Folders != null)
+                FilesAndFolders.AddRange(Folders);
+            
+            FilesAndFolders = ImmutableList.ValueOf(FilesAndFolders);
+        }
+
+        public Identity Id { get; }
+        public FileType Type { get; }
+        public string Name { get; }
+        public IList<IFileModel> Files { get; }
+        public IList<IFileGroupModel> Folders { get; }
+        public IList<IFileBase> FilesAndFolders { get; }
+
+        public bool HasFiles()
+        {
+            return Files != null && Files.Count > 0;
+        }
+
+        public bool HasFolders()
+        {
+            return Folders != null && Folders.Count > 0;
+        }
+
+        public bool HasFilesOrFolders()
+        {
+            return HasFiles() || HasFolders();
+        }
+
+        // CONSIDER: using a separate FileGroupType
+        public IFileGroupModel FileGroupForType(FileType type)
+        {
+            foreach (var folder in Folders)
+            {
+                if (folder?.Type == type)
+                    return folder;
+            }
+
+            return null;
+        }
     }
 }

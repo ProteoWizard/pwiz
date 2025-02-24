@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// helper classes.
     /// </summary>
     [XmlRoot("settings_summary")]
-    public class SrmSettings : XmlNamedElement, IPeptideFilter
+    public class SrmSettings : XmlNamedElement, IPeptideFilter, IValidating
     {
         public SrmSettings(string name, PeptideSettings peptideSettings, TransitionSettings transitionSettings, DataSettings dataSettings, DocumentRetentionTimes documentRetentionTimes)
             : base(name)
@@ -75,6 +75,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Create cached calculator instances
             CreatePrecursorMassCalcs();
             CreateFragmentMassCalcs();
+            UpdateFileLists();
         }
 
         [TrackChildren]
@@ -2197,6 +2198,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Initialize mass calculators
             CreatePrecursorMassCalcs();
             CreateFragmentMassCalcs();
+
+            Validate();
         }
 
         public static SrmSettings Deserialize(XmlReader reader)
@@ -2292,50 +2295,47 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        // TODO (ekoneil): placeholder, not immutable. Need to rework to update as SrmSettings changes.
-        public IDictionary<FileType, IEnumerable<IFileBase>> Files
+        public IFileGroupModel Files { get; private set; }
+
+        public void Validate()
         {
-            get
+            UpdateFileLists();
+        }
+
+        private void UpdateFileLists()
+        {
+            var folders = new List<IFileGroupModel>();
+
+            // TODO: IFileProvider interface {
+            //           IDictionary<FileType, IFileGroupModel> Files();
+            //           void Validate();
+            //           void UpdateFileList();
+            //       }
+            if (MeasuredResults != null)
             {
-                var dict = new Dictionary<FileType, IEnumerable<IFileBase>>();
+                var files = MeasuredResults.Files;
+                if (files != null)
+                    folders.Add(files);
+            }
 
-                // *.raw
-                if (MeasuredResults?.Chromatograms != null)
-                {
-                    dict[FileType.replicates] = MeasuredResults.Chromatograms;
-                }
+            if (PeptideSettings != null)
+            {
+                var files = PeptideSettings.Files;
+                if (files != null)
+                    folders.AddRange(files);
+            }
 
-                // *.blib
-                if (PeptideSettings?.Libraries?.LibrarySpecs != null)
-                {
-                    dict[FileType.peptide_library] = PeptideSettings.Libraries.LibrarySpecs;
-                }
+            if (TransitionSettings != null)
+            {
+                var files = TransitionSettings.Files;
+                if(files != null) 
+                    folders.AddRange(files);
+            }
 
-                // *.protdb
-                if (PeptideSettings != null && HasBackgroundProteome)
-                {
-                    dict[FileType.background_proteome] = ImmutableList.Singleton(PeptideSettings.BackgroundProteome);
-                }
-
-                // *.irtdb
-                if (PeptideSettings != null && HasRTCalcPersisted)
-                {
-                        dict[FileType.retention_score_calculator] = ImmutableList.Singleton(PeptideSettings.Prediction.RetentionTime.Calculator);
-                }
-
-                // *.optdb
-                if (HasOptimizationLibraryPersisted)
-                {
-                    dict[FileType.optimization_library] = ImmutableList.Singleton(TransitionSettings.Prediction.OptimizedLibrary);
-                }
-
-                // *.imsdb
-                if (HasIonMobilityLibraryPersisted)
-                {
-                    dict[FileType.ion_mobility_library] = ImmutableList.Singleton(TransitionSettings.IonMobilityFiltering.IonMobilityLibrary);
-                }
-
-                return new ImmutableDictionary<FileType, IEnumerable<IFileBase>>(dict);
+            var newFiles = new BasicFileGroupModel(FileType.folder, null, folders);
+            if (!ArrayUtil.ReferencesEqual(newFiles.FilesAndFolders, Files?.FilesAndFolders))
+            {
+                Files = newFiles;
             }
         }
     }

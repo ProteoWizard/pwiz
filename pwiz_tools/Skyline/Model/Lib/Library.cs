@@ -1505,13 +1505,13 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    /// <summary>
-    /// Identity class to allow identity equality on <see cref="LibrarySpec"/>.
-    /// </summary>
-    public sealed class LibrarySpecId : Identity { }
-
     public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription, IFileModel
     {
+        /// <summary>
+        /// Identity class to allow identity equality on <see cref="LibrarySpec"/>.
+        /// </summary>
+        private sealed class LibrarySpecId : Identity { }
+
         public static readonly PeptideRankId PEP_RANK_COPIES =
             new PeptideRankId(@"Spectrum count", () => LibResources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =

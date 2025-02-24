@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
+using Array = System.Array;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -351,7 +352,7 @@ namespace pwiz.Skyline.Model.Results
 
     [XmlRoot("replicate")]
     [XmlRootAlias("chromatogram_group")]
-    public sealed class ChromatogramSet : XmlNamedIdElement, IFileGroupModel
+    public sealed class ChromatogramSet : XmlNamedIdElement, IValidating
     {
         /// <summary>
         /// Info for all files contained in this replicate
@@ -383,10 +384,10 @@ namespace pwiz.Skyline.Model.Results
             
         }
 
-        public ChromatogramSet(string name, 
-                IEnumerable<MsDataFileUri> msDataFileNames,
-                Annotations annotations,
-                OptimizableRegression optimizationFunction)
+        public ChromatogramSet(string name,
+            IEnumerable<MsDataFileUri> msDataFileNames,
+            Annotations annotations,
+            OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
             MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
@@ -395,15 +396,28 @@ namespace pwiz.Skyline.Model.Results
             Annotations = annotations;
             SampleType = SampleType.DEFAULT;
             SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
+
+            UpdateFileList();
         }
 
-        public FileType Type => FileType.replicates;
+        public IFileGroupModel Files { get; private set; }
 
-        public IEnumerable<IFileModel> Files
+        public void Validate()
         {
-            get
+            UpdateFileList();
+        }
+
+        private void UpdateFileList()
+        {
+            var sampleFiles = MSDataFileInfos?.Cast<IFileModel>().ToList();
+
+            var chromSetFileGroup = new BasicFileGroupModel(FileType.replicate, Name, MakeReadOnly(sampleFiles), null);
+
+            if (Files == null || 
+                !ReferenceEquals(Files.Name, chromSetFileGroup.Name) ||
+                !ArrayUtil.ReferencesEqual(Files.FilesAndFolders, chromSetFileGroup.FilesAndFolders))
             {
-                return MSDataFileInfos;
+                Files = chromSetFileGroup;
             }
         }
 
@@ -712,6 +726,7 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramSet()
             : base(new ChromatogramSetId())
         {
+            UpdateFileList();
         }
 
         public static ChromatogramSet Deserialize(XmlReader reader)
@@ -1218,7 +1233,7 @@ namespace pwiz.Skyline.Model.Results
             return this;
         }
 
-        public FileType Type { get => FileType.replicate_file; }
+        public FileType Type { get => FileType.replicate_sample; }
         public string Name { get => FilePath.GetFileName(); }
         string IFileModel.FilePath => FilePath.GetFilePath();
     }

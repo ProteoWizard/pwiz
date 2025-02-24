@@ -35,10 +35,10 @@ namespace pwiz.Skyline.Controls
         // Used while merging a file data model with a FilesTree. Each entry explains how to
         // create a specific type of TreeNode given a type of file. Entries in this dict will
         // grow as more file types are supported. 
-        private static readonly Dictionary<FileType, CreateFilesTreeNode> TREE_NODE_DELEGATES =
+        private static readonly Dictionary<FileType, CreateFilesTreeNode> TREE_NODE_FACTORIES =
             new Dictionary<FileType, CreateFilesTreeNode> {
-                {FileType.replicates, ReplicateTreeNode.CreateNode},
-                {FileType.replicate_file, ReplicateSampleFileTreeNode.CreateNode},
+                {FileType.replicate, ReplicateTreeNode.CreateNode},
+                {FileType.replicate_sample, ReplicateSampleFileTreeNode.CreateNode},
                 {FileType.peptide_library, PeptideLibraryTreeNode.CreateNode},
                 {FileType.background_proteome, BackgroundProteomeTreeNode.CreateNode},
                 {FileType.retention_score_calculator, RetentionScoreCalculatorFileTreeNode.CreateNode},
@@ -89,18 +89,12 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.CacheFile);
             ImageList.Images.Add(Resources.ViewFile);
 
-            _replicatesFolder = 
-                FolderNode.Create(FolderType.replicates, ControlsResources.FilesTree_TreeNodeLabel_Replicates, 0);
-            _peptideLibrariesFolder = 
-                FolderNode.Create(FolderType.peptide_libraries, ControlsResources.FilesTree_TreeNodeLabel_Libraries, 1);
-            _backgroundProteomeFolder =
-                FolderNode.Create(FolderType.background_proteome, ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome, 2);
-            _irtFolder =
-                FolderNode.Create(FolderType.retention_score_calculator, SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator, 3);
-            _imsdbFolder =
-                FolderNode.Create(FolderType.ion_mobility_library, SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library, 4);
-            _projectFilesFolder =
-                FolderNode.Create(FolderType.project_files, ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles, 5);
+            _replicatesFolder = FolderNode.Create(FolderType.replicates, ControlsResources.FilesTree_TreeNodeLabel_Replicates, 0);
+            _peptideLibrariesFolder = FolderNode.Create(FolderType.peptide_libraries, ControlsResources.FilesTree_TreeNodeLabel_Libraries, 1);
+            _backgroundProteomeFolder = FolderNode.Create(FolderType.background_proteome, ControlsResources.FilesTree_TreeNodeLabel_BackgroundProteome, 2);
+            _irtFolder = FolderNode.Create(FolderType.retention_score_calculator, SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator, 3);
+            _imsdbFolder = FolderNode.Create(FolderType.ion_mobility_library, SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library, 4);
+            _projectFilesFolder = FolderNode.Create(FolderType.project_files, ControlsResources.FilesTree_TreeNodeLabel_ProjectFiles, 5);
 
             _fileSystemWatcher = new FileSystemWatcher();
         }
@@ -227,28 +221,32 @@ namespace pwiz.Skyline.Controls
 
                 // document changed, so re-wire project-level files
                 var auditLogFilePath = SrmDocument.GetAuditLogPath(DocumentContainer.DocumentFilePath);
-                _projectFilesFolder.Nodes.Add(new SkylineAuditLogTreeNode(new AuditLogFileModel(ControlsResources.FilesTree_TreeNodeLabel_AuditLog, auditLogFilePath)));
+                _projectFilesFolder.Nodes.Add(new SkylineAuditLogTreeNode(new AuditLogFileModel(auditLogFilePath)));
 
                 var viewFilePath = SkylineWindow.GetViewFile(DocumentContainer.DocumentFilePath);
-                _projectFilesFolder.Nodes.Add(new SkylineViewTreeNode(new ViewFileModel(ControlsResources.FilesTree_TreeNodeLabel_ViewFile, viewFilePath)));
+                _projectFilesFolder.Nodes.Add(new SkylineViewTreeNode(new ViewFileModel(viewFilePath)));
 
                 // CONSIDER: is this the correct way to get the path to a .skyd file?
                 //           is there a back compat consideration when there were per-replicate cache files?
                 var skydFilePath = ChromatogramCache.FinalPathForName(DocumentContainer.DocumentFilePath, null);
                 if (File.Exists(skydFilePath))
                 {
-                    _projectFilesFolder.Nodes.Add(new SkylineChromatogramCacheTreeNode(new ChromatogramCacheFileModel(ControlsResources.FilesTree_TreeNodeLabel_ChromatogramCache, skydFilePath)));
+                    _projectFilesFolder.Nodes.Add(new SkylineChromatogramCacheTreeNode(new ChromatogramCacheFileModel(skydFilePath)));
                 }
             }
 
-            var files = Document.Settings.Files;
+            var docFiles = Document.Settings.Files;
 
+            // TODO: generate whole tree from document
+            // ConnectFilesOfTypeToTree(docFiles, FileType.folder_replicates, _replicatesFolder);                      // replicate => sample files (.raw, etc)
+
+            ConnectFilesOfTypeToTree(docFiles, FileType.folder_replicates, _replicatesFolder);                      // replicate => sample files (.raw, etc)
+            ConnectFilesOfTypeToTree(docFiles, FileType.folder_peptide_libraries, _peptideLibrariesFolder);         // .blib
+            ConnectFilesOfTypeToTree(docFiles, FileType.folder_background_proteome, _backgroundProteomeFolder);     // .protdb
+            ConnectFilesOfTypeToTree(docFiles, FileType.folder_retention_score_calculator, _irtFolder);             // .irtdb
+            ConnectFilesOfTypeToTree(docFiles, FileType.folder_ion_mobility_library, _imsdbFolder);                 // .imsdb
             // TODO: support .optdb
-            ConnectFilesOfTypeToTree(files, FileType.replicates, _replicatesFolder);
-            ConnectFilesOfTypeToTree(files, FileType.peptide_library, _peptideLibrariesFolder);       // .blib
-            ConnectFilesOfTypeToTree(files, FileType.background_proteome, _backgroundProteomeFolder); // .protdb
-            ConnectFilesOfTypeToTree(files, FileType.retention_score_calculator, _irtFolder);         // .irtdb
-            ConnectFilesOfTypeToTree(files, FileType.ion_mobility_library, _imsdbFolder);             // .imsdb
+
             AddOrRemove(_projectFilesFolder);
 
             UpdateNodeStates();
@@ -260,6 +258,7 @@ namespace pwiz.Skyline.Controls
                 foreach (TreeNode child in Root.Nodes)
                 {
                     child.Expand();
+
                 }
             }
         }
@@ -281,13 +280,13 @@ namespace pwiz.Skyline.Controls
             node.UpdateState();
         }
 
-        private void ConnectFilesOfTypeToTree(IDictionary<FileType, IEnumerable<IFileBase>> files, FileType fileType, FolderNode folder)
+        private void ConnectFilesOfTypeToTree(IFileGroupModel root, FileType type, FolderNode folder)
         {
-            if (files.TryGetValue(fileType, out var filesOfType))
-            {
-                MergeNodes(DocumentContainer.DocumentFilePath, filesOfType, folder.Nodes);
-                AddOrRemove(folder);
-            }
+            // CONSIDER: put TryGetValue style accessor on IFileGroupModel
+            var filesForType = root.FileGroupForType(type)?.FilesAndFolders;
+
+            MergeNodes(DocumentContainer.DocumentFilePath, filesForType, folder.Nodes); 
+            AddOrRemove(folder);
         }
 
         private void AddOrRemove(FolderNode folder)
@@ -340,7 +339,10 @@ namespace pwiz.Skyline.Controls
         // CONSIDER: refactor for more code reuse with SrmTreeNode
         internal static void MergeNodes(string documentPath, IEnumerable<IFileBase> docFiles, TreeNodeCollection treeNodes)
         {
-            // need support for lookup by index, so convert to list for now
+            if (docFiles == null)
+                return;
+
+            // need to look items up by index, so convert to list
             var docFilesList = docFiles.ToList();
 
             IFileBase nodeDoc = null;
@@ -422,7 +424,7 @@ namespace pwiz.Skyline.Controls
                 FileNode nodeTree;
                 if (!remaining.TryGetValue(nodeDoc.Id.GlobalIndex, out nodeTree))
                 {
-                    var createNodeDelegate = TREE_NODE_DELEGATES[nodeDoc.Type];
+                    var createNodeDelegate = TREE_NODE_FACTORIES[nodeDoc.Type];
                     nodeTree = createNodeDelegate(documentPath, nodeDoc);
 
                     nodesToInsert.Add(nodeTree);
@@ -451,11 +453,7 @@ namespace pwiz.Skyline.Controls
             {
                 var nodeTree = (FileNode)treeNodes[insertNodeIndex + firstInsertPosition];
                 var docNode = docFilesList[insertNodeIndex + firstInsertPosition];
-                // Best replicate display, requires that the node have correct
-                // parenting, before the text and icons can be set correctly.
-                // So, force a model change to update those values.
-                // Also, TransitionGroups and Transitions need to know their Peptide in order
-                // to display ratios, so they must be updated when their parent changes
+
                 if (!ReferenceEquals(docNode, nodeTree.Model))
                 {
                     nodeTree.Model = docNode;
@@ -468,10 +466,12 @@ namespace pwiz.Skyline.Controls
                 var treeNode = treeNodes[i] as FileNode;
                 var model = treeNode?.Model;
 
-                if (!(model is IFileGroupModel fileGroup))
-                    continue;
-
-                MergeNodes(documentPath, fileGroup.Files, treeNode.Nodes);
+                // TODO (ekoneil): replace .Files with .FilesAndFolders
+                // Look for TreeNodes whose model represent a file group. If any are found, rely on their
+                // models being up-to-date (since it was just merged with the document) and recursively
+                // create / update / delete TreeNodes associated with its children
+                if (model is IFileGroupModel fileGroup)
+                    MergeNodes(documentPath, fileGroup.Files, treeNode.Nodes);
             }
         }
 
@@ -528,9 +528,9 @@ namespace pwiz.Skyline.Controls
 
             ImageIndex = ImageAvailable;
         }
-        public int ImageAvailable { get; private set; }
+        public int ImageAvailable { get; }
 
-        public int ImageMissing { get; private set; }
+        public int ImageMissing { get; }
 
         public virtual void OnModelChanged()
         {
@@ -564,7 +564,8 @@ namespace pwiz.Skyline.Controls
     public class FolderNode : FilesTreeNode, IComparable
     {
         public static FolderNode Create(FolderType type, string label, int sortOrder, 
-            FilesTree.ImageId imageAvailable = FilesTree.ImageId.folder, FilesTree.ImageId imageMissing = FilesTree.ImageId.file_missing)
+                                        FilesTree.ImageId imageAvailable = FilesTree.ImageId.folder, 
+                                        FilesTree.ImageId imageMissing = FilesTree.ImageId.file_missing)
         {
             var folderNode = new FolderNode(label, imageAvailable, imageMissing)
             {
@@ -910,6 +911,8 @@ namespace pwiz.Skyline.Controls
         public override string LocalFilePath { get; }
     }
 
+    #region Project File IFileModels and TreeNodes
+
     public class SkylineAuditLogTreeNode : FileNode, ITipProvider
     {
         public SkylineAuditLogTreeNode(AuditLogFileModel model) : 
@@ -934,15 +937,10 @@ namespace pwiz.Skyline.Controls
         public override string LocalFilePath => (Model as IFileModel)?.FilePath;
     }
 
-    #region Project File Models
-
-    public sealed class SkylineFileModelId : Identity { };
-    public sealed class AuditLogFileModelId : Identity { };
-    public sealed class ViewFileModelId : Identity { };
-    public sealed class ChromatogramCacheModelId : Identity { };
-
     public class SkylineFileModel : IFileModel
     {
+        private sealed class SkylineFileModelId : Identity { }
+
         public SkylineFileModel(string name, string filePath)
         {
             Id = new SkylineFileModelId();
@@ -958,10 +956,12 @@ namespace pwiz.Skyline.Controls
 
     public class AuditLogFileModel : IFileModel
     {
-        public AuditLogFileModel(string name, string filePath)
+        private sealed class AuditLogFileModelId : Identity { }
+
+        public AuditLogFileModel(string filePath)
         {
             Id = new AuditLogFileModelId();
-            Name = name;
+            Name = ControlsResources.FilesTree_TreeNodeLabel_AuditLog;
             FilePath = filePath;
         }
         public Identity Id { get; private set; }
@@ -972,10 +972,12 @@ namespace pwiz.Skyline.Controls
     
     public class ChromatogramCacheFileModel : IFileModel
     {
-        public ChromatogramCacheFileModel(string name, string filePath)
+        private sealed class ChromatogramCacheModelId : Identity { }
+
+        public ChromatogramCacheFileModel(string filePath)
         {
             Id = new ChromatogramCacheModelId();
-            Name = name;
+            Name = ControlsResources.FilesTree_TreeNodeLabel_ChromatogramCache;
             FilePath = filePath;
         }
         public Identity Id { get; private set; }
@@ -986,10 +988,12 @@ namespace pwiz.Skyline.Controls
 
     public class ViewFileModel : IFileModel
     {
-        public ViewFileModel(string name, string filePath)
+        private sealed class ViewFileModelId : Identity { }
+
+        public ViewFileModel(string filePath)
         {
             Id = new ViewFileModelId();    
-            Name = name;
+            Name = ControlsResources.FilesTree_TreeNodeLabel_ViewFile;
             FilePath = filePath;
         }
 

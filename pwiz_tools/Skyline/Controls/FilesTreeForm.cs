@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Controls
                     libraryExplorerToolStripMenuItem.Visible = true;
                     openContainingFolderMenuStripItem.Visible = false;
                     return;
-                case FileNode file when file.Model.Type != FileType.replicates:
+                case FileNode file when file.Model.Type != FileType.replicate:
                     manageResultsToolStripMenuItem.Visible = false;
                     libraryExplorerToolStripMenuItem.Visible = false;
 

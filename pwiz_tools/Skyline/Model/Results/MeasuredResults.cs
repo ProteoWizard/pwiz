@@ -25,6 +25,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -32,7 +33,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Results
 {
     [XmlRoot("measured_results")]
-    public sealed class MeasuredResults : Immutable, IXmlSerializable
+    public sealed class MeasuredResults : Immutable, IXmlSerializable, IValidating
     {
         public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
@@ -61,6 +62,29 @@ namespace pwiz.Skyline.Model.Results
             // The only way to get peaks with areas not normalized by
             // time is to load an older document that was created this way.
             IsTimeNormalArea = true;
+
+            UpdateFileList();
+        }
+
+        public IFileGroupModel Files { get; private set; }
+
+        public void Validate()
+        {
+            UpdateFileList();
+        }
+
+        private void UpdateFileList()
+        {
+            var newFileList = Chromatograms?.Select(item => item.Files).ToList();
+
+            if (newFileList == null)
+                return;
+
+            var newFileGroup = new BasicFileGroupModel(FileType.folder_replicates, null, newFileList);
+            if (!ArrayUtil.ReferencesEqual(Files?.FilesAndFolders, newFileGroup.FilesAndFolders))
+            {
+                Files = newFileGroup;
+            }
         }
 
         public bool IsEmpty
@@ -1292,6 +1316,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MeasuredResults()
         {
+            UpdateFileList();
         }
 
         private enum ATTR

@@ -240,7 +240,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, SkylineWindow.FilesTree.Folder(FolderType.peptide_libraries)?.Nodes.Count);
             Assert.AreEqual("Rat (NIST) (Rat_plasma2) (Rat_plasma)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             Assert.AreEqual("Rat (GPM) (Rat_plasma2) (Rat_plasma)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
-
+            
             var peptideLibraryName = SkylineWindow.FilesTree.Folder(FolderType.peptide_libraries)?.Nodes[0].Name;
             Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name, peptideLibraryName);
             RunUI(() => SkylineWindow.FilesTreeForm.OpenLibraryExplorer(peptideLibraryName));
@@ -289,7 +289,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static void CheckReplicateEquivalence(int expectedCount)
         {
-            var docNodes = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
+            var docNodes = SkylineWindow.Document.Settings.MeasuredResults.Files.FilesAndFolders;
             var treeNodes = SkylineWindow.FilesTree.Folder(FolderType.replicates).Nodes;
 
             Assert.IsNotNull(docNodes);

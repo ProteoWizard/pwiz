@@ -42,7 +42,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.DocSettings
 {
     [XmlRoot("peptide_settings")]
-    public class PeptideSettings : Immutable, IXmlSerializable
+    public class PeptideSettings : Immutable, IXmlSerializable, IValidating
     {
         public PeptideSettings(Enzyme enzyme,
                                DigestSettings digestSettings,
@@ -71,6 +71,8 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             Quantification = QuantificationSettings.DEFAULT;
             ProteinAssociationSettings = proteinAssociationSettings;
+
+            UpdateFileList();
         }
 
         [TrackChildren]
@@ -102,6 +104,69 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren]
         public ProteinAssociation.ParsimonySettings ProteinAssociationSettings { get; private set; }
+
+        public IList<IFileGroupModel> Files { get; private set; }
+
+        public void Validate()
+        {
+            UpdateFileList();
+        }
+
+        private IList<IFileBase> FilesAndFoldersByType(FileType fileType)
+        {
+            if (Files == null)
+                return null;
+
+            foreach (var item in Files)
+            {
+                if (item?.Type == fileType)
+                    return item.FilesAndFolders;
+            }
+
+            return null;
+        }
+
+        private void UpdateFileList()
+        {
+            // *.blib
+            IFileGroupModel newLibrariesFileGroup = null;
+            if (Libraries?.LibrarySpecs != null)
+            {
+                newLibrariesFileGroup = Libraries.Files;
+            }
+
+            // *.protdb
+            IFileGroupModel newProtDbFileGroup = null;
+            if (BackgroundProteome is { IsNone: false })
+            {
+                newProtDbFileGroup = new BasicFileGroupModel(FileType.folder_background_proteome, null, BackgroundProteome);
+            }
+
+            // *.irtdb
+            IFileGroupModel newRetentionScoreCalculator = null;
+            if (Prediction?.RetentionTime?.Calculator?.PersistencePath != null)
+            {
+                newRetentionScoreCalculator = new BasicFileGroupModel(FileType.folder_retention_score_calculator, null, Prediction.RetentionTime.Calculator);
+            }
+
+            if (!ArrayUtil.ReferencesEqual(newLibrariesFileGroup?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_peptide_libraries)) ||
+                !ArrayUtil.ReferencesEqual(newProtDbFileGroup?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_background_proteome)) ||
+                !ArrayUtil.ReferencesEqual(newRetentionScoreCalculator?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_retention_score_calculator)))
+            {
+                var newFileGroupModel = new List<IFileGroupModel>();
+
+                if (newLibrariesFileGroup != null)
+                    newFileGroupModel.Add(newLibrariesFileGroup);
+
+                if (newProtDbFileGroup != null)
+                    newFileGroupModel.Add(newProtDbFileGroup);
+
+                if (newRetentionScoreCalculator != null)
+                    newFileGroupModel.Add(newRetentionScoreCalculator);
+
+                Files = MakeReadOnly(newFileGroupModel);
+            }
+        }
 
         #region Property change methods
 
@@ -198,6 +263,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private PeptideSettings()
         {
+            UpdateFileList();
         }
 
         public static PeptideSettings Deserialize(XmlReader reader)
@@ -1954,6 +2020,26 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _librarySpecs = MakeReadOnly(value); }
         }
 
+        public IFileGroupModel Files { get; private set; }
+
+        public bool HasFilesOrFolders()
+        {
+            return Files != null && Files.HasFilesOrFolders();
+        }
+
+        private void UpdateFileLists()
+        {
+            var librarySpecModels = _librarySpecs?.Cast<IFileModel>().ToList();
+            var librarySpecFolder = new BasicFileGroupModel(FileType.folder_peptide_libraries, null, MakeReadOnly(librarySpecModels), null);
+
+            if (Files == null ||
+                !ArrayUtil.ReferencesEqual(Files.FilesAndFolders, librarySpecFolder.FilesAndFolders))
+            {
+                Files = librarySpecFolder;
+            }
+        }
+
+
         public IEnumerable<LibrarySpec> LibrarySpecsUnloaded
         {
             get
@@ -2426,6 +2512,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private PeptideLibraries()
         {
+            UpdateFileLists();
         }
 
         // Temporary storage of the rank ID name, until all LibrarySpecs
@@ -2517,6 +2604,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Leave connecting the libraries to the LibrarySpecs in the
             // SpectralLibraryList until the root settings object is validated.
+
+            UpdateFileLists();
         }
 
         private bool LibrariesMatch()
