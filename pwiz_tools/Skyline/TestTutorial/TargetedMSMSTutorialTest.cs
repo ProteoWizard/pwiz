@@ -250,8 +250,8 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             RunUI(() =>
             {
-                exportMethodDlg.SetInstrument("Thermo LTQ");
-                Assert.AreEqual("Thermo LTQ", exportMethodDlg.InstrumentType);
+                exportMethodDlg.SetInstrument(ExportInstrumentType.THERMO_LTQ);
+                Assert.AreEqual(ExportInstrumentType.THERMO_LTQ, exportMethodDlg.InstrumentType);
                 exportMethodDlg.SetMethodType(ExportMethodType.Standard);
                 exportMethodDlg.SetTemplateFile(GetTestPath(@"Low Res\TargetedMSMS_template.meth"), true);
             });
