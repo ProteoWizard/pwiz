@@ -70,15 +70,6 @@ namespace pwiz.Skyline.Model.GroupComparison {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All {0} peaks are truncated.
-        /// </summary>
-        public static string PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated {
-            get {
-                return ResourceManager.GetString("PeptideQuantifier_SumTransitionQuantities_All__0__peaks_are_truncated", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Missing values for {0}/{1} transitions.
         /// </summary>
         public static string PeptideQuantifier_SumTransitionQuantities_Missing_values_for__0___1__transitions {
@@ -93,25 +84,6 @@ namespace pwiz.Skyline.Model.GroupComparison {
         public static string PeptideQuantifier_SumTransitionQuantities_Transition___0___is_missing {
             get {
                 return ResourceManager.GetString("PeptideQuantifier_SumTransitionQuantities_Transition___0___is_missing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Transition &apos;{0}&apos; is truncated.
-        /// </summary>
-        public static string PeptideQuantifier_SumTransitionQuantities_Transition___0___is_truncated {
-            get {
-                return ResourceManager.GetString("PeptideQuantifier_SumTransitionQuantities_Transition___0___is_truncated", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Truncated peaks for {0}/{1} transitions.
-        /// </summary>
-        public static string PeptideQuantifier_SumTransitionQuantities_Truncated_peaks_for__0___1__transitions {
-            get {
-                return ResourceManager.GetString("PeptideQuantifier_SumTransitionQuantities_Truncated_peaks_for__0___1__transitions" +
-                        "", resourceCulture);
             }
         }
         

@@ -127,7 +127,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
                         {
                             IdentityPath.ROOT,
                             new PeptideQuantifier.Quantity(GetPeptideQuantifier(calibrationPoint).GetIsotopologArea(SrmSettings, calibrationPoint.ReplicateIndex,
-                                calibrationPoint.LabelType), 1, false)
+                                calibrationPoint.LabelType), 1)
                         }
                     };
                 }
@@ -351,14 +351,7 @@ namespace pwiz.Skyline.Model.DocSettings.AbsoluteQuantification
             ICollection<IdentityPath> completeTransitionSet;
             if (IsAllowMissingTransitions())
             {
-                if (allTransitionQuantities.Values.Any(v => v.Truncated) && !allTransitionQuantities.Values.All(v=>v.Truncated))
-                {
-                    completeTransitionSet = allTransitionQuantities.Where(kvp=>!kvp.Value.Truncated).Select(kvp=>kvp.Key).ToHashSet();
-                }
-                else
-                {
-                    completeTransitionSet = allTransitionQuantities.Keys;
-                }
+                completeTransitionSet = allTransitionQuantities.Keys;
             }
             else
             {

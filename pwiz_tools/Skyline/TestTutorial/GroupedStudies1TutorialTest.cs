@@ -1534,11 +1534,10 @@ namespace pwiz.SkylineTestTutorial
                 });
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
             }
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
-            WaitForConditionUI(() => 11 == foldChangeGrid.DataboundGridControl.RowCount);
-            RunUI(() => Assert.AreEqual(11, foldChangeGrid.DataboundGridControl.RowCount));
+            WaitForConditionUI(() => foldChangeGrid.IsComplete);
             RunUI(() =>
             {
+                Assert.AreEqual(13, foldChangeGrid.DataboundGridControl.RowCount);
                 var barGraph = FindOpenForm<FoldChangeBarGraph>();
                 var scale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
                 scale.Min = -6.5;
@@ -1578,13 +1577,14 @@ namespace pwiz.SkylineTestTutorial
                 return;
             }
 
-            WaitForConditionUI(() => foldChangeGrid.DataboundGridControl.IsComplete);
+            WaitForConditionUI(() => foldChangeGrid.IsComplete);
             var settingsForm = ShowDialog<EditGroupComparisonDlg>(foldChangeGrid.ShowChangeSettings);
             RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedIndex = 0);
-            WaitForConditionUI(() => 37 == foldChangeGrid.DataboundGridControl.RowCount);
-            RunUI(() => settingsForm.ComboIdentityAnnotation.SelectedItem = "SubjectId");
+            WaitForConditionUI(() => foldChangeGraph.IsComplete);
             RunUI(() =>
             {
+                Assert.AreEqual(39, foldChangeGrid.DataboundGridControl.RowCount);
+                settingsForm.ComboIdentityAnnotation.SelectedItem = "SubjectId";
                 string folderName = Path.GetDirectoryName(SkylineWindow.DocumentFilePath);
                 Assert.IsNotNull(folderName);
                 string newFileName = Path.Combine(folderName,
@@ -1607,7 +1607,8 @@ namespace pwiz.SkylineTestTutorial
                 });
                 OkDialog(quickFilterForm, quickFilterForm.OkDialog);
             }
-            WaitForConditionUI(() => 92 == foldChangeGrid.DataboundGridControl.RowCount);
+            WaitForConditionUI(() => foldChangeGrid.IsComplete);
+            RunUI(()=>Assert.AreEqual(93, foldChangeGrid.DataboundGridControl.RowCount));
             PauseForGraphScreenShot("Copy peptide bar graph metafile", FindOpenForm<FoldChangeBarGraph>());
 
             RunUI(() =>

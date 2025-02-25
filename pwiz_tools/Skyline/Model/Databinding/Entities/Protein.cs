@@ -251,7 +251,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             var allTransitionIdentityPaths = replicateQuantities
-                .SelectMany(dict => dict.Where(kvp => !kvp.Value.Truncated).Select(kvp => kvp.Key)).ToHashSet();
+                .SelectMany(dict => dict.Select(kvp => kvp.Key)).ToHashSet();
             if (allTransitionIdentityPaths.Count == 0)
             {
                 allTransitionIdentityPaths = replicateQuantities.SelectMany(dict => dict.Keys).ToHashSet();

@@ -79,7 +79,9 @@ namespace pwiz.SkylineTest.MSstats.Normalization
             {
                 Assume.IsTrue(asSmallMolecules);
                 return;
-            } 
+            }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetNoNormalization_dataProcessedData.csv")));
             VerifyAbundances(testDocument, asSmallMolecules, expected,
                 transitionChromInfo =>
@@ -118,6 +120,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                 Assume.IsTrue(asSmallMolecules);
                 return;
             }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var expectedResults = MsStatsTestUtil.ReadExpectedResults(typeof(MsStatsNormalizationTest),
                 "BrudererSubsetNoNormalization_TestingResult.csv");
             GroupComparisonDef groupComparisonDef = new GroupComparisonDef("test")
@@ -150,6 +154,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                 Assume.IsTrue(asSmallMolecules);
                 return;
             }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var chromatograms = testDocument.Settings.MeasuredResults.Chromatograms;
             var expected = ReadDataProcessedRows(new StreamReader(OpenTestFile("BrudererSubsetEqualizeMedians_dataProcessedData.csv")));
             NormalizationData normalizationData = NormalizationData.GetNormalizationData(testDocument, false, null);
@@ -203,6 +209,8 @@ namespace pwiz.SkylineTest.MSstats.Normalization
                 Assume.IsTrue(asSmallMolecules);
                 return;
             }
+
+            testDocument = RemoveTruncatedPeaks(testDocument);
             var expectedResults = MsStatsTestUtil.ReadExpectedResults(typeof(MsStatsNormalizationTest),
                 "BrudererSubsetEqualizeMedians_TestingResult.csv");
             GroupComparisonDef groupComparisonDef = new GroupComparisonDef("test")
@@ -318,6 +326,11 @@ namespace pwiz.SkylineTest.MSstats.Normalization
         {
             return typeof (MsStatsNormalizationTest).Assembly
                 .GetManifestResourceStream(typeof (MsStatsNormalizationTest), name);
+        }
+
+        private SrmDocument RemoveTruncatedPeaks(SrmDocument document)
+        {
+            return ResultsUtil.RemoveTruncatedPeaks(document);
         }
 
         Dictionary<DataProcessedRowKey, double?> ReadDataProcessedRows(TextReader reader)

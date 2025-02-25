@@ -252,9 +252,9 @@ namespace TestPerf
                         new[] { 2.2, 4.6 },
                         new[] { 1.9, 4.7 },
                     },
-                    DiffPeptideCounts = new[] { 10459, 6387, 2238, 1823 },
-                    UnpolishedProteins = 1647,
-                    PolishedProteins = 1647,
+                    DiffPeptideCounts = new[] { 10478, 6400, 2244, 1823 },
+                    UnpolishedProteins = 1662,
+                    PolishedProteins = 1662,
                 };
             }
             else
@@ -278,7 +278,7 @@ namespace TestPerf
                         new[] { 1.2, 4.3 },
                     },
                     DiffPeptideCounts = new[] { 139, 47, 29, 52 },
-                    UnpolishedProteins = 9,
+                    UnpolishedProteins = 10,
                     FoldChangeProteinsMax = 2,
                 };
             }
@@ -364,8 +364,8 @@ namespace TestPerf
                         new[] {4.4, 1.7},
                         new[] {3.7, 1.8},
                     },
-                    DiffPeptideCounts = new[] { 42, 7, 8, 12 },
-                    UnpolishedProteins = 9,
+                    DiffPeptideCounts = new[] { 43, 8, 8, 12 },
+                    UnpolishedProteins = 10,
                 };
 
                 SetInstrumentType(new InstrumentSpecificValues
