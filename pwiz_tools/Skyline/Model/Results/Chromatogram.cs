@@ -1009,6 +1009,11 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        public ChromFileInfo FindChromFileInfo(ChromFileInfoId chromFileInfoId)
+        {
+            return _msDataFileInfo.FirstOrDefault(chromFileInfo => ReferenceEquals(chromFileInfo.Id, chromFileInfoId));
+        }
     }
 
     /// <summary>

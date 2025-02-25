@@ -18,10 +18,10 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Util;
 using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.FilesView;
+using Process = System.Diagnostics.Process;
 
 namespace pwiz.Skyline.Controls
 {
@@ -67,24 +67,23 @@ namespace pwiz.Skyline.Controls
 
         public void OpenContainingFolder(TreeNode selectedNode)
         {
-            if (FilesTree.SelectedNode is FileNode fileNode)
+            if (FilesTree.SelectedNode is FilesTreeNode fileNode)
             {
                 Process.Start(@"explorer.exe", $@"/select,""{fileNode.LocalFilePath}""");
             }
         }
 
-        public void OpenLibraryExplorer(string libraryName)
+        public void OpenLibraryExplorer(SpectralLibrary model)
         {
-            SkylineWindow.OpenLibraryExplorer(libraryName);
+            SkylineWindow.OpenLibraryExplorer(model.Name);
         }
 
-        public void ActivateReplicate(FilesTreeNode node)
+        public void ActivateReplicate(Replicate model)
         {
             // Replicates open using the replicate name, which is pulled from the parent tree node which
             // avoids adding a pointer to the parent in SrmSettings and adding a new field on the
             // replicate file's data model
-            if (node.Parent is ReplicateTreeNode parent)
-                SkylineWindow.ActivateReplicate(parent.Name);
+            SkylineWindow.ActivateReplicate(model.Name);
         }
 
         public void ShowManageResultsDialog()
@@ -158,26 +157,38 @@ namespace pwiz.Skyline.Controls
         {
             _nodeTip.HideTip();
 
-            switch (FilesTree.SelectedNode)
+            var filesTreeNode = FilesTree.SelectedNode as FilesTreeNode;
+
+            switch (filesTreeNode?.Model)
             {
-                case FolderNode folder when folder.FolderType == FolderType.replicates:
+                // TODO: Menu Item: Open Library
+                // TODO: Menu Item: Activate Replicate
+                case ReplicatesFolder _:
                     manageResultsToolStripMenuItem.Visible = true;
                     manageResultsToolStripMenuItem.Enabled = true;
                     libraryExplorerToolStripMenuItem.Visible = false;
                     openContainingFolderMenuStripItem.Visible = false;
                     return;
-                case FolderNode folder when folder.FolderType == FolderType.peptide_libraries:
+                case SpectralLibrariesFolder _:
                     manageResultsToolStripMenuItem.Visible = false;
                     libraryExplorerToolStripMenuItem.Visible = true;
                     openContainingFolderMenuStripItem.Visible = false;
                     return;
-                case FileNode file when file.Model.Type != FileType.replicate:
+                case BackgroundProteome _:
+                case IonMobilityLibrary _:
+                case OptimizationLibrary _:
+                case ReplicateSampleFile _:
+                case RTCalc _:
+                case SkylineAuditLog _:
+                case SkylineChromatogramCache _:
+                case SkylineViewFile _:
+                case SpectralLibrary _:
                     manageResultsToolStripMenuItem.Visible = false;
                     libraryExplorerToolStripMenuItem.Visible = false;
-
-                    // only offer the option if the file currently exists and isn't removed or deleted
+            
+                    // only offer the Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
                     openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = file.LocalFileExists();
+                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
                     return;
                 default:
                     e.Cancel = true;
@@ -187,16 +198,18 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            switch (e.Node)
+            var filesTreeNode = e.Node as FilesTreeNode;
+
+            switch (filesTreeNode?.Model)
             {
-                case SkylineAuditLogTreeNode _:
+                case SkylineAuditLog _:
                     ShowAuditLog();
                     break;
-                case PeptideLibraryTreeNode peptideLibrary:
-                    OpenLibraryExplorer(peptideLibrary.Text);
+                case SpectralLibrary spectralLibrary:
+                    OpenLibraryExplorer(spectralLibrary);
                     break;
-                case ReplicateSampleFileTreeNode replicate:
-                    ActivateReplicate(replicate);
+                case ReplicateSampleFile _:
+                    ActivateReplicate((Replicate)((FilesTreeNode)filesTreeNode.Parent).Model);
                     break;
             }
         }

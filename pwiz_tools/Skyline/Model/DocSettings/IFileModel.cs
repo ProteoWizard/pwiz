@@ -36,21 +36,21 @@ namespace pwiz.Skyline.Model.DocSettings
         sky_audit_log,              // .skyl
         sky_chromatogram_cache,     // .skyd
         sky_view,                   // .sky.view
+
         folder,
         folder_replicates,
         folder_peptide_libraries,
         folder_background_proteome,
         folder_retention_score_calculator,
         folder_ion_mobility_library,
-        folder_optimization_library
+        folder_optimization_library,
+        folder_project_files
     }
 
     public interface IFileBase
     {
         Identity Id { get; }
-        
         FileType Type { get; }
-
         string Name { get; }
     }
 
@@ -58,21 +58,21 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         string FilePath { get; }
     }
-    
+
+    // CONSIDER: separating folder type from the FileType enum
     public interface IFileGroupModel : IFileBase
     {
         IList<IFileModel> Files { get; }
-
         IList<IFileGroupModel> Folders { get; }
-
         IList<IFileBase> FilesAndFolders { get; }
-
-        IFileGroupModel FileGroupForType(FileType type);
-
-        bool HasFilesOrFolders();
     }
 
-    // TODO: use a factory so can be built incrementally ensuring immutability and non-null'ness without all the boilerplate
+    public interface IFileProvider
+    {
+        IDictionary<FileType, IFileGroupModel> Files { get; }
+    }
+
+    // TODO: build incrementally with a factory to simplify ensuring immutability and non-null files / folders
     public class BasicFileGroupModel : IFileGroupModel
     {
         private class BasicFileGroupModelId : Identity { }
@@ -85,6 +85,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public BasicFileGroupModel(FileType type, string name, IList<IFileModel> files, IList<IFileGroupModel> folders) {
             Id = new BasicFileGroupModelId();
+
             Type = type;
             Name = name;
             Files = ImmutableList.ValueOf(files);
@@ -121,18 +122,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool HasFilesOrFolders()
         {
             return HasFiles() || HasFolders();
-        }
-
-        // CONSIDER: using a separate FileGroupType
-        public IFileGroupModel FileGroupForType(FileType type)
-        {
-            foreach (var folder in Folders)
-            {
-                if (folder?.Type == type)
-                    return folder;
-            }
-
-            return null;
         }
     }
 }

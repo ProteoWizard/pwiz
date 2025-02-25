@@ -574,6 +574,30 @@
     <Compile Include="Model\DocSettings\IFileModel.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
+    <Compile Include="Model\FilesView\BackgroundProteome.cs" />
+    <Compile Include="Model\FilesView\BackgroundProteomeFolder.cs" />
+    <Compile Include="Model\FilesView\FileNode.cs" />
+    <Compile Include="Model\FilesView\FilesView.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FilesView.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Model\FilesView\IonMobilityLibrary.cs" />
+    <Compile Include="Model\FilesView\IonMobilityLibraryFolder.cs" />
+    <Compile Include="Model\FilesView\OptimizationLibraryFolder.cs" />
+    <Compile Include="Model\FilesView\OptimizationLibrary.cs" />
+    <Compile Include="Model\FilesView\ProjectFilesFolder.cs" />
+    <Compile Include="Model\FilesView\Replicate.cs" />
+    <Compile Include="Model\FilesView\ReplicateSampleFile.cs" />
+    <Compile Include="Model\FilesView\ReplicatesFolder.cs" />
+    <Compile Include="Model\FilesView\RootFileNode.cs" />
+    <Compile Include="Model\FilesView\RTCalcFolder.cs" />
+    <Compile Include="Model\FilesView\RTCalc.cs" />
+    <Compile Include="Model\FilesView\SkylineAuditLog.cs" />
+    <Compile Include="Model\FilesView\SkylineChromatogramCache.cs" />
+    <Compile Include="Model\FilesView\SkylineViewFile.cs" />
+    <Compile Include="Model\FilesView\SpectralLibrariesFolder.cs" />
+    <Compile Include="Model\FilesView\SpectralLibrary.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -3719,6 +3743,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Databinding\Entities\ColumnToolTips.zh-CHS.resx">
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\FilesView\FilesView.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FilesView.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.ja.resx">
@@ -7177,6 +7206,7 @@
       <Version>1.0.2420.47</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

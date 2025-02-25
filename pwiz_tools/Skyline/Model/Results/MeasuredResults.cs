@@ -33,7 +33,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Results
 {
     [XmlRoot("measured_results")]
-    public sealed class MeasuredResults : Immutable, IXmlSerializable, IValidating
+    public sealed class MeasuredResults : Immutable, IXmlSerializable, IValidating, IFileProvider
     {
         public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
@@ -63,27 +63,33 @@ namespace pwiz.Skyline.Model.Results
             // time is to load an older document that was created this way.
             IsTimeNormalArea = true;
 
-            UpdateFileList();
+            UpdateFiles();
         }
 
-        public IFileGroupModel Files { get; private set; }
+        public IDictionary<FileType, IFileGroupModel> Files { get; private set; }
 
         public void Validate()
         {
-            UpdateFileList();
+            UpdateFiles();
         }
 
-        private void UpdateFileList()
+        private void UpdateFiles()
         {
-            var newFileList = Chromatograms?.Select(item => item.Files).ToList();
-
-            if (newFileList == null)
+            if (IsEmpty)
                 return;
 
+            var newFileList = Chromatograms?.Select(item => item.Files).ToList();
+
             var newFileGroup = new BasicFileGroupModel(FileType.folder_replicates, null, newFileList);
-            if (!ArrayUtil.ReferencesEqual(Files?.FilesAndFolders, newFileGroup.FilesAndFolders))
+            if (!ArrayUtil.ReferencesEqual(newFileGroup.FilesAndFolders,
+                    Files != null && Files.TryGetValue(FileType.folder_replicates, out var value) ? value.FilesAndFolders : null))
             {
-                Files = newFileGroup;
+                var newFiles = new Dictionary<FileType, IFileGroupModel>
+                {
+                    {newFileGroup.Type, newFileGroup}
+                };
+
+                Files = MakeReadOnly(newFiles);
             }
         }
 
@@ -1316,7 +1322,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MeasuredResults()
         {
-            UpdateFileList();
+            UpdateFiles();
         }
 
         private enum ATTR
@@ -1962,6 +1968,11 @@ namespace pwiz.Skyline.Model.Results
         public double? GetMedianTicArea()
         {
             return _medianTicArea;
+        }
+
+        public ChromatogramSet FindChromatogramSet(ChromatogramSetId chromatogramSetId)
+        {
+            return _chromatograms.FirstOrDefault(chromatogramSet => ReferenceEquals(chromatogramSet.Id, chromatogramSetId));
         }
     }
 

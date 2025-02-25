@@ -1,0 +1,66 @@
+﻿/*
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Collections.Generic;
+using pwiz.Common.Collections;
+
+namespace pwiz.Skyline.Model.FilesView
+{
+    public class ProjectFilesFolder : FileNode
+    {
+        private static readonly Identity PROJECT_FILES_FOLDER = new StaticFolderId();
+
+        private readonly string _documentPath;
+
+        public ProjectFilesFolder(SrmDocument document, string documentPath) : 
+            base(document, new IdentityPath(PROJECT_FILES_FOLDER), ImageId.folder)
+        {
+            _documentPath = documentPath;
+        }
+
+        public override string Name => FilesView.FilesTree_TreeNodeLabel_ProjectFiles;
+        public override string FilePath => string.Empty;
+
+        public override IList<FileNode> Files
+        {
+            get
+            {
+                IList<FileNode> files = new List<FileNode>();
+
+                if (Document.Settings.DataSettings.IsAuditLoggingEnabled) 
+                    files.Add(new SkylineAuditLog(Document, _documentPath));
+
+                // TODO: does this need to check for whether the Skyline Document is saved to disk?
+                files.Add(new SkylineViewFile(Document, _documentPath));
+
+                // Chromatogram Caches (.skyd)
+                // TODO: is this correct? Cache files created in MeasuredResults @ line 1640
+                // TODO: does this need to check if the file exists?
+                var cachePaths = Document.Settings.MeasuredResults?.CachePaths;
+                if (cachePaths != null)
+                {
+                    foreach (var cachePath in cachePaths)
+                    {
+                        files.Add(new SkylineChromatogramCache(Document, _documentPath, cachePath));
+                    }
+                }
+
+                return ImmutableList<FileNode>.ValueOf(files);
+            }
+        }
+
+    }
+}

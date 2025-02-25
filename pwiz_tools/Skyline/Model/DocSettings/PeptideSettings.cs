@@ -42,7 +42,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.DocSettings
 {
     [XmlRoot("peptide_settings")]
-    public class PeptideSettings : Immutable, IXmlSerializable, IValidating
+    public class PeptideSettings : Immutable, IXmlSerializable, IValidating, IFileProvider
     {
         public PeptideSettings(Enzyme enzyme,
                                DigestSettings digestSettings,
@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Quantification = QuantificationSettings.DEFAULT;
             ProteinAssociationSettings = proteinAssociationSettings;
 
-            UpdateFileList();
+            UpdateFiles();
         }
 
         [TrackChildren]
@@ -105,64 +105,63 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren]
         public ProteinAssociation.ParsimonySettings ProteinAssociationSettings { get; private set; }
 
-        public IList<IFileGroupModel> Files { get; private set; }
+        public bool HasLibraries { get { return Libraries != null && Libraries.HasLibraries; } }
+
+        public bool HasDocumentLibrary { get { return Libraries != null && Libraries.HasDocumentLibrary; } }
+
+        public bool HasBackgroundProteome { get { return BackgroundProteome != null && !BackgroundProteome.IsNone; } }
+
+        public bool HasRTPrediction { get { return Prediction != null && Prediction.RetentionTime != null; } }
+
+        public bool HasRTCalcPersisted { get { return HasRTPrediction && Prediction.RetentionTime.Calculator.PersistencePath != null; } }
+
+        public IDictionary<FileType, IFileGroupModel> Files { get; private set; }
 
         public void Validate()
         {
-            UpdateFileList();
+            UpdateFiles();
         }
 
-        private IList<IFileBase> FilesAndFoldersByType(FileType fileType)
-        {
-            if (Files == null)
-                return null;
-
-            foreach (var item in Files)
-            {
-                if (item?.Type == fileType)
-                    return item.FilesAndFolders;
-            }
-
-            return null;
-        }
-
-        private void UpdateFileList()
+        private void UpdateFiles()
         {
             // *.blib
             IFileGroupModel newLibrariesFileGroup = null;
-            if (Libraries?.LibrarySpecs != null)
+            if (HasLibraries)
             {
                 newLibrariesFileGroup = Libraries.Files;
             }
 
             // *.protdb
             IFileGroupModel newProtDbFileGroup = null;
-            if (BackgroundProteome is { IsNone: false })
+            if (HasBackgroundProteome)
             {
                 newProtDbFileGroup = new BasicFileGroupModel(FileType.folder_background_proteome, null, BackgroundProteome);
             }
 
             // *.irtdb
             IFileGroupModel newRetentionScoreCalculator = null;
-            if (Prediction?.RetentionTime?.Calculator?.PersistencePath != null)
+            if (HasRTCalcPersisted)
             {
                 newRetentionScoreCalculator = new BasicFileGroupModel(FileType.folder_retention_score_calculator, null, Prediction.RetentionTime.Calculator);
             }
 
-            if (!ArrayUtil.ReferencesEqual(newLibrariesFileGroup?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_peptide_libraries)) ||
-                !ArrayUtil.ReferencesEqual(newProtDbFileGroup?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_background_proteome)) ||
-                !ArrayUtil.ReferencesEqual(newRetentionScoreCalculator?.FilesAndFolders, FilesAndFoldersByType(FileType.folder_retention_score_calculator)))
+            if (!ArrayUtil.ReferencesEqual(newLibrariesFileGroup?.FilesAndFolders, 
+                    Files != null && Files.TryGetValue(FileType.folder_peptide_libraries, out var value1) ? value1.FilesAndFolders : null) ||
+                !ArrayUtil.ReferencesEqual(newProtDbFileGroup?.FilesAndFolders, 
+                    Files != null && Files.TryGetValue(FileType.folder_background_proteome, out var value2) ? value2.FilesAndFolders : null) ||
+                !ArrayUtil.ReferencesEqual(newRetentionScoreCalculator?.FilesAndFolders,
+                    Files != null && Files.TryGetValue(FileType.folder_retention_score_calculator, out var value3) ? value3.FilesAndFolders : null))
             {
-                var newFileGroupModel = new List<IFileGroupModel>();
+                var newFileGroupModel = new SortedDictionary<FileType, IFileGroupModel>();
 
                 if (newLibrariesFileGroup != null)
-                    newFileGroupModel.Add(newLibrariesFileGroup);
+                    newFileGroupModel[newLibrariesFileGroup.Type] = newLibrariesFileGroup;
 
                 if (newProtDbFileGroup != null)
-                    newFileGroupModel.Add(newProtDbFileGroup);
+                    newFileGroupModel[newProtDbFileGroup.Type] = newProtDbFileGroup;
 
                 if (newRetentionScoreCalculator != null)
-                    newFileGroupModel.Add(newRetentionScoreCalculator);
+                    newFileGroupModel[newRetentionScoreCalculator.Type] = newRetentionScoreCalculator; 
 
                 Files = MakeReadOnly(newFileGroupModel);
             }
@@ -263,7 +262,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private PeptideSettings()
         {
-            UpdateFileList();
+            UpdateFiles();
         }
 
         public static PeptideSettings Deserialize(XmlReader reader)
@@ -2022,11 +2021,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IFileGroupModel Files { get; private set; }
 
-        public bool HasFilesOrFolders()
-        {
-            return Files != null && Files.HasFilesOrFolders();
-        }
-
         private void UpdateFileLists()
         {
             var librarySpecModels = _librarySpecs?.Cast<IFileModel>().ToList();
@@ -2817,6 +2811,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public LibrarySpec FindLibrarySpec(Identity identity)
+        {
+            return _librarySpecs.FirstOrDefault(librarySpec => ReferenceEquals(librarySpec.Id, identity));
+        }
     }
 
 
