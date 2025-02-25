@@ -1,8 +1,8 @@
-<html>
+﻿<html>
 
 <head>
-    <meta charset="utf-8">
-    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css">
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="../../shared/SkylineStyles.css" />
     <script src="../../shared/skyline.js" type="text/javascript"></script>
 </head>
 
@@ -106,8 +106,7 @@
         <img src="s-01.png" />
     </p>
     <p>
-        このウィザードを使用して複数のペプチド検索エンジンの<br />1つからスペクトルライブラリを作成します。サポートされている検索パイプラインの詳細については「<a
-            href="https://skyline.ms/tutorial_method_edit_ja.url">ターゲットメソッドの編集</a>」チュートリアルをご覧ください。なお本チュートリアルで使用するファイルは最低限の情報のみを含む縮小版となります。ご注意ください。
+        このウィザードを使用して複数のペプチド検索エンジンの<br />1つからスペクトルライブラリを作成します。サポートされている検索パイプラインの詳細については「<a href="https://skyline.ms/tutorial_method_edit_ja.url">ターゲットメソッドの編集</a>」チュートリアルをご覧ください。なお本チュートリアルで使用するファイルは最低限の情報のみを含む縮小版となります。ご注意ください。
     </p>
     <p>
         以下の操作を行い、検索結果をライブラリに追加します。
@@ -167,9 +166,6 @@
     <p>
         ウィザードは [ <b>修飾を追加</b> ] ページに進みます。
         ここでは、検索結果では見つかったものの、ドキュメントにはないアミノ酸修飾もすべてリストアップされています。場合によっては、Unimodデータベースサイトでの検索でアミノ酸、質量の組み合わせが一致する修飾が表示されます。
-    </p>
-    <p>
-        *Unimodとはコミュニティが支援する、質量分析計用途のタンパク質修飾の総合データベースです（<a target="_blank" href="https://www.unimod.org">https://www.unimod.org</a>）。
     </p>
     <p class="keep-next">
         本チュートリアルで登場する修飾は、「Phospho (ST)」（SerineもしくはThreonine残基のリン酸化）、「Phospho (Y)」（Tyrosine残基のリン酸化）および「Oxidation
@@ -307,8 +303,7 @@
         スペクトルグラフの下に、「ファイル: 100803_005b_MCF7_TiTip3.wiff」および「RT: 35.21」と表示されています。「RT:」は保持時間情報で、この場合は35.21minとなります。 また「ファイル:
         100803_005b_MCF7_TiTip3.wiff」は表示されているMSスペクトルがSkylineにインポートされたファイルに正しく紐づけされているということを示しています。「ファイル
         」名とインポートしたファイル名を完全に一致させる必要はありません。Skylineでは多くのペプチド検索パイプラインで生の装置データがmzXML、mzML、MGF、MS2などのフォーマットに変換されます。通常Skylineは「basename.mgf」と「basename.wiff」との一致、すなわちベース名（ファイル名。この場合はbasenameと表示されている）の一致を検索します。<br />パイプラインには柔軟性が必要とされることが多く、「BASENAME.mzML」が「Basename.RAW」のように大文字と小文字の区別なく一致の検索が行われます。また複数のドット拡張子の処理も含まれています。例えば、「basename.c.mzXML」と「basename.raw」は一致することになります。ただし、「F011852.dat」のようにSkylineにインポートするデータファイルとベース名を共有できない場合は、検索パイプラインの見直しを検討するか（別の検索を使用するなど）、Skylineチームと協力してこの問題を解決することを検討してください。またMascot
-        .dat<br />ファイルについては、別途Skylineウェブサイトの「<a
-            href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=mascot_missing_rt">Mascot検索で見つからないID（Peptide推定）推定</a>」ページを参照することをお薦めします。その他の問題については、Skylineサポート掲示板（[
+        .dat<br />ファイルについては、別途Skylineウェブサイトの「<a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=mascot_missing_rt">Mascot検索で見つからないID（Peptide推定）推定</a>」ページを参照することをお薦めします。その他の問題については、Skylineサポート掲示板（[
         <b>ヘルプ</b> ] メニューで [ <b>サポート</b> ] をクリック）に、問題を投稿することをお薦めします。
     </p>
     <p>
@@ -330,7 +325,7 @@
         <li>ペプチドの全クロマトグラムが見られない場合は、[ <b>ビュー</b> ] メニューで [ <b>自動ズーム</b> ] から[ <b>なし</b> ]（Shift+F11）をクリックします。</li>
         <li>[ <b>編集</b> ] メニューで [ <b>すべて展開</b> ] を選択し、[ <b>プリカーサー</b> ] をクリックします。</li>
     </ul>
-    <p class="keep-next">
+    <p>
         Skylineドキュメントは以下のようになります。
     </p>
     <p>
@@ -459,11 +454,11 @@
     </p>
     <table class="comp-fig">
         <tr>
-            <td  class="comp-fig">
+            <td class="comp-fig">
                 <b>5b_MCF7_TiTip3</b><br />
                 <img src="s-18.png" />
             </td>
-            <td  class="comp-fig">
+            <td class="comp-fig">
                 <b>1_MCF7_TiB_L</b><br />
                 <img src="s-19.png" />
             </td>
@@ -843,8 +838,7 @@
         MS1フィルタの原著論文で実際に使われたデータセットを自分で確認したい場合は<sup>1</sup>以下のリンクからドキュメントをダウンロードしてください。
     </p>
     <p>
-        <a
-            href="http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/">http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/</a>
+        <a href="http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/">http://proteome.gs.washington.edu/supplementary_data/MS1_Filtering/minimized/</a>
     </p>
     <p>
         必要なSkylineドキュメントおよび生データがすべて含まれています。

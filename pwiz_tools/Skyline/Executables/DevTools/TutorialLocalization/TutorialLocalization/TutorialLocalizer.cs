@@ -67,7 +67,9 @@ namespace TutorialLocalization
             {
                 return;
             }
-
+            
+            ImportTranslations(mergedDocument);
+            ReplaceElement(mergedDocument, localizedDoc, "//head");
             var translatedStrings = new HashSet<string>();
             var localizationRecords = new List<LocalizationRecord>();
             var exactLocalizedValues = new Dictionary<StringKey, string>();
@@ -93,19 +95,21 @@ namespace TutorialLocalization
 
             foreach (var el in ListLocalizableElements(mergedDocument.DocumentNode))
             {
-                if (!ContainsLocalizableText(el))
-                {
-                    continue;
-                }
                 string localizedValue;
                 if (exactLocalizedValues.TryGetValue(ExactStringKey(el), out localizedValue) || normalizedLocalizedValues.TryGetValue(NormalizedStringKey(el), out localizedValue))
                 {
-                    translatedStrings.Add(NormalizeWhitespace(el.InnerHtml));
+                    if (ContainsLocalizableText(el))
+                    {
+                        translatedStrings.Add(NormalizeWhitespace(el.InnerHtml));
+                    }
                     el.InnerHtml = localizedValue;
                 }
                 else
                 {
-                    localizationRecords.Add(new LocalizationRecord(RelativePath, el.XPath, el.InnerHtml));
+                    if (ContainsLocalizableText(el))
+                    {
+                        localizationRecords.Add(new LocalizationRecord(RelativePath, el.XPath, el.InnerHtml));
+                    }
                 }
             }
 
@@ -135,14 +139,19 @@ namespace TutorialLocalization
                 TutorialsLocalizer.AddLocalizationRecord(Language, localizationRecord);
             }
 
-            TutorialsLocalizer.AddHtmlDocument(ReadEnglishDocument(), Path.Combine(RelativePath, Language, "invariant.html"));
+            TutorialsLocalizer.AddFileBytes(File.ReadAllBytes(GetEnglishDocumentPath()), Path.Combine(RelativePath, Language, "invariant.html"));
             TutorialsLocalizer.AddHtmlDocument(mergedDocument, Path.Combine(RelativePath, Language, "index.html"));
             TutorialsLocalizer.AddFilesInFolder(Path.Combine(RootFolder, Language), Path.Combine(RelativePath, Language));
         }
 
         private HtmlDocument ReadEnglishDocument()
         {
-            return TutorialsLocalizer.ReadHtmlDocument(Path.Combine(RootFolder, "en", "index.html"));
+            return TutorialsLocalizer.ReadHtmlDocument(GetEnglishDocumentPath());
+        }
+
+        private string GetEnglishDocumentPath()
+        {
+            return Path.Combine(RootFolder, "en", "index.html");
         }
 
         private static string RemoveIndexesFromXPath(string xPath)
@@ -275,6 +284,40 @@ namespace TutorialLocalization
         private bool ContainsLocalizableText(HtmlNode node)
         {
             return node.InnerText.Any(ch => !char.IsWhiteSpace(ch));
+        }
+
+        private void ImportTranslations(HtmlDocument document)
+        {
+            var overrides = TutorialsLocalizer.GetLocalizationRecordOverrides(Language, RelativePath);
+            foreach (var localizationRecord in overrides)
+            {
+                var el = document.DocumentNode.SelectSingleNode(localizationRecord.XPath);
+                if (el == null)
+                {
+                    Console.Error.WriteLine("Unable to find node:{0} tutorial:{1} language:{2}", localizationRecord.XPath, RelativePath, Language);
+                }
+                else
+                {
+                    el.InnerHtml = localizationRecord.Localized;
+                }
+            }
+        }
+
+        private void ReplaceElement(HtmlDocument target, HtmlDocument source, string xPath)
+        {
+            var targetNode = target.DocumentNode.SelectSingleNode(xPath);
+            var sourceNode = source.DocumentNode.SelectSingleNode(xPath);
+            if (targetNode == null && sourceNode == null)
+            {
+                return;
+            }
+
+            if (targetNode == null || sourceNode == null)
+            {
+                Console.Error.WriteLine("Unable to find {0} in {1} tutorial:{2} language:{3}", xPath, targetNode == null ? "target" : "source", RelativePath, Language);
+                return;
+            }
+            targetNode.ParentNode.ReplaceChild(HtmlNode.CreateNode(sourceNode.OuterHtml), targetNode);
         }
     }
 }
