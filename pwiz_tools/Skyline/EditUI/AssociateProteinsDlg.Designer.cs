@@ -73,6 +73,7 @@
             this.panelStatusBarResult = new System.Windows.Forms.FlowLayoutPanel();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.proteinSourcePanel = new System.Windows.Forms.Panel();
+            this.cbRememberLastChoice = new System.Windows.Forms.CheckBox();
             this.gbParsimonyOptions.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).BeginInit();
@@ -412,12 +413,20 @@
             // proteinSourcePanel
             // 
             resources.ApplyResources(this.proteinSourcePanel, "proteinSourcePanel");
+            this.proteinSourcePanel.Controls.Add(this.cbRememberLastChoice);
             this.proteinSourcePanel.Controls.Add(this.rbFASTA);
             this.proteinSourcePanel.Controls.Add(this.rbBackgroundProteome);
             this.proteinSourcePanel.Controls.Add(this.comboBackgroundProteome);
             this.proteinSourcePanel.Controls.Add(this.browseFastaTargetsBtn);
             this.proteinSourcePanel.Controls.Add(this.tbxFastaTargets);
             this.proteinSourcePanel.Name = "proteinSourcePanel";
+            // 
+            // cbRememberLastChoice
+            // 
+            resources.ApplyResources(this.cbRememberLastChoice, "cbRememberLastChoice");
+            this.cbRememberLastChoice.Name = "cbRememberLastChoice";
+            this.cbRememberLastChoice.UseVisualStyleBackColor = true;
+            this.cbRememberLastChoice.CheckedChanged += new System.EventHandler(this.cbRememberLastChoice_CheckedChanged);
             // 
             // AssociateProteinsDlg
             // 
@@ -495,5 +504,6 @@
         private System.Windows.Forms.Panel proteinSourcePanel;
         private System.Windows.Forms.CheckBox cbGeneLevel;
         private System.Windows.Forms.Label lblGroupAtGeneLevel;
+        private System.Windows.Forms.CheckBox cbRememberLastChoice;
     }
 }
