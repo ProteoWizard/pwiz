@@ -1751,7 +1751,7 @@ namespace pwiz.SkylineTestData
                                 "--exp-strategy=single",
                                 "--exp-file=" + testFilesDir.GetTestPath("Bogus.meth"),
                                 "--exp-template=" + thermoTemplate);
-            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_,"Thermo LTQ")));
+            Assert.IsTrue(output.Contains(string.Format(Resources.CommandLine_ExportInstrumentFile_Error__the_specified_instrument__0__is_not_compatible_with_scheduled_methods_, ExportInstrumentType.THERMO_LTQ)));
             Assert.IsTrue(output.Contains(Resources.CommandLine_ExportInstrumentFile_No_method_will_be_exported_));
 
             //Error: not all peptides have RT info

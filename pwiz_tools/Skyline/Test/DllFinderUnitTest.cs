@@ -75,6 +75,15 @@ namespace pwiz.SkylineTest
             finder.EnsureDlls();    // May throw
 
             VerifyCopiedDlls(testCase, finder, testServices);
+
+            var softwareInfo = finder.GetSoftwareInfo();
+            Assert.AreEqual(testCase.ExpectedInstrumentType, softwareInfo.InstrumentType);
+            Assert.AreEqual(testCase.ExpectedVersion, softwareInfo.Version);
+            if (testCase.ExpectedCopyCount > 0)
+            {
+                Assert.IsNotNull(softwareInfo.Path);
+                Assert.IsTrue(testServices.DirectoryExists(softwareInfo.Path), $"The directory {softwareInfo.Path} does not exist");
+            }
         }
 
         private string GetExceptionMessage(int testCaseExpectException)
@@ -171,6 +180,11 @@ namespace pwiz.SkylineTest
             {
                 // Return whether the file was defined as existing in the test data
                 return _filesByPath.TryGetValue(path, out var f);
+            }
+
+            public bool DirectoryExists(string path)
+            {
+                return _filesByPath.Keys.Any(p => path.Equals(Path.GetDirectoryName(p)));
             }
 
             public DateTime GetLastWriteTime(string path)
@@ -318,6 +332,8 @@ namespace pwiz.SkylineTest
             public List<RegistrySubKeyData> RegistrySubKeys { get; set; }
             public int? ExpectException { get; set; }
             public int? ExpectedCopyCount { get; set; }
+            public string ExpectedInstrumentType { get; set; }
+            public double ExpectedVersion { get; set; }
         }
 
         public class FileData

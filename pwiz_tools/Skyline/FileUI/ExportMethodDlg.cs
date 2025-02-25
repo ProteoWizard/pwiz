@@ -123,7 +123,10 @@ namespace pwiz.Skyline.FileUI
             // Select the last instrument if the CE predictor is the same as last time.
             if (!string.IsNullOrEmpty(lastCePredictorName) && Equals(lastCePredictorName, cePredictorName))
             {
-                InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(lastInstrument));
+                // Make sure the combo box can handle selecting this type without showing an error
+                string selectionType = GetSelectedInstrument(lastInstrument);
+                if (listTypes.Contains(selectionType) && GetInstrumentTypeFromSelection(selectionType, true) != null)
+                    InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(lastInstrument));
             }
 
             // Otherwise, set instrument type based on CE regression name for the document.
@@ -273,7 +276,10 @@ namespace pwiz.Skyline.FileUI
 
         public string InstrumentType
         {
-            get { return _instrumentType; }
+            get
+            {
+                return _instrumentType;
+            }
             set
             {
                 _instrumentType = value;
@@ -288,8 +294,45 @@ namespace pwiz.Skyline.FileUI
                         MethodType = ExportMethodType.Standard;                        
 
                 }
-                comboInstrument.SelectedItem = _instrumentType;
+                comboInstrument.SelectedItem = GetSelectedInstrument(_instrumentType);
             }
+        }
+
+        private string GetSelectedInstrument(string instrumentType)
+        {
+            // If this method export and Thermo instrument type that supports TNG XML API,
+            // then the combo box selection should be just "Thermo"
+            return _fileType == ExportFileType.Method &&
+                   instrumentType != null &&
+                   ExportInstrumentType.ThermoInstallationType(instrumentType) != null
+                ? ExportInstrumentType.THERMO
+                : instrumentType;
+        }
+
+        private string GetInstrumentTypeFromSelection()
+        {
+            return GetInstrumentTypeFromSelection(comboInstrument.SelectedItem.ToString(), false);
+        }
+
+        private string GetInstrumentTypeFromSelection(string selectionType, bool silentMode)
+        {
+            if (_fileType != ExportFileType.Method || !Equals(selectionType, ExportInstrumentType.THERMO))
+                return selectionType;
+
+            var dllFinder = new ThermoDllFinder();
+            var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
+            if (thermoSoftwareInfo == null)
+            {
+                if (!silentMode)
+                {
+                    MessageDlg.Show(this,
+                        ModelResources
+                            .ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+                }
+                return null;
+            }
+
+            return ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
         }
 
         public bool IsSingleWindowInstrument
@@ -325,6 +368,8 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
                    Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
                    Equals(type, ExportInstrumentType.THERMO_STELLAR) ||
+                   Equals(type, ExportInstrumentType.THERMO_ASTRAL) ||
+                   Equals(type, ExportInstrumentType.THERMO_ASCEND) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -353,6 +398,9 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                        Equals(type, ExportInstrumentType.THERMO_EXPLORIS) ||
                        Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
+                       Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
+                       Equals(type, ExportInstrumentType.THERMO_ASTRAL) ||
+                       Equals(type, ExportInstrumentType.THERMO_ASCEND) ||
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -823,7 +871,10 @@ namespace pwiz.Skyline.FileUI
         {
             var helper = new MessageBoxHelper(this, true);
 
-            _instrumentType = comboInstrument.SelectedItem.ToString();
+            var selectedInstrumentType = GetInstrumentTypeFromSelection();
+            if (selectedInstrumentType == null)
+                return;
+            _instrumentType = selectedInstrumentType;
 
             // Use variable for document to export, since code below may modify the document.
             SrmDocument documentExport = _document;
@@ -1671,7 +1722,14 @@ namespace pwiz.Skyline.FileUI
         {
             bool wasFullScanInstrument = IsFullScanInstrument;
 
-            _instrumentType = comboInstrument.SelectedItem.ToString();
+            var selectedInstrumentType = GetInstrumentTypeFromSelection();
+            if (selectedInstrumentType == null)
+            {
+                // No Thermo installation. Force the selection back to something valid
+                comboInstrument.SelectedIndex = 0;
+                return;
+            }
+            _instrumentType = selectedInstrumentType;
 
             // Temporary code until we support Agilent export of DIA isolation lists.
             if (Equals(_instrumentType, ExportInstrumentType.AGILENT_TOF) && IsDia)

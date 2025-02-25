@@ -185,17 +185,29 @@ namespace pwiz.Skyline.Model
         public const string BRUKER_TIMSTOF = "Bruker timsTOF";
         public const string SHIMADZU = "Shimadzu";
         public const string THERMO = "Thermo";
-        public const string THERMO_TSQ = "Thermo TSQ";
-        public const string THERMO_ENDURA = "Thermo Endura";
-        public const string THERMO_QUANTIVA = "Thermo Quantiva";
-        public const string THERMO_ALTIS = "Thermo Altis";
-        public const string THERMO_STELLAR = "Thermo Stellar";
-        public const string THERMO_FUSION = "Thermo Fusion";
-        public const string THERMO_LTQ = "Thermo LTQ";
-        public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
-        public const string THERMO_EXPLORIS = "Thermo Exploris";
-        public const string THERMO_FUSION_LUMOS = "Thermo Fusion Lumos";
-        public const string THERMO_ECLIPSE = "Thermo Eclipse";
+        public const string THERMO_TSQ = "Thermo TSQ Vantage/Ultra"; // tsq
+        public const string THERMO_LTQ = "Thermo LTQ (legacy)";     // ltq
+        public const string THERMO_ENDURA = "Thermo Endura";        // tsq
+        public const string THERMO_ENDURA_REG = "TSQEndura";
+        public const string THERMO_QUANTIVA = "Thermo Quantiva";    // tsq
+        public const string THERMO_QUANTIVA_REG = "TSQQuantiva";
+        public const string THERMO_ALTIS = "Thermo Altis";          // tsq
+        public const string THERMO_ALTIS_REG = "TSQAltis";
+        public const string THERMO_STELLAR = "Thermo Stellar";      // q-ltq
+        public const string THERMO_STELLAR_REG = "Stellar";
+        public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive"; // q-orbi - no method export, did not support TNG XML API
+        public const string THERMO_EXPLORIS = "Thermo Exploris";    // q-orbi
+        public const string THERMO_EXPLORIS_REG = "OrbitrapExploris480";    // CONSIDER: Other Exploris versions?
+        public const string THERMO_ASCEND = "Thermo Ascend";        // q-orbi
+        public const string THERMO_ASCEND_REG = "OrbitrapAscend";
+        public const string THERMO_FUSION = "Thermo Fusion";        // q-orbi/ltq
+        public const string THERMO_FUSION_REG = "OrbitrapFusion";
+        public const string THERMO_FUSION_LUMOS = "Thermo Fusion Lumos"; // q-orbi/ltq
+        public const string THERMO_FUSION_LUMOS_REG = "OrbitrapFusionLumos";
+        public const string THERMO_ECLIPSE = "Thermo Eclipse";      // q-orbe/ltq
+        public const string THERMO_ECLIPSE_REG = "OrbitrapEclipse";
+        public const string THERMO_ASTRAL = "Thermo Astral";        // q-orbi/tof
+        public const string THERMO_ASTRAL_REG = "OrbitrapAstral";
         public const string WATERS = "Waters";
         public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
@@ -223,15 +235,9 @@ namespace pwiz.Skyline.Model
                 ABI_7500,
                 ABI_7600,
                 SHIMADZU,
+                THERMO,
                 THERMO_TSQ,
                 THERMO_LTQ,
-                THERMO_QUANTIVA,
-                THERMO_ALTIS,
-                THERMO_STELLAR,
-                THERMO_EXPLORIS,
-                THERMO_ECLIPSE,
-                THERMO_FUSION,
-                THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
             };
@@ -265,32 +271,51 @@ namespace pwiz.Skyline.Model
             };
 
         private static readonly Dictionary<string, string> METHOD_EXTENSIONS;
+        private static readonly Dictionary<string, string> THERMO_TYPE_TO_INSTALLATION_TYPE;
 
         static ExportInstrumentType()
         {
             METHOD_EXTENSIONS = new Dictionary<string, string>
-                                   {
-                                       {ABI_QTRAP, EXT_AB_SCIEX},
-                                       {ABI_TOF, EXT_AB_SCIEX},
-                                       {ABI_7500, EXT_SCIEX_OS},
-                                       {ABI_7600, EXT_SCIEX_OS},
-                                       {AGILENT6400, EXT_AGILENT},
-                                       {AGILENT_MASSHUNTER_12_METHOD, EXT_AGILENT},
-                                       {BRUKER_TOF, EXT_BRUKER},
-                                       {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
-                                       {SHIMADZU, EXT_SHIMADZU},
-                                       {THERMO_TSQ, EXT_THERMO},
-                                       {THERMO_LTQ, EXT_THERMO},
-                                       {THERMO_QUANTIVA, EXT_THERMO},
-                                       {THERMO_ALTIS, EXT_THERMO},
-                                       {THERMO_EXPLORIS, EXT_THERMO},
-                                       {THERMO_ECLIPSE, EXT_THERMO},
-                                       {THERMO_FUSION, EXT_THERMO},
-                                       {THERMO_FUSION_LUMOS, EXT_THERMO},
-                                       {THERMO_STELLAR, EXT_THERMO},
-                                       {WATERS_XEVO_TQ, EXT_WATERS},
-                                       {WATERS_QUATTRO_PREMIER, EXT_WATERS}
-                                   };
+            {
+                { ABI_QTRAP, EXT_AB_SCIEX },
+                { ABI_TOF, EXT_AB_SCIEX },
+                { ABI_7500, EXT_SCIEX_OS },
+                { ABI_7600, EXT_SCIEX_OS },
+                { AGILENT6400, EXT_AGILENT },
+                { AGILENT_MASSHUNTER_12_METHOD, EXT_AGILENT },
+                { BRUKER_TOF, EXT_BRUKER },
+                { BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF },
+                { SHIMADZU, EXT_SHIMADZU },
+                { THERMO, EXT_THERMO },
+                { THERMO_TSQ, EXT_THERMO },
+                { THERMO_LTQ, EXT_THERMO },
+                { THERMO_ENDURA, EXT_THERMO },
+                { THERMO_QUANTIVA, EXT_THERMO },
+                { THERMO_ALTIS, EXT_THERMO },
+                { THERMO_STELLAR, EXT_THERMO },
+                { THERMO_EXPLORIS, EXT_THERMO },
+                { THERMO_ASCEND, EXT_THERMO },
+                { THERMO_FUSION, EXT_THERMO },
+                { THERMO_FUSION_LUMOS, EXT_THERMO },
+                { THERMO_ECLIPSE, EXT_THERMO },
+                { THERMO_ASTRAL, EXT_THERMO },
+                { WATERS_XEVO_TQ, EXT_WATERS },
+                { WATERS_QUATTRO_PREMIER, EXT_WATERS }
+            };
+
+            THERMO_TYPE_TO_INSTALLATION_TYPE = new Dictionary<string, string>
+            {
+                { THERMO_ENDURA, THERMO_ENDURA_REG },
+                { THERMO_QUANTIVA, THERMO_QUANTIVA_REG },
+                { THERMO_ALTIS, THERMO_ALTIS_REG },
+                { THERMO_STELLAR, THERMO_STELLAR_REG },
+                { THERMO_FUSION, THERMO_FUSION_REG },
+                { THERMO_EXPLORIS, THERMO_EXPLORIS_REG },
+                { THERMO_FUSION_LUMOS, THERMO_FUSION_LUMOS_REG },
+                { THERMO_ECLIPSE, THERMO_ECLIPSE_REG },
+                { THERMO_ASTRAL, THERMO_ASTRAL_REG },
+                { THERMO_ASCEND, THERMO_ASCEND_REG },
+            };
         }
 
         public static string TransitionListExtension(string instrument)
@@ -332,6 +357,22 @@ namespace pwiz.Skyline.Model
         {
             string ext;
             return METHOD_EXTENSIONS.TryGetValue(instrument, out ext) ? ext : null;
+        }
+
+        public static string ThermoInstallationType(string instrument)
+        {
+            string installationType;
+            return THERMO_TYPE_TO_INSTALLATION_TYPE.TryGetValue(instrument, out installationType) ? installationType : null;
+        }
+
+        public static string ThermoTypeFromInstallationType(string installationType)
+        {
+            foreach (var typeToInstallationType in THERMO_TYPE_TO_INSTALLATION_TYPE)
+            {
+                if (Equals(installationType, typeToInstallationType.Value))
+                    return typeToInstallationType.Key;
+            }
+            return null;
         }
 
         public static bool IsFullScanInstrumentType(string type)
@@ -828,11 +869,6 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
-            if (ExportInstrumentType.THERMO_STELLAR.Equals(instrumentType))
-            {
-                exporter.IsolationList = AbstractMassListExporter.IsolationStrategy.precursor;
-                exporter.IsPrecursorLimited = true;
-            }
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, instrumentType, m));
 
             return exporter;
@@ -1186,10 +1222,22 @@ namespace pwiz.Skyline.Model
 
         public static string ExeBuildRelativePath => Path.GetDirectoryName(EXE_BUILD_METHOD);
 
-        protected void EnsureLibraries()
+        protected ThermoDllFinder Finder { get; private set; }
+
+        protected bool EnsureLibraries(string expectedInstrumentType)
         {
-            // var dllFinder = new ThermoDllFinder();
-            // dllFinder.EnsureDlls();
+            Finder = new ThermoDllFinder();
+            var instrumentInfo = Finder.GetSoftwareInfo();
+            string instrumentType = instrumentInfo?.InstrumentType;
+            if (string.IsNullOrEmpty(instrumentType))
+                throw new IOException(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+            if (!Equals(expectedInstrumentType, instrumentType))
+            {
+                throw new IOException(string.Format(
+                    ModelResources.ThermoMassListExporter_EnsureLibraries_The_installed_Thermo_instrument_type___0___does_not_match_the_requested_output_method_type___1___,
+                    instrumentType, expectedInstrumentType));
+            }
+            return true;
         }
     }
 
@@ -1853,25 +1901,14 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, string instrumentType, IProgressMonitor progressMonitor)
         {
-            if (fileName != null)
-                EnsureLibraries();
+            string registryInstrumentType = ExportInstrumentType.ThermoInstallationType(instrumentType);
+            if (fileName != null && !EnsureLibraries(registryInstrumentType))
+                return;
 
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string>();
-            if (instrumentType.Equals(ExportInstrumentType.THERMO_ENDURA))
-            {
-                argv.Add(@"-e");
-            }
-            else if (instrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA))
-            {
-                argv.Add(@"-q");
-            }
-            else if (instrumentType.Equals(ExportInstrumentType.THERMO_ALTIS))
-            {
-                argv.Add(@"-a");
-            }
+            var argv = new List<string> { @"-t", registryInstrumentType };
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -1882,14 +1919,14 @@ namespace pwiz.Skyline.Model
 
         public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            if (fileName != null)
-                EnsureLibraries();
+            string registryInstrumentType = @"Stellar";
+            if (fileName != null && !EnsureLibraries(registryInstrumentType))
+                return;
 
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string>();
-            argv.Add(@"-t");
+            var argv = new List<string> { @"-t", registryInstrumentType };
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -2099,28 +2136,14 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            if (fileName != null)
-                EnsureLibraries();
+            string registryInstrumentType = ExportInstrumentType.ThermoInstallationType(_instrumentType);
+            if (fileName != null && !EnsureLibraries(registryInstrumentType))
+                return;
 
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string>();
-            switch (_instrumentType)
-            {
-                case ExportInstrumentType.THERMO_EXPLORIS:
-                    argv.Add(@"-p");
-                    break;
-                case ExportInstrumentType.THERMO_FUSION:
-                    argv.Add(@"-f");
-                    break;
-                case ExportInstrumentType.THERMO_FUSION_LUMOS:
-                    argv.Add(@"-l");
-                    break;
-                case ExportInstrumentType.THERMO_ECLIPSE:
-                    argv.Add(@"-c");
-                    break;
-            }
+            var argv = new List<string> { @"-t", registryInstrumentType };
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }

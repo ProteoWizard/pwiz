@@ -821,4 +821,7 @@
   <data name="PeptideGroupBuilder_AppendSequence_Failed_to_interpret_modified_sequence__0_" xml:space="preserve">
       <value>Failed to interpret modified sequence {0}</value>
   </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_The_installed_Thermo_instrument_type___0___does_not_match_the_requested_output_method_type___1___" xml:space="preserve">
+      <value>The installed Thermo instrument type '{0}' does not match the requested output method type '{1}'.</value>
+  </data>
 </root>

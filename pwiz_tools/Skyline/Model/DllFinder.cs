@@ -20,6 +20,7 @@
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -144,7 +145,7 @@ namespace pwiz.Skyline.Model
         public void EnsureDlls()
         {
             // ReSharper disable ConstantNullCoalescingCondition
-            string instrumentSoftwarePath = GetSoftwarePath();
+            string instrumentSoftwarePath = GetSoftwareInfo().Path;
             if (instrumentSoftwarePath == null)
             {
                 // If all the required libraries exist, then continue even if Thermo installation is gone.
@@ -197,13 +198,20 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private string GetSoftwarePath()
+        public class SoftwareInfo
+        {
+            public string Path { get; set; }
+            public string InstrumentType { get; set; }
+            public double Version { get; set; }
+        }
+
+        public SoftwareInfo GetSoftwareInfo()
         {
             try
             {
                 // CONSIDER: Might be worth breaking this up to provide more helpful error messages
                 using var tngKey = Services.GetRootKey();
-                return GetSoftwarePath(tngKey);
+                return GetSoftwareInfo(tngKey);
             }
             catch
             {
@@ -211,19 +219,20 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private string GetSoftwarePath(IDisposable tngKey)
+        private SoftwareInfo GetSoftwareInfo(IDisposable tngKey)
         {
             if (tngKey == null)
                 return null;
 
-            string path = null;
+            SoftwareInfo info = new SoftwareInfo();
             foreach (var subKeyName in Services.GetSubKeyNames(tngKey))
             {
                 if (Equals(subKeyName, @"DataAccess"))
                     continue;
 
                 using var machineKey = Services.OpenSubKey(tngKey, subKeyName);
-                using var versionKey = GetFirstSubKey(machineKey);
+                double? version;
+                using var versionKey = GetVersionSubKey(machineKey, out version);
                 var keyPath = GetMachineProgramPath(versionKey);
                 if (keyPath == null)
                     continue;
@@ -231,14 +240,17 @@ namespace pwiz.Skyline.Model
                 // If the path for the key does not contain the necessary DLLs keep looking
                 if (!ContainsDependencyLibraries(keyPath.Path))
                     continue;
+                var infoForKey = new SoftwareInfo
+                    { Path = keyPath.Path, InstrumentType = subKeyName, Version = version.Value };
                 // Return the first full installation with the DLLs
                 if (keyPath.IsFull)
-                    return keyPath.Path;
+                    return infoForKey;
                 // Otherwise, if the current best path is null, use this one
-                path ??= keyPath.Path;
+                if (info.Path == null)
+                    info = infoForKey;
             }
 
-            return path;
+            return info;
         }
 
         private class ProgramPath
@@ -259,14 +271,23 @@ namespace pwiz.Skyline.Model
             return new ProgramPath { Path = programPath, IsFull = full };
         }
 
-        private IDisposable GetFirstSubKey(IDisposable parentKey)
+        private IDisposable GetVersionSubKey(IDisposable parentKey, out double? version)
         {
+            version = null;
             if (parentKey == null)
                 return null;
             var subKeyNames = Services.GetSubKeyNames(parentKey);
-            if (subKeyNames.Length < 1)
-                return null;
-            return Services.OpenSubKey(parentKey, subKeyNames[0]);
+            foreach (var name in subKeyNames)
+            {
+                double versionNum;
+                if (double.TryParse(name, NumberStyles.Float, CultureInfo.InvariantCulture, out versionNum))
+                {
+                    version = versionNum;
+                    return Services.OpenSubKey(parentKey, name);
+                }
+            }
+
+            return null;
         }
     }
 }
