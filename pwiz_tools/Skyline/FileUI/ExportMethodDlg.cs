@@ -124,9 +124,7 @@ namespace pwiz.Skyline.FileUI
             if (!string.IsNullOrEmpty(lastCePredictorName) && Equals(lastCePredictorName, cePredictorName))
             {
                 // Make sure the combo box can handle selecting this type without showing an error
-                string selectionType = GetSelectedInstrument(lastInstrument);
-                if (listTypes.Contains(selectionType) && GetInstrumentTypeFromSelection(selectionType, true) != null)
-                    InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(lastInstrument));
+                SelectInstrumentTypeIfValid(lastInstrument, listTypes);
             }
 
             // Otherwise, set instrument type based on CE regression name for the document.
@@ -149,17 +147,21 @@ namespace pwiz.Skyline.FileUI
                     i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix));
                 }
                 if (i != -1)
-                    InstrumentType = listTypes[i];
+                    SelectInstrumentTypeIfValid(listTypes[i], listTypes);
             }
             // If nothing found based on CE regression name, just use the first instrument in the list
             if (InstrumentType == null)
             {
                 var instrumentTypeFirst = listTypes[0];
                 // Avoid defaulting to Agilent for DIA when we know it is not supported.
-                if (IsDiaFullScan && Equals(instrumentTypeFirst, ExportInstrumentType.AGILENT_TOF) && listTypes.Length > 1)
-                    InstrumentType = listTypes[1];
-                else
-                    InstrumentType = instrumentTypeFirst;
+                if (IsDiaFullScan && Equals(instrumentTypeFirst, ExportInstrumentType.AGILENT_TOF) &&
+                    listTypes.Length > 1)
+                {
+                    instrumentTypeFirst = listTypes[1];
+                }
+                // Assume this is still not an instrument type that fails validation (i.e. Thermo with no software installed)
+                Assume.IsNotNull(GetInstrumentTypeFromSelection(GetSelectedInstrument(instrumentTypeFirst), true));
+                InstrumentType = instrumentTypeFirst;
             }
 
             // Reset method type based on what was used last and what the chosen instrument is capable of
@@ -259,6 +261,13 @@ namespace pwiz.Skyline.FileUI
             UpdateInstrumentControls(MethodType);
         }
 
+        private void SelectInstrumentTypeIfValid(string instrumentType, string[] listTypes)
+        {
+            string selectionType = GetSelectedInstrument(instrumentType);
+            if (listTypes.Contains(selectionType) && GetInstrumentTypeFromSelection(selectionType, true) != null)
+                InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(instrumentType));
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
@@ -321,7 +330,7 @@ namespace pwiz.Skyline.FileUI
 
             var dllFinder = new ThermoDllFinder();
             var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
-            if (thermoSoftwareInfo == null)
+            if (thermoSoftwareInfo.InstrumentType == null)
             {
                 if (!silentMode)
                 {
