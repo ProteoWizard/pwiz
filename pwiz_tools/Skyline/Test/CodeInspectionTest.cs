@@ -47,6 +47,8 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using TestRunnerLib.PInvoke;
@@ -213,6 +215,8 @@ namespace pwiz.SkylineTest
                 @"DllImport", // Forbidden pattern - match [DllImport
                 false, // Pattern is a regular expression
                 @"Use of P/Invoke is not allowed. Instead, use the interop library in pwiz.Common.SystemUtil.PInvoke."); // Explanation for prohibition, appears in report
+
+            FilesTreeDataModelInspection();
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -533,6 +537,14 @@ namespace pwiz.SkylineTest
                 }
                 return settings;
             }
+        }
+
+        // Assert the file data model is not an IIdentityContainer. It would be easy to implement IIC on the base
+        // interface. If done, though, other Skyline tests (esp. tutorials) fail with subtle errors. So check that
+        // hasn't happened.
+        private static void FilesTreeDataModelInspection()
+        {
+            Assert.IsFalse(typeof(IIdentiyContainer).IsAssignableFrom(typeof(IFileBase)));
         }
 
         /// <summary>
