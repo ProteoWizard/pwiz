@@ -107,7 +107,8 @@ namespace SkylineTester
             if (GetTestList().Length > 0)
                 args.Append(" perftests=on"); // In case any perf tests were explicitly selected - no harm if they weren't
 
-            if (MainWindow.RunParallel.Checked && GetTestCount() > 1) // No need for parallel on a single test
+            if (MainWindow.RunParallel.Checked &&
+                GetTestCount()*cultures.Count > 1) // No need to fire up parallel nodes on a single test in single culture
             {
                 // CONSIDER: Should we add a checkbox for this?
                 // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
