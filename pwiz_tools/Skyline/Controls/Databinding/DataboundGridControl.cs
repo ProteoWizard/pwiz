@@ -56,7 +56,6 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
             replicatePivotDataGridView.CellValueChanged += replicatePivotDataGridView_CellValueChanged;
-            boundDataGridView.CellValueChanged += boundDataGridView_CellValueChanged;
             NavBar.ClusterSplitButton.Visible = true;
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
                 heatMapContextMenuItem_Click));
@@ -1089,11 +1088,6 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
-        private void boundDataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            MainGridPopulated();
-        }
-
         private void replicatePivotDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             ReplicatePivotGridResized();
@@ -1145,7 +1139,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 _inColumnChange = true;
                 var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-                if (replicatePivotColumns != null && replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
+                if (replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
                 {
                     replicatePivotDataGridView.Show();
                     dataGridSplitContainer.Panel1Collapsed = false;
