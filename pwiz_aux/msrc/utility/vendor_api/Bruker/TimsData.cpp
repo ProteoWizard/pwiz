@@ -127,6 +127,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
       allowMsMsWithoutPrecursor_(allowMsMsWithoutPrecursor),
       isolationMzFilter_(isolationMzFilter),
       currentFrameId_(-1),
+      isDiagonalPASEF_(false),
       tdfStoragePtr_(new TimsBinaryData(rawpath)),
       tdfStorage_(*tdfStoragePtr_)
 {
@@ -300,7 +301,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     // for diagonalPASEF, build a map of scan number to isolation m/z for each window group
     if (isDiaPasef)
     {
-        string checkDiagPasefSql = "SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup";
+        string checkDiagPasefSql = "SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup)";
         sqlite::query checkDiagPasefQuery(db, checkDiagPasefSql.c_str());
         int countMaxIsolationMzPerGroup = checkDiagPasefQuery.begin()->get<sqlite3_int64>(0);
         isDiagonalPASEF_ = maxNumScans - countMaxIsolationMzPerGroup < 10; // heuristic from Bruker based on MCC email 2/11/2025
