@@ -300,7 +300,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
     // for diagonalPASEF, build a map of scan number to isolation m/z for each window group
     if (isDiaPasef)
     {
-        string checkDiagPasefSql = "SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup";
+        string checkDiagPasefSql = "SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup)";
         sqlite::query checkDiagPasefQuery(db, checkDiagPasefSql.c_str());
         int countMaxIsolationMzPerGroup = checkDiagPasefQuery.begin()->get<sqlite3_int64>(0);
         isDiagonalPASEF_ = maxNumScans - countMaxIsolationMzPerGroup < 10; // heuristic from Bruker based on MCC email 2/11/2025
@@ -309,12 +309,15 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         {
             string queryIsolationWindowGroupCount = "SELECT COUNT(*) FROM DiaFrameMsMsWindowGroups";
             size_t isolationWindowGroupCount = sqlite::query(db, queryIsolationWindowGroupCount.c_str()).begin()->get<sqlite3_int64>(0);
-            isolationMzByScanNumberByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
+            isolationMzLowByScanNumberByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
+            isolationMzHighByScanNumberByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
+            isolationMzRangeLowByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
+            isolationMzRangeHighByWindowGroup_.resize(isolationWindowGroupCount); // assume groups are numbered 1 ... n
 
             string queryMaxScanNum = "SELECT MAX(ScanNumEnd) FROM DiaFrameMsMsWindows";
             size_t maxScanNum = sqlite::query(db, queryMaxScanNum.c_str()).begin()->get<sqlite3_int64>(0);
 
-            string queryWindows = "SELECT WindowGroup, IsolationMz, ScanNumBegin, ScanNumEnd FROM DiaFrameMsMsWindows";
+            string queryWindows = "SELECT WindowGroup, IsolationMz, IsolationWidth, ScanNumBegin, ScanNumEnd FROM DiaFrameMsMsWindows";
             sqlite::query q(db, queryWindows.c_str());
 
             for (auto itr = q.begin(); itr != q.end(); ++itr)
@@ -322,12 +325,21 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 sqlite::query::rows row = *itr;
                 int windowGroup, scanBegin, scanEnd;
                 double isolationMz;
-                row.getter() >> windowGroup >> isolationMz >> scanBegin >> scanEnd;
+                double isolationWidth;
+                row.getter() >> windowGroup >> isolationMz >> isolationWidth >> scanBegin >> scanEnd;
 
-                auto& isolationMzByScanNumber = isolationMzByScanNumberByWindowGroup_[windowGroup - 1];
-                isolationMzByScanNumber.resize(maxScanNum);
+                auto& isolationMzLowByScanNumber = isolationMzLowByScanNumberByWindowGroup_[windowGroup - 1];
+                isolationMzLowByScanNumber.resize(maxScanNum);
+                auto& isolationMzHighByScanNumber = isolationMzHighByScanNumberByWindowGroup_[windowGroup - 1];
+                isolationMzHighByScanNumber.resize(maxScanNum);
                 for (; scanBegin < scanEnd; ++scanBegin)
-                    isolationMzByScanNumber[scanBegin] = isolationMz;
+                {
+                    isolationMzLowByScanNumber[scanBegin] = isolationMz - isolationWidth/2;
+                    isolationMzHighByScanNumber[scanBegin] = isolationMz + isolationWidth/2;
+                }
+                isolationMzRangeLowByWindowGroup_[windowGroup - 1] = isolationMzLowByScanNumber[scanEnd - 1];
+                isolationMzRangeHighByWindowGroup_[windowGroup - 1] = isolationMzHighByScanNumber[0];
+
             }
         }
     }
@@ -634,6 +646,16 @@ bool TimsDataImpl::hasLCData() const { return false; }
 bool TimsDataImpl::hasPASEFData() const { return hasPASEFData_; }
 bool TimsDataImpl::isDiagonalPASEF() const { return isDiagonalPASEF_; }
 
+// Diagonal PASEF data has isolation m/z that varies with scan number within a frame
+double TimsDataImpl::getIsolationMzRangeLowByWindowGroup(int windowGroup) const
+{
+    return isolationMzRangeLowByWindowGroup_[windowGroup - 1];
+}
+double TimsDataImpl::getIsolationMzRangeHighByWindowGroup(int windowGroup) const
+{
+    return isolationMzRangeHighByWindowGroup_[windowGroup - 1];
+}
+
 bool TimsDataImpl::canConvertOneOverK0AndCCS() const { return true; }
 
 double TimsDataImpl::oneOverK0ToCCS(double oneOverK0, double mz, int charge) const
@@ -850,7 +872,8 @@ void TimsSpectrum::getCombinedSpectrumData(BinaryData<double>& mz, BinaryData<do
     {
         isolationWindowStart.resize(intensities.size());
         isolationWindowEnd.resize(intensities.size());
-        const auto& isolationMzByScanNumber = frame_.timsDataImpl_.isolationMzByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
+        const auto& isolationMzLowByScanNumber = frame_.timsDataImpl_.isolationMzLowByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
+        const auto& isolationMzHighByScanNumber = frame_.timsDataImpl_.isolationMzHighByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
         double* itr3 = &isolationWindowStart[0];
         double* itr4 = &isolationWindowEnd[0];
         for (int i = 0; i <= range; ++i)
@@ -860,8 +883,8 @@ void TimsSpectrum::getCombinedSpectrumData(BinaryData<double>& mz, BinaryData<do
             {
                 *itr = intensityCounts[j];
                 *itr2 = frame_.oneOverK0_[scanBegin_ + i];
-                *itr3 = isolationMzByScanNumber[scanBegin_ + i] - getIsolationWidth() / 2;
-                *itr4 = isolationMzByScanNumber[scanBegin_ + i] + getIsolationWidth() / 2;
+                *itr3 = isolationMzLowByScanNumber[scanBegin_ + i];
+                *itr4 = isolationMzHighByScanNumber[scanBegin_ + i];
                 /*if (*itr2 < 0.0001 || *itr2 > 2)
                     throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
                                         " j=" + lexical_cast<string>(j) +

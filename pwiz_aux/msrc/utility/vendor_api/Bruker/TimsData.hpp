@@ -249,6 +249,10 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     /// returns true if the source is TIMS diagonal PASEF data (combined spectra will have isolation m/z arrays)
     virtual bool isDiagonalPASEF() const;
 
+    // Diagonal PASEF data has isolation m/z that varies with scan number within a frame
+    virtual double getIsolationMzRangeLowByWindowGroup(int windowGroup) const;
+    virtual double getIsolationMzRangeHighByWindowGroup(int windowGroup) const;
+
     virtual bool canConvertOneOverK0AndCCS() const;
 
     virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const;
@@ -313,7 +317,10 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     bool allowMsMsWithoutPrecursor_; // when false, PASEF MS2 specta without precursor info will be excluded
     vector<chemistry::MzMobilityWindow> isolationMzFilter_; // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
     vector<vector<double>> oneOverK0ByScanNumberByCalibration_;
-    vector<vector<double>> isolationMzByScanNumberByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
+    vector<vector<double>> isolationMzLowByScanNumberByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
+    vector<vector<double>> isolationMzHighByScanNumberByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
+    vector<double> isolationMzRangeLowByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
+    vector<double> isolationMzRangeHighByWindowGroup_; // for diagonal PASEF where isolation m/z varies with scan number within a frame
     ChromatogramPtr tic_, ticMs1_, bpc_, bpcMs1_;
 
     int64_t currentFrameId_; // used for cacheing frame contents

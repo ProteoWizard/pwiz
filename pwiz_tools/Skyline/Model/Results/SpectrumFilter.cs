@@ -946,13 +946,38 @@ namespace pwiz.Skyline.Model.Results
                 if (filterPair.IsKnownWindowGroup(_windowGroup))
                     return !filterPair.IsBestWindowGroup(_windowGroup);
 
-                // We may encounter multiple window groups that include our mz and 1/K0 range, use the one whose mz,1/K0 boundbox we are most centered on
-                var distanceMz = isoWin.IsolationMz.Value - filterPair.Q1;
-                var filterTarget = CalcCenter(filterPair.MinIonMobilityValue, filterPair.MaxIonMobilityValue);
-                double? imWinCenter = _imWinCenter ?? CalcCenter(spectrum.MinIonMobility, spectrum.MaxIonMobility);
-                var distanceIM = CalcDelta(imWinCenter, filterTarget) ?? 0;
-                var distanceToCenter = Math.Sqrt(distanceMz * distanceMz + distanceIM * distanceIM);
-                if (!filterPair.UpdateBestWindowGroup(_windowGroup, distanceToCenter))
+                var distanceToCenter = double.MaxValue;
+                if (spectrum.ScanningQuadMzLows != null) // Diagonal PASEF?
+                {
+                    // Find the scanning quad window that best matches
+                    var mzLow = isoWin.IsolationMz - isoWin.IsolationWidth / 2;
+                    var mzHigh = isoWin.IsolationMz + isoWin.IsolationWidth / 2;
+                    var imCenter = CalcCenter(filterPair.MinIonMobilityValue, filterPair.MaxIonMobilityValue);
+                    for (var i = 0; i < spectrum.Intensities.Length; i++)
+                    {
+                        if (mzLow > spectrum.ScanningQuadMzHighs[i] || mzHigh < spectrum.ScanningQuadMzLows[i])
+                            continue;
+                        var im = spectrum.IonMobilities[i];
+                        if (filterPair.MinIonMobilityValue >im || filterPair.MaxIonMobilityValue < im)
+                            continue;
+
+                        var scanningQuadCenter = CalcCenter(spectrum.ScanningQuadMzLows[i], spectrum.ScanningQuadMzHighs[i])??0;
+                        var distanceQuad = scanningQuadCenter - filterPair.Q1;
+                        var distanceSpectrumIM = im - CalcDelta(im, imCenter) ?? double.MaxValue;
+                        distanceToCenter = Math.Min(distanceToCenter, Math.Sqrt(distanceQuad * distanceQuad + distanceSpectrumIM * distanceSpectrumIM));
+                    }
+                }
+                else
+                {
+                    // We may encounter multiple window groups that include our mz and 1/K0 range, use the one whose mz,1/K0 boundbox we are most centered on
+                    var distanceMz = isoWin.IsolationMz.Value - filterPair.Q1;
+                    var filterTarget = CalcCenter(filterPair.MinIonMobilityValue, filterPair.MaxIonMobilityValue);
+                    double? imWinCenter = _imWinCenter ?? CalcCenter(spectrum.MinIonMobility, spectrum.MaxIonMobility); // N.B. _imWinCenter is null in three-array mode
+                    var distanceIM = CalcDelta(imWinCenter, filterTarget) ?? 0;
+                    distanceToCenter = Math.Sqrt(distanceMz * distanceMz + distanceIM * distanceIM);
+                }
+
+                if (!filterPair.TryUpdateBestWindowGroup(_windowGroup, distanceToCenter))
                 {
                     return true;    // Filter the spectrum. This is not the best window group for this FilterPair
                 }

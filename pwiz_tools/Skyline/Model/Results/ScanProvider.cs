@@ -236,7 +236,8 @@ namespace pwiz.Skyline.Model.Results
             spectra.Add(currentSpectrum);
             if (currentSpectrum.IonMobilities != null)  // Sort combined IMS spectra by m/z order
             {
-                ArrayUtil.Sort(currentSpectrum.Mzs, currentSpectrum.Intensities, currentSpectrum.IonMobilities);
+                ArrayUtil.Sort(currentSpectrum.Mzs, currentSpectrum.Intensities, currentSpectrum.IonMobilities,
+                    currentSpectrum.ScanningQuadMzLows, currentSpectrum.ScanningQuadMzHighs); // In case it's diagonal PASEF
             }
             else if (currentSpectrum.IonMobility.HasValue) // Look ahead for uncombined IMS spectra
             {

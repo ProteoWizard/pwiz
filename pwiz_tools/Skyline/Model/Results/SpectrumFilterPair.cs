@@ -96,17 +96,15 @@ namespace pwiz.Skyline.Model.Results
         }
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
-        public int? BestWindowGroup { get; private set; }
-        public double? BestWindowGroupDistance { get; private set; }
-        public IList<int> OtherWindowGroups { get; private set; }
+        public int? BestWindowGroup { get; private set; }  // For DIA PASEF
+        public double? BestWindowGroupDistance { get; private set; }  // For DIA PASEF
+        public HashSet<int> RejectedWindowGroups { get; private set; } // For DIA PASEF
         public int? OptStep { get; }
         private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
-        private bool HasCombinedIonMobility { get; set; } // When true, data was read in 3-array format, which affects spectrum ID format
         private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
-        private IIonMobilityFunctionsProvider IonMobilityFunctionsProvider { get; set; }
 
         public string ScanDescriptionFilter { get; set; }
 
@@ -267,6 +265,8 @@ namespace pwiz.Skyline.Model.Results
 
                 var intensityArray = spectrum.Intensities;
                 var imsArray = spectrum.IonMobilities;
+                var scanningQuadMzLowArray = spectrum.ScanningQuadMzLows; // For diagonal PASEF
+                var scanningQuadMzHighArray = spectrum.ScanningQuadMzHighs; // For diagonal PASEF
 
                 // Search for matching peaks for each Q3 filter
                 // Use binary search to get to the first m/z value to be considered more quickly
@@ -316,6 +316,10 @@ namespace pwiz.Skyline.Model.Results
                         // Avoid adding points that are not within the allowed ion mobility range
                         if (imsArray != null && !ContainsIonMobilityValue(imsArray[iNext], useIonMobilityHighEnergyOffset
                                 ? productFilter.HighEnergyIonMobilityValueOffset : 0))
+                            continue;
+                        // Handle diagonal PASEF
+                        if (scanningQuadMzLowArray != null &&
+                            (Q1 < scanningQuadMzLowArray[iNext] || Q1 > scanningQuadMzHighArray[iNext]))
                             continue;
                         accumulator.AddPoint(mzArray[iNext], intensityArray[iNext]);
                     }
@@ -450,7 +454,7 @@ namespace pwiz.Skyline.Model.Results
         public bool IsKnownWindowGroup(int windowGroup)
         {
             return windowGroup == BestWindowGroup ||
-                   (OtherWindowGroups != null && OtherWindowGroups.Contains(windowGroup));
+                   (RejectedWindowGroups != null && RejectedWindowGroups.Contains(windowGroup));
         }
 
         public bool IsBestWindowGroup(int windowGroup)
@@ -458,16 +462,21 @@ namespace pwiz.Skyline.Model.Results
             return windowGroup == BestWindowGroup;
         }
 
-        public bool UpdateBestWindowGroup(int windowGroup, double distance)
+        public bool TryUpdateBestWindowGroup(int windowGroup, double distance)
         {
             if (BestWindowGroup.HasValue)
             {
                 // Already have a best value and this is it
                 if (BestWindowGroup.Value == windowGroup)
+                {
                     return true;
+                }
                 // Not it and the distance is not closer
                 if (BestWindowGroupDistance.Value <= distance)
+                {
+                    RejectWindowGroup(windowGroup);
                     return false;
+                }
             }
             // This becomes the best window group
             if (BestWindowGroup.HasValue)
@@ -475,18 +484,23 @@ namespace pwiz.Skyline.Model.Results
                 // Save any previously seen window groups, providing for most likely cases:
                 // 1. No other possible window groups
                 // 2. 1 other possible window group
-                if (OtherWindowGroups == null)
-                    OtherWindowGroups = new[] {BestWindowGroup.Value};
-                else
-                {
-                    if (OtherWindowGroups.Count == 1)
-                        OtherWindowGroups = new List<int>(OtherWindowGroups);
-                    OtherWindowGroups.Add(BestWindowGroup.Value);
-                }
+                RejectWindowGroup(BestWindowGroup.Value);
             }
             BestWindowGroup = windowGroup;
             BestWindowGroupDistance = distance;
             return true;
+
+            void RejectWindowGroup(int rejectedWindowGroup)
+            {
+                if (RejectedWindowGroups == null)
+                {
+                    RejectedWindowGroups = new HashSet<int>{rejectedWindowGroup};
+                }
+                else
+                {
+                    RejectedWindowGroups.Add(rejectedWindowGroup);
+                }
+            }
         }
 
         public bool MatchesDdaPrecursor(SignedMz precursorMz)
@@ -619,11 +633,6 @@ namespace pwiz.Skyline.Model.Results
 
     public class SpectrumProductFilter
     {
-        public SpectrumProductFilter(double targetMz, double filterWidth, double highEnergyIonMobilityValueOffset) :
-            this(new SignedMz(targetMz), filterWidth, highEnergyIonMobilityValueOffset)
-        {
-        }
-
         public SpectrumProductFilter(SignedMz targetMz, double filterWidth, double highEnergyIonMobilityValueOffset)
         {
             TargetMz = targetMz;

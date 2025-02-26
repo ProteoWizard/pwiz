@@ -307,6 +307,9 @@ struct PWIZ_API_DECL CompassData
 
     /// returns true if the source is TIMS diagonal PASEF data (combined spectra will have isolation m/z arrays)
     virtual bool isDiagonalPASEF() const { return false; }
+    // Diagonal PASEF data has isolation m/z that varies with scan number within a frame
+    virtual double getIsolationMzRangeLowByWindowGroup(int windowGroup) const { return 0; }
+    virtual double getIsolationMzRangeHighByWindowGroup(int windowGroup) const { return 0; }
 
     virtual bool canConvertOneOverK0AndCCS() const { return false; }
     virtual double oneOverK0ToCCS(double oneOverK0, double mz, int charge) const { return 0; }
