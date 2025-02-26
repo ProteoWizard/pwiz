@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Ionic.Zip;
-using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
@@ -59,6 +58,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
         private const string SPACE = TextUtil.SPACE;
         private const string TAB = "\t";
+        private string PythonVirtualEnvironmentScriptsDir { get; }
         private LibraryHelper LibraryHelper { get; set; }
         public string AmbiguousMatchesMessage
         {
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Carafe
         private string PythonVersion { get; }
         private string PythonVirtualEnvironmentName { get; }
         private SrmDocument Document { get; }
-        [CanBeNull] private string ProteinDatabaseFilePath { get;  }
+        public string ProteinDatabaseFilePath { get; private set; }
         internal string ExperimentDataFilePath { get; set;  }
         internal string ExperimentDataTuningFilePath { get; set; }
 
@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.Carafe
         private string PythonVirtualEnvironmentActivateScriptPath =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
                 PythonVirtualEnvironmentName);
-        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
+        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE, LibraryHelper.TimeStamp);
         private string JavaDir => Path.Combine(RootDir, JAVA);
         private string CarafeDir => Path.Combine(RootDir, CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -105,7 +105,11 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeFileBaseName => CARAFE + HYPHEN + CARAFE_VERSION;
         private string CarafeJarZipFileName => CarafeFileBaseName + DOT_ZIP;
         private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
-        private Uri CarafeJarZipDownloadUrl = new Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
+
+        private Uri CarafeJarZipDownloadUrl =
+            new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/{CARAFE}-{CARAFE_VERSION}-beta{DOT_ZIP}"); 
+
+        //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
         private Uri CarafeJarZipUri => new Uri(CarafeJarZipDownloadUrl + CarafeJarZipFileName);
         private string CarafeJarZipLocalPath => Path.Combine(UserDir, DOWNLOADS, CarafeJarZipFileName);
         private Uri CarafeJarZipLocalUri => new Uri(@$"file:///{CarafeJarZipLocalPath}");
@@ -117,15 +121,15 @@ namespace pwiz.Skyline.Model.Carafe
 
         private string CarafeJarFileDir => Path.Combine(CarafeDir, CarafeFileBaseName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
-        private string InputFileName => INPUT + TextUtil.UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
+        private string InputFileName => INPUT + TextUtil.UNDERSCORE + TextUtil.EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
 
         private IList<ArgumentAndValue> CommandArguments =>
             new []
             {
                 new ArgumentAndValue(@"jar", CarafeJarFilePath, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"db", InputFilePath , TextUtil.HYPHEN),
-                new ArgumentAndValue(@"i", ExperimentDataTuningFilePath, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"db", ProteinDatabaseFilePath , TextUtil.HYPHEN),
+                new ArgumentAndValue(@"i", InputFilePath, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ms", ExperimentDataFilePath, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"o", CarafeOutputLibraryDir, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
@@ -192,8 +196,9 @@ namespace pwiz.Skyline.Model.Carafe
             string libOutPath,
             string pythonVersion,
             string pythonVirtualEnvironmentName,
+            string pythonVirtualEnvironmentScriptsDir,
             string experimentDataFilePath,
-            string experimentDataTuningFilePath,
+            string proteinDatabaseFilePath,
             SrmDocument document)
         {
             Document = document;
@@ -202,10 +207,16 @@ namespace pwiz.Skyline.Model.Carafe
             Directory.CreateDirectory(CarafeDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             LibraryHelper = new LibraryHelper(InputFilePath);
+            ProteinDatabaseFilePath = proteinDatabaseFilePath;
             PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
+            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
-            ExperimentDataTuningFilePath = experimentDataTuningFilePath;            
+            Document = document;
+            Directory.CreateDirectory(RootDir);
+            Directory.CreateDirectory(JavaDir);
+            Directory.CreateDirectory(CarafeDir);
+            //ExperimentDataTuningFilePath = experimentDataTuningFilePath;            
         }
 
         public CarafeLibraryBuilder(
@@ -213,6 +224,7 @@ namespace pwiz.Skyline.Model.Carafe
             string libOutPath,
             string pythonVersion,
             string pythonVirtualEnvironmentName,
+            string pythonVirtualEnvironmentScriptsDir,
             string proteinDatabaseFilePath,
             string experimentDataFilePath,
             string experimentDataTuningFilePath,
@@ -221,6 +233,7 @@ namespace pwiz.Skyline.Model.Carafe
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
+            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ProteinDatabaseFilePath = proteinDatabaseFilePath;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
@@ -252,11 +265,10 @@ namespace pwiz.Skyline.Model.Carafe
 
             SetupJavaEnvironment(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-            if (BuildLibraryForCurrentSkylineDocument)
-            {
+            //if (BuildLibraryForCurrentSkylineDocument)
+            //{
                 LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"carafe");
-                
-            }
+            //}
             ExecuteCarafe(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
 

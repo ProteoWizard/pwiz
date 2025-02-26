@@ -114,7 +114,7 @@ namespace pwiz.Skyline.SettingsUI
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
         public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => false;
+        private bool IsCarafeEnabled => true;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
         private string CarafePythonVirtualEnvironmentDir =>
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.SettingsUI
             comboLearnFrom.SelectedIndex = 0;
 
             toolTipProteinDatabase.SetToolTip(labelProteinDatabase, @"A protein database in FASTA format to build library for, this should be a superset of your experiment data samples.");
-            toolTipTrainingData.SetToolTip(labelTrainingData, @"Peptide detection result from DIA-NN (DIA-NN's main report).");
+      //      toolTipTrainingData.SetToolTip(labelTrainingData, @"Peptide detection result from DIA-NN (DIA-NN's main report).");
             toolTipMsMsData.SetToolTip(labelMsMsData, @"DIA-MS data in mzML format used to generate the training data.");
 
             _helper = new MessageBoxHelper(this);
@@ -327,6 +327,27 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioCarafeSource.Checked)
                 {
+                    if (!SetupPythonEnvironmentForCarafe(createDlg))
+                    {
+                        if (cleanUp) pythonInstaller.CleanUpPythonEnvironment(CARAFE);
+                        return false;
+
+                    }
+
+                    if (Builder == null && newBuilder)
+                    {
+                        string msMsDataFilePath = textBoxMsMsData.Text;
+                        if (!File.Exists(msMsDataFilePath))
+                        {
+                            _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
+                            return false;
+                        }
+                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
+                            msMsDataFilePath, ProteinDatabaseFilePath, DocumentUI);
+
+                        BuilderLibFilepath = Builder.BuilderLibraryPath;
+                    }
+
                     // handle options for comboBuildLibraryTarget dropdown 
                     if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
                     {
@@ -342,6 +363,8 @@ namespace pwiz.Skyline.SettingsUI
                             @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
                     }
 
+
+                    /* ******************
                     // handle options for comboLearnFrom dropdown 
                     string learningDocPath = string.Empty;
                     IList<LibrarySpec> learningLibraries = new List<LibrarySpec>();
@@ -350,13 +373,13 @@ namespace pwiz.Skyline.SettingsUI
                     switch (comboLearnFrom.SelectedIndex)
                     {
                         case (int)LearningOptions.files:
-                            trainingDataFilePath = textBoxTrainingData.Text;
+                            //trainingDataFilePath = 
                             msMsDataFilePath = textBoxMsMsData.Text;
-                            if (!File.Exists(trainingDataFilePath))
-                            {
-                                _helper.ShowTextBoxError(textBoxTrainingData, @$"{trainingDataFilePath} does not exist.");
-                                return false;
-                            }
+                            //if (!File.Exists(trainingDataFilePath))
+                            //{
+                            //    _helper.ShowTextBoxError(textBoxTrainingData, @$"{trainingDataFilePath} does not exist.");
+                            //   return false;
+                            //}
                             if (!File.Exists(msMsDataFilePath))
                             {
                                 _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
@@ -393,11 +416,13 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (Builder == null && newBuilder)
                     {
-                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE,
-                            msMsDataFilePath, trainingDataFilePath, DocumentUI);
+                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
+                            msMsDataFilePath, ProteinDatabaseFilePath, DocumentUI);
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
 
                     }
+
+                    ****************** */
                 }
                 else
                 {
@@ -621,8 +646,20 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     PythonDlg.Dispose();
                     PythonInstallerUI.Dispose();
+                    Cursor = Cursors.Default;
+                    btnNext.Enabled = true;
                     return false;
                 }
+                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+                {
+                    if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
+                    PythonInstallerUI.Dispose();
+                    Cursor = Cursors.Default;
+                    btnNext.Enabled = true;
+                    return false;
+                }
+
+                PythonInstallerUI.Dispose();
             }
             else if (!pythonInstaller.IsNvidiaEnvironmentReady())
             {
@@ -717,7 +754,25 @@ namespace pwiz.Skyline.SettingsUI
         public void OkWizardPage()
         {
             Cursor.Current = Cursors.WaitCursor;
-            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
+            if (tabControlMain.SelectedIndex == (int)Pages.learning && radioCarafeSource.Checked)
+            {
+                if (textBoxProteinDatabase.Text == "" || textBoxMsMsData.Text == "")
+                {
+                    btnNext.Enabled = false;
+                }
+                else
+                {
+                    btnNext.Enabled = true;
+
+                    if (ValidateBuilder(true, true, true, true))
+                    {
+                        Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
+                        Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
+                        DialogResult = DialogResult.OK;
+                    }
+                }
+            }
+            else if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
                 if (ValidateBuilder(true, true, true, true))
                 {
@@ -726,6 +781,7 @@ namespace pwiz.Skyline.SettingsUI
                     DialogResult = DialogResult.OK;
                 }
             }
+
             else if (ValidateBuilder(false, true, false, true))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
@@ -1259,6 +1315,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textBoxProteinDatabase.Text = dlg.FileName;
             }
+            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "")
+                btnNext.Enabled = true;
         }
 
         private void buttonTrainingData_Click(object sender, EventArgs e)
@@ -1273,7 +1331,7 @@ namespace pwiz.Skyline.SettingsUI
             dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                textBoxTrainingData.Text = dlg.FileName;
+                //textBoxTrainingData.Text = dlg.FileName;
             }
         }
 
@@ -1291,6 +1349,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textBoxMsMsData.Text = dlg.FileName;
             }
+            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "")
+                btnNext.Enabled = true;
         }
     }
 }

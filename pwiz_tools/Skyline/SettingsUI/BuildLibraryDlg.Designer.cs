@@ -70,9 +70,6 @@
             this.tabLearn = new System.Windows.Forms.TabPage();
             this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
             this.tabWithFiles = new System.Windows.Forms.TabPage();
-            this.labelTrainingData = new System.Windows.Forms.Label();
-            this.buttonTrainingData = new System.Windows.Forms.Button();
-            this.textBoxTrainingData = new System.Windows.Forms.TextBox();
             this.labelMsMsData = new System.Windows.Forms.Label();
             this.buttonMsMsData = new System.Windows.Forms.Button();
             this.textBoxMsMsData = new System.Windows.Forms.TextBox();
@@ -86,7 +83,6 @@
             this.comboLearnFrom = new System.Windows.Forms.ComboBox();
             this.labelLearnFrom = new System.Windows.Forms.Label();
             this.tabControlBuildLibraryTarget = new pwiz.Skyline.Controls.WizardPages();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.labelProteinDatabase = new System.Windows.Forms.Label();
             this.buttonProteinDatabase = new System.Windows.Forms.Button();
@@ -425,31 +421,11 @@
             // tabWithFiles
             // 
             this.tabWithFiles.BackColor = System.Drawing.SystemColors.Control;
-            this.tabWithFiles.Controls.Add(this.labelTrainingData);
-            this.tabWithFiles.Controls.Add(this.buttonTrainingData);
-            this.tabWithFiles.Controls.Add(this.textBoxTrainingData);
             this.tabWithFiles.Controls.Add(this.labelMsMsData);
             this.tabWithFiles.Controls.Add(this.buttonMsMsData);
             this.tabWithFiles.Controls.Add(this.textBoxMsMsData);
             resources.ApplyResources(this.tabWithFiles, "tabWithFiles");
             this.tabWithFiles.Name = "tabWithFiles";
-            // 
-            // labelTrainingData
-            // 
-            resources.ApplyResources(this.labelTrainingData, "labelTrainingData");
-            this.labelTrainingData.Name = "labelTrainingData";
-            // 
-            // buttonTrainingData
-            // 
-            resources.ApplyResources(this.buttonTrainingData, "buttonTrainingData");
-            this.buttonTrainingData.Name = "buttonTrainingData";
-            this.buttonTrainingData.UseVisualStyleBackColor = true;
-            this.buttonTrainingData.Click += new System.EventHandler(this.buttonTrainingData_Click);
-            // 
-            // textBoxTrainingData
-            // 
-            resources.ApplyResources(this.textBoxTrainingData, "textBoxTrainingData");
-            this.textBoxTrainingData.Name = "textBoxTrainingData";
             // 
             // labelMsMsData
             // 
@@ -531,17 +507,10 @@
             // tabControlBuildLibraryTarget
             // 
             resources.ApplyResources(this.tabControlBuildLibraryTarget, "tabControlBuildLibraryTarget");
-            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage1);
             this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage2);
             this.tabControlBuildLibraryTarget.Name = "tabControlBuildLibraryTarget";
             this.tabControlBuildLibraryTarget.SelectedIndex = 0;
             this.tabControlBuildLibraryTarget.TabStop = false;
-            // 
-            // tabPage1
-            // 
-            this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
-            resources.ApplyResources(this.tabPage1, "tabPage1");
-            this.tabPage1.Name = "tabPage1";
             // 
             // tabPage2
             // 
@@ -687,28 +656,18 @@
         private System.Windows.Forms.Label labelBuildLibraryTarget;
         private System.Windows.Forms.ComboBox comboBuildLibraryTarget;
         private Controls.WizardPages tabControlBuildLibraryTarget;
-        private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox textBoxProteinDatabase;
         private System.Windows.Forms.Button buttonProteinDatabase;
         private System.Windows.Forms.TabPage tabWithFiles;
-        private System.Windows.Forms.Button buttonTrainingData;
-        private System.Windows.Forms.TextBox textBoxTrainingData;
         private System.Windows.Forms.Button buttonMsMsData;
         private System.Windows.Forms.TextBox textBoxMsMsData;
         private System.Windows.Forms.Label labelProteinDatabase;
-        private System.Windows.Forms.Label labelTrainingData;
         private System.Windows.Forms.Label labelMsMsData;
         private System.Windows.Forms.ToolTip toolTipProteinDatabase;
         private System.Windows.Forms.ToolTip toolTipTrainingData;
         private System.Windows.Forms.ToolTip toolTipMsMsData;
-
-        internal string TextBoxTrainingDataFile
-        {
-            get => textBoxTrainingData.Text;
-            set => textBoxTrainingData.Text = value;
-        }
         internal string TextBoxMsMsDataFile
         {
             get => textBoxMsMsData.Text;

@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
                 buildLibraryDlg.Carafe = true;
                 buildLibraryDlg.OkWizardPage();
                 buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
-                buildLibraryDlg.TextBoxTrainingDataFile = fineTuningFile;
+//                buildLibraryDlg.TextBoxTrainingDataFile = fineTuningFile;
             });
             pythonUtil.InstallPython(buildLibraryDlg);
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);

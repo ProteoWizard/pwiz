@@ -53,6 +53,14 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string LIBRARY_TYPE = @"Library Type";
         private const string LIBRARY_PROBABILITY_SCORE = @"Library Probability Score";
         private const string PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS = @"Peptide Modified Sequence Unimod Ids";
+
+        private static readonly DateTime _nowTime = DateTime.Now;
+
+        public static string TimeStamp
+        {
+            get => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
+        }
+
         public string InputFilePath { get; private set; }
         private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
         private static readonly IEnumerable<string> PrecursorTableColumnNamesCarafe = 

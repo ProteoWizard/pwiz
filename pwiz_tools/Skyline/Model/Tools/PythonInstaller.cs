@@ -361,6 +361,7 @@ namespace pwiz.Skyline.Model.Tools
                 return false;
             
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
+            //NumTotalTasks = tasks.Count;
 
             if (abortedTasks != null && abortedTasks.Count > 0) tasks = abortedTasks;
 
@@ -383,7 +384,7 @@ namespace pwiz.Skyline.Model.Tools
                 return true;
 
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
-
+            //NumTotalTasks = tasks.Count;
             if (abortedTasks != null && abortedTasks.Count > 0) tasks = abortedTasks;
 
             if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
@@ -485,6 +486,7 @@ namespace pwiz.Skyline.Model.Tools
                 if (nextTask != null) tasks.Add(nextTask);
             }
             PendingTasks = tasks;
+            NumTotalTasks = PendingTasks.Count;
             return tasks;
         }
 
