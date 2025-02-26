@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace TutorialLocalization
 {
     /// <summary>
@@ -30,7 +32,18 @@ namespace TutorialLocalization
             XPath = xPath;
             English = english;
         }
-        public string TutorialName { get; }
+
+        [SuppressMessage("ReSharper", "InconsistentNaming")]
+        public LocalizationRecord(string TutorialName, string XPath, string English, string Localized,
+            string OriginalEnglish)
+        {
+            this.TutorialName = TutorialName;
+            this.XPath = XPath;
+            this.English = English;
+            this.Localized = Localized;
+            this.OriginalEnglish = OriginalEnglish;
+        }
+        public string TutorialName { get; private set; }
         public string XPath { get; }
         public string English { get; }
         public string Localized { get; private set; }
