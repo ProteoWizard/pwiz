@@ -639,7 +639,7 @@ else
         if --i-agree-to-the-vendor-licenses in $(args)
         {
             echo "Extracting vendor APIs..." ;
-            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)/7zz x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64.7z" ; }
+            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)/7zz x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64.7z" ; }
             RESCAN ;
         }
         else
@@ -1251,7 +1251,7 @@ rule msparser-path ( properties * )
     } 
     else if <toolset>gcc in $(properties)
     {
-        lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64/gnu" ;
+        lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64/gnu" ;
     }
     else
     {
