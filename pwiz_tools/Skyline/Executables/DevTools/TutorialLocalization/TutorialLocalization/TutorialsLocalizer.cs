@@ -128,18 +128,26 @@ namespace TutorialLocalization
             ZipFile.AddEntry(relativePath, bytes);
         }
 
+        /// <summary>
+        /// Gets the HTML for the document.
+        /// </summary>
         public static string GetHtml(HtmlDocument document)
         {
             var stringWriter = new StringWriter();
             document.Save(stringWriter);
-            var document2 = new HtmlDocument()
-            {
-                OptionWriteEmptyNodes = true
-            };
+            var document2 = new HtmlDocument();
             document2.LoadHtml(stringWriter.ToString());
-            var stringWriter2 = new StringWriter();
-            document2.Save(stringWriter2);
-            return stringWriter2.ToString();
+            var parts = new List<string> { "<html>", string.Empty };
+            // Empty nodes (e.g. "link") in the head should end in ">"
+            document2.OptionWriteEmptyNodes = false;
+            parts.Add(document2.DocumentNode.SelectSingleNode("//head").OuterHtml);
+            parts.Add(string.Empty);
+            // Empty nodes (e.g. "img") 
+            document2.OptionWriteEmptyNodes = true;
+            parts.Add(document2.DocumentNode.SelectSingleNode("//body").OuterHtml);
+            parts.Add(string.Empty);
+            parts.Add("</html>");
+            return string.Join(Environment.NewLine, parts);
         }
 
         public void AddLocalizationRecord(string language, LocalizationRecord record)
