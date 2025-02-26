@@ -298,9 +298,43 @@ namespace TutorialLocalization
                 }
                 else
                 {
-                    el.InnerHtml = localizationRecord.Localized;
+                    el.InnerHtml = IndentHtml(localizationRecord.Localized, GetElementDepth(el) - 1);
                 }
             }
+        }
+
+        private int GetElementDepth(HtmlNode el)
+        {
+	        int result = 0;
+	        for (el = el.ParentNode; el != null; el = el.ParentNode)
+	        {
+		        result++;
+	        }
+
+	        return result;
+        }
+
+        private string IndentHtml(string html, int indentLevel)
+        {
+	        if (indentLevel < 0)
+	        {
+		        return html;
+	        }
+	        var rawLines = html.Replace("\r\n", "\n").Split('\n');
+	        if (rawLines.Length <= 1)
+	        {
+		        return html;
+	        }
+
+	        string strTab = "    ";
+	        string indent = string.Concat(Enumerable.Repeat(strTab, indentLevel));
+	        var lines = rawLines.Select(line => line.Trim()).Where(line => line.Length > 0).Select(line=>indent + line)
+		        .Prepend(string.Empty).ToList();
+	        if (indentLevel > 0)
+	        {
+                lines.Add(string.Concat(Enumerable.Repeat(strTab, indentLevel - 1)));
+	        }
+	        return string.Join("\r\n", lines);
         }
 
         private void ReplaceElement(HtmlDocument target, HtmlDocument source, string xPath)
