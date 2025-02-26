@@ -22,6 +22,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
@@ -34,16 +35,20 @@ namespace pwiz.Skyline.ToolsUI
     {
         private static string _userAnswerToCuda;
         public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
+
+        private static ReadOnlyCollection<PythonTask> _tasks;
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
             var result = DialogResult.OK;
-            var tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment() : pythonInstaller.PendingTasks;
+            _tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment().AsReadOnly() : pythonInstaller.PendingTasks.AsReadOnly() ; 
+           
+            
             _userAnswerToCuda = null;
-            pythonInstaller.NumTotalTasks = tasks.Count;
+            pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
             List<PythonTask> abortedTasks = new List<PythonTask>();
             bool abortTask = false;
-            foreach (var task in tasks)
+            foreach (var task in _tasks)
             {
                 try
                 {
