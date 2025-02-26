@@ -999,7 +999,8 @@ namespace pwiz.Skyline.Controls.Databinding
                 // Add a column for the replicate name if it doesn't already exist
                 if (!replicatePivotDataGridView.Columns.Contains(replicateName))
                 {
-                    replicatePivotDataGridView.Columns.Add(replicateName, replicateName);
+                    var columnIndex = replicatePivotDataGridView.Columns.Add(replicateName, replicateName);
+                    replicatePivotDataGridView.Columns[columnIndex].SortMode = DataGridViewColumnSortMode.NotSortable;
                 }
 
                 foreach (var column in group)
