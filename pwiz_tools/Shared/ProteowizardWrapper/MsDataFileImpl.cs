@@ -1050,6 +1050,16 @@ namespace pwiz.ProteowizardWrapper
             return data;
         }
 
+        private double[] GetScanningQuadMzLowArray(Spectrum s)
+        {
+            return s.getArrayByCVID(CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array)?.data?.Storage();
+        }
+
+        private double[] GetScanningQuadMzHighArray(Spectrum s)
+        {
+            return s.getArrayByCVID(CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array)?.data?.Storage();
+        }
+
         private double[] TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
         {
             using var data = s.getArrayByCVID(cvid)?.data;
@@ -1068,7 +1078,9 @@ namespace pwiz.ProteowizardWrapper
                     Centroided = true,
                     Mzs = new double[0],
                     Intensities = new double[0],
-                    IonMobilities = null
+                    IonMobilities = null,
+                    ScanningQuadMzLows = null,
+                    ScanningQuadMzHighs = null
                 };
             }
             string idText = spectrum.id;
@@ -1128,6 +1140,17 @@ namespace pwiz.ProteowizardWrapper
                     msDataSpectrum.Mzs = ToArray(spectrum.getMZArray());
                     msDataSpectrum.Intensities = ToArray(spectrum.getIntensityArray());
                     msDataSpectrum.IonMobilities = GetIonMobilityArray(spectrum);
+                    if (msDataSpectrum.Level > 1)
+                    {
+                        // For diagonal PASEF
+                        msDataSpectrum.ScanningQuadMzLows = GetScanningQuadMzLowArray(spectrum);
+                        msDataSpectrum.ScanningQuadMzHighs = GetScanningQuadMzHighArray(spectrum);
+                    }
+                    else
+                    {
+                        msDataSpectrum.ScanningQuadMzLows = null;
+                        msDataSpectrum.ScanningQuadMzHighs = null;
+                    }
                     if (msDataSpectrum.IonMobilities != null)
                     {
                         // One more linear walk should be fine, given how much copying and walking gets done
@@ -1143,6 +1166,14 @@ namespace pwiz.ProteowizardWrapper
                     else if (expectIonMobilityValue)
                     {
                         msDataSpectrum.IonMobility = GetIonMobility(spectrum);
+                    }
+
+                    if (msDataSpectrum.ScanningQuadMzLows != null)
+                    {
+                        // One more linear walk should be fine, given how much copying and walking gets done
+                        // N.B its possible that this range goes slightly outside the declared isolation window
+                        msDataSpectrum.MinScanningQuadMz = msDataSpectrum.ScanningQuadMzLows.Min();
+                        msDataSpectrum.MaxScanningQuadMz = msDataSpectrum.ScanningQuadMzLows.Max();
                     }
 
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
@@ -2007,6 +2038,11 @@ namespace pwiz.ProteowizardWrapper
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
+        public double[] ScanningQuadMzLows { get; set; } // for combined-mode Bruker diagonal PASEF
+        public double[] ScanningQuadMzHighs { get; set; } // for combined-mode Bruker diagonal PASEF
+        public double? MinScanningQuadMz { get; set; }
+        public double? MaxScanningQuadMz { get; set; }
+
         public string ScanDescription { get; set; }
 
         public MsInstrumentConfigInfo InstrumentInfo { get; set; }
