@@ -127,6 +127,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
       allowMsMsWithoutPrecursor_(allowMsMsWithoutPrecursor),
       isolationMzFilter_(isolationMzFilter),
       currentFrameId_(-1),
+      isDiagonalPASEF_(false),
       tdfStoragePtr_(new TimsBinaryData(rawpath)),
       tdfStorage_(*tdfStoragePtr_)
 {
