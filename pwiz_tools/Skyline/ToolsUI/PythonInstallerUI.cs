@@ -40,9 +40,11 @@ namespace pwiz.Skyline.ToolsUI
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
             var result = DialogResult.OK;
-            _tasks = (pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment(): pythonInstaller.PendingTasks).ToList() ; 
-           
             
+            _tasks = new List<PythonTask>(pythonInstaller.PendingTasks.IsNullOrEmpty()
+                ? pythonInstaller.ValidatePythonVirtualEnvironment()
+                : pythonInstaller.PendingTasks);
+
             _userAnswerToCuda = null;
             pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
