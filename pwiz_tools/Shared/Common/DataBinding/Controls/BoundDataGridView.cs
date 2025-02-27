@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -117,14 +118,7 @@ namespace pwiz.Common.DataBinding.Controls
                     return;
                 }
 
-                var columnsToHide = new HashSet<string>();
-                var clusteredProperties =
-                    (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
-                if (clusteredProperties != null)
-                {
-                    columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p => p.Name));
-                }
-
+                var columnsToHide = new HashSet<string>(GetColumnsToHide(bindingListSource.ReportResults).Select(pd=>pd.Name));
                 var newItemProperties = bindingListSource.ItemProperties;
                 if (!Equals(newItemProperties, _itemProperties))
                 {
@@ -161,7 +155,16 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 _inUpdateColumns = false;
             }
+        }
 
+        protected virtual IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
+        {
+            if (reportResults is ClusteredReportResults clusteredReportResults)
+            {
+                return clusteredReportResults.ClusteredProperties.GetAllColumnHeaderProperties();
+            }
+
+            return Array.Empty<PropertyDescriptor>();
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)
@@ -281,9 +284,19 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
+        private void UpdateColumnsFrozen()
+        {
+            var frozenColumnCount = _bindingListSource.ColumnFormats.FrozenColumnCount;
+            for (int i = 0; i < Columns.Count; i++)
+            {
+                Columns[i].Frozen = (i + 1) <= frozenColumnCount;
+            }
+        }
+
         protected void OnFormatsChanged()
         {
             UpdateColumnFormats(true);
+            UpdateColumnsFrozen();
         }
 
         protected override void OnRowValidating(DataGridViewCellCancelEventArgs e)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -27,6 +27,7 @@ using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -43,6 +44,7 @@ namespace pwiz.Common.DataBinding.Controls
             InitializeComponent();
 
             _waitingMsg = Resources.NavBar_NavBar_Waiting_for_data___;
+            navBarButtonFreezeColumns.DropDownOpening += navBarButtonFreezeColumns_DropDownOpening;
         }
         [TypeConverter(typeof(ReferenceConverter))]
         public BindingListSource BindingListSource
@@ -617,7 +619,55 @@ namespace pwiz.Common.DataBinding.Controls
             get { return navBarButtonViews; }
         }
 
+        public ToolStripSplitButton FreezeColumnsSplitButton
+        {
+            get { return navBarButtonFreezeColumns; }
+        }
+
         public int Separator2Position => bindingNavigatorSeparator2.Bounds.Left;
+
+        private void navBarButtonFreezeColumns_ButtonClick(object sender, EventArgs e)
+        {
+            if (BindingListSource.ColumnFormats.FrozenColumnCount > 0)
+            {
+                BindingListSource.ColumnFormats.FrozenColumnCount = 0;
+            }
+            else
+            {
+                var defaultFreezeColumns = 1;
+                for (int i = 0; i < BindingListSource.ItemProperties.Count; i++)
+                {
+                    var columnPropertyDescriptor = BindingListSource.ItemProperties[i] as ColumnPropertyDescriptor;
+                    if (columnPropertyDescriptor.PivotKey != null)
+                    {
+                        defaultFreezeColumns = i;
+                        break;
+                    }
+                }
+                BindingListSource.ColumnFormats.FrozenColumnCount = defaultFreezeColumns;
+            }
+        }
+
+        private void navBarButtonFreezeColumns_DropDownOpening(object sender, EventArgs e)
+        {
+            navBarButtonFreezeColumns.DropDownItems.Clear();
+            for (int i = 0; i < BindingListSource.ItemProperties.Count; i++)
+            {
+                var columnPropertyDescriptor = BindingListSource.ItemProperties[i] as ColumnPropertyDescriptor;
+                if (columnPropertyDescriptor.PivotKey != null)
+                {
+                    break;
+                }
+                var menuItem = new ToolStripMenuItem($"Freeze up to {columnPropertyDescriptor.DisplayName}");
+                int columnsToFreeze = i + 1;
+                menuItem.Click += (s, args) => BindingListSource.ColumnFormats.FrozenColumnCount = columnsToFreeze;
+                if (BindingListSource.ColumnFormats.FrozenColumnCount == columnsToFreeze)
+                {
+                    menuItem.Font = new Font(menuItem.Font, FontStyle.Bold);
+                }
+                navBarButtonFreezeColumns.DropDownItems.Add(menuItem);
+            }
+        }
 
         private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
         {
