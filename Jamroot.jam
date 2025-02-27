@@ -384,9 +384,6 @@ project pwiz
         <toolset>gcc:<define>_DEFAULT_SOURCE
         <toolset>clang:<define>_DEFAULT_SOURCE
 
-        # msparser uses old libstd++ API, so with GCC 5+, the entire project has to use it as well
-        <toolset>gcc:<define>_GLIBCXX_USE_CXX11_ABI=0
-
         # set standard to C++14, 17 for MSVC (due to Arrow)
         <toolset>msvc:<cxxflags>"/std:c++17"
         <toolset>gcc:<cxxflags>-std=c++14
@@ -1020,18 +1017,7 @@ rule secure-scl-throws ( properties * )
     }
 }
 
-# newer OS/GCC versions have PIE enabled by default, but msparser was compiled without PIE, so we must also compile without PIE
-obj has-pie : $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : <cflags>-fno-pie <cxxflags>-fno-pie <linkflags>-no-pie ;
-explicit has-pie ;
-
-if [ check-target-builds has-pie "GCC has -no-pie" : <cflags>-no-pie <cxxflags>-no-pie <linkflags>-no-pie ]
-{
-    .pic-options = -fPIC -no-pie -fno-pie ;
-}
-else
-{
-    .pic-options = -fPIC ;
-}
+.pic-options = -fPIC ;
 
 # any GCC executable that uses shared libraries must have all its code built with -fPIC
 rule static-with-fpic ( properties * )
