@@ -38,6 +38,7 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private BindingListSource _bindingListSource;
         private string _waitingMsg;
+
         public NavBar()
         {
             InitializeComponent();

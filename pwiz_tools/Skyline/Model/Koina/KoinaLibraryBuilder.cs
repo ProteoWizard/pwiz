@@ -175,6 +175,10 @@ namespace pwiz.Skyline.Model.Koina
             return true;
         }
 
+        public string ProductLibraryPath()
+        {
+            return LibrarySpec.FilePath;
+        }
         public static List<KoinaIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
         {
             var peps = standard.GetDocument().Peptides.ToList();
@@ -208,5 +212,8 @@ namespace pwiz.Skyline.Model.Koina
         {
             get { return null; }
         }
+
+        public string BuilderLibraryPath => BuildOutput;
+
     }
 }
