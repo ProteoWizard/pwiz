@@ -113,6 +113,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\DisposableCollection.cs" />
+    <Compile Include="Collections\Factor.cs" />
+    <Compile Include="Collections\ImmutableListFactory.cs" />
+    <Compile Include="Collections\IntegerList.cs" />
     <Compile Include="CommonApplicationSettings.cs" />
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
     <Compile Include="Chemistry\Formula.cs" />

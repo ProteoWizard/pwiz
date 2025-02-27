@@ -135,7 +135,8 @@ namespace pwiz.Skyline.Model.Proteome
         public override ProteinMetadata ChangeSingleProteinMetadata(ProteinMetadata singleProteinMetadata)
         {
             Assume.IsTrue(singleProteinMetadata?.ProteinMetadataList?.Count == 1);
-            return new ProteinGroupMetadata(ProteinMetadataList.ReplaceElement(singleProteinMetadata, m => m.Name == singleProteinMetadata!.Name));
+            
+            return new ProteinGroupMetadata(ProteinMetadataList.ReplaceAt(ProteinMetadataList.IndexOf(m => m.Name == singleProteinMetadata!.Name), singleProteinMetadata));
         }
 
         public override ProteinMetadata ChangeWebSearchInfo(WebSearchInfo webSearchInfo)
