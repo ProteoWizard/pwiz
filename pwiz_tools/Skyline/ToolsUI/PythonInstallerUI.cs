@@ -22,8 +22,8 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
@@ -36,11 +36,11 @@ namespace pwiz.Skyline.ToolsUI
         private static string _userAnswerToCuda;
         public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
 
-        private static ReadOnlyCollection<PythonTask> _tasks;
+        private static IList<PythonTask> _tasks;
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
             var result = DialogResult.OK;
-            _tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment().AsReadOnly() : pythonInstaller.PendingTasks.AsReadOnly() ; 
+            _tasks = (pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment(): pythonInstaller.PendingTasks).ToList() ; 
            
             
             _userAnswerToCuda = null;
