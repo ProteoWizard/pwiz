@@ -460,8 +460,8 @@ namespace pwiz.SkylineTestFunctional
                     { "Charge", "2" },
                     { "Label", "light" },
                     { "SpectrumCount", "93" },
-                    { "KoinaDotpMatch", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.4589) },
-                    { "KoinaDotpMatchFull", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.4425) }
+                    { "KoinaDotpMatch", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.7240) },
+                    { "KoinaDotpMatchFull", string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.5666) }
                 },
                 new Dictionary<string, object> {
                     {"LibraryName","Rat (NIST) (Rat_plasma2) (Rat_plasma)"},
@@ -469,8 +469,8 @@ namespace pwiz.SkylineTestFunctional
                     {"Charge","2"},
                     {"Label","light"},
                     {"SpectrumCount","4"},
-                    {"KoinaDotpMatch",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.5100)},
-                    {"KoinaDotpMatchFull",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.3229)}
+                    {"KoinaDotpMatch",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.7689)},
+                    {"KoinaDotpMatchFull",string.Format(GraphsResources.GraphSpectrum_DoUpdate_dotp___0_0_0000_, 0.5570)}
                 }
             };
 
