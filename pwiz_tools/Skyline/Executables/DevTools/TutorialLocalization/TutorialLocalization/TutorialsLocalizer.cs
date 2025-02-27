@@ -171,7 +171,7 @@ namespace TutorialLocalization
         public byte[] ToUtf8Bytes(string str)
         {
             var memoryStream = new MemoryStream();
-            using (var writer = new StreamWriter(memoryStream, new UTF8Encoding(true)))
+            using (var writer = new StreamWriter(memoryStream, new UTF8Encoding(false)))
             {
                 writer.Write(str);
             }
