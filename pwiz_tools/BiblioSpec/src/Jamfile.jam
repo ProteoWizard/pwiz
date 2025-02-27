@@ -134,6 +134,35 @@ rule waters-api-usage-requirements ( properties * )
     return $(result) ;
 }
 
+rule parquet-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)  
+    {
+        if <runtime-debugging>off in $(properties)
+        {
+            result += <define>USE_PARQUET_READER ;
+        }
+
+        # include parquet even for debug builds because it will compile, it just won't run
+        result += <library>parquet ;
+        result += <dependency>install-parquet ;
+    }
+    return $(result) ;
+}
+
+rule parquet-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)  
+    {
+        # include parquet even for debug builds because it will compile, it just won't run
+        result += <library>parquet ;
+        result += <dependency>install-parquet ;
+    }
+    return $(result) ;
+}
+
 
 # some properties for all
 project 
@@ -194,22 +223,20 @@ lib blibbuild
     <link>static
     <conditional>@mascot-api-requirements
     <conditional>@waters-define
+    <conditional>@parquet-api-requirements
     <dependency>unimod_2.xsd
     <dependency>quantitation_1.xsd
     <dependency>quantitation_2.xsd
     <dependency>unimod.xml
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <toolset>msvc:<library>parquet
-    <toolset>msvc:<dependency>install-parquet
     $(pwiz-boost-libraries)
     <dependency>modifications.xml # required file for running BlibBuild with MaxQuant support
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
     <conditional>@waters-api-usage-requirements
+    <conditional>@parquet-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
-    <toolset>msvc:<library>parquet
-    <toolset>msvc:<dependency>install-parquet
     $(pwiz-boost-libraries)
     <dependency>modifications.xml
  ;

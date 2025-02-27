@@ -629,6 +629,9 @@ class DiaNNSpecLibReader::Impl
 
         ParquetReader(const string& filepath) : filepath_(filepath)
         {
+#ifndef USE_PARQUET_READER
+            Verbosity::error("parquet files are not supported in current build (runtime debugging on)");
+#endif
             auto input = arrow::io::ReadableFile::Open(filepath);
             if (!input.ok())
                 Verbosity::error("cannot open %s: %s", filepath.c_str(), input.status().message().c_str());
@@ -644,6 +647,9 @@ class DiaNNSpecLibReader::Impl
 
         static bool is_parquet(const string& filepath)
         {
+#ifndef USE_PARQUET_READER
+            return bal::iends_with(filepath, ".parquet");
+#endif
             auto input = arrow::io::ReadableFile::Open(filepath);
             if (!input.ok())
                 return false;
