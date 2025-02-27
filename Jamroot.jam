@@ -1017,7 +1017,18 @@ rule secure-scl-throws ( properties * )
     }
 }
 
-.pic-options = -fPIC ;
+# newer OS/GCC versions have PIE enabled by default, but msparser was compiled without PIE, so we must also compile without PIE
+obj has-pie : $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : <cflags>-fno-pie <cxxflags>-fno-pie <linkflags>-no-pie ;
+explicit has-pie ;
+
+if [ check-target-builds has-pie "GCC has -no-pie" : <cflags>-no-pie <cxxflags>-no-pie <linkflags>-no-pie ]
+{
+    .pic-options = -fPIC -no-pie -fno-pie ;
+}
+else
+{
+    .pic-options = -fPIC ;
+}
 
 # any GCC executable that uses shared libraries must have all its code built with -fPIC
 rule static-with-fpic ( properties * )
