@@ -25,6 +25,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -32,7 +33,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Results
 {
     [XmlRoot("measured_results")]
-    public sealed class MeasuredResults : Immutable, IXmlSerializable
+    public sealed class MeasuredResults : Immutable, IXmlSerializable, IValidating, IFileProvider
     {
         public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
@@ -61,6 +62,35 @@ namespace pwiz.Skyline.Model.Results
             // The only way to get peaks with areas not normalized by
             // time is to load an older document that was created this way.
             IsTimeNormalArea = true;
+
+            UpdateFiles();
+        }
+
+        public IDictionary<FileType, IFileGroupModel> Files { get; private set; }
+
+        public void Validate()
+        {
+            UpdateFiles();
+        }
+
+        private void UpdateFiles()
+        {
+            if (IsEmpty)
+                return;
+
+            var newFileList = Chromatograms?.Select(item => item.Files).ToList();
+
+            var newFileGroup = new BasicFileGroupModel(FileType.folder_replicates, null, newFileList);
+            if (!ArrayUtil.ReferencesEqual(newFileGroup.FilesAndFolders,
+                    Files != null && Files.TryGetValue(FileType.folder_replicates, out var value) ? value.FilesAndFolders : null))
+            {
+                var newFiles = new Dictionary<FileType, IFileGroupModel>
+                {
+                    {newFileGroup.Type, newFileGroup}
+                };
+
+                Files = MakeReadOnly(newFiles);
+            }
         }
 
         public bool IsEmpty
@@ -1292,6 +1322,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MeasuredResults()
         {
+            UpdateFiles();
         }
 
         private enum ATTR
@@ -1937,6 +1968,11 @@ namespace pwiz.Skyline.Model.Results
         public double? GetMedianTicArea()
         {
             return _medianTicArea;
+        }
+
+        public ChromatogramSet FindChromatogramSet(ChromatogramSetId chromatogramSetId)
+        {
+            return _chromatograms.FirstOrDefault(chromatogramSet => ReferenceEquals(chromatogramSet.Id, chromatogramSetId));
         }
     }
 

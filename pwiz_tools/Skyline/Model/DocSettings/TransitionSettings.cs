@@ -41,7 +41,7 @@ using pwiz.Skyline.Model.Results.Spectra;
 namespace pwiz.Skyline.Model.DocSettings
 {
     [XmlRoot("transition_settings")]
-    public class TransitionSettings : Immutable, IValidating, IXmlSerializable
+    public class TransitionSettings : Immutable, IValidating, IXmlSerializable, IFileProvider
     {
         public TransitionSettings(TransitionPrediction prediction,
                                   TransitionFilter filter,
@@ -101,6 +101,71 @@ namespace pwiz.Skyline.Model.DocSettings
             return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz);
         }
 
+        public bool HasOptimizationLibrary
+        {
+            get
+            {
+                return Prediction != null && Prediction.OptimizedLibrary != null && !Prediction.OptimizedLibrary.IsNone;
+            }
+        }
+
+        public bool HasOptimizationLibraryPersisted
+        {
+            get
+            {
+                return HasOptimizationLibrary && Prediction.OptimizedLibrary.PersistencePath != null;
+            }
+        }
+
+        public bool HasDriftTimePrediction { get { return IonMobilityFiltering != null && IonMobilityFiltering.IonMobilityLibrary != null; } }
+
+        public bool HasIonMobilityLibraryPersisted
+        {
+            get
+            {
+                return HasDriftTimePrediction &&
+                       IonMobilityFiltering.IonMobilityLibrary != null &&
+                       !IonMobilityFiltering.IonMobilityLibrary.IsNone &&
+                       IonMobilityFiltering.IonMobilityLibrary.FilePath != null;
+            }
+        }
+
+        public IDictionary<FileType, IFileGroupModel> Files { get; private set; }
+
+        private void UpdateFiles()
+        {
+            // *.imsdb
+            IFileGroupModel newIonMobilityLibrary = null;
+            if (HasIonMobilityLibraryPersisted) 
+            {
+                newIonMobilityLibrary = new BasicFileGroupModel(FileType.folder_ion_mobility_library, null, IonMobilityFiltering.IonMobilityLibrary);
+            }
+
+            // *.optdb
+            IFileGroupModel newOptimizationLibrary = null;
+            if (HasOptimizationLibraryPersisted)
+            {
+                newOptimizationLibrary = new BasicFileGroupModel(FileType.folder_optimization_library, null, Prediction.OptimizedLibrary);
+            }
+
+            if (!ArrayUtil.ReferencesEqual(newIonMobilityLibrary?.FilesAndFolders,
+                    Files != null && Files.TryGetValue(FileType.ion_mobility_library, out var value1) ? value1.FilesAndFolders : null) ||
+                !ArrayUtil.ReferencesEqual(newOptimizationLibrary?.FilesAndFolders,
+                    Files != null && Files.TryGetValue(FileType.folder_optimization_library, out var value2) ? value2.FilesAndFolders : null))
+            {
+                var newFileGroupModel = new SortedDictionary<FileType, IFileGroupModel>();
+
+                if (newIonMobilityLibrary != null)
+                    newFileGroupModel[newIonMobilityLibrary.Type] = newIonMobilityLibrary;
+
+                // TODO: support .optdb
+                // if (newOptimizationLibrary != null)
+                //     newFileGroupModel[newOptimizationLibrary.Type] = newOptimizationLibrary;
+
+                Files = MakeReadOnly(newFileGroupModel); 
+            }
+        }
+
         #region Property change methods
 
         public TransitionSettings ChangePrediction(TransitionPrediction prop)
@@ -150,6 +215,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private TransitionSettings()
         {
+            UpdateFiles();
         }
 
         void IValidating.Validate()
@@ -174,6 +240,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(
                     DocSettingsResources.TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan);
             }
+
+            UpdateFiles();
         }
 
         public static TransitionSettings Deserialize(XmlReader reader)
