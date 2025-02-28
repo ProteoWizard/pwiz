@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using Ionic.Zip;
@@ -33,6 +32,8 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Diagnostics;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 
@@ -40,10 +41,13 @@ namespace pwiz.Skyline.Model.Carafe
 {
     public class CarafeLibraryBuilder : IiRTCapableLibraryBuilder
     {
+        internal const string ECHO = @"echo";
         private const string BIN = @"bin";
         private const string INPUT = @"input";
         private const string CARAFE = @"carafe";
         private const string CARAFE_VERSION = @"0.0.1";
+        private const string CARAFE_DEV = @"-dev"; 
+        private const string CARAFE_DEV_VERSION = CARAFE_DEV + @"-20250225T003942Z-001"; 
         private const string CMD_ARG_C = @"/C";
         private const string CMD_EXECUTABLE = @"cmd.exe";
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
@@ -58,6 +62,11 @@ namespace pwiz.Skyline.Model.Carafe
         private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
         private const string SPACE = TextUtil.SPACE;
         private const string TAB = "\t";
+
+        internal TextWriter Writer { get; }
+
+        public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
+
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private LibraryHelper LibraryHelper { get; set; }
         public string AmbiguousMatchesMessage
@@ -93,33 +102,34 @@ namespace pwiz.Skyline.Model.Carafe
             PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
                 PythonVirtualEnvironmentName);
         private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE, LibraryHelper.TimeStamp);
-        private string JavaDir => Path.Combine(RootDir, JAVA);
-        private string CarafeDir => Path.Combine(RootDir, CARAFE);
+        private string JavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JAVA);
+        private string CarafeDir => Path.Combine(RootDir, CARAFE); 
+        private string CarafeJavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
+        private DirectoryInfo CarafeJavaDirInfo => new DirectoryInfo(CarafeJavaDir);
         private DirectoryInfo CarafeDirInfo => new DirectoryInfo(CarafeDir);
         private string JavaSdkDownloadFileName => @"jdk-21_windows-x64_bin.zip";
         private Uri JavaSdkUri => new Uri(JAVA_SDK_DOWNLOAD_URL + JavaSdkDownloadFileName);
         private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
         private string JavaExecutablePath { get; set; }
         private string CarafeFileBaseName => CARAFE + HYPHEN + CARAFE_VERSION;
-        private string CarafeJarZipFileName => CarafeFileBaseName + DOT_ZIP;
+        private string CarafeJarZipFileName => CarafeFileBaseName + CARAFE_DEV_VERSION + DOT_ZIP;
         private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
-
         private Uri CarafeJarZipDownloadUrl =
-            new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/{CARAFE}-{CARAFE_VERSION}-beta{DOT_ZIP}"); 
+            new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/{CARAFE}-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}"); 
 
-        //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
+        //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}-dev/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
         private Uri CarafeJarZipUri => new Uri(CarafeJarZipDownloadUrl + CarafeJarZipFileName);
         private string CarafeJarZipLocalPath => Path.Combine(UserDir, DOWNLOADS, CarafeJarZipFileName);
         private Uri CarafeJarZipLocalUri => new Uri(@$"file:///{CarafeJarZipLocalPath}");
-        private string CarafeJarZipDownloadPath => Path.Combine(CarafeDir, CarafeJarZipFileName);
+        private string CarafeJarZipDownloadPath => Path.Combine(CarafeJavaDir, CarafeJarZipFileName);
         private string CarafeOutputLibraryDir => Path.Combine(CarafeDir, OUTPUT_LIBRARY);
         private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME);
 
         public string BuilderLibraryPath => CarafeOutputLibraryFilePath;
 
-        private string CarafeJarFileDir => Path.Combine(CarafeDir, CarafeFileBaseName);
+        private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName + CARAFE_DEV);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
         private string InputFileName => INPUT + TextUtil.UNDERSCORE + TextUtil.EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
@@ -159,7 +169,7 @@ namespace pwiz.Skyline.Model.Carafe
                 new ArgumentAndValue(@"rf_rt_win", @"1", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"rf", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"seed", @"2000", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN),
+                new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"skyline", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"tf", @"all", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"valid", string.Empty, TextUtil.HYPHEN),
@@ -199,14 +209,13 @@ namespace pwiz.Skyline.Model.Carafe
             string pythonVirtualEnvironmentScriptsDir,
             string experimentDataFilePath,
             string proteinDatabaseFilePath,
-            SrmDocument document)
+            SrmDocument document,
+            TextWriter textWriter)
         {
             Document = document;
-            Directory.CreateDirectory(RootDir);
-            Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(CarafeDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            LibraryHelper = new LibraryHelper(InputFilePath);
+            LibraryHelper = new LibraryHelper(InputFilePath, experimentDataFilePath);
+            Writer = textWriter;
             ProteinDatabaseFilePath = proteinDatabaseFilePath;
             PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
@@ -215,7 +224,8 @@ namespace pwiz.Skyline.Model.Carafe
             Document = document;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(CarafeDir);
+            //Directory.CreateDirectory(CarafeDir);
+            Directory.CreateDirectory(CarafeJavaDir);
             //ExperimentDataTuningFilePath = experimentDataTuningFilePath;            
         }
 
@@ -240,7 +250,9 @@ namespace pwiz.Skyline.Model.Carafe
             Document = document;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(CarafeDir);
+            //Directory.CreateDirectory(CarafeDir);
+            Directory.CreateDirectory(CarafeJavaDir);
+
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -261,19 +273,27 @@ namespace pwiz.Skyline.Model.Carafe
 
         private void RunCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            progressStatus = progressStatus.ChangeSegments(0, 3);
+            //progressStatus = progressStatus.ChangeSegments(0, 3);
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Executing carafe")
+                .ChangePercentComplete(0));
 
             SetupJavaEnvironment(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
+            //progressStatus = progressStatus.NextSegment();
             //if (BuildLibraryForCurrentSkylineDocument)
             //{
-                LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"carafe");
+               LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"carafe");
+              // progressStatus = progressStatus.NextSegment();
+
             //}
             ExecuteCarafe(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
+            //progressStatus = progressStatus.NextSegment();
 
             ImportSpectralLibrary(progress, ref progressStatus);
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
         }
+
         private void SetupJavaEnvironment(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
@@ -292,6 +312,9 @@ namespace pwiz.Skyline.Model.Carafe
                 // clean java dir
                 JavaDirInfo.Delete(true);
                 Directory.CreateDirectory(JavaDir);
+                
+                CarafeJavaDirInfo.Delete(true);
+                Directory.CreateDirectory(CarafeJavaDir);
 
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
@@ -308,8 +331,10 @@ namespace pwiz.Skyline.Model.Carafe
             if (!isCarafeValid)
             {
                 // clean carafe dir
-                CarafeDirInfo.Delete(true);
-                Directory.CreateDirectory(CarafeDir);
+                CarafeJavaDirInfo.Delete(true);
+                Directory.CreateDirectory(RootDir);
+                Directory.CreateDirectory(CarafeJavaDir);
+
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
@@ -319,7 +344,7 @@ namespace pwiz.Skyline.Model.Carafe
 
                 // unzip carafe jar package
                 using var carafeJarZip = ZipFile.Read(CarafeJarZipDownloadPath);
-                carafeJarZip.ExtractAll(CarafeDir);
+                carafeJarZip.ExtractAll(CarafeJavaDir);
             }
 
 
@@ -365,12 +390,15 @@ namespace pwiz.Skyline.Model.Carafe
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(@"Executing carafe")
-                .ChangePercentComplete(0));
+                .ChangePercentComplete(-1));
 
          
             // compose carafe cmd command arguments to build library
             var args = new StringBuilder();
-        
+
+            var cmdBuilder = new StringBuilder();
+            CancellationToken cancelToken = CancellationToken.None;
+
             // add activate python virtual env command
             args.Append(PythonVirtualEnvironmentActivateScriptPath);
             args.Append(SPACE);
@@ -387,28 +415,43 @@ namespace pwiz.Skyline.Model.Carafe
                 args.Append(arg).Append(SPACE);
             }
 
+            cmdBuilder.Append(args).Append(SPACE);
+
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO,
+                cmdBuilder, TextUtil.AMPERSAND);
+           
+            cmd += string.Format(
+                ToolsResources
+                    .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
+                ECHO, TextUtil.AMPERSAND);
+            
+            cmd += cmdBuilder;
+
+            string batPath = Path.Combine(RootDir, "runCarafe.bat");
+            File.WriteAllText(batPath, cmd);
+
             // execute command
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(CMD_EXECUTABLE)
+            var psi = new ProcessStartInfo() 
             {
+                FileName = batPath,
                 CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                RedirectStandardInput = true
+                UseShellExecute = false
             };
+
             try
             {
-                pr.Run(psi, args.ToString(), progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+                pr.EnableImmediateLog = true;
+                pr.Run(psi, string.Empty, progress, ref progressStatus, Writer, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {
-                // TODO(xgwang): update this exception to an Carafe specific one
                 throw new Exception(@"Failed to build library by executing carafe", ex);
             }
 
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
+
         }
 
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)

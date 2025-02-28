@@ -23,12 +23,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
@@ -53,6 +55,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string LIBRARY_TYPE = @"Library Type";
         private const string LIBRARY_PROBABILITY_SCORE = @"Library Probability Score";
         private const string PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS = @"Peptide Modified Sequence Unimod Ids";
+        private const string BEST_RT = @"Best Retention Time";
+        private const string MIN_RT = @"Min Start Time";
+        private const string MAX_RT = @"Max End Time";
+        private const string IONMOB_MS1 = @"Ion Mobility MS1";
+        private const string APEX_SPECTRUM_ID = @"Apex Spectrum ID Fragment"; 
+        private const string FILE_NAME = @"File Name";
+        private const string Q_VALUE = @"Detection Q Value";
 
         private static readonly DateTime _nowTime = DateTime.Now;
 
@@ -62,12 +71,15 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         }
 
         public string InputFilePath { get; private set; }
+        public static string DataFilePath { get; private set; }
+
         private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
         private static readonly IEnumerable<string> PrecursorTableColumnNamesCarafe = 
             new[] 
             { 
                 PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
-                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS
+                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS, BEST_RT, MIN_RT, 
+                MAX_RT, IONMOB_MS1, APEX_SPECTRUM_ID, FILE_NAME, Q_VALUE
             };
 
         private static IList<ModificationIndex> carafeSupportedModificationIndices =>
@@ -102,10 +114,17 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             return modList;
         }
-        public LibraryHelper(string inputFilePath)
+        public LibraryHelper(string inputFilePath, string dataFilePath = null)
         {
             InputFilePath = inputFilePath;
+            DataFilePath = dataFilePath;
+        }
 
+        public static string GetDataFileName()
+        {
+            if (DataFilePath.IsNullOrEmpty())
+                return "";
+            return Path.GetFileName(DataFilePath);
         }
         public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
@@ -231,12 +250,20 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
                         var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";
                         var unimodSequence = modifiedSequence.ToString();
+                        var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime;
+                        var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime;
+                        var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime;
+                        string ionmob_ms1 = (bool) docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.HasValue ? 
+                            docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : @"#N/A";
+                        var apex_psm = @"unknown";//docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
+                        var filename = LibraryHelper.GetDataFileName();
 
-                        result.Add(string.Join(TAB, new[]
+                        result.Add(string.Join(TAB, new object[]
                             {
                                 precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
                                 docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
-                                note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds
+                                note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds,
+                                best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore
                             })
                         );
                     }
@@ -421,12 +448,14 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
-        {            Document = document;
+        {            
+            Document = document;
             Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
         }
+
 
         public bool BuildLibrary(IProgressMonitor progress)
         {

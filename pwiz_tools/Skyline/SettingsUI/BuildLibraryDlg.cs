@@ -101,7 +101,7 @@ namespace pwiz.Skyline.SettingsUI
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
         internal const string CARAFE_PYTHON_VERSION = @"3.9.13";
         private const string CARAFE = @"carafe";
-        private const string WORKSPACES = @"workspaces";
+        private const string ALPHAPEPTDEEP_DIA_DIR = @"Documents/pwiz-CarafeSupport-Feb262025/"+ALPHAPEPTDEEP_DIA;
         private const string PEPTDEEP = @"peptdeep";
 
         private static readonly IFormView[] TAB_PAGES =
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.SettingsUI
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(CARAFE_PYTHON_VERSION, CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         // TODO(xgwang): update this to the ssh link to the remote repo
-        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
+        private string AlphapeptdeepDiaRepo = @"https://github.com/wenbostar/alphapeptdeep_dia";
         // TODO(xgwang): update this to user input value from the dlg
         private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
@@ -343,7 +343,7 @@ namespace pwiz.Skyline.SettingsUI
                             return false;
                         }
                         Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, ProteinDatabaseFilePath, DocumentUI);
+                            msMsDataFilePath, ProteinDatabaseFilePath, DocumentUI, _skylineWindow.GetTextWriter());
 
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }
@@ -614,10 +614,11 @@ namespace pwiz.Skyline.SettingsUI
             var packages = new List<PythonPackage>()
             {
                 new PythonPackage
-                    { Name = PEPTDEEP, Version = @$"git+file:///{AlphapeptdeepDiaRepo.Replace('\\', '/')}" },
+                    { Name = PEPTDEEP, Version = @$"git+{AlphapeptdeepDiaRepo}" },
                 new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
                 new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
                 new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
+                new PythonPackage { Name = @"torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null },
                 new PythonPackage { Name = @"wheel", Version = null }
             };
 
@@ -625,13 +626,18 @@ namespace pwiz.Skyline.SettingsUI
                 pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(), CARAFE);
             else
                 pythonInstaller.ClearPendingTasks();
-
+            Cursor = Cursors.WaitCursor;
+            btnNext.Enabled = false;
             if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
             {
+                Cursor = Cursors.Default;
+                btnNext.Enabled = true;
                 return true;
             }
             else if (!createDlg)
             {
+                Cursor = Cursors.Default;
+                btnNext.Enabled = true;
                 return false;
             }
 
@@ -667,12 +673,16 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     PythonDlg.Dispose();
                     PythonInstallerUI.Dispose();
+                    Cursor = Cursors.Default;
+                    btnNext.Enabled = true;
                     return false;
                 }
                 PythonInstallerUI.Dispose();
 
             }
             if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
+            Cursor = Cursors.Default;
+            btnNext.Enabled = true;
             return true;
        
         }

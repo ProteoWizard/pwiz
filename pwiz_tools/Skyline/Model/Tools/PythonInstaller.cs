@@ -877,9 +877,11 @@ namespace pwiz.Skyline.Model.Tools
                         break;
                 }
             }
-            catch 
+            catch (Exception ex)
             {
-                return;
+                string error = $@"Unexpected error: {ex.Message}";
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
+                    error));
             }
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);

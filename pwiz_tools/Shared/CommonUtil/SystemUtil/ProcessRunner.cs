@@ -145,7 +145,7 @@ namespace pwiz.Common.SystemUtil
             {
                 sbOutput = new StringBuilder();
                 writer = new StringWriter(sbOutput);
-            }
+            } 
 
             try
             {
@@ -155,11 +155,8 @@ namespace pwiz.Common.SystemUtil
                 string line;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
-                    if (EnableImmediateLog)
-                        Messages.WriteAsyncUserMessage(line);
-
-                    if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
-                        writer.WriteLine(line);
+                    if (EnableImmediateLog && writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
+                        writer.WriteLineAsync(line);
 
                     string lineLower = line.ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
