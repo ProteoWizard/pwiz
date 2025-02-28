@@ -728,8 +728,7 @@ namespace pwiz.Skyline.Model.Koina.Models
                     intensities1All.Add(s1[matchIndex1++].Intensity);
                     intensities2All.Add(s2[matchIndex2++].Intensity);
                 }
-
-                if (mz1 < mz2)
+                else if (mz1 < mz2)
                 {
                     if (!ignoreMismatches1)
                     {
@@ -738,7 +737,8 @@ namespace pwiz.Skyline.Model.Koina.Models
                     }
                     matchIndex1++;
                 }
-                else{
+                else
+                {
                     if (!ignoreMismatches2)
                     {
                         intensities1All.Add(0.0);
