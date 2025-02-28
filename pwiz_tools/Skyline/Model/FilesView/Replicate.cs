@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model.FilesView
             _chromatogramSet = document.MeasuredResults?.FindChromatogramSet(chromSetId);
         }
 
-        public override string Name => _chromatogramSet.Name ?? "#DELETED#";
+        public override string Name => _chromatogramSet.Name ?? string.Empty;
         public override string FilePath => null;
         public override string FileName => null;
         public override IList<FileNode> Files

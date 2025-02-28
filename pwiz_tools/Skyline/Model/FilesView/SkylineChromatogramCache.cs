@@ -20,17 +20,15 @@ namespace pwiz.Skyline.Model.FilesView
 {
     public class SkylineChromatogramCache : FileNode
     {
-        // TODO: make a temporary Id for ChromatogramCache, which doesn't have one of its own
+        // TODO: this is a temporary Id for ChromatogramCache, which doesn't have one of its own
         private class ChromatogramCacheId : Identity { }
 
         private readonly string _documentPath;
-        private readonly string _cachePath;
 
-        public SkylineChromatogramCache(SrmDocument document, string documentPath, string cachePath) : 
+        public SkylineChromatogramCache(SrmDocument document, string documentPath) : 
             base(document, new IdentityPath(new ChromatogramCacheId()), ImageId.cache_file)
         {
             _documentPath = documentPath;
-            _cachePath = cachePath;
         }
 
         public override string Name => FilesView.FilesTree_TreeNodeLabel_ChromatogramCache;

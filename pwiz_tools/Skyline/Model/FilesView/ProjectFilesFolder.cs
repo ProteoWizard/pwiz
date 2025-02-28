@@ -47,14 +47,14 @@ namespace pwiz.Skyline.Model.FilesView
                 files.Add(new SkylineViewFile(Document, _documentPath));
 
                 // Chromatogram Caches (.skyd)
-                // TODO: is this correct? Cache files created in MeasuredResults @ line 1640
-                // TODO: does this need to check if the file exists?
+                // TODO: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
+                // TODO: does this also need to check if the file exists?
                 var cachePaths = Document.Settings.MeasuredResults?.CachePaths;
                 if (cachePaths != null)
                 {
-                    foreach (var cachePath in cachePaths)
+                    foreach (var _ in cachePaths)
                     {
-                        files.Add(new SkylineChromatogramCache(Document, _documentPath, cachePath));
+                        files.Add(new SkylineChromatogramCache(Document, _documentPath));
                     }
                 }
 
