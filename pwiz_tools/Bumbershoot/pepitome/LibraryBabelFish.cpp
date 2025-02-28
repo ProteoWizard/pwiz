@@ -331,7 +331,8 @@ namespace freicore
             while(numAttempts < 100 && !foundDecoy)
             {
                 stringstream shuffledPeptide;
-                std::random_shuffle(movableAAs.begin(),movableAAs.end());
+                std::mt19937 rng(0);
+                std::shuffle(movableAAs.begin(), movableAAs.end(), rng);
                 size_t repeat = 0;
                 size_t nonRepeat = 0;
                 size_t randomAAIndex = 0;
@@ -376,7 +377,8 @@ namespace freicore
             {
                 vector<string> aminoAcids = boost::assign::list_of("A")("R")("N")("D")("C")("E")("Q")("G")("H")("I")("L")("K")("M")("F")("P")("S")("T")("U")("W")("Y")("V");
                 //{"A","R","N","D","E","Q","G","H","I","L","M","F","P","S","T","U","W","Y","V"};
-                std::random_shuffle(aminoAcids.begin(),aminoAcids.end());
+                std::mt19937 rng(0);
+                std::shuffle(aminoAcids.begin(), aminoAcids.end(), rng);
                 vector<string> saltedPeptide;
                 saltedPeptide.push_back(peptide[0]);
                 saltedPeptide.push_back(aminoAcids[0]);

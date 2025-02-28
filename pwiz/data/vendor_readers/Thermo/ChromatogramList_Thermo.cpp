@@ -485,7 +485,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
     }
 
     /*ostringstream imStream;
-    std::auto_ptr<LabelValueArray> imArray = rawfile_->getInstrumentMethods();
+    std::unique_ptr<LabelValueArray> imArray = rawfile_->getInstrumentMethods();
     for(size_t i=0, end=imArray->size(); i < end; ++i)
         imStream << imArray->label(i) << imArray->value(i) << endl;
     string im = imStream.str();

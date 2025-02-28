@@ -25,6 +25,38 @@
 
 using expat : 2.0.1 : $(EXPAT_SOURCE) ;
 
+searched-lib arrow
+    : # sources
+    : # requirements
+        <name>arrow
+        <search>$(PWIZ_LIBRARIES_PATH)/arrow
+        <include>$(PWIZ_LIBRARIES_PATH)/arrow/include
+        <conditional>@msvc-requirement
+        #<runtime-debugging>on:<build>no
+    : # default-build
+    : # usage-requirements
+        <include>$(PWIZ_LIBRARIES_PATH)/arrow/include
+    ;
+
+searched-lib parquet
+    : # sources
+    : # requirements
+        <name>parquet
+        <search>$(PWIZ_LIBRARIES_PATH)/arrow
+        <include>$(PWIZ_LIBRARIES_PATH)/arrow/include
+        <library>arrow
+        <conditional>@msvc-requirement
+        #<runtime-debugging>on:<build>no
+    : # default-build
+    : # usage-requirements
+        <include>$(PWIZ_LIBRARIES_PATH)/arrow/include
+        <library>arrow
+    ;
+
+install install-parquet : parquet arrow ;
+explicit parquet arrow install-parquet ;
+
+
 # use a rule to return <define>__LINUX__ based on the value of OS
 rule define-os ( properties * )
 {
@@ -102,6 +134,34 @@ rule waters-api-usage-requirements ( properties * )
     return $(result) ;
 }
 
+rule parquet-api-requirements ( properties * )
+{
+    local result ;
+
+    if <toolset>msvc in $(properties) && <runtime-debugging>off in $(properties)
+    {
+        result += <define>USE_PARQUET_READER ;
+        result += <dependency>install-parquet ;
+    }
+
+    # include parquet even for Linux and debug builds because it will compile, it just won't run
+    result += <library>parquet ;
+
+    return $(result) ;
+}
+
+rule parquet-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)  
+    {
+        # include parquet even for debug builds because it will compile, it just won't run
+        result += <library>parquet ;
+        result += <dependency>install-parquet ;
+    }
+    return $(result) ;
+}
+
 
 # some properties for all
 project 
@@ -162,6 +222,7 @@ lib blibbuild
     <link>static
     <conditional>@mascot-api-requirements
     <conditional>@waters-define
+    <conditional>@parquet-api-requirements
     <dependency>unimod_2.xsd
     <dependency>quantitation_1.xsd
     <dependency>quantitation_2.xsd
@@ -173,6 +234,7 @@ lib blibbuild
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
     <conditional>@waters-api-usage-requirements
+    <conditional>@parquet-api-usage-requirements
     <library>$(PWIZ_ROOT_PATH)/libraries/SQLite//sqlite3
     $(pwiz-boost-libraries)
     <dependency>modifications.xml
@@ -221,6 +283,8 @@ exe BlibBuild
     <link>static
     <conditional>@mascot-define
     <conditional>@waters-define
+    #<toolset>msvc:<assembly-dependency>$(PWIZ_LIBRARIES_PATH)/arrow/parquet.dll
+    #<toolset>msvc:<assembly-dependency>$(PWIZ_LIBRARIES_PATH)/arrow/arrow.dll
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements

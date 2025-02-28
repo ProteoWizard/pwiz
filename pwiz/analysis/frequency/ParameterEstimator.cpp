@@ -62,11 +62,11 @@ class ParameterEstimatorImpl : public ParameterEstimator
 };
 
 
-auto_ptr<ParameterEstimator> ParameterEstimator::create(const Function& function,
+unique_ptr<ParameterEstimator> ParameterEstimator::create(const Function& function,
                                                                 const Data& data,
                                                                 const Parameters& initialEstimate)
 {
-    return auto_ptr<ParameterEstimator>(new ParameterEstimatorImpl(function, data, initialEstimate));
+    return std::make_unique<ParameterEstimatorImpl>(function, data, initialEstimate);
 }
 
 

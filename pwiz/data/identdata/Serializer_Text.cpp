@@ -593,7 +593,7 @@ void Serializer_Text::Impl::setHeaders(const vector<string>& headers) const
         to_lower(f);
         vector<string>::const_iterator i;
         i=std::find_if(idNames.begin(), idNames.end(),
-                       std::bind2nd(std::equal_to<string>(),f));
+                       std::bind(std::equal_to<string>(), std::placeholders::_1, f));
 
 
         if (i!=idNames.end())

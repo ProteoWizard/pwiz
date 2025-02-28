@@ -91,7 +91,7 @@ void test()
     // create estimator
     
     FrequencyEstimatorPhysicalModel::Config config;
-    auto_ptr<FrequencyEstimatorPhysicalModel> fe(FrequencyEstimatorPhysicalModel::create(config));
+    unique_ptr<FrequencyEstimatorPhysicalModel> fe(FrequencyEstimatorPhysicalModel::create(config));
 
     // get estimate and check answer
 
