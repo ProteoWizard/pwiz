@@ -137,17 +137,16 @@ rule waters-api-usage-requirements ( properties * )
 rule parquet-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)  
-    {
-        if <runtime-debugging>off in $(properties)
-        {
-            result += <define>USE_PARQUET_READER ;
-        }
 
-        # include parquet even for debug builds because it will compile, it just won't run
-        result += <library>parquet ;
+    if <toolset>msvc in $(properties) && <runtime-debugging>off in $(properties)
+    {
+        result += <define>USE_PARQUET_READER ;
         result += <dependency>install-parquet ;
     }
+
+    # include parquet even for Linux and debug builds because it will compile, it just won't run
+    result += <library>parquet ;
+
     return $(result) ;
 }
 
