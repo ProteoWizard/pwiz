@@ -50,7 +50,8 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class ExistingExperimentsTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestExistingExperimentsTutorial()
         {
             // Set true to look at tutorial screenshots.
