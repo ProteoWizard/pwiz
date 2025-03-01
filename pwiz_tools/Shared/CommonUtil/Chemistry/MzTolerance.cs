@@ -85,12 +85,6 @@ namespace pwiz.Common.Chemistry
             return (a >= b - this) && (a <= b + this);
         }
 
-        /// <summary>returns true iff b - a is greater than the value in tolerance (useful for matching sorted mass lists)</summary>
-        public bool LessThanTolerance(double a, double b)
-        {
-            return (a < b - this);
-        }
-
         public string UnitName => Enum.GetName(typeof(Units), Unit);
         public string UnitText => Resources.ResourceManager.GetString(nameof(Units) + "_" + UnitName);
 
