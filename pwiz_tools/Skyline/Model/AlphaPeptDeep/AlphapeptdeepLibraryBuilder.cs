@@ -369,10 +369,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private static readonly DateTime _nowTime = DateTime.Now;
 
-        public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
+        public static readonly string TimeStamp = _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
-        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP, TimeStamp);
+
+        private static readonly string RootDir = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP, TimeStamp);
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
         private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
@@ -439,8 +440,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progressStatus = progressStatus.ChangeSegments(0, 5);
-
-            if (Document.DocumentHash != null) LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+            Directory.CreateDirectory(RootDir);
+            if (Document.DocumentHash != null)
+            {
+                LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+            }
             progressStatus = progressStatus.NextSegment();
 
             PrepareSettingsFile(progress, ref progressStatus);
