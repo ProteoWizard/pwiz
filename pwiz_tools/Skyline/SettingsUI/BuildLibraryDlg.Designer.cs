@@ -68,8 +68,18 @@
             this.tabKoinaSource = new System.Windows.Forms.TabPage();
             this.tabFiles = new System.Windows.Forms.TabPage();
             this.tabLearn = new System.Windows.Forms.TabPage();
+            this.tabControlBuildLibraryTarget = new pwiz.Skyline.Controls.WizardPages();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.labelProteinDatabase = new System.Windows.Forms.Label();
+            this.buttonProteinDatabase = new System.Windows.Forms.Button();
+            this.textBoxProteinDatabase = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
             this.tabWithFiles = new System.Windows.Forms.TabPage();
+            this.labelDoc = new System.Windows.Forms.Label();
+            this.buttonDoc = new System.Windows.Forms.Button();
+            this.textBoxDoc = new System.Windows.Forms.TextBox();
             this.labelMsMsData = new System.Windows.Forms.Label();
             this.buttonMsMsData = new System.Windows.Forms.Button();
             this.textBoxMsMsData = new System.Windows.Forms.TextBox();
@@ -82,12 +92,6 @@
             this.label3 = new System.Windows.Forms.Label();
             this.comboLearnFrom = new System.Windows.Forms.ComboBox();
             this.labelLearnFrom = new System.Windows.Forms.Label();
-            this.tabControlBuildLibraryTarget = new pwiz.Skyline.Controls.WizardPages();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.labelProteinDatabase = new System.Windows.Forms.Label();
-            this.buttonProteinDatabase = new System.Windows.Forms.Button();
-            this.textBoxProteinDatabase = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
             this.comboBuildLibraryTarget = new System.Windows.Forms.ComboBox();
             this.labelBuildLibraryTarget = new System.Windows.Forms.Label();
             this.toolTipProteinDatabase = new System.Windows.Forms.ToolTip(this.components);
@@ -102,12 +106,12 @@
             this.tabKoinaSource.SuspendLayout();
             this.tabFiles.SuspendLayout();
             this.tabLearn.SuspendLayout();
+            this.tabControlBuildLibraryTarget.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.tabControlLearning.SuspendLayout();
             this.tabWithFiles.SuspendLayout();
             this.tabPageDocument.SuspendLayout();
             this.tabPageLibraries.SuspendLayout();
-            this.tabControlBuildLibraryTarget.SuspendLayout();
-            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -402,11 +406,58 @@
             this.tabLearn.Controls.Add(this.tabControlLearning);
             this.tabLearn.Controls.Add(this.comboLearnFrom);
             this.tabLearn.Controls.Add(this.labelLearnFrom);
-            this.tabLearn.Controls.Add(this.tabControlBuildLibraryTarget);
             this.tabLearn.Controls.Add(this.comboBuildLibraryTarget);
             this.tabLearn.Controls.Add(this.labelBuildLibraryTarget);
+            this.tabLearn.Controls.Add(this.tabControlBuildLibraryTarget);
             resources.ApplyResources(this.tabLearn, "tabLearn");
             this.tabLearn.Name = "tabLearn";
+            // 
+            // tabControlBuildLibraryTarget
+            // 
+            resources.ApplyResources(this.tabControlBuildLibraryTarget, "tabControlBuildLibraryTarget");
+            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage2);
+            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage1);
+            this.tabControlBuildLibraryTarget.Name = "tabControlBuildLibraryTarget";
+            this.tabControlBuildLibraryTarget.SelectedIndex = 0;
+            this.tabControlBuildLibraryTarget.TabStop = false;
+            // 
+            // tabPage2
+            // 
+            this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage2.Controls.Add(this.labelProteinDatabase);
+            this.tabPage2.Controls.Add(this.buttonProteinDatabase);
+            this.tabPage2.Controls.Add(this.textBoxProteinDatabase);
+            this.tabPage2.Controls.Add(this.label6);
+            resources.ApplyResources(this.tabPage2, "tabPage2");
+            this.tabPage2.Name = "tabPage2";
+            // 
+            // labelProteinDatabase
+            // 
+            resources.ApplyResources(this.labelProteinDatabase, "labelProteinDatabase");
+            this.labelProteinDatabase.Name = "labelProteinDatabase";
+            // 
+            // buttonProteinDatabase
+            // 
+            resources.ApplyResources(this.buttonProteinDatabase, "buttonProteinDatabase");
+            this.buttonProteinDatabase.Name = "buttonProteinDatabase";
+            this.buttonProteinDatabase.UseVisualStyleBackColor = true;
+            this.buttonProteinDatabase.Click += new System.EventHandler(this.buttonProteinDatabase_Click);
+            // 
+            // textBoxProteinDatabase
+            // 
+            resources.ApplyResources(this.textBoxProteinDatabase, "textBoxProteinDatabase");
+            this.textBoxProteinDatabase.Name = "textBoxProteinDatabase";
+            // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
+            // 
+            // tabPage1
+            // 
+            resources.ApplyResources(this.tabPage1, "tabPage1");
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // tabControlLearning
             // 
@@ -421,11 +472,31 @@
             // tabWithFiles
             // 
             this.tabWithFiles.BackColor = System.Drawing.SystemColors.Control;
+            this.tabWithFiles.Controls.Add(this.labelDoc);
+            this.tabWithFiles.Controls.Add(this.buttonDoc);
+            this.tabWithFiles.Controls.Add(this.textBoxDoc);
             this.tabWithFiles.Controls.Add(this.labelMsMsData);
             this.tabWithFiles.Controls.Add(this.buttonMsMsData);
             this.tabWithFiles.Controls.Add(this.textBoxMsMsData);
             resources.ApplyResources(this.tabWithFiles, "tabWithFiles");
             this.tabWithFiles.Name = "tabWithFiles";
+            // 
+            // labelDoc
+            // 
+            resources.ApplyResources(this.labelDoc, "labelDoc");
+            this.labelDoc.Name = "labelDoc";
+            // 
+            // buttonDoc
+            // 
+            resources.ApplyResources(this.buttonDoc, "buttonDoc");
+            this.buttonDoc.Name = "buttonDoc";
+            this.buttonDoc.UseVisualStyleBackColor = true;
+            this.buttonDoc.Click += new System.EventHandler(this.buttonDoc_Click);
+            // 
+            // textBoxDoc
+            // 
+            resources.ApplyResources(this.textBoxDoc, "textBoxDoc");
+            this.textBoxDoc.Name = "textBoxDoc";
             // 
             // labelMsMsData
             // 
@@ -494,7 +565,8 @@
             this.comboLearnFrom.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLearnFrom.FormattingEnabled = true;
             this.comboLearnFrom.Items.AddRange(new object[] {
-            resources.GetString("comboLearnFrom.Items")});
+            resources.GetString("comboLearnFrom.Items"),
+            resources.GetString("comboLearnFrom.Items1")});
             resources.ApplyResources(this.comboLearnFrom, "comboLearnFrom");
             this.comboLearnFrom.Name = "comboLearnFrom";
             this.comboLearnFrom.SelectedIndexChanged += new System.EventHandler(this.comboLearnFrom_SelectedIndexChanged);
@@ -504,52 +576,13 @@
             resources.ApplyResources(this.labelLearnFrom, "labelLearnFrom");
             this.labelLearnFrom.Name = "labelLearnFrom";
             // 
-            // tabControlBuildLibraryTarget
-            // 
-            resources.ApplyResources(this.tabControlBuildLibraryTarget, "tabControlBuildLibraryTarget");
-            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage2);
-            this.tabControlBuildLibraryTarget.Name = "tabControlBuildLibraryTarget";
-            this.tabControlBuildLibraryTarget.SelectedIndex = 0;
-            this.tabControlBuildLibraryTarget.TabStop = false;
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
-            this.tabPage2.Controls.Add(this.labelProteinDatabase);
-            this.tabPage2.Controls.Add(this.buttonProteinDatabase);
-            this.tabPage2.Controls.Add(this.textBoxProteinDatabase);
-            this.tabPage2.Controls.Add(this.label6);
-            resources.ApplyResources(this.tabPage2, "tabPage2");
-            this.tabPage2.Name = "tabPage2";
-            // 
-            // labelProteinDatabase
-            // 
-            resources.ApplyResources(this.labelProteinDatabase, "labelProteinDatabase");
-            this.labelProteinDatabase.Name = "labelProteinDatabase";
-            // 
-            // buttonProteinDatabase
-            // 
-            resources.ApplyResources(this.buttonProteinDatabase, "buttonProteinDatabase");
-            this.buttonProteinDatabase.Name = "buttonProteinDatabase";
-            this.buttonProteinDatabase.UseVisualStyleBackColor = true;
-            this.buttonProteinDatabase.Click += new System.EventHandler(this.buttonProteinDatabase_Click);
-            // 
-            // textBoxProteinDatabase
-            // 
-            resources.ApplyResources(this.textBoxProteinDatabase, "textBoxProteinDatabase");
-            this.textBoxProteinDatabase.Name = "textBoxProteinDatabase";
-            // 
-            // label6
-            // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
-            // 
             // comboBuildLibraryTarget
             // 
             this.comboBuildLibraryTarget.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBuildLibraryTarget.FormattingEnabled = true;
             this.comboBuildLibraryTarget.Items.AddRange(new object[] {
-            resources.GetString("comboBuildLibraryTarget.Items")});
+            resources.GetString("comboBuildLibraryTarget.Items"),
+            resources.GetString("comboBuildLibraryTarget.Items1")});
             resources.ApplyResources(this.comboBuildLibraryTarget, "comboBuildLibraryTarget");
             this.comboBuildLibraryTarget.Name = "comboBuildLibraryTarget";
             this.comboBuildLibraryTarget.SelectedIndexChanged += new System.EventHandler(this.comboBuildLibraryTarget_SelectedIndexChanged);
@@ -589,6 +622,9 @@
             this.tabFiles.PerformLayout();
             this.tabLearn.ResumeLayout(false);
             this.tabLearn.PerformLayout();
+            this.tabControlBuildLibraryTarget.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
+            this.tabPage2.PerformLayout();
             this.tabControlLearning.ResumeLayout(false);
             this.tabWithFiles.ResumeLayout(false);
             this.tabWithFiles.PerformLayout();
@@ -596,9 +632,6 @@
             this.tabPageDocument.PerformLayout();
             this.tabPageLibraries.ResumeLayout(false);
             this.tabPageLibraries.PerformLayout();
-            this.tabControlBuildLibraryTarget.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -668,10 +701,20 @@
         private System.Windows.Forms.ToolTip toolTipProteinDatabase;
         private System.Windows.Forms.ToolTip toolTipTrainingData;
         private System.Windows.Forms.ToolTip toolTipMsMsData;
+        private System.Windows.Forms.Label labelDoc;
+        private System.Windows.Forms.Button buttonDoc;
+        private System.Windows.Forms.TextBox textBoxDoc;
+        private System.Windows.Forms.TabPage tabPage1;
+
         internal string TextBoxMsMsDataFile
         {
             get => textBoxMsMsData.Text;
             set => textBoxMsMsData.Text = value;
+        }
+        internal string TextBoxDocumentFile
+        {
+            get => textBoxDoc.Text;
+            set => textBoxDoc.Text = value;
         }
     }
 }

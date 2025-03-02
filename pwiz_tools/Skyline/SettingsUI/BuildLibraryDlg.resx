@@ -122,14 +122,10 @@
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="textName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 38</value>
-  </data>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="textName.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 25</value>
   </data>
   <data name="textName.Size" type="System.Drawing.Size, System.Drawing">
-    <value>398, 26</value>
+    <value>267, 20</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.TabIndex" type="System.Int32, mscorlib">
@@ -157,13 +153,10 @@
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 14</value>
-  </data>
-  <data name="label4.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>3, 9</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>55, 20</value>
+    <value>38, 13</value>
   </data>
   <data name="label4.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -183,17 +176,15 @@
   <data name="&gt;&gt;label4.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="btnCancel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>738, 555</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>492, 361</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -217,13 +208,10 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnNext.Location" type="System.Drawing.Point, System.Drawing">
-    <value>616, 555</value>
-  </data>
-  <data name="btnNext.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>411, 361</value>
   </data>
   <data name="btnNext.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnNext.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -247,13 +235,10 @@
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 109</value>
-  </data>
-  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>3, 71</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>98, 20</value>
+    <value>66, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -277,13 +262,10 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="textPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 134</value>
-  </data>
-  <data name="textPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 87</value>
   </data>
   <data name="textPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>709, 26</value>
+    <value>474, 20</value>
   </data>
   <data name="textPath.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -308,13 +290,10 @@ library will be created.</value>
     <value>True</value>
   </data>
   <data name="iRTPeptidesLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 395</value>
-  </data>
-  <data name="iRTPeptidesLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>9, 257</value>
   </data>
   <data name="iRTPeptidesLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>169, 20</value>
+    <value>114, 13</value>
   </data>
   <data name="iRTPeptidesLabel.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -341,13 +320,10 @@ library will be created.</value>
     <value>NoControl</value>
   </data>
   <data name="ceLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 6</value>
-  </data>
-  <data name="ceLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>6, 4</value>
   </data>
   <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 20</value>
+    <value>32, 13</value>
   </data>
   <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -368,13 +344,10 @@ library will be created.</value>
     <value>0</value>
   </data>
   <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 31</value>
-  </data>
-  <data name="ceCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 20</value>
   </data>
   <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 28</value>
+    <value>122, 21</value>
   </data>
   <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -398,13 +371,10 @@ library will be created.</value>
     <value>NoControl</value>
   </data>
   <data name="actionLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 8</value>
-  </data>
-  <data name="actionLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>3, 5</value>
   </data>
   <data name="actionLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>58, 20</value>
+    <value>40, 13</value>
   </data>
   <data name="actionLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -434,13 +404,10 @@ library will be created.</value>
     <value>Append</value>
   </data>
   <data name="comboAction.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 32</value>
-  </data>
-  <data name="comboAction.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 21</value>
   </data>
   <data name="comboAction.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 28</value>
+    <value>121, 21</value>
   </data>
   <data name="comboAction.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -469,13 +436,10 @@ of the redundant library data.</value>
     <value>NoControl</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 120</value>
-  </data>
-  <data name="cbIncludeAmbiguousMatches.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 78</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.Size" type="System.Drawing.Size, System.Drawing">
-    <value>234, 24</value>
+    <value>165, 21</value>
   </data>
   <data name="cbIncludeAmbiguousMatches.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -505,13 +469,10 @@ of the redundant library data.</value>
     <value>NoControl</value>
   </data>
   <data name="cbKeepRedundant.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 85</value>
-  </data>
-  <data name="cbKeepRedundant.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 55</value>
   </data>
   <data name="cbKeepRedundant.Size" type="System.Drawing.Size, System.Drawing">
-    <value>194, 24</value>
+    <value>139, 21</value>
   </data>
   <data name="cbKeepRedundant.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -542,13 +503,10 @@ you can append more spectra in the future.</value>
     <value>NoControl</value>
   </data>
   <data name="cbFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 155</value>
-  </data>
-  <data name="cbFilter.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 101</value>
   </data>
   <data name="cbFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>233, 24</value>
+    <value>163, 21</value>
   </data>
   <data name="cbFilter.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -572,13 +530,10 @@ you can append more spectra in the future.</value>
     <value>4</value>
   </data>
   <data name="comboStandards.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 420</value>
-  </data>
-  <data name="comboStandards.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>9, 273</value>
   </data>
   <data name="comboStandards.Size" type="System.Drawing.Size, System.Drawing">
-    <value>284, 28</value>
+    <value>191, 21</value>
   </data>
   <data name="comboStandards.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -599,13 +554,10 @@ you can append more spectra in the future.</value>
     <value>True</value>
   </data>
   <data name="radioCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 100</value>
-  </data>
-  <data name="radioCarafeSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 65</value>
   </data>
   <data name="radioCarafeSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>82, 24</value>
+    <value>63, 20</value>
   </data>
   <data name="radioCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -629,13 +581,10 @@ you can append more spectra in the future.</value>
     <value>True</value>
   </data>
   <data name="radioAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 65</value>
-  </data>
-  <data name="radioAlphaSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 42</value>
   </data>
   <data name="radioAlphaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>147, 24</value>
+    <value>107, 20</value>
   </data>
   <data name="radioAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -662,13 +611,10 @@ you can append more spectra in the future.</value>
     <value>True</value>
   </data>
   <data name="koinaInfoSettingsBtn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>189, 138</value>
-  </data>
-  <data name="koinaInfoSettingsBtn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>126, 90</value>
   </data>
   <data name="koinaInfoSettingsBtn.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 20</value>
+    <value>68, 13</value>
   </data>
   <data name="koinaInfoSettingsBtn.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -695,13 +641,10 @@ you can append more spectra in the future.</value>
     <value>NoControl</value>
   </data>
   <data name="radioKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 135</value>
-  </data>
-  <data name="radioKoinaSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 88</value>
   </data>
   <data name="radioKoinaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>74, 24</value>
+    <value>59, 20</value>
   </data>
   <data name="radioKoinaSource.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -725,13 +668,10 @@ you can append more spectra in the future.</value>
     <value>True</value>
   </data>
   <data name="radioFilesSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 29</value>
-  </data>
-  <data name="radioFilesSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 19</value>
   </data>
   <data name="radioFilesSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 24</value>
+    <value>53, 20</value>
   </data>
   <data name="radioFilesSource.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -752,16 +692,10 @@ you can append more spectra in the future.</value>
     <value>4</value>
   </data>
   <data name="dataSourceGroupBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 191</value>
-  </data>
-  <data name="dataSourceGroupBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="dataSourceGroupBox.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 124</value>
   </data>
   <data name="dataSourceGroupBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>300, 180</value>
+    <value>200, 117</value>
   </data>
   <data name="dataSourceGroupBox.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -785,13 +719,10 @@ you can append more spectra in the future.</value>
     <value>Top, Right</value>
   </data>
   <data name="btnBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>729, 131</value>
-  </data>
-  <data name="btnBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>486, 85</value>
   </data>
   <data name="btnBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnBrowse.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -815,16 +746,13 @@ you can append more spectra in the future.</value>
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="gridInputFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 38</value>
-  </data>
-  <data name="gridInputFiles.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 25</value>
   </data>
   <data name="gridInputFiles.RowHeadersWidth" type="System.Int32, mscorlib">
     <value>62</value>
   </data>
   <data name="gridInputFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>690, 543</value>
+    <value>460, 353</value>
   </data>
   <data name="gridInputFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -845,13 +773,10 @@ you can append more spectra in the future.</value>
     <value>Top, Right</value>
   </data>
   <data name="btnAddPaths.Location" type="System.Drawing.Point, System.Drawing">
-    <value>708, 128</value>
-  </data>
-  <data name="btnAddPaths.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>472, 83</value>
   </data>
   <data name="btnAddPaths.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 35</value>
+    <value>93, 23</value>
   </data>
   <data name="btnAddPaths.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -875,13 +800,10 @@ you can append more spectra in the future.</value>
     <value>True</value>
   </data>
   <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 14</value>
-  </data>
-  <data name="label7.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>6, 9</value>
   </data>
   <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>87, 20</value>
+    <value>58, 13</value>
   </data>
   <data name="label7.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -905,13 +827,10 @@ you can append more spectra in the future.</value>
     <value>Top, Right</value>
   </data>
   <data name="btnAddDirectory.Location" type="System.Drawing.Point, System.Drawing">
-    <value>708, 83</value>
-  </data>
-  <data name="btnAddDirectory.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>472, 54</value>
   </data>
   <data name="btnAddDirectory.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 35</value>
+    <value>93, 23</value>
   </data>
   <data name="btnAddDirectory.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -939,13 +858,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>Top, Right</value>
   </data>
   <data name="btnAddFile.Location" type="System.Drawing.Point, System.Drawing">
-    <value>708, 38</value>
-  </data>
-  <data name="btnAddFile.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>472, 25</value>
   </data>
   <data name="btnAddFile.Size" type="System.Drawing.Size, System.Drawing">
-    <value>140, 35</value>
+    <value>93, 23</value>
   </data>
   <data name="btnAddFile.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -975,13 +891,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>False</value>
   </data>
   <data name="btnPrevious.Location" type="System.Drawing.Point, System.Drawing">
-    <value>495, 555</value>
-  </data>
-  <data name="btnPrevious.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>330, 361</value>
   </data>
   <data name="btnPrevious.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnPrevious.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1008,16 +921,13 @@ You can uncheck ones you do not want added to the library.</value>
     <value>Top, Left, Right</value>
   </data>
   <data name="tabFilesSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabFilesSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabFilesSource.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFilesSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>493, 207</value>
+    <value>326, 130</value>
   </data>
   <data name="tabFilesSource.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1038,13 +948,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>0</value>
   </data>
   <data name="tabAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabAlphaSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabAlphaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>493, 207</value>
+    <value>326, 130</value>
   </data>
   <data name="tabAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1065,13 +972,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>1</value>
   </data>
   <data name="tabCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabCarafeSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabCarafeSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>493, 207</value>
+    <value>326, 130</value>
   </data>
   <data name="tabCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1092,16 +996,13 @@ You can uncheck ones you do not want added to the library.</value>
     <value>2</value>
   </data>
   <data name="tabKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabKoinaSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabKoinaSource.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabKoinaSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>493, 207</value>
+    <value>326, 130</value>
   </data>
   <data name="tabKoinaSource.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1122,13 +1023,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>3</value>
   </data>
   <data name="tabControlDataSource.Location" type="System.Drawing.Point, System.Drawing">
-    <value>339, 191</value>
-  </data>
-  <data name="tabControlDataSource.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>226, 124</value>
   </data>
   <data name="tabControlDataSource.Size" type="System.Drawing.Size, System.Drawing">
-    <value>501, 240</value>
+    <value>334, 156</value>
   </data>
   <data name="tabControlDataSource.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -1146,16 +1044,13 @@ You can uncheck ones you do not want added to the library.</value>
     <value>0</value>
   </data>
   <data name="tabProperties.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabProperties.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabProperties.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabProperties.Size" type="System.Drawing.Size, System.Drawing">
-    <value>860, 509</value>
+    <value>571, 326</value>
   </data>
   <data name="tabProperties.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1176,16 +1071,13 @@ You can uncheck ones you do not want added to the library.</value>
     <value>0</value>
   </data>
   <data name="tabFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabFiles.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabFiles.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>860, 509</value>
+    <value>571, 326</value>
   </data>
   <data name="tabFiles.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1208,6 +1100,90 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="tabControlLearning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="labelDoc.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelDoc.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelDoc.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 51</value>
+  </data>
+  <data name="labelDoc.Size" type="System.Drawing.Size, System.Drawing">
+    <value>126, 13</value>
+  </data>
+  <data name="labelDoc.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="labelDoc.Text" xml:space="preserve">
+    <value>&amp;Skyline tuning document:</value>
+  </data>
+  <data name="&gt;&gt;labelDoc.Name" xml:space="preserve">
+    <value>labelDoc</value>
+  </data>
+  <data name="&gt;&gt;labelDoc.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelDoc.Parent" xml:space="preserve">
+    <value>tabWithFiles</value>
+  </data>
+  <data name="&gt;&gt;labelDoc.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="buttonDoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="buttonDoc.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonDoc.Location" type="System.Drawing.Point, System.Drawing">
+    <value>470, 65</value>
+  </data>
+  <data name="buttonDoc.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="buttonDoc.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="buttonDoc.Text" xml:space="preserve">
+    <value>&amp;Browse...</value>
+  </data>
+  <data name="&gt;&gt;buttonDoc.Name" xml:space="preserve">
+    <value>buttonDoc</value>
+  </data>
+  <data name="&gt;&gt;buttonDoc.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;buttonDoc.Parent" xml:space="preserve">
+    <value>tabWithFiles</value>
+  </data>
+  <data name="&gt;&gt;buttonDoc.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="textBoxDoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="textBoxDoc.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 67</value>
+  </data>
+  <data name="textBoxDoc.Size" type="System.Drawing.Size, System.Drawing">
+    <value>455, 20</value>
+  </data>
+  <data name="textBoxDoc.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;textBoxDoc.Name" xml:space="preserve">
+    <value>textBoxDoc</value>
+  </data>
+  <data name="&gt;&gt;textBoxDoc.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;textBoxDoc.Parent" xml:space="preserve">
+    <value>tabWithFiles</value>
+  </data>
+  <data name="&gt;&gt;textBoxDoc.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="labelMsMsData.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1215,13 +1191,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>NoControl</value>
   </data>
   <data name="labelMsMsData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 8</value>
-  </data>
-  <data name="labelMsMsData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>4, 5</value>
   </data>
   <data name="labelMsMsData.Size" type="System.Drawing.Size, System.Drawing">
-    <value>101, 20</value>
+    <value>71, 13</value>
   </data>
   <data name="labelMsMsData.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -1239,7 +1212,7 @@ You can uncheck ones you do not want added to the library.</value>
     <value>tabWithFiles</value>
   </data>
   <data name="&gt;&gt;labelMsMsData.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="buttonMsMsData.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -1248,13 +1221,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>NoControl</value>
   </data>
   <data name="buttonMsMsData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>702, 29</value>
-  </data>
-  <data name="buttonMsMsData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>468, 19</value>
   </data>
   <data name="buttonMsMsData.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="buttonMsMsData.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1272,19 +1242,16 @@ You can uncheck ones you do not want added to the library.</value>
     <value>tabWithFiles</value>
   </data>
   <data name="&gt;&gt;buttonMsMsData.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="textBoxMsMsData.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxMsMsData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 32</value>
-  </data>
-  <data name="textBoxMsMsData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>7, 24</value>
   </data>
   <data name="textBoxMsMsData.Size" type="System.Drawing.Size, System.Drawing">
-    <value>680, 26</value>
+    <value>455, 20</value>
   </data>
   <data name="textBoxMsMsData.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1299,19 +1266,16 @@ You can uncheck ones you do not want added to the library.</value>
     <value>tabWithFiles</value>
   </data>
   <data name="&gt;&gt;textBoxMsMsData.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="tabWithFiles.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabWithFiles.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabWithFiles.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabWithFiles.Size" type="System.Drawing.Size, System.Drawing">
-    <value>830, 176</value>
+    <value>551, 110</value>
   </data>
   <data name="tabWithFiles.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1335,13 +1299,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>Top, Right</value>
   </data>
   <data name="btnLearningDocBrowse.Location" type="System.Drawing.Point, System.Drawing">
-    <value>702, 34</value>
-  </data>
-  <data name="btnLearningDocBrowse.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>468, 22</value>
   </data>
   <data name="btnLearningDocBrowse.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnLearningDocBrowse.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1365,13 +1326,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>Top, Left, Right</value>
   </data>
   <data name="textLearningDoc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 37</value>
-  </data>
-  <data name="textLearningDoc.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>7, 24</value>
   </data>
   <data name="textLearningDoc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>680, 26</value>
+    <value>455, 20</value>
   </data>
   <data name="textLearningDoc.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1392,13 +1350,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>True</value>
   </data>
   <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>6, 11</value>
-  </data>
-  <data name="label5.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>4, 7</value>
   </data>
   <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>150, 20</value>
+    <value>101, 13</value>
   </data>
   <data name="label5.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1419,16 +1374,13 @@ You can uncheck ones you do not want added to the library.</value>
     <value>2</value>
   </data>
   <data name="tabPageDocument.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabPageDocument.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabPageDocument.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPageDocument.Size" type="System.Drawing.Size, System.Drawing">
-    <value>830, 176</value>
+    <value>551, 110</value>
   </data>
   <data name="tabPageDocument.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1452,13 +1404,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>Top, Bottom, Left, Right</value>
   </data>
   <data name="listLibraries.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 37</value>
-  </data>
-  <data name="listLibraries.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>7, 24</value>
   </data>
   <data name="listLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>804, 142</value>
+    <value>537, 89</value>
   </data>
   <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1479,13 +1428,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 11</value>
-  </data>
-  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>7, 7</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>139, 20</value>
+    <value>93, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1506,16 +1452,13 @@ You can uncheck ones you do not want added to the library.</value>
     <value>1</value>
   </data>
   <data name="tabPageLibraries.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabPageLibraries.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabPageLibraries.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPageLibraries.Size" type="System.Drawing.Size, System.Drawing">
-    <value>830, 176</value>
+    <value>551, 110</value>
   </data>
   <data name="tabPageLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1536,13 +1479,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>2</value>
   </data>
   <data name="tabControlLearning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 288</value>
-  </data>
-  <data name="tabControlLearning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 190</value>
   </data>
   <data name="tabControlLearning.Size" type="System.Drawing.Size, System.Drawing">
-    <value>838, 209</value>
+    <value>559, 136</value>
   </data>
   <data name="tabControlLearning.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1560,16 +1500,16 @@ You can uncheck ones you do not want added to the library.</value>
     <value>0</value>
   </data>
   <data name="comboLearnFrom.Items" xml:space="preserve">
+    <value>Another Skyline Document</value>
+  </data>
+  <data name="comboLearnFrom.Items1" xml:space="preserve">
     <value>Current Skyline Document</value>
   </data>
   <data name="comboLearnFrom.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 238</value>
-  </data>
-  <data name="comboLearnFrom.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>9, 161</value>
   </data>
   <data name="comboLearnFrom.Size" type="System.Drawing.Size, System.Drawing">
-    <value>408, 28</value>
+    <value>273, 21</value>
   </data>
   <data name="comboLearnFrom.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1590,19 +1530,16 @@ You can uncheck ones you do not want added to the library.</value>
     <value>True</value>
   </data>
   <data name="labelLearnFrom.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 214</value>
-  </data>
-  <data name="labelLearnFrom.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>6, 145</value>
   </data>
   <data name="labelLearnFrom.Size" type="System.Drawing.Size, System.Drawing">
-    <value>113, 20</value>
+    <value>102, 13</value>
   </data>
   <data name="labelLearnFrom.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
   <data name="labelLearnFrom.Text" xml:space="preserve">
-    <value>&amp;Fine-tune with:</value>
+    <value>&amp;Tuning data source:</value>
   </data>
   <data name="&gt;&gt;labelLearnFrom.Name" xml:space="preserve">
     <value>labelLearnFrom</value>
@@ -1616,6 +1553,63 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="&gt;&gt;labelLearnFrom.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <data name="comboBuildLibraryTarget.Items" xml:space="preserve">
+    <value>Protein FASTA File</value>
+  </data>
+  <data name="comboBuildLibraryTarget.Items1" xml:space="preserve">
+    <value>Current Skyline Document</value>
+  </data>
+  <data name="comboBuildLibraryTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 28</value>
+  </data>
+  <data name="comboBuildLibraryTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>273, 21</value>
+  </data>
+  <data name="comboBuildLibraryTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;comboBuildLibraryTarget.Name" xml:space="preserve">
+    <value>comboBuildLibraryTarget</value>
+  </data>
+  <data name="&gt;&gt;comboBuildLibraryTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBuildLibraryTarget.Parent" xml:space="preserve">
+    <value>tabLearn</value>
+  </data>
+  <data name="&gt;&gt;comboBuildLibraryTarget.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="labelBuildLibraryTarget.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelBuildLibraryTarget.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelBuildLibraryTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 12</value>
+  </data>
+  <data name="labelBuildLibraryTarget.Size" type="System.Drawing.Size, System.Drawing">
+    <value>78, 13</value>
+  </data>
+  <data name="labelBuildLibraryTarget.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelBuildLibraryTarget.Text" xml:space="preserve">
+    <value>&amp;Build library for:</value>
+  </data>
+  <data name="&gt;&gt;labelBuildLibraryTarget.Name" xml:space="preserve">
+    <value>labelBuildLibraryTarget</value>
+  </data>
+  <data name="&gt;&gt;labelBuildLibraryTarget.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelBuildLibraryTarget.Parent" xml:space="preserve">
+    <value>tabLearn</value>
+  </data>
+  <data name="&gt;&gt;labelBuildLibraryTarget.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
   <data name="tabControlBuildLibraryTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -1626,13 +1620,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>NoControl</value>
   </data>
   <data name="labelProteinDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 6</value>
-  </data>
-  <data name="labelProteinDatabase.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>7, 4</value>
   </data>
   <data name="labelProteinDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>134, 20</value>
+    <value>99, 13</value>
   </data>
   <data name="labelProteinDatabase.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1659,13 +1650,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>NoControl</value>
   </data>
   <data name="buttonProteinDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>702, 28</value>
-  </data>
-  <data name="buttonProteinDatabase.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>468, 18</value>
   </data>
   <data name="buttonProteinDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="buttonProteinDatabase.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1689,13 +1677,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxProteinDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 31</value>
-  </data>
-  <data name="textBoxProteinDatabase.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>7, 20</value>
   </data>
   <data name="textBoxProteinDatabase.Size" type="System.Drawing.Size, System.Drawing">
-    <value>680, 26</value>
+    <value>455, 20</value>
   </data>
   <data name="textBoxProteinDatabase.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1719,13 +1704,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>NoControl</value>
   </data>
   <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 11</value>
-  </data>
-  <data name="label6.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>7, 7</value>
   </data>
   <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>0, 20</value>
+    <value>0, 13</value>
   </data>
   <data name="label6.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1743,19 +1725,16 @@ You can uncheck ones you do not want added to the library.</value>
     <value>3</value>
   </data>
   <data name="tabPage2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabPage2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabPage2.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPage2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>830, 82</value>
+    <value>551, 55</value>
   </data>
   <data name="tabPage2.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="tabPage2.Text" xml:space="preserve">
     <value>FASTA File</value>
@@ -1772,14 +1751,38 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="&gt;&gt;tabPage2.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="tabControlBuildLibraryTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 92</value>
+  <data name="tabPage1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>4, 22</value>
   </data>
-  <data name="tabControlBuildLibraryTarget.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+  <data name="tabPage1.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 3, 3, 3</value>
+  </data>
+  <data name="tabPage1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>551, 55</value>
+  </data>
+  <data name="tabPage1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="tabPage1.Text" xml:space="preserve">
+    <value>Current Skyline Document</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Name" xml:space="preserve">
+    <value>tabPage1</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.Parent" xml:space="preserve">
+    <value>tabControlBuildLibraryTarget</value>
+  </data>
+  <data name="&gt;&gt;tabPage1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tabControlBuildLibraryTarget.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 55</value>
   </data>
   <data name="tabControlBuildLibraryTarget.Size" type="System.Drawing.Size, System.Drawing">
-    <value>838, 115</value>
+    <value>559, 81</value>
   </data>
   <data name="tabControlBuildLibraryTarget.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -1794,76 +1797,13 @@ You can uncheck ones you do not want added to the library.</value>
     <value>tabLearn</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="comboBuildLibraryTarget.Items" xml:space="preserve">
-    <value>Protein FASTA File</value>
-  </data>
-  <data name="comboBuildLibraryTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 43</value>
-  </data>
-  <data name="comboBuildLibraryTarget.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
-  </data>
-  <data name="comboBuildLibraryTarget.Size" type="System.Drawing.Size, System.Drawing">
-    <value>408, 28</value>
-  </data>
-  <data name="comboBuildLibraryTarget.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="&gt;&gt;comboBuildLibraryTarget.Name" xml:space="preserve">
-    <value>comboBuildLibraryTarget</value>
-  </data>
-  <data name="&gt;&gt;comboBuildLibraryTarget.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboBuildLibraryTarget.Parent" xml:space="preserve">
-    <value>tabLearn</value>
-  </data>
-  <data name="&gt;&gt;comboBuildLibraryTarget.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
-  <data name="labelBuildLibraryTarget.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelBuildLibraryTarget.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelBuildLibraryTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 18</value>
-  </data>
-  <data name="labelBuildLibraryTarget.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
-  </data>
-  <data name="labelBuildLibraryTarget.Size" type="System.Drawing.Size, System.Drawing">
-    <value>116, 20</value>
-  </data>
-  <data name="labelBuildLibraryTarget.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="labelBuildLibraryTarget.Text" xml:space="preserve">
-    <value>&amp;Build library for:</value>
-  </data>
-  <data name="&gt;&gt;labelBuildLibraryTarget.Name" xml:space="preserve">
-    <value>labelBuildLibraryTarget</value>
-  </data>
-  <data name="&gt;&gt;labelBuildLibraryTarget.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelBuildLibraryTarget.Parent" xml:space="preserve">
-    <value>tabLearn</value>
-  </data>
-  <data name="&gt;&gt;labelBuildLibraryTarget.ZOrder" xml:space="preserve">
     <value>5</value>
   </data>
   <data name="tabLearn.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabLearn.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabLearn.Size" type="System.Drawing.Size, System.Drawing">
-    <value>860, 509</value>
+    <value>571, 326</value>
   </data>
   <data name="tabLearn.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1884,13 +1824,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>2</value>
   </data>
   <data name="tabControlMain.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 5</value>
-  </data>
-  <data name="tabControlMain.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3</value>
   </data>
   <data name="tabControlMain.Size" type="System.Drawing.Size, System.Drawing">
-    <value>868, 542</value>
+    <value>579, 352</value>
   </data>
   <data name="tabControlMain.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1920,13 +1857,10 @@ You can uncheck ones you do not want added to the library.</value>
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>868, 609</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>579, 396</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

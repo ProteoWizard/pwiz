@@ -43,11 +43,12 @@ namespace pwiz.Skyline.Model.Carafe
     {
         internal const string ECHO = @"echo";
         private const string BIN = @"bin";
-        private const string INPUT = @"input";
+        private const string INPUT = @"input"; 
+        private const string TRAIN = @"train";
         private const string CARAFE = @"carafe";
         private const string CARAFE_VERSION = @"0.0.1";
         private const string CARAFE_DEV = @"-dev"; 
-        private const string CARAFE_DEV_VERSION = CARAFE_DEV + @"-20250225T003942Z-001"; 
+        private const string CARAFE_DEV_VERSION = CARAFE_DEV + @"-20250228T195109Z-001";
         private const string CMD_ARG_C = @"/C";
         private const string CMD_EXECUTABLE = @"cmd.exe";
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
@@ -93,6 +94,7 @@ namespace pwiz.Skyline.Model.Carafe
         private string PythonVersion { get; }
         private string PythonVirtualEnvironmentName { get; }
         private SrmDocument Document { get; }
+        private SrmDocument TrainingDocument { get; }
         public string ProteinDatabaseFilePath { get; private set; }
         internal string ExperimentDataFilePath { get; set;  }
         internal string ExperimentDataTuningFilePath { get; set; }
@@ -132,7 +134,11 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName + CARAFE_DEV);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
         private string InputFileName => INPUT + TextUtil.UNDERSCORE + TextUtil.EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
+        private string TrainingFileName => TRAIN + TextUtil.UNDERSCORE + TextUtil.EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
+
+        private string TrainingFilePath => Path.Combine(RootDir, TrainingFileName);
+
 
         private IList<ArgumentAndValue> CommandArguments =>
             new []
@@ -214,7 +220,7 @@ namespace pwiz.Skyline.Model.Carafe
         {
             Document = document;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            LibraryHelper = new LibraryHelper(InputFilePath, experimentDataFilePath);
+            LibraryHelper = new LibraryHelper(InputFilePath, TrainingFilePath, experimentDataFilePath);
             Writer = textWriter;
             ProteinDatabaseFilePath = proteinDatabaseFilePath;
             PythonVersion = pythonVersion;
@@ -282,8 +288,12 @@ namespace pwiz.Skyline.Model.Carafe
             //progressStatus = progressStatus.NextSegment();
             //if (BuildLibraryForCurrentSkylineDocument)
             //{
-               LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"carafe");
-              // progressStatus = progressStatus.NextSegment();
+               LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
+
+               if (TrainingDocument != null)
+                   LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, @"carafe");
+
+            // progressStatus = progressStatus.NextSegment();
 
             //}
             ExecuteCarafe(progress, ref progressStatus);

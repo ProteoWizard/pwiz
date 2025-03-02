@@ -41,6 +41,7 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.EditUI;
 using System.Runtime.CompilerServices;
+using System.Xml.Serialization;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 
@@ -109,10 +110,10 @@ namespace pwiz.Skyline.SettingsUI
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
         public enum DataSourcePages { files, alpha, carafe, koina }
-        public enum BuildLibraryTargetOptions { currentSkylineDocument }
+        public enum BuildLibraryTargetOptions { fastaFile, currentSkylineDocument }
         // TODO: After supporting LearningOptions.document, add "Skyline Document" option to the comboLearnFrom dropdown
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
-        public enum LearningOptions { files, libraries, document }
+        public enum LearningOptions { another_doc, this_doc }
         private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => true;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
@@ -150,6 +151,8 @@ namespace pwiz.Skyline.SettingsUI
             _skylineWindow = skylineWindow;
             _documentUiContainer = skylineWindow;
 
+            tabPage1.BackColor = tabPage1.Parent.BackColor;
+
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
             comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
@@ -165,8 +168,8 @@ namespace pwiz.Skyline.SettingsUI
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
-            comboBuildLibraryTarget.SelectedIndex = 0;
-            comboLearnFrom.SelectedIndex = 0;
+            comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
+            comboLearnFrom.SelectedIndex = (int)DataSourcePages.files;
 
             toolTipProteinDatabase.SetToolTip(labelProteinDatabase, @"A protein database in FASTA format to build library for, this should be a superset of your experiment data samples.");
       //      toolTipTrainingData.SetToolTip(labelTrainingData, @"Peptide detection result from DIA-NN (DIA-NN's main report).");
@@ -240,6 +243,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             get => _documentUiContainer.DocumentUI;
         }
+
+        internal SrmDocument _trainingDocument;
       
         private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false, bool newBuilder = false)
         {
@@ -1269,15 +1274,48 @@ namespace pwiz.Skyline.SettingsUI
         private void comboLearnFrom_SelectedIndexChanged(object sender, EventArgs e)
         {
             var learningOption = (LearningOptions)comboLearnFrom.SelectedIndex;
-            tabControlLearning.SelectedIndex = (int)learningOption;
+            comboLearnFrom_Update(learningOption);
+        }
+
+        private void comboLearnFrom_Update(LearningOptions learningOption)
+        {
+            comboLearnFrom.SelectedIndex = (int)learningOption;
             switch (learningOption)
             {
-                case LearningOptions.libraries:
-                    PopulateLibraries();
+                case LearningOptions.another_doc:
+                    labelDoc.Enabled = true;
+                    buttonDoc.Enabled = true;
+                    textBoxDoc.Enabled = true;
+                    //PopulateLibraries();
+                    break;
+                case LearningOptions.this_doc:
+                    labelDoc.Enabled = false;
+                    buttonDoc.Enabled = false;
+                    textBoxDoc.Enabled = false;
+                    comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
+                    tabPage1.BackColor = tabPage1.Parent.BackColor;
                     break;
             }
         }
-
+        private void comboBuildLibraryTarget_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            tabControlBuildLibraryTarget.SelectedIndex = comboBuildLibraryTarget.SelectedIndex;
+            comboBuildLibraryTarget_Update((BuildLibraryTargetOptions)tabControlBuildLibraryTarget.SelectedIndex);
+        }
+        private void comboBuildLibraryTarget_Update(BuildLibraryTargetOptions targetOption)
+        {
+            comboBuildLibraryTarget.SelectedIndex = (int)targetOption;
+            switch (targetOption)
+            {
+                case BuildLibraryTargetOptions.currentSkylineDocument:
+                    comboLearnFrom.SelectedIndex = (int)LearningOptions.another_doc;
+                    labelDoc.Enabled = true;
+                    buttonDoc.Enabled = true;
+                    textBoxDoc.Enabled = true;
+                    tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
+                    break;
+            }
+        }
         private void PopulateLibraries()
         {
             if (_driverLibrary == null)
@@ -1305,12 +1343,6 @@ namespace pwiz.Skyline.SettingsUI
             }
 
         }
-
-        private void comboBuildLibraryTarget_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            tabControlBuildLibraryTarget.SelectedIndex = comboBuildLibraryTarget.SelectedIndex;
-        }
-
         private void buttonProteinDatabase_Click(object sender, EventArgs e)
         {
             using var dlg = new OpenFileDialog();
@@ -1362,5 +1394,32 @@ namespace pwiz.Skyline.SettingsUI
             if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "")
                 btnNext.Enabled = true;
         }
+        private void buttonDoc_Click(object sender, EventArgs e)
+        {
+            using var dlg = new OpenFileDialog();
+            dlg.Title = @"Select Skyline Document File";
+            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
+            dlg.CheckPathExists = true;
+            dlg.Multiselect = false;
+            dlg.SupportMultiDottedExtensions = true; 
+            dlg.DefaultExt = DataSourceUtil.EXT_MZML;
+            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(@"Skyline document files", SrmDocument.FILTER_DOC));
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                textBoxDoc.Text = dlg.FileName;
+            }
+
+            _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
+           
+            using (var reader = new StreamReader(PathEx.SafePath(dlg.FileName)))
+            {
+                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                _trainingDocument = (SrmDocument)ser.Deserialize(reader);
+            }
+
+            if (textBoxProteinDatabase.Text != "" && textBoxDoc.Text != "")
+                btnNext.Enabled = true;
+        }
+
     }
 }

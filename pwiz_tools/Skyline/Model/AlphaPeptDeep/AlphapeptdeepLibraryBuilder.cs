@@ -30,7 +30,6 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
@@ -71,10 +70,12 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         }
 
         public string InputFilePath { get; private set; }
+        public string TrainingFilePath { get; private set; }
+
         public static string DataFilePath { get; private set; }
 
         private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
-        private static readonly IEnumerable<string> PrecursorTableColumnNamesCarafe = 
+        private static readonly IEnumerable<string> TrainingTableColumnNamesCarafe = 
             new[] 
             { 
                 PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
@@ -82,6 +83,12 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 MAX_RT, IONMOB_MS1, APEX_SPECTRUM_ID, FILE_NAME, Q_VALUE
             };
 
+        private static readonly IEnumerable<string> PrecursorTableColumnNamesCarafe =
+            new[]
+            {
+                PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
+                PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS
+            };
         private static IList<ModificationIndex> carafeSupportedModificationIndices =>
             new[]
             {
@@ -114,10 +121,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             return modList;
         }
-        public LibraryHelper(string inputFilePath, string dataFilePath = null)
+        public LibraryHelper(string inputFilePath, string trainingFilePath = null, string dataFilePath = null)
         {
             InputFilePath = inputFilePath;
             DataFilePath = dataFilePath;
+            TrainingFilePath = trainingFilePath;
         }
 
         public static string GetDataFileName()
@@ -126,14 +134,26 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 return "";
             return Path.GetFileName(DataFilePath);
         }
-        public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
+        public void PreparePrecursorInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Preparing input file")
+                .ChangeMessage(@"Preparing prediction input file")
                 .ChangePercentComplete(0));
 
-            var precursorTable = GetPrecursorTable(Document, toolName);
+            var precursorTable = GetInputTable(Document, toolName);
             File.WriteAllLines(InputFilePath, precursorTable);
+
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangePercentComplete(100));
+        }
+        public void PrepareTrainingInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
+        {
+            progress.UpdateProgress(progressStatus = progressStatus
+                .ChangeMessage(@"Preparing training input file")
+                .ChangePercentComplete(0));
+
+            var trainingTable = GetInputTable(Document, toolName, true);
+            File.WriteAllLines(TrainingFilePath, trainingTable);
 
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
@@ -152,8 +172,14 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 }
             }
         }
-
-        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, string toolName)
+        /// <summary>
+        /// Returns an input table
+        /// </summary>
+        /// <param name="Document">Skyline document</param>
+        /// <param name="toolName">carafe or alphapeptdeep</param>
+        /// <param name="training">generate a training file for carafe or prediction file (default)</param>
+        /// <returns></returns>
+        public IEnumerable<string> GetInputTable(SrmDocument Document, string toolName, bool training = false)
         {
             var result = new List<string>();
             string header;
@@ -162,9 +188,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             if (alphapeptDeepFormat)
                 header = string.Join(TAB, PrecursorTableColumnNames);
             else if (toolName.Equals(@"carafe"))
-                header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
+                if (training)
+                    header = string.Join(TAB, TrainingTableColumnNamesCarafe);
+                else
+                    header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
             else
                 header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
+
 
 
             result.Add(header);
@@ -477,7 +507,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             progressStatus = progressStatus.ChangeSegments(0, 5);
 
-            if (Document.DocumentHash != null) LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+            if (Document.DocumentHash != null) LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
             progressStatus = progressStatus.NextSegment();
 
             PrepareSettingsFile(progress, ref progressStatus);
