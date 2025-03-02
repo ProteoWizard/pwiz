@@ -32,13 +32,17 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenFileDialogNEWatersConnectMethod(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
+        public OpenFileDialogNEWatersConnectMethod(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null
+            // , IList<RemoteAccountType> remoteAccountTypeCreationRestriction = null   TODO ZZZ  NOT USED
+            )
             : base( null /* SOURCE_TYPES */, remoteAccounts, specificDataSourceFilter )
         {
         }
 
         public MsDataFileUri DataSource => FileName;
         public MsDataFileUri[] DataSources => FileNames;
+
+        // private IList<RemoteAccountType> remoteAccountTypeCreationRestriction;   TODO ZZZ  NOT USED
 
         protected override void CreateNewRemoteSession(RemoteAccount remoteAccount)
         {

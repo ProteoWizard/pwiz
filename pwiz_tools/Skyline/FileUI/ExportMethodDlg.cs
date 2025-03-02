@@ -25,7 +25,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using EnvDTE;
 using NHibernate;
+using NHibernate.Util;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -66,7 +68,7 @@ namespace pwiz.Skyline.FileUI
 
 
         //  TODO  ZZZ Save this to Settings.Default.ExportMethodTemplateList instead???
-        private WatersConnectUrl _watersConnectUrl;
+        private WatersConnectUrl _watersConnectUrl_MethodTemplate;
 
         private readonly ExportDlgProperties _exportProperties;
 
@@ -341,10 +343,10 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
-                   Equals(type, ExportInstrumentType.WATERS_XEVO_TQ) ||
+                   Equals(type, ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX) ||
                    Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                    Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
-                   Equals(type, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT) ||
+                   Equals(type, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT) ||
                    // For AbSciex's TOF 5600 and QSTAR instruments, the dwell (accumulation) time
                    // given in the template method is used. So we will not display the 
                    // "Dwell Time" text box.
@@ -370,10 +372,10 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
-                       Equals(type, ExportInstrumentType.WATERS_XEVO_TQ) ||
+                       Equals(type, ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX) ||
                        Equals(type, ExportInstrumentType.WATERS_XEVO_QTOF) ||
                        Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
-                       Equals(type, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT) ||
+                       Equals(type, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT) ||
                        Equals(type, ExportInstrumentType.BRUKER_TOF) ||
                        Equals(type, ExportInstrumentType.BRUKER_TIMSTOF) ||
                        // LTQ can only schedule for inclusion lists, but then it always
@@ -838,15 +840,11 @@ namespace pwiz.Skyline.FileUI
         {
             MessageDlg.Show(this, @"ZZZ: HARD CODED:  outputPath.  HARD CODED parts so NOT final code");
 
-            //  TODO  ZZZ   FAKE VALUE
-            // outputPath = @"FAKE_OUTPUT_PATH";
-
-
-            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 //  Export to Waters Connect
 
-                if (_watersConnectUrl == null)
+                if (_watersConnectUrl_MethodTemplate == null)
                 {
                     MessageDlg.Show(this, "Instrument Type is Waters Connect but Template file is not selected from Waters Connect");
 
@@ -886,7 +884,7 @@ namespace pwiz.Skyline.FileUI
                 
                 //  TODO  ZZZ  need to add a test for existing WATERS_CONNECT_INSTRUMENT when start saving the template to Skyline Settings
 
-                if ((!Equals(InstrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT)) && // Exclude WATERS_CONNECT_INSTRUMENT since template NOT on local file system
+                if ((!Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT)) && // Exclude WATERS_CONNECT_INSTRUMENT since template NOT on local file system
                     (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
                     Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF)
                     ? !Directory.Exists(templateName) : !File.Exists(templateName)))
@@ -1138,45 +1136,22 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            if (outputPath == null)
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
-                string title = Text;
-                string ext = TextUtil.EXT_CSV;
-                string filter = FileUIResources.ExportMethodDlg_OkDialog_Method_File;
+                ExportToWatersConnect(documentExport);
 
-                //  TODO  ZZZ  Export Waters Connect Differently
 
-                if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            }
+            else
+            {
+                //  Export to Local File
+
+
+                if (outputPath == null)
                 {
-
-
-
-
-
-
-                    //  Export to Waters Connect
-
-                    //  TODO  ZZZ  Export Waters Connect Need Code
-
-                    MessageDlg.Show(this, "ZZZ  Export Waters Connect Need Code to get Folder Id and name to export to");
-                  
-                    //  TODO First show Save Dialog to get folder id and name to export to
-
-                    //  TODO  Next make webservice call to Waters Connect
-
-                    // _watersConnect_TemplateMethodId = watersConnectUrl.InjectionId;
-                    // _watersConnect_FolderId = watersConnectUrl.FolderOrSampleSetId;
-
-
-
-
-
-
-
-                }
-                else
-                {
-                    //  Export to local file
+                    string title = Text;
+                    string ext = TextUtil.EXT_CSV;
+                    string filter = FileUIResources.ExportMethodDlg_OkDialog_Method_File;
 
                     switch (_fileType)
                     {
@@ -1196,7 +1171,6 @@ namespace pwiz.Skyline.FileUI
                             break;
                     }
 
-
                     using (var dlg = new SaveFileDialog())
                     {
                         dlg.Title = title;
@@ -1211,63 +1185,12 @@ namespace pwiz.Skyline.FileUI
 
                         outputPath = dlg.FileName;
                     }
-
                 }
-            }
-            _exportProperties.PolarityFilter = comboPolarityFilter.Enabled
-                ? (ExportPolarity)comboPolarityFilter.SelectedIndex
-                : ExportPolarity.all;
+                _exportProperties.PolarityFilter = comboPolarityFilter.Enabled
+                    ? (ExportPolarity)comboPolarityFilter.SelectedIndex
+                    : ExportPolarity.all;
 
-            //  TODO  ZZZ  Is setting this to null correct for Waters Connect???
-
-            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
-            {
-                Settings.Default.ExportDirectory = null;
-            }
-            else
-            {
                 Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
-            }
-
-            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
-            {
-
-
-
-
-
-
-
-                //  Export to Waters Connect
-
-                //  TODO  ZZZ   NEED CODE HERE
-
-
-                //  Export to Waters Connect
-
-                //  TODO  ZZZ  Export Waters Connect Need Code
-
-                var watersConnectUrl = _watersConnectUrl;
-
-                MessageDlg.Show(this, "ZZZ  Export Waters Connect Need Code for Webservice POST. AcquisitionMethodId: " + _watersConnectUrl.AcquisitionMethodId);
-
-                //  TODO First show Save Dialog to get folder id and name to export to
-
-                //  TODO  Next make webservice call to Waters Connect
-
-                // _watersConnect_TemplateMethodId = watersConnectUrl.InjectionId;
-                // _watersConnect_FolderId = watersConnectUrl.FolderOrSampleSetId;
-
-
-
-
-
-
-            }
-            else
-            {
-                //  Export to Local File
-
 
                 // Set ShowMessages property on ExportDlgProperties to true
                 // so that we see the progress dialog during the export process
@@ -1349,6 +1272,359 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportMs1RepetitionTime = _exportProperties.Ms1RepetitionTime;
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="documentExport"></param>
+        private void ExportToWatersConnect(SrmDocument documentExport)
+        {
+            var watersConnectUrl_MethodTemplate = _watersConnectUrl_MethodTemplate;
+
+            //  Select Output Folder and Name
+
+            //  TODO  ZZZ  Replace this with "Save" dialog results
+
+
+            //  Hard code to same Folder as template and hard code output name to "Fake..."
+            var outputFolderPathPartsList = new List<string>();
+            outputFolderPathPartsList.Add("FakeExportName");
+
+            var watersConnectUrl_ExportMethod = (WatersConnectUrl)watersConnectUrl_MethodTemplate.ChangePathParts(outputFolderPathPartsList);
+
+
+
+            //  Duplicated from "Export to local file" code
+            _exportProperties.PolarityFilter = comboPolarityFilter.Enabled
+                ? (ExportPolarity)comboPolarityFilter.SelectedIndex
+                : ExportPolarity.all;
+
+    
+            Settings.Default.ExportDirectory = null;
+
+
+
+
+            //  Export to Waters Connect
+
+            //  TODO  ZZZ   NEED CODE HERE
+
+
+            //  Export to Waters Connect
+
+            //  TODO  ZZZ  Export Waters Connect Need Code
+
+
+            MessageDlg.Show(this, "ZZZ  Export Waters Connect Need Code for Webservice POST. AcquisitionMethodId: " + _watersConnectUrl_MethodTemplate.AcquisitionMethodId
+            + ", Exporting to folderId: " + watersConnectUrl_ExportMethod.FolderOrSampleSetId);
+
+            //  TODO First show Save Dialog to get folder id and name to export to
+
+            //  TODO  Next make webservice call to Waters Connect
+
+            // _watersConnect_TemplateMethodId = watersConnectUrl.InjectionId;
+            // _watersConnect_FolderId = watersConnectUrl.FolderOrSampleSetId;
+
+
+            try
+            {
+
+                var exporter = _exportProperties.InitExporter(new WatersMethodExporter(documentExport)
+                {
+                    MethodInstrumentType = ExportInstrumentType.WATERS_QUATTRO_PREMIER
+                });
+                if (MethodType == ExportMethodType.Standard)
+                    exporter.RunLength = RunLength;
+
+                //  Export with filename of null puts the file contents (that are normally passed to the executable for the specific instrument)
+                //     into exporter.MemoryOutput[AbstractMassListExporter.MEMORY_KEY_ROOT]
+
+                try
+                {
+
+                    //  TODO   ZZZ  Critical: MUST Uncomment code in 'public class WatersMethodExporter : WatersMassListExporter'
+
+                    MessageDlg.Show(this, "ZZZ  Critical: MUST Uncomment code in 'public class WatersMethodExporter : WatersMassListExporter'");
+
+                    //  Code in 'public class WatersMethodExporter : WatersMassListExporter':
+
+                    //  TODO   ZZZ   MUST Uncomment
+
+                    // if(fileName != null)
+                    //     EnsureLibraries();
+
+                    MessageDlg.Show(this, "Before Call: exporter.ExportMethod(null /* fileName */, \"FakeTemplateNameUnused\" /* templateName */, null /* m */ );");
+
+
+                    exporter.ExportMethod(null /* fileName */, "FakeTemplateNameUnused" /* templateName */, null /* m */ );
+                }
+                catch (Exception e)
+                {
+
+                    MessageDlg.Show(this, "Exception from: exporter.ExportMethod(null /* fileName */, \"FakeTemplateNameUnused\" /* templateName */, null /* m */ );");
+
+                    Console.WriteLine(e);
+                    throw;
+                }
+
+                MessageDlg.Show(this, "After Call: exporter.ExportMethod(null /* fileName */, \"FakeTemplateNameUnused\" /* templateName */, null /* m */ );");
+
+
+                var memoryOutput_Local = exporter.MemoryOutput;
+
+                var memoryOutput_Local_MEMORY_KEY_ROOT = memoryOutput_Local[AbstractMassListExporter.MEMORY_KEY_ROOT];
+
+                var memoryOutput_Local_MEMORY_KEY_ROOT_Length = memoryOutput_Local_MEMORY_KEY_ROOT.Length;
+
+                var memoryOutput_Local_MEMORY_KEY_ROOT_String = memoryOutput_Local_MEMORY_KEY_ROOT.ToString();
+
+                var fieldSeparator_Local = exporter.FieldSeparator;
+
+                var memoryOutput_SplitLines = memoryOutput_Local_MEMORY_KEY_ROOT_String.ReplaceWholeWord("\r\n", "\n").Split('\n');
+
+                var peptide_seq_Index = -1;
+                var precursor_mz_Index = -1;
+                var precursor_retT_Index = -1;
+                var product_m_z_Index = -1;
+                var collision_energy_Index = -1;
+                var cone_voltage_Index = -1;
+
+                //  Split Header Line on exporter.FieldSeparator
+                {
+                    var memoryOutput_HeaderLine = memoryOutput_SplitLines[0];
+
+                    var memoryOutput_HeaderLine_Split = memoryOutput_HeaderLine.Split(exporter.FieldSeparator);
+
+                    for (var index = 0; index < memoryOutput_HeaderLine_Split.Length; index++)
+                    {
+                        if (Equals(memoryOutput_HeaderLine_Split[index], "peptide.seq"))
+                        {
+                            peptide_seq_Index = index;
+                        }
+
+                        if (Equals(memoryOutput_HeaderLine_Split[index], "precursor.mz"))
+                        {
+                            precursor_mz_Index = index;
+                        }
+
+                        if (Equals(memoryOutput_HeaderLine_Split[index], "precursor.retT"))
+                        {
+                            precursor_retT_Index = index;
+                        }
+
+                        if (Equals(memoryOutput_HeaderLine_Split[index], "product.m_z"))
+                        {
+                            product_m_z_Index = index;
+                        }
+
+                        if (Equals(memoryOutput_HeaderLine_Split[index], "collision_energy"))
+                        {
+                            collision_energy_Index = index;
+                        }
+
+                        if (Equals(memoryOutput_HeaderLine_Split[index], "cone_voltage"))
+                        {
+                            cone_voltage_Index = index;
+                        }
+                    }
+
+                    if (peptide_seq_Index == -1)
+                    {
+                        var msg = "ERROR: peptide_seq_Index == -1";
+                        MessageDlg.Show(this, msg);
+                        throw new Exception(msg);
+                    }
+                    if (precursor_mz_Index == -1)
+                    {
+                        var msg = "ERROR: precursor_mz_Index == -1";
+                        MessageDlg.Show(this, msg);
+                        throw new Exception(msg);
+                    }
+                    if (precursor_retT_Index == -1)
+                    {
+                        var msg = "ERROR: precursor_retT_Index == -1";
+                        MessageDlg.Show(this, msg);
+                        throw new Exception(msg);
+                    }
+                    if (product_m_z_Index == -1)
+                    {
+                        var msg = "ERROR: product_m_z_Index == -1";
+                        MessageDlg.Show(this, msg);
+                        throw new Exception(msg);
+                    }
+                    if (collision_energy_Index == -1)
+                    {
+                        var msg = "ERROR: collision_energy_Index == -1";
+                        MessageDlg.Show(this, msg);
+                        throw new Exception(msg);
+                    }
+                    if (cone_voltage_Index == -1)
+                    {
+                        var msg = "ERROR: cone_voltage_Index == -1";
+                        MessageDlg.Show(this, msg);
+                        throw new Exception(msg);
+                    }
+                }
+
+
+                var targets = new List<WatersConnect_WebserviceCall_SingleTarget>();
+
+                //  Start at index 1 to skip header line
+                for (var index = 1; index < memoryOutput_SplitLines.Length; index++)
+                {
+                    var memoryOutput_DataLine  = memoryOutput_SplitLines[index];
+
+                    var memoryOutput_DataLine_Split = memoryOutput_DataLine.Split(exporter.FieldSeparator);
+
+                    var target = new WatersConnect_WebserviceCall_SingleTarget();
+                    target.id = "HardCodedUnknownValue";
+                    target.name = memoryOutput_DataLine_Split[peptide_seq_Index];
+                    {
+                        var valueString = memoryOutput_DataLine_Split[precursor_retT_Index];
+                        target.retentionTime = double.Parse(valueString);
+                    }
+                    {
+                        var valueString = memoryOutput_DataLine_Split[collision_energy_Index];
+                        target.collisionEnergy = double.Parse(valueString);
+                    }
+                    {
+                        var valueString = memoryOutput_DataLine_Split[cone_voltage_Index];
+                        target.coneVoltage = double.Parse(valueString);
+                    }
+
+                    var transition = new WatersConnect_WebserviceCall_SingleTransition();
+                    {
+                        var valueString = memoryOutput_DataLine_Split[precursor_mz_Index];
+                        transition.precursorMz = double.Parse(valueString);
+                    }
+                    {
+                        var valueString = memoryOutput_DataLine_Split[product_m_z_Index];
+                        transition.productMz = double.Parse(valueString);
+                    }
+
+                    var transitions = new List<WatersConnect_WebserviceCall_SingleTransition>();
+                    transitions.Add(transition);
+
+                    target.transitions = transitions;
+
+                    targets.Add(target);
+                }
+
+                var watersConnect_WebserviceCall_Root = new WatersConnect_WebserviceCall_Root();
+
+                watersConnect_WebserviceCall_Root.name = watersConnectUrl_ExportMethod.GetFileName();
+                watersConnect_WebserviceCall_Root.description = "Skyline Export Initial Testing with Hard Coding";
+                watersConnect_WebserviceCall_Root.destinationFolderId = watersConnectUrl_ExportMethod.FolderOrSampleSetId;
+                watersConnect_WebserviceCall_Root.templateMethodId = watersConnectUrl_MethodTemplate.AcquisitionMethodId;
+
+                watersConnect_WebserviceCall_Root.targets = targets;
+
+                var z = 0;
+
+                // private class WatersConnect_WebserviceCall_Root
+                // {
+                //     public string name;
+                //     public string description;
+                //     public string destinationFolderId;
+                //     public string templateMethodId;
+                //
+                //     public List<WatersConnect_WebserviceCall_SingleTarget> targets;
+                // }
+                //
+                // private class WatersConnect_WebserviceCall_SingleTarget
+                // {
+                //
+                //     public string id;
+                //     public string name;
+                //     public string group;
+                //
+                //     public double retentionTime;
+                //     public double collisionEnergy;
+                //     public double coneVoltage;
+                //
+                //     public string polarity;
+                //
+                //     public double startTime;
+                //     public double endTime;
+                //
+                //     public List<WatersConnect_WebserviceCall_SingleTransition> transitions;
+                // }
+                //
+                // private class WatersConnect_WebserviceCall_SingleTransition
+                // {
+                //     public double precursorMz;
+                //     public double productMz;
+                //     public bool isQuanIon;
+                //     public double dwellTime;
+                //     public bool autoDwell;
+                // }
+
+            }
+            catch (UnauthorizedAccessException x)
+            {
+                MessageDlg.ShowException(this, x);
+                // _exportProperties.ShowMessages = wasShowMessageValue;
+                return;
+            }
+            catch (IOException x)
+            {
+                MessageDlg.ShowException(this, x);
+                // _exportProperties.ShowMessages = wasShowMessageValue;
+                return;
+            }
+
+            //  memoryOutput_Local_MEMORY_KEY_ROOT_String contains:  "protein.name,peptide.seq,precursor.mz,precursor.retT,product.m_z,collision_energy,cone_voltage,peptide_unmod.seq,ion_name,library_rank\r\nMolecules,Reserpine.[M+],609.280658,15,609.280658,21,35,Reserpine,precursor,-1\r\nMolecules,C8H10N4O2.[M+H],195.087652,15,195.087652,6,35,C8H10N4O2,precursor,-1\r\nMolecules,Uracil.[M-H],111.020001,15,111.020001,3,35,Uracil,precursor,-1\r\n"
+
+            //  Broken into lines:
+
+            // protein.name,peptide.seq,precursor.mz,precursor.retT,product.m_z,collision_energy,cone_voltage,peptide_unmod.seq,ion_name,library_rank
+            // Molecules,Reserpine.[M+],609.280658,15,609.280658,21,35,Reserpine,precursor,-1
+            // Molecules,C8H10N4O2.[M+H],195.087652,15,195.087652,6,35,C8H10N4O2,precursor,-1
+            // Molecules,Uracil.[M-H],111.020001,15,111.020001,3,35,Uracil,precursor,-1
+
+            //  So one option is to generate that string and parse it to create the objects for the JSON.
+
+            //      This approach changes or removes any embedded ',' separators which is not needed for creating JSON so may be an undesirable side effect.
+
+        }
+
+        private class WatersConnect_WebserviceCall_Root
+        {
+            public string name;
+            public string description;
+            public string destinationFolderId;
+            public string templateMethodId;
+
+            public List<WatersConnect_WebserviceCall_SingleTarget> targets;
+        }
+
+        private class WatersConnect_WebserviceCall_SingleTarget
+        {
+
+            public string id;
+            public string name;
+            public string group;
+
+            public double retentionTime;
+            public double collisionEnergy;
+            public double coneVoltage;
+
+            public string polarity;
+
+            public double startTime;
+            public double endTime;
+            
+            public List<WatersConnect_WebserviceCall_SingleTransition> transitions;
+        }
+
+        private class WatersConnect_WebserviceCall_SingleTransition
+        {
+            public double precursorMz;
+            public double productMz;
+            public bool isQuanIon;
+            public double dwellTime;
+            public bool autoDwell;
         }
 
         private static bool IsInSynchPredictor(string name, string namePrefix)
@@ -1803,7 +2079,7 @@ namespace pwiz.Skyline.FileUI
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
 
-            if (Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 textTemplateFile.Enabled = false; // Make so user cannot change value to restrict user to change via "Browse" button
             }
@@ -1827,7 +2103,7 @@ namespace pwiz.Skyline.FileUI
 
             MethodTemplateFile templateFile;
 
-            if (!Equals(_instrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            if (!Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 textTemplateFile.Text = Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile)
                     ? templateFile.FilePath
@@ -1837,7 +2113,7 @@ namespace pwiz.Skyline.FileUI
             {
                 //  Waters Connect - Always reset to empty since currently NOT storing _watersConnect_TemplateMethodId in Settings.Default.ExportMethodTemplateList
                 textTemplateFile.Text = string.Empty;
-                _watersConnectUrl = null;
+                _watersConnectUrl_MethodTemplate = null;
             }
 
 
@@ -2220,31 +2496,37 @@ namespace pwiz.Skyline.FileUI
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
 
-            if (Equals(InstrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+            if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 MessageDlg.Show(this, @"ZZZ: Browse for WATERS_CONNECT_INSTRUMENT Template.  Need to filter Settings.Default.RemoteAccountList to ONLY Waters Connect.  Preferable to only allow user to create Waters Connect connections.");
 
-                //  TODO  Need to filter Settings.Default.RemoteAccountList to ONLY Waters Connect
-                //  TODO  Preferable to only allow user to create Waters Connect connections
+                //  TODO  ZZZ  Need to filter Settings.Default.RemoteAccountList to ONLY Waters Connect
+                //  TODO  ZZZ  Preferable to only allow user to create Waters Connect connections
 
-                IList<RemoteAccount> remoteAccountsFiltered = null;
+                //  !!!  DOES NOT WORK to filter Settings.Default.RemoteAccountList and pass that in
+                //          since BaseFileDialogNE class expects only Settings.Default.RemoteAccountList to be passed in.
+                //          BaseFileDialogNE class interchangeably uses Settings.Default.RemoteAccountList with the private field it copies the passed in ctor param to.
 
-                if (Settings.Default.RemoteAccountList != null)
-                {
-                    remoteAccountsFiltered = new RemoteAccountList();
-                    foreach (var remoteAccount in Settings.Default.RemoteAccountList)
-                    {
-                        if (remoteAccount.AccountType == RemoteAccountType.WATERS_CONNECT)
-                        {
-                            remoteAccountsFiltered.Add(remoteAccount);
-                        }
-                    }
-                }
+                // IList<RemoteAccount> remoteAccountsFiltered = null;
+                //
+                // if (Settings.Default.RemoteAccountList != null)
+                // {
+                //     remoteAccountsFiltered = new RemoteAccountList();
+                //     foreach (var remoteAccount in Settings.Default.RemoteAccountList)
+                //     {
+                //         if (remoteAccount.AccountType == RemoteAccountType.WATERS_CONNECT)
+                //         {
+                //             remoteAccountsFiltered.Add(remoteAccount);
+                //         }
+                //     }
+                // }
 
-                IList<RemoteAccountType> remoteAccountTypeCreateRestriction = new List<RemoteAccountType>();
-                remoteAccountTypeCreateRestriction.Add(RemoteAccountType.WATERS_CONNECT);
+                //   Remove 'remoteAccountTypeCreationRestriction' since not used
 
-                using (var dlgOpen = new OpenFileDialogNEWatersConnectMethod(remoteAccountsFiltered))
+                // IList<RemoteAccountType> remoteAccountTypeCreationRestriction = new List<RemoteAccountType>();
+                // remoteAccountTypeCreationRestriction.Add(RemoteAccountType.WATERS_CONNECT);
+
+                using (var dlgOpen = new OpenFileDialogNEWatersConnectMethod(Settings.Default.RemoteAccountList, null))
                 {
                    dlgOpen.Text = "Select Template";
                    // The dialog expects null to mean no directory was supplied, so don't assign
@@ -2261,7 +2543,7 @@ namespace pwiz.Skyline.FileUI
                    // Use saved source type, if there is one.
                    string sourceType = null; // Settings.Default.SrmResultsSourceType;
                    if (!string.IsNullOrEmpty(sourceType))
-                   dlgOpen.SourceTypeName = sourceType;
+                       dlgOpen.SourceTypeName = sourceType;
 
                    if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                        return;
@@ -2296,7 +2578,11 @@ namespace pwiz.Skyline.FileUI
                         throw new Exception("dataSource not type WatersConnectUrl");
                     }
 
-                    _watersConnectUrl = watersConnectUrl;
+                    var en = watersConnectUrl.EncodedPath;
+
+
+
+                    _watersConnectUrl_MethodTemplate = watersConnectUrl;
 
                     textTemplateFile.Text = watersConnectUrl.GetFilePath();
 
@@ -2307,7 +2593,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             //  Clear since not Waters Connect
-            _watersConnectUrl = null;
+            _watersConnectUrl_MethodTemplate = null;
 
 
             string templateName = textTemplateFile.Text;
@@ -2392,9 +2678,9 @@ namespace pwiz.Skyline.FileUI
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_THERMO));
                 }
-                else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ) ||
+                else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX) ||
                          Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
-                         Equals(InstrumentType, ExportInstrumentType.WATERS_CONNECT_INSTRUMENT))
+                         Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
                 {
                     listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_WATERS));
                 }
