@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections;
 using pwiz.Common.Chemistry;
 
 namespace pwiz.Skyline.Model.Results
@@ -59,6 +58,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
 
             // Find closest precursor Mz match.
+            // Watch out for negative values, which sort before positive values.
             var lookup = new PeptidePrecursorMz(null, precursorMz);
             int i = _precursorMzPeptideList.BinarySearch(lookup, PeptidePrecursorMz.COMPARER);
             if (i < 0)
@@ -67,11 +67,33 @@ namespace pwiz.Skyline.Model.Results
                 if (i >= _precursorMzPeptideList.Count)
                     i = _precursorMzPeptideList.Count - 1;
                 else if (i > 0 &&
-                    precursorMz - _precursorMzPeptideList[i - 1].PrecursorMz <
-                    _precursorMzPeptideList[i].PrecursorMz - precursorMz)
+                         _precursorMzPeptideList[i - 1].PrecursorMz.IsNegative == precursorMz.IsNegative &&
+                         _precursorMzPeptideList[i].PrecursorMz.IsNegative == precursorMz.IsNegative &&
+                         precursorMz - _precursorMzPeptideList[i - 1].PrecursorMz <
+                         _precursorMzPeptideList[i].PrecursorMz - precursorMz)
                     i--;
             }
             var closestMatch = _precursorMzPeptideList[i];
+            if (closestMatch.PrecursorMz.IsNegative != precursorMz.IsNegative)
+            {
+                // Just past the negative range, or just below the positive range
+                if (precursorMz.IsNegative)
+                {
+                    if (!_precursorMzPeptideList[0].PrecursorMz.IsNegative)
+                    {
+                        return null; // There aren't any negative values in the list
+                    }
+                    closestMatch = _precursorMzPeptideList[i - 1]; // End of negative range
+                }
+                else
+                {
+                    if (i+1 >= _precursorMzPeptideList.Count)
+                    {
+                        return null; // There aren't any positive values in the list
+                    }
+                    closestMatch = _precursorMzPeptideList[i + 1]; // Start of positive range
+                }
+            }
 
             // Return color seed only if the match is within allowed tolerance.
             return Math.Abs(closestMatch.PrecursorMz - precursorMz) > _mzMatchTolerance
@@ -97,9 +119,14 @@ namespace pwiz.Skyline.Model.Results
                 public int Compare(PeptidePrecursorMz p1, PeptidePrecursorMz p2)
                 {
                     // ReSharper disable PossibleNullReferenceException
-                    return Comparer.Default.Compare(p1.PrecursorMz, p2.PrecursorMz);
+                    return p1.PrecursorMz.CompareTo(p2.PrecursorMz);
                     // ReSharper restore PossibleNullReferenceException
                 }
+            }
+
+            public override string ToString()
+            {
+                return $@"{PrecursorMz.RawValue} {NodePeptide}"; // For debug convenience, not user-facing
             }
         }
     }
