@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.FilesView;
 using Process = System.Diagnostics.Process;
+using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Controls
 {
@@ -54,35 +55,72 @@ namespace pwiz.Skyline.Controls
             filesTree.InitializeTree(SkylineWindow);
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FilesTree FilesTree => filesTree;
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public SkylineWindow SkylineWindow { get; private set; }
+        public SkylineWindow SkylineWindow { get; }
 
-        public void ShowAuditLog()
+        protected override string GetPersistentString()
+        {
+            return base.GetPersistentString() + @"|" + FilesTree.GetPersistentString();
+        }
+
+        public void OpenAuditLog()
         {
             SkylineWindow.ShowAuditLog();
         }
 
         public void OpenContainingFolder(TreeNode selectedNode)
         {
-            if (FilesTree.SelectedNode is FilesTreeNode fileNode)
+            if (FilesTree.SelectedNode is FilesTreeNode filesTreeNode)
             {
-                Process.Start(@"explorer.exe", $@"/select,""{fileNode.LocalFilePath}""");
+                Process.Start(@"explorer.exe", $@"/select,""{filesTreeNode.LocalFilePath}""");
             }
         }
 
-        public void OpenLibraryExplorer(SpectralLibrary model)
+        public void OpenLibraryExplorerDialog(TreeNode selectedNode)
         {
-            SkylineWindow.OpenLibraryExplorer(model.Name);
+            var model = (SpectralLibrary)((FilesTreeNode)selectedNode).Model;
+            var libraryName = model.Name;
+
+            var index = SkylineWindow.OwnedForms.IndexOf(form => form is ViewLibraryDlg);
+
+            // Change the selected library if Library Explorer is already available
+            if (index != -1)
+            {
+                var viewLibraryDlg = SkylineWindow.OwnedForms[index] as ViewLibraryDlg;
+                viewLibraryDlg?.Activate();
+                viewLibraryDlg?.ChangeSelectedLibrary(libraryName);
+            }
+            // If not, open a new Library Explorer.
+            else
+            {
+                SkylineWindow.OpenLibraryExplorer(libraryName);
+            }
         }
 
-        public void ActivateReplicate(Replicate model)
+        // Replicates open using the replicate name, which is pulled from the parent tree node which
+        // avoids adding a pointer to the parent in SrmSettings and adding a new field on the
+        // replicate file's data model
+        public void ActivateReplicate(TreeNode selectedNode)
         {
-            // Replicates open using the replicate name, which is pulled from the parent tree node which
-            // avoids adding a pointer to the parent in SrmSettings and adding a new field on the
-            // replicate file's data model
+            var filesTreeNode = (FilesTreeNode)selectedNode;
+            Replicate model;
+            switch (filesTreeNode.Model)
+            {
+                case ReplicateSampleFile _:
+                    model = (Replicate)((FilesTreeNode)filesTreeNode.Parent).Model;
+                    break;
+                case Replicate replicate:
+                    model = replicate;
+                    break;
+                default:
+                    return;
+            }
+
             SkylineWindow.ActivateReplicate(model.Name);
         }
 
@@ -91,12 +129,146 @@ namespace pwiz.Skyline.Controls
             SkylineWindow.ManageResults();
         }
 
-        public void ShowSpectralLibrariesDialog()
+        public void OpenLibraryExplorerDialog()
         {
             SkylineWindow.ViewSpectralLibraries();
         }
 
-        public void FilesTree_MouseMove(Point location)
+        #region ITipDisplayer implementation
+
+        public Rectangle ScreenRect => Screen.GetBounds(FilesTree);
+
+        public bool AllowDisplayTip => FilesTree.Focused;
+
+        public Rectangle RectToScreen(Rectangle r)
+        {
+            return FilesTree.RectangleToScreen(r);
+        }
+
+        #endregion
+
+        // TreeNode => Open Context Menu
+        private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
+        {
+            _nodeTip.HideTip();
+
+            var filesTreeNode = FilesTree.SelectedNode as FilesTreeNode;
+            
+            libraryExplorerToolStripMenuItem.Visible = false;
+            manageResultsToolStripMenuItem.Visible = false;
+            openAuditLogMenuItem.Visible = false;
+            openLibraryInLibraryExplorerMenuItem.Visible = false;
+            openContainingFolderMenuStripItem.Visible = false;
+            selectReplicateMenuItem.Visible = false;
+
+            switch (filesTreeNode?.Model)
+            {
+                case ReplicatesFolder _:
+                    manageResultsToolStripMenuItem.Visible = true;
+                    manageResultsToolStripMenuItem.Enabled = true;
+                    return;
+                case Replicate _:
+                case ReplicateSampleFile _:
+                    selectReplicateMenuItem.Visible = true;
+
+                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
+                    openContainingFolderMenuStripItem.Visible = true;
+                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
+                    break;
+                case SpectralLibrariesFolder _:
+                    libraryExplorerToolStripMenuItem.Visible = true;
+                    return;
+                case SpectralLibrary _:
+                    openLibraryInLibraryExplorerMenuItem.Visible = true;
+
+                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
+                    openContainingFolderMenuStripItem.Visible = true;
+                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
+                    break;
+                case SkylineAuditLog _:
+                    openAuditLogMenuItem.Visible = true;
+                    
+                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
+                    openContainingFolderMenuStripItem.Visible = true;
+                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
+                    break;
+                case BackgroundProteome _:
+                case IonMobilityLibrary _:
+                case OptimizationLibrary _:
+                case RTCalc _:
+                case SkylineChromatogramCache _:
+                case SkylineViewFile _:
+                case SkylineFileModel _:
+                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
+                    openContainingFolderMenuStripItem.Visible = true;
+                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
+                    return;
+                default:
+                    e.Cancel = true;
+                    break;
+            }
+        }
+
+        private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
+        {
+            var filesTreeNode = e.Node as FilesTreeNode;
+
+            switch (filesTreeNode?.Model)
+            {
+                case SkylineAuditLog _:
+                    OpenAuditLog();
+                    break;
+                case SpectralLibrary _:
+                    OpenLibraryExplorerDialog(filesTreeNode); 
+                    break;
+                case ReplicateSampleFile _:
+                    ActivateReplicate(filesTreeNode);
+                    break;
+            }
+        }
+
+        private void FilesTree_OpenContainingFolderMenuItem(object sender, EventArgs e)
+        {
+            OpenContainingFolder(FilesTree.SelectedNode);
+        }
+
+        private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
+        {
+            ShowManageResultsDialog();
+        }
+
+        private void FilesTree_OpenLibraryExplorerMenuItem(object sender, EventArgs e) 
+        {
+            OpenLibraryExplorerDialog();
+        }
+
+        private void FilesTree_OpenAuditLogMenuItem(object sender, EventArgs e)
+        {
+            OpenAuditLog();
+        }
+
+        private void FilesTree_ActivateReplicateMenuItem(object sender, EventArgs e)
+        {
+            ActivateReplicate(FilesTree.SelectedNode);
+        }
+
+        private void FilesTree_OpenLibraryInLibraryExplorerMenuItem(object sender, EventArgs e)
+        {
+            OpenLibraryExplorerDialog(FilesTree.SelectedNode);
+        }
+
+        // FilesTree => display ToolTip
+        private void FilesTree_MouseMove(object sender, MouseEventArgs e)
+        {
+            FilesTree_MouseMove(e.Location);
+        }
+
+        private void FilesTree_LostFocus(object sender, EventArgs e)
+        {
+            _nodeTip?.HideTip();
+        }
+
+        private void FilesTree_MouseMove(Point location)
         {
             if (!_moveThreshold.Moved(location))
                 return;
@@ -121,112 +293,6 @@ namespace pwiz.Skyline.Controls
             {
                 _nodeTip?.HideTip();
             }
-        }
-
-        #region ITipDisplayer implementation
-
-        public Rectangle ScreenRect => Screen.GetBounds(FilesTree);
-
-        public bool AllowDisplayTip => FilesTree.Focused;
-
-        public Rectangle RectToScreen(Rectangle r)
-        {
-            return FilesTree.RectangleToScreen(r);
-        }
-
-        #endregion
-
-        protected override string GetPersistentString()
-        {
-            return base.GetPersistentString() + @"|" + FilesTree.GetPersistentString();
-        }
-
-        // FilesTree => display ToolTip
-        private void FilesTree_MouseMove(object sender, MouseEventArgs e)
-        {
-            FilesTree_MouseMove(e.Location);
-        }
-
-        private void FilesTree_LostFocus(object sender, EventArgs e)
-        {
-            _nodeTip?.HideTip();
-        }
-
-        // TreeNode => Open Context Menu
-        private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
-        {
-            _nodeTip.HideTip();
-
-            var filesTreeNode = FilesTree.SelectedNode as FilesTreeNode;
-
-            switch (filesTreeNode?.Model)
-            {
-                // TODO: Menu Item: Open Library
-                // TODO: Menu Item: Activate Replicate
-                case ReplicatesFolder _:
-                    manageResultsToolStripMenuItem.Visible = true;
-                    manageResultsToolStripMenuItem.Enabled = true;
-                    libraryExplorerToolStripMenuItem.Visible = false;
-                    openContainingFolderMenuStripItem.Visible = false;
-                    return;
-                case SpectralLibrariesFolder _:
-                    manageResultsToolStripMenuItem.Visible = false;
-                    libraryExplorerToolStripMenuItem.Visible = true;
-                    openContainingFolderMenuStripItem.Visible = false;
-                    return;
-                case BackgroundProteome _:
-                case IonMobilityLibrary _:
-                case OptimizationLibrary _:
-                case ReplicateSampleFile _:
-                case RTCalc _:
-                case SkylineAuditLog _:
-                case SkylineChromatogramCache _:
-                case SkylineViewFile _:
-                case SpectralLibrary _:
-                    manageResultsToolStripMenuItem.Visible = false;
-                    libraryExplorerToolStripMenuItem.Visible = false;
-            
-                    // only offer the Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
-                    openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
-                    return;
-                default:
-                    e.Cancel = true;
-                    break;
-            }
-        }
-
-        private void FilesTree_TreeNodeMouseDoubleClick(object sender, TreeNodeMouseClickEventArgs e)
-        {
-            var filesTreeNode = e.Node as FilesTreeNode;
-
-            switch (filesTreeNode?.Model)
-            {
-                case SkylineAuditLog _:
-                    ShowAuditLog();
-                    break;
-                case SpectralLibrary spectralLibrary:
-                    OpenLibraryExplorer(spectralLibrary);
-                    break;
-                case ReplicateSampleFile _:
-                    ActivateReplicate((Replicate)((FilesTreeNode)filesTreeNode.Parent).Model);
-                    break;
-            }
-        }
-
-        private void FilesTree_ShowContainingFolderMenuItem(object sender, EventArgs e)
-        {
-            OpenContainingFolder(FilesTree.SelectedNode);
-        }
-
-        private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
-        {
-            ShowManageResultsDialog();
-        }
-
-        private void FilesTree_LibraryExplorerMenuItem(object sender, EventArgs e) 
-        {
-            ShowSpectralLibrariesDialog();
         }
     }
 }

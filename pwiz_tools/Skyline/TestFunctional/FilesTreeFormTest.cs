@@ -31,6 +31,9 @@ using Peptide = pwiz.Skyline.Model.Peptide;
 
 // TODO: Replicate => verify right-click menu includes Open Containing Folder
 // TODO: Test Tooltips. See MethodEditTutorialTest.ShowNodeTip
+// TODO: tests for imsdb / irtdb with separate .sky file
+// TODO: test file system watcher - add, rename, delete
+// TODO: add a test scenario with an Audit Log
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
@@ -160,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
             var filesTreeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[4] as FilesTreeNode;
             RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.ActivateReplicate((Replicate)filesTreeNode?.Model);
+                SkylineWindow.FilesTreeForm.ActivateReplicate(filesTreeNode);
             });
             WaitForGraphs();
             RunUI(() => Assert.AreEqual(4, SkylineWindow.SelectedResultsIndex));
@@ -247,10 +250,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.Nodes.Count);
             Assert.AreEqual("Rat (NIST) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             Assert.AreEqual("Rat (GPM) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
-            
-            var peptideLibraryModel = (SpectralLibrary)((FilesTreeNode)SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.Nodes[0])?.Model;
+
+            var peptideLibraryTreeNode = (FilesTreeNode)SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.Nodes[0];
+            var peptideLibraryModel = (SpectralLibrary)peptideLibraryTreeNode?.Model;
             Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name, peptideLibraryModel?.Name);
-            RunUI(() => SkylineWindow.FilesTreeForm.OpenLibraryExplorer(peptideLibraryModel));
+            RunUI(() => SkylineWindow.FilesTreeForm.OpenLibraryExplorerDialog(peptideLibraryTreeNode));
             var libraryDlg = WaitForOpenForm<ViewLibraryDlg>();
             RunUI(() =>
             {
@@ -279,11 +283,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesView.FilesTree_TreeNodeLabel_ViewFile));
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesView.FilesTree_TreeNodeLabel_ChromatogramCache));
 
-            // TODO: add a test scenario with an Audit Log
             // // Project Files => Audit Log Action
             // RunUI(() =>
             // {
-            //     SkylineWindow.FilesTreeForm.ShowAuditLog();
+            //     SkylineWindow.FilesTreeForm.OpenAuditLog();
             // });
             // WaitForConditionUI(() => SkylineWindow.AuditLogForm.Visible);
 

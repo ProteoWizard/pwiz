@@ -40,9 +40,12 @@ namespace pwiz.Skyline.Controls
             this.filesTree = new pwiz.Skyline.Controls.FilesTree();
             this.panel1 = new System.Windows.Forms.Panel();
             this.filesTreeContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.libraryExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openContainingFolderMenuStripItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.libraryExplorerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openLibraryInLibraryExplorerMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.selectReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openAuditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.filesTreeContextMenu.SuspendLayout();
             this.SuspendLayout();
@@ -70,9 +73,18 @@ namespace pwiz.Skyline.Controls
             this.filesTreeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.libraryExplorerToolStripMenuItem,
             this.manageResultsToolStripMenuItem,
-            this.openContainingFolderMenuStripItem});
+            this.openContainingFolderMenuStripItem,
+            this.openLibraryInLibraryExplorerMenuItem,
+            this.selectReplicateMenuItem,
+            this.openAuditLogMenuItem});
             this.filesTreeContextMenu.Name = "contextMenuStrip1";
             resources.ApplyResources(this.filesTreeContextMenu, "filesTreeContextMenu");
+            // 
+            // libraryExplorerToolStripMenuItem
+            // 
+            resources.ApplyResources(this.libraryExplorerToolStripMenuItem, "libraryExplorerToolStripMenuItem");
+            this.libraryExplorerToolStripMenuItem.Name = "libraryExplorerToolStripMenuItem";
+            this.libraryExplorerToolStripMenuItem.Click += new System.EventHandler(this.FilesTree_OpenLibraryExplorerMenuItem);
             // 
             // manageResultsToolStripMenuItem
             // 
@@ -85,13 +97,25 @@ namespace pwiz.Skyline.Controls
             this.openContainingFolderMenuStripItem.Image = global::pwiz.Skyline.Properties.Resources.Folder;
             resources.ApplyResources(this.openContainingFolderMenuStripItem, "openContainingFolderMenuStripItem");
             this.openContainingFolderMenuStripItem.Name = "openContainingFolderMenuStripItem";
-            this.openContainingFolderMenuStripItem.Click += new System.EventHandler(this.FilesTree_ShowContainingFolderMenuItem);
+            this.openContainingFolderMenuStripItem.Click += new System.EventHandler(this.FilesTree_OpenContainingFolderMenuItem);
             // 
-            // libraryExplorerToolStripMenuItem
+            // openLibraryInLibraryExplorerMenuItem
             // 
-            resources.ApplyResources(this.libraryExplorerToolStripMenuItem, "libraryExplorerToolStripMenuItem");
-            this.libraryExplorerToolStripMenuItem.Name = "libraryExplorerToolStripMenuItem";
-            this.libraryExplorerToolStripMenuItem.Click += new System.EventHandler(this.FilesTree_LibraryExplorerMenuItem);
+            this.openLibraryInLibraryExplorerMenuItem.Name = "openLibraryInLibraryExplorerMenuItem";
+            resources.ApplyResources(this.openLibraryInLibraryExplorerMenuItem, "openLibraryInLibraryExplorerMenuItem");
+            this.openLibraryInLibraryExplorerMenuItem.Click += new System.EventHandler(this.FilesTree_OpenLibraryInLibraryExplorerMenuItem);
+            // 
+            // selectReplicateMenuItem
+            // 
+            this.selectReplicateMenuItem.Name = "selectReplicateMenuItem";
+            resources.ApplyResources(this.selectReplicateMenuItem, "selectReplicateMenuItem");
+            this.selectReplicateMenuItem.Click += new System.EventHandler(this.FilesTree_ActivateReplicateMenuItem);
+            // 
+            // openAuditLogMenuItem
+            // 
+            this.openAuditLogMenuItem.Name = "openAuditLogMenuItem";
+            resources.ApplyResources(this.openAuditLogMenuItem, "openAuditLogMenuItem");
+            this.openAuditLogMenuItem.Click += new System.EventHandler(this.FilesTree_OpenAuditLogMenuItem);
             // 
             // FilesTreeForm
             // 
@@ -117,5 +141,8 @@ namespace pwiz.Skyline.Controls
         private System.Windows.Forms.ToolStripMenuItem openContainingFolderMenuStripItem;
         private System.Windows.Forms.ToolStripMenuItem manageResultsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem libraryExplorerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openLibraryInLibraryExplorerMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem selectReplicateMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openAuditLogMenuItem;
     }
 }
