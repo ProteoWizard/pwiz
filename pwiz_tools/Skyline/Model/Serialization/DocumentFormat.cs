@@ -119,8 +119,7 @@ namespace pwiz.Skyline.Model.Serialization
         public static readonly DocumentFormat VERSION_23_13 = new DocumentFormat(23.13); // Relative abundance formatting
         public static readonly DocumentFormat VERSION_24_1 = new DocumentFormat(24.1); // Release format
         public static readonly DocumentFormat VERSION_24_11 = new DocumentFormat(24.11); // Global spectrum filters
-        public static readonly DocumentFormat VERSION_24_12 = new DocumentFormat(24.12); // truncated_proportion
-        public static readonly DocumentFormat CURRENT = VERSION_24_12;
+        public static readonly DocumentFormat CURRENT = VERSION_24_11;
 
         private readonly double _versionNumber;
         public DocumentFormat(double versionNumber)

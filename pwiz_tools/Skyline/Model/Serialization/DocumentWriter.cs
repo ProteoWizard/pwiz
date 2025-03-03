@@ -670,9 +670,6 @@ namespace pwiz.Skyline.Model.Serialization
             writer.WriteAttributeNullable(ATTR.height, chromInfo.Height);
             writer.WriteAttributeNullable(ATTR.mass_error_ppm, chromInfo.MassError);
             writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
-            // Writing truncated proportion 0 for peaks with a truncated count of zero is redundant
-            if ((chromInfo.Truncated ?? 0) != 0)
-                writer.WriteAttributeNullable(ATTR.truncated_proportion, chromInfo.TruncatedProportion);
             writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLowerInvariant());
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             writer.WriteAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);

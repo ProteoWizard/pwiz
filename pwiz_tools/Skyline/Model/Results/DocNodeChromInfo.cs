@@ -172,23 +172,22 @@ namespace pwiz.Skyline.Model.Results
         [Flags]
         private enum Flags
         {
-            HasRetentionTime =          0x00000001,
-            HasStartRetentionTime =     0x00000002,
-            HasEndRetentionTime =       0x00000004,
-            HasFwhm =                   0x00000008,
-            HasArea =                   0x00000010,
-            HasAreaMs1 =                0x00000020,
-            HasAreaFragment =           0x00000040,
-            HasBackgroundArea =         0x00000080,
-            HasBackgroundAreaMs1 =      0x00000100,
-            HasBackgroundAreaFragment = 0x00000200,
-            HasHeight =                 0x00000400,
-            HasMassError =              0x00000800,
-            HasLibraryDotProduct =      0x00001000,
-            HasIsotopeDotProduct =      0x00002000,
-            HasQValue =                 0x00004000,
-            HasZScore =                 0x00008000,
-            HasTruncatedProportion =    0x00010000,
+            HasRetentionTime = 1,
+            HasStartRetentionTime = 2,
+            HasEndRetentionTime = 4,
+            HasFwhm = 8,
+            HasArea = 16,
+            HasAreaMs1 = 32,
+            HasAreaFragment = 64,
+            HasBackgroundArea = 128,
+            HasBackgroundAreaMs1 = 256,
+            HasBackgroundAreaFragment = 512,
+            HasHeight = 1024,
+            HasMassError = 2048,
+            HasLibraryDotProduct = 4096,
+            HasIsotopeDotProduct = 8192,
+            HasQValue = 16384,
+            HasZScore = 32768,
         }
 
         private Flags _flags;
@@ -210,7 +209,6 @@ namespace pwiz.Skyline.Model.Results
                                         float? height,
                                         float? massError,
                                         int? truncated,
-                                        float? truncatedProportion,
                                         PeakIdentification identified,
                                         float? libraryDotProduct,
                                         float? isotopeDotProduct,
@@ -236,7 +234,6 @@ namespace pwiz.Skyline.Model.Results
             Height = height;
             MassError = massError;
             Truncated = truncated;
-            TruncatedProportion = truncatedProportion;
             Identified = identified;
             LibraryDotProduct = libraryDotProduct;
             IsotopeDotProduct = isotopeDotProduct;
@@ -341,13 +338,6 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return _truncated >= 0 ? _truncated : (int?) null; }
             private set { _truncated = value ?? -1; }
-        }
-
-        private float _truncatedProportion;
-        public float? TruncatedProportion
-        {
-            get { return GetOptional(_truncatedProportion, Flags.HasTruncatedProportion); }
-            private set { _truncatedProportion = SetOptional(value, Flags.HasTruncatedProportion); }
         }
 
         public PeakIdentification Identified { get; private set; }
@@ -465,7 +455,6 @@ namespace pwiz.Skyline.Model.Results
                    other.BackgroundAreaFragment.Equals(BackgroundAreaFragment) &&
                    other.Height.Equals(Height) &&
                    other.Truncated.Equals(Truncated) &&
-                   other.TruncatedProportion.Equals(TruncatedProportion) &&
                    other.Identified.Equals(Identified) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.IsotopeDotProduct.Equals(IsotopeDotProduct) &&
@@ -504,7 +493,6 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (BackgroundAreaFragment.HasValue ? BackgroundAreaFragment.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Height.HasValue ? Height.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
-                result = (result*397) ^ (TruncatedProportion.HasValue ? TruncatedProportion.Value.GetHashCode() : 0);
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);

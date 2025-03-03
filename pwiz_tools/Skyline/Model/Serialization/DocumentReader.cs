@@ -124,10 +124,6 @@ namespace pwiz.Skyline.Model.Serialization
             float? height = reader.GetNullableFloatAttribute(ATTR.height);
             float? massError = reader.GetNullableFloatAttribute(ATTR.mass_error_ppm);
             int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
-            float? truncatedProportion = reader.GetNullableFloatAttribute(ATTR.truncated_proportion);
-            // When truncated count is zero, truncate proportion is known to be zero
-            if (truncated is 0 && !truncatedProportion.HasValue)
-                truncatedProportion = 0;
             PeakIdentification identified = reader.GetEnumAttribute(ATTR.identified, PeakIdentificationFastLookup.Dict,
                 PeakIdentification.FALSE, XmlUtil.EnumCase.upper);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
@@ -162,7 +158,6 @@ namespace pwiz.Skyline.Model.Serialization
                 height,
                 massError,
                 truncated,
-                truncatedProportion,
                 identified,
                 libraryDotProduct,
                 isotopeDotProduct,

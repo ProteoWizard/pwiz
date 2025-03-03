@@ -195,7 +195,6 @@ namespace pwiz.Skyline.Model.Serialization
             public const string fwhm = "fwhm";
             public const string fwhm_degenerate = "fwhm_degenerate";
             public const string truncated = "truncated";
-            public const string truncated_proportion = "truncated_proportion";
             public const string identified = "identified";
             public const string user_set = "user_set";
             public const string peak_count_ratio = "peak_count_ratio";

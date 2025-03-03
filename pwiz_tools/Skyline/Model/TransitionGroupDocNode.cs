@@ -2566,7 +2566,6 @@ namespace pwiz.Skyline.Model
             private float? BackgroundAreaFragment { get; set; }
             private float? MassError { get; set; }
             private int? Truncated { get; set; }
-            private float? TruncatedProportion { get; set; }
             private PeakIdentification Identified { get; set; }
             private float? LibraryDotProduct { get; set; }
             private float? IsotopeDotProduct { get; set; }
@@ -2626,11 +2625,6 @@ namespace pwiz.Skyline.Model
                                 Truncated = 0;
                             if (info.IsTruncated.Value)
                                 Truncated++;
-
-                            // Weighted mean value for truncation
-                            double truncatedProportion = TruncatedProportion ?? 1;
-                            truncatedProportion += ((info.IsTruncated.Value ? 1 : 0) - truncatedProportion) * info.Area / Area.Value;
-                            TruncatedProportion = (float)truncatedProportion;
                         }
                         switch (Settings.GetChromSource(nodeTran))
                         {
@@ -2719,7 +2713,6 @@ namespace pwiz.Skyline.Model
                                                     (float?) BestRetentionTimes?.Height,
                                                     MassError,
                                                     Truncated,
-                                                    TruncatedProportion,
                                                     Identified,
                                                     LibraryDotProduct,
                                                     IsotopeDotProduct,
