@@ -22,11 +22,7 @@
         のライブラリは、保持時間のアラインメントのために同じ装置と標準ペプチドを用いる後続のDIAランで何度も使用することができます。 
     </p>
     <p>
-        DDA検索結果を、このライブラリDIA分析アプローチに適したライブラリに変換するメソッドは数多く存在し（<a
-            href="https://skyline.ms/webinar02.url">Skylineチュートリアルウェビナー#2</a>の「以前のナレッジワークフロー」で説明され、以降はウェビナー<a
-            href="https://skyline.ms/webinar14.url">#14</a>、<a href="https://skyline.ms/webinar15.url">#15</a>、<a
-            href="https://skyline.ms/webinar18.url">#18</a>およびチュートリアル<a
-            href="https://skyline.ms/tutorial_dia_swath_ja.url">DIA/SWATHデータの分析</a>でより詳しく文書化）、DIA分析を開始する最も直接的でアクセスしやすい方法は、同じ装置にDIAランとDDAランを組み込み、DDA結果のスペクトルおよび保持時間をDIAランの予測として使用することです。
+        DDA検索結果を、このライブラリDIA分析アプローチに適したライブラリに変換するメソッドは数多く存在し（<a href="https://skyline.ms/webinar02.url">Skylineチュートリアルウェビナー#2</a>の「以前のナレッジワークフロー」で説明され、以降はウェビナー<a href="https://skyline.ms/webinar14.url">#14</a>、<a href="https://skyline.ms/webinar15.url">#15</a>、<a href="https://skyline.ms/webinar18.url">#18</a>およびチュートリアル<a href="https://skyline.ms/tutorial_dia_swath_ja.url">DIA/SWATHデータの分析</a>でより詳しく文書化）、DIA分析を開始する最も直接的でアクセスしやすい方法は、同じ装置にDIAランとDDAランを組み込み、DDA結果のスペクトルおよび保持時間をDIAランの予測として使用することです。
     </p>
     <p>
         このチュートリアルでは、Skylineで簡単な散在DDA/DIAアプローチを使用してDIAランを設定、インポート、およびプロセスする方法を学習します。研究でDIAを使用する場合には、上記のウェビナーやチュートリアルで説明されているより強力で複雑な方法に進むことを強くお勧めします。
@@ -133,10 +129,8 @@
             <td><b>注：</b>[ <b>保持時間のフィルタ</b> ] オプションは、[ <b>MS/MS IDのスキャンの中で</b> [5] <b>分前後のスキャンのもののみを使用</b> ]
                 のままにしておいてください。これによって、Skylineはライブラリ内で見つかったペプチドスペクトル一致から5分以内で取得されたDIAスペクトルからの強度のみを抽出します。単一のペプチドスペクトル一致の場合、総抽出ウィンドウは10分です。所与のペプチドに対して1つ以上のIDがある場合、Skylineは最小ID時間マイナス5分と最大ID時間プラス5分の範囲で取得されたスペクトルから抽出します。（後で説明しますが、すべてのID保持時間は構築した非冗長ライブラリ内にも保存されます。)
                 2つ目のオプションである [ <b>予測RTの中で</b> [5] <b>分前後のスキャンのもののみを使用</b> ]
-                では、RT予測（たとえばSSRCalc、または一般的にはiRTライブラリ）を使用して抽出時間範囲を決定します。本チュートリアルではRT予測は使用しませんが、これは前記の他のチュートリアルやウェビナー、そして<a
-                    href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">アッセイのインポート</a>のヒント（Skylineのウェブサイトの
-                [ <a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tips">ヒント</a> ] &gt; [ <a
-                    href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=other_tools">他の定量ツールでの作業</a>
+                では、RT予測（たとえばSSRCalc、または一般的にはiRTライブラリ）を使用して抽出時間範囲を決定します。本チュートリアルではRT予測は使用しませんが、これは前記の他のチュートリアルやウェビナー、そして<a href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">アッセイのインポート</a>のヒント（Skylineのウェブサイトの
+                [ <a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tips">ヒント</a> ] &gt; [ <a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=other_tools">他の定量ツールでの作業</a>
                 ]）でも説明しています<b>。</b></td>
         </tr>
     </table>
@@ -290,11 +284,6 @@
     <p>
         <img src="s-07.png" />
     </p>
-    <p>
-        このデータセットでは、[ <b>カットオフスコア</b> ]
-        フィールドが「0.95」に設定されており、PeptideProphetスコアが0.95以上のペプチドスペクトル一致が含まれることを意味します。これはDDAデータがTPPで処理されたためです（SEQUESTによるペプチドスペクトル一致の後）。q値またはゼロが最高で1が最低である期待スコアを使用する他のスペクトル一致パイプラインの場合は、1
-        – スコアのカットオフスコアを使用します。したがって、0.95は≤0.05となります。再利用可能なライブラリの場合は、0.99などのもっと厳密なカットオフを使用します（≤0.01またはq値の偽発見率1%）。
-    </p>
     <ul>
         <li>[ <b>ファイルを追加</b> ] ボタンをクリックします。</li>
         <li>表示される [ <b>入力ファイルを追加</b> ] フォームで、チュートリアルが入っているディレクトリから以下のファイルを選択します。<ul>
@@ -303,9 +292,13 @@
         </li>
     </ul>
     <p>
+        このデータセットでは、[ <b>スコア閾値</b> ] フィールド「0.95」がPeptideProphetスコアが0.95以上のペプチドスペクトル一致が
+        含まれることを意味します。これはDDAデータがTPPで処理されたためです（SEQUESTによるペプチドスペクトル一致の後）。再利用可能なライブラ
+        リの場合は、0.99などのもっと厳密な閾値を使用します（≤0.01またはq値の偽発見率1%）。
+    </p>
+    <p>
         このファイルには、1回のDDAランからのペプチドスペクトル一致結果が含まれています。実際の実験では、質量分析計で実際にDDA取得を行い、それから検索エンジンで出力ファイルを実行し、このようなファイルを1つ以上生成します（通常はTPPが生成するpepXMLに対して1つ）。ここでは、ファイルが提供されています。元のDDAランデータファイル（mzXMLに変換）であるinteract-20130311_DDA_Pit01.mzXMLも同じフォルダにありますので注意してください。このファイルをクロマトグラム抽出用にインポートする必要はありませんが、ライブラリビルダーが.pep.xmlファイルには存在しない、そのライブラリのMS/MSスペクトルを検出するためにこのファイルが存在している必要があります。Mascot
-        DATファイル、Proteome Discoverer pdResultファイル、X! TandemネイティブXMLファイルなどのその他のスペクトル一致パイプラインの出力では、1つの出力ファイルに必要な情報すべてが含まれています。Skylineウェブサイトで<a
-            href="https://skyline.ms/build-blib.url">対応するツールおよびファイル形式の全リスト</a>をご覧ください。
+        DATファイル、Proteome Discoverer pdResultファイル、X! TandemネイティブXMLファイルなどのその他のスペクトル一致パイプラインの出力では、1つの出力ファイルに必要な情報すべてが含まれています。Skylineウェブサイトで<a href="https://skyline.ms/build-blib.url">対応するツールおよびファイル形式の全リスト</a>をご覧ください。
     </p>
     <ul>
         <li>[ <b>開く</b> ] をクリックしてこのファイルを構築しているライブラリに追加します。</li>
@@ -419,8 +412,7 @@
         <img src="s-14.png" />
     </p>
     <p>
-        今FASTAテキストに6個のターゲットタンパク質だけを含めたこの簡単な導入では、デコイやmProphetアルゴリズムで生成された動的ピーク選択モデルは使用しません。これらのオプションについての詳細は、<a
-            href="https://skyline.ms/tutorial_dia_swath_ja.url">DIA/SWATHデータの分析</a>のチュートリアルを参照してください。
+        今FASTAテキストに6個のターゲットタンパク質だけを含めたこの簡単な導入では、デコイやmProphetアルゴリズムで生成された動的ピーク選択モデルは使用しません。これらのオプションについての詳細は、<a href="https://skyline.ms/tutorial_dia_swath_ja.url">DIA/SWATHデータの分析</a>のチュートリアルを参照してください。
     </p>
     <ul>
         <li>[ <b>完了</b> ] ボタンをクリックします。</li>
@@ -456,8 +448,7 @@
         <i>m/z</i>の範囲にある考えられるすべてのプリカーサーとプロダクトの組み合わせを網羅しているため、あらゆるセットのプロダクトイオンを抽出できます（少なくともMS/MSスペクトルの測定範囲内にあるもの）。しかしながら、実際には考えられるすべてのプロダクトイオンを抽出する必要はないことが多く、事実、ノイズが多く、必要とするペプチドの信号が非常に低いクロマトグラムを追加してペプチドの検出を妨げる場合があります。最も強度が高い6個のトランジション(y1、y2、b1、b2を含まない)を必要とするように設定するプロダクトイオンの選択規則は、プロテオミクスコミュニティにおいて広く受け入れられるようになりました。
     </p>
     <p>
-        大規模なDIA実験では、高度なピーク選択（ペプチド検出）モデルをトレーニングするデコイペプチド<sup>6</sup>があると有用な場合があります。これによってSkyline自動ピーク選択が向上し、Skylineが検出確率スコア（q値）を生成できるようになります。デコイペプチドは厳密にはDIAワークフローには必要ではなく、カスタムピークスコアメソッドを適用する場合にのみ必要となります。多くの場合、Skylineデフォルトピーク選択が十分にうまく機能するので、カスタムピークスコアは必要ありません。カスタムピークスコアを使用する場合でも、デコイに代わるものはあります（<a
-            href="https://skyline.ms/tutorial_peak_picking_ja.url">高度なピーク選択モデル</a>のチュートリアルを参照）。本チュートリアルでは、ドキュメントにデコイを追加しません。
+        大規模なDIA実験では、高度なピーク選択（ペプチド検出）モデルをトレーニングするデコイペプチド<sup>6</sup>があると有用な場合があります。これによってSkyline自動ピーク選択が向上し、Skylineが検出確率スコア（q値）を生成できるようになります。デコイペプチドは厳密にはDIAワークフローには必要ではなく、カスタムピークスコアメソッドを適用する場合にのみ必要となります。多くの場合、Skylineデフォルトピーク選択が十分にうまく機能するので、カスタムピークスコアは必要ありません。カスタムピークスコアを使用する場合でも、デコイに代わるものはあります（<a href="https://skyline.ms/tutorial_peak_picking_ja.url">高度なピーク選択モデル</a>のチュートリアルを参照）。本チュートリアルでは、ドキュメントにデコイを追加しません。
     </p>
     <h1>DIA結果の調査</h1>
     <p>
@@ -472,6 +463,7 @@
         <li>[ <b>ビュー</b> ] メニューで [ <b>ピーク面積</b> ] を選択し、[ <b>繰り返し測定の比較</b> ] ( F7) をクリックします。</li>
         <li>クロマトグラムグラフの1つを右クリックし、[ <b>凡例</b> ] をクリックしてチェックをオフにします。</li>
         <li>[ <b>ピーク面積－繰り返し測定の比較</b> ] グラフを [ <b>ライブラリ一致</b> ] ビューの上にあるメインウィンドウの右端にドッキングします。</li>
+        <li>[ <b>ピーク面積－繰り返し測定の比較</b> ] グラフを右クリックし、[ <b>内積を表示</b> ] を選択して [ <b>標識</b> ] をクリックします。</li>
         <li>[ <b>ターゲット</b> ] ビュー内の最初のペプチドK.YALSQDV<b><u>C</u></b>TYR.D [64, 74]を選択します。</li>
     </ul>
     <p class="keep-next">
@@ -755,10 +747,10 @@
     <p>
         <img src="s-29.png" />
     </p>
-    <p class="keep-next">
+    <p>
         41.68分で、抽出されたピークのm/zが左にシフトするのがわかります。
     </p>
-    <p class="keep-next">
+    <p>
         <img src="s-30.png" />
     </p>
     <p>
@@ -773,16 +765,10 @@
     </p>
     <h1>まとめ</h1>
     <p>
-        本チュートリアルでは、DIA装置メソッドの生成またはこのチュートリアル同様に単なるデータ分析に使用するDIA取得スキームを定義しました。DDA検索結果からスペクトルライブラリを構築し、測定されたRTに基づいてライブラリ内で保持時間制限を設定し、対象とするタンパク質とDDAランからの一致するスペクトルに基づいて測定するトランジションセットを定義し、DIAランをインポートし、その結果生じるデータ品質を分析しました。最後に、すべてのSkylineドキュメント同様、対象とするペプチドのピーク面積と統計情報が生成できます。本チュートリアルでは、さらに高度な調査のためにその他に複数のチュートリアル（<a
-            href="https://skyline.ms/tutorial_method_edit_ja.url">ターゲットメソッドの編集</a>、<a
-            href="https://skyline.ms/tutorial_existing_quant_ja.url">既存の定量的実験</a>、<a href="https://skyline.ms/tutorial_irt_ja.url">iRT保持時間の予測</a>、<a
-            href="https://skyline.ms/tutorial_peak_picking_ja.url">高度なピーク選択モデル</a>、<a
-            href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">アッセイライブラリのインポート</a>および<a
-            href="https://panoramaweb.org/labkey/wiki/home/page.view?name=chromatogram_libraries">パノラマクロマトグラムライブラリ</a>）に言及しています。
+        本チュートリアルでは、DIA装置メソッドの生成またはこのチュートリアル同様に単なるデータ分析に使用するDIA取得スキームを定義しました。DDA検索結果からスペクトルライブラリを構築し、測定されたRTに基づいてライブラリ内で保持時間制限を設定し、対象とするタンパク質とDDAランからの一致するスペクトルに基づいて測定するトランジションセットを定義し、DIAランをインポートし、その結果生じるデータ品質を分析しました。最後に、すべてのSkylineドキュメント同様、対象とするペプチドのピーク面積と統計情報が生成できます。本チュートリアルでは、さらに高度な調査のためにその他に複数のチュートリアル（<a href="https://skyline.ms/tutorial_method_edit_ja.url">ターゲットメソッドの編集</a>、<a href="https://skyline.ms/tutorial_existing_quant_ja.url">既存の定量的実験</a>、<a href="https://skyline.ms/tutorial_irt_ja.url">iRT保持時間の予測</a>、<a href="https://skyline.ms/tutorial_peak_picking_ja.url">高度なピーク選択モデル</a>、<a href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">アッセイライブラリのインポート</a>および<a href="https://panoramaweb.org/labkey/wiki/home/page.view?name=chromatogram_libraries">パノラマクロマトグラムライブラリ</a>）に言及しています。
     </p>
     <p>
-        本ワークフローでは、DIAランの前、後、またはその間に取得したDDAランがあれば、SkylineであらゆるDIAデータセットを分析できるようになります。これはDIAデータ分析を始める簡単な方法の1つですが、<a
-            href="https://skyline.ms/tutorial_dia_swath_ja.url">DIA/SWATHデータの分析</a>チュートリアルで勉強を続けることが強く奨励されます。そこでは、較正されたiRT値を使用してスペクトルライブラリを構築し、クロマトグラムピークのスコアと選択にこの正規化された保持時間とmProphet統計モデルを使用します。また、Skylineでのグループ比較も使用して、調整されたp値で各ペプチドまたはタンパク質の条件による倍率変化を推定します。
+        本ワークフローでは、DIAランの前、後、またはその間に取得したDDAランがあれば、SkylineであらゆるDIAデータセットを分析できるようになります。これはDIAデータ分析を始める簡単な方法の1つですが、<a href="https://skyline.ms/tutorial_dia_swath_ja.url">DIA/SWATHデータの分析</a>チュートリアルで勉強を続けることが強く奨励されます。そこでは、較正されたiRT値を使用してスペクトルライブラリを構築し、クロマトグラムピークのスコアと選択にこの正規化された保持時間とmProphet統計モデルを使用します。また、Skylineでのグループ比較も使用して、調整されたp値で各ペプチドまたはタンパク質の条件による倍率変化を推定します。
     </p>
     <h1>参考文献</h1>
     <p class="bibliography">
