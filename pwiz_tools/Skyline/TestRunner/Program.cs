@@ -1408,6 +1408,15 @@ namespace TestRunner
                 testList.RemoveAll(test => test.IsPerfTest);
                 unfilteredTestList.RemoveAll(test => test.IsPerfTest);
             }
+            else
+            {
+                // Take advantage of the extra time available in perftest runs to do the leak tests we
+                // skip in regular nightlies - but skip leak tests covered in regular nightlies
+                foreach (var test in unfilteredTestList)
+                {
+                    test.DoNotLeakTest = !test.DoNotLeakTest;
+                }
+            }
 
             // If this is a nightly run, check the SKYLINE_NIGHTLY_TEST_EXCLUSIONS env var 
             HandleNightlyTestExclusions(testList, unfilteredTestList, log, asNightly);
@@ -1527,6 +1536,11 @@ namespace TestRunner
                     {
                         runTests.Log("\r\n");
                         runTests.Log("# Pass 0: Run with French number format, no vendor readers, no internet access.\r\n");
+                        if (testList.Any(t => t.IsPerfTest))
+                        {
+                            // These are largely about vendor and/or internet performance, so not worth doing in pass 0
+                            runTests.Log("# Skipping perf tests for pass 0.\r\n");
+                        }
                     }
 
                     runTests.Language = new CultureInfo("fr");
@@ -1534,18 +1548,12 @@ namespace TestRunner
                     runTests.AccessInternet = false;
                     runTests.RunPerfTests = false;
                     runTests.CheckCrtLeaks = CrtLeakThreshold;
-                    bool warnedPass0PerfTest = false;
                     for (int testNumber = 0; testNumber < testList.Count; testNumber++)
                     {
                         var test = testList[testNumber];
                         if (test.IsPerfTest)
                         {
                             // These are largely about vendor and/or internet performance, so not worth doing in pass 0
-                            if (!warnedPass0PerfTest)
-                            {
-                                warnedPass0PerfTest = true;
-                                runTests.Log("# Skipping perf tests for pass 0.\r\n");
-                            }
                             continue;
                         }
                         if (!runTests.Run(test, 0, testNumber, dmpDir, false) || // No point in re-running a failed test
@@ -1571,9 +1579,20 @@ namespace TestRunner
                     {
                         runTests.Log("\r\n");
                         runTests.Log("# Pass 1: Run tests multiple times to detect memory leaks.\r\n");
+                        if (testList.Any(t => t.DoNotLeakTest))
+                        {
+                            // These are  too lengthy to run multiple times for leak testing, so not a good fit for pass 1
+                            // But it's a shame to skip them entirely, so we flip the attribute so they run on perf test machines
+                            runTests.Log("# Tests with NoLeakTesting attribute are skipped in pass 1 but prioritized in pass 2.\r\n");
+                            runTests.Log("# Note that systems running perf tests invert the NoLeakTesting attribute to ensure overall coverage.\r\n");
+                        }
+                        if (testList.Any(t => t.IsPerfTest))
+                        {
+                            // These are generally too lengthy to run multiple times, so not a good fit for pass 1
+                            runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
+                        }
                     }
 
-                    bool warnedPass1PerfTest = false;
                     var maxDeltas = new LeakTracking();
                     int maxIterationCount = 0;
 
@@ -1590,11 +1609,12 @@ namespace TestRunner
                             if (test.IsPerfTest)
                             {
                                 // These are generally too lengthy to run multiple times, so not a good fit for pass 1
-                                if (!warnedPass1PerfTest)
-                                {
-                                    warnedPass1PerfTest = true;
-                                    runTests.Log("# Skipping perf tests for pass 1 leak checks.\r\n");
-                                }
+                                continue;
+                            }
+
+                            if (test.DoNotLeakTest)
+                            {
+                                // These are specifically too lengthy to run multiple times, so not a good fit for pass 1
                                 continue;
                             }
 
@@ -1712,6 +1732,11 @@ namespace TestRunner
                     runTests.Log("# Pass 2+: Run tests in each selected language.\r\n");
                 }
 
+                // Move any tests with the NoLeakTesting attribute to the front of the list for pass 2, as we skipped them in pass 1
+                testList = testList.Where(t => t.DoNotLeakTest)
+                    .Concat(testList.Where(t => !t.DoNotLeakTest))
+                    .ToList();
+
                 int perfPass = pass; // For nightly tests, we'll run perf tests just once per language, and only in one language (dynamically chosen for coverage) if english and french (along with any others) are both enabled
                 bool needsPerfTestPass2Warning = asNightly && testList.Any(t => t.IsPerfTest); // No perf tests, no warning
                 var perfTestsOneLanguageOnly = asNightly && perftests && languages.Any(l => l.StartsWith("en")) && languages.Any(l => l.StartsWith("fr"));
@@ -1756,7 +1781,8 @@ namespace TestRunner
                                     }
                                     break;
                                 }
-                                if (!runTests.Run(test, pass, testNumber, dmpDir, false))
+                                if (!runTests.Run(test, pass, testNumber, dmpDir, false) || // Test failed, don't rerun
+                                    RunOnceTestNames.Contains(test.TestMethod.Name)) // No point in running certain tests more than once
                                 {
                                     removeList.Add(test);
                                     i = languages.Length - 1;   // Don't run other languages.
