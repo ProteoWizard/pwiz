@@ -820,10 +820,10 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             driftTimesByFileId = new IndexedIonMobilities(driftTimesBySpectraIdAndFileId[id]);
                         }
-                        var peakBoundariesByFileId = ImmutableSortedList<int, ExplicitPeakBounds>.EMPTY;
+                        var peakBoundariesByFileId = ExplicitPeakBoundsDict<int>.EMPTY;
                         if (peakBoundsBySpectraIdAndFileId != null)
                         {
-                            peakBoundariesByFileId = ImmutableSortedList.FromValues(peakBoundsBySpectraIdAndFileId[id].Distinct());
+                            peakBoundariesByFileId = new ExplicitPeakBoundsDict<int>(peakBoundsBySpectraIdAndFileId[id].Distinct());
                         }
                         LibKey key;
                         if (isProteomic)
@@ -1185,8 +1185,8 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
                         var driftTimesByFileId = IndexedIonMobilities.Read(stream);
-                        ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries =
-                            ReadPeakBoundaries(stream);
+                        ExplicitPeakBoundsDict<int> peakBoundaries =
+                            ReadPeakBoundaries(stream).ValueFromCache(valueCache);
                         _anyExplicitPeakBounds = _anyExplicitPeakBounds || peakBoundaries.Count > 0;
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
@@ -1246,12 +1246,12 @@ namespace pwiz.Skyline.Model.Lib
                 details);
         }
 
-        private ImmutableSortedList<int, ExplicitPeakBounds> ReadPeakBoundaries(Stream stream)
+        private ExplicitPeakBoundsDict<int> ReadPeakBoundaries(Stream stream)
         {
             int peakBoundCount = PrimitiveArrays.ReadOneValue<int>(stream);
             if (peakBoundCount == 0)
             {
-                return ImmutableSortedList<int, ExplicitPeakBounds>.EMPTY;
+                return ExplicitPeakBoundsDict<int>.EMPTY;
             }
             var peakBoundaryValues = new List<KeyValuePair<int, ExplicitPeakBounds>>();
             for (int i = 0; i < peakBoundCount; i++)
@@ -1262,10 +1262,10 @@ namespace pwiz.Skyline.Model.Lib
                 double score = PrimitiveArrays.ReadOneValue<double>(stream);
                 peakBoundaryValues.Add(new KeyValuePair<int, ExplicitPeakBounds>(fileId, new ExplicitPeakBounds(peakStart, peakEnd, score)));
             }
-            return ImmutableSortedList.FromValues(peakBoundaryValues);
+            return new ExplicitPeakBoundsDict<int>(peakBoundaryValues);
         }
 
-        private void WritePeakBoundaries(Stream stream, ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries)
+        private void WritePeakBoundaries(Stream stream, ExplicitPeakBoundsDict<int> peakBoundaries)
         {
             PrimitiveArrays.WriteOneValue(stream, peakBoundaries.Count);
             foreach (var entry in peakBoundaries)
@@ -2803,7 +2803,7 @@ namespace pwiz.Skyline.Model.Lib
         public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein,
             IndexedRetentionTimes retentionTimesByFileId = default(IndexedRetentionTimes), 
             IndexedIonMobilities ionMobilitiesByFileId = default(IndexedIonMobilities),
-            ImmutableSortedList<int, ExplicitPeakBounds> peakBoundaries = null,
+            ExplicitPeakBoundsDict<int> peakBoundaries = null,
             double? score = null, 
             string scoreType = null)
         {
@@ -2814,7 +2814,7 @@ namespace pwiz.Skyline.Model.Lib
             Protein = protein;
             RetentionTimesByFileId = retentionTimesByFileId;
             IonMobilitiesByFileId = ionMobilitiesByFileId;
-            PeakBoundariesByFileId = peakBoundaries ?? ImmutableSortedList<int, ExplicitPeakBounds>.EMPTY;
+            PeakBoundariesByFileId = peakBoundaries ?? ExplicitPeakBoundsDict<int>.EMPTY;
             Score = score;
             ScoreType = scoreType;
         }
@@ -2826,7 +2826,7 @@ namespace pwiz.Skyline.Model.Lib
         public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
         public IndexedRetentionTimes RetentionTimesByFileId { get; }
         public IndexedIonMobilities IonMobilitiesByFileId { get; }
-        public ImmutableSortedList<int, ExplicitPeakBounds> PeakBoundariesByFileId { get; }
+        public ExplicitPeakBoundsDict<int> PeakBoundariesByFileId { get; }
         public double? Score { get; }
         public string ScoreType { get; }
     }
