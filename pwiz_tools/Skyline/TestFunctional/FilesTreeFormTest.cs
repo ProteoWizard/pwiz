@@ -23,8 +23,7 @@ using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Model.FilesView;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Model.Results;
 using Peptide = pwiz.Skyline.Model.Peptide;
@@ -56,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual(FilesView.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
@@ -77,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual(FilesView.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
 
             // FilesTree should only have one set of nodes after opening a new document
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
@@ -280,8 +279,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => projectFilesRoot.IsVisible);
             
             Assert.AreEqual(2, projectFilesRoot.Nodes.Count);
-            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesView.FilesTree_TreeNodeLabel_ViewFile));
-            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesView.FilesTree_TreeNodeLabel_ChromatogramCache));
+            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ViewFile));
+            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ChromatogramCache));
 
             // // Project Files => Audit Log Action
             // RunUI(() =>
