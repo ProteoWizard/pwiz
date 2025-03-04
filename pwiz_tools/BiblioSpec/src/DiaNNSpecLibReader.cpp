@@ -197,8 +197,6 @@ inline std::string get_aas(const std::string &name, vector<SeqMod>& mods)
                 if (potentialMass.find_first_not_of("01234567890.") != string::npos)
                     throw std::runtime_error("unable to handle mod in library entry as either a UniMod id or delta mass: " + potentialMass + " in " + name);
                 double modMass = lexical_cast<double>(potentialMass);
-                if (i > 0)
-                    modMass -= pwiz::proteome::AminoAcid::Info::record(name[i - 1]).residueFormula.monoisotopicMass();
 
                 if (!mods.empty() && mods.back().position == position)
                     mods.back().deltaMass += modMass;
@@ -591,203 +589,207 @@ class DiaNNSpecLibReader::Impl
     Library specLib;
     const char* specLibFile_;
 
-    constexpr static int column_count = 9;
-
-    typedef io::CSVReader<column_count, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> CsvReader;
-
-    void open_file(const string& filepath)
+    template<int column_count>
+    class Reader
     {
-        if (ParquetReader::is_parquet(filepath))
-            parquetReader_.reset(new ParquetReader(filepath));
-        else
-            csvReader_.reset(new CsvReader(filepath));
-    }
+        typedef io::CSVReader<column_count, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> CsvReader;
+        class ParquetReader;
 
-    // a wrapper for reading Parquet files that provides the same interface as CSVReader
-    class ParquetReader
-    {
-        unique_ptr<parquet::arrow::FileReader> reader_;
-        vector<string> columnNames_; // and order
-        int64_t numRowGroups_;
-        int64_t rowIndex_ = 0;
-        int64_t rowGroup_ = -1;
-        const string& filepath_;
-
-        // an enum of supported types for columns
-        enum ColumnType { int64, fp, str };
-
-        std::shared_ptr<arrow::Table> table_;
-        vector<std::shared_ptr<arrow::Array>> columnArrays_;
-        vector<ColumnType> columnTypes_;
-
-        inline std::shared_ptr<arrow::Array> get_arrow_column_chunk(std::shared_ptr<arrow::Table> table, string column_name)
-        {
-            return table->GetColumnByName(column_name)->chunk(0);
-        }
+        unique_ptr<CsvReader> csvReader_;
+        unique_ptr<ParquetReader> parquetReader_;
+        string filepath_;
 
         public:
 
-        ParquetReader(const string& filepath) : filepath_(filepath)
+        void open_file(const string& filepath)
         {
+            filepath_ = filepath;
+
+            if (ParquetReader::is_parquet(filepath))
+                parquetReader_.reset(new ParquetReader(filepath_));
+            else
+                csvReader_.reset(new CsvReader(filepath_));
+        }
+
+        // a wrapper for reading Parquet files that provides the same interface as CSVReader
+        class ParquetReader
+        {
+            unique_ptr<parquet::arrow::FileReader> reader_;
+            vector<string> columnNames_; // and order
+            int64_t numRowGroups_;
+            int64_t rowIndex_ = 0;
+            int64_t rowGroup_ = -1;
+            const string& filepath_;
+
+            // an enum of supported types for columns
+            enum ColumnType { int64, fp, str };
+
+            std::shared_ptr<arrow::Table> table_;
+            vector<std::shared_ptr<arrow::Array>> columnArrays_;
+            vector<ColumnType> columnTypes_;
+
+            inline std::shared_ptr<arrow::Array> get_arrow_column_chunk(std::shared_ptr<arrow::Table> table, string column_name)
+            {
+                return table->GetColumnByName(column_name)->chunk(0);
+            }
+
+        public:
+
+            ParquetReader(const string& filepath) : filepath_(filepath)
+            {
 #ifndef USE_PARQUET_READER
-            Verbosity::error("parquet files are not supported in current build (runtime debugging on)");
+                Verbosity::error("parquet files are not supported in current build (runtime debugging on)");
 #endif
-            auto input = arrow::io::ReadableFile::Open(filepath);
-            if (!input.ok())
-                Verbosity::error("cannot open %s: %s", filepath.c_str(), input.status().message().c_str());
+                auto input = arrow::io::ReadableFile::Open(filepath);
+                if (!input.ok())
+                    Verbosity::error("cannot open %s: %s", filepath.c_str(), input.status().message().c_str());
 
-            auto got_reader = parquet::arrow::OpenFile(input.ValueOrDie(), arrow::default_memory_pool(), &reader_);
-            if (!got_reader.ok())
-                Verbosity::error("cannot initialise arrow reader for %s: %s", filepath.c_str(), got_reader.message().c_str());
+                auto got_reader = parquet::arrow::OpenFile(input.ValueOrDie(), arrow::default_memory_pool(), &reader_);
+                if (!got_reader.ok())
+                    Verbosity::error("cannot initialise arrow reader for %s: %s", filepath.c_str(), got_reader.message().c_str());
 
-            numRowGroups_ = reader_->num_row_groups();
-            if (!numRowGroups_)
-                Verbosity::error("parquet library contains zero row groups for %s", filepath.c_str());
-        }
+                numRowGroups_ = reader_->num_row_groups();
+                if (!numRowGroups_)
+                    Verbosity::error("parquet library contains zero row groups for %s", filepath.c_str());
+            }
 
-        static bool is_parquet(const string& filepath)
-        {
+            static bool is_parquet(const string& filepath)
+            {
 #ifndef USE_PARQUET_READER
-            return bal::iends_with(filepath, ".parquet");
+                return bal::iends_with(filepath, ".parquet");
 #endif
-            auto input = arrow::io::ReadableFile::Open(filepath);
-            if (!input.ok())
-                return false;
+                auto input = arrow::io::ReadableFile::Open(filepath);
+                if (!input.ok())
+                    return false;
 
-            unique_ptr<parquet::arrow::FileReader> reader;
-            auto got_reader = parquet::arrow::OpenFile(input.ValueOrDie(), arrow::default_memory_pool(), &reader);
-            return got_reader.ok();
-        }
+                unique_ptr<parquet::arrow::FileReader> reader;
+                auto got_reader = parquet::arrow::OpenFile(input.ValueOrDie(), arrow::default_memory_pool(), &reader);
+                return got_reader.ok();
+            }
 
-        void read_header_helper(const multiset<string>& allColumnNames, const char* columnName)
-        {
-            columnNames_.emplace_back(columnName);
-        }
+            void read_header_helper(const multiset<string>& allColumnNames, const char* columnName)
+            {
+                columnNames_.emplace_back(columnName);
+            }
 
-        template<class ...ColNames>
-        void read_header_helper(const multiset<string>& allColumnNames, const char* columnName, ColNames...cols)
-        {
-            if (allColumnNames.find(string(columnName)) == allColumnNames.end())
-                Verbosity::error("file %s does not have a column called %s", filepath_.c_str(), columnName);
+            template<class ...ColNames>
+            void read_header_helper(const multiset<string>& allColumnNames, const char* columnName, ColNames...cols)
+            {
+                if (allColumnNames.find(string(columnName)) == allColumnNames.end())
+                    Verbosity::error("file %s does not have a column called %s", filepath_.c_str(), columnName);
 
-            read_header_helper(allColumnNames, columnName);
-            read_header_helper(allColumnNames, cols...);
-        }
+                read_header_helper(allColumnNames, columnName);
+                read_header_helper(allColumnNames, cols...);
+            }
+
+            template<class ...ColNames>
+            void read_header(io::ignore_column ignore_policy, ColNames...cols)
+            {
+                auto got_table = reader_->ReadTable(&table_);
+                if (!got_table.ok())
+                    Verbosity::error("cannot read table from %s: %s", filepath_.c_str(), got_table.message().c_str());
+
+                auto allColumnNames = table_->ColumnNames();
+                read_header_helper(multiset(allColumnNames.begin(), allColumnNames.end()), cols...);
+            }
+
+            bool has_column(const std::string& name) const
+            {
+                auto column_names = table_->ColumnNames();
+                return boost::range::find(column_names, name) != column_names.end();
+            }
+
+            void read_row_helper(std::size_t i, int& t) const
+            {
+                const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
+                t = intArray->Value(rowIndex_);
+            }
+
+            void read_row_helper(std::size_t i, int64_t& t) const
+            {
+                const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
+                t = intArray->Value(rowIndex_);
+            }
+
+            void read_row_helper(std::size_t i, float& t) const
+            {
+                const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
+                t = fpArray->Value(rowIndex_);
+            }
+
+            void read_row_helper(std::size_t i, std::string_view& t) const
+            {
+                const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
+                t = strArray->Value(rowIndex_);
+            }
+
+            template<class T, class ...ColType>
+            void read_row_helper(std::size_t i, T& t, ColType&...cols) const
+            {
+                read_row_helper(i, t); // read current column i
+                read_row_helper(i + 1, cols...); // recurse to parse next column
+            }
+
+            template<class ...ColType>
+            bool read_row(ColType& ...cols)
+            {
+                constexpr auto numColumns = sizeof...(ColType);
+                static_assert(numColumns >= column_count, "not enough columns specified");
+                static_assert(numColumns <= column_count, "too many columns specified");
+
+                // go to first row group, or next group if rowIndex has reached num_rows()
+                if (rowGroup_ == -1 || rowIndex_ >= table_->num_rows())
+                {
+                    ++rowGroup_;
+                    if (rowGroup_ >= numRowGroups_)
+                        return false;
+
+                    rowIndex_ = 0;
+                    auto got_row_group = reader_->ReadRowGroup(rowGroup_, &table_);
+                    if (!got_row_group.ok())
+                        Verbosity::error("cannot read row group %d from %s", rowGroup_, filepath_.c_str());
+
+                    if (table_->num_rows() == 0)
+                        return false;
+
+                    columnArrays_.clear();
+                    for (size_t i = 0; i < columnNames_.size(); ++i)
+                        columnArrays_.emplace_back(get_arrow_column_chunk(table_, columnNames_[i]));
+                }
+
+                read_row_helper(0, cols...);
+                ++rowIndex_;
+
+                return true;
+            }
+        };
+
+        static bool is_parquet(const string& filepath) { return ParquetReader::is_parquet(filepath); }
 
         template<class ...ColNames>
         void read_header(io::ignore_column ignore_policy, ColNames...cols)
         {
-            auto got_table = reader_->ReadTable(&table_);
-            if (!got_table.ok())
-                Verbosity::error("cannot read table from %s", filepath_.c_str());
-
-            auto allColumnNames = table_->ColumnNames();
-            read_header_helper(multiset(allColumnNames.begin(), allColumnNames.end()), cols...);
+            if (csvReader_)
+                csvReader_->read_header(ignore_policy, std::forward<ColNames>(cols)...);
+            else
+                parquetReader_->read_header(ignore_policy, std::forward<ColNames>(cols)...);
         }
 
         bool has_column(const std::string& name) const
         {
-            auto column_names = table_->ColumnNames();
-            return boost::range::find(column_names, name) != column_names.end();
-        }
-
-        void read_row_helper(std::size_t i, int& t) const
-        {
-            const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
-            t = intArray->Value(rowIndex_);
-        }
-
-        void read_row_helper(std::size_t i, int64_t& t) const
-        {
-            const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
-            t = intArray->Value(rowIndex_);
-        }
-
-        void read_row_helper(std::size_t i, float& t) const
-        {
-            const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
-            t = fpArray->Value(rowIndex_);
-        }
-
-        void read_row_helper(std::size_t i, std::string_view& t) const
-        {
-            const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
-            t = strArray->Value(rowIndex_);
-        }
-
-        template<class T, class ...ColType>
-        void read_row_helper(std::size_t i, T& t, ColType&...cols) const
-        {
-            read_row_helper(i, t); // read current column i
-            read_row_helper(i + 1, cols...); // recurse to parse next column
+            if (csvReader_)
+                return csvReader_->has_column(name);
+            return parquetReader_->has_column(name);
         }
 
         template<class ...ColType>
         bool read_row(ColType& ...cols)
         {
-            constexpr auto numColumns = sizeof...(ColType);
-            static_assert(numColumns >= column_count, "not enough columns specified");
-            static_assert(numColumns <= column_count, "too many columns specified");
-
-            // go to first row group, or next group if rowIndex has reached num_rows()
-            if (rowGroup_ == -1 || rowIndex_ >= table_->num_rows())
-            {
-                ++rowGroup_;
-                if (rowGroup_ >= numRowGroups_)
-                    return false;
-
-                rowIndex_ = 0;
-                auto got_row_group = reader_->ReadRowGroup(rowGroup_, &table_);
-                if (!got_row_group.ok())
-                    Verbosity::error("cannot read row group %d from %s", rowGroup_, filepath_.c_str());
-
-                if (table_->num_rows() == 0)
-                    return false;
-
-                columnArrays_.clear();
-                for (size_t i = 0; i < columnNames_.size(); ++i)
-                    columnArrays_.emplace_back(get_arrow_column_chunk(table_, columnNames_[i]));
-            }
-
-            read_row_helper(0, cols...);
-            ++rowIndex_;
-
-            return true;
+            if (csvReader_)
+                return csvReader_->read_row(std::forward<ColType&>(cols)...);
+            return parquetReader_->read_row(std::forward<ColType&>(cols)...);
         }
     };
-
-    unique_ptr<CsvReader> csvReader_;
-    unique_ptr<ParquetReader> parquetReader_;
-
-    static bool is_parquet(const string& filepath) { return ParquetReader::is_parquet(filepath); }
-
-    template<class ...ColNames>
-    void read_header(io::ignore_column ignore_policy, ColNames...cols)
-    {
-        static_assert(sizeof...(ColNames) >= column_count, "not enough column names specified");
-        static_assert(sizeof...(ColNames) <= column_count, "too many column names specified");
-        if (csvReader_)
-            csvReader_->read_header(ignore_policy, std::forward<ColNames>(cols)...);
-        else
-            parquetReader_->read_header(ignore_policy, std::forward<ColNames>(cols)...);
-    }
-
-    bool has_column(const std::string& name) const
-    {
-        if (csvReader_)
-            return csvReader_->has_column(name);
-        return parquetReader_->has_column(name);
-    }
-
-    template<class ...ColType>
-    bool read_row(ColType& ...cols)
-    {
-        static_assert(sizeof...(ColType) >= column_count, "not enough columns specified");
-        static_assert(sizeof...(ColType) <= column_count, "too many columns specified");
-        if (csvReader_)
-            return csvReader_->read_row(std::forward<ColType&>(cols)...);
-        return parquetReader_->read_row(std::forward<ColType&>(cols)...);
-    }
 };
 
 DiaNNSpecLibReader::DiaNNSpecLibReader(BlibBuilder& maker, const char* specLibFile, const ProgressIndicator* parent_progress)
@@ -851,11 +853,15 @@ bool DiaNNSpecLibReader::parseFile()
     if (diannReportFilepath == specLibFile || !bfs::exists(diannReportFilepath))
     {
         // iterate all TSV files in the same directory as the speclib, check the ones sharing the most leading characters, and look for the report headers in them
-        vector<bfs::path> siblingTsvFiles;
+        vector<bfs::path> siblingTsvFiles, siblingParquetFiles;
         pwiz::util::expand_pathmask(bfs::path(impl_->specLibFile_).parent_path() / "*.tsv", siblingTsvFiles);
-        multimap<int, bfs::path> tsvFilepathBySharedPrefixLength;
+        pwiz::util::expand_pathmask(bfs::path(impl_->specLibFile_).parent_path() / "*.parquet", siblingParquetFiles);
+        vector<bfs::path> siblingFiles;
+        siblingFiles.insert(siblingFiles.end(), siblingParquetFiles.begin(), siblingParquetFiles.end());
+        siblingFiles.insert(siblingFiles.end(), siblingTsvFiles.begin(), siblingTsvFiles.end());
+        map<int, vector<bfs::path>> tsvFilepathBySharedPrefixLength;
         auto speclibFilename = bfs::path(impl_->specLibFile_).filename().string();
-        for (const auto& tsvFilepath : siblingTsvFiles)
+        for (const auto& tsvFilepath : siblingFiles)
         {
             if (!bfs::is_regular_file(tsvFilepath))
                 continue;
@@ -867,26 +873,27 @@ bool DiaNNSpecLibReader::parseFile()
                 if (tsvFilename[i] != speclibFilename[i])
                     break;
             sharedPrefixLength = i;
-            tsvFilepathBySharedPrefixLength.emplace(sharedPrefixLength, tsvFilepath);
+            if (sharedPrefixLength < 1)
+                continue;
+            tsvFilepathBySharedPrefixLength[sharedPrefixLength].emplace_back(tsvFilepath);
         }
 
         diannReportFilepath.clear();
-        for (const auto& kvp : boost::make_iterator_range(tsvFilepathBySharedPrefixLength.rbegin(), tsvFilepathBySharedPrefixLength.rend()))
-        {
-            if (kvp.first < 1)
-                break;
-
-            io::CSVReader<3, io::trim_chars<' ', ' '>, io::no_quote_escape<'\t'>> reportReader(kvp.second.string().c_str());
-            reportReader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id", "Q.Value", "RT");
-            if (reportReader.has_column("Precursor.Id") && reportReader.has_column("Q.Value") && reportReader.has_column("RT"))
+        if (!tsvFilepathBySharedPrefixLength.empty())
+            for (const auto& tsvFilepath : tsvFilepathBySharedPrefixLength.rbegin()->second)
             {
-                diannReportFilepath = kvp.second.string();
-                break;
+                Impl::Reader<3> reader;
+                reader.open_file(tsvFilepath.string());
+                reader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id", "Q.Value", "RT");
+                if (reader.has_column("Precursor.Id") && reader.has_column("Q.Value") && reader.has_column("RT"))
+                {
+                    diannReportFilepath = tsvFilepath.string();
+                    break;
+                }
             }
-        }
 
         if (diannReportFilepath.empty())
-            throw BlibException(true, "unable to determine DIA-NN report filename for '%s': the TSV report is required to read speclib files and must be in the same directory as the speclib and share some leading characters (e.g. somedata-tsv.speclib and somedata-report.tsv)",
+            throw BlibException(true, "unable to determine DIA-NN report filename for '%s': the Parquet or TSV report is required to read speclib files and must be in the same directory as the speclib and share some leading characters (e.g. somedata-tsv.speclib and somedata-report.parquet)",
                 impl_->specLibFile_);
     }
 
@@ -898,14 +905,15 @@ bool DiaNNSpecLibReader::parseFile()
     // read runs one at a time from the report file in a loop until all runs have been processed
     do
     {
-        impl_->open_file(diannReportFilepath);
-        const char *fileNameColumn = impl_->is_parquet(diannReportFilepath) ? "Run" : "File.Name"; // DIANN v2 doesn't provide File.Name column
-        impl_->read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
+        Impl::Reader<9> reader;
+        reader.open_file(diannReportFilepath);
+        const char *fileNameColumn = reader.is_parquet(diannReportFilepath) ? "Run" : "File.Name"; // DIANN v2 doesn't provide File.Name column
+        reader.read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
         std::string_view run, fileName, proteinGrp, precursorId;
         float qValue, rt, rtStart, rtStop, im;
         string currentRun, currentFilename;
         hasSkippedRuns = false;
-        while (impl_->read_row(run, fileName, proteinGrp, precursorId, qValue, rt, rtStart, rtStop, im))
+        while (reader.read_row(run, fileName, proteinGrp, precursorId, qValue, rt, rtStart, rtStop, im))
         {
             if (currentRun.empty())
             {
