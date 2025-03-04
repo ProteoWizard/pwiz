@@ -131,7 +131,7 @@ namespace pwiz.Skyline.Controls.Databinding
             BindingListSource bindingListSource, char separator)
         {
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-            if (replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
+            if (replicatePivotColumns.HasConstantAndVariableColumns())
             {
                 var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
 

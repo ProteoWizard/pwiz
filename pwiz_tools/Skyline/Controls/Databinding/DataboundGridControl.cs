@@ -1151,7 +1151,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 _inColumnChange = true;
                 var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-                if (replicatePivotColumns != null && replicatePivotColumns.HasConstantColumns() && replicatePivotColumns.HasVariableColumns())
+                if (replicatePivotColumns != null && replicatePivotColumns.HasConstantAndVariableColumns())
                 {
                     replicatePivotDataGridView.Show();
                     dataGridSplitContainer.Panel1Collapsed = false;
@@ -1186,10 +1186,9 @@ namespace pwiz.Skyline.Controls.Databinding
             try
             {
                 _inColumnChange = true;
-                if (replicatePivotDataGridView.Visible && replicatePivotDataGridView.RowCount > 0)
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                if (replicatePivotDataGridView.RowCount > 0 && replicatePivotColumns != null && replicatePivotColumns.HasConstantAndVariableColumns())
                 {
-                    var replicatePivotColumns =
-                        ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
                     UpdateReplicateDataGridFrozenState();
                     ResizePivotByReplicateGridToFit();
                     AlignPivotByReplicateGridColumns(replicatePivotColumns);

@@ -45,11 +45,6 @@ namespace pwiz.Skyline.Model.Databinding
 
         protected abstract ResultKey GetResultKey(ColumnPropertyDescriptor columnPropertyDescriptor);
 
-        public bool IsPivoted()
-        {
-            return GetReplicateColumnGroups().Any();
-        }
-
         public Replicate GetReplicate(ColumnPropertyDescriptor columnPropertyDescriptor)
         {
             var resultKey = GetResultKey(columnPropertyDescriptor);
@@ -83,14 +78,19 @@ namespace pwiz.Skyline.Model.Databinding
             return false;
         }
 
-        public bool HasConstantColumns()
+        public bool HasConstantAndVariableColumns()
         {
-            return GetReplicateColumnGroups().SelectMany(grouping => grouping).Any(IsConstantColumn);
-        }
+            bool hasConstant = false;
+            bool hasVariable = false;
+            foreach (var descriptor in GetReplicateColumnGroups().SelectMany(grouping => grouping))
+            {
+                hasConstant |= IsConstantColumn(descriptor);
+                hasVariable |= !IsConstantColumn(descriptor);
 
-        public bool HasVariableColumns()
-        {
-            return GetReplicateColumnGroups().SelectMany(grouping => grouping).Any(descriptor => !IsConstantColumn(descriptor));
+                if (hasConstant && hasVariable)
+                    return true;
+            }
+            return false;
         }
 
         private static Type GetRowType(ItemProperties itemProperties)
