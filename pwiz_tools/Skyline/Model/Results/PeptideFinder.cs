@@ -58,47 +58,42 @@ namespace pwiz.Skyline.Model.Results
                 return null;
 
             // Find closest precursor Mz match.
-            // Watch out for negative values, which sort before positive values.
             var lookup = new PeptidePrecursorMz(null, precursorMz);
             int i = _precursorMzPeptideList.BinarySearch(lookup, PeptidePrecursorMz.COMPARER);
-            if (i < 0)
+            if (i >= 0)
             {
-                i = ~i;
-                if (i >= _precursorMzPeptideList.Count)
-                    i = _precursorMzPeptideList.Count - 1;
-                else if (i > 0 &&
-                         _precursorMzPeptideList[i - 1].PrecursorMz.IsNegative == precursorMz.IsNegative &&
-                         _precursorMzPeptideList[i].PrecursorMz.IsNegative == precursorMz.IsNegative &&
-                         precursorMz - _precursorMzPeptideList[i - 1].PrecursorMz <
-                         _precursorMzPeptideList[i].PrecursorMz - precursorMz)
-                    i--;
+                return _precursorMzPeptideList[i].NodePeptide; // Exact match
             }
-            var closestMatch = _precursorMzPeptideList[i];
-            if (closestMatch.PrecursorMz.IsNegative != precursorMz.IsNegative)
+
+            // BinarySearch returns bitwise complement of the index of the next larger element,
+            // but the closest match might be the element we just passed.  Also, if precursor Mz is negative,
+            // we have to make sure search hasn't crossed over into positive territory. (SignedMz sorts
+            // negative values before positive ones e.g. -100, -200, 100, 200)
+            i = ~i; 
+            PeptidePrecursorMz closestMatch = null;
+            var closestDistance = double.MaxValue;
+            for (var candidateIndex = i - 1; candidateIndex <= i; candidateIndex++)
             {
-                // Just past the negative range, or just below the positive range
-                if (precursorMz.IsNegative)
+                if (candidateIndex < 0 || candidateIndex >= _precursorMzPeptideList.Count)
                 {
-                    if (!_precursorMzPeptideList[0].PrecursorMz.IsNegative)
-                    {
-                        return null; // There aren't any negative values in the list
-                    }
-                    closestMatch = _precursorMzPeptideList[i - 1]; // End of negative range
+                    continue;
                 }
-                else
+                var candidate = _precursorMzPeptideList[candidateIndex];
+                if (candidate.PrecursorMz.IsNegative != precursorMz.IsNegative)
                 {
-                    if (i+1 >= _precursorMzPeptideList.Count)
-                    {
-                        return null; // There aren't any positive values in the list
-                    }
-                    closestMatch = _precursorMzPeptideList[i + 1]; // Start of positive range
+                    continue;
+                }
+
+                var distance = Math.Abs(candidate.PrecursorMz - precursorMz);
+                if (distance < closestDistance)
+                {
+                    closestMatch = candidate;
+                    closestDistance = distance;
                 }
             }
 
-            // Return color seed only if the match is within allowed tolerance.
-            return Math.Abs(closestMatch.PrecursorMz - precursorMz) > _mzMatchTolerance
-                ? null
-                : closestMatch.NodePeptide;
+            // Return only if the match is within allowed tolerance.
+            return closestDistance > _mzMatchTolerance ? null : closestMatch?.NodePeptide;
         }
 
         private sealed class PeptidePrecursorMz
