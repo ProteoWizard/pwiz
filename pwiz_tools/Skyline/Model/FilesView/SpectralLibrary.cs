@@ -15,6 +15,7 @@
  */
 
 using System;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.FilesView
@@ -23,14 +24,18 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private readonly Lazy<LibrarySpec> _librarySpec;
 
-        public SpectralLibrary(SrmDocument document, Identity libraryId) : 
-            base(document, new IdentityPath(libraryId), ImageId.peptide)
+        public SpectralLibrary(SrmDocument document, string documentPath, Identity libraryId) : 
+            base(document, documentPath, new IdentityPath(libraryId), ImageId.peptide)
         {
             _librarySpec = new Lazy<LibrarySpec>(FindLibrarySpec);
         }
 
+        public override Immutable Immutable => _librarySpec.Value;
+
         public override string Name => _librarySpec.Value.Name;
         public override string FilePath => _librarySpec.Value.FilePath;
+
+        public override bool IsBackedByFile => true;
 
         private LibrarySpec FindLibrarySpec()
         {

@@ -15,6 +15,7 @@
  */
 
 using System;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -22,15 +23,19 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private readonly Lazy<Proteome.BackgroundProteome> _backgroundProteome;
 
-        public BackgroundProteome(SrmDocument document, Identity backgroundProteomeId) : 
-            base(document, new IdentityPath(backgroundProteomeId))
+        public BackgroundProteome(SrmDocument document, string documentPath, Identity backgroundProteomeId) : 
+            base(document, documentPath, new IdentityPath(backgroundProteomeId))
         {
             _backgroundProteome = new Lazy<Proteome.BackgroundProteome>(FindBackgroundProteome);
         }
 
+        public override Immutable Immutable { get => _backgroundProteome.Value; }
+
         public override string Name => _backgroundProteome.Value.Name;
         public override string FilePath => _backgroundProteome.Value.FilePath;
         public override string FileName => _backgroundProteome.Value.FileName;
+
+        public override bool IsBackedByFile => true;
 
         private Proteome.BackgroundProteome FindBackgroundProteome()
         {

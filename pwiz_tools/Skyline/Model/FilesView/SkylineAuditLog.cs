@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 
+using pwiz.Common.SystemUtil;
+
 namespace pwiz.Skyline.Model.FilesView
 {
     public class SkylineAuditLog : FileNode
     {
         private static readonly Identity AUDIT_LOG_FILE = new StaticFolderId();
 
-        private static string _documentPath;
-
         public SkylineAuditLog(SrmDocument document, string documentPath) : 
-            base(document, new IdentityPath(AUDIT_LOG_FILE), ImageId.audit_log)
+            base(document, documentPath, new IdentityPath(AUDIT_LOG_FILE), ImageId.audit_log)
         {
-            _documentPath = documentPath;
         }
 
+        public override Immutable Immutable => Document.Settings;
+
         public override string Name => FilesView.FilesTree_TreeNodeLabel_AuditLog;
-        public override string FilePath => SrmDocument.GetAuditLogPath(_documentPath);
+        public override string FilePath => SrmDocument.GetAuditLogPath(DocumentPath);
+
+        public override bool IsBackedByFile => true;
     }
 }

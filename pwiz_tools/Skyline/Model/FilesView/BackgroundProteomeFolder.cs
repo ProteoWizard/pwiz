@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -25,10 +26,16 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private static readonly Identity BACKGROUND_PROTEOME = new StaticFolderId();
 
-        public BackgroundProteomeFolder(SrmDocument document) : 
-            base(document, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder)
+        public BackgroundProteomeFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder)
         {
         }
+
+        public override Immutable Immutable => Document.Settings.PeptideSettings;
+
+        public override string Name => FilesView.FilesTree_TreeNodeLabel_BackgroundProteome;
+        public override string FilePath => string.Empty;
+        public override string FileName => string.Empty;
 
         public override IList<FileNode> Files
         {
@@ -39,12 +46,8 @@ namespace pwiz.Skyline.Model.FilesView
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, Document.Settings.PeptideSettings.BackgroundProteome.Id));
+                return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, DocumentPath, Document.Settings.PeptideSettings.BackgroundProteome.Id));
             }
         }
-
-        public override string Name => FilesView.FilesTree_TreeNodeLabel_BackgroundProteome;
-        public override string FilePath => string.Empty;
-        public override string FileName => string.Empty;
     }
 }

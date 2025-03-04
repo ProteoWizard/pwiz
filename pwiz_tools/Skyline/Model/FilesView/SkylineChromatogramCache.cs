@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.FilesView
@@ -23,16 +24,17 @@ namespace pwiz.Skyline.Model.FilesView
         // TODO: this is a temporary Id for ChromatogramCache, which doesn't have one of its own
         private class ChromatogramCacheId : Identity { }
 
-        private readonly string _documentPath;
-
         public SkylineChromatogramCache(SrmDocument document, string documentPath) : 
-            base(document, new IdentityPath(new ChromatogramCacheId()), ImageId.cache_file)
+            base(document, documentPath, new IdentityPath(new ChromatogramCacheId()), ImageId.cache_file)
         {
-            _documentPath = documentPath;
         }
+
+        public override Immutable Immutable => Document.Settings.MeasuredResults;
 
         public override string Name => FilesView.FilesTree_TreeNodeLabel_ChromatogramCache;
 
-        public override string FilePath => ChromatogramCache.FinalPathForName(_documentPath, null);
+        public override string FilePath => ChromatogramCache.FinalPathForName(DocumentPath, null);
+
+        public override bool IsBackedByFile => true;
     }
 }

@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.FilesView
@@ -24,20 +25,23 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private readonly ChromatogramSet _chromatogramSet;
 
-        public Replicate(SrmDocument document, ChromatogramSetId chromSetId) : 
-            base(document, new IdentityPath(chromSetId), ImageId.replicate)
+        public Replicate(SrmDocument document, string documentPath, ChromatogramSetId chromSetId) : 
+            base(document, documentPath, new IdentityPath(chromSetId), ImageId.replicate)
         {
             _chromatogramSet = document.MeasuredResults?.FindChromatogramSet(chromSetId);
         }
 
+        public override Immutable Immutable => _chromatogramSet;
+
         public override string Name => _chromatogramSet.Name ?? string.Empty;
         public override string FilePath => null;
         public override string FileName => null;
+
         public override IList<FileNode> Files
         {
             get
             {
-                return _chromatogramSet.MSDataFileInfos.Select(fileInfo => new ReplicateSampleFile(Document, 
+                return _chromatogramSet.MSDataFileInfos.Select(fileInfo => new ReplicateSampleFile(Document, DocumentPath,
                     (ChromatogramSetId)IdentityPath.GetIdentity(0), 
                     (ChromFileInfoId)  fileInfo.Id)).ToList<FileNode>();
             }

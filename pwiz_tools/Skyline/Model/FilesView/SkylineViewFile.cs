@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
+using pwiz.Common.SystemUtil;
+
 namespace pwiz.Skyline.Model.FilesView
 {
     public class SkylineViewFile : FileNode
     {
         private static readonly Identity VIEW_FILE = new StaticFolderId();
-        private readonly string _documentPath;
 
         public SkylineViewFile(SrmDocument document, string documentPath) : 
-            base(document, new IdentityPath(VIEW_FILE), ImageId.view_file)
-        {
-            _documentPath = documentPath;
+            base(document, documentPath, new IdentityPath(VIEW_FILE), ImageId.view_file)
+        { 
         }
 
+        public override Immutable Immutable => Document.Settings;
+
         public override string Name => FilesView.FilesTree_TreeNodeLabel_ViewFile;
-        public override string FilePath => SkylineWindow.GetViewFile(_documentPath);
+        public override string FilePath => SkylineWindow.GetViewFile(DocumentPath);
+        public override bool IsBackedByFile => true;
     }
 }

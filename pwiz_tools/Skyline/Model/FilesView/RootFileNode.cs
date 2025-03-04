@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 // TODO: support project files
 
@@ -23,13 +24,13 @@ namespace pwiz.Skyline.Model.FilesView
 {
     public class RootFileNode : FileNode
     {
-        private string _documentPath;
 
         public RootFileNode(SrmDocument document, string documentPath) :
-            base(document, IdentityPath.ROOT, ImageId.skyline)
+            base(document, documentPath, IdentityPath.ROOT, ImageId.skyline)
         {
-            _documentPath = documentPath;
         }
+
+        public override Immutable Immutable => Document;
 
         public override string Name => null;
         public override string FilePath => null;
@@ -43,31 +44,31 @@ namespace pwiz.Skyline.Model.FilesView
 
                 // CONSIDER: add a "HasFiles" check to avoid eagerly loading everything
                 //           from SrmDocument with a file shown in the tree
-                FileNode files = new ReplicatesFolder(Document);
+                FileNode files = new ReplicatesFolder(Document, DocumentPath);
                 if(files.Files.Count > 0) 
                     list.Add(files);
 
-                files = new SpectralLibrariesFolder(Document);
+                files = new SpectralLibrariesFolder(Document, DocumentPath);
                 if (files.Files.Count > 0)
                     list.Add(files);
 
-                files = new BackgroundProteomeFolder(Document);
+                files = new BackgroundProteomeFolder(Document, DocumentPath);
+                if (files.Files.Count > 0)
+                    list.Add(files);
+                
+                files = new RTCalcFolder(Document, DocumentPath);
+                if (files.Files.Count > 0)
+                    list.Add(files);
+                
+                files = new IonMobilityLibraryFolder(Document, DocumentPath);
+                if (files.Files.Count > 0)
+                    list.Add(files);
+                
+                files = new OptimizationLibraryFolder(Document, DocumentPath);
                 if (files.Files.Count > 0)
                     list.Add(files);
 
-                files = new RTCalcFolder(Document);
-                if (files.Files.Count > 0)
-                    list.Add(files);
-
-                files = new IonMobilityLibraryFolder(Document);
-                if (files.Files.Count > 0)
-                    list.Add(files);
-
-                files = new OptimizationLibraryFolder(Document);
-                if (files.Files.Count > 0)
-                    list.Add(files);
-
-                files = new ProjectFilesFolder(Document, _documentPath);
+                files = new ProjectFilesFolder(Document, DocumentPath);
                 list.Add(files);
 
                 return ImmutableList.ValueOf(list);

@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Controls
             SkylineWindow.ActivateReplicate(model.Name);
         }
 
-        public void ShowManageResultsDialog()
+        public void OpenManageResultsDialog()
         {
             SkylineWindow.ManageResults();
         }
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Controls
 
         private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
         {
-            ShowManageResultsDialog();
+            OpenManageResultsDialog();
         }
 
         private void FilesTree_OpenLibraryExplorerMenuItem(object sender, EventArgs e) 

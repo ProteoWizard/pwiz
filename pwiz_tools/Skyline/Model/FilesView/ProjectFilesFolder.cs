@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -23,13 +24,12 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private static readonly Identity PROJECT_FILES_FOLDER = new StaticFolderId();
 
-        private readonly string _documentPath;
-
         public ProjectFilesFolder(SrmDocument document, string documentPath) : 
-            base(document, new IdentityPath(PROJECT_FILES_FOLDER), ImageId.folder)
+            base(document, documentPath, new IdentityPath(PROJECT_FILES_FOLDER), ImageId.folder)
         {
-            _documentPath = documentPath;
         }
+
+        public override Immutable Immutable => Document;
 
         public override string Name => FilesView.FilesTree_TreeNodeLabel_ProjectFiles;
         public override string FilePath => string.Empty;
@@ -41,10 +41,10 @@ namespace pwiz.Skyline.Model.FilesView
                 IList<FileNode> files = new List<FileNode>();
 
                 if (Document.Settings.DataSettings.IsAuditLoggingEnabled) 
-                    files.Add(new SkylineAuditLog(Document, _documentPath));
+                    files.Add(new SkylineAuditLog(Document, DocumentPath));
 
                 // TODO: does this need to check for whether the Skyline Document is saved to disk?
-                files.Add(new SkylineViewFile(Document, _documentPath));
+                files.Add(new SkylineViewFile(Document, DocumentPath));
 
                 // Chromatogram Caches (.skyd)
                 // TODO: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Model.FilesView
                 {
                     foreach (var _ in cachePaths)
                     {
-                        files.Add(new SkylineChromatogramCache(Document, _documentPath));
+                        files.Add(new SkylineChromatogramCache(Document, DocumentPath));
                     }
                 }
 

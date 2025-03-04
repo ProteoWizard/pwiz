@@ -18,6 +18,7 @@ using System;
 using pwiz.Common.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -26,10 +27,15 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private static readonly Identity IMSDB_FOLDER = new StaticFolderId();
 
-        public IonMobilityLibraryFolder(SrmDocument document) : 
-            base(document, new IdentityPath(IMSDB_FOLDER), ImageId.folder)
+        public IonMobilityLibraryFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(IMSDB_FOLDER), ImageId.folder)
         {
         }
+
+        public override Immutable Immutable => Document.Settings.TransitionSettings;
+
+        public override string Name => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
+        public override string FilePath => string.Empty;
 
         public override IList<FileNode> Files
         {
@@ -40,11 +46,8 @@ namespace pwiz.Skyline.Model.FilesView
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                return ImmutableList<FileNode>.Singleton(new IonMobilityLibrary(Document, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id));
+                return ImmutableList<FileNode>.Singleton(new IonMobilityLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id));
             }
         }
-
-        public override string Name => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
-        public override string FilePath => string.Empty;
     }
 }

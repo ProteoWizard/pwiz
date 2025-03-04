@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -25,9 +26,15 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private static readonly Identity SPECTRAL_LIBRARIES = new StaticFolderId();
 
-        public SpectralLibrariesFolder(SrmDocument document) : base(document, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder)
+        public SpectralLibrariesFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder)
         {
         }
+
+        public override Immutable Immutable => Document.Settings.PeptideSettings;
+
+        public override string Name => FilesView.FilesTree_TreeNodeLabel_Libraries;
+        public override string FilePath => string.Empty;
 
         public override IList<FileNode> Files
         {
@@ -38,12 +45,9 @@ namespace pwiz.Skyline.Model.FilesView
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                var files = Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Select(library => new SpectralLibrary(Document, library.Id)).ToList<FileNode>();
+                var files = Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Select(library => new SpectralLibrary(Document, DocumentPath, library.Id)).ToList<FileNode>();
                 return ImmutableList.ValueOf(files);
             }
         }
-
-        public override string Name => FilesView.FilesTree_TreeNodeLabel_Libraries;
-        public override string FilePath => string.Empty;
     }
 }

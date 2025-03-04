@@ -21,6 +21,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.FilesView;
@@ -135,7 +136,7 @@ namespace pwiz.Skyline.Controls
         {
             var document = DocumentContainer.DocumentUI;
 
-            if (document == null || e == null)
+            if (document == null || e == null || ReferenceEquals(document.Settings, e.DocumentPrevious?.Settings))
                 return;
 
             Document = document;
@@ -213,6 +214,7 @@ namespace pwiz.Skyline.Controls
             return false;
         }
 
+        // TODO: avoid updating nodes with children if the node's model didn't change
         // CONSIDER: does FilesTree need to support selection like in SequenceTree / SrmTreeNode?
         // CONSIDER: refactor for more code reuse with SrmTreeNode
         internal static void MergeNodes(IEnumerable<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc)
@@ -243,7 +245,7 @@ namespace pwiz.Skyline.Controls
                     var nodeTree = treeNodes[i] as FilesTreeNode;
                     if (nodeTree == null)
                         break;
-                    if (!ReferenceEquals(nodeTree.Model, nodeDoc))
+                    if (!ReferenceEquals(nodeTree.Model.Immutable, nodeDoc.Immutable))
                     {
                         if(nodeTree.Model.IdentityPath.Equals(nodeDoc.IdentityPath))
                         {
@@ -259,7 +261,7 @@ namespace pwiz.Skyline.Controls
 
                             // Found node with the same ID, so replace its doc node, if not
                             // reference equal to the one looked up.
-                            if (!ReferenceEquals(nodeTree.Model, nodeDoc))
+                            if (!ReferenceEquals(nodeTree.Model.Immutable, nodeDoc.Immutable))
                             {
                                 nodeTree.Model = nodeDoc;
                             }
@@ -332,7 +334,7 @@ namespace pwiz.Skyline.Controls
                 var nodeTree = (FilesTreeNode)treeNodes[insertNodeIndex + firstInsertPosition];
                 var docNode = docFilesList[insertNodeIndex + firstInsertPosition];
 
-                if (!ReferenceEquals(docNode, nodeTree.Model))
+                if (!ReferenceEquals(docNode.Immutable, nodeTree.Model.Immutable))
                 {
                     nodeTree.Model = docNode;
                 }
@@ -406,6 +408,7 @@ namespace pwiz.Skyline.Controls
     public class FilesTreeNode : TreeNodeMS, ITipProvider
     {
         private FileNode _model;
+
         internal static FilesTreeNode CreateNode(FileNode model)
         {
             return new FilesTreeNode(model, model.Name);
@@ -415,8 +418,6 @@ namespace pwiz.Skyline.Controls
             base(label)
         {
             Model = model;
-            // Set default image for now until file monitoring is rebuilt
-            ImageIndex = (int)model.ImageAvailable;
         }
 
         public FileNode Model
@@ -431,10 +432,9 @@ namespace pwiz.Skyline.Controls
 
         public string FileName => Model.FileName;
         public string FilePath => Model.FilePath;
-        public int ImageAvailable => (int)Model.ImageAvailable;
-        public int ImageMissing => (int)Model.ImageMissing;
-
-        public string LocalFilePath => string.Empty;
+        public ImageId ImageAvailable => Model.ImageAvailable;
+        public ImageId ImageMissing => Model.ImageMissing;
+        public string LocalFilePath => Model.LocalFilePath;
 
         public void UpdateState()
         {
@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Controls
             Text = Model.Name;
 
             var isAnyFileMissing = IsAnyFileMissing(this);
-            ImageIndex = isAnyFileMissing ? ImageMissing : ImageAvailable;
+            ImageIndex = isAnyFileMissing ? (int)ImageMissing : (int)ImageAvailable;
         }
 
         internal static bool IsAnyFileMissing(FilesTreeNode node)
@@ -484,6 +484,7 @@ namespace pwiz.Skyline.Controls
 
             customTable.AddDetailRow(FilesView.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
             customTable.AddDetailRow(FilesView.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
+            customTable.AddDetailRow(FilesView.FilesTree_TreeNode_RenderTip_LocalFilePath, LocalFilePath, rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
@@ -544,16 +545,20 @@ namespace pwiz.Skyline.Controls
 
     public class SkylineFileModel : FileNode
     {
-        public SkylineFileModel(SrmDocument document, string fileName, string filePath) : 
-            base(document, new IdentityPath(), ImageId.skyline)
+        public SkylineFileModel(SrmDocument document, string skyFileName, string skyFilePath) : 
+            base(document, skyFilePath, new IdentityPath(), ImageId.skyline)
         {
-            Name = fileName;
-            FileName = fileName;
-            FilePath = filePath;
+            Name = skyFileName;
+            FileName = skyFileName;
+            FilePath = skyFilePath;
         }
+
+        public override Immutable Immutable => Document;
 
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
+
+        public override bool IsBackedByFile => true;
     }
 }

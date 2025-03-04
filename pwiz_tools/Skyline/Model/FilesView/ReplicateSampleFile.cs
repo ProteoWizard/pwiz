@@ -15,6 +15,8 @@
  */
 
 using System;
+using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.FilesView
@@ -23,21 +25,36 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private readonly Lazy<ChromFileInfo> _chromFileInfo;
 
-        public ReplicateSampleFile(SrmDocument document, ChromatogramSetId chromatogramSetId, ChromFileInfoId chromFileInfoId)
-            : base(document, new IdentityPath(chromatogramSetId, chromFileInfoId), ImageId.replicate_sample_file)
+        public ReplicateSampleFile(SrmDocument document, string documentPath, ChromatogramSetId chromatogramSetId, ChromFileInfoId chromFileInfoId)
+            : base(document, documentPath, new IdentityPath(chromatogramSetId, chromFileInfoId), ImageId.replicate_sample_file)
         {
             _chromFileInfo = new Lazy<ChromFileInfo>(FindChromFileInfo);
         }
 
+        public override Immutable Immutable => _chromFileInfo.Value;
+
         public override string Name => _chromFileInfo.Value.Name;
         public override string FilePath => _chromFileInfo.Value.FilePath.GetFilePath();
         public override string FileName => _chromFileInfo.Value.FilePath.GetFileName();
+
+        public override bool IsBackedByFile => true;
+        public override bool LocalFileExists()
+        {
+            return DoesReplicateSampleFileExist(LocalFilePath);
+        }
 
         private ChromFileInfo FindChromFileInfo()
         {
             return Document.MeasuredResults?.FindChromatogramSet(
                 (ChromatogramSetId)IdentityPath.GetIdentity(0)).FindChromFileInfo(
                 (ChromFileInfoId)  IdentityPath.GetIdentity(1));
+        }
+
+        // Customize how replicate sample files are found - might be a file (ex: foo.raw) or a directory (ex: bar.d)
+        internal static bool DoesReplicateSampleFileExist(string filePath)
+        {
+            // includes a directory check because some replicate samples live in nested directories (*.d)
+            return File.Exists(filePath) || Directory.Exists(filePath);
         }
     }
 }

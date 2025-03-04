@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.FilesView
@@ -26,10 +27,12 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private static readonly Identity REPLICATES = new StaticFolderId();
 
-        public ReplicatesFolder(SrmDocument document) : 
-            base(document, new IdentityPath(REPLICATES), ImageId.folder)
+        public ReplicatesFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(REPLICATES), ImageId.folder)
         {
         }
+
+        public override Immutable Immutable => Document.Settings.MeasuredResults;
 
         public override IList<FileNode> Files
         {
@@ -40,7 +43,9 @@ namespace pwiz.Skyline.Model.FilesView
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                var files = Document.MeasuredResults.Chromatograms.Select(chromatogramSet => new Replicate(Document, (ChromatogramSetId)chromatogramSet.Id)).ToList<FileNode>();
+                var files = Document.MeasuredResults.Chromatograms.Select(chromatogramSet => 
+                    new Replicate(Document, DocumentPath, (ChromatogramSetId)chromatogramSet.Id)).ToList<FileNode>();
+
                 return ImmutableList.ValueOf(files);
             }
         }

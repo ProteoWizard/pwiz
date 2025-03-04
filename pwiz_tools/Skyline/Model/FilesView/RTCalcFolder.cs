@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -26,10 +27,15 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private static readonly Identity RT_CALC_FOLDER = new StaticFolderId();
 
-        public RTCalcFolder(SrmDocument document) :
-            base(document, new IdentityPath(RT_CALC_FOLDER), ImageId.folder)
+        public RTCalcFolder(SrmDocument document, string documentPath) :
+            base(document, documentPath, new IdentityPath(RT_CALC_FOLDER), ImageId.folder)
         {
         }
+
+        public override Immutable Immutable => Document.Settings.PeptideSettings;
+
+        public override string Name => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
+        public override string FilePath => string.Empty;
 
         public override IList<FileNode> Files
         {
@@ -40,11 +46,8 @@ namespace pwiz.Skyline.Model.FilesView
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                return ImmutableList<FileNode>.Singleton(new RTCalc(Document, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id));
+                return ImmutableList<FileNode>.Singleton(new RTCalc(Document, DocumentPath, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id));
             }
         }
-
-        public override string Name => SkylineResources.SkylineWindow_FindIrtDatabase_iRT_Calculator;
-        public override string FilePath => string.Empty;
     }
 }

@@ -15,6 +15,7 @@
  */
 
 using System;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -22,17 +23,22 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private readonly Lazy<Optimization.OptimizationLibrary> _lazy;
 
-        public OptimizationLibrary(SrmDocument document, Identity optimizedLibraryId) : base(document, new IdentityPath(optimizedLibraryId))
+        public OptimizationLibrary(SrmDocument document, string documentPath, Identity optimizedLibraryId) : 
+            base(document, documentPath, new IdentityPath(optimizedLibraryId))
         {
             _lazy = new Lazy<Optimization.OptimizationLibrary>(FindOptimizationLibrary);
         }
+
+        public override Immutable Immutable => _lazy.Value;
+
+        public override string Name => _lazy.Value.Name;
+        public override string FilePath => _lazy.Value.FilePath;
+
+        public override bool IsBackedByFile => true;
 
         private Optimization.OptimizationLibrary FindOptimizationLibrary()
         {
             return Document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
         }
-
-        public override string Name => _lazy.Value.Name;
-        public override string FilePath => _lazy.Value.FilePath;
     }
 }

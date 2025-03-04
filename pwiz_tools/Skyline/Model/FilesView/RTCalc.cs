@@ -15,6 +15,7 @@
  */
 
 using System;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.FilesView
@@ -24,13 +25,17 @@ namespace pwiz.Skyline.Model.FilesView
     {
         private readonly Lazy<RetentionScoreCalculatorSpec> _lazy;
 
-        public RTCalc(SrmDocument document, Identity id) : base(document, new IdentityPath(id))
+        public RTCalc(SrmDocument document, string documentPath, Identity id) : base(document, documentPath, new IdentityPath(id))
         {
             _lazy = new Lazy<RetentionScoreCalculatorSpec>(FindRTCalcSpec);
         }
 
+        public override Immutable Immutable => _lazy.Value;
+
         public override string Name => _lazy.Value.Name;
         public override string FilePath => _lazy.Value.FilePath;
+
+        public override bool IsBackedByFile => true;
 
         private RetentionScoreCalculatorSpec FindRTCalcSpec()
         {

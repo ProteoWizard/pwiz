@@ -115,6 +115,15 @@ namespace pwiz.Skyline.Model.FilesView {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Local File Path.
+        /// </summary>
+        public static string FilesTree_TreeNode_RenderTip_LocalFilePath {
+            get {
+                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_LocalFilePath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Local Path.
         /// </summary>
         public static string FilesTree_TreeNode_RenderTip_LocalPath {

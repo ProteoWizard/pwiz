@@ -15,6 +15,7 @@
  */
 
 using System;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -22,13 +23,17 @@ namespace pwiz.Skyline.Model.FilesView
     public class IonMobilityLibrary : FileNode
     {
         private readonly Lazy<IonMobility.IonMobilityLibrary> _lazy;
-        public IonMobilityLibrary(SrmDocument document, Identity id) : base(document, new IdentityPath(id))
+        public IonMobilityLibrary(SrmDocument document, string documentPath, Identity id) : base(document, documentPath, new IdentityPath(id))
         {
             _lazy = new Lazy<IonMobility.IonMobilityLibrary>(FindIonMobilityLibrary);
         }
 
+        public override Immutable Immutable => _lazy.Value;
+
         public override string Name => _lazy.Value.Name;
         public override string FilePath => _lazy.Value.FilePath;
+
+        public override bool IsBackedByFile => true;
 
         private IonMobility.IonMobilityLibrary FindIonMobilityLibrary()
         {

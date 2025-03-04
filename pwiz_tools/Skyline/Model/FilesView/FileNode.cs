@@ -39,10 +39,13 @@ using System.Collections.Generic;
                     * View
                     * Chromatogram Cache
 
-    https://skyline.ms/wiki/home/software/Skyline/page.view?name=file-types
+    File type reference, which Brendan shares with people using Skyline.
+        https://skyline.ms/wiki/home/software/Skyline/page.view?name=file-types
 
  */
 // TODO: rebuild detection for file delete, rename
+// TODO: initialize local file on a background thread
+// ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Model.FilesView
 {
     public enum FileState
@@ -71,9 +74,11 @@ namespace pwiz.Skyline.Model.FilesView
 
     public abstract class FileNode
     {
-        protected FileNode(SrmDocument document, IdentityPath identityPath, ImageId available = ImageId.file, ImageId missing = ImageId.file_missing)
+        protected FileNode(SrmDocument document, string documentPath, IdentityPath identityPath,
+                           ImageId available = ImageId.file, ImageId missing = ImageId.file_missing)
         {
             Document = document;
+            DocumentPath = documentPath;
             IdentityPath = identityPath;
             ImageAvailable = available;
             ImageMissing = missing;
@@ -81,24 +86,37 @@ namespace pwiz.Skyline.Model.FilesView
             FileState = FileState.available;
         }
 
+        public void InitLocalFile()
+        {
+            if (IsBackedByFile)
+            {
+                LocalFilePath = LookForFileInPotentialLocations(DocumentPath, FileName);
+            }
+        }
+
         public SrmDocument Document { get; }
+        public string DocumentPath { get; set; }
         public IdentityPath IdentityPath { get; }
+        public abstract Immutable Immutable { get; }
 
         public abstract string Name { get; }
         public abstract string FilePath { get; }
         public virtual string FileName => Path.GetFileName(FilePath);
-        public virtual IList<FileNode> Files => new List<FileNode>();
-        public virtual bool HasFiles() => Files != null && Files.Count > 0;
 
         public ImageId ImageAvailable { get; }
         public ImageId ImageMissing { get; }
         public FileState FileState { get; private set; }
 
-        public string LocalFilePath => string.Empty;
+        public virtual bool IsBackedByFile => false;
 
-        public bool LocalFileExists()
+        public virtual string LocalFilePath { get; private set; }
+
+        public virtual IList<FileNode> Files => new List<FileNode>();
+        public virtual bool HasFiles() => Files != null && Files.Count > 0;
+
+        public virtual bool LocalFileExists()
         {
-            return true; // File.Exists(LocalFilePath);
+            return File.Exists(LocalFilePath);
         }
 
         public void FileAvailable()
@@ -129,18 +147,6 @@ namespace pwiz.Skyline.Model.FilesView
                 return fileName;
             else
                 return PathEx.FindExistingRelativeFile(relativeFilePath, fileName);
-        }
-
-        ///
-        /// LOOK FOR REPLICATE SAMPLE FILES
-        /// 
-        /// <summary></summary>
-        /// <param name="filePath">Possible path to a local file. Could be either a file or a directory. </param>
-        /// <returns></returns>
-        internal static bool LookForReplicateSampleFileInPotentialLocations(string filePath)
-        {
-            // includes a directory check because some replicate samples live in nested directories (*.d)
-            return File.Exists(filePath) || Directory.Exists(filePath); 
         }
     }
 }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.FilesView
 {
@@ -26,9 +27,15 @@ namespace pwiz.Skyline.Model.FilesView
         // ReSharper disable once IdentifierTypo
         private static readonly Identity OPTDB_FOLDER = new StaticFolderId();
 
-        public OptimizationLibraryFolder(SrmDocument document) : base(document, new IdentityPath(OPTDB_FOLDER), ImageId.folder)
+        public OptimizationLibraryFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(OPTDB_FOLDER), ImageId.folder)
         {
         }
+
+        public override Immutable Immutable => Document.Settings.TransitionSettings;
+
+        public override string Name => FilesView.FilesTree_TreeNodeLabel_OptimizationLibrary;
+        public override string FilePath => string.Empty;
 
         public override IList<FileNode> Files
         {
@@ -39,11 +46,8 @@ namespace pwiz.Skyline.Model.FilesView
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                return ImmutableList.Singleton<FileNode>(new OptimizationLibrary(Document, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id));
+                return ImmutableList.Singleton<FileNode>(new OptimizationLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id));
             }
         }
-
-        public override string Name => FilesView.FilesTree_TreeNodeLabel_OptimizationLibrary;
-        public override string FilePath => string.Empty;
     }
 }
