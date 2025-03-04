@@ -73,6 +73,7 @@ namespace pwiz.Skyline.Model.Proteome
         public string FileName { get => Name; }
         public string FilePath { get => DatabasePath; }
         public FileType Type { get => FileType.background_proteome; }
+        public IList<IFileModel> Files => null;
 
         public bool IsNone
         {

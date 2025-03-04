@@ -264,5 +264,6 @@ namespace pwiz.Skyline.Model.Optimization
         public Identity Id { get; }
         public FileType Type { get => FileType.optimization_library; }
         public string FilePath { get => DatabasePath; }
+        public IList<IFileModel> Files => null;
     }
 }

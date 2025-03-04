@@ -66,7 +66,9 @@ namespace pwiz.Skyline.Model.Results
             UpdateFiles();
         }
 
-        public IDictionary<FileType, IFileGroupModel> Files { get; private set; }
+        private static Identity _replicateFolderId = new StaticFolderId();
+
+        public IList<IFileModel> Files { get; private set; }
 
         public void Validate()
         {
@@ -78,18 +80,14 @@ namespace pwiz.Skyline.Model.Results
             if (IsEmpty)
                 return;
 
-            var newFileList = Chromatograms?.Select(item => item.Files).ToList();
+            var newChromatogramSetList = Chromatograms?.Select(item => item).Cast<IFileModel>().ToList(); 
 
-            var newFileGroup = new BasicFileGroupModel(FileType.folder_replicates, null, newFileList);
-            if (!ArrayUtil.ReferencesEqual(newFileGroup.FilesAndFolders,
-                    Files != null && Files.TryGetValue(FileType.folder_replicates, out var value) ? value.FilesAndFolders : null))
+            var oldReplicatesFolder = Files?.FirstOrDefault();
+            var oldChromatogramSetList = oldReplicatesFolder?.Files;
+            if (!ArrayUtil.ReferencesEqual(newChromatogramSetList, oldChromatogramSetList))
             {
-                var newFiles = new Dictionary<FileType, IFileGroupModel>
-                {
-                    {newFileGroup.Type, newFileGroup}
-                };
-
-                Files = MakeReadOnly(newFiles);
+                IFileModel folder = new FolderModel(_replicateFolderId, FileType.folder_replicates, newChromatogramSetList);
+                Files = ImmutableList.Singleton(folder);
             }
         }
 

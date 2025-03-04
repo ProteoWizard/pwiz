@@ -106,6 +106,7 @@ namespace pwiz.Skyline.Model.IonMobility
 
         public Identity Id { get; }
         public FileType Type { get => FileType.ion_mobility_library; }
+        public IList<IFileModel> Files => null;
     }
 
     [XmlRoot("ion_mobility_library")]

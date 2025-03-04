@@ -2267,44 +2267,44 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public IFileGroupModel Files { get; private set; }
+        public IFileModel Files { get; private set; }
 
         public void Validate()
         {
             UpdateFileLists();
         }
 
+        private static Identity _rootFolderId = new StaticFolderId();
+
         private void UpdateFileLists()
         {
-            var folders = new List<IFileGroupModel>();
+            // Order matters! FilesTree shows items in the order returned by SrmSettings.
+            var folders = new List<IFileModel>();
 
-            // Order matters! This order influences how folders appear in the FilesTree since the tree
-            // is directly bound to the tree of files returned by SrmSettings.
             if (MeasuredResults != null)
             {
                 var files = MeasuredResults.Files;
                 if (files != null && files.Count > 0)
-                    folders.AddRange(files.Values);
+                    folders.AddRange(files);
             }
 
             if (PeptideSettings != null)
             {
                 var files = PeptideSettings.Files;
                 if (files != null && files.Count > 0)
-                    folders.AddRange(files.Values);
+                    folders.AddRange(files);
             }
 
             if (TransitionSettings != null)
             {
                 var files = TransitionSettings.Files;
                 if (files != null && files.Count > 0)
-                    folders.AddRange(files.Values);
+                    folders.AddRange(files);
             }
 
-            var newFiles = new BasicFileGroupModel(FileType.folder, null, folders);
-            if (!ArrayUtil.ReferencesEqual(newFiles.FilesAndFolders, Files?.FilesAndFolders))
+            if (!ArrayUtil.ReferencesEqual(folders, Files?.Files))
             {
-                Files = newFiles;
+                Files = new FolderModel(_rootFolderId, FileType.folder, folders);
             }
         }
     }

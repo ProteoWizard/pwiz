@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.Results
 
     [XmlRoot("replicate")]
     [XmlRootAlias("chromatogram_group")]
-    public sealed class ChromatogramSet : XmlNamedIdElement, IValidating
+    public sealed class ChromatogramSet : XmlNamedIdElement, IFileModel, IValidating
     {
         /// <summary>
         /// Info for all files contained in this replicate
@@ -400,7 +400,9 @@ namespace pwiz.Skyline.Model.Results
             UpdateFileList();
         }
 
-        public IFileGroupModel Files { get; private set; }
+        public FileType Type => FileType.replicate;
+        public string FilePath { get; }
+        public IList<IFileModel> Files { get; private set; }
 
         public void Validate()
         {
@@ -409,15 +411,11 @@ namespace pwiz.Skyline.Model.Results
 
         private void UpdateFileList()
         {
-            var sampleFiles = MSDataFileInfos?.Cast<IFileModel>().ToList();
+            var newFiles = MSDataFileInfos?.Cast<IFileModel>().ToList();
 
-            var chromSetFileGroup = new BasicFileGroupModel(FileType.replicate, Name, MakeReadOnly(sampleFiles), null);
-
-            if (Files == null || 
-                !ReferenceEquals(Files.Name, chromSetFileGroup.Name) ||
-                !ArrayUtil.ReferencesEqual(Files.FilesAndFolders, chromSetFileGroup.FilesAndFolders))
+            if (!ArrayUtil.ReferencesEqual(newFiles, Files))
             {
-                Files = chromSetFileGroup;
+                Files = newFiles;
             }
         }
 
@@ -1241,6 +1239,8 @@ namespace pwiz.Skyline.Model.Results
         public FileType Type { get => FileType.replicate_sample; }
         public string Name { get => FilePath.GetFileName(); }
         string IFileModel.FilePath => FilePath.GetFilePath();
+        public IList<IFileModel> Files => null;
+
     }
 
     /// <summary>

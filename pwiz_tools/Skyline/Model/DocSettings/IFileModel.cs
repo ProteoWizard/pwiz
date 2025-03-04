@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -47,81 +48,46 @@ namespace pwiz.Skyline.Model.DocSettings
         folder_project_files
     }
 
-    public interface IFileBase
+    class StaticFolderId : Identity { }
+
+    public interface IFileModel
     {
         Identity Id { get; }
         FileType Type { get; }
         string Name { get; }
-    }
 
-    public interface IFileModel : IFileBase
-    {
         string FilePath { get; }
-    }
 
-    // CONSIDER: separating folder type from the FileType enum
-    public interface IFileGroupModel : IFileBase
-    {
         IList<IFileModel> Files { get; }
-        IList<IFileGroupModel> Folders { get; }
-        IList<IFileBase> FilesAndFolders { get; }
     }
 
     public interface IFileProvider
     {
-        IDictionary<FileType, IFileGroupModel> Files { get; }
+        IList<IFileModel> Files { get; }
     }
 
-    // TODO: build incrementally with a factory to simplify ensuring immutability and non-null files / folders
-    public class BasicFileGroupModel : IFileGroupModel
+    public class FolderModel : IFileModel
     {
-        private class BasicFileGroupModelId : Identity { }
+        public FolderModel(Identity id, FileType type, IFileModel file) :
+            this(id, type, new SingletonList<IFileModel>(file)) { }
 
-        public BasicFileGroupModel(FileType type, string name, IList<IFileGroupModel> folders) : this(type, name, null, folders) { }
-
-        public BasicFileGroupModel(FileType type, string name, IList<IFileModel> files) : this(type, name, files, null) { }
-
-        public BasicFileGroupModel(FileType type, string name, IFileModel file) : this(type, name, ImmutableList.Singleton(file), null) { }
-
-        public BasicFileGroupModel(FileType type, string name, IList<IFileModel> files, IList<IFileGroupModel> folders) {
-            Id = new BasicFileGroupModelId();
-
+        public FolderModel(Identity id, FileType type, IList<IFileModel> files)
+        {
+            Id = id;
             Type = type;
-            Name = name;
             Files = ImmutableList.ValueOf(files);
-            Folders = ImmutableList.ValueOf(folders);
-
-            FilesAndFolders = new List<IFileBase>();
-
-            if (Files != null)
-                FilesAndFolders.AddRange(Files);
-            
-            if (Folders != null)
-                FilesAndFolders.AddRange(Folders);
-            
-            FilesAndFolders = ImmutableList.ValueOf(FilesAndFolders);
         }
 
         public Identity Id { get; }
         public FileType Type { get; }
-        public string Name { get; }
+        public string Name => string.Empty;
+        public string FilePath => string.Empty;
+
         public IList<IFileModel> Files { get; }
-        public IList<IFileGroupModel> Folders { get; }
-        public IList<IFileBase> FilesAndFolders { get; }
 
         public bool HasFiles()
         {
             return Files != null && Files.Count > 0;
-        }
-
-        public bool HasFolders()
-        {
-            return Folders != null && Folders.Count > 0;
-        }
-
-        public bool HasFilesOrFolders()
-        {
-            return HasFiles() || HasFolders();
         }
     }
 }

@@ -130,39 +130,41 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public IDictionary<FileType, IFileGroupModel> Files { get; private set; }
+        private IDictionary<FileType, IFileModel> _files = new SortedDictionary<FileType, IFileModel>();
+
+        public IList<IFileModel> Files => ImmutableList.ValueOf(_files.Values.ToList());
+
+        private static Identity _ionMobilityFolderId = new StaticFolderId();
+        private static Identity _optimizationLibFolderId = new StaticFolderId();
 
         private void UpdateFiles()
         {
             // *.imsdb
-            IFileGroupModel newIonMobilityLibrary = null;
-            if (HasIonMobilityLibraryPersisted) 
+            _files.TryGetValue(FileType.ion_mobility_library, out var oldImsdb);
+            if (HasIonMobilityLibraryPersisted)
             {
-                newIonMobilityLibrary = new BasicFileGroupModel(FileType.folder_ion_mobility_library, null, IonMobilityFiltering.IonMobilityLibrary);
+                IFileModel newImsdb = IonMobilityFiltering.IonMobilityLibrary;
+                if (!ReferenceEquals(newImsdb, oldImsdb?.Files.FirstOrDefault()))
+                {
+                    var folder = new FolderModel(_ionMobilityFolderId, FileType.folder_ion_mobility_library, newImsdb);
+                    _files[FileType.folder_ion_mobility_library] = folder;
+                }
+            } 
+            else if (oldImsdb != null)
+            {
+                _files.Remove(FileType.folder_ion_mobility_library);
             }
 
             // *.optdb
-            IFileGroupModel newOptimizationLibrary = null;
+            _files.TryGetValue(FileType.folder_optimization_library, out var oldOptdb);
             if (HasOptimizationLibraryPersisted)
             {
-                newOptimizationLibrary = new BasicFileGroupModel(FileType.folder_optimization_library, null, Prediction.OptimizedLibrary);
-            }
-
-            if (!ArrayUtil.ReferencesEqual(newIonMobilityLibrary?.FilesAndFolders,
-                    Files != null && Files.TryGetValue(FileType.ion_mobility_library, out var value1) ? value1.FilesAndFolders : null) ||
-                !ArrayUtil.ReferencesEqual(newOptimizationLibrary?.FilesAndFolders,
-                    Files != null && Files.TryGetValue(FileType.folder_optimization_library, out var value2) ? value2.FilesAndFolders : null))
-            {
-                var newFileGroupModel = new SortedDictionary<FileType, IFileGroupModel>();
-
-                if (newIonMobilityLibrary != null)
-                    newFileGroupModel[newIonMobilityLibrary.Type] = newIonMobilityLibrary;
-
-                // TODO: support .optdb
-                // if (newOptimizationLibrary != null)
-                //     newFileGroupModel[newOptimizationLibrary.Type] = newOptimizationLibrary;
-
-                Files = MakeReadOnly(newFileGroupModel); 
+                var newOptdb = Prediction.OptimizedLibrary;
+                if (!ReferenceEquals(newOptdb, oldOptdb?.Files.FirstOrDefault()))
+                {
+                    var folder = new FolderModel(_optimizationLibFolderId, FileType.folder_optimization_library, newOptdb);
+                    _files[FileType.folder_optimization_library] = folder;
+                }
             }
         }
 

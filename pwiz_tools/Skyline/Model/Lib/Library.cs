@@ -1555,12 +1555,10 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public Identity Id { get; }
-
-        public FileType Type { get => FileType.peptide_library; }
-
-        public string FileName { get => Name; }
-
+        public FileType Type => FileType.peptide_library;
+        public string FileName => Name;
         public string FilePath { get; private set; }
+        public IList<IFileModel> Files => null;
 
         /// <summary>
         /// Returns the filter string to be used for finding a library of this type.

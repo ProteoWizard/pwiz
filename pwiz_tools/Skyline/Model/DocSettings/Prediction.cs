@@ -1215,6 +1215,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public Identity Id { get; }
         public FileType Type { get => FileType.retention_score_calculator; }
         public string FilePath { get => PersistencePath; }
+        public IList<IFileModel> Files => null;
     }
 
     public interface IRetentionScoreSource

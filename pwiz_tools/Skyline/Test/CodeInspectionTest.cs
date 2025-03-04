@@ -544,7 +544,7 @@ namespace pwiz.SkylineTest
         // hasn't happened.
         private static void FilesTreeDataModelInspection()
         {
-            Assert.IsFalse(typeof(IIdentiyContainer).IsAssignableFrom(typeof(IFileBase)));
+            Assert.IsFalse(typeof(IIdentiyContainer).IsAssignableFrom(typeof(IFileModel)));
         }
 
         /// <summary>

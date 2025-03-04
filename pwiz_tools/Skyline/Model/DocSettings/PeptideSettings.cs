@@ -115,55 +115,68 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasRTCalcPersisted { get { return HasRTPrediction && Prediction.RetentionTime.Calculator.PersistencePath != null; } }
 
-        public IDictionary<FileType, IFileGroupModel> Files { get; private set; }
+        private IDictionary<FileType, IFileModel> _files = new SortedDictionary<FileType, IFileModel>();
+
+        public IList<IFileModel> Files => ImmutableList.ValueOf(_files.Values.ToList());
 
         public void Validate()
         {
             UpdateFiles();
         }
 
+        private static Identity _backgroundProteomeFolderId = new StaticFolderId();
+        private static Identity _retentionScoreCalcFolderId = new StaticFolderId();
+
         private void UpdateFiles()
         {
             // *.blib
-            IFileGroupModel newLibrariesFileGroup = null;
+            _files.TryGetValue(FileType.folder_peptide_libraries, out var oldLibraries);
             if (HasLibraries)
             {
-                newLibrariesFileGroup = Libraries.Files;
+                var newLibraries = Libraries.Files;
+
+                if (!ReferenceEquals(newLibraries, oldLibraries))
+                {
+                    _files[FileType.folder_peptide_libraries] = newLibraries;
+                }
+            }
+            else if (oldLibraries != null)
+            {
+                _files.Remove(FileType.folder_peptide_libraries);
             }
 
             // *.protdb
-            IFileGroupModel newProtDbFileGroup = null;
+            _files.TryGetValue(FileType.folder_background_proteome, out var oldProtdbFolder);
             if (HasBackgroundProteome)
             {
-                newProtDbFileGroup = new BasicFileGroupModel(FileType.folder_background_proteome, null, BackgroundProteome);
+                IFileModel newProtdb = BackgroundProteome;
+
+                if (!ReferenceEquals(newProtdb, oldProtdbFolder?.Files.FirstOrDefault()))
+                {
+                    _files[FileType.folder_peptide_libraries] =
+                        new FolderModel(_backgroundProteomeFolderId, FileType.folder_background_proteome, newProtdb);
+                }
+            }
+            else if(oldProtdbFolder != null)
+            {
+                _files.Remove(FileType.folder_background_proteome);
             }
 
             // *.irtdb
-            IFileGroupModel newRetentionScoreCalculator = null;
+            _files.TryGetValue(FileType.folder_retention_score_calculator, out var oldIrtdbFolder);
             if (HasRTCalcPersisted)
             {
-                newRetentionScoreCalculator = new BasicFileGroupModel(FileType.folder_retention_score_calculator, null, Prediction.RetentionTime.Calculator);
-            }
+                IFileModel newIrtdb = Prediction.RetentionTime.Calculator;
 
-            if (!ArrayUtil.ReferencesEqual(newLibrariesFileGroup?.FilesAndFolders, 
-                    Files != null && Files.TryGetValue(FileType.folder_peptide_libraries, out var value1) ? value1.FilesAndFolders : null) ||
-                !ArrayUtil.ReferencesEqual(newProtDbFileGroup?.FilesAndFolders, 
-                    Files != null && Files.TryGetValue(FileType.folder_background_proteome, out var value2) ? value2.FilesAndFolders : null) ||
-                !ArrayUtil.ReferencesEqual(newRetentionScoreCalculator?.FilesAndFolders,
-                    Files != null && Files.TryGetValue(FileType.folder_retention_score_calculator, out var value3) ? value3.FilesAndFolders : null))
+                if (!ReferenceEquals(newIrtdb, oldIrtdbFolder?.Files.FirstOrDefault()))
+                {
+                    _files[FileType.folder_peptide_libraries] =
+                        new FolderModel(_retentionScoreCalcFolderId, FileType.folder_retention_score_calculator, newIrtdb);
+                }
+            } 
+            else if (oldIrtdbFolder != null)
             {
-                var newFileGroupModel = new SortedDictionary<FileType, IFileGroupModel>();
-
-                if (newLibrariesFileGroup != null)
-                    newFileGroupModel[newLibrariesFileGroup.Type] = newLibrariesFileGroup;
-
-                if (newProtDbFileGroup != null)
-                    newFileGroupModel[newProtDbFileGroup.Type] = newProtDbFileGroup;
-
-                if (newRetentionScoreCalculator != null)
-                    newFileGroupModel[newRetentionScoreCalculator.Type] = newRetentionScoreCalculator; 
-
-                Files = MakeReadOnly(newFileGroupModel);
+                _files.Remove(FileType.folder_retention_score_calculator);
             }
         }
 
@@ -2019,17 +2032,18 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _librarySpecs = MakeReadOnly(value); }
         }
 
-        public IFileGroupModel Files { get; private set; }
+        public IFileModel Files { get; private set; }
+
+        private static Identity _librariesFolderId = new StaticFolderId();
 
         private void UpdateFileLists()
         {
-            var librarySpecModels = _librarySpecs?.Cast<IFileModel>().ToList();
-            var librarySpecFolder = new BasicFileGroupModel(FileType.folder_peptide_libraries, null, MakeReadOnly(librarySpecModels), null);
+            var newLibraries = _librarySpecs?.Cast<IFileModel>().ToList();
 
-            if (Files == null ||
-                !ArrayUtil.ReferencesEqual(Files.FilesAndFolders, librarySpecFolder.FilesAndFolders))
+            if (!ArrayUtil.ReferencesEqual(newLibraries, Files?.Files))
             {
-                Files = librarySpecFolder;
+                IFileModel folder = new FolderModel(_librariesFolderId, FileType.folder_peptide_libraries, newLibraries);
+                Files = folder;
             }
         }
 
