@@ -135,14 +135,25 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
 
-                // Build up data rows for replicate pivot properties
+                // Filter columns for main grid to be written out.
+                var filteredColumnDescriptors = bindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
+                    .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor)).ToList();
+
+                // Count main grid columns to add spaces.
+                var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
+                    .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
+
+                // Create header line with property column and replicate headers.
                 var headerLine = new List<string> { @"Property" };
+                AppendEmpty(headerLine, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1);
+
                 var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
                 var propertyLines = new List<List<string>> { headerLine };
                 foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
                 {
-                    // Add replicate to header line
+                    // Add replicate to header line.
                     headerLine.Add(group.Key.ReplicateName);
+                    AppendEmpty(headerLine, replicateVariablePropertyCounts[group.ToList()[0].PivotKey] - 1);
 
                     foreach (var column in group)
                     {
@@ -154,34 +165,32 @@ namespace pwiz.Skyline.Controls.Databinding
                         var propertyPath = column.DisplayColumn.PropertyPath;
                         if (!propertyLineDictionary.ContainsKey(propertyPath))
                         {
+                            // Create a new row if property line does not exist yet.
                             var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
                             var newRow = new List<string> { propertyDisplayName };
+                            AppendEmpty(newRow, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1);
                             propertyLineDictionary[propertyPath] = newRow;
                             propertyLines.Add(newRow);
                         }
 
-                        // Add value to property line
+                        // Add value to property line.
                         var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(item => column.GetValue(item) != null);
                         var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
                         var propertyLine = propertyLineDictionary[propertyPath];
                         propertyLine.Add(formattedValue);
+                        AppendEmpty(propertyLine, replicateVariablePropertyCounts[column.PivotKey] - 1);
                     }
                 }
 
-                // Write pivot replicate data
+                // Write pivot replicate data.
                 foreach (var line in propertyLines)
                 {
                     dsvWriter.WriteRowValues(writer, line.AsEnumerable());
                 }
                 writer.WriteLine();
 
-                // Write main data rows with filtered item properties
-                var filteredColumnDescriptors = bindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
-                    .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor));
-                var filteredItemProperties = new ItemProperties(filteredColumnDescriptors);
-
                 IProgressStatus status = new ProgressStatus(string.Format(Resources.SkylineViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-                WriteDataWithStatus(progressMonitor, ref status, writer, new RowItemEnumerator(bindingListSource.Cast<RowItem>(), filteredItemProperties, bindingListSource.ColumnFormats), separator);
+                WriteDataWithStatus(progressMonitor, ref status, writer, new RowItemEnumerator(bindingListSource.Cast<RowItem>(), new ItemProperties(filteredColumnDescriptors), bindingListSource.ColumnFormats), separator);
             }
             else
             {
@@ -189,6 +198,13 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        private void AppendEmpty(List<string> list, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                list.Add(string.Empty);
+            }
+        }
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
         {
             Settings.Default.PersistedViews.SetViewSpecList(viewGroup, viewSpecList);
