@@ -22,20 +22,18 @@
         库，或是（在其他工具中）创建叫做“分析库”的扩展离子对列表（具备碎片离子子集的相似信息）。这些碎片离子相对丰度和归一化保留时间 (iRT) 库可用于后续任意多次使用相同仪器和标准肽段进行保留时间校准的 DIA 运行。 
     </p>
     <p>
-        尽管有多种方法可将 DDA 搜索结果转换为适合该库 DIA 分析方法的库（在 <a
-            href="https://skyline.ms/webinar02.url">第 2 场 Skyline
-            教程网络研讨会</a>中描述为“先验知识工作流程”，此后在<a href="https://skyline.ms/webinar14.url">第 14</a>、<a href="https://skyline.ms/webinar15.url">15</a> 和 <a
-            href="https://skyline.ms/webinar18.url">18 场</a>网络研讨会以及 <a href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH
+        尽管有多种方法可将 DDA 搜索结果转换为适合该库 DIA 分析方法的库（在 <a href="https://skyline.ms/webinar02.url">第 2 场 Skyline
+            教程网络研讨会</a>中描述为“先验知识工作流程”，此后在<a href="https://skyline.ms/webinar14.url">第 14</a>、<a href="https://skyline.ms/webinar15.url">15</a> 和 <a href="https://skyline.ms/webinar18.url">18 场</a>网络研讨会以及 <a href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH
             数据分析</a>教程中都有更详尽的记录），但开始 DIA 分析的一种简单易行的方法是在同一仪器上穿插 DDA 运行和 DIA 运行，将 DDA 结果的谱图和保留时间作为对 DIA 运行的预测。
     </p>
     <p>
         在本教程中，您将学习如何使用简单的 DDA/DIA 穿插方法在 Skyline 中设置、导入和处理 DIA 运行。如果您要在研究中使用 DIA，强烈建议您继续使用上面所列网络研讨会和教程中阐述的更强大、更复杂的方法。
     </p>
     <h1>入门指南</h1>
-    <p class="keep-next">
+    <p>
         要开始本教程，请下载下列 ZIP 文件：
     </p>
-    <p class="keep-next">
+    <p>
         <a href="https://skyline.ms/tutorials/DIA-20_2.zip">https://skyline.ms/tutorials/DIA-20_2.zip</a>
     </p>
     <p>
@@ -133,10 +131,8 @@
             <td><b>备注：</b>您将<b>保留时间筛选</b>选项保留为<b>仅使用 MS/MS ID</b> [5] <b>分钟之内的扫描</b>。Skyline
                 就会明白，它应当只从您库中找到的肽段谱图匹配 5 分钟内采集的 DIA 谱图提取强度。对于单个肽段谱图匹配，总提取窗口将为 10 分钟。如果给定的肽段有多个 ID，Skyline 将从最短 ID 时间减去 5 分钟和最长 ID 时间加上 5
                 分钟的范围内采集的谱图中进行提取。（所有 ID 保留时间存储在您建的非冗余库中，稍后会看到。）第二个选项是<b>仅使用预测保留</b>  [5] <b>分钟之内的扫描</b>，其中使用保留时间预测器（例如 SSRCalc
-                或更常见的 iRT 库）来确定提取时间范围。本教程中虽不会使用 RT 预测器，但它们在前文提到的其它教程和网络研讨会以及<a
-                    href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">导入分析库</a>提示（在
-                Skyline 网页上的<a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tips">提示</a> &gt; <a
-                    href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=other_tools">使用其它定量工具</a>）中讨论过<b>。</b>
+                或更常见的 iRT 库）来确定提取时间范围。本教程中虽不会使用 RT 预测器，但它们在前文提到的其它教程和网络研讨会以及<a href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">导入分析库</a>提示（在
+                Skyline 网页上的<a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=tips">提示</a> &gt; <a href="https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=other_tools">使用其它定量工具</a>）中讨论过<b>。</b>
             </td>
         </tr>
     </table>
@@ -283,10 +279,6 @@
     <p>
         <img src="s-07.png" />
     </p>
-    <p>
-        对于该数据集，<b>截止得分</b>字段设置为“0.95”表明 PeptideProphet 得分为 0.95 或更高的肽段谱图匹配项将包括在内，因为 DDA 数据采用 TPP 处理（在使用 SEQUEST 进行肽段谱图匹配之后）。对于使用 q
-        值或预期得分的其它谱图匹配管道，其中 0 表示最好，1 表示最差，截止得分使用 1 – 得分。因此，0.95 意味着 ≤0.05。对于可重用的库，可能要使用更严格的截止得分，如 0.99（即 ≤0.01 或 q 值错误发现率为 1%）。
-    </p>
     <ul>
         <li>单击<b>添加文件</b>按钮。</li>
         <li>在出现的<b>添加输入文件</b>表单中，从教程所在的目录中选择以下文件：<ul>
@@ -295,10 +287,13 @@
         </li>
     </ul>
     <p>
+        对于该数据集，<b>得分阈值</b>字段设置为“0.95”，表明 PeptideProphet 得分为 0.95 或更高的肽段谱图匹配项将包括在内，因为 DDA 数据采用 TPP 处理（在使用 SEQUEST 进行肽段谱图匹配之后）。对于可重用的库，
+        可能要使用更严格的阈值，如 0.99（即 ≤0.01 或 q 值错误发现率为 1%）。
+    </p>
+    <p>
         此文件包含单次 DDA 运行的肽段谱图匹配结果。在真正的实验中，您其实会在质谱仪上执行 DDA 采集，然后通过搜索引擎运行输出文件，以生成一个或多个这样的文件（对于 TPP 生成的 pepXML，通常生成一个文件）。在此会为您提供这些文件。请注意，原始 DDA 运行数据文件（已转换为
         mzXML），即 interact-20130311_DDA_Pit01.mzXML，也位于同一文件夹中。虽然无需为色谱图提取而导入该文件，但其必须位于此处，建库器才能查找 .pep.xml 文件中所没有的库串联质谱谱图。Mascot DAT 文件、Proteome
-        Discoverer pdResult 文件以及 X! Tandem 原生 XML 文件等其它谱图匹配管道输出则是在单独一个输出文件中包含需要的一切信息。您可以在 Skyline 网站上找到<a
-            href="https://skyline.ms/build-blib.url">支持的工具和文件格式的完整列表</a>。
+        Discoverer pdResult 文件以及 X! Tandem 原生 XML 文件等其它谱图匹配管道输出则是在单独一个输出文件中包含需要的一切信息。您可以在 Skyline 网站上找到<a href="https://skyline.ms/build-blib.url">支持的工具和文件格式的完整列表</a>。
     </p>
     <ul>
         <li>单击<b>打开</b>将此文件添加到所建的库中。</li>
@@ -408,8 +403,7 @@
         <img src="s-14.png" />
     </p>
     <p>
-        在这个简单的介绍中，您刚刚提供的 FASTA 文本中只有 6 个目标蛋白质，您将不使用诱饵或通过 mProphet 算法生成的动态峰选择模型。有关这些选项的详细信息，请查阅 <a
-            href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。
+        在这个简单的介绍中，您刚刚提供的 FASTA 文本中只有 6 个目标蛋白质，您将不使用诱饵或通过 mProphet 算法生成的动态峰选择模型。有关这些选项的详细信息，请查阅 <a href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。
     </p>
     <ul>
         <li>单击<b>完成</b>按钮。</li>
@@ -446,8 +440,7 @@
     </p>
     <p>
         在大型 DIA 实验中，使用诱饵肽段<sup>6</sup>来训练高级峰选择（肽段检测）模型可能会有用，此举可以改进 Skyline 自动选择峰的结果并允许 Skyline 生成检测概率得分（q 值）。诱饵肽段对于 DIA
-        工作流程并无绝对必要，只有在您选择应用自定义峰得分方法时才需要。在许多情况下，Skyline 默认峰选择表现非常好，无需自定义峰得分，即便使用自定义峰得分，也存在诱饵的替代方案（请参阅<a
-            href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>教程）。在本教程中，不会向文档中添加诱饵。
+        工作流程并无绝对必要，只有在您选择应用自定义峰得分方法时才需要。在许多情况下，Skyline 默认峰选择表现非常好，无需自定义峰得分，即便使用自定义峰得分，也存在诱饵的替代方案（请参阅<a href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>教程）。在本教程中，不会向文档中添加诱饵。
     </p>
     <h1>探索 DIA 结果</h1>
     <p>
@@ -462,6 +455,7 @@
         <li>在<b>视图</b>菜单中选择<b>峰面积</b>，并单击<b>重复测定比较</b> (F7)。</li>
         <li>右键单击其中一个色谱图，然后单击<b>图例</b>将其取消选中。</li>
         <li>将<b>峰面积 - 重复测定比较</b>图停靠到<b>库匹配</b>视图顶部主窗口的右边缘。</li>
+        <li>右键单击<b>峰面积 - 重复测定比较</b>图，选择<b>显示点积</b> ，然后单击<b>标签</b> 。</li>
         <li>选择<b>目标</b>视图中的第一个肽段 K.YALSQDV<b><u>C</u></b>TYR.D [64, 74]。</li>
     </ul>
     <p class="keep-next">
@@ -743,10 +737,10 @@
     <p>
         <img src="s-29.png" />
     </p>
-    <p class="keep-next">
+    <p>
         在 41.68 分钟处，可以看到所提取峰的质荷比左移：
     </p>
-    <p class="keep-next">
+    <p>
         <img src="s-30.png" />
     </p>
     <p>
@@ -761,15 +755,11 @@
     <h1>结语</h1>
     <p>
         在本教程中，您定义了用于生成 DIA 仪器方法或本教程中所述简单数据分析的 DIA 采集方案。您运用 DDA 搜索结果建立了谱图库，根据库中测得的 RT 设置了保留时间限制，定义了一组基于目标蛋白质和 DDA 运行的匹配谱图进行测量的离子对，导入了 DIA
-        运行，并分析了获取的数据质量。和所有 Skyline 文档中一样，您最终可以生成目标肽段的峰面积和统计信息。本教程中还提到了其它几部用于进行更高级研究的教程（<a
-            href="https://skyline.ms/tutorial_method_edit_zh.url">靶向方法编辑</a>、<a href="https://skyline.ms/tutorial_existing_quant_zh.url">现有定量实验</a>、<a
-            href="https://skyline.ms/tutorial_irt_zh.url">iRT 保留时间预测</a>、<a href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>、<a
-            href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">导入分析库</a>以及
+        运行，并分析了获取的数据质量。和所有 Skyline 文档中一样，您最终可以生成目标肽段的峰面积和统计信息。本教程中还提到了其它几部用于进行更高级研究的教程（<a href="https://skyline.ms/tutorial_method_edit_zh.url">靶向方法编辑</a>、<a href="https://skyline.ms/tutorial_existing_quant_zh.url">现有定量实验</a>、<a href="https://skyline.ms/tutorial_irt_zh.url">iRT 保留时间预测</a>、<a href="https://skyline.ms/tutorial_peak_picking_zh.url">高级峰选择模型</a>、<a href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">导入分析库</a>以及
         <a href="https://panoramaweb.org/labkey/wiki/home/page.view?name=chromatogram_libraries">Panorama 色谱图库</a>）。
     </p>
     <p>
-        通过这个工作流程，您应当能够分析 Skyline 中的任何 DIA 数据集，前提是它伴随 DIA 运行之前、之后或之中采集的 DDA 运行。这是开始 DIA 数据分析的一种简单方法。但是，强烈建议您继续学习 <a
-            href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。从中您将使用校准的 iRT 值建立谱图库，并使用这些归一化保留时间和 mProphet
+        通过这个工作流程，您应当能够分析 Skyline 中的任何 DIA 数据集，前提是它伴随 DIA 运行之前、之后或之中采集的 DDA 运行。这是开始 DIA 数据分析的一种简单方法。但是，强烈建议您继续学习 <a href="https://skyline.ms/tutorial_dia_swath_zh.url">DIA/SWATH 数据分析</a>教程。从中您将使用校准的 iRT 值建立谱图库，并使用这些归一化保留时间和 mProphet
         统计模型进行色谱峰的评分和选择。您还将根据调整后的 p 值，使用 Skyline 中的群组比较来估计每个肽段或蛋白质条件之间的倍数变化。
     </p>
     <h1>参考书目</h1>
