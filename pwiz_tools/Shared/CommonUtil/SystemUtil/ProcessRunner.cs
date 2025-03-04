@@ -155,13 +155,15 @@ namespace pwiz.Common.SystemUtil
                 string line;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
-                    if (EnableImmediateLog && writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
-                        writer.WriteLineAsync(line);
+                    //if (EnableImmediateLog && writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
+                    //    writer.WriteLineAsync(line);
 
                     string lineLower = line.ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
                     {
                         sbError.AppendLine(line);
+                        if (EnableImmediateLog && writer != null)
+                            writer.WriteLineAsync(line);
                     }
                     else // if (progress != null)
                     {

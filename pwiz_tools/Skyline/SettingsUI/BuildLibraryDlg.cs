@@ -124,7 +124,7 @@ namespace pwiz.Skyline.SettingsUI
         // TODO(xgwang): update this to the ssh link to the remote repo
         private string AlphapeptdeepDiaRepo = @"https://github.com/wenbostar/alphapeptdeep_dia";
         // TODO(xgwang): update this to user input value from the dlg
-        private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
+        //private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
         private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
 
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.SettingsUI
                             return false;
                         }
                         Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, ProteinDatabaseFilePath, DocumentUI, _skylineWindow.GetTextWriter());
+                            msMsDataFilePath, textLearningDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _skylineWindow.GetTextWriter(), _trainingDocument);
 
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }
@@ -360,7 +360,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else if (comboBuildLibraryTarget.SelectedIndex != (int)BuildLibraryTargetOptions.currentSkylineDocument)
                     {
-                        throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
+                   //     throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
                     }
                     else
                     {
@@ -771,7 +771,7 @@ namespace pwiz.Skyline.SettingsUI
             Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex == (int)Pages.learning && radioCarafeSource.Checked)
             {
-                if (textBoxProteinDatabase.Text == "" || textBoxMsMsData.Text == "")
+                if (textBoxMsMsData.Text == "")
                 {
                     btnNext.Enabled = false;
                 }
@@ -1403,7 +1403,7 @@ namespace pwiz.Skyline.SettingsUI
             dlg.Multiselect = false;
             dlg.SupportMultiDottedExtensions = true; 
             dlg.DefaultExt = DataSourceUtil.EXT_MZML;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(@"Skyline document files", SrmDocument.FILTER_DOC));
+            dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 textBoxDoc.Text = dlg.FileName;

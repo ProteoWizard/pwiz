@@ -283,19 +283,27 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime;
                         var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime;
                         var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime;
-                        string ionmob_ms1 = (bool) docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.HasValue ? 
+                        string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ? 
                             docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : @"#N/A";
                         var apex_psm = @"unknown";//docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
                         var filename = LibraryHelper.GetDataFileName();
-
-                        result.Add(string.Join(TAB, new object[]
+                        if (training)
+                            result.Add(string.Join(TAB, new object[]
                             {
                                 precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
                                 docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
                                 note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds,
                                 best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore
-                            })
-                        );
+                            }));
+                        else
+                            result.Add(string.Join(TAB, new[]
+                                {
+                                    precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
+                                    docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
+                                    note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds
+                                })
+                            );
+
                     }
                 }
             }
