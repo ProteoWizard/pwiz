@@ -979,7 +979,7 @@ namespace pwiz.Skyline.Controls.Databinding
             replicatePivotDataGridView.Columns.Add(colReplicateProperty);
 
             var rowPropertyPaths = new List<PropertyPath>();
-
+            var rowCellTemplates = new Dictionary<ColumnPropertyDescriptor, DataGridViewCell>();
             // Iterate through item properties to create columns and rows
             foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
             {
@@ -1018,6 +1018,12 @@ namespace pwiz.Skyline.Controls.Databinding
                         .FirstOrDefault(v => v != null);
 
                     // Set the cell value for the replicate column
+                    if (!rowCellTemplates.ContainsKey(column))
+                    {
+                        rowCellTemplates[column] = bindingListSource.ViewContext.CreateGridViewColumn(column).CellTemplate;
+                    }
+                    var cell = (DataGridViewCell)rowCellTemplates[column].Clone();
+                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName] = cell;
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Value = value;
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
                     if (column.IsReadOnly)
@@ -1082,6 +1088,19 @@ namespace pwiz.Skyline.Controls.Databinding
         private void replicatePivotDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
         {
             ReplicatePivotGridResized();
+        }
+
+        private void replicatePivotDataGridView_OnCellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
+            {
+                var value = replicatePivotDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                var linkValue = value as ILinkValue;
+                if (linkValue != null)
+                {
+                    linkValue.ClickEventHandler(this, e);
+                }
+            }
         }
 
         private void boundDataGridView_Resize(object sender, EventArgs e)
