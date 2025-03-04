@@ -1066,11 +1066,13 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
                 {
-                    if (grouping.Key.ReplicateName.Equals(replicatePivotDataGridView.Columns[e.ColumnIndex].HeaderText))
+                    var modifiedReplicate = replicatePivotDataGridView.Columns[e.ColumnIndex].HeaderText;
+                    var modifiedProperty = replicatePivotDataGridView.Rows[e.RowIndex].Cells[0].Value;
+                    if (grouping.Key.ReplicateName.Equals(modifiedReplicate))
                     {
                         foreach (var column in grouping)
                         {
-                            if (column.DisplayColumn.PropertyPath.Name.Equals(replicatePivotDataGridView.Rows[e.RowIndex].Cells[0].Value))
+                            if (column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized).Equals(modifiedProperty))
                             {
                                 var columnDescriptor = column.DisplayColumn.ColumnDescriptor;
                                 var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(r => columnDescriptor.Parent.GetPropertyValue(r, column.PivotKey) != null);
