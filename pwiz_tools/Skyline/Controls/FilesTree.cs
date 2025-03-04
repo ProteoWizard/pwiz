@@ -182,8 +182,6 @@ namespace pwiz.Skyline.Controls
 
                 MergeNodes(files.Files, Root.Nodes, FilesTreeNode.CreateNode);
 
-                UpdateNodeStates();
-
                 var expandedNodes = IsAnyNodeExpanded(Root);
                 if (!expandedNodes)
                 {
