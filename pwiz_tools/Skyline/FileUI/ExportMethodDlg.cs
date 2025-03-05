@@ -330,7 +330,7 @@ namespace pwiz.Skyline.FileUI
 
             var dllFinder = new ThermoDllFinder();
             var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
-            if (thermoSoftwareInfo.InstrumentType == null)
+            if (thermoSoftwareInfo?.InstrumentType == null)
             {
                 if (!silentMode)
                 {

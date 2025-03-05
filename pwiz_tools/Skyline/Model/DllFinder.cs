@@ -110,9 +110,12 @@ namespace pwiz.Skyline.Model
 
     public class ThermoDllFinder
     {
+        // Can be changed in test mode to avoid reading from the registry
+        public static IDllFinderServices DEFAULT_SERVICES = new DllFinderSystemServices(ROOT_KEY_PATH);
+
         public ThermoDllFinder(IDllFinderServices services = null)
         {
-            Services = services ?? new DllFinderSystemServices(ROOT_KEY_PATH);
+            Services = services ?? DEFAULT_SERVICES;
 
             var rootExeDir = Services.GetSkylineExePath();
             if (!string.IsNullOrEmpty(rootExeDir))
@@ -145,7 +148,7 @@ namespace pwiz.Skyline.Model
         public void EnsureDlls()
         {
             // ReSharper disable ConstantNullCoalescingCondition
-            string instrumentSoftwarePath = GetSoftwareInfo().Path;
+            string instrumentSoftwarePath = GetSoftwareInfo()?.Path;
             if (instrumentSoftwarePath == null)
             {
                 // If all the required libraries exist, then continue even if Thermo installation is gone.

@@ -39,13 +39,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ThermoDllFinderTest()
         {
-            var clazz = typeof(DllFinderUnitTest);
-            using var stream = clazz.Assembly.GetManifestResourceStream(clazz, "DllFinderUnitTest.json");
-            Assert.IsNotNull(stream);
-            using var reader = new StreamReader(stream);
-            string json = reader.ReadToEnd();
-            var testCases = JsonConvert.DeserializeObject<List<ThermoDllFinderTestCase>>(json);
-            foreach (var testCase in testCases)
+            foreach (var testCase in LoadTestCases("DllFinderUnitTest.json"))
             {
                 try
                 {
@@ -65,6 +59,16 @@ namespace pwiz.SkylineTest
                         e.ToString()));
                 }
             }
+        }
+
+        public static IList<ThermoDllFinderTestCase> LoadTestCases(string jsonFile)
+        {
+            var clazz = typeof(DllFinderUnitTest);
+            using var stream = clazz.Assembly.GetManifestResourceStream(clazz, jsonFile);
+            Assert.IsNotNull(stream);
+            using var reader = new StreamReader(stream);
+            string json = reader.ReadToEnd();
+            return JsonConvert.DeserializeObject<List<ThermoDllFinderTestCase>>(json);
         }
 
         private void RunTest(ThermoDllFinderTestCase testCase)
@@ -334,6 +338,8 @@ namespace pwiz.SkylineTest
             public int? ExpectedCopyCount { get; set; }
             public string ExpectedInstrumentType { get; set; }
             public double ExpectedVersion { get; set; }
+
+            public IDllFinderServices DllFinderServices => new TestDllFinderServices(this);
         }
 
         public class FileData

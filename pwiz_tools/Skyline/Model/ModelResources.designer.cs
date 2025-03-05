@@ -327,6 +327,36 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error: The specified instrument type &apos;{0}&apos; does not match the installed software &apos;{1}&apos;..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_" +
+                        "not_match_the_installed_software___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: Unknown Thermo instrument type &apos;{0}&apos; installed..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_Error__Unknown_Thermo_instrument_type___0___installed_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_Error__Unknown_Thermo_instrument_type___0___inst" +
+                        "alled_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the instrument type &apos;Thermo&apos; to export a method with the installed software..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_met" +
+                        "hod_with_the_installed_software_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Custom molecules must specify a formula or valid monoisotopic and average masses..
         /// </summary>
         public static string CustomMolecule_Validate_Custom_molecules_must_specify_a_formula_or_valid_monoisotopic_and_average_masses_ {

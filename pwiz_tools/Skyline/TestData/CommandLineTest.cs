@@ -1827,8 +1827,6 @@ namespace pwiz.SkylineTestData
             CommandArgs.Argument[] valueListArgs = 
             {
                 CommandArgs.ARG_REPORT_FORMAT,
-                CommandArgs.ARG_EXP_TRANSITION_LIST_INSTRUMENT,
-                CommandArgs.ARG_EXP_METHOD_INSTRUMENT,
                 CommandArgs.ARG_EXP_STRATEGY,
                 CommandArgs.ARG_EXP_METHOD_TYPE,
                 CommandArgs.ARG_EXP_OPTIMIZING,
@@ -1840,6 +1838,29 @@ namespace pwiz.SkylineTestData
                 output = RunCommand(args);
                 AssertEx.Contains(output, new CommandArgs.ValueInvalidException(valueListArg, bogusValue, valueListArg.Values).Message);
             }
+
+            // Transition list, isolation list, and method export
+            string bogusInstrument = string.Format(
+                SkylineResources.CommandArgs_ParseArgsInternal_Warning__The_instrument_type__0__is_not_valid__Please_choose_from_,
+                bogusValue);
+            args[3] = CommandArgs.ARG_EXP_TRANSITION_LIST_INSTRUMENT.ArgumentText + "=" + bogusValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output,
+                bogusInstrument,
+                TextUtil.LineSeparate(ExportInstrumentType.TRANSITION_LIST_TYPES),
+                SkylineResources.CommandArgs_ParseArgsInternal_No_transition_list_will_be_exported_);
+            args[3] = CommandArgs.ARG_EXP_ISOLATION_LIST_INSTRUMENT.ArgumentText + "=" + bogusValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output,
+                bogusInstrument,
+                TextUtil.LineSeparate(ExportInstrumentType.ISOLATION_LIST_TYPES),
+                SkylineResources.CommandArgs_ParseArgsInternal_No_isolation_list_will_be_exported_);
+            args[3] = CommandArgs.ARG_EXP_METHOD_INSTRUMENT.ArgumentText + "=" + bogusValue;
+            output = RunCommand(args);
+            AssertEx.Contains(output,
+                bogusInstrument,
+                TextUtil.LineSeparate(ExportInstrumentType.METHOD_TYPES),
+                SkylineResources.CommandArgs_ParseArgsInternal_No_method_will_be_exported_);
 
             CommandArgs.Argument[] valueIntArguments =
             {

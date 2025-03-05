@@ -171,6 +171,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
+    <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
@@ -340,6 +341,7 @@
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
+    <EmbeddedResource Include="CommandLineThermoMethodTest.json" />
     <None Include="DecoysTest.zip" />
     <EmbeddedResource Include="DllFinderUnitTest.json" />
     <None Include="DocLoadLibraryTest.zip" />

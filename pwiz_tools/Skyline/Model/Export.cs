@@ -589,6 +589,8 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.THERMO_ECLIPSE:
                 case ExportInstrumentType.THERMO_EXPLORIS:
                 case ExportInstrumentType.THERMO_FUSION_LUMOS:
+                case ExportInstrumentType.THERMO_ASTRAL:
+                case ExportInstrumentType.THERMO_ASCEND:
                     return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.SHIMADZU:
                     if (type == ExportFileType.List)
