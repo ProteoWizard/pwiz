@@ -47,25 +47,24 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override void DoTest()
-        { 
+        {
+            //
             // SCENARIO - empty document 
-            RunUI(() =>
-            {
-                SkylineWindow.ShowFilesTreeForm(true);
-            });
+            //
+            RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument,
+                SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
-            RunUI(() =>
-            {
-                SkylineWindow.DestroyFilesTreeForm();
-            });
+            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
 
+            //
             // SCENARIO
+            //
             var emptyDocument = SrmDocumentHelper.MakeEmptyDocument();
             SrmDocumentHelper.AddProteinsToDocument(emptyDocument, 50);
 
@@ -83,12 +82,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
-            RunUI(() =>
-            {
-                SkylineWindow.DestroyFilesTreeForm();
-            });
+            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
 
-            // SCENARIO - real .sky file (rat_plasma.sky)
+            //
+            // SCENARIO - rat_plasma.sky
+            //
             var documentPath = TestFilesDir.GetTestPath("Rat_plasma.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
@@ -127,9 +125,11 @@ namespace pwiz.SkylineTestFunctional
 
             CheckReplicateEquivalence(42);
 
-            // Rename replicate. Tree node should get new node in correct position
-            const string newName = "Test this name";
+            // Rename replicate. Tree node should get new node in correct position with expanded folder
+            RunUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Expand());
+            WaitForConditionUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded);
 
+            const string newName = "Test this name";
             RunUI(() =>
             {
                 SkylineWindow.ModifyDocument("Rename replicate in FilesTree test", srmDoc =>
@@ -149,14 +149,17 @@ namespace pwiz.SkylineTestFunctional
 
             doc = WaitForDocumentChange(doc);
 
+            CheckReplicateEquivalence(42);
+            // make sure UI updated without adding new top-level folders
+            Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
+
             // make sure model name updated 
             Assert.AreEqual(newName, doc.Settings.MeasuredResults.Chromatograms[3].Name);
-            // make sure UI updated without adding new folders
-            Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
             // make sure correct TreeNode updated with new name
             Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Name);
-            CheckReplicateEquivalence(42); 
-            // TODO: check expand / collapse state
+            // folder was expanded before rename and should remain expanded. If not expanded, make sure
+            // the model associated with the node has the same Identity as the model it replaced
+            RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded));
 
             // Selecting replicate should update selected index / graphs
             var filesTreeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[4] as FilesTreeNode;
@@ -264,9 +267,12 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => !libraryDlg.Visible);
 
             //
-            // Background Proteome (folder not visible for this .sky file)
+            // Folders for types not included in this .sky file should not be available
             //
             Assert.IsNull(SkylineWindow.FilesTree.Folder<BackgroundProteomeFolder>());
+            Assert.IsNull(SkylineWindow.FilesTree.Folder<IonMobilityLibraryFolder>());
+            Assert.IsNull(SkylineWindow.FilesTree.Folder<RTCalcFolder>());
+            Assert.IsNull(SkylineWindow.FilesTree.Folder<OptimizationLibraryFolder>());
 
             //
             // Project Files
@@ -299,18 +305,31 @@ namespace pwiz.SkylineTestFunctional
         private static void CheckReplicateEquivalence(int expectedCount)
         {
             var docNodes = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
+
+            var filesModel = new RootFileNode(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
+            var replicateFolderModel = filesModel.Files[0];
+
             var treeNodes = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes;
 
             Assert.IsNotNull(docNodes);
             Assert.IsNotNull(treeNodes);
+            Assert.IsNotNull(replicateFolderModel);
+
             Assert.AreEqual(expectedCount, docNodes.Count);
             Assert.AreEqual(docNodes.Count, treeNodes.Count);
+            Assert.AreEqual(docNodes.Count, treeNodes.Count);
+            Assert.AreEqual(docNodes.Count, replicateFolderModel.Files.Count);
 
             for (var i = 0; i < docNodes.Count; i++)
             {
                 var filesTreeNode = treeNodes[i] as FilesTreeNode;
 
+                Assert.IsTrue(ReferenceEquals(docNodes[i], replicateFolderModel.Files[i].Immutable));
+                Assert.IsTrue(ReferenceEquals(docNodes[i], filesTreeNode?.Model.Immutable));
+
+                Assert.AreEqual(docNodes[i].Id, replicateFolderModel.Files[i].IdentityPath.GetIdentity(0));
                 Assert.AreEqual(docNodes[i].Id, filesTreeNode?.Model.IdentityPath.GetIdentity(0));
+                Assert.AreEqual(docNodes[i].Name, replicateFolderModel.Files[i].Name);
                 Assert.AreEqual(docNodes[i].Name, treeNodes[i].Name);
             }
         }

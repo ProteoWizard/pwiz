@@ -443,18 +443,21 @@ namespace pwiz.Skyline.Controls.FilesTree
             Name = Model.Name;
             Text = Model.Name;
 
-            var isAnyFileMissing = IsAnyFileMissing(this);
+            // TODO: do this work in the background to avoid blocking the UI thread
+            Model.InitLocalFile();
+
+            var isAnyFileMissing = IsAnyChildFileMissing(this);
             ImageIndex = isAnyFileMissing ? (int)ImageMissing : (int)ImageAvailable;
         }
 
-        internal static bool IsAnyFileMissing(FilesTreeNode node)
+        internal static bool IsAnyChildFileMissing(FilesTreeNode node)
         {
             if (node.Model.FileState == FileState.missing)
                 return true;
 
             foreach (FilesTreeNode child in node.Nodes)
             {
-                if (IsAnyFileMissing(child))
+                if (IsAnyChildFileMissing(child))
                     return true;
             }
 

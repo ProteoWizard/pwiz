@@ -75,6 +75,10 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     public abstract class FileNode
     {
+
+        // ReSharper disable once LocalizableElement
+        private static string FILE_PATH_NOT_SET = "# local path #";
+
         protected FileNode(SrmDocument document, string documentPath, IdentityPath identityPath,
                            ImageId available = ImageId.file, ImageId missing = ImageId.file_missing)
         {
@@ -85,14 +89,21 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageMissing = missing;
 
             FileState = FileState.available;
+
+            LocalFilePath = FILE_PATH_NOT_SET;
         }
 
         public void InitLocalFile()
         {
-            if (IsBackedByFile)
+            if (IsBackedByFile && !IsLocalFilePathConfigured())
             {
                 LocalFilePath = LookForFileInPotentialLocations(DocumentPath, FileName);
             }
+        }
+
+        private bool IsLocalFilePathConfigured()
+        {
+            return !ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET);
         }
 
         public SrmDocument Document { get; }

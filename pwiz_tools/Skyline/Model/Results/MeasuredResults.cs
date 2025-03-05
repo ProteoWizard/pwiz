@@ -66,31 +66,6 @@ namespace pwiz.Skyline.Model.Results
             UpdateFiles();
         }
 
-        private static Identity _replicateFolderId = new StaticFolderId();
-
-        public IList<IFileModel> Files { get; private set; }
-
-        public void Validate()
-        {
-            UpdateFiles();
-        }
-
-        private void UpdateFiles()
-        {
-            if (IsEmpty)
-                return;
-
-            var newChromatogramSetList = Chromatograms?.Select(item => item).Cast<IFileModel>().ToList(); 
-
-            var oldReplicatesFolder = Files?.FirstOrDefault();
-            var oldChromatogramSetList = oldReplicatesFolder?.Files;
-            if (!ArrayUtil.ReferencesEqual(newChromatogramSetList, oldChromatogramSetList))
-            {
-                IFileModel folder = new FolderModel(_replicateFolderId, FileType.folder_replicates, newChromatogramSetList);
-                Files = ImmutableList.Singleton(folder);
-            }
-        }
-
         public bool IsEmpty
         {
             get { return _chromatograms == null || _chromatograms.Count == 0; }
@@ -565,36 +540,35 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)
         {
             // Clone the current node, and update its cache properties.
-            var results = ImClone(this);
-
-            // Make sure peaks are adjusted as chromatograms are rescored
-            if (resultsCache._cacheRecalc != null &&
-                resultsCache._listPartialCaches != null)
+            return ChangeProp(ImClone(this), results =>
             {
-                results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
-            }
+                // Make sure peaks are adjusted as chromatograms are rescored
+                if (resultsCache._cacheRecalc != null &&
+                    resultsCache._listPartialCaches != null)
+                {
+                    results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
+                }
 
-            results.UpdateClonedCaches(resultsCache);
+                results.UpdateClonedCaches(resultsCache);
 
-            results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
-            results.IsDeserialized = false;
+                results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
+                results.IsDeserialized = false;
 
-            string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
-            var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
-            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation()); // Ignore centroiding, combineIMS etc for key purposes
-            var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
-            var setCachedFileNames = new HashSet<string>(enumCachedNames);
-            var chromatogramSets = new List<ChromatogramSet>();
-            foreach (var chromSet in results.Chromatograms)
-            {
-                chromatogramSets.Add(chromSet.ChangeFileCacheFlags(
-                    dictCachedFiles, setCachedFileNames, cachePath));
-            }
+                string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
+                var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
+                var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation()); // Ignore centroiding, combineIMS etc for key purposes
+                var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
+                var setCachedFileNames = new HashSet<string>(enumCachedNames);
+                var chromatogramSets = new List<ChromatogramSet>();
+                foreach (var chromSet in results.Chromatograms)
+                {
+                    chromatogramSets.Add(chromSet.ChangeFileCacheFlags(
+                        dictCachedFiles, setCachedFileNames, cachePath));
+                }
 
-            if (!ArrayUtil.ReferencesEqual(chromatogramSets, results.Chromatograms))
-                results.Chromatograms = chromatogramSets;
-
-            return results;
+                if (!ArrayUtil.ReferencesEqual(chromatogramSets, results.Chromatograms))
+                    results.Chromatograms = chromatogramSets;
+            });
         }
 
         private void UpdateClonedCaches(MeasuredResults resultsCache)
@@ -994,6 +968,31 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
             return new ChromCacheMinimizer(document, _cacheFinal);
+        }
+
+        private static Identity _replicateFolderId = new StaticFolderId();
+
+        public IList<IFileModel> Files { get; private set; }
+
+        public void Validate()
+        {
+            UpdateFiles();
+        }
+
+        private void UpdateFiles()
+        {
+            if (IsEmpty)
+                return;
+
+            var newChromatogramSetList = Chromatograms?.Select(item => item).Cast<IFileModel>().ToList();
+
+            var oldReplicatesFolder = Files?.FirstOrDefault();
+            var oldChromatogramSetList = oldReplicatesFolder?.Files;
+            if (!ArrayUtil.ReferencesEqual(newChromatogramSetList, oldChromatogramSetList))
+            {
+                IFileModel folder = new FolderModel(_replicateFolderId, FileType.folder_replicates, newChromatogramSetList);
+                Files = ImmutableList.Singleton(folder);
+            }
         }
 
         #region Property change methods
