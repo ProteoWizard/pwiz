@@ -329,8 +329,8 @@ namespace AutoQC
 
         public void Init()
         {
-            _requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(_panoramaSettings.PanoramaServerUri,
-                _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword));
+            _requestHelper = new PanoramaRequestHelper(new LabkeySessionWebClient(new PanoramaServer(_panoramaSettings.PanoramaServerUri,
+                _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword)));
             _timer = new Timer(e => { PingPanoramaServer(); });
             _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5)); // Ping Panorama every 5 minutes.
         }

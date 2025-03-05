@@ -56,7 +56,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         void scenario(PeptideFilter.PeptideUniquenessConstraint cancellationCheckType, string initialBackgroundProteome, string newBackgroundProteome = null, bool verbose = false)
         {
             AllowInternetAccess = true; // Testing cancellation of web lookup is integral to this test
-            TestFilesZip = GetPerfTestDataURL(@"PerfUniquePeptidesTest.zip");
+            TestFilesZip = GetPerfTestDataURL(@"PerfUniquePeptidesTest_v2.zip"); // N.B. in V2 the protdb files metadata are mostly resolved so we don't abuse Uniprot servers  
             _skyfile = "lots_of_human_proteins.sky";
             _cancellationCheckType = cancellationCheckType;
             _initialBackgroundProteome = initialBackgroundProteome;

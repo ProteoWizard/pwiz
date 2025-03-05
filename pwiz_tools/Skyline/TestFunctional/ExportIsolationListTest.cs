@@ -23,11 +23,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -150,6 +152,16 @@ namespace pwiz.SkylineTestFunctional
             var zLast = AsSmallMoleculesNegative ? -3 : 3;
             var ceFirst = AsSmallMoleculesNegative ? 20.3 : 20.4;
             var ceLast = AsSmallMoleculesNegative ? 19.1 : 19.2;
+
+            // Test an issue found in the PeptideFinder class with mixed polarity docs
+            if (SkylineWindow.Document.IsMixedPolarity())
+            {
+                var beyondMaxNegMz = (from precursor in SkylineWindow.Document.MoleculeTransitionGroups
+                    where precursor.PrecursorMz.IsNegative
+                    select precursor.PrecursorMz.RawValue).Min()-100.0;
+                var finder = new PeptideFinder(SkylineWindow.Document);
+                AssertEx.IsNull(finder.FindPeptide(new SignedMz(beyondMaxNegMz))); // This will throw a "polarity mismatch" exception if the issue is not fixed
+            }
 
             // Export Agilent unscheduled DDA list.
             ExportIsolationList(

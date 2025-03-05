@@ -111,11 +111,13 @@ namespace pwiz.SkylineTestUtil
             // Testing will have UseKeysOverride set to true to prevent accidental
             // keyboard interaction with the running test.
             RunUI(Program.MainWindow, () => Program.MainWindow.UseKeysOverride = false);
+            ClipboardEx.UseInternalClipboard(false);
             lock (_pauseLock)
             {
                 RunUI(_ownerForm, RefreshAndShow);
                 Monitor.Wait(_pauseLock, timeout ?? -1);
             }
+            ClipboardEx.UseInternalClipboard();
             RunUI(Program.MainWindow, () => Program.MainWindow.UseKeysOverride = true);
 
             // Record that the screenshot happened in the console output to make
