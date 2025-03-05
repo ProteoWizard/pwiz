@@ -185,19 +185,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     clauseText = GetAbbreviatedText(filterPages.Clauses[iPage]);
                 }
                 string caption = filterPages.Pages[iPage].Caption;
+                string part = clauseText;
                 if (caption != null)
                 {
-                    parts.Add(TextUtil.ColonSeparate(caption, clauseText));
+                    part = TextUtil.ColonSeparate(caption, clauseText);
                 }
-                else
+                if (iPage != 0)
                 {
-                    string part = clauseText;
-                    if (iPage != 0)
-                    {
-                        part = TextUtil.SpaceSeparate(Resources.SpectrumClassFilter_GetAbbreviatedText_OR, part);
-                    }
-                    parts.Add(part);
+                    part = TextUtil.SpaceSeparate(Resources.SpectrumClassFilter_GetAbbreviatedText_OR, part);
                 }
+                parts.Add(part);
             }
 
             return TextUtil.SpaceSeparate(parts);
