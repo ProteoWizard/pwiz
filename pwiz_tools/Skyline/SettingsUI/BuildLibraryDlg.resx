@@ -1505,6 +1505,9 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="comboLearnFrom.Items1" xml:space="preserve">
     <value>Current Skyline Document</value>
   </data>
+  <data name="comboLearnFrom.Items2" xml:space="preserve">
+    <value>DIA-NN Report Document</value>
+  </data>
   <data name="comboLearnFrom.Location" type="System.Drawing.Point, System.Drawing">
     <value>9, 161</value>
   </data>

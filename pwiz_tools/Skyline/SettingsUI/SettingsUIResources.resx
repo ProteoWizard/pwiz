@@ -223,6 +223,21 @@
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
     <value>You must specify an output file path.</value>
   </data>
+   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu" xml:space="preserve">
+    <value>You must specify an output file path.</value>
+  </data>
+  <data name="BuildLibraryDlg_Skyline_tuning_document" xml:space="preserve">
+    <value>&amp;Skyline tuning document:</value>
+  </data>
+  <data name="BuildLibraryDlg_Select_Skyline_document_file" xml:space="preserve">
+    <value>Select Skyline Document File</value>
+  </data>
+  <data name="BuildLibraryDlg_DIANN_report_document" xml:space="preserve">
+    <value>&amp;DIA-NN report document:</value>
+  </data>
+  <data name="BuildLibraryDlg_Select_DIANN_report_document" xml:space="preserve">
+    <value>Select DIA-NN report document:</value>
+  </data>
   <data name="BuildLibraryNotification_BuildLibraryNotification_Library__0__" xml:space="preserve">
     <value>Library {0}</value>
   </data>

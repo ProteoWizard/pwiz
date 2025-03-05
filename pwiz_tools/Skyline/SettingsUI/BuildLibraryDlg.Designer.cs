@@ -68,13 +68,6 @@
             this.tabKoinaSource = new System.Windows.Forms.TabPage();
             this.tabFiles = new System.Windows.Forms.TabPage();
             this.tabLearn = new System.Windows.Forms.TabPage();
-            this.tabControlBuildLibraryTarget = new pwiz.Skyline.Controls.WizardPages();
-            this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.labelProteinDatabase = new System.Windows.Forms.Label();
-            this.buttonProteinDatabase = new System.Windows.Forms.Button();
-            this.textBoxProteinDatabase = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
             this.tabWithFiles = new System.Windows.Forms.TabPage();
             this.labelDoc = new System.Windows.Forms.Label();
@@ -94,6 +87,13 @@
             this.labelLearnFrom = new System.Windows.Forms.Label();
             this.comboBuildLibraryTarget = new System.Windows.Forms.ComboBox();
             this.labelBuildLibraryTarget = new System.Windows.Forms.Label();
+            this.tabControlBuildLibraryTarget = new pwiz.Skyline.Controls.WizardPages();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.labelProteinDatabase = new System.Windows.Forms.Label();
+            this.buttonProteinDatabase = new System.Windows.Forms.Button();
+            this.textBoxProteinDatabase = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.toolTipProteinDatabase = new System.Windows.Forms.ToolTip(this.components);
             this.toolTipTrainingData = new System.Windows.Forms.ToolTip(this.components);
             this.toolTipMsMsData = new System.Windows.Forms.ToolTip(this.components);
@@ -106,12 +106,12 @@
             this.tabKoinaSource.SuspendLayout();
             this.tabFiles.SuspendLayout();
             this.tabLearn.SuspendLayout();
-            this.tabControlBuildLibraryTarget.SuspendLayout();
-            this.tabPage2.SuspendLayout();
             this.tabControlLearning.SuspendLayout();
             this.tabWithFiles.SuspendLayout();
             this.tabPageDocument.SuspendLayout();
             this.tabPageLibraries.SuspendLayout();
+            this.tabControlBuildLibraryTarget.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -412,53 +412,6 @@
             resources.ApplyResources(this.tabLearn, "tabLearn");
             this.tabLearn.Name = "tabLearn";
             // 
-            // tabControlBuildLibraryTarget
-            // 
-            resources.ApplyResources(this.tabControlBuildLibraryTarget, "tabControlBuildLibraryTarget");
-            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage2);
-            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage1);
-            this.tabControlBuildLibraryTarget.Name = "tabControlBuildLibraryTarget";
-            this.tabControlBuildLibraryTarget.SelectedIndex = 0;
-            this.tabControlBuildLibraryTarget.TabStop = false;
-            // 
-            // tabPage2
-            // 
-            this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
-            this.tabPage2.Controls.Add(this.labelProteinDatabase);
-            this.tabPage2.Controls.Add(this.buttonProteinDatabase);
-            this.tabPage2.Controls.Add(this.textBoxProteinDatabase);
-            this.tabPage2.Controls.Add(this.label6);
-            resources.ApplyResources(this.tabPage2, "tabPage2");
-            this.tabPage2.Name = "tabPage2";
-            // 
-            // labelProteinDatabase
-            // 
-            resources.ApplyResources(this.labelProteinDatabase, "labelProteinDatabase");
-            this.labelProteinDatabase.Name = "labelProteinDatabase";
-            // 
-            // buttonProteinDatabase
-            // 
-            resources.ApplyResources(this.buttonProteinDatabase, "buttonProteinDatabase");
-            this.buttonProteinDatabase.Name = "buttonProteinDatabase";
-            this.buttonProteinDatabase.UseVisualStyleBackColor = true;
-            this.buttonProteinDatabase.Click += new System.EventHandler(this.buttonProteinDatabase_Click);
-            // 
-            // textBoxProteinDatabase
-            // 
-            resources.ApplyResources(this.textBoxProteinDatabase, "textBoxProteinDatabase");
-            this.textBoxProteinDatabase.Name = "textBoxProteinDatabase";
-            // 
-            // label6
-            // 
-            resources.ApplyResources(this.label6, "label6");
-            this.label6.Name = "label6";
-            // 
-            // tabPage1
-            // 
-            resources.ApplyResources(this.tabPage1, "tabPage1");
-            this.tabPage1.Name = "tabPage1";
-            this.tabPage1.UseVisualStyleBackColor = true;
-            // 
             // tabControlLearning
             // 
             resources.ApplyResources(this.tabControlLearning, "tabControlLearning");
@@ -492,11 +445,6 @@
             this.buttonDoc.Name = "buttonDoc";
             this.buttonDoc.UseVisualStyleBackColor = true;
             this.buttonDoc.Click += new System.EventHandler(this.buttonDoc_Click);
-            // 
-            // textBoxDoc
-            // 
-            resources.ApplyResources(this.textBoxDoc, "textBoxDoc");
-            this.textBoxDoc.Name = "textBoxDoc";
             // 
             // labelMsMsData
             // 
@@ -566,7 +514,8 @@
             this.comboLearnFrom.FormattingEnabled = true;
             this.comboLearnFrom.Items.AddRange(new object[] {
             resources.GetString("comboLearnFrom.Items"),
-            resources.GetString("comboLearnFrom.Items1")});
+            resources.GetString("comboLearnFrom.Items1"),
+            resources.GetString("comboLearnFrom.Items2")});
             resources.ApplyResources(this.comboLearnFrom, "comboLearnFrom");
             this.comboLearnFrom.Name = "comboLearnFrom";
             this.comboLearnFrom.SelectedIndexChanged += new System.EventHandler(this.comboLearnFrom_SelectedIndexChanged);
@@ -591,6 +540,53 @@
             // 
             resources.ApplyResources(this.labelBuildLibraryTarget, "labelBuildLibraryTarget");
             this.labelBuildLibraryTarget.Name = "labelBuildLibraryTarget";
+            // 
+            // tabControlBuildLibraryTarget
+            // 
+            resources.ApplyResources(this.tabControlBuildLibraryTarget, "tabControlBuildLibraryTarget");
+            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage2);
+            this.tabControlBuildLibraryTarget.Controls.Add(this.tabPage1);
+            this.tabControlBuildLibraryTarget.Name = "tabControlBuildLibraryTarget";
+            this.tabControlBuildLibraryTarget.SelectedIndex = 0;
+            this.tabControlBuildLibraryTarget.TabStop = false;
+            // 
+            // tabPage2
+            // 
+            this.tabPage2.BackColor = System.Drawing.SystemColors.Control;
+            this.tabPage2.Controls.Add(this.labelProteinDatabase);
+            this.tabPage2.Controls.Add(this.buttonProteinDatabase);
+            this.tabPage2.Controls.Add(this.textBoxProteinDatabase);
+            this.tabPage2.Controls.Add(this.label6);
+            resources.ApplyResources(this.tabPage2, "tabPage2");
+            this.tabPage2.Name = "tabPage2";
+            // 
+            // labelProteinDatabase
+            // 
+            resources.ApplyResources(this.labelProteinDatabase, "labelProteinDatabase");
+            this.labelProteinDatabase.Name = "labelProteinDatabase";
+            // 
+            // buttonProteinDatabase
+            // 
+            resources.ApplyResources(this.buttonProteinDatabase, "buttonProteinDatabase");
+            this.buttonProteinDatabase.Name = "buttonProteinDatabase";
+            this.buttonProteinDatabase.UseVisualStyleBackColor = true;
+            this.buttonProteinDatabase.Click += new System.EventHandler(this.buttonProteinDatabase_Click);
+            // 
+            // textBoxProteinDatabase
+            // 
+            resources.ApplyResources(this.textBoxProteinDatabase, "textBoxProteinDatabase");
+            this.textBoxProteinDatabase.Name = "textBoxProteinDatabase";
+            // 
+            // label6
+            // 
+            resources.ApplyResources(this.label6, "label6");
+            this.label6.Name = "label6";
+            // 
+            // tabPage1
+            // 
+            resources.ApplyResources(this.tabPage1, "tabPage1");
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // BuildLibraryDlg
             // 
@@ -622,9 +618,6 @@
             this.tabFiles.PerformLayout();
             this.tabLearn.ResumeLayout(false);
             this.tabLearn.PerformLayout();
-            this.tabControlBuildLibraryTarget.ResumeLayout(false);
-            this.tabPage2.ResumeLayout(false);
-            this.tabPage2.PerformLayout();
             this.tabControlLearning.ResumeLayout(false);
             this.tabWithFiles.ResumeLayout(false);
             this.tabWithFiles.PerformLayout();
@@ -632,6 +625,9 @@
             this.tabPageDocument.PerformLayout();
             this.tabPageLibraries.ResumeLayout(false);
             this.tabPageLibraries.PerformLayout();
+            this.tabControlBuildLibraryTarget.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
+            this.tabPage2.PerformLayout();
             this.ResumeLayout(false);
 
         }

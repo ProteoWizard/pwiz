@@ -323,11 +323,47 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;DIA-NN report document:.
+        /// </summary>
+        public static string BuildLibraryDlg_DIANN_report_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_DIANN_report_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finding library input files in.
         /// </summary>
         public static string BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select DIA-NN report document:.
+        /// </summary>
+        public static string BuildLibraryDlg_Select_DIANN_report_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Select_DIANN_report_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select Skyline Document File.
+        /// </summary>
+        public static string BuildLibraryDlg_Select_Skyline_document_file {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Select_Skyline_document_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Skyline tuning document:.
+        /// </summary>
+        public static string BuildLibraryDlg_Skyline_tuning_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Skyline_tuning_document", resourceCulture);
             }
         }
         
@@ -385,6 +421,15 @@ namespace pwiz.Skyline.SettingsUI {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_docume" +
                         "nt_to_learn_from_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must specify an output file path..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu", resourceCulture);
             }
         }
         

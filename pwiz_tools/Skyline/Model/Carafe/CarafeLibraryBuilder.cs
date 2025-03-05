@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string CARAFE = @"carafe";
         private const string CARAFE_VERSION = @"0.0.1";
         private const string CARAFE_DEV = @"-dev"; 
-        private const string CARAFE_DEV_VERSION = CARAFE_DEV + @"-20250228T195109Z-001";
+        private const string CARAFE_DEV_VERSION = CARAFE_DEV + @"-20250304T224833Z-001";
         private const string CMD_ARG_C = @"/C";
         private const string CMD_EXECUTABLE = @"cmd.exe";
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string OUTPUT_LIBRARY = @"output_library";
         private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
         private const string SPACE = TextUtil.SPACE;
-        private const string TAB = "\t";
+        private const string TAB = @"\t";
 
         internal TextWriter Writer { get; }
 
@@ -138,7 +138,19 @@ namespace pwiz.Skyline.Model.Carafe
         private string TrainingFileName => TRAIN + TextUtil.UNDERSCORE + TextUtil.EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
 
-        private string TrainingFilePath => Path.Combine(RootDir, TrainingFileName);
+        private bool _diann_training;
+
+        private string _trainingFilePath;
+        private string TrainingFilePath
+        {
+            get
+            {
+                if (_trainingFilePath == null)
+                    return Path.Combine(RootDir, TrainingFileName);
+                return _trainingFilePath;
+            }
+            set { _trainingFilePath = value; }
+        }
 
 
         private IList<ArgumentAndValue> CommandArguments =>
@@ -174,7 +186,6 @@ namespace pwiz.Skyline.Model.Carafe
                 new ArgumentAndValue(@"rf_rt_win", @"1", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"rf", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"seed", @"2000", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"skyline", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"tf", @"all", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"valid", string.Empty, TextUtil.HYPHEN),
@@ -217,7 +228,8 @@ namespace pwiz.Skyline.Model.Carafe
             string dbInputFilePath,
             SrmDocument document,
             TextWriter textWriter, 
-            SrmDocument trainingDocument)
+            SrmDocument trainingDocument,
+            bool diann_training)
         {
             Document = document;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
@@ -230,6 +242,11 @@ namespace pwiz.Skyline.Model.Carafe
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
+
+            _diann_training = diann_training;
+            if (_diann_training)
+                TrainingFilePath = experimentDataTuningFilePath;
+
             Document = document;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
@@ -299,13 +316,24 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
+
                 LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
                 LibraryHelper.PrepareTrainingInputFile(TrainingDocument, progress, ref progressStatus, @"carafe");
+            }
+            else if (_diann_training)
+            {
+                readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
+                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
             }
             else
             {
                 readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
+                readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
+
                 LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, @"carafe");
             }
             // progressStatus = progressStatus.NextSegment();
@@ -338,8 +366,8 @@ namespace pwiz.Skyline.Model.Carafe
                 JavaDirInfo.Delete(true);
                 Directory.CreateDirectory(JavaDir);
                 
-                CarafeJavaDirInfo.Delete(true);
-                Directory.CreateDirectory(CarafeJavaDir);
+                //CarafeJavaDirInfo.Delete(true);
+                //Directory.CreateDirectory(CarafeJavaDir);
 
                 // download java sdk package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
@@ -356,7 +384,7 @@ namespace pwiz.Skyline.Model.Carafe
             if (!isCarafeValid)
             {
                 // clean carafe dir
-                CarafeJavaDirInfo.Delete(true);
+                //CarafeJavaDirInfo.Delete(true);
                 Directory.CreateDirectory(RootDir);
                 Directory.CreateDirectory(CarafeJavaDir);
 
@@ -370,6 +398,7 @@ namespace pwiz.Skyline.Model.Carafe
                 // unzip carafe jar package
                 using var carafeJarZip = ZipFile.Read(CarafeJarZipDownloadPath);
                 carafeJarZip.ExtractAll(CarafeJavaDir);
+                PythonInstallerUtil.SignFile(CarafeJarFilePath);
             }
 
 
@@ -391,6 +420,12 @@ namespace pwiz.Skyline.Model.Carafe
                 return false;
             }
             JavaExecutablePath = javaExecutablePath;
+            var signatureValid = PythonInstallerUtil.IsSignatureValid(JavaExecutablePath, PythonInstallerUtil.GetFileHash(JavaExecutablePath));
+            if (signatureValid != true)
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -400,6 +435,9 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 return false;
             }
+            var signatureValid = PythonInstallerUtil.IsSignatureValid(CarafeJarFilePath, PythonInstallerUtil.GetFileHash(CarafeJarFilePath));
+            if (signatureValid != true)
+                return false;
             return true;
         }
 
@@ -409,6 +447,7 @@ namespace pwiz.Skyline.Model.Carafe
             Assume.IsTrue(dirs.Length.Equals(1), @"Java directory has more than one java SDKs");
             var javaSdkDir = dirs[0];
             JavaExecutablePath = Path.Combine(javaSdkDir, BIN, JAVA_EXECUTABLE);
+            PythonInstallerUtil.SignFile(JavaExecutablePath);
         }
 
         private void ExecuteCarafe(IProgressMonitor progress, ref IProgressStatus progressStatus, IList<ArgumentAndValue> commandArgs)

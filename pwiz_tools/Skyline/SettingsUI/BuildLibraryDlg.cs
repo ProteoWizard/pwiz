@@ -113,7 +113,7 @@ namespace pwiz.Skyline.SettingsUI
         public enum BuildLibraryTargetOptions { fastaFile, currentSkylineDocument }
         // TODO: After supporting LearningOptions.document, add "Skyline Document" option to the comboLearnFrom dropdown
         // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
-        public enum LearningOptions { another_doc, this_doc }
+        public enum LearningOptions { another_doc, this_doc, diann_report }
         private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => true;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.SettingsUI
                             return false;
                         }
                         Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, textLearningDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _skylineWindow.GetTextWriter(), _trainingDocument);
+                            msMsDataFilePath, textBoxDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _skylineWindow.GetTextWriter(), _trainingDocument, labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document));
 
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }
@@ -1286,14 +1286,22 @@ namespace pwiz.Skyline.SettingsUI
                     labelDoc.Enabled = true;
                     buttonDoc.Enabled = true;
                     textBoxDoc.Enabled = true;
+                    labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
                     //PopulateLibraries();
                     break;
                 case LearningOptions.this_doc:
                     labelDoc.Enabled = false;
                     buttonDoc.Enabled = false;
                     textBoxDoc.Enabled = false;
+                    labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
                     comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
                     tabPage1.BackColor = tabPage1.Parent.BackColor;
+                    break;
+                case LearningOptions.diann_report:
+                    labelDoc.Enabled = true;
+                    buttonDoc.Enabled = true;
+                    textBoxDoc.Enabled = true;
+                    labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document);
                     break;
             }
         }
@@ -1308,11 +1316,15 @@ namespace pwiz.Skyline.SettingsUI
             switch (targetOption)
             {
                 case BuildLibraryTargetOptions.currentSkylineDocument:
-                    comboLearnFrom.SelectedIndex = (int)LearningOptions.another_doc;
-                    labelDoc.Enabled = true;
-                    buttonDoc.Enabled = true;
-                    textBoxDoc.Enabled = true;
-                    tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
+                    if (comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc)
+                    {
+                        comboLearnFrom.SelectedIndex = (int)LearningOptions.another_doc;
+                        labelDoc.Enabled = true;
+                        buttonDoc.Enabled = true;
+                        textBoxDoc.Enabled = true;
+                        labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
+                        tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
+                    }
                     break;
             }
         }
@@ -1338,7 +1350,7 @@ namespace pwiz.Skyline.SettingsUI
                 dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    textLearningDoc.Text = dlg.FileName;
+                    textBoxDoc.Text = dlg.FileName;
                 }
             }
 
@@ -1397,29 +1409,42 @@ namespace pwiz.Skyline.SettingsUI
         private void buttonDoc_Click(object sender, EventArgs e)
         {
             using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Skyline Document File";
+
+            if (this.labelDoc.Text == SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document)
+            {
+                dlg.Title = SettingsUIResources.BuildLibraryDlg_Select_Skyline_document_file;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
+            }
+            else
+            {
+                dlg.Title = SettingsUIResources.BuildLibraryDlg_Select_DIANN_report_document;
+                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
+            }
+            
             dlg.InitialDirectory = Settings.Default.ActiveDirectory;
             dlg.CheckPathExists = true;
             dlg.Multiselect = false;
             dlg.SupportMultiDottedExtensions = true; 
             dlg.DefaultExt = DataSourceUtil.EXT_MZML;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
+            
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 textBoxDoc.Text = dlg.FileName;
-            }
 
-            _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
-           
-            using (var reader = new StreamReader(PathEx.SafePath(dlg.FileName)))
-            {
-                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                _trainingDocument = (SrmDocument)ser.Deserialize(reader);
+                if (this.labelDoc.Text == SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document)
+                {
+                    _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
+
+                    using (var reader = new StreamReader(PathEx.SafePath(dlg.FileName)))
+                    {
+                        XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                        _trainingDocument = (SrmDocument)ser.Deserialize(reader);
+                    }
+                }
             }
 
             if (textBoxProteinDatabase.Text != "" && textBoxDoc.Text != "")
                 btnNext.Enabled = true;
         }
-
     }
 }
