@@ -649,18 +649,6 @@ you can append more spectra in the future.</value>
   <data name="radioCarafeSource.Text" xml:space="preserve">
     <value>&amp;Carafe</value>
   </data>
-  <data name="&gt;&gt;radioCarafeSource.Name" xml:space="preserve">
-    <value>radioCarafeSource</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;radioCarafeSource.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="radioAlphaSource.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -675,18 +663,6 @@ you can append more spectra in the future.</value>
   </data>
   <data name="radioAlphaSource.Text" xml:space="preserve">
     <value>AlphaPept&amp;Deep</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.Name" xml:space="preserve">
-    <value>radioAlphaSource</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.Parent" xml:space="preserve">
-    <value>dataSourceGroupBox</value>
-  </data>
-  <data name="&gt;&gt;radioAlphaSource.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <data name="koinaInfoSettingsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -1100,18 +1076,6 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="tabFilesSource.Text" xml:space="preserve">
     <value>Files</value>
   </data>
-  <data name="&gt;&gt;tabFilesSource.Name" xml:space="preserve">
-    <value>tabFilesSource</value>
-  </data>
-  <data name="&gt;&gt;tabFilesSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabFilesSource.Parent" xml:space="preserve">
-    <value>tabControlDataSource</value>
-  </data>
-  <data name="&gt;&gt;tabFilesSource.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="tabCarafeSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -1123,18 +1087,6 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="tabCarafeSource.Text" xml:space="preserve">
     <value>Carafe</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.Name" xml:space="preserve">
-    <value>tabCarafeSource</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.Parent" xml:space="preserve">
-    <value>tabControlDataSource</value>
-  </data>
-  <data name="&gt;&gt;tabCarafeSource.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="tabKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1150,18 +1102,6 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="tabKoinaSource.Text" xml:space="preserve">
     <value>Koina</value>
-  </data>
-  <data name="&gt;&gt;tabKoinaSource.Name" xml:space="preserve">
-    <value>tabKoinaSource</value>
-  </data>
-  <data name="&gt;&gt;tabKoinaSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabKoinaSource.Parent" xml:space="preserve">
-    <value>tabControlDataSource</value>
-  </data>
-  <data name="&gt;&gt;tabKoinaSource.ZOrder" xml:space="preserve">
-    <value>3</value>
   </data>
   <data name="tabControlLearning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1198,18 +1138,6 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="tabControlLearning.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
-  </data>
-  <data name="&gt;&gt;tabControlLearning.Name" xml:space="preserve">
-    <value>tabControlLearning</value>
-  </data>
-  <data name="&gt;&gt;tabControlLearning.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=23.1.1.555, Culture=neutral, PublicKeyToken=null</value>
-  </data>
-  <data name="&gt;&gt;tabControlLearning.Parent" xml:space="preserve">
-    <value>tabLearn</value>
-  </data>
-  <data name="&gt;&gt;tabControlLearning.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="&gt;&gt;btnLearningDocBrowse.Name" xml:space="preserve">
     <value>btnLearningDocBrowse</value>
@@ -1262,18 +1190,6 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="tabPageDocument.Text" xml:space="preserve">
     <value>Results</value>
   </data>
-  <data name="&gt;&gt;tabPageDocument.Name" xml:space="preserve">
-    <value>tabPageDocument</value>
-  </data>
-  <data name="&gt;&gt;tabPageDocument.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPageDocument.Parent" xml:space="preserve">
-    <value>tabControlLearning</value>
-  </data>
-  <data name="&gt;&gt;tabPageDocument.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="btnLearningDocBrowse.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
@@ -1289,18 +1205,6 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="btnLearningDocBrowse.Text" xml:space="preserve">
     <value>&amp;Browse...</value>
   </data>
-  <data name="&gt;&gt;btnLearningDocBrowse.Name" xml:space="preserve">
-    <value>btnLearningDocBrowse</value>
-  </data>
-  <data name="&gt;&gt;btnLearningDocBrowse.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;btnLearningDocBrowse.Parent" xml:space="preserve">
-    <value>tabPageDocument</value>
-  </data>
-  <data name="&gt;&gt;btnLearningDocBrowse.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="textLearningDoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -1311,18 +1215,6 @@ You can uncheck ones you do not want added to the library.</value>
     <value>455, 20</value>
   </data>
   <data name="textLearningDoc.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;textLearningDoc.Name" xml:space="preserve">
-    <value>textLearningDoc</value>
-  </data>
-  <data name="&gt;&gt;textLearningDoc.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;textLearningDoc.Parent" xml:space="preserve">
-    <value>tabPageDocument</value>
-  </data>
-  <data name="&gt;&gt;textLearningDoc.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label5.AutoSize" type="System.Boolean, mscorlib">
@@ -1339,18 +1231,6 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
     <value>L&amp;earning document:</value>
-  </data>
-  <data name="&gt;&gt;label5.Name" xml:space="preserve">
-    <value>label5</value>
-  </data>
-  <data name="&gt;&gt;label5.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label5.Parent" xml:space="preserve">
-    <value>tabPageDocument</value>
-  </data>
-  <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
@@ -1391,18 +1271,6 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="tabPageLibraries.Text" xml:space="preserve">
     <value>Libraries</value>
   </data>
-  <data name="&gt;&gt;tabPageLibraries.Name" xml:space="preserve">
-    <value>tabPageLibraries</value>
-  </data>
-  <data name="&gt;&gt;tabPageLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabPageLibraries.Parent" xml:space="preserve">
-    <value>tabControlLearning</value>
-  </data>
-  <data name="&gt;&gt;tabPageLibraries.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="listLibraries.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
@@ -1414,18 +1282,6 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="listLibraries.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
-    <value>listLibraries</value>
-  </data>
-  <data name="&gt;&gt;listLibraries.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckedListBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;listLibraries.Parent" xml:space="preserve">
-    <value>tabPageLibraries</value>
-  </data>
-  <data name="&gt;&gt;listLibraries.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="label3.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -1442,18 +1298,6 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="label3.Text" xml:space="preserve">
     <value>L&amp;earning Libraries:</value>
   </data>
-  <data name="&gt;&gt;label3.Name" xml:space="preserve">
-    <value>label3</value>
-  </data>
-  <data name="&gt;&gt;label3.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label3.Parent" xml:space="preserve">
-    <value>tabPageLibraries</value>
-  </data>
-  <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="comboLearnFrom.Items" xml:space="preserve">
     <value>Skyline Results</value>
   </data>
@@ -1467,18 +1311,6 @@ You can uncheck ones you do not want added to the library.</value>
     <value>273, 21</value>
   </data>
   <data name="comboLearnFrom.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
-  </data>
-  <data name="&gt;&gt;comboLearnFrom.Name" xml:space="preserve">
-    <value>comboLearnFrom</value>
-  </data>
-  <data name="&gt;&gt;comboLearnFrom.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;comboLearnFrom.Parent" xml:space="preserve">
-    <value>tabLearn</value>
-  </data>
-  <data name="&gt;&gt;comboLearnFrom.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
   <data name="label1.AutoSize" type="System.Boolean, mscorlib">
@@ -1496,18 +1328,6 @@ You can uncheck ones you do not want added to the library.</value>
   <data name="label1.Text" xml:space="preserve">
     <value>&amp;Learn from:</value>
   </data>
-  <data name="&gt;&gt;label1.Name" xml:space="preserve">
-    <value>label1</value>
-  </data>
-  <data name="&gt;&gt;label1.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label1.Parent" xml:space="preserve">
-    <value>tabLearn</value>
-  </data>
-  <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
   <data name="tabAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
   </data>
@@ -1519,18 +1339,6 @@ You can uncheck ones you do not want added to the library.</value>
   </data>
   <data name="tabAlphaSource.Text" xml:space="preserve">
     <value>AlphaPeptDeep</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaSource.Name" xml:space="preserve">
-    <value>tabAlphaSource</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaSource.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TabPage, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaSource.Parent" xml:space="preserve">
-    <value>tabControlDataSource</value>
-  </data>
-  <data name="&gt;&gt;tabAlphaSource.ZOrder" xml:space="preserve">
-    <value>1</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
