@@ -3077,9 +3077,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="PasteDlg_ReadPrecursorOrProductColumns_Invalid_cone_voltage_value__0_" xml:space="preserve">
     <value>Invalid cone voltage value {0}</value>
   </data>
-  <data name="SkylineViewContext_WriteData_Writing__0__rows" xml:space="preserve">
-    <value>Writing {0} rows</value>
-  </data>
   <data name="ColumnSet_GetTransitionsTable_Precursor" xml:space="preserve">
     <value>Precursor</value>
   </data>

@@ -190,8 +190,14 @@ namespace pwiz.Common.DataBinding
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
         {
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
+            WriteData(progressMonitor, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
+        }
+
+        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+            RowItemEnumerator rowItemEnumerator, char separator)
+        {
+            IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, rowItemEnumerator.Count));
+            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
         }
 
         protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, RowItemEnumerator rowItemEnumerator, char separator)

@@ -189,8 +189,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
                 writer.WriteLine();
 
-                IProgressStatus status = new ProgressStatus(string.Format(Resources.SkylineViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-                WriteDataWithStatus(progressMonitor, ref status, writer, new RowItemEnumerator(bindingListSource.Cast<RowItem>(), new ItemProperties(filteredColumnDescriptors), bindingListSource.ColumnFormats), separator);
+                base.WriteData(progressMonitor, writer, new RowItemEnumerator(bindingListSource.Cast<RowItem>(), new ItemProperties(filteredColumnDescriptors), bindingListSource.ColumnFormats), separator);
             }
             else
             {
