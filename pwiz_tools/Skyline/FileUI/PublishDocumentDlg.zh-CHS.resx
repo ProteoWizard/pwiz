@@ -320,14 +320,12 @@
   </data>
   <data name="cbAnonymousServers.Text" xml:space="preserve">
     <value>显示匿名服务器</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <metadata name="toolTipShowAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
   <data name="cbAnonymousServers.ToolTip" xml:space="preserve">
     <value>匿名服务器未关联用户帐户。需要有用户帐户才能向服务器上传文档。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbAnonymousServers.Name" xml:space="preserve">
     <value>cbAnonymousServers</value>

@@ -249,7 +249,6 @@
   </data>
   <data name="AreaReplicateGraphPane_Tooltip_Total" xml:space="preserve">
     <value>总数:</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AsyncChromatogramsGraph_AsyncChromatogramsGraph_Intensity" xml:space="preserve">
     <value>强度</value>
@@ -718,31 +717,24 @@
   </data>
   <data name="AreaPeptideGraphPane_UpdateAxes_Peptide_Rank" xml:space="preserve">
     <value>肽段排名</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
     <value>相对丰度</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
     <value>蛋白质排名</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SummaryRelativeAbundanceGraphPane_UpdateAxes_Molecule_Rank" xml:space="preserve">
     <value>分子排名</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_Auto_Arrange_Labels" xml:space="preserve">
     <value>自动排列标签</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_PauseLabelLayout" xml:space="preserve">
     <value>暂停标签布局</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FoldChangeVolcanoPlot_BuildContextMenu_RestartLabelLayout" xml:space="preserve">
     <value>恢复标签布局</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
     <value>肽段</value>

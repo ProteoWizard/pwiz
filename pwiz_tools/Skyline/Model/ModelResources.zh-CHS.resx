@@ -799,22 +799,18 @@
   </data>
   <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match__add_terminus_and_or_amino_acid_specificity_to_choose_a_single_match" xml:space="preserve">
     <value>发现多个 UniMod 匹配项；添加末端和/或氨基酸特异性以选择单个匹配项</value>
-    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
-Needs Review:New resource</comment>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
   </data>
   <data name="ModificationMatcher_GetStaticMod_found_more_than_one_UniMod_match_but_the_given_specificity___0___does_not_match_any_of_them_" xml:space="preserve">
     <value>发现一个以上的 UniMod 匹配项，但给定的特异性 ({0}) 不匹配其中任何一项。</value>
-    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
-Needs Review:New resource</comment>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
   </data>
   <data name="ModificationMatcher_GetStaticMod_no_UniMod_match" xml:space="preserve">
     <value>无 UniMod 匹配项</value>
-    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.
-Needs Review:New resource</comment>
+    <comment>Intended to be appended to a "Lookup failed" message as the reason for lookup failure.</comment>
   </data>
   <data name="ImportPeptideSearch_GetLibBuilder_detected_features" xml:space="preserve">
     <value>检测到的特征</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PasteDlg_UpdateMoleculeType_Library_Intensity" xml:space="preserve">
     <value>库强度</value>

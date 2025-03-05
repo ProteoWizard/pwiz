@@ -113,8 +113,8 @@ namespace AutoQCTest
             var labKeyQuery = PanoramaUtil.CallNewInterface(panoramaServerUri, "query", $"{uniqueFolder}",
                 "selectRows", "schemaName=targetedms&queryName=runs", true);
             var requestHelper =
-                new PanoramaRequestHelper(new WebClientWithCredentials(panoramaServerUri, TestUtils.PANORAMAWEB_USER,
-                    TestUtils.GetPanoramaWebPassword()));
+                new PanoramaRequestHelper(new LabkeySessionWebClient(new PanoramaServer(panoramaServerUri, TestUtils.PANORAMAWEB_USER,
+                    TestUtils.GetPanoramaWebPassword())));
             var startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             var x = startTime;
             while (x < startTime + TIMEOUT_80SEC)

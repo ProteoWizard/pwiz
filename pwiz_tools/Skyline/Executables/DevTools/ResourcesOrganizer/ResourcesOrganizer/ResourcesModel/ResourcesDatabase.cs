@@ -164,6 +164,10 @@ namespace ResourcesOrganizer.ResourcesModel
                 foreach (var language in file.Value.Entries
                              .SelectMany(resourceEntry => resourceEntry.LocalizedValues.Keys).Distinct())
                 {
+                    if (!overrideAll && !file.Value.AnyEntriesForLanguage(language))
+                    {
+                        continue;
+                    }
                     var folder = Path.GetDirectoryName(file.Key) ?? string.Empty;
                     var fileName = Path.GetFileNameWithoutExtension(file.Key) + "." + language + Path.GetExtension(file.Key);
                     var localizedEntry = zipArchive.CreateEntry(Path.Combine(folder, fileName));

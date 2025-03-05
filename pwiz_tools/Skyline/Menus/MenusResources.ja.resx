@@ -326,10 +326,8 @@
 
 1. [設定] &gt; [ペプチド設定 - ライブラリ] タブに移動して [リストの編集] をクリックします。
 2. ライブラリのアイテムを選択して [編集] をクリックし、[指定されたピーク境界を使用する] チェックボックスをオフにします。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
     <value>デコイを追加</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>

@@ -614,7 +614,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (_documentContainer is SkylineWindow stateProvider)
                 {
-                    var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults.Chromatograms.FirstOrDefault(
+                    var chromSet = stateProvider.DocumentUI.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(
                         chrom => chrom.ContainsFile(_msDataFileScanHelper.ScanProvider.DataFilePath));
                     spectrumProperties.ReplicateName = chromSet?.Name;
                     if (_peaks?.Length > 0)
