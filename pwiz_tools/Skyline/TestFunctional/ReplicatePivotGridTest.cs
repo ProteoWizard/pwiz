@@ -85,22 +85,27 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = 50);
             Assert.AreEqual(50, documentGrid.DataboundGridControl.ReplicatePivotDataGridView.HorizontalScrollingOffset);
 
-            // Freeze default columns and verify they remain visible after scrolling.
-            RunUI(() => documentGrid.NavBar.FreezeColumnsSplitButton.PerformButtonClick());
+            // Freeze all eligible columns and verify they remain visible after scrolling.
+            RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[6].PerformClick());
             RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = GetReplicateGridPropertyWidth(documentGrid));
             Assert.AreEqual(GetReplicateGridPropertyWidth(documentGrid), GetReplicateGridPropertyWidth(documentGrid, true));
             Assert.AreEqual(GetMainGridPropertyColumnsWidth(documentGrid), GetMainGridPropertyColumnsWidth(documentGrid, true));
 
-            // Disable freezing of columns and verify they don't remain visible after scrolling now.
-            RunUI(() => documentGrid.NavBar.FreezeColumnsSplitButton.PerformButtonClick());
+            // Select same option to unfreeze columns and verify they don't remain visible
+            RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[6].PerformClick());
             RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = GetReplicateGridPropertyWidth(documentGrid));
             Assert.AreEqual(0, GetReplicateGridPropertyWidth(documentGrid, true));
             Assert.AreEqual(0, GetMainGridPropertyColumnsWidth(documentGrid, true));
 
             // Freeze only some of the columns and validate that property columns visible width remains the same
             var scrollOffset = 10;
-            RunUI(() => documentGrid.NavBar.FreezeColumnsSplitButton.ShowDropDown());
-            RunUI(() => documentGrid.NavBar.FreezeColumnsSplitButton.DropDownItems[2].PerformClick()); // Freeze up to column 3
+            RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[2].PerformClick()); // Freeze up to column 3
             RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = scrollOffset);
             Assert.AreEqual(GetMainGridPropertyColumnsWidth(documentGrid), GetMainGridPropertyColumnsWidth(documentGrid, true) + scrollOffset);
             Assert.AreEqual(GetReplicateGridPropertyWidth(documentGrid, true), GetMainGridPropertyColumnsWidth(documentGrid, true));

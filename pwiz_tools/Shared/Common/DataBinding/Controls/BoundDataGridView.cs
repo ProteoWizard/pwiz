@@ -286,11 +286,27 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void UpdateColumnsFrozen()
         {
-            var frozenColumnCount = _bindingListSource.ColumnFormats.FrozenColumnCount;
-            for (int i = 0; i < Columns.Count; i++)
+            var lastFrozenColumn = FindLastFrozenColumn();
+            var shouldFreeze = lastFrozenColumn != null;
+            foreach (DataGridViewColumn column in Columns)
             {
-                Columns[i].Frozen = (i + 1) <= frozenColumnCount;
+                var currentPropertyDescriptor = GetPropertyDescriptor(column);
+                var currentColumnId = ColumnId.GetColumnId(currentPropertyDescriptor);
+                column.Frozen = shouldFreeze;
+
+                // Set Frozen to false once we reach target column. 
+                if (currentColumnId.Equals(lastFrozenColumn))
+                {
+                    shouldFreeze = false;
+                }
             }
+        }
+
+        private ColumnId FindLastFrozenColumn()
+        {
+            return _bindingListSource.ItemProperties
+                .Select(ColumnId.GetColumnId)
+                .LastOrDefault(columnId => _bindingListSource.ColumnFormats.GetFormat(columnId).Frozen ?? false);
         }
 
         protected void OnFormatsChanged()

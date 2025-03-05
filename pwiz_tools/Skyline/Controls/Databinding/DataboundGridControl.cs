@@ -829,7 +829,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
                 .Sum(col =>
                 {
-                    if (bindingListSource.ColumnFormats.FrozenColumnCount > 0)
+                    if (IsMainGridFrozen())
                     {
                         return CalculateColumnVisibleWidth(boundDataGridView, col);
                     }
@@ -903,7 +903,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     // Resizing of non replicate columns behaves differently if columns are frozen.
                     // If columns are frozen then we have to consider the visible column widths as 
                     // the current property column width can be dependent on scrolling. 
-                    if (bindingListSource.ColumnFormats.FrozenColumnCount > 0)
+                    if (IsMainGridFrozen())
                     {
                         var visibleWidth = CalculateColumnVisibleWidth(boundDataGridView, dataGridViewColumn);
                         if (visibleWidth > 0)
@@ -942,7 +942,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void UpdateReplicateDataGridFrozenState()
         {
-            if (bindingListSource.ColumnFormats.FrozenColumnCount > 0)
+            if (IsMainGridFrozen())
             {
                 colReplicateProperty.Frozen = true;
             }
@@ -950,6 +950,11 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 colReplicateProperty.Frozen = false;
             }
+        }
+
+        private bool IsMainGridFrozen()
+        {
+            return DataGridView.Columns.Cast<DataGridViewColumn>().Any(column => column.Frozen);
         }
 
         private void UpdateReplicateDataGridScrollPosition(int scrollPosition)

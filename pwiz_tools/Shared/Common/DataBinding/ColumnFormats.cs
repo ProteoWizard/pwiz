@@ -26,16 +26,6 @@ namespace pwiz.Common.DataBinding
     public class ColumnFormats
     {
         private Dictionary<ColumnId, ColumnFormat> _formats = new Dictionary<ColumnId, ColumnFormat>();
-        private int _frozenColumnCount;
-
-        public int FrozenColumnCount
-        {
-            get { return _frozenColumnCount; }
-            set { 
-                _frozenColumnCount = value;
-                FireFormatChanged();
-            }
-        }
 
         public void SetFormat(ColumnId columnId, ColumnFormat columnFormat)
         {
@@ -90,9 +80,16 @@ namespace pwiz.Common.DataBinding
             return ChangeProp(ImClone(this), im => im.Width = width);
         }
 
+        public bool? Frozen { get; private set; }
+
+        public ColumnFormat SetFrozen(bool? frozen)
+        {
+            return ChangeProp(ImClone(this), im => im.Frozen = frozen);
+        }
+
         protected bool Equals(ColumnFormat other)
         {
-            return string.Equals(Format, other.Format) && Width == other.Width;
+            return string.Equals(Format, other.Format) && Width == other.Width && Frozen == other.Frozen;
         }
 
         public override bool Equals(object obj)

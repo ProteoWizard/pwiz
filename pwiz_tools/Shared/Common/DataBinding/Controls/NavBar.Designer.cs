@@ -50,13 +50,13 @@
             this.lblFilterApplied = new System.Windows.Forms.ToolStripLabel();
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
             this.btnGroupTotal = new System.Windows.Forms.ToolStripSplitButton();
+            this.freezeColumnsUpToToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.navBarButtonCluster = new System.Windows.Forms.ToolStripSplitButton();
             this.navBarButtonClusterGrid = new System.Windows.Forms.ToolStripMenuItem();
             this.advancedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.navBarButtonCopyAll = new System.Windows.Forms.ToolStripButton();
             this.navBarButtonActions = new System.Windows.Forms.ToolStripDropDownButton();
-            this.navBarButtonFreezeColumns = new System.Windows.Forms.ToolStripSplitButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -195,8 +195,7 @@
             this.tbxFind,
             this.navBarButtonMatchCase,
             this.toolStripSeparator2,
-            this.lblFilterApplied,
-            this.navBarButtonFreezeColumns});
+            this.lblFilterApplied});
             resources.ApplyResources(this.bindingNavigator1, "bindingNavigator1");
             this.bindingNavigator1.MoveFirstItem = this.bindingNavigatorMoveFirstItem;
             this.bindingNavigator1.MoveLastItem = this.bindingNavigatorMoveLastItem;
@@ -208,10 +207,18 @@
             // btnGroupTotal
             // 
             this.btnGroupTotal.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnGroupTotal.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.freezeColumnsUpToToolStripMenuItem});
             resources.ApplyResources(this.btnGroupTotal, "btnGroupTotal");
             this.btnGroupTotal.Name = "btnGroupTotal";
             this.btnGroupTotal.ButtonClick += new System.EventHandler(this.btnGroupTotal_Click);
             this.btnGroupTotal.DropDownOpening += new System.EventHandler(this.btnGroupTotal_DropDownOpening);
+            // 
+            // freezeColumnsUpToToolStripMenuItem
+            // 
+            this.freezeColumnsUpToToolStripMenuItem.Image = global::pwiz.Common.Properties.Resources.FreezeCells;
+            resources.ApplyResources(this.freezeColumnsUpToToolStripMenuItem, "freezeColumnsUpToToolStripMenuItem");
+            this.freezeColumnsUpToToolStripMenuItem.Name = "freezeColumnsUpToToolStripMenuItem";
             // 
             // navBarButtonCluster
             // 
@@ -255,14 +262,6 @@
             this.navBarButtonActions.Name = "navBarButtonActions";
             this.navBarButtonActions.DropDownOpening += new System.EventHandler(this.navBarButtonActions_DropDownOpening);
             // 
-            // navBarButtonFreezeColumns
-            // 
-            this.navBarButtonFreezeColumns.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.navBarButtonFreezeColumns.Image = global::pwiz.Common.Properties.Resources.FreezeCells;
-            resources.ApplyResources(this.navBarButtonFreezeColumns, "navBarButtonFreezeColumns");
-            this.navBarButtonFreezeColumns.Name = "navBarButtonFreezeColumns";
-            this.navBarButtonFreezeColumns.ButtonClick += new System.EventHandler(this.navBarButtonFreezeColumns_ButtonClick);
-            // 
             // NavBar
             // 
             resources.ApplyResources(this, "$this");
@@ -305,6 +304,6 @@
         private System.Windows.Forms.ToolStripSplitButton navBarButtonCluster;
         private System.Windows.Forms.ToolStripMenuItem advancedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem navBarButtonClusterGrid;
-        private System.Windows.Forms.ToolStripSplitButton navBarButtonFreezeColumns;
+        private System.Windows.Forms.ToolStripMenuItem freezeColumnsUpToToolStripMenuItem;
     }
 }

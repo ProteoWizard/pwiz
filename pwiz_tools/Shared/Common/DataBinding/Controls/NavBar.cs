@@ -44,7 +44,6 @@ namespace pwiz.Common.DataBinding.Controls
             InitializeComponent();
 
             _waitingMsg = Resources.NavBar_NavBar_Waiting_for_data___;
-            navBarButtonFreezeColumns.DropDownOpening += navBarButtonFreezeColumns_DropDownOpening;
         }
         [TypeConverter(typeof(ReferenceConverter))]
         public BindingListSource BindingListSource
@@ -413,6 +412,9 @@ namespace pwiz.Common.DataBinding.Controls
                 dataSchema = BindingListSource.ViewContext.DataSchema;
             }
             btnGroupTotal.DropDownItems.Clear();
+
+            AddFreezeColumnMenuItems();
+
             if (!layouts.IsEmpty)
             {
                 foreach (var layout in layouts.Layouts)
@@ -459,6 +461,73 @@ namespace pwiz.Common.DataBinding.Controls
                 btnGroupTotal.DropDownItems.Add(
                     new ToolStripMenuItem(Resources.NavBar_UpdateGroupTotalDropdown_Manage_layouts___, null, (sender, args) => ManageLayouts()));
             }
+        }
+
+        private void AddFreezeColumnMenuItems()
+        {
+
+            if (BindingListSource != null)
+            {
+                freezeColumnsUpToToolStripMenuItem.DropDownItems.Clear();
+                btnGroupTotal.DropDownItems.Add(freezeColumnsUpToToolStripMenuItem);
+
+                var selectedColumnId = GetSelectedFrozenColumn();
+                for (var i = 0; i < BindingListSource.ItemProperties.Count; i++)
+                {
+                    var columnPropertyDescriptor = BindingListSource.ItemProperties[i] as ColumnPropertyDescriptor;
+                    // Once we reach a column without a pivot key we no longer want to allow freezing
+                    if (!(columnPropertyDescriptor is { PivotKey: null }))
+                    {
+                        break;
+                    }
+
+                    var menuItem = new ToolStripMenuItem(columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized));
+                    var columnId = ColumnId.GetColumnId(BindingListSource.ItemProperties[i]);
+                    menuItem.Click += (s, args) => FreezeColumnMenuItem_Click(s, args, columnId);
+                    freezeColumnsUpToToolStripMenuItem.DropDownItems.Add(menuItem);
+
+                    //Bold the selected column
+                    if (columnId.Equals(selectedColumnId))
+                    {
+                        menuItem.Font = new Font(menuItem.Font, FontStyle.Bold);
+                    }
+                }
+            }
+            btnGroupTotal.DropDownItems.Add(new ToolStripSeparator());
+        }
+
+        private void FreezeColumnMenuItem_Click(object sender, EventArgs args, ColumnId newSelectedColumnId)
+        {
+            var previouslySelectedColumnId = GetSelectedFrozenColumn();
+            var isNewSelectedFrozen = BindingListSource.ColumnFormats.GetFormat(newSelectedColumnId).Frozen ?? false;
+            var sameSelected = newSelectedColumnId.Equals(previouslySelectedColumnId);
+            var shouldFreeze = (sameSelected && !isNewSelectedFrozen) || !sameSelected;
+
+            foreach (var itemProperty in BindingListSource.ItemProperties)
+            {
+                var currentColumnId = ColumnId.GetColumnId(itemProperty);
+                var currentColumnFormat = BindingListSource.ColumnFormats.GetFormat(currentColumnId);
+
+                if (shouldFreeze || currentColumnFormat.Frozen != null)
+                {
+                    var updatedColumnFormat = currentColumnFormat.SetFrozen(shouldFreeze);
+                    BindingListSource.ColumnFormats.SetFormat(currentColumnId, updatedColumnFormat);
+                }
+
+                //Once we find our selected column we start to disable freezing for remaining columns.
+                if (currentColumnId.Equals(newSelectedColumnId))
+                {
+                    shouldFreeze = false;
+                }
+            }
+
+        }
+
+        private ColumnId GetSelectedFrozenColumn()
+        {
+            return BindingListSource.ItemProperties
+                .Select(ColumnId.GetColumnId)
+                .LastOrDefault(columnId => BindingListSource.ColumnFormats.GetFormat(columnId).Frozen ?? false);
         }
 
         private bool CanRememberView(ViewGroupId viewGroupId)
@@ -619,55 +688,17 @@ namespace pwiz.Common.DataBinding.Controls
             get { return navBarButtonViews; }
         }
 
-        public ToolStripSplitButton FreezeColumnsSplitButton
+        public ToolStripSplitButton GroupButton
         {
-            get { return navBarButtonFreezeColumns; }
+            get { return btnGroupTotal; }
+        }
+
+        public ToolStripMenuItem FreezeColumnsMenuItem
+        {
+            get { return freezeColumnsUpToToolStripMenuItem; }
         }
 
         public int Separator2Position => bindingNavigatorSeparator2.Bounds.Left;
-
-        private void navBarButtonFreezeColumns_ButtonClick(object sender, EventArgs e)
-        {
-            if (BindingListSource.ColumnFormats.FrozenColumnCount > 0)
-            {
-                BindingListSource.ColumnFormats.FrozenColumnCount = 0;
-            }
-            else
-            {
-                var defaultFreezeColumns = 1;
-                for (int i = 0; i < BindingListSource.ItemProperties.Count; i++)
-                {
-                    var columnPropertyDescriptor = BindingListSource.ItemProperties[i] as ColumnPropertyDescriptor;
-                    if (columnPropertyDescriptor.PivotKey != null)
-                    {
-                        defaultFreezeColumns = i;
-                        break;
-                    }
-                }
-                BindingListSource.ColumnFormats.FrozenColumnCount = defaultFreezeColumns;
-            }
-        }
-
-        private void navBarButtonFreezeColumns_DropDownOpening(object sender, EventArgs e)
-        {
-            navBarButtonFreezeColumns.DropDownItems.Clear();
-            for (int i = 0; i < BindingListSource.ItemProperties.Count; i++)
-            {
-                var columnPropertyDescriptor = BindingListSource.ItemProperties[i] as ColumnPropertyDescriptor;
-                if (columnPropertyDescriptor.PivotKey != null)
-                {
-                    break;
-                }
-                var menuItem = new ToolStripMenuItem($"Freeze up to {columnPropertyDescriptor.DisplayName}");
-                int columnsToFreeze = i + 1;
-                menuItem.Click += (s, args) => BindingListSource.ColumnFormats.FrozenColumnCount = columnsToFreeze;
-                if (BindingListSource.ColumnFormats.FrozenColumnCount == columnsToFreeze)
-                {
-                    menuItem.Font = new Font(menuItem.Font, FontStyle.Bold);
-                }
-                navBarButtonFreezeColumns.DropDownItems.Add(menuItem);
-            }
-        }
 
         private void navBarButtonCluster_ButtonClick(object sender, EventArgs e)
         {
