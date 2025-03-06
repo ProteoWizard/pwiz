@@ -26,13 +26,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
@@ -2751,7 +2751,7 @@ namespace pwiz.Skyline.Model
 
         private void EnsureAnalyst(IProgressMonitor progressMonitor)
         {
-            string analystPath = AdvApi.GetPathFromProgId(@"Analyst.MassSpecMethod.1");
+            string analystPath = Advapi32.GetPathFromProgId(@"Analyst.MassSpecMethod.1");
             string analystDir = null;
             if (analystPath != null)
                 analystDir = Path.GetDirectoryName(analystPath);
@@ -3048,7 +3048,7 @@ namespace pwiz.Skyline.Model
 
         private static void EnsureSciexOs(IProgressMonitor progressMonitor)
         {
-            var sciexOsDir = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, @"SOFTWARE\SCIEX\SCIEX OS", @"InstallationDirectory");
+            var sciexOsDir = Advapi32.RegQueryKeyValue(@"SOFTWARE\SCIEX\SCIEX OS", @"InstallationDirectory");
             if (sciexOsDir == null)
                 throw new IOException(ModelResources.SciexOsMethodExporter_EnsureSciexOs_Failed_to_find_a_valid_SCIEX_OS_installation_);
 
@@ -4943,11 +4943,10 @@ namespace pwiz.Skyline.Model
             // ReSharper disable ConstantNullCoalescingCondition
             string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD) ?? string.Empty;
             string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? string.Empty, buildSubdir);
-            string dacServerPath = AdvApi.GetPathFromProgId(@"DACScanStats.DACScanStats"); 
+            string dacServerPath = Advapi32.GetPathFromProgId(@"DACScanStats.DACScanStats"); 
             if (dacServerPath == null)
             {
-                dacServerPath = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE,
-                                                        @"SOFTWARE\Wow6432Node\Micromass\MassLynx", @"Root"); 
+                dacServerPath = Advapi32.RegQueryKeyValue(@"SOFTWARE\Wow6432Node\Micromass\MassLynx", @"Root"); 
                 if (dacServerPath == null)
                 {
                     // If all the necessary libraries exist, then continue even if MassLynx is gone.
@@ -4979,75 +4978,6 @@ namespace pwiz.Skyline.Model
                 if (!File.Exists(destFile) || !Equals(File.GetLastWriteTime(destFile), File.GetLastWriteTime(srcFile)))
                     File.Copy(srcFile, destFile, true);
             }
-        }
-    }
-
-    internal static class AdvApi
-    {
-        [DllImport(@"advapi32.dll", CharSet = CharSet.Auto)]
-        public static extern int RegOpenKeyEx(
-          UIntPtr hKey,
-          string subKey,
-          int ulOptions,
-          int samDesired,
-          out UIntPtr hkResult);
-        [DllImport(@"advapi32.dll", CharSet = CharSet.Unicode, EntryPoint = @"RegQueryValueExW", SetLastError = true)]
-        public static extern int RegQueryValueEx(
-            UIntPtr hKey,
-            string lpValueName,
-            int lpReserved,
-            out uint lpType,
-            StringBuilder lpData,
-            ref uint lpcbData);
-        [DllImport(@"advapi32.dll", SetLastError = true)]
-        public static extern int RegCloseKey(
-            UIntPtr hKey);
-
-// ReSharper disable InconsistentNaming
-        public static UIntPtr HKEY_LOCAL_MACHINE = new UIntPtr(0x80000002u);
-        public static UIntPtr HKEY_CURRENT_USER = new UIntPtr(0x80000001u);
-
-        public const int KEY_READ = 0x20019;
-        public const int KEY_WOW64_32KEY = 0x0200;
-
-        public const int REG_SZ = 1;
-// ReSharper restore InconsistentNaming
-
-        public static string GetPathFromProgId(string progId)
-        {
-            String clsid = RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\" + progId + @"\CLSID");
-            if (clsid == null)
-                return null;
-            return RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\CLSID\" + clsid + @"\InprocServer32"); 
-        }
-
-        public static string RegQueryKeyValue(UIntPtr hKey, string path)
-        {
-            return RegQueryKeyValue(hKey, path, string.Empty);
-        }
-
-        public static string RegQueryKeyValue(UIntPtr hKey, string path, string valueName)
-        {
-            UIntPtr hKeyQuery;
-            if (RegOpenKeyEx(hKey, path, 0, KEY_READ, out hKeyQuery) != 0)
-            {
-                if (RegOpenKeyEx(hKey, path, 0, KEY_READ | KEY_WOW64_32KEY, out hKeyQuery) != 0)
-                    return null;
-            }
-
-            uint size = 1024;
-            StringBuilder sb = new StringBuilder(1024);
-
-            try
-            {
-                if (RegQueryValueEx(hKeyQuery, valueName, 0, out _, sb, ref size) != 0)
-                    return null;
-            }
-            finally
-            {
-                RegCloseKey(hKeyQuery);
-            }
-            return sb.ToString();
         }
     }
 

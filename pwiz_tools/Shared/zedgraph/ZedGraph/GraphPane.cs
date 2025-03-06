@@ -146,6 +146,10 @@ namespace ZedGraph
 
 		private LabelLayout _labelLayout;
 
+		/// <summary>
+		/// Indicates if this graph pane has the LabelLayout object attached.
+		/// Setting it to false removes the layout object.
+		/// </summary>
 		public bool EnableLabelLayout
 		{
 			get => _labelLayout != null;
@@ -1561,7 +1565,10 @@ namespace ZedGraph
                         labeledPoint.Label.IsVisible = true;
                     }
                     else
+                    {
                         labeledPoint.Label.IsVisible = false;
+                        GraphObjList.Remove(labeledPoint.Connector);
+                    }
                 }
 				
                 if (visiblePoints.Any())

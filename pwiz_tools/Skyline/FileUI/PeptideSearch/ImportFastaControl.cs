@@ -296,7 +296,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 FastaFile = tbxFasta.Text;
                 if (!File.Exists(FastaFile))
                     ImportFastaHelper.ShowFastaError(Resources.ToolDescription_RunTool_File_not_found_);
+            }
         }
+
+        public void ScrollFastaTextToEnd()
+        {
+            tbxFasta.Select(tbxFasta.Text.Length, 0);
+        }
+
+        public void ScrollFastaTargetsToEnd()
+        {
+            tbxFastaTargets.Select(tbxFastaTargets.Text.Length, 0);
         }
 
         public void SetFastaContent(string fastaFilePath, bool forceFastaAsFilepath = false)

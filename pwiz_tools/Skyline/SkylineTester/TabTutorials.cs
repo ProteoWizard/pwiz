@@ -46,8 +46,6 @@ namespace SkylineTester
             args.Append(MainWindow.GetCulture(MainWindow.TutorialsLanguage));
             if (MainWindow.ShowFormNamesTutorial.Checked)
                 args.Append(" showformnames=on");
-            if (MainWindow.ShowMatchingPagesTutorial.Checked)
-                args.Append(" showpages=on");
             if (MainWindow.TutorialsDemoMode.Checked)
                 args.Append(" demo=on");
             else
@@ -57,9 +55,9 @@ namespace SkylineTester
                     pauseSeconds = -2; // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
                 else if (MainWindow.PauseTutorialsScreenShots.Checked)
                 {
-                    int startingPage;
-                    if (Int32.TryParse(MainWindow.PauseStartingPage.Text, out startingPage) && startingPage > 1)
-                        args.Append(" startingpage=").Append(startingPage);
+                    int startingScreenshot;
+                    if (Int32.TryParse(MainWindow.PauseStartingScreenshot.Text, out startingScreenshot) && startingScreenshot > 1)
+                        args.Append(" startingshot=").Append(startingScreenshot);
                 }
                 else if (!Int32.TryParse(MainWindow.PauseTutorialsSeconds.Text, out pauseSeconds))
                     pauseSeconds = 0;

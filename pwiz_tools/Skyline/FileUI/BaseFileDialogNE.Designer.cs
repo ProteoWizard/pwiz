@@ -57,6 +57,7 @@ namespace pwiz.Skyline.FileUI
             this.desktopButton = new System.Windows.Forms.Button();
             this.myDocumentsButton = new System.Windows.Forms.Button();
             this.myComputerButton = new System.Windows.Forms.Button();
+            this.lookInImageListSmall = new System.Windows.Forms.ImageList(this.components);
             this.navToolStrip.SuspendLayout();
             this.flowLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -246,7 +247,6 @@ namespace pwiz.Skyline.FileUI
             this.lookInImageList.Images.SetKeyName(8, "folder.png");
             this.lookInImageList.Images.SetKeyName(9, "DataProcessing.png");
             this.lookInImageList.Images.SetKeyName(10, "File.png");
-            this.lookInImageList.Images.SetKeyName(11, "RemoteAccounts.png");
             // 
             // recentDocumentsButton
             // 
@@ -283,6 +283,22 @@ namespace pwiz.Skyline.FileUI
             this.myComputerButton.Name = "myComputerButton";
             this.myComputerButton.UseVisualStyleBackColor = false;
             this.myComputerButton.Click += new System.EventHandler(this.myComputerButton_Click);
+            // 
+            // lookInImageListSmall
+            // 
+            this.lookInImageListSmall.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("lookInImageListSmall.ImageStream")));
+            this.lookInImageListSmall.TransparentColor = System.Drawing.Color.Transparent;
+            this.lookInImageListSmall.Images.SetKeyName(0, "RecentDocuments.png");
+            this.lookInImageListSmall.Images.SetKeyName(1, "Desktop.png");
+            this.lookInImageListSmall.Images.SetKeyName(2, "MyDocuments.png");
+            this.lookInImageListSmall.Images.SetKeyName(3, "MyComputer.png");
+            this.lookInImageListSmall.Images.SetKeyName(4, "MyNetworkPlaces.png");
+            this.lookInImageListSmall.Images.SetKeyName(5, "LocalDrive.png");
+            this.lookInImageListSmall.Images.SetKeyName(6, "OpticalDrive.png");
+            this.lookInImageListSmall.Images.SetKeyName(7, "NetworkDrive.png");
+            this.lookInImageListSmall.Images.SetKeyName(8, "Folder.png");
+            this.lookInImageListSmall.Images.SetKeyName(9, "MassSpecFile.png");
+            this.lookInImageListSmall.Images.SetKeyName(10, "UnknownFile.png");
             // 
             // BaseFileDialogNE
             // 
@@ -344,5 +360,6 @@ namespace pwiz.Skyline.FileUI
         protected System.Windows.Forms.ListView listView;
         protected System.Windows.Forms.TextBox sourcePathTextBox;
         protected System.Windows.Forms.Button actionButton;
+        private System.Windows.Forms.ImageList lookInImageListSmall;
     }
 }

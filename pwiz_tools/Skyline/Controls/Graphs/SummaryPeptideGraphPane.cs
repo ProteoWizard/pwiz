@@ -141,19 +141,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 CurveList.Add(curveItem);
             }
 
+            UpdateAxes();
             if (ShowSelection && SelectedIndex != -1)
             {
-                double yValue = _graphData.SelectedMaxY;
-                double yMin = _graphData.SelectedMinY;
-                double height = yValue - yMin;
-                GraphObjList.Add(new BoxObj(SelectedIndex + .5, yValue, 0.99,
-                                            height, Color.Black, Color.Empty)
-                {
-                    IsClippedToChartRect = true,
-                });
+                DrawSelectionBox(SelectedIndex, _graphData.SelectedMaxY, _graphData.SelectedMinY);
             }
-
-            UpdateAxes();
         }
 
         protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,
@@ -170,8 +162,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Title.Text = TextUtil.SpaceSeparate(GraphsResources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
-                YAxis.Scale.MinAuto = false;
-                FixedYMin = YAxis.Scale.Min = 1;
+                YAxis.Scale.MinAuto = true;
+                FixedYMin = null;
                 YAxis.Scale.Max = _graphData.MaxY * 10;
             }
             else
@@ -227,7 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             XAxis.Scale.TextLabels = _graphData.Labels;
             ScaleAxisLabels();
-
+            RemoveInvalidPointValues();
             AxisChange();            
         }
 

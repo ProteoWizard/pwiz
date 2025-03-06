@@ -567,7 +567,6 @@ class HandlerScan : public SAXParser::Handler
     bool getBinaryData_;
     string scanNumber_;
     string collisionEnergy_;
-    string activationMethod_;
     HandlerPeaks handlerPeaks_;
     HandlerPrecursor handlerPrecursor_;
     CVID nativeIdFormat_;

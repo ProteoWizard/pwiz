@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Management;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -37,6 +36,7 @@ using Microsoft.Win32;
 using Microsoft.Win32.TaskScheduler;
 using SkylineTester.Properties;
 using TestRunnerLib;
+using TestRunnerLib.PInvoke;
 using ZedGraph;
 using Label = System.Windows.Forms.Label;
 using Timer = System.Windows.Forms.Timer;
@@ -87,9 +87,9 @@ namespace SkylineTester
 
         private readonly Dictionary<string, string> _languageNames = new Dictionary<string, string>
         {
-            {"en", "English"},
-            {"fr", "French"},
-            {"tr", "Turkish"},
+            {"en-US", "English"},
+            {"fr-FR", "French"},
+            {"tr-TR", "Turkish"},
             {"ja", "Japanese"},
             {"zh-CHS", "Chinese"}
         };
@@ -222,7 +222,7 @@ namespace SkylineTester
 
             // Refresh shell if association changed.
             if (checkRegistry == null)
-                SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
+                Shell32Test.SHChangeNotify(0x08000000, 0x0000, IntPtr.Zero, IntPtr.Zero);
 
             _runButtons = new[]
             {
@@ -346,9 +346,6 @@ namespace SkylineTester
             loader.RunWorkerAsync(testSet.SelectedItem?.ToString() ?? "All tests");
         }
 
-        [DllImport("shell32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern void SHChangeNotify(uint wEventId, uint uFlags, IntPtr dwItem1, IntPtr dwItem2);
-
         private void BackgroundLoad(object sender, DoWorkEventArgs e)
         {
             try
@@ -390,6 +387,9 @@ namespace SkylineTester
 
                 RunUI(() =>
                 {
+                    if (!Equals(testSet.SelectedItem, testSetValue))
+                        return;
+
                     testsTree.Nodes.Clear();
                     testsTree.Nodes.Add(skylineNode);
                     skylineNode.Expand();
@@ -1063,7 +1063,6 @@ namespace SkylineTester
                 tutorialsDemoMode,
                 tutorialsLanguage,
                 showFormNamesTutorial,
-                showMatchingPagesTutorial,
                 tutorialsTree,
 
                 // Tests
@@ -1498,7 +1497,7 @@ namespace SkylineTester
         public CheckBox         Pass0                       { get { return pass0; } }
         public CheckBox         Pass1                       { get { return pass1; } }
         public RadioButton      ModeTutorialsCoverShots     { get { return modeTutorialsCoverShots; } }
-        public TextBox          PauseStartingPage           { get { return pauseStartingPage; } }
+        public TextBox          PauseStartingScreenshot           { get { return pauseStartingScreenshot; } }
         public RadioButton      PauseTutorialsScreenShots   { get { return pauseTutorialsScreenShots; } }
         public NumericUpDown    PauseTutorialsSeconds       { get { return pauseTutorialsSeconds; } }
         public RadioButton      QualityChooseTests          { get { return qualityChooseTests; } }
@@ -1523,7 +1522,6 @@ namespace SkylineTester
         public Button           RunTests                    { get { return runTests; } }
         public Button           RunTutorials                { get { return runTutorials; } }
         public CheckBox         ShowFormNames               { get { return showFormNames; } }
-        public CheckBox         ShowMatchingPagesTutorial   { get { return showMatchingPagesTutorial; } }
         public CheckBox         ShowFormNamesTutorial       { get { return showFormNamesTutorial; } }
         public ComboBox         TestSet                     { get { return testSet; } }
         public RadioButton      SkipCheckedTests            { get { return skipCheckedTests; } }
@@ -1742,14 +1740,6 @@ namespace SkylineTester
         private void formsGrid_SelectionChanged(object sender, EventArgs e)
         {
             labelSelectedFormsCount.Text = formsGrid.SelectedRows.Count + " selected";
-        }
-
-        private void pauseTutorialsScreenShots_CheckedChanged(object sender, EventArgs e)
-        {
-            bool pauseChecked = pauseTutorialsScreenShots.Checked;
-            showMatchingPagesTutorial.Enabled = pauseChecked;
-            if (!pauseChecked)
-                showMatchingPagesTutorial.Checked = false;
         }
 
         private void comboBoxRunStats_SelectedIndexChanged(object sender, EventArgs e)
@@ -1981,6 +1971,7 @@ namespace SkylineTester
             // Adjust settings to match the mode
             var runModeTest = RunTestMode.SelectedItem.ToString();
             bool offScreenEnabled = true;
+            bool translationLanguagesOnly = false;
             if (!Equals(runModeTest, "Test"))
             {
                 runSerial.Checked = true;
@@ -1995,8 +1986,13 @@ namespace SkylineTester
                     runLoopsCount.Text = 1.ToString();
                     Offscreen.Checked = false;  // Can't do screenshots offscreen
                     offScreenEnabled = false;
+                    translationLanguagesOnly = true;
                 }
             }
+
+            TestsFrench.Enabled = TestsTurkish.Enabled = !translationLanguagesOnly;
+            if (translationLanguagesOnly)
+                TestsFrench.Checked = TestsTurkish.Checked = false;
             Offscreen.Enabled = offScreenEnabled;
         }
 

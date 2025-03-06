@@ -1,8 +1,9 @@
 ﻿/*
- * Original author: Eduardo Armendariz <wardough .at. uw.edu>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
+ * Original authors: Eduardo Armendariz <wardough .at. uw.edu>,
+ *                   Brendan MacLean <brendanx .at. uw.edu>
+ *                   MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2024 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +25,16 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
+using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil.Properties;
 using pwiz.Skyline.Controls;
+using TestRunnerLib.PInvoke;
 
 namespace pwiz.SkylineTestUtil
 {
-
     public interface IPauseTestController
     {
         void Continue();
@@ -53,7 +54,6 @@ namespace pwiz.SkylineTestUtil
     public partial class ScreenshotPreviewForm : Form
     {
         private const string END_TEST_TEXT = "End";
-        private const string PAUSE_TEXT = "&Pause";
         private const string PAUSE_TIP_TEXT = "Pause (Shift-F5)";
 
         private const int SCREENSHOT_MAX_WIDTH = 800; // doubled as side by side
@@ -65,20 +65,19 @@ namespace pwiz.SkylineTestUtil
         private Thread _screenshotPreviewThread;
         private readonly ManualResetEvent _screenshotPreviewHandleReadyEvent = new ManualResetEvent(false);
 
+        private readonly MultiFormActivator _activator;
+
         // these members should only be accessed in a block which locks on _lock (is this necessary for all?)
         #region synchronized members
         private readonly object _lock = new object();
         private int _screenshotNum;
         private string _description;
-        private string _linkUrl;
-        private string _imageUrl;
-        private string _fileToShow;
-        private string _fileToSave;
+        private ScreenshotFile _fileToShow;
+        private string _fileToSave; // May be different from the file to show for a language that doesn't exist yet
         private ScreenshotValues _screenshotValues;
-        private Bitmap _oldScreenshot;
-        private string _fileLoaded;
-        private Bitmap _newScreenshot;
-        private bool _screenshotTaken;
+        private OldScreenshot _oldScreenshot;
+        private NewScreenshot _newScreenshot;
+        private ScreenshotDiff _diff;
         private NextScreenshotProgress _nextScreenshotProgress;
 
         private class NextScreenshotProgress
@@ -99,28 +98,30 @@ namespace pwiz.SkylineTestUtil
         }
         #endregion
 
+        private RichTextBox _rtfDiff;
+
         public ScreenshotPreviewForm(IPauseTestController pauseTestController, ScreenshotManager screenshotManager)
         {
             _pauseTestController = pauseTestController;
             _screenshotManager = screenshotManager;
+            _oldScreenshot = new OldScreenshot();
+            _newScreenshot = new NewScreenshot();
 
             InitializeComponent();
             
             Icon = Resources.camera;
+            toolStripPickColorButton.SelectedColor = HighlightColor;
 
-            _defaultContinueText = continueBtn.Text;
             _defaultContinueTipText = toolStripContinue.ToolTipText;
             _defaultImageSourceTipText = helpTip.GetToolTip(buttonImageSource);
 
-            UpdateImageSourceButtons();
+            _activator = new MultiFormActivator();
 
-            if (TestUtilSettings.Default.ShowTextButtons)
-                toolStrip.Visible = false;
-            else
-                splitBar.Visible = false;
+            UpdateImageSourceButtons();
 
             // Unfortunately there is not enough information about the image sizes to
             // the starting location right here, but this is better than using the Windows default
+            labelOldSize.Text = labelNewSize.Text = string.Empty;
             StartPosition = FormStartPosition.Manual;
             var savedLocation = TestUtilSettings.Default.PreviewFormLocation;
             if (!TestUtilSettings.Default.ManualSizePreview)
@@ -132,17 +133,16 @@ namespace pwiz.SkylineTestUtil
             else
             {
                 Location = savedLocation;
-                autoSizeWindowCheckbox.Checked = false;
+                toolStripAutoSize.Checked = false;
                 var savedSize = TestUtilSettings.Default.PreviewFormSize;
                 if (!savedSize.IsEmpty)
                     Size = savedSize;
-                FormEx.ForceOnScreen(this);
+                ForceOnScreen();
                 if (TestUtilSettings.Default.PreviewFormMaximized)
                     WindowState = FormWindowState.Maximized;
             }
         }
 
-        private readonly string _defaultContinueText;    // Store for later
         private readonly string _defaultContinueTipText; // Store for later
         private readonly string _defaultImageSourceTipText; // Store for later
 
@@ -155,15 +155,13 @@ namespace pwiz.SkylineTestUtil
             {
                 _screenshotNum = _pauseTestController.ScreenshotNum;
                 _description = _pauseTestController.Description;
-                _linkUrl = _pauseTestController.LinkUrl;
-                _imageUrl = _pauseTestController.ImageUrl;
                 _fileToSave = _pauseTestController.FileToSave;
                 _screenshotValues = new ScreenshotValues(_pauseTestController.ScreenshotControl,
                     _pauseTestController.FullScreen, _pauseTestController.ProcessShot);
-                if (!Equals(_fileToShow, _pauseTestController.FileToShow))
+                if (!Equals(_fileToShow?.Path, _pauseTestController.FileToShow))
                 {
-                    _fileToShow = _pauseTestController.FileToShow;
-                    _fileLoaded = null;
+                    _fileToShow = new ScreenshotFile(_pauseTestController.FileToShow);
+                    _oldScreenshot.FileLoaded = null;
                 }
 
                 // If there is not yet any progress, create a single step progress instance that is complete
@@ -172,7 +170,7 @@ namespace pwiz.SkylineTestUtil
 
                 if (_nextScreenshotProgress.IsReadyForScreenshot)
                 {
-                    _screenshotTaken = false;
+                    _newScreenshot.IsTaken = false;
                 }
                 else
                 {
@@ -191,7 +189,25 @@ namespace pwiz.SkylineTestUtil
             // The wait below must happen outside to lock above or risk deadlocking
             _screenshotPreviewHandleReadyEvent.WaitOne(); // Block until the handle is created
 
+            // Ideally, this would use FormUtil.OpenForms, but this works pretty well and including
+            // all open forms gets tricky with cross-thread operations and choosing top level forms
+            var activationForm = ActivationForm;
+            _activator.Reset(this, activationForm);
+            if (activationForm is FloatingWindow)
+                _activator.AddForm(activationForm.Owner);   // Add the SkylineWindow too
+
             FormStateChangedBackground();
+        }
+
+        private Form ActivationForm
+        {
+            get
+            {
+                var parentForm = _pauseTestController.ScreenshotControl.FindForm();
+                if (parentForm is DockableForm dockableForm)    // A dockable form is never the top level
+                    parentForm = dockableForm.Pane.FindForm();
+                return parentForm;
+            }
         }
 
         protected override bool ShowWithoutActivation
@@ -225,17 +241,26 @@ namespace pwiz.SkylineTestUtil
 
         private bool HasBackgroundWork { get { lock(_lock) { return !IsLoaded || (!IsWaiting && !IsScreenshotTaken); } } }
         private bool IsComplete { get { lock (_lock) { return IsLoaded && !IsWaiting && IsScreenshotTaken; } } }
-        // CONSIDER: This doesn't really cover the case where the current thing is loaded but not from the current source
-        private bool IsLoaded { get { lock (_lock) { return Equals(_fileLoaded, _fileToShow) || Equals(_fileLoaded, _imageUrl); } } }
+        private bool IsLoaded { get { lock (_lock) { return _oldScreenshot.IsCurrent(_fileToShow, OldImageSource); } } }
         private bool IsWaiting { get { lock (_lock) { return _nextScreenshotProgress is { IsReadyForScreenshot: false }; } } }
-        private bool IsScreenshotTaken { get { lock (_lock) { return _screenshotTaken; } } }
+        private bool IsScreenshotTaken { get { lock (_lock) { return _newScreenshot.IsTaken; } } }
 
         private void RefreshScreenshots()
         {
             lock (_lock)
             {
-                _fileLoaded = null;
-                _screenshotTaken = false;
+                _oldScreenshot.FileLoaded = null;
+                _newScreenshot.IsTaken = false;
+            }
+
+            FormStateChanged();
+        }
+
+        private void RefreshOldScreenshot()
+        {
+            lock (_lock)
+            {
+                _oldScreenshot.FileLoaded = null;
             }
 
             FormStateChanged();
@@ -267,8 +292,7 @@ namespace pwiz.SkylineTestUtil
 
             if (HasBackgroundWork)
             {
-                bool showWebImage = TestUtilSettings.Default.ShowWebImage;
-                ActionUtil.RunAsync(() => UpdateScreenshotsAsync(showWebImage));
+                UpdateScreenshotsBackground();
             }
             else if (IsComplete)
             {
@@ -284,17 +308,93 @@ namespace pwiz.SkylineTestUtil
         {
             lock (_lock)
             {
-                helpTip.SetToolTip(oldScreenshotLabel, _fileLoaded);
-                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot);
-                helpTip.SetToolTip(newScreenshotLabel, _screenshotTaken ? _description : null);
+                UpdateImageSourceButtons();
+                helpTip.SetToolTip(oldScreenshotLabel, _oldScreenshot.FileLoaded);
+                SetPreviewSize(labelOldSize, _oldScreenshot);
+                SetPreviewImage(oldScreenshotPictureBox, _oldScreenshot, _diff);
+                helpTip.SetToolTip(newScreenshotLabel, _newScreenshot.IsTaken ? _description : null);
+                SetPreviewSize(labelNewSize, _newScreenshot);
                 SetPreviewImage(newScreenshotPictureBox, _newScreenshot);
+                ShowImageDiff();
+            }
+        }
+
+        private void ShowImageDiff()
+        {
+            bool showOldPictureBox = true;
+            if (_diff == null)
+            {
+                pictureMatching.Visible = false;
+                labelOldSize.Left = pictureMatching.Left;
+                labelOldSize.ForeColor = Color.Black;
+            }
+            else
+            {
+                pictureMatching.Visible = true;
+                labelOldSize.Left = pictureMatching.Right;
+                bool matching = !_diff.IsDiff;
+                var bmpDiff = matching ? Skyline.Properties.Resources.Peak : Skyline.Properties.Resources.NoPeak;
+                bmpDiff.MakeTransparent(Color.White);
+                pictureMatching.Image = bmpDiff;
+                if (matching)
+                {
+                    labelOldSize.ForeColor = Color.Green;
+                }
+                else
+                {
+                    labelOldSize.ForeColor = Color.Red;
+                    labelOldSize.Text += _diff.DiffText;
+                    bool imagesMatch = !_diff.SizesDiffer && !_diff.PixelsDiffer;
+                    if (imagesMatch)
+                    {
+                        _diff.ShowBinaryDiff(EnsureBinaryDiffControl());
+                    }
+
+                    showOldPictureBox = !imagesMatch;
+                }
+            }
+            oldScreenshotPictureBox.Visible = showOldPictureBox;
+            if (_rtfDiff != null)
+                _rtfDiff.Visible = !showOldPictureBox;
+        }
+
+        private RichTextBox EnsureBinaryDiffControl()
+        {
+            if (_rtfDiff == null)
+            {
+                _rtfDiff = new RichTextBox
+                {
+                    Dock = DockStyle.Fill,
+                    Font = new Font("Courier New", 10), // Use monospaced font for better alignment
+                    ReadOnly = true,
+                    WordWrap = false,
+                    TabIndex = oldScreenshotPictureBox.TabIndex
+                };
+                var controlList = oldScreenshotPictureBox.Parent.Controls;
+                controlList.Add(_rtfDiff);
+                controlList.SetChildIndex(_rtfDiff, controlList.IndexOf(oldScreenshotPictureBox));
+            }
+
+            return _rtfDiff;
+        }
+
+        private static void SetPreviewSize(Label labelSize, ScreenshotInfo screenshot)
+        {
+            var image = screenshot.Image;
+            if (image == null || screenshot.IsPlaceholder)
+                labelSize.Text = string.Empty;
+            else
+            {
+                lock (image)
+                {
+                    labelSize.Text = $@"{image.Width} x {image.Height}px";
+                }
             }
         }
 
         private void UpdateTools()
         {
             UpdateProgress();
-            UpdateToolbar();
             UpdateToolStrip();
         }
 
@@ -304,7 +404,7 @@ namespace pwiz.SkylineTestUtil
             toolStripDescription.Text =
                 toolStripDescription.ToolTipText =
                     _description;
-            toolStripGotoWeb.Enabled = _linkUrl != null;
+            toolStripGotoWeb.Enabled = _fileToShow != null;
 
             // Update next text box
             UpdateNextTextBox(toolStripTextBoxNext, toolStripLabelNext);
@@ -334,41 +434,7 @@ namespace pwiz.SkylineTestUtil
             toolStripSave.Enabled = toolStripSaveAndContinue.Enabled = IsScreenshotTaken;
         }
 
-        private void UpdateToolbar()
-        {
-            // Update the description
-            descriptionLinkLabel.Text = _description;
-            helpTip.SetToolTip(descriptionLinkLabel, _description);
-
-            if (_linkUrl == null)
-            {
-                descriptionLinkLabel.LinkColor = descriptionLinkLabel.ForeColor;
-                descriptionLinkLabel.LinkBehavior = LinkBehavior.NeverUnderline;
-            }
-            else
-            {
-                descriptionLinkLabel.LinkColor = Color.Blue;
-                descriptionLinkLabel.LinkBehavior = LinkBehavior.AlwaysUnderline;
-            }
-
-            // Update next text box
-            UpdateNextTextBox(textBoxNext, labelNext);
-
-            // Update the buttons
-            string continueButtonText = _defaultContinueText;
-            if (progressBar.Visible)
-            {
-                continueButtonText = _nextScreenshotProgress.StopNum - _screenshotNum > 1 ? PAUSE_TEXT : null;
-            }
-
-            continueBtn.Text = continueButtonText ?? _defaultContinueText;
-            continueBtn.Enabled = continueButtonText != null;
-
-            refreshBtn.Enabled = !progressBar.Visible;
-            saveScreenshotBtn.Enabled = saveScreenshotAndContinueBtn.Enabled = IsScreenshotTaken;
-        }
-
-        private void UpdateNextTextBox(TextControl textBox, EnableControl label)
+        private void UpdateNextTextBox(ToolStripTextBox textBox, ToolStripLabel label)
         {
             if (progressBar.Visible)
             {
@@ -385,73 +451,6 @@ namespace pwiz.SkylineTestUtil
                 label.Enabled = true;
             }
         }
-
-        #region Helper classes for Next text boxes
-        private abstract class EnableControl
-        {
-            protected EnableControl(object control)
-            {
-                Control = control;
-            }
-
-            protected object Control { get; }
-
-            public abstract bool Enabled { set; }
-            public static implicit operator EnableControl(Label c) => new LabelControl(c);
-            public static implicit operator EnableControl(ToolStripLabel c) => new ToolStripLabelControl(c);
-        }
-
-        private abstract class TextControl : EnableControl
-        {
-            protected TextControl(object control) : base(control) { }
-
-            public abstract string Text { set; }
-            public abstract void FocusAll();
-
-            public static implicit operator TextControl(TextBox c) => new TextBoxControl(c);
-            public static implicit operator TextControl(ToolStripTextBox c) => new ToolStripTextBoxControl(c);
-        }
-
-        private class TextBoxControl : TextControl
-        {
-            public TextBoxControl(TextBox control) : base(control) { }
-            private TextBox TextBox => (TextBox)Control;
-            public override string Text { set => TextBox.Text = value; }
-            public override bool Enabled { set => TextBox.Enabled = value; }
-            public override void FocusAll()
-            {
-                TextBox.SelectAll();
-                TextBox.Focus();
-            }
-        }
-
-        private class LabelControl : EnableControl
-        {
-            public LabelControl(Label control) : base(control) { }
-            private Label Label => (Label)Control;
-            public override bool Enabled { set => Label.Enabled = value; }
-        }
-
-        private class ToolStripTextBoxControl : TextControl
-        {
-            public ToolStripTextBoxControl(ToolStripTextBox control) : base(control) { }
-            private ToolStripTextBox TextBox => (ToolStripTextBox)Control;
-            public override string Text { set => TextBox.Text = value; }
-            public override bool Enabled { set => TextBox.Enabled = value; }
-            public override void FocusAll()
-            {
-                TextBox.SelectAll();
-                TextBox.Focus();
-            }
-        }
-
-        private class ToolStripLabelControl : EnableControl
-        {
-            public ToolStripLabelControl(ToolStripLabel control) : base(control) { }
-            private ToolStripLabel Label => (ToolStripLabel)Control;
-            public override bool Enabled { set => Label.Enabled = value; }
-        }
-        #endregion
 
         private void UpdateProgress()
         {
@@ -481,63 +480,81 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private void UpdateScreenshotsAsync(bool showWebImage)
+        private void UpdateScreenshotsBackground()
+        {
+            var imageSource = OldImageSource;   // Get this value now
+            var highlightColor = HighlightColor;
+            ActionUtil.RunAsync(() => UpdateScreenshotsAsync(imageSource, highlightColor), "Preview update async");
+        }
+
+        private void UpdateScreenshotsAsync(ImageSource oldImageSource, Color highlightColor)
         {
             Assume.IsTrue(InvokeRequired);  // Expecting this to run on a background thread. Use ActionUtil.RunAsync()
 
-            Bitmap oldScreenshot;
-            string fileToShow, imageUrl, fileLoaded;
+            ScreenshotFile fileToShow;
+            ScreenshotInfo oldScreenshot;
+            string fileLoaded;
 
             lock (_lock)
             {
                 fileToShow = _fileToShow;
-                fileLoaded = _fileLoaded;
-                imageUrl = showWebImage ? _imageUrl : null;
-                oldScreenshot = _oldScreenshot;
+                fileLoaded = _oldScreenshot.FileLoaded;
+                oldScreenshot = new ScreenshotInfo(_oldScreenshot);
             }
 
-            string fileToLoad = imageUrl ?? fileToShow;
-            if (!Equals(fileLoaded, fileToLoad))
+            string oldFileDescription = fileToShow.GetDescription(oldImageSource);
+            if (!Equals(fileLoaded, oldFileDescription))
             {
-                oldScreenshot = LoadScreenshot(fileToShow, imageUrl);
-                fileLoaded = fileToLoad;
+                oldScreenshot = LoadScreenshot(fileToShow, oldImageSource);
+                fileLoaded = oldFileDescription;
             }
 
             lock (_lock)
             {
-                _oldScreenshot = oldScreenshot;
-                _fileLoaded = fileLoaded;
+                if (!Equals(fileToShow, _fileToShow))
+                    return;
+                _oldScreenshot = new OldScreenshot(oldScreenshot, fileLoaded);
+                _diff = null;
             }
 
             lock (_screenshotManager)
             {
-                Bitmap newScreenshot;
+                ScreenshotInfo newScreenshot;
                 bool shotTaken, waitingForScreenshot;
                 ScreenshotValues screenshotValues;
+                ScreenshotDiff diff = null;
 
                 lock (_lock)
                 {
                     screenshotValues = _screenshotValues;
-                    shotTaken = _screenshotTaken;
-                    newScreenshot = _newScreenshot;
+                    shotTaken = _newScreenshot.IsTaken;
+                    newScreenshot = new ScreenshotInfo(_newScreenshot);
                     waitingForScreenshot = IsWaiting;
                 }
 
                 // Only take a new screenshot when the test is ready
                 if (waitingForScreenshot)
                 {
-                    newScreenshot = Resources.progress;
+                    newScreenshot = new ScreenshotInfo(Resources.progress);
                 }
-                else if (!shotTaken)
+                else
                 {
-                    newScreenshot = TakeScreenshot(screenshotValues);
-                    shotTaken = true;
+                    if (!shotTaken)
+                    {
+                        newScreenshot = TakeScreenshot(screenshotValues);
+                        shotTaken = true;
+                    }
+
+                    if (!newScreenshot.IsPlaceholder || !oldScreenshot.IsPlaceholder)
+                    {
+                        diff = DiffScreenshots(oldScreenshot, newScreenshot, highlightColor);
+                    }
                 }
 
                 lock (_lock)
                 {
-                    _newScreenshot = newScreenshot;
-                    _screenshotTaken = shotTaken;
+                    _newScreenshot = new NewScreenshot(newScreenshot, shotTaken);
+                    _diff = diff;
                     if (shotTaken)
                         _nextScreenshotProgress = null;    // Done waiting for the next screenshot
                 }
@@ -545,6 +562,21 @@ namespace pwiz.SkylineTestUtil
 
             FormStateChangedBackground();
         }
+
+        private ScreenshotDiff DiffScreenshots(ScreenshotInfo oldScreenshot, ScreenshotInfo newScreenshot, Color highlightColor)
+        {
+            try
+            {
+                return new ScreenshotDiff(oldScreenshot, newScreenshot, highlightColor);
+            }
+            catch (Exception e)
+            {
+                BeginInvoke((Action)(() => ShowMessageWithException(
+                    "Failed to diff bitmaps.", e)));
+                return null;
+            }
+        }
+
 
         private struct ScreenshotValues
         {
@@ -562,63 +594,78 @@ namespace pwiz.SkylineTestUtil
             public Func<Bitmap, Bitmap> ProcessShot { get; }
         }
 
-        private Bitmap TakeScreenshot(ScreenshotValues values)
+        private ScreenshotInfo TakeScreenshot(ScreenshotValues values)
         {
+            var noScreenshot = new ScreenshotInfo(Resources.noscreenshot);
             if (Equals(values, ScreenshotValues.Empty))
             {
-                return Resources.noscreenshot;
+                return noScreenshot;
             }
 
             var control = values.Control;
             try
             {
                 _screenshotManager.ActivateScreenshotForm(control);
-                return _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
+                var newScreenshot = _screenshotManager.TakeShot(control, values.FullScreen, null, values.ProcessShot);
+                return new ScreenshotInfo(_screenshotManager.SaveToMemory(newScreenshot), newScreenshot);
             }
             catch (Exception e)
             {
-                this.BeginInvoke((Action)(() => PreviewMessageDlg.ShowWithException(this,
-                    "Failed attempting to take a screenshot.", e)));
-                return Resources.noscreenshot;
+                BeginInvoke((Action)(() => ShowMessageWithException("Failed attempting to take a screenshot.", e)));
+                return noScreenshot;
             }
         }
 
-        private Bitmap LoadScreenshot(string file, string uri)
+        private ScreenshotInfo LoadScreenshot(ScreenshotFile file, ImageSource source)
         {
             try
             {
                 byte[] imageBytes;
-                if (uri == null)
-                    imageBytes = File.ReadAllBytes(file);
-                else
+                switch (source)
                 {
-                    using var webClient = new WebClient();
-                    using var fileSaverTemp = new FileSaver(file);  // Temporary. Never saved
-                    webClient.DownloadFile(uri, fileSaverTemp.SafeName);
-                    imageBytes = File.ReadAllBytes(fileSaverTemp.SafeName);
+                    case ImageSource.git:
+                        imageBytes = GitFileHelper.GetGitFileBinaryContent(file.Path);
+                        break;
+                    case ImageSource.disk:
+                        imageBytes = File.ReadAllBytes(file.Path);
+                        break;
+                    case ImageSource.web:
+                    default:
+                    {
+                        using var webClient = new WebClient();
+                        using var fileSaverTemp = new FileSaver(file.Path);  // Temporary. Never saved
+                        webClient.DownloadFile(file.UrlToDownload, fileSaverTemp.SafeName);
+                        imageBytes = File.ReadAllBytes(fileSaverTemp.SafeName);
+                    }
+                        break;
                 }
-                var existingImageMemoryStream = new MemoryStream(imageBytes);
-                return new Bitmap(existingImageMemoryStream);
+                var ms = new MemoryStream(imageBytes);
+                return new ScreenshotInfo(ms);
             }
             catch (Exception e)
             {
-                this.BeginInvoke((Action) (() => PreviewMessageDlg.ShowWithException(this, 
-                    string.Format("Failed to load a bitmap from {0}.", uri ?? file), e)));
+                BeginInvoke((Action)(() => ShowMessageWithException(
+                    string.Format("Failed to load a bitmap from {0}.", file.GetDescription(source)), e)));
                 var failureBmp = Resources.DiskFailure;
                 failureBmp.MakeTransparent(Color.White);
-                return failureBmp;
+                return new ScreenshotInfo(failureBmp);
             }
         }
 
-        private void SetPreviewImage(PictureBox previewBox, Bitmap screenshot)
+        private void SetPreviewImage(PictureBox previewBox, ScreenshotInfo screenshot, ScreenshotDiff diff = null)
         {
-            var newImage = screenshot;
-            if (screenshot != null)
+            var baseImage = diff?.HighlightedImage ?? screenshot.Image;
+            var newImage = baseImage;
+            if (baseImage != null && !screenshot.IsPlaceholder)
             {
-                var containerSize = !autoSizeWindowCheckbox.Checked ? previewBox.Size : Size.Empty;
-                var screenshotSize = CalcBitmapSize(screenshot, containerSize);
-                if (screenshotSize != screenshot.Size)
-                    newImage = new Bitmap(screenshot, screenshotSize);
+                lock (baseImage)
+                {
+                    var containerSize = !toolStripAutoSize.Checked ? previewBox.Size : Size.Empty;
+                    var screenshotSize = CalcBitmapSize(screenshot, containerSize);
+                    // Always make a copy to avoid having PictureBox lock the bitmap
+                    // which can cause issues with future image diffs
+                    newImage = new Bitmap(baseImage, screenshotSize);
+                }
             }
 
             previewBox.Image = newImage;
@@ -635,12 +682,13 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private Size CalcBitmapSize(Bitmap bitmap, Size containerSize)
+        private Size CalcBitmapSize(ScreenshotInfo screenshot, Size containerSize)
         {
-            if (bitmap == null)
-                return Size.Empty;
+            var startingSize = Size.Empty;
+            if (screenshot == null)
+                return startingSize;
 
-            var startingSize = bitmap.Size;
+            startingSize = screenshot.ImageSize;
             var scaledHeight = (double)SCREENSHOT_MAX_HEIGHT / startingSize.Height;
             var scaledWidth = (double)SCREENSHOT_MAX_WIDTH / startingSize.Width;
 
@@ -677,7 +725,7 @@ namespace pwiz.SkylineTestUtil
                 // Do nothing. This can happen when the window is minimized.
             }
 
-            if (!autoSizeWindowCheckbox.Checked)
+            if (!toolStripAutoSize.Checked)
                 return;
 
             var autoSize = CalcAutoSize();
@@ -698,12 +746,12 @@ namespace pwiz.SkylineTestUtil
             bool screenshotTaken, stopAtNexScreenshot;
             lock (_lock)
             {
-                screenshotTaken = _screenshotTaken;
+                screenshotTaken = _newScreenshot.IsTaken;
                 stopAtNexScreenshot = _nextScreenshotProgress != null &&
                                       _nextScreenshotProgress.StopNum - _screenshotNum == 0;
             }
 
-            if (!_screenshotTaken)
+            if (!screenshotTaken)
             {
                 if (_screenshotManager.IsOverlappingScreenshot(Bounds))
                     Hide();
@@ -742,11 +790,8 @@ namespace pwiz.SkylineTestUtil
                     return Size.Empty;
 
                 var minFormWidth = Math.Max(newImageSize.Width, oldImageSize.Width) * 2 + CELL_PADDING * 4;
-                // May want this calculation to be possible before the form is fully shown. That means
-                // it cannot be based on the Visible property, since it is false when the form is not visible
-                bool showToolbar = TestUtilSettings.Default.ShowTextButtons;
                 var minFormHeight = Math.Max(newImageSize.Height, oldImageSize.Height) +
-                                    (showToolbar ? splitBar.Height : toolStrip.Height) + 
+                                    toolStrip.Height +
                                     oldScreenshotLabelPanel.Height + CELL_PADDING * 2;
                 var minClientSize = MinimumSize - (Size - ClientSize);
                 minFormHeight = Math.Max(minFormHeight, minClientSize.Height);
@@ -768,13 +813,13 @@ namespace pwiz.SkylineTestUtil
             // So, textBoxNext can be used for checking the value but focus and selection need
             // to go to the visible control in the case of an error.
             int nextShot;
-            if (Equals(textBoxNext.Text, END_TEST_TEXT))
+            if (Equals(toolStripTextBoxNext.Text, END_TEST_TEXT))
                 nextShot = FindLastShot(minNext);
             else
             {
 
                 var helper = new MessageBoxHelper(this);
-                if (!helper.ValidateNumberTextBox(textBoxNext, minNext, null, out nextShot))
+                if (!helper.ValidateNumberTextBox(toolStripTextBoxNext.TextBox, minNext, null, out nextShot))
                 {
                     ResetAndFocusNext(minNext);
                     return;
@@ -783,7 +828,7 @@ namespace pwiz.SkylineTestUtil
                 string nextScreenshotFile = _screenshotManager.ScreenshotSourceFile(nextShot);
                 if (!File.Exists(nextScreenshotFile))
                 {
-                    helper.ShowTextBoxError(textBoxNext, "Invalid {0} value {1}. Screenshot file {2} does not exist.", null, nextShot, nextScreenshotFile);
+                    helper.ShowTextBoxError(toolStripTextBoxNext.TextBox, "Invalid {0} value {1}. Screenshot file {2} does not exist.", null, nextShot, nextScreenshotFile);
                     // Must be too big. So find the largest valid number.
                     nextShot = FindLastShot(minNext);
                     ResetAndFocusNext(nextShot);
@@ -803,13 +848,9 @@ namespace pwiz.SkylineTestUtil
 
         private void ResetAndFocusNext(int nextValue)
         {
-            TextControl textControl;
-            if (textBoxNext.Visible)
-                textControl = textBoxNext;
-            else
-                textControl = toolStripTextBoxNext;
-            textControl.Text = nextValue.ToString();
-            textControl.FocusAll();
+            toolStripTextBoxNext.Text = nextValue.ToString();
+            toolStripTextBoxNext.SelectAll();
+            toolStripTextBoxNext.Focus();
         }
 
         /// <summary>
@@ -833,11 +874,10 @@ namespace pwiz.SkylineTestUtil
                 // Since it is not yet known what the description will be use ... and the link to the next screenshot
                 // CONSIDER: Make this a ScreenShotInfo class?
                 _description = _screenshotManager.ScreenshotDescription(_screenshotNum, "...");
-                _fileToShow = _screenshotManager.ScreenshotSourceFile(_screenshotNum);
+                _fileToShow = new ScreenshotFile(_screenshotManager.ScreenshotSourceFile(_screenshotNum));
                 _fileToSave = _screenshotManager.ScreenshotDestFile(_screenshotNum);
-                _imageUrl = _screenshotManager.ScreenshotImgUrl(_screenshotNum);
-                _linkUrl = _screenshotManager.ScreenshotUrl(_screenshotNum);
-                _screenshotTaken = false;
+                _newScreenshot.IsTaken = false;
+                _diff = null;
             }
         }
 
@@ -847,11 +887,14 @@ namespace pwiz.SkylineTestUtil
             {
                 Hide();
             }
-            else if(File.Exists(_screenshotManager.ScreenshotSourceFile(_screenshotNum)))
+            else if (File.Exists(_screenshotManager.ScreenshotSourceFile(_screenshotNum)))
             {
                 FormStateChanged();
             }
 
+            // The MultiFormActivator can change test behavior. So, it needs to be cleared
+            // before continuing the test.
+            _activator.Clear();
             _pauseTestController.Continue();
         }
 
@@ -875,25 +918,46 @@ namespace pwiz.SkylineTestUtil
 
         private bool SaveScreenshot()
         {
-            if (File.Exists(_fileToSave) && !FileEx.IsWritable(_fileToSave))
+            string filePath = _fileToSave;
+            if (File.Exists(filePath) && !IsWritable(filePath))
             {
-                PreviewMessageDlg.Show(this, TextUtil.LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
+                ShowMessage(LineSeparate(string.Format("The file {0} is locked.", _fileToSave),
                     "Check that it is not open in another program such as TortoiseIDiff."));
                 return false;
             }
             try
             {
-                string screenshotDir = Path.GetDirectoryName(_fileToSave) ?? string.Empty;
+                string screenshotDir = Path.GetDirectoryName(filePath) ?? string.Empty;
                 Assume.IsFalse(string.IsNullOrEmpty(screenshotDir));    // Because ReSharper complains about possible null
                 Directory.CreateDirectory(screenshotDir);
 
-                _newScreenshot.Save(_fileToSave);
+                _newScreenshot.Image.Save(filePath);
                 return true;
             }
             catch (Exception e)
             {
-                PreviewMessageDlg.ShowWithException(this, string.Format("Failed to save screenshot {0}", _fileToSave), e);
+                PreviewMessageDlg.ShowWithException(this, string.Format("Failed to save screenshot {0}", filePath), e);
                 return false;
+            }
+        }
+
+        private void Revert()
+        {
+            string filePath = _fileToSave;
+            if (File.Exists(filePath) && !IsWritable(filePath))
+            {
+                ShowMessage(LineSeparate(string.Format("The file {0} is locked.", filePath),
+                    "Check that it is not open in another program such as TortoiseIDiff."));
+                return;
+            }
+            try
+            {
+                GitFileHelper.RevertFileToHead(filePath);
+                RefreshOldScreenshot();
+            }
+            catch (Exception e)
+            {
+                ShowMessageWithException(string.Format("Failed to revert screenshot {0}", filePath), e);
             }
         }
 
@@ -903,11 +967,22 @@ namespace pwiz.SkylineTestUtil
                 Continue();
         }
 
+        private void SaveAndStay()
+        {
+            if (SaveScreenshot())
+                RefreshOldScreenshot();
+        }
+
         private void GotoLink()
         {
-            if (!string.IsNullOrEmpty(_linkUrl))
+            string urlInTutorial;
+            lock (_lock)
             {
-                WebHelpers.OpenLink(_linkUrl);
+                urlInTutorial = _fileToShow?.UrlInTutorial;
+            }
+            if (!string.IsNullOrEmpty(urlInTutorial))
+            {
+                OpenLink(urlInTutorial);
             }
         }
 
@@ -935,10 +1010,10 @@ namespace pwiz.SkylineTestUtil
 
             if (WindowState != FormWindowState.Minimized)
             {
-                if (autoSizeWindowCheckbox.Checked && _autoResizeComplete)
+                if (toolStripAutoSize.Checked && _autoResizeComplete)
                 {
                     // The user is resizing the form
-                    autoSizeWindowCheckbox.Checked = false;
+                    toolStripAutoSize.Checked = false;
                 }
 
                 StoreFormBoundsState();
@@ -954,7 +1029,7 @@ namespace pwiz.SkylineTestUtil
             if (!_autoResizeComplete)
                 return;
 
-            TestUtilSettings.Default.ManualSizePreview = !autoSizeWindowCheckbox.Checked;
+            TestUtilSettings.Default.ManualSizePreview = !toolStripAutoSize.Checked;
             if (WindowState == FormWindowState.Normal)
                 TestUtilSettings.Default.PreviewFormLocation = Location;
             if (WindowState == FormWindowState.Normal)
@@ -963,28 +1038,44 @@ namespace pwiz.SkylineTestUtil
                 (WindowState == FormWindowState.Maximized);
         }
 
-        private void ToggleToolStrip()
+        private Color HighlightColor
         {
-            TestUtilSettings.Default.ShowTextButtons = splitBar.Visible = toolStrip.Visible;
-            toolStrip.Visible = !toolStrip.Visible;
-            if (toolStrip.Visible)
-                UpdateToolStrip();
-            else
-                UpdateToolbar();
-            // Since the two are not exactly the same height, the form may need to be
-            // resized if it is in auto-size mode.
-            ResizeComponents();
+            get => Color.FromArgb(TestUtilSettings.Default.ImageDiffAlpha,
+                TestUtilSettings.Default.ImageDiffColor.R,
+                TestUtilSettings.Default.ImageDiffColor.G,
+                TestUtilSettings.Default.ImageDiffColor.B);
+
+            set
+            {
+                TestUtilSettings.Default.ImageDiffAlpha = value.A;
+                TestUtilSettings.Default.ImageDiffColor = Color.FromArgb(value.R, value.G, value.B);
+            }
         }
 
-        private void ToggleImageSource()
+        private static readonly ImageSource[] OLD_IMAGE_SOURCES = { ImageSource.disk, ImageSource.git, ImageSource.web };
+
+        private ImageSource OldImageSource
         {
-            TestUtilSettings.Default.ShowWebImage = !TestUtilSettings.Default.ShowWebImage;
+            get => OLD_IMAGE_SOURCES[TestUtilSettings.Default.OldImageSource % OLD_IMAGE_SOURCES.Length];
+            set
+            {
+                for (int i = 0; i < OLD_IMAGE_SOURCES.Length; i++)
+                {
+                    if (OLD_IMAGE_SOURCES[i] == value)
+                        TestUtilSettings.Default.OldImageSource = i;
+                }
+            }
+        }
+
+        private void NextOldImageSource()
+        {
+            OldImageSource = OLD_IMAGE_SOURCES[(TestUtilSettings.Default.OldImageSource + 1) % OLD_IMAGE_SOURCES.Length];
 
             UpdateImageSourceButtons();
 
             lock (_lock)
             {
-                _fileLoaded = null;
+                _oldScreenshot = new OldScreenshot(_oldScreenshot, null, OldImageSource);
             }
 
             FormStateChanged();
@@ -992,57 +1083,46 @@ namespace pwiz.SkylineTestUtil
 
         private void UpdateImageSourceButtons()
         {
-            if (TestUtilSettings.Default.ShowWebImage)
+            switch (OldImageSource)
             {
-                buttonImageSource.Image = Resources.websource;
-                helpTip.SetToolTip(buttonImageSource,
-                    TextUtil.LineSeparate(_defaultImageSourceTipText.ReadLines().First(),
-                        "Current: Web"));
-            }
-            else
-            {
-                buttonImageSource.Image = Resources.save;
-                helpTip.SetToolTip(buttonImageSource, _defaultImageSourceTipText);
-            }
-        }
+                case ImageSource.web:
+                    buttonImageSource.Image = Resources.websource;
+                    helpTip.SetToolTip(buttonImageSource,
+                        LineSeparate(_defaultImageSourceTipText.Split('\n').First(),
+                            "Current: Web"));
+                    break;
+                case ImageSource.git:
+                    buttonImageSource.Image = Resources.gitsource;
+                    helpTip.SetToolTip(buttonImageSource,
+                        LineSeparate(_defaultImageSourceTipText.Split('\n').First(),
+                            "Current: Git HEAD"));
+                    break;
+                case ImageSource.disk:
+                default:
+                    bool? changed = null;
+                    var filePath = _fileToSave;
+                    if (File.Exists(filePath))
+                    {
+                        try
+                        {
+                            changed = GitFileHelper.IsModified(filePath);
+                        }
+                        catch (Exception)
+                        {
+                            // Ignore and leave changed null
+                        }
+                    }
 
-        private void continueBtn_Click(object sender, EventArgs e)
-        {
-            if (IsWaiting)
-                PauseAtNextScreenshot();
-            else
-                Continue();
-        }
-
-        private void saveScreenshotBtn_Click(object sender, EventArgs e)
-        {
-            SaveScreenshot();
-        }
-
-        private void saveScreenshotAndContinueBtn_Click(object sender, EventArgs e)
-        {
-            SaveAndContinue();
-        }
-
-        private void refreshBtn_Click(object sender, EventArgs e)
-        {
-            RefreshScreenshots();
-        }
-
-        private void descriptionLinkLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            GotoLink();
-        }
-
-        private void autoSizeWindowCheckbox_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!toolStrip.Visible || toolStripAutoSize.Checked != autoSizeWindowCheckbox.Checked)
-            {
-                toolStripAutoSize.Checked = autoSizeWindowCheckbox.Checked;
-                if (autoSizeWindowCheckbox.Checked)
-                    ResizeComponents();
-
-                StoreFormBoundsState();
+                    if (!changed.HasValue)
+                    {
+                        buttonImageSource.Image = Resources.fileunknown;
+                    }
+                    else
+                    {
+                        buttonImageSource.Image = changed.Value ? Resources.filechanged : Resources.fileunchanged;
+                    }
+                    helpTip.SetToolTip(buttonImageSource, _defaultImageSourceTipText);
+                    break;
             }
         }
 
@@ -1070,12 +1150,17 @@ namespace pwiz.SkylineTestUtil
 
         private void toolStripSave_Click(object sender, EventArgs e)
         {
-            SaveScreenshot();
+            SaveAndStay();
         }
 
         private void toolStripSaveAndContinue_Click(object sender, EventArgs e)
         {
             SaveAndContinue();
+        }
+
+        private void toolStripRevert_Click(object sender, EventArgs e)
+        {
+            Revert();
         }
 
         private void toolStripGotoWeb_Click(object sender, EventArgs e)
@@ -1085,41 +1170,25 @@ namespace pwiz.SkylineTestUtil
 
         private void toolStripAutoSize_CheckedChanged(object sender, EventArgs e)
         {
-            if (!splitBar.Visible || autoSizeWindowCheckbox.Checked != toolStripAutoSize.Checked)
+            if (toolStripAutoSize.Checked)
+                ResizeComponents();
+
+            StoreFormBoundsState();
+        }
+
+        private void toolStripPickColorButton_ColorChanged(object sender, EventArgs e)
+        {
+            if (HighlightColor != toolStripPickColorButton.SelectedColor)
             {
-                autoSizeWindowCheckbox.Checked = toolStripAutoSize.Checked;
-                if (toolStripAutoSize.Checked)
-                    ResizeComponents();
-
-                StoreFormBoundsState();
+                HighlightColor = toolStripPickColorButton.SelectedColor;
+                if (oldScreenshotPictureBox.Visible)
+                    UpdateScreenshotsBackground();
             }
-        }
-
-        private void toolStripSwitchToToolbar_Click(object sender, EventArgs e)
-        {
-            ToggleToolStrip();
-        }
-
-        private void buttonSwitchToToolStrip_Click(object sender, EventArgs e)
-        {
-            ToggleToolStrip();
-        }
-
-        private void textBoxNext_TextChanged(object sender, EventArgs e)
-        {
-            if (!Equals(textBoxNext.Text, toolStripTextBoxNext.Text))
-                toolStripTextBoxNext.Text = textBoxNext.Text;
-        }
-
-        private void toolStripTextBoxNext_TextChanged(object sender, EventArgs e)
-        {
-            if (!Equals(textBoxNext.Text, toolStripTextBoxNext.Text))
-                textBoxNext.Text = toolStripTextBoxNext.Text;
         }
 
         private void buttonImageSource_Click(object sender, EventArgs e)
         {
-            ToggleImageSource();
+            NextOldImageSource();
         }
 
         private void ScreenshotPreviewForm_KeyDown(object sender, KeyEventArgs e)
@@ -1127,7 +1196,7 @@ namespace pwiz.SkylineTestUtil
             switch (e.KeyCode)
             {
                 case Keys.Escape:
-                    if (textBoxNext.Focused || toolStripTextBoxNext.Focused)
+                    if (toolStripTextBoxNext.Focused)
                         Focus();
                     else
                         Close();
@@ -1136,7 +1205,7 @@ namespace pwiz.SkylineTestUtil
                 case Keys.Tab:
                     if (e.Control)
                     {
-                        ToggleImageSource();
+                        NextOldImageSource();
                         e.Handled = true;
                     }
                     break;
@@ -1162,7 +1231,7 @@ namespace pwiz.SkylineTestUtil
                     if (e.Control)
                     {
                         if (IsComplete)
-                            SaveScreenshot();
+                            SaveAndStay();
                         e.Handled = true;
                     }
                     break;
@@ -1183,10 +1252,19 @@ namespace pwiz.SkylineTestUtil
                 case Keys.C:
                     if (e.Control)
                     {
-                        if (e.Shift)
-                            CopyBitmap(_oldScreenshot);
-                        else
-                            CopyBitmap(_newScreenshot);
+                        Bitmap imageToCopy;
+                        lock (_lock)
+                        {
+                            imageToCopy = e.Shift ? _oldScreenshot.Image : _newScreenshot.Image;
+                        }
+                        CopyBitmap(imageToCopy);
+                        e.Handled = true;
+                    }
+                    break;
+                case Keys.Z:
+                    if (e.Control)
+                    {
+                        Revert();
                         e.Handled = true;
                     }
                     break;
@@ -1203,6 +1281,36 @@ namespace pwiz.SkylineTestUtil
             {
                 PreviewMessageDlg.ShowWithException(this, "Failed clipboard operation.", e);
             }
+        }
+
+        public static bool IsWritable(string path)
+        {
+            return FileEx.IsWritable(path);
+        }
+
+        private string LineSeparate(params string[] lines)
+        {
+            return TextUtil.LineSeparate(lines);
+        }
+
+        public static void OpenLink(string link)
+        {
+            WebHelpers.OpenLink(link);
+        }
+
+        public void ForceOnScreen()
+        {
+            FormEx.ForceOnScreen(this);
+        }
+
+        private void ShowMessage(string message)
+        {
+            PreviewMessageDlg.Show(this, message);
+        }
+
+        private void ShowMessageWithException(string message, Exception e)
+        {
+            PreviewMessageDlg.ShowWithException(this, message, e);
         }
 
         /// <summary>

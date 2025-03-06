@@ -113,6 +113,26 @@ namespace pwiz.Skyline.FileUI
             _specificDataSourceFilter = specificDataSourceFilter;
         }
 
+        // private void ExportImages(ImageList imageList, string suffix)
+        // {
+        //     try
+        //     {
+        //         string saveFolder = @"C:\proj\Scratch\pwiz_tools\Skyline\Resources\ImageList";
+        //         Directory.CreateDirectory(saveFolder);
+        //
+        //         for (int i = 0; i < imageList.Images.Count; i++)
+        //         {
+        //             Image image = imageList.Images[i];
+        //             string filePath = Path.Combine(saveFolder, $"{(ImageIndex)i}{suffix}.png");
+        //             image.Save(filePath, ImageFormat.Png);
+        //         }
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         Console.WriteLine(e);
+        //     }
+        // }
+
         public void RestoreState(string documentPath, OpenDataSourceState state)
         {
             if (state != null)
@@ -1021,13 +1041,14 @@ namespace pwiz.Skyline.FileUI
             if( e.Index < 0 || e.Index >= lookInComboBox.Items.Count)
                 return;
 
-            TreeNode node = (TreeNode) lookInComboBox.Items[e.Index];
+            var node = (TreeNode) lookInComboBox.Items[e.Index];
+            var textSize = TextRenderer.MeasureText(node.Text, lookInComboBox.Font);
 
-            int x, y, indent;
-            if( ( e.State & DrawItemState.ComboBoxEdit ) == DrawItemState.ComboBoxEdit )
+            int x, indent;
+            int y = e.Bounds.Y + (e.Bounds.Height - 16) / 2;
+            if ( ( e.State & DrawItemState.ComboBoxEdit ) == DrawItemState.ComboBoxEdit )
             {
-                x = 2;
-                y = 2;
+                x = 3;  // Any less and the image gets clipped
                 indent = 0;
             }
             else
@@ -1036,13 +1057,13 @@ namespace pwiz.Skyline.FileUI
                 e.DrawFocusRectangle();
 
                 x = node.TreeView.Indent / 2;
-                y = e.Bounds.Y;
                 indent = node.TreeView.Indent * node.Level;
             }
 
-            Image image = lookInImageList.Images[node.ImageIndex];
+            var image = lookInImageListSmall.Images[node.ImageIndex];
             e.Graphics.DrawImage( image, x + indent, y, 16, 16 );
-            e.Graphics.DrawString( node.Text, lookInComboBox.Font, new SolidBrush(lookInComboBox.ForeColor), x + indent + 16, y );
+            int textY = e.Bounds.Y + (e.Bounds.Height - textSize.Height) / 2;   // Vertically center the text
+            e.Graphics.DrawString( node.Text, lookInComboBox.Font, new SolidBrush(lookInComboBox.ForeColor), x + indent + 16, textY );
         }
 
         private void lookInComboBox_MeasureItem( object sender, MeasureItemEventArgs e )

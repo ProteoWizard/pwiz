@@ -246,7 +246,7 @@
   <data name="textPassword.Location" type="System.Drawing.Point, System.Drawing">
     <value>0, 63</value>
   </data>
-  <data name="textPassword.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
+  <data name="textPassword.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
   </data>
   <data name="textPassword.Size" type="System.Drawing.Size, System.Drawing">
@@ -531,7 +531,7 @@
   <data name="tbxClientSecret.Location" type="System.Drawing.Point, System.Drawing">
     <value>6, 113</value>
   </data>
-  <data name="tbxClientSecret.PasswordChar" type="System.Char, mscorlib" xml:space="preserve">
+  <data name="tbxClientSecret.PasswordChar" xml:space="preserve" type="System.Char, mscorlib">
     <value>*</value>
   </data>
   <data name="tbxClientSecret.Size" type="System.Drawing.Size, System.Drawing">
@@ -539,18 +539,6 @@
   </data>
   <data name="tbxClientSecret.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
-  </data>
-  <data name="&gt;&gt;tbxClientSecret.Name" xml:space="preserve">
-    <value>tbxClientSecret</value>
-  </data>
-  <data name="&gt;&gt;tbxClientSecret.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxClientSecret.Parent" xml:space="preserve">
-    <value>groupBoxUnifi</value>
-  </data>
-  <data name="&gt;&gt;tbxClientSecret.ZOrder" xml:space="preserve">
-    <value>0</value>
   </data>
   <data name="lblClientSecret.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -567,18 +555,6 @@
   <data name="lblClientSecret.Text" xml:space="preserve">
     <value>Client secret:</value>
   </data>
-  <data name="&gt;&gt;lblClientSecret.Name" xml:space="preserve">
-    <value>lblClientSecret</value>
-  </data>
-  <data name="&gt;&gt;lblClientSecret.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblClientSecret.Parent" xml:space="preserve">
-    <value>groupBoxUnifi</value>
-  </data>
-  <data name="&gt;&gt;lblClientSecret.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
   <data name="tbxClientScope.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -590,18 +566,6 @@
   </data>
   <data name="tbxClientScope.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
-  </data>
-  <data name="&gt;&gt;tbxClientScope.Name" xml:space="preserve">
-    <value>tbxClientScope</value>
-  </data>
-  <data name="&gt;&gt;tbxClientScope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxClientScope.Parent" xml:space="preserve">
-    <value>groupBoxUnifi</value>
-  </data>
-  <data name="&gt;&gt;tbxClientScope.ZOrder" xml:space="preserve">
-    <value>2</value>
   </data>
   <data name="lblClientScope.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -618,18 +582,6 @@
   <data name="lblClientScope.Text" xml:space="preserve">
     <value>Client scope:</value>
   </data>
-  <data name="&gt;&gt;lblClientScope.Name" xml:space="preserve">
-    <value>lblClientScope</value>
-  </data>
-  <data name="&gt;&gt;lblClientScope.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblClientScope.Parent" xml:space="preserve">
-    <value>groupBoxUnifi</value>
-  </data>
-  <data name="&gt;&gt;lblClientScope.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <data name="tbxIdentityServer.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -641,18 +593,6 @@
   </data>
   <data name="tbxIdentityServer.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
-  </data>
-  <data name="&gt;&gt;tbxIdentityServer.Name" xml:space="preserve">
-    <value>tbxIdentityServer</value>
-  </data>
-  <data name="&gt;&gt;tbxIdentityServer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;tbxIdentityServer.Parent" xml:space="preserve">
-    <value>groupBoxUnifi</value>
-  </data>
-  <data name="&gt;&gt;tbxIdentityServer.ZOrder" xml:space="preserve">
-    <value>4</value>
   </data>
   <data name="lblIdentityServer.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -668,18 +608,6 @@
   </data>
   <data name="lblIdentityServer.Text" xml:space="preserve">
     <value>Identity server:</value>
-  </data>
-  <data name="&gt;&gt;lblIdentityServer.Name" xml:space="preserve">
-    <value>lblIdentityServer</value>
-  </data>
-  <data name="&gt;&gt;lblIdentityServer.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblIdentityServer.Parent" xml:space="preserve">
-    <value>groupBoxUnifi</value>
-  </data>
-  <data name="&gt;&gt;lblIdentityServer.ZOrder" xml:space="preserve">
-    <value>5</value>
   </data>
   <data name="wizardPagesByAccountType.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>

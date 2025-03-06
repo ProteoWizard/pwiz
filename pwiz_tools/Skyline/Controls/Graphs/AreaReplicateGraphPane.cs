@@ -194,6 +194,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     return BarType.PercentStack;
                 }
 
+                if (Settings.Default.AreaLogScale && AreaGraphController.AreaNormalizeOption.AllowLogScale)
+                {
+                    return BarType.Cluster;
+                }
+
                 return BarType.Stack;
             }
         }
@@ -653,11 +658,6 @@ namespace pwiz.Skyline.Controls.Graphs
             ParentGroupNode = parentGroupNode;
             SumAreas = sumAreas;
 
-            // Draw a box around the currently selected replicate
-            if (ShowSelection && maxArea >  -double.MaxValue)
-            {
-                AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
-            }
             // Reset the scale when the parent node changes
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
@@ -692,6 +692,11 @@ namespace pwiz.Skyline.Controls.Graphs
             AddDotProductLine(graphData);
 
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
+            // Draw a box around the currently selected replicate
+            if (ShowSelection && maxArea > -double.MaxValue)
+            {
+                AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
+            }
         }
 
         private void AddDotProductLine(AreaGraphData graphData)
@@ -832,12 +837,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
-                        -yValue, Color.Black, Color.Empty)
-                // Just passing in yValue here doesn't work when log scale is enabled, -yValue works with and without log scale enabled
-                {
-                    IsClippedToChartRect = true,
-                });
+                DrawSelectionBox(selectedReplicateIndex, yValue, 0);
             }
         }
 
@@ -923,11 +923,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
                 }
-                else if (Settings.Default.AreaLogScale)
+                else if (Settings.Default.AreaLogScale && BarSettings.Type == BarType.Cluster)
                 {
-                    // If currently not log scale, reset the y-axis max
-                    if (YAxis.Type != AxisType.Log)
-                        YAxis.Scale.MaxAuto = true;
+                    YAxis.Scale.MaxAuto = true;
                     if (Settings.Default.PeakAreaMaxArea != 0)
                     {
                         YAxis.Scale.MaxAuto = false;
@@ -936,8 +934,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     YAxis.Type = AxisType.Log;
                     YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(GetYAxisTitle(aggregateOp, normalizeOption));
-                    YAxis.Scale.MinAuto = false;
-                    FixedYMin = YAxis.Scale.Min = 1;
+                    YAxis.Scale.MinAuto = true;
+                    FixedYMin = null;
                 }
                 else
                 {
@@ -964,16 +962,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MaxAuto = true;
             }
             Legend.IsVisible = !IsMultiSelect && Settings.Default.ShowPeakAreaLegend;
+            RemoveInvalidPointValues();
             AxisChange();
 
             // Reformat Y-Axis for labels and whiskers
             var maxY = GraphHelper.GetMaxY(CurveList,this);
-            if (DotProductLabelsVisible || DotProductLineVisible)
+            if ((DotProductLabelsVisible || DotProductLineVisible) && !YAxis.Scale.IsLog)
             {
                 var reservedSpace = _labelHeight * 2;
                 var unitsPerPixel = maxY / (Chart.Rect.Height - reservedSpace);
-                var extraSpace = reservedSpace*unitsPerPixel;
-                maxY += extraSpace;
+                if (unitsPerPixel > 0)
+                {
+                    var extraSpace = reservedSpace * unitsPerPixel;
+                    maxY += extraSpace;
+                }
             }
        
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane

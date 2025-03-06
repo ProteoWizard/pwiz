@@ -33,6 +33,7 @@ using log4net;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using TestRunnerLib.PInvoke;
 using Exception = System.Exception;
 
 namespace TestRunnerLib
@@ -50,6 +51,7 @@ namespace TestRunnerLib
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
+        public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
         public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
@@ -74,6 +76,9 @@ namespace TestRunnerLib
 
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
+
+            var noNightlyLeakTestAttr = RunTests.GetAttribute(testMethod, "NoLeakTestingAttribute");
+            DoNotLeakTest = noNightlyLeakTestAttr != null; // Running this multiple times would take too long
 
             var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
             SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
@@ -172,7 +177,7 @@ namespace TestRunnerLib
             bool retrydatadownloads,
             IEnumerable<string> pauseForms,
             int pauseSeconds = 0,
-            int pauseStartingPage = 1,
+            int pauseStartingScreenshot = 1,
             bool useVendorReaders = true,
             int timeoutMultiplier = 1,
             string results = null,
@@ -221,7 +226,7 @@ namespace TestRunnerLib
             Skyline.Set("NoSaveSettings", true);
             Skyline.Set("UnitTestTimeoutMultiplier", timeoutMultiplier);
             Skyline.Set("PauseSeconds", pauseSeconds);
-            Skyline.Set("PauseStartingPage", pauseStartingPage);
+            Skyline.Set("PauseStartingScreenshot", pauseStartingScreenshot);
             Skyline.Set("PauseForms", pauseForms != null ? pauseForms.ToList() : null);
             Skyline.Set("Log", (Action<string>)(s => Log(s)));
             Skyline.Run("Init");
@@ -349,6 +354,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                TestContext.Properties["TestPass"] = pass.ToString();
                 if (IsParallelClient)
                 {
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs
@@ -471,9 +477,9 @@ namespace TestRunnerLib
             CommittedMemoryBytes = committedBytes;
             var previousPrivateBytes = TotalMemoryBytes;
             TotalMemoryBytes = _process.PrivateMemorySize64;
-            LastTotalHandleCount = GetHandleCount(HandleType.total);
-            LastUserHandleCount = GetHandleCount(HandleType.user);
-            LastGdiHandleCount = GetHandleCount(HandleType.gdi);
+            LastTotalHandleCount = GetHandleCount(User32Test.HandleType.total);
+            LastUserHandleCount = GetHandleCount(User32Test.HandleType.user);
+            LastGdiHandleCount = GetHandleCount(User32Test.HandleType.gdi);
 
             if (WriteMiniDumps && test.MinidumpLeakThreshold != null)
             {
@@ -994,17 +1000,12 @@ namespace TestRunnerLib
             }
         }
 
-        [DllImport("User32")]
-        private static extern int GetGuiResources(IntPtr hProcess, int uiFlags);
-
-        private enum HandleType { total = -1, gdi = 0, user = 1 }
-
-        private int GetHandleCount(HandleType handleType)
+        private int GetHandleCount(User32Test.HandleType handleType)
         {
-            if (handleType == HandleType.total)
+            if (handleType == User32Test.HandleType.total)
                 return _process.HandleCount;
 
-            return GetGuiResources(_process.Handle, (int)handleType);
+            return _process.GetGuiResources(handleType);
         }
 
         private static void Try<TEx>(Action action, int loopCount, bool throwOnFailure = true, int milliseconds = 500) 

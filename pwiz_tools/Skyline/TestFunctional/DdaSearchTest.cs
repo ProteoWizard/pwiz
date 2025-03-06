@@ -407,13 +407,20 @@ namespace pwiz.SkylineTestFunctional
             {
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
                 importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-
-                // Cancel search
-                if (!errorExpected)
-                    importPeptideSearchDlg.SearchControl.Cancel();
             });
 
-            if (errorExpected)
+            if (!errorExpected)
+            {
+                SkylineWindow.BeginInvoke(new Action(importPeptideSearchDlg.Close)); // try to close (don't wait for return)
+                var cannotCloseDuringSearchDlg = WaitForOpenForm<MessageDlg>();
+                Assert.AreEqual(PeptideSearchResources.SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_,
+                    cannotCloseDuringSearchDlg.Message);
+                OkDialog(cannotCloseDuringSearchDlg, cannotCloseDuringSearchDlg.ClickNo);
+
+                // Cancel search (but don't close wizard)
+                RunUI(importPeptideSearchDlg.SearchControl.Cancel);
+            }
+            else // errorExpected
             {
                 var fastaFileNotFoundDlg = WaitForOpenForm<MessageDlg>();
                 var expectedMsg = new FileNotFoundException(GetSystemResourceString("IO.FileNotFound_FileName", GetTestPath(TestSettings.FastaFilename))).Message;

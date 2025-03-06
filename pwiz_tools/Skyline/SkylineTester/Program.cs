@@ -21,9 +21,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTester.Properties;
 
 namespace SkylineTester
@@ -82,7 +82,7 @@ namespace SkylineTester
             {
                 try
                 {
-                    AttachConsole(ATTACH_PARENT_PROCESS);
+                    Kernel32.AttachConsoleToParentProcess();
                     CreateZipInstallerWindow.CreateZipFile(args[0], args[0].ToLower().EndsWith("withtestdata.zip"));
                     Thread.Sleep(2000);
                 }
@@ -106,9 +106,5 @@ namespace SkylineTester
         {
             Environment.Exit(UserKilledTestRun ? 0xDEAD : 0);
         }
-
-        [DllImport("kernel32.dll")]
-        static extern bool AttachConsole(int dwProcessId);
-        private const int ATTACH_PARENT_PROCESS = -1;
     }
 }

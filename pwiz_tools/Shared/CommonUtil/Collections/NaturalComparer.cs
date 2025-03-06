@@ -21,8 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.Collections
 {
@@ -38,13 +38,10 @@ namespace pwiz.Common.Collections
     /// </summary>
     public class NaturalFilenameComparer
     {
-        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-        private static extern int StrCmpLogicalW(string x, string y);
-
         //Compare strings with natural sort
         public static int Compare(string x, string y)
         {
-            return StrCmpLogicalW(x, y);
+            return Shlwapi.StrCmpLogicalW(x, y);
         }
     }
 

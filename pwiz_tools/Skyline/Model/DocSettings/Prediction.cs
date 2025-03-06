@@ -2802,8 +2802,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void GetCurve(RetentionTimeStatistics statistics, out double[] lineScores, out double[] lineTimes)
         {
             // Find maximum hydrophobicity score points for drawing the regression line
-            lineScores = new[] { Double.MaxValue, 0 };
-            lineTimes = new[] { Double.MaxValue, 0 };
+            lineScores = new[] { Double.MaxValue, Double.MinValue };
+            lineTimes = new[] { Double.MaxValue, Double.MinValue };
 
             for (int i = 0; i < statistics.ListHydroScores.Count; i++)
             {

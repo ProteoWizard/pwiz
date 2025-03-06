@@ -99,6 +99,5 @@
   </resheader>
   <data name="AbstractAlertDlg_Message_truncated" xml:space="preserve">
     <value>消息被截短。按 Ctrl+C 将完整消息复制到剪贴板。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>

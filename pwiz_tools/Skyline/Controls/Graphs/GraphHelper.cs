@@ -579,18 +579,34 @@ namespace pwiz.Skyline.Controls.Graphs
             g.Legend.FontSpec.Size = fontSize;
         }
 
+        /// <summary>
+        /// Ensure that the maximum value displayed on the Y-axis is greater than <paramref name="myMaxY"/>.
+        /// This is used when the maximum value is different from what ZedGraph thinks it should be, such as because
+        /// of the extra space for <see cref="MeanErrorBarItem"/> in <see cref="GetMaxY"/> or the space required
+        /// for the dot product lines and labels.
+        /// </summary>
         public static void ReformatYAxis(GraphPane g, double myMaxY)
         {
-            var _max = MyMod(myMaxY, g.YAxis.Scale.MajorStep) == 0.0 ? myMaxY :
-                  myMaxY + g.YAxis.Scale.MajorStep - MyMod(myMaxY, g.YAxis.Scale.MajorStep);
-            g.YAxis.Scale.Max = _max;
-        }
-        protected static double MyMod(double x, double y)
-        {
-            if (y == 0)
-                return 0;
-            var temp = x / y;
-            return y * (temp - Math.Floor(temp));
+            var yAxisScale = g.YAxis.Scale;
+            double newMax;
+            if (yAxisScale.IsLog)
+            {
+                newMax = Math.Pow(10.0, Math.Ceiling(Math.Log10(myMaxY)));
+            }
+            else
+            {
+                var majorStep = yAxisScale.MajorStep;
+                if (majorStep <= 0)
+                {
+                    return;
+                }
+                newMax = Math.Ceiling(myMaxY / majorStep) * majorStep;
+            }
+
+            if (newMax != yAxisScale.Max && newMax > yAxisScale.Min)
+            {
+                yAxisScale.Max = newMax;
+            }
         }
 
         // Find maximum value for bar graph including whiskers

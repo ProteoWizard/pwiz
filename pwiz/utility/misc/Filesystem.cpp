@@ -446,7 +446,7 @@ PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
     int matchingPathCount = 0;
 
 #ifdef WIN32
-    path maskParentPath = pathmask.branch_path();
+    path maskParentPath = pathmask.parent_path();
 	WIN32_FIND_DATAW fdata;
 	HANDLE srcFile = FindFirstFileExW(boost::nowide::widen(pathmask.string()).c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0);
 	if (srcFile == INVALID_HANDLE_VALUE)
@@ -496,43 +496,6 @@ PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
 }
 
 
-namespace
-{
-    void copy_recursive(const bfs::path& from, const bfs::path& to)
-    {
-        bfs::copy_directory(from, to);
-
-        for(bfs::directory_entry& entry : bfs::directory_iterator(from))
-        {
-            bfs::file_status status = entry.status();
-            if (status.type() == bfs::directory_file)
-                copy_recursive(entry.path(), to / entry.path().filename());
-            else if (status.type() == bfs::regular_file)
-                bfs::copy_file(entry.path(), to / entry.path().filename());
-            else
-                throw bfs::filesystem_error("[copy_directory] invalid path type", entry.path(), boost::system::error_code(boost::system::errc::no_such_file_or_directory, boost::system::system_category()));
-        }
-    }
-
-    void copy_recursive(const bfs::path& from, const bfs::path& to, boost::system::error_code& ec)
-    {
-        bfs::copy_directory(from, to, ec);
-        if (ec.value() != 0)
-            return;
-
-        for(bfs::directory_entry& entry : bfs::directory_iterator(from))
-        {
-            bfs::file_status status = entry.status(ec);
-            if (status.type() == bfs::directory_file)
-                copy_recursive(entry.path(), to / entry.path().filename(), ec);
-            else if (status.type() == bfs::regular_file)
-                bfs::copy_file(entry.path(), to / entry.path().filename(), ec);
-            else if (ec.value() != 0)
-                ec.assign(boost::system::errc::no_such_file_or_directory, boost::system::system_category());
-        }
-    }
-}
-
 PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bool recursive, boost::system::error_code* ec)
 {
     if (!bfs::is_directory(from))
@@ -549,16 +512,16 @@ PWIZ_API_DECL void copy_directory(const bfs::path& from, const bfs::path& to, bo
     if (recursive)
     {
         if (ec != NULL)
-            copy_recursive(from, to, *ec);
+            bfs::copy(from, to, bfs::copy_options::recursive, *ec);
         else
-            copy_recursive(from, to);
+            bfs::copy(from, to, bfs::copy_options::recursive);
     }
     else
     {
         if (ec != NULL)
-            bfs::copy_directory(from, to, *ec);
+            bfs::copy(from, to, *ec);
         else
-            bfs::copy_directory(from, to);
+            bfs::copy(from, to);
     }
 }
 
