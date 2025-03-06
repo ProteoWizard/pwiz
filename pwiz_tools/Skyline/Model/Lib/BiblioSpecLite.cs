@@ -2398,7 +2398,6 @@ namespace pwiz.Skyline.Model.Lib
             private int?[] _columnIndexes;
             private int _schemaVer;
             private IDataReader _reader;
-            private object[] _rowValues;
 
             public RetentionTimeReader(IDataReader dataReader, int schemaVer)
             {
@@ -2417,8 +2416,6 @@ namespace pwiz.Skyline.Model.Lib
                         _columnIndexes[colEnum] = ordinal;
                     }
                 }
-
-                _rowValues = new object[dataReader.FieldCount];
             }
 
             public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectaIdFileIdTimes { get; private set; }
@@ -2438,7 +2435,6 @@ namespace pwiz.Skyline.Model.Lib
             {
                 while (_reader.Read())
                 {
-                    _reader.GetValues(_rowValues);
                     int? refSpectraId = GetInt(Column.RefSpectraID);
                     int? spectrumSourceId = GetInt(Column.SpectrumSourceID);
                     if (!refSpectraId.HasValue || !spectrumSourceId.HasValue)
@@ -2548,7 +2544,12 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     return null;
                 }
-                return _rowValues[columnIndex.Value];
+                object value = _reader.GetValue(columnIndex.Value);
+                if (value is DBNull)
+                {
+                    return null;
+                }
+                return value;
             }
 
             private double? GetDouble(Column column)
