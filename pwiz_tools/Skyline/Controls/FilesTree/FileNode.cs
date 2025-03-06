@@ -75,7 +75,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     public abstract class FileNode
     {
-
         // ReSharper disable once LocalizableElement
         private static string FILE_PATH_NOT_SET = "# local path #";
 
@@ -88,7 +87,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageAvailable = available;
             ImageMissing = missing;
 
-            FileState = FileState.available;
+            FileState = FileState.unknown;
 
             LocalFilePath = FILE_PATH_NOT_SET;
         }
@@ -100,7 +99,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 LocalFilePath = LookForFileInPotentialLocations(DocumentPath, FileName);
             }
         }
-            
+
         private bool IsLocalFilePathConfigured()
         {
             return !ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET);

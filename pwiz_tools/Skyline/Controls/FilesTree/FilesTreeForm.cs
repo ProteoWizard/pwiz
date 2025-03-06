@@ -197,7 +197,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case RTCalc _:
                 case SkylineChromatogramCache _:
                 case SkylineViewFile _:
-                case SkylineFileModel _:
+                case RootFileNode _:
                     // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
                     openContainingFolderMenuStripItem.Visible = true;
                     openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();

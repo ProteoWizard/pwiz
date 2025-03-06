@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
@@ -27,13 +28,25 @@ namespace pwiz.Skyline.Controls.FilesTree
         public RootFileNode(SrmDocument document, string documentPath) :
             base(document, documentPath, IdentityPath.ROOT, ImageId.skyline)
         {
+            if (documentPath == null)
+            {
+                Name = FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument;
+                FilePath = null;
+                FileName = null;
+            }
+            else
+            {
+                Name = Path.GetFileName(documentPath);
+                FilePath = documentPath;
+                FileName = Path.GetFileName(documentPath);
+            }
         }
 
         public override Immutable Immutable => Document;
-
-        public override string Name => null;
-        public override string FilePath => null;
-        public override string FileName => null;
+        public override bool IsBackedByFile => FilePath != null;
+        public override string Name { get; }
+        public override string FilePath { get; }
+        public override string FileName { get; }
 
         public override IList<FileNode> Files
         {
@@ -42,7 +55,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var list = new List<FileNode>();
 
                 // CONSIDER: add a "HasFiles" check to avoid eagerly loading everything
-                //           from SrmDocument with a file shown in the tree
+                //           from SrmDocument for files shown in the tree
                 FileNode files = new ReplicatesFolder(Document, DocumentPath);
                 if(files.Files.Count > 0) 
                     list.Add(files);

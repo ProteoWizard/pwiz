@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 // TODO: initialize FileSystemWatcher when a new SkylineDocument is saved
 // TODO: check for local files in the background to avoid blocking UI thread
@@ -156,34 +157,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 BeginUpdateMS();
 
-                // Did the document change?
-                if (!ReferenceEquals(document.Id, e.DocumentPrevious?.Id))
-                {
-                    SkylineFileModel skylineFileModel;
-
-                    // Empty document - happens when choosing "Blank Document" on Skyline's Start Page
-                    if (DocumentContainer.DocumentFilePath == null)
-                    {
-                        // No file path because the document hasn't been saved yet
-                        skylineFileModel = new SkylineFileModel(document, 
-                                                      FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, 
-                                                      null);
-                    }
-                    else
-                    {
-                        skylineFileModel = new SkylineFileModel(document, 
-                                                                Path.GetFileName(DocumentContainer.DocumentFilePath),
-                                                                DocumentContainer.DocumentFilePath);
-                    }
-
-                    Root = FilesTreeNode.CreateNode(skylineFileModel);
-
-                    Nodes.Add(Root);
-                }
-
                 var files = new RootFileNode(document, DocumentContainer.DocumentFilePath);
 
-                MergeNodes(files.Files, Root.Nodes, FilesTreeNode.CreateNode);
+                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode);
+
+                Root = (FilesTreeNode)Nodes[0]; // Set root node
 
                 var expandedNodes = IsAnyNodeExpanded(Root);
                 if (!expandedNodes)
@@ -197,7 +175,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 CommonActionUtil.SafeBeginInvoke(this, () => { 
 
-                    // Start the file system monitor if it's not running and a Skyline document
+                    // Start the file system monitor if (1) not already running and (2) a Skyline document
                     // is open and saved to disk.
                     if (!IsMonitoringFileSystem() && DocumentContainer.DocumentFilePath != null)
                     {
@@ -427,8 +405,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 _model = value;
 
-                // Order matters - local file needs to be initialized before 
-                // setting the model since the setter can update the UI.
+                // Order matters so do this first. Local file needs to be
+                // initialized before configuring the UI.
                 Model.InitLocalFile();
 
                 OnModelChanged();
@@ -479,18 +457,21 @@ namespace pwiz.Skyline.Controls.FilesTree
             var customTable = new TableDesc();
             customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_Name, Name, rt);
 
-            if (Model.IsBackedByFile && !Model.LocalFileExists())
+            if (Model.IsBackedByFile)
             {
-                var font = rt.FontBold;
-                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileMissing, string.Empty, rt);
-                font = rt.FontNormal;
+                if (!Model.LocalFileExists())
+                {
+                    var font = rt.FontBold;
+                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileMissing, string.Empty, rt);
+                    font = rt.FontNormal;
+                }
+
+                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
+                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
+
+                if (Model.IsBackedByFile)
+                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, LocalFilePath, rt);
             }
-
-            customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
-            customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
-
-            if(Model.IsBackedByFile)
-                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, LocalFilePath, rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
@@ -538,9 +519,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             // of a file with that name, ignore the event.
             var filesTreeNode = FindTreeNodeForFileName(root, fileName);
 
-            // file system notifications might reference files FilesTree should
-            // ignore - for example: *.tmp files created when saving the .sky or
-            // .sky.view files so ignore updates not related to a node in the tree
             if (filesTreeNode != null)
             {
                 filesTreeNode.Model.FileAvailable();
@@ -573,7 +551,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         // Update tree node images based on whether the local file is available.
-        // Do not update the root node representing the .sky file
+        // Stop before updating the root node representing the .sky file.
+        // Does minimal traversal of the tree only walking up to root 
+        // from the given node.
         private static void UpdateFileImages(FilesTreeNode filesTreeNode)
         { 
             do
@@ -583,23 +563,5 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             while (filesTreeNode.Parent != null);
         }
-    }
-
-    public class SkylineFileModel : FileNode
-    {
-        public SkylineFileModel(SrmDocument document, string skyFileName, string skyFilePath) : 
-            base(document, skyFilePath, new IdentityPath(), ImageId.skyline)
-        {
-            Name = skyFileName;
-            FileName = skyFileName;
-            FilePath = skyFilePath;
-        }
-
-        public override Immutable Immutable => Document;
-
-        public override string Name { get; }
-        public override string FileName { get; }
-        public override string FilePath { get; }
-        public override bool IsBackedByFile => true;
     }
 }
