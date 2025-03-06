@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 LocalFilePath = LookForFileInPotentialLocations(DocumentPath, FileName);
             }
         }
-
+            
         private bool IsLocalFilePathConfigured()
         {
             return !ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET);

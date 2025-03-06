@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
 // TODO: initialize FileSystemWatcher when a new SkylineDocument is saved
+// TODO: check for local files in the background to avoid blocking UI thread
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
@@ -65,9 +66,22 @@ namespace pwiz.Skyline.Controls.FilesTree
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FilesTreeNode Root { get; private set; }
 
+        // Used for testing
         public string RootNodeText()
         {
             return Root.Text;
+        }
+
+        // Used for testing
+        public bool IsMonitoringFileSystem()
+        {
+            return _fileSystemWatcher?.Path != string.Empty;
+        }
+
+        // Used for testing
+        public string PathMonitoredForFileSystemChanges()
+        {
+            return _fileSystemWatcher?.Path;
         }
 
         public void ScrollToTop()
@@ -75,6 +89,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             Nodes[0]?.EnsureVisible();
         }
 
+        // Used for testing
         public void ScrollToFolder<T>() where T : FileNode
         {
             Folder<T>().EnsureVisible();
@@ -104,19 +119,16 @@ namespace pwiz.Skyline.Controls.FilesTree
         public void FileDeleted(string fileName)
         {
             FilesTreeNode.FileDeleted(Root, fileName);
-            UpdateNodeStates();
         }
 
         public void FileCreated(string fileName)
         {
             FilesTreeNode.FileCreated(Root, fileName);
-            UpdateNodeStates();
         }
 
         public void FileRenamed(string oldFileName, string newFileName)
         {
             FilesTreeNode.FileRenamed(Root, oldFileName, newFileName);
-            UpdateNodeStates();
         }
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
@@ -144,32 +156,24 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 BeginUpdateMS();
 
+                // Did the document change?
                 if (!ReferenceEquals(document.Id, e.DocumentPrevious?.Id))
                 {
-                    // The document changed, so rebuild FilesTree starting at the root
-                    Nodes.Clear();
-
                     SkylineFileModel skylineFileModel;
+
+                    // Empty document - happens when choosing "Blank Document" on Skyline's Start Page
                     if (DocumentContainer.DocumentFilePath == null)
                     {
+                        // No file path because the document hasn't been saved yet
                         skylineFileModel = new SkylineFileModel(document, 
-                                                        FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, 
-                                                        null);
+                                                      FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, 
+                                                      null);
                     }
                     else
                     {
                         skylineFileModel = new SkylineFileModel(document, 
                                                                 Path.GetFileName(DocumentContainer.DocumentFilePath),
                                                                 DocumentContainer.DocumentFilePath);
-
-                        _fileSystemWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
-                        _fileSystemWatcher.SynchronizingObject = this;
-                        _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName;
-                        _fileSystemWatcher.IncludeSubdirectories = true;
-                        _fileSystemWatcher.EnableRaisingEvents = true;
-                        _fileSystemWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
-                        _fileSystemWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
-                        _fileSystemWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
                     }
 
                     Root = FilesTreeNode.CreateNode(skylineFileModel);
@@ -190,6 +194,23 @@ namespace pwiz.Skyline.Controls.FilesTree
                         child.Expand();
                     }
                 }
+
+                CommonActionUtil.SafeBeginInvoke(this, () => { 
+
+                    // Start the file system monitor if it's not running and a Skyline document
+                    // is open and saved to disk.
+                    if (!IsMonitoringFileSystem() && DocumentContainer.DocumentFilePath != null)
+                    {
+                        _fileSystemWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
+                        _fileSystemWatcher.SynchronizingObject = this;
+                        _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName;
+                        _fileSystemWatcher.IncludeSubdirectories = true;
+                        _fileSystemWatcher.EnableRaisingEvents = true;
+                        _fileSystemWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
+                        _fileSystemWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
+                        _fileSystemWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
+                    }
+                });
             }
             finally
             {
@@ -211,7 +232,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             return false;
         }
 
-        // TODO: avoid updating nodes with children if the node's model didn't change
+        // CONSIDER: skip running MergeNodes on child nodes if the parent's model didn't change
         // CONSIDER: does FilesTree need to support selection like in SequenceTree / SrmTreeNode?
         // CONSIDER: refactor for more code reuse with SrmTreeNode
         internal static void MergeNodes(IEnumerable<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc)
@@ -351,23 +372,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        private void UpdateNodeStates()
-        {
-            BeginUpdate();
-            UpdateNodeStates(Root);
-            EndUpdate();
-        }
-
-        private static void UpdateNodeStates(FilesTreeNode node)
-        {
-            foreach (FilesTreeNode child in node.Nodes)
-            {
-                UpdateNodeStates(child);
-            }
-
-            node.UpdateState();
-        }
-
         protected override bool IsParentNode(TreeNode node)
         {
             return node.Parent == null;
@@ -411,8 +415,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             return new FilesTreeNode(model, model.Name);
         }
 
-        internal FilesTreeNode(FileNode model, string label) :
-            base(label)
+        internal FilesTreeNode(FileNode model, string label) : base(label)
         {
             Model = model;
         }
@@ -423,6 +426,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             set
             {
                 _model = value;
+
+                // Order matters - local file needs to be initialized before 
+                // setting the model since the setter can update the UI.
+                Model.InitLocalFile();
+
                 OnModelChanged();
             }
         }
@@ -442,9 +450,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             Name = Model.Name;
             Text = Model.Name;
-
-            // TODO: do this work in the background to avoid blocking the UI thread
-            Model.InitLocalFile();
 
             var isAnyFileMissing = IsAnyChildFileMissing(this);
             ImageIndex = isAnyFileMissing ? (int)ImageMissing : (int)ImageAvailable;
@@ -474,36 +479,37 @@ namespace pwiz.Skyline.Controls.FilesTree
             var customTable = new TableDesc();
             customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_Name, Name, rt);
 
-            // Disabled for now
-            // if (!LocalFileExists())
-            // {
-            //     var font = rt.FontBold;
-            //     customTable.AddDetailRow(ControlsResources.FilesTree_TreeNode_RenderTip_FileMissing, string.Empty, rt);
-            //     font = rt.FontNormal;
-            // }
+            if (Model.IsBackedByFile && !Model.LocalFileExists())
+            {
+                var font = rt.FontBold;
+                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileMissing, string.Empty, rt);
+                font = rt.FontNormal;
+            }
 
             customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
             customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
-            customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, LocalFilePath, rt);
+
+            if(Model.IsBackedByFile)
+                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, LocalFilePath, rt);
 
             var size = customTable.CalcDimensions(g);
             customTable.Draw(g);
             return new Size((int)size.Width + 4, (int)size.Height + 4);
         }
 
-        private static FilesTreeNode FindTreeNodeForFileName(TreeNode treeNode, string name)
+        private static FilesTreeNode FindTreeNodeForFileName(TreeNode treeNode, string fileName)
         {
             if (!(treeNode is FilesTreeNode filesTreeNode))
                 return null;
 
-            if (filesTreeNode.FileName.Equals(name, StringComparison.OrdinalIgnoreCase))
+            if (filesTreeNode.Model.IsBackedByFile && filesTreeNode.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase))
             {
                 return filesTreeNode;
             }
 
             foreach (TreeNode n in filesTreeNode.Nodes)
             {
-                var result = FindTreeNodeForFileName(n, name);
+                var result = FindTreeNodeForFileName(n, fileName);
                 if (result != null)
                     return result;
             }
@@ -514,7 +520,16 @@ namespace pwiz.Skyline.Controls.FilesTree
         internal static void FileDeleted(TreeNode root, string fileName)
         {
             var filesTreeNode = FindTreeNodeForFileName(root, fileName);
-            filesTreeNode?.Model.FileMissing();
+
+            // file system notifications might reference files FilesTree should
+            // ignore - for example: *.tmp files created when saving the .sky or
+            // .sky.view files so ignore updates not related to a node in the tree
+            if (filesTreeNode != null)
+            {
+                filesTreeNode.Model.FileMissing();
+
+                UpdateFileImages(filesTreeNode);
+            }
         }
 
         internal static void FileCreated(TreeNode root, string fileName)
@@ -522,7 +537,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Look for a tree node associated with the new file name. If Files Tree isn't aware
             // of a file with that name, ignore the event.
             var filesTreeNode = FindTreeNodeForFileName(root, fileName);
-            filesTreeNode?.Model.FileAvailable();
+
+            // file system notifications might reference files FilesTree should
+            // ignore - for example: *.tmp files created when saving the .sky or
+            // .sky.view files so ignore updates not related to a node in the tree
+            if (filesTreeNode != null)
+            {
+                filesTreeNode.Model.FileAvailable();
+                UpdateFileImages(filesTreeNode);
+            }
         }
 
         internal static void FileRenamed(TreeNode root, string oldFileName, string newFileName)
@@ -530,16 +553,35 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Look for a tree node with the file's previous name. If a node with that name is found
             // treat the file as missing. 
             var filesTreeNode = FindTreeNodeForFileName(root, oldFileName);
+
             if (filesTreeNode != null)
             {
                 filesTreeNode.Model.FileMissing();
+                UpdateFileImages(filesTreeNode);
                 return;
             }
 
             // Now, look for a tree node with the new file name. If found, a file was restored with
             // a name Files Tree is aware of, so mark the file as available.
             filesTreeNode = FindTreeNodeForFileName(root, newFileName);
-            filesTreeNode?.Model.FileAvailable();
+
+            if (filesTreeNode != null)
+            {
+                filesTreeNode.Model.FileAvailable();
+                UpdateFileImages(filesTreeNode);
+            }
+        }
+
+        // Update tree node images based on whether the local file is available.
+        // Do not update the root node representing the .sky file
+        private static void UpdateFileImages(FilesTreeNode filesTreeNode)
+        { 
+            do
+            {
+                filesTreeNode.OnModelChanged();
+                filesTreeNode = (FilesTreeNode)filesTreeNode.Parent;
+            }
+            while (filesTreeNode.Parent != null);
         }
     }
 
@@ -556,9 +598,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         public override Immutable Immutable => Document;
 
         public override string Name { get; }
-        public override string FilePath { get; }
         public override string FileName { get; }
-
+        public override string FilePath { get; }
         public override bool IsBackedByFile => true;
     }
 }

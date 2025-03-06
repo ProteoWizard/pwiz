@@ -22,6 +22,7 @@ using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.SettingsUI;
@@ -54,10 +55,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument,
-                SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+
+            Assert.AreEqual(string.Empty, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+            var monitoredPath = Path.Combine(TestFilesDir.FullPath, "savedFileName.sky");
+            RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
+            WaitForCondition(() => SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
@@ -101,6 +107,7 @@ namespace pwiz.SkylineTestFunctional
             // now, show files tree
             RunUI(() => SkylineWindow.ShowFilesTreeForm(true));
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+            WaitForConditionUI(() => SkylineWindow.FilesTree.IsMonitoringFileSystem());
 
             Assert.AreEqual("Rat_plasma.sky", SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
@@ -287,6 +294,43 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(2, projectFilesRoot.Nodes.Count);
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ViewFile));
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ChromatogramCache));
+
+            //
+            // Watch for changes on the file system
+            //
+            var replicateFolderModel = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var sampleFileTreeNode = (FilesTreeNode)replicateFolderModel.Nodes[0].Nodes[0];
+            var replicateSampleFileModel = sampleFileTreeNode.Model as ReplicateSampleFile;
+
+            Assert.IsNotNull(replicateSampleFileModel);
+
+            var filePath = replicateSampleFileModel.LocalFilePath;
+            Assert.IsTrue(File.Exists(filePath));
+
+            File.Move(filePath, filePath + "RENAMED");
+            WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageMissing);
+
+            // replicate sample file
+            Assert.AreEqual(FileState.missing, replicateSampleFileModel.FileState);
+            Assert.AreEqual((int)sampleFileTreeNode.ImageMissing, sampleFileTreeNode.ImageIndex);
+
+            // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
+            Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent).ImageMissing, sampleFileTreeNode.Parent.ImageIndex);
+            Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageMissing, sampleFileTreeNode.Parent.Parent.ImageIndex);
+            Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
+
+            // restore file to the expected name
+            File.Move(filePath + "RENAMED", filePath);
+            WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageAvailable);
+
+            // now check that icons changed back
+            Assert.AreEqual(FileState.available, replicateSampleFileModel.FileState);
+            Assert.AreEqual((int)sampleFileTreeNode.ImageAvailable, sampleFileTreeNode.ImageIndex);
+
+            // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
+            Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent).ImageAvailable, sampleFileTreeNode.Parent.ImageIndex);
+            Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageAvailable, sampleFileTreeNode.Parent.Parent.ImageIndex);
+            Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
 
             // // Project Files => Audit Log Action
             // RunUI(() =>
