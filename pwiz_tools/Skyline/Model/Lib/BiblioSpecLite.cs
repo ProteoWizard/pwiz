@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 19;
+        private const int FORMAT_VERSION_CACHE = 20;
         // V19 add protein/MoleculeGroupName
         // V18 crosslinks
         // V17 add ID file (alongside already-cached spectrum source file)
@@ -683,6 +683,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes")) // Only a filtered library will have this table
                     {
+                        var startTime = DateTime.UtcNow;
                         using (var cmd = _sqliteConnection.Connection.CreateCommand())
                         {
                             cmd.CommandText = @"SELECT * FROM RetentionTimes";
@@ -698,6 +699,7 @@ namespace pwiz.Skyline.Model.Lib
                                     kvp => kvp.Value);
                             }
                         }
+                        Console.Out.WriteLine("Read all retention times in {0}", DateTime.UtcNow.Subtract(startTime));
                     }
                     if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"ScoreTypes"))
                     {
@@ -1071,6 +1073,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 var sm = loader.StreamManager;
                 Stream stream;
+                DateTime startTime = DateTime.UtcNow;
                 if (cacheBytes != null)
                 {
                     cacheBytes.Seek(0, SeekOrigin.Begin);
@@ -1191,7 +1194,7 @@ namespace pwiz.Skyline.Model.Lib
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
                     }
-
+                    Console.Out.WriteLine("Load from cache in {0}", DateTime.UtcNow.Subtract(startTime));
                     // Checksum = checksum.ChecksumValue;
                     SetLibraryEntries(libraryEntries);
 
@@ -1257,9 +1260,9 @@ namespace pwiz.Skyline.Model.Lib
             for (int i = 0; i < peakBoundCount; i++)
             {
                 int fileId = PrimitiveArrays.ReadOneValue<int>(stream);
-                double peakStart = PrimitiveArrays.ReadOneValue<double>(stream);
-                double peakEnd = PrimitiveArrays.ReadOneValue<double>(stream);
-                double score = PrimitiveArrays.ReadOneValue<double>(stream);
+                float peakStart = PrimitiveArrays.ReadOneValue<float>(stream);
+                float peakEnd = PrimitiveArrays.ReadOneValue<float>(stream);
+                float score = PrimitiveArrays.ReadOneValue<float>(stream);
                 peakBoundaryValues.Add(new KeyValuePair<int, ExplicitPeakBounds>(fileId, new ExplicitPeakBounds(peakStart, peakEnd, score)));
             }
             return new ExplicitPeakBoundsDict<int>(peakBoundaryValues);
@@ -1271,9 +1274,9 @@ namespace pwiz.Skyline.Model.Lib
             foreach (var entry in peakBoundaries)
             {
                 PrimitiveArrays.WriteOneValue(stream, entry.Key);
-                PrimitiveArrays.WriteOneValue(stream, entry.Value.StartTime);
-                PrimitiveArrays.WriteOneValue(stream, entry.Value.EndTime);
-                PrimitiveArrays.WriteOneValue(stream, entry.Value.Score);
+                PrimitiveArrays.WriteOneValue(stream, (float) entry.Value.StartTime);
+                PrimitiveArrays.WriteOneValue(stream, (float) entry.Value.EndTime);
+                PrimitiveArrays.WriteOneValue(stream, (float) entry.Value.Score);
             }
         }
 
@@ -2395,6 +2398,7 @@ namespace pwiz.Skyline.Model.Lib
             private int?[] _columnIndexes;
             private int _schemaVer;
             private IDataReader _reader;
+            private object[] _rowValues;
 
             public RetentionTimeReader(IDataReader dataReader, int schemaVer)
             {
@@ -2413,6 +2417,8 @@ namespace pwiz.Skyline.Model.Lib
                         _columnIndexes[colEnum] = ordinal;
                     }
                 }
+
+                _rowValues = new object[dataReader.FieldCount];
             }
 
             public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectaIdFileIdTimes { get; private set; }
@@ -2432,6 +2438,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 while (_reader.Read())
                 {
+                    _reader.GetValues(_rowValues);
                     int? refSpectraId = GetInt(Column.RefSpectraID);
                     int? spectrumSourceId = GetInt(Column.SpectrumSourceID);
                     if (!refSpectraId.HasValue || !spectrumSourceId.HasValue)
@@ -2541,12 +2548,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     return null;
                 }
-                object value = _reader.GetValue(columnIndex.Value);
-                if (value is DBNull)
-                {
-                    return null;
-                }
-                return value;
+                return _rowValues[columnIndex.Value];
             }
 
             private double? GetDouble(Column column)
