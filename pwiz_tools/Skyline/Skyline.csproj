@@ -555,7 +555,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
+    <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
