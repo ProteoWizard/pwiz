@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
  *
  * Copyright 2009 Vanderbilt University - Nashville, TN 37232
@@ -25,9 +25,9 @@ namespace pwiz.Skyline.FileUI
 {
     public class OpenDataSourceDialog : OpenFileDialogNE
     {
-        private static string[] SOURCE_TYPES => new[]
+        private static readonly string[] SOURCE_TYPES =
         {
-            FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,   // Localized text can't be stored in a static variable
+            FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
             DataSourceUtil.TYPE_WIFF,
             DataSourceUtil.TYPE_WIFF2,
             DataSourceUtil.TYPE_AGILENT,

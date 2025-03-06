@@ -62,6 +62,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_UIMF = "Unified Ion Mobility Frame";
         public const string TYPE_MBI = "Mobilion MBI";
         public const string TYPE_CHORUSRESPONSE = "Chorus Response";
+        public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters acquisition method";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
         // ReSharper restore LocalizableElement

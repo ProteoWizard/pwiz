@@ -61,14 +61,23 @@ namespace pwiz.Skyline.FileUI
             listView.ListViewItemSorter = _listViewColumnSorter;
 
             DialogResult = DialogResult.Cancel;
-            
-            sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
-            sourceTypeComboBox.SelectedIndex = 0;
-            // Use the small image list 16x16 to avoid scaling at runtime which produces color inconsistencies
-            listView.SmallImageList = lookInImageListSmall;
-            listView.LargeImageList = lookInImageListSmall;
 
-            // ExportImages(listView.SmallImageList, string.Empty);
+            if (sourceTypes == null)
+            {
+                sourceTypeComboBox.Visible = false;
+                label1.Visible = false;
+            }
+            else
+            {
+                sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
+                sourceTypeComboBox.SelectedIndex = 0;
+            }
+
+            // Create a new image list for the list view that is the default size (16x16)
+            ImageList imageList = new ImageList{ColorDepth = ColorDepth.Depth32Bit};
+            imageList.Images.AddRange(lookInImageList.Images.Cast<Image>().ToArray());
+            listView.SmallImageList = imageList;
+            listView.LargeImageList = imageList;
 
             TreeView tv = new TreeView { Indent = 8 };
             _remoteIndex = lookInComboBox.Items.Count;
@@ -456,12 +465,14 @@ namespace pwiz.Skyline.FileUI
                     RemoteAccount remoteAccount = GetRemoteAccount(remoteUrl);
                     if (RemoteSession == null || !Equals(remoteAccount, RemoteSession.Account))
                     {
-                        RemoteSession = RemoteSession.CreateSession(remoteAccount);
+                        CreateNewRemoteSession(remoteAccount);
                     }
                     RemoteServerException exception;
                     bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
+                        //  TODO  ZZZ  Should the Image vary based on the file type?
+
                         var imageIndex = DataSourceUtil.IsFolderType(item.Type)
                             ? ImageIndex.Folder
                             : ImageIndex.MassSpecFile;
@@ -558,10 +569,14 @@ namespace pwiz.Skyline.FileUI
             var items = new List<ListViewItem>();
             foreach (var sourceInfo in listSourceInfo)
             {
-                if (sourceTypeComboBox.SelectedIndex == 0 ||
-                            sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type ||
-                            // Always show folders
-                            sourceInfo.isFolder)
+                if (sourceTypeComboBox == null ||
+                     sourceTypeComboBox.SelectedItem == null || // null if no sourceTypes passed in
+                     (sourceTypeComboBox != null &&
+                        sourceTypeComboBox.SelectedItem != null &&
+                        (sourceTypeComboBox.SelectedIndex == 0 ||
+                         sourceTypeComboBox.SelectedItem.ToString() == sourceInfo.type)) ||
+                     // Always show folders
+                     sourceInfo.isFolder)
                 {
                     // Filter for specifically named data sources (as when called from Skyline File>Share)
                     if (_specificDataSourceFilter != null && !sourceInfo.isFolder)
@@ -653,9 +668,9 @@ namespace pwiz.Skyline.FileUI
             } 
 
             if (dirInfo == null)
-            {
-                if (directory is RemoteUrl)
                 {
+                if (directory is RemoteUrl)
+            {
                     lookInComboBox.SelectedIndex = _remoteIndex;
                 }
                 else
@@ -736,6 +751,15 @@ namespace pwiz.Skyline.FileUI
             lookInComboBox.DropDownHeight = lookInComboBox.Items.Count * 18 + 2;
 
             lookInComboBox.ResumeLayout();
+        }
+
+        /// <summary>
+        /// Allows override in subclasses
+        /// </summary>
+        /// <param name="remoteAccount"></param>
+        protected virtual void CreateNewRemoteSession(RemoteAccount remoteAccount)
+        {
+            RemoteSession = RemoteSession.CreateSession(remoteAccount);
         }
 
         private void sourcePathTextBox_KeyUp( object sender, KeyEventArgs e )

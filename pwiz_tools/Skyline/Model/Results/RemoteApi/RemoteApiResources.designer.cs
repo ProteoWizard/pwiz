@@ -77,5 +77,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi {
                 return ResourceManager.GetString("Unifi_Label_Unifi", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to waters_connect.
+        /// </summary>
+        public static string WatersConnect_Label_Waters_Connect {
+            get {
+                return ResourceManager.GetString("WatersConnect_Label_Waters_Connect", resourceCulture);
+            }
+        }
     }
 }

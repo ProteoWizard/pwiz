@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Unifi
         
         public override bool IsWatersLockmassCorrectionCandidate()
         {
-            return true;
+            return false;
         }
 
         public override RemoteAccountType AccountType

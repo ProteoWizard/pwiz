@@ -123,4 +123,8 @@
   <data name="Unifi_Label_Unifi" xml:space="preserve">
     <value>UNIFI</value>
   </data>
+  <data name="WatersConnect_Label_Waters_Connect" xml:space="preserve">
+    <value>waters_connect</value>
+    <comment>Lower case is intentional branding.</comment>
+  </data>
 </root>

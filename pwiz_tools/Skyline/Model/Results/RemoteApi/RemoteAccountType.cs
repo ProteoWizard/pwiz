@@ -19,6 +19,7 @@
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
 {
@@ -26,7 +27,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
     {
         public static readonly RemoteAccountType UNIFI = new Unifi();
         public static readonly RemoteAccountType ARDIA = new Ardia();
-        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {UNIFI, ARDIA});
+        public static readonly RemoteAccountType WATERS_CONNECT = new WatersConnect();
+        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {ARDIA, UNIFI, WATERS_CONNECT});
 
         public abstract string Name { get;  }
         public abstract string Label { get; }
@@ -80,6 +82,29 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             public override RemoteAccount GetEmptyAccount()
             {
                 return new ArdiaAccount(string.Empty, null, null);
+            }
+        }
+
+        private class WatersConnect : RemoteAccountType
+        {
+            public override RemoteUrl GetEmptyUrl()
+            {
+                return WatersConnectUrl.Empty;
+            }
+
+            public override string Label
+            {
+                get { return RemoteApiResources.WatersConnect_Label_Waters_Connect; }
+            }
+
+            public override string Name
+            {
+                get { return @"waters_connect"; }
+            }
+
+            public override RemoteAccount GetEmptyAccount()
+            {
+                return new WatersConnectAccount(@"https://devconnect.waters.com:48444", null, null);
             }
         }
     }

@@ -198,7 +198,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_FUSION_LUMOS = "Thermo Fusion Lumos";
         public const string THERMO_ECLIPSE = "Thermo Eclipse";
         public const string WATERS = "Waters";
-        public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
+        public const string WATERS_XEVO_TQ_MASS_LYNX = "Waters TQ (MassLynx)"; // Export to local file
+        public const string WATERS_XEVO_TQ_WATERS_CONNECT = "Waters TQ (waters_connect)";  // Export to Remote Waters Connect
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
         public const string WATERS_SYNAPT_TRAP = "Waters Synapt (trap)";
         public const string WATERS_SYNAPT_TRANSFER = "Waters Synapt (transfer)";
@@ -233,8 +234,9 @@ namespace pwiz.Skyline.Model
                 THERMO_ECLIPSE,
                 THERMO_FUSION,
                 THERMO_FUSION_LUMOS,
-                WATERS_XEVO_TQ,
-                WATERS_QUATTRO_PREMIER,
+                WATERS_XEVO_TQ_MASS_LYNX,
+                WATERS_XEVO_TQ_WATERS_CONNECT,
+                WATERS_QUATTRO_PREMIER
             };
 
         public static readonly string[] TRANSITION_LIST_TYPES =
@@ -289,7 +291,7 @@ namespace pwiz.Skyline.Model
                                        {THERMO_FUSION, EXT_THERMO},
                                        {THERMO_FUSION_LUMOS, EXT_THERMO},
                                        {THERMO_STELLAR, EXT_THERMO},
-                                       {WATERS_XEVO_TQ, EXT_WATERS},
+                                       {WATERS_XEVO_TQ_MASS_LYNX, EXT_WATERS},
                                        {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
         }
@@ -393,7 +395,8 @@ namespace pwiz.Skyline.Model
         public static bool IsSingleWindowInstrumentType(string type)
         {
             return Equals(type, WATERS) ||
-                   Equals(type, WATERS_XEVO_TQ) ||
+                   Equals(type, WATERS_XEVO_TQ_MASS_LYNX) ||
+                   Equals(type, WATERS_XEVO_TQ_WATERS_CONNECT) ||
                    Equals(type, WATERS_QUATTRO_PREMIER);
         }
     }
@@ -575,7 +578,7 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.WATERS:
                 case ExportInstrumentType.WATERS_SYNAPT_TRAP:
                 case ExportInstrumentType.WATERS_SYNAPT_TRANSFER:
-                case ExportInstrumentType.WATERS_XEVO_TQ:
+                case ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX:
                 case ExportInstrumentType.WATERS_XEVO_QTOF:
                     if (type == ExportFileType.List)
                         return ExportWatersCsv(doc, path);
@@ -583,6 +586,9 @@ namespace pwiz.Skyline.Model
                         return ExportWatersIsolationList(doc, path, template, instrumentType);
                     else
                         return ExportWatersMethod(doc, path, template);
+                case ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT:
+                    //  TODO  ZZZ   NEED To ADD code here
+                    throw new InvalidOperationException(("NO Support yet for: ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT"));
                 case ExportInstrumentType.WATERS_QUATTRO_PREMIER:
                     return ExportWatersQMethod(doc, path, template);
                 default:
@@ -4892,11 +4898,16 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            if(fileName != null)
-                EnsureLibraries();
+            //  TODO   ZZZ   MUST Uncomment
+
+            // if(fileName != null)
+            //     EnsureLibraries();
 
             if (!InitExport(fileName, progressMonitor))
+            {
                 return;
+            }
+
 
             var argv = new List<string>();
             if (Equals(MethodInstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
