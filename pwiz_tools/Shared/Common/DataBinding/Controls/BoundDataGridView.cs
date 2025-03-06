@@ -126,15 +126,15 @@ namespace pwiz.Common.DataBinding.Controls
                     for (int i = 0; i < newItemProperties.Count; i++)
                     {
                         var propertyDescriptor = newItemProperties[i];
-                        if (columnsToHide.Contains(propertyDescriptor.Name))
-                        {
-                            continue;
-                        }
 
                         var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
                         if (null != column)
                         {
                             newColumns.Add(column);
+                            if (columnsToHide.Contains(propertyDescriptor.Name))
+                            {
+                                column.Visible = false;
+                            }
                         }
                     }
 

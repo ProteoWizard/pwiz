@@ -26,7 +26,6 @@ namespace pwiz.Common.DataBinding
     public class ColumnFormats
     {
         private Dictionary<ColumnId, ColumnFormat> _formats = new Dictionary<ColumnId, ColumnFormat>();
-
         public void SetFormat(ColumnId columnId, ColumnFormat columnFormat)
         {
             if (columnFormat.IsEmpty)

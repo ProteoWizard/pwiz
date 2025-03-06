@@ -826,7 +826,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
             // If columns are frozen we size the property column based on visible width
             var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && col.Visible)
                 .Sum(col =>
                 {
                     if (IsMainGridFrozen())
@@ -862,23 +862,21 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var replicateTotalWidthMap = GetMainGridReplicateColumnWidths(replicatePivotColumns);
             var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
-                .ToLookup(col => col.DataPropertyName);
+                .ToDictionary(col => col.DataPropertyName);
             foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
             {
                 var replicateColumnsRounder = new AdjustingRounder();
                 DataGridViewColumn lastColumn = null;
                 foreach (var column in grouping)
                 {
-                    boundColumns[column.Name].ForEach(dataGridViewColumn =>
+                    if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
                     {
-                        if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
-                        {
-                            var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
-                            var widthToAdd = (int)replicateColumnsRounder.Round(replicatePivotDataGridView.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
-                            dataGridViewColumn.Width = widthToAdd;
-                            lastColumn = dataGridViewColumn;
-                        }
-                    });
+                        var dataGridViewColumn = boundColumns[column.Name];
+                        var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
+                        var widthToAdd = (int)replicateColumnsRounder.Round(replicatePivotDataGridView.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
+                        dataGridViewColumn.Width = widthToAdd;
+                        lastColumn = dataGridViewColumn;
+                    }
                 }
                 if (lastColumn != null)
                 {
@@ -932,11 +930,12 @@ namespace pwiz.Skyline.Controls.Databinding
         private Dictionary<string, int> GetMainGridReplicateColumnWidths(ReplicatePivotColumns replicatePivotColumns)
         {
             var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
-                .ToLookup(col => col.DataPropertyName);
+                .Where(col => col.Visible)
+                .ToDictionary(col => col.DataPropertyName);
             var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
                 .ToDictionary(
                     kvp => kvp.Key.ReplicateName,
-                    kvp => kvp.Sum(column => boundColumns[column.Name].Sum(col => col.Width)));
+                    kvp => kvp.Where(column => boundColumns.ContainsKey(column.Name)).Sum(column => boundColumns[column.Name].Width));
             return replicateTotalWidthMap;
         }
 
@@ -965,7 +964,7 @@ namespace pwiz.Skyline.Controls.Databinding
             var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
                 .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
             var nonReplicateColumnsWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && col.Visible)
                 .Sum(col => col.Width);
             var columnWidthOffset = nonReplicateColumnsWidth - colReplicateProperty.Width;
             var offsetScrollPosition = scrollPosition - columnWidthOffset;
@@ -984,7 +983,9 @@ namespace pwiz.Skyline.Controls.Databinding
             replicatePivotDataGridView.Columns.Add(colReplicateProperty);
 
             var rowPropertyPaths = new List<PropertyPath>();
-            var rowCellTemplates = new Dictionary<ColumnPropertyDescriptor, DataGridViewCell>();
+            var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
+                .ToDictionary(col => col.DataPropertyName);
+
             // Iterate through item properties to create columns and rows
             foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
             {
@@ -1022,12 +1023,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
                         .FirstOrDefault(v => v != null);
 
-                    // Set the cell value for the replicate column
-                    if (!rowCellTemplates.ContainsKey(column))
-                    {
-                        rowCellTemplates[column] = bindingListSource.ViewContext.CreateGridViewColumn(column).CellTemplate;
-                    }
-                    var cell = (DataGridViewCell)rowCellTemplates[column].Clone();
+                    var cell = (DataGridViewCell)boundColumns[column.Name].CellTemplate.Clone();
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName] = cell;
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Value = value;
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
