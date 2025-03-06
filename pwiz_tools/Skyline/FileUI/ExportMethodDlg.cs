@@ -330,13 +330,13 @@ namespace pwiz.Skyline.FileUI
 
             var dllFinder = new ThermoDllFinder();
             var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
-            if (thermoSoftwareInfo?.InstrumentType == null)
+            if (thermoSoftwareInfo.InstrumentType == null)
             {
                 if (!silentMode)
                 {
-                    MessageDlg.Show(this,
-                        ModelResources
-                            .ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+                    MessageDlg.Show(this, TextUtil.LineSeparate(
+                        ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_,
+                        thermoSoftwareInfo.FailureReason));
                 }
                 return null;
             }

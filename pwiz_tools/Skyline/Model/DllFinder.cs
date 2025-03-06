@@ -24,6 +24,9 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -130,30 +133,28 @@ namespace pwiz.Skyline.Model
 
         public IDllFinderServices Services { get; }
 
-        // ReSharper disable LocalizableElement
-        private const string ROOT_KEY_PATH = @"SOFTWARE\Wow6432Node\Thermo Instruments\TNG";
+        public const string ROOT_KEY_PATH = @"SOFTWARE\Wow6432Node\Thermo Instruments\TNG";
 
         private static readonly string[] DEPENDENCY_LIBRARIES =
         {
-            "Thermo.TNG.MethodXMLFactory.dll",
-            "Thermo.TNG.MethodXMLInterface.dll"
+            @"Thermo.TNG.MethodXMLFactory.dll",
+            @"Thermo.TNG.MethodXMLInterface.dll"
         };
 
         private static readonly string[] OPTIONAL_DEPENDENCY_LIBRARIES =
         {
-            "Thermo.TNG.MethodXMLInterface2.dll"
+            @"Thermo.TNG.MethodXMLInterface2.dll"
         };
-        // ReSharper restore LocalizableElement
 
         public void EnsureDlls()
         {
             // ReSharper disable ConstantNullCoalescingCondition
-            string instrumentSoftwarePath = GetSoftwareInfo()?.Path;
-            if (instrumentSoftwarePath == null)
+            var info = GetSoftwareInfo();
+            if (info.Path == null)
             {
                 // If all the required libraries exist, then continue even if Thermo installation is gone.
                 if (!ContainsDependencyLibraries(DestinationDir))
-                    throw new IOException(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+                    throw new IOException(TextUtil.LineSeparate(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_, info.FailureReason));
                 return;
             }
 
@@ -161,7 +162,7 @@ namespace pwiz.Skyline.Model
             foreach (var dllDependency in AllDependencyLibraries)
             {
                 string library = dllDependency.DllFileName;
-                string srcFile = Path.Combine(instrumentSoftwarePath, library);
+                string srcFile = Path.Combine(info.Path, library);
                 string destFile = Path.Combine(DestinationDir, library);
                 bool srcExists = Services.Exists(srcFile);
                 if (!srcExists)
@@ -187,7 +188,12 @@ namespace pwiz.Skyline.Model
 
         public bool ContainsDependencyLibraries(string dir)
         {
-            return DEPENDENCY_LIBRARIES.All(libraryName => Services.Exists(Path.Combine(dir, libraryName)));
+            return MissingDependencyLibraries(dir).IsNullOrEmpty();
+        }
+
+        public IEnumerable<string> MissingDependencyLibraries(string dir)
+        {
+            return DEPENDENCY_LIBRARIES.Where(libraryName => !Services.Exists(Path.Combine(dir, libraryName)));
         }
 
         public static IEnumerable<DllDependency> AllDependencyLibraries
@@ -206,33 +212,38 @@ namespace pwiz.Skyline.Model
             public string Path { get; set; }
             public string InstrumentType { get; set; }
             public double Version { get; set; }
+            public string FailureReason { get; set; }
         }
 
         public SoftwareInfo GetSoftwareInfo()
         {
             try
             {
-                // CONSIDER: Might be worth breaking this up to provide more helpful error messages
                 using var tngKey = Services.GetRootKey();
                 return GetSoftwareInfo(tngKey);
             }
-            catch
+            catch (Exception x)
             {
-                return null;
+                return new SoftwareInfo { FailureReason = x.ToString() };
             }
         }
 
         private SoftwareInfo GetSoftwareInfo(IDisposable tngKey)
         {
+            var info = new SoftwareInfo();
             if (tngKey == null)
-                return null;
+            {
+                info.FailureReason = string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_The_key__0__was_not_found_in_the_Windows_registry_, ROOT_KEY_PATH);
+                return info;
+            }
 
-            SoftwareInfo info = new SoftwareInfo();
+            var listMachineNames = new List<string>();
             foreach (var subKeyName in Services.GetSubKeyNames(tngKey))
             {
                 if (Equals(subKeyName, @"DataAccess"))
                     continue;
 
+                listMachineNames.Add(subKeyName);
                 using var machineKey = Services.OpenSubKey(tngKey, subKeyName);
                 double? version;
                 using var versionKey = GetVersionSubKey(machineKey, out version);
@@ -242,7 +253,17 @@ namespace pwiz.Skyline.Model
 
                 // If the path for the key does not contain the necessary DLLs keep looking
                 if (!ContainsDependencyLibraries(keyPath.Path))
+                {
+                    // If no other path found yet, note the missing DLLs as the failure reason
+                    if (info.Path == null)
+                    {
+                        info.FailureReason = TextUtil.LineSeparate(
+                            string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_missing_required_files_,
+                                keyPath.Path, subKeyName),
+                            TextUtil.LineSeparate(MissingDependencyLibraries(keyPath.Path)));
+                    }
                     continue;
+                }
                 var infoForKey = new SoftwareInfo
                     { Path = keyPath.Path, InstrumentType = subKeyName, Version = version.Value };
                 // Return the first full installation with the DLLs
@@ -251,6 +272,12 @@ namespace pwiz.Skyline.Model
                 // Otherwise, if the current best path is null, use this one
                 if (info.Path == null)
                     info = infoForKey;
+            }
+
+            if (info.Path == null && info.FailureReason == null)
+            {
+                info.FailureReason = TextUtil.LineSeparate(string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath, ROOT_KEY_PATH),
+                    TextUtil.LineSeparate(listMachineNames));
             }
 
             return info;

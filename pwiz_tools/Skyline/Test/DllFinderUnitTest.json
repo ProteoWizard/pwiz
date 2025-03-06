@@ -23,7 +23,7 @@
       }
     ],
     "ExpectedInstrumentType": "OrbitrapAstral",
-    "ExpectedVersion":  4.3
+    "ExpectedVersion": 4.3
   },
   {
     "TestName": "ThermoDllFinder finds all required DLLs are up to date",
@@ -317,7 +317,8 @@
       {
         "Path": "C:\\Program Files\\Skyline\\Method\\Thermo\\Thermo.TNG.MethodXMLInterface.dll"
       }
-    ]
+    ],
+    "ExpectFailureReason": 0
   },
   {
     "TestName": "ThermoDllFinder no installation and missing required DLL",
@@ -327,7 +328,42 @@
         "Path": "C:\\Program Files\\Skyline\\Method\\Thermo\\Thermo.TNG.MethodXMLFactory.dll"
       }
     ],
-    "ExpectException": 1
+    "RegistrySubKeys": [],
+    "ExpectException": 1,
+    "ExpectFailureReason": 1
+  },
+  {
+    "TestName": "ThermoDllFinder no installation complex subkeys and missing required DLLs",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
+    "Files": [],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapExploris480",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapExploris120",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3"
+          }
+        ]
+      },
+      {
+        "SubKeyName": "OrbitrapExplorisGC",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3"
+          }
+        ]
+      }
+    ],
+    "ExpectException": 1,
+    "ExpectFailureReason": 2
   },
   {
     "TestName": "ThermoDllFinder fails if required DLL missing",
@@ -349,7 +385,8 @@
         ]
       }
     ],
-    "ExpectException": 1  // used to be 2, but no longer possible to achieve 2
+    "ExpectException": 1,
+    "ExpectFailureReason": 3
   },
   {
     "TestName": "ThermoDllFinder fails without Skyline.exe path",

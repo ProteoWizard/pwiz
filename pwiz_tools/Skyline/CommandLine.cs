@@ -3998,10 +3998,11 @@ namespace pwiz.Skyline
                 {
                     var dllFinder = new ThermoDllFinder();
                     var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
-                    if (thermoSoftwareInfo?.InstrumentType == null)
+                    if (thermoSoftwareInfo.InstrumentType == null)
                     {
                         _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_,
                             ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_));
+                        _out.WriteLine(thermoSoftwareInfo.FailureReason);
                         return false;
                     }
                     // If not generally exporting a Thermo method, and the instrument type

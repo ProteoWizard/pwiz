@@ -1230,9 +1230,12 @@ namespace pwiz.Skyline.Model
         {
             Finder = new ThermoDllFinder();
             var instrumentInfo = Finder.GetSoftwareInfo();
-            string instrumentType = instrumentInfo?.InstrumentType;
-            if (string.IsNullOrEmpty(instrumentType))
-                throw new IOException(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
+            string instrumentType = instrumentInfo.InstrumentType;
+            if (instrumentType == null)
+            {
+                throw new IOException(TextUtil.LineSeparate(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_,
+                    instrumentInfo.FailureReason));
+            }
             if (!Equals(expectedInstrumentType, instrumentType))
             {
                 throw new IOException(string.Format(

@@ -76,18 +76,23 @@ namespace pwiz.SkylineTest
             var testServices = new TestDllFinderServices(testCase);
 
             var finder = new ThermoDllFinder(testServices); // May throw
-            finder.EnsureDlls();    // May throw
-
-            VerifyCopiedDlls(testCase, finder, testServices);
 
             var softwareInfo = finder.GetSoftwareInfo();
             Assert.AreEqual(testCase.ExpectedInstrumentType, softwareInfo.InstrumentType);
             Assert.AreEqual(testCase.ExpectedVersion, softwareInfo.Version);
+            if (testCase.ExpectFailureReason.HasValue)
+            {
+                Assert.AreEqual(GetFailureMessage(testCase.ExpectFailureReason.Value), softwareInfo.FailureReason);
+            }
             if (testCase.ExpectedCopyCount > 0)
             {
                 Assert.IsNotNull(softwareInfo.Path);
                 Assert.IsTrue(testServices.DirectoryExists(softwareInfo.Path), $"The directory {softwareInfo.Path} does not exist");
             }
+
+            finder.EnsureDlls();    // May throw
+
+            VerifyCopiedDlls(testCase, finder, testServices);
         }
 
         private string GetExceptionMessage(int testCaseExpectException)
@@ -98,15 +103,29 @@ namespace pwiz.SkylineTest
                     return ModelResources.ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_;
                 case 1:
                     return ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_;
-                case 2:
-                    // CONSIDER: Only need to test once, but this feels like it should be more flexible
-                    return string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_,
-                        "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll");
             }
 
             return null;
         }
 
+        private string GetFailureMessage(int testCaseExpectException)
+        {
+            switch (testCaseExpectException)
+            {
+                case 0:
+                    return string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_The_key__0__was_not_found_in_the_Windows_registry_, ThermoDllFinder.ROOT_KEY_PATH);
+                case 1:
+                    return TextUtil.LineSeparate(string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath, ThermoDllFinder.ROOT_KEY_PATH), string.Empty);
+                case 2:
+                    return TextUtil.LineSeparate(string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath, ThermoDllFinder.ROOT_KEY_PATH), 
+                        TextUtil.LineSeparate("OrbitrapExploris480", "OrbitrapExploris120", "OrbitrapExplorisGC"));
+                case 3:
+                    return TextUtil.LineSeparate(string.Format(ModelResources.ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_missing_required_files_,"C:\\Thermo\\instrumentSoftwarePath", "OrbitrapAstral"),
+                        "Thermo.TNG.MethodXMLInterface.dll");
+            }
+
+            return null;
+        }
         private void VerifyCopiedDlls(ThermoDllFinderTestCase testCase, ThermoDllFinder finder,
             TestDllFinderServices testServices)
         {
@@ -172,7 +191,8 @@ namespace pwiz.SkylineTest
                     .ToDictionary(f => f.Path, StringComparer.OrdinalIgnoreCase);
 
                 // Create the root registry key structure in memory
-                _rootKey = new TestRegistryKey(string.Empty, testCase.RegistrySubKeys ?? new List<RegistrySubKeyData>());
+                if (testCase.RegistrySubKeys != null)
+                    _rootKey = new TestRegistryKey(string.Empty, testCase.RegistrySubKeys);
             }
 
             public string GetSkylineExePath()
@@ -335,6 +355,7 @@ namespace pwiz.SkylineTest
             public List<FileData> Files { get; set; }
             public List<RegistrySubKeyData> RegistrySubKeys { get; set; }
             public int? ExpectException { get; set; }
+            public int? ExpectFailureReason { get; set; }
             public int? ExpectedCopyCount { get; set; }
             public string ExpectedInstrumentType { get; set; }
             public double ExpectedVersion { get; set; }

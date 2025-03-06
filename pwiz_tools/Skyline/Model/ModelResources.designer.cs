@@ -1990,6 +1990,37 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to find a machine name key with a valid ProgramPath value in the
+        ///in the Windows registry key &apos;{0}&apos; from:.
+        /// </summary>
+        public static string ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath {
+            get {
+                return ResourceManager.GetString("ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_Pr" +
+                        "ogramPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The key &apos;{0}&apos; was not found in the Windows registry..
+        /// </summary>
+        public static string ThermoDllFinder_GetSoftwareInfo_The_key__0__was_not_found_in_the_Windows_registry_ {
+            get {
+                return ResourceManager.GetString("ThermoDllFinder_GetSoftwareInfo_The_key__0__was_not_found_in_the_Windows_registry" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ProgramPath {0} for the instrument {1} is missing required files:.
+        /// </summary>
+        public static string ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_missing_required_files_ {
+            get {
+                return ResourceManager.GetString("ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_mis" +
+                        "sing_required_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to find a valid Thermo instrument installation..
         /// </summary>
         public static string ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_ {
