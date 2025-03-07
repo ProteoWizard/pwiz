@@ -51,6 +51,8 @@ namespace pwiz.Common.SystemUtil
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
 
+        public bool EnableImmediateLog { get; set; }
+
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
         /// but we dont want that output to be shown to the user when we display the output
@@ -118,7 +120,7 @@ namespace pwiz.Common.SystemUtil
             {
                 try
                 {
-                    proc.StandardInput.Write(stdin);
+                    proc.StandardInput.WriteLine(stdin);
                 }
                 finally
                 {
@@ -153,6 +155,9 @@ namespace pwiz.Common.SystemUtil
                 string line;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
+                    if (EnableImmediateLog)
+                        Messages.WriteAsyncUserMessage(line);
+
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                         writer.WriteLine(line);
 
@@ -198,7 +203,11 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            status = status.ChangeMessage(line);
+                            if (EnableImmediateLog)
+                                status = status.ChangeMessage(Resources.ProcessRunner_Run_Working_);
+                            else 
+                                status = status.ChangeMessage(line);
+                            
                             progress.UpdateProgress(status);
                         }
                     }
