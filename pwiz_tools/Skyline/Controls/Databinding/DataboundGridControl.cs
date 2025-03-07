@@ -1027,7 +1027,6 @@ namespace pwiz.Skyline.Controls.Databinding
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName] = cell;
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Value = value;
                     replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
-                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ValueType = column.PropertyType;
                     if (column.IsReadOnly)
                     {
                         replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Style.BackColor = readOnlyCellColor;
