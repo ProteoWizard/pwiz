@@ -1036,6 +1036,23 @@ namespace pwiz.Skyline.Controls.Databinding
             
         }
 
+        private void UpdateMainGridDefaultFrozenState()
+        {
+            var firstColumn = boundDataGridView.Columns
+                .Cast<DataGridViewColumn>()
+                .First(col => col.Visible);
+            var firstColumnId = ColumnId.GetColumnId(GetPropertyDescriptor(firstColumn));
+            var firstColumnFormat = bindingListSource.ColumnFormats.GetFormat(firstColumnId);
+
+            // We check for false because we only want to enable the column if a state has not been set.
+            if (firstColumnFormat.Frozen != false)
+            {
+                var updatedColumnFormat = firstColumnFormat.ChangeFrozen(true);
+                BindingListSource.ColumnFormats.SetFormat(firstColumnId, updatedColumnFormat);
+            }
+            
+        }
+
         private void ResizePivotByReplicateGridToFit()
         {
             int rowLimit = 10;
@@ -1157,6 +1174,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     replicatePivotDataGridView.Show();
                     dataGridSplitContainer.Panel1Collapsed = false;
                     PopulateReplicateDataGridView(replicatePivotColumns);
+                    UpdateMainGridDefaultFrozenState();
                     ResizePivotByReplicateGridToFit();
                     AlignPivotByReplicateGridColumns(replicatePivotColumns);
                 }
