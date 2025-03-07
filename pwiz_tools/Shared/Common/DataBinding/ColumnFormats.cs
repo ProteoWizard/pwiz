@@ -81,7 +81,7 @@ namespace pwiz.Common.DataBinding
 
         public bool? Frozen { get; private set; }
 
-        public ColumnFormat SetFrozen(bool? frozen)
+        public ColumnFormat ChangeFrozen(bool? frozen)
         {
             return ChangeProp(ImClone(this), im => im.Frozen = frozen);
         }

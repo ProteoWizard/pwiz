@@ -510,7 +510,7 @@ namespace pwiz.Common.DataBinding.Controls
 
                 if (shouldFreeze || currentColumnFormat.Frozen != null)
                 {
-                    var updatedColumnFormat = currentColumnFormat.SetFrozen(shouldFreeze);
+                    var updatedColumnFormat = currentColumnFormat.ChangeFrozen(shouldFreeze);
                     BindingListSource.ColumnFormats.SetFormat(currentColumnId, updatedColumnFormat);
                 }
 
