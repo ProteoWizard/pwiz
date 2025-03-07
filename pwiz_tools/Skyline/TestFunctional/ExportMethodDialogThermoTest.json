@@ -26,7 +26,7 @@
     "ExpectedVersion": 4.3
   },
   {
-    "TestName": "Unknown instrument succeeds",
+    "TestName": "Unknown instrument",
     "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
     "Files": [
       {

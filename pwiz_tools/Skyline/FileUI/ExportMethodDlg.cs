@@ -261,11 +261,24 @@ namespace pwiz.Skyline.FileUI
             UpdateInstrumentControls(MethodType);
         }
 
+        /// <summary>
+        /// Sets InstrumentType to a passed in value if it is valid based on
+        /// a list of types passed in and installed software on the local computer.
+        /// </summary>
+        /// <param name="instrumentType">An instrument type which may be long form, e.g. "Thermo Astral"</param>
+        /// <param name="listTypes">The list of type names used in the instrument type combo box</param>
         private void SelectInstrumentTypeIfValid(string instrumentType, string[] listTypes)
         {
+            // First get a valid type to select based on the starting type. This may convert
+            // a type like "Thermo Astral" stored in user.config to just "Thermo"
             string selectionType = GetSelectedInstrument(instrumentType);
-            if (listTypes.Contains(selectionType) && GetInstrumentTypeFromSelection(selectionType, true) != null)
-                InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(instrumentType));
+            // If the resulting type is in the allowed list of types
+            if (listTypes.Contains(selectionType))
+            {
+                // Set the instrument type to a validated installed name which will set the combo box
+                // selection using GetSelectedInstrument as above.
+                InstrumentType ??= GetInstrumentTypeFromSelection(selectionType, true);
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -307,22 +320,52 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public string InstrumentTypeSelectedText => comboInstrument.SelectedItem.ToString();
+
+        /// <summary>
+        /// Versions prior to March 7, 2025 and the export list types, user.config may have
+        /// saved explicit Thermo instrument types like "Thermo Stellar". For method export
+        /// we want to select just "Thermo" for these types and have Skyline figure out the
+        /// appropriate instrument type based on the Windows registry and DLLs on the disk.
+        /// </summary>
+        /// <param name="instrumentType">A saved instrument type name</param>
+        /// <returns>Either the saved instrument type name unchanged or for a Thermo method
+        /// export to an instrument supporting TNG XML API, then just "Thermo"</returns>
         private string GetSelectedInstrument(string instrumentType)
         {
-            // If this method export and Thermo instrument type that supports TNG XML API,
+            // If this is method export and a Thermo instrument type that supports TNG XML API,
             // then the combo box selection should be just "Thermo"
             return _fileType == ExportFileType.Method &&
-                   instrumentType != null &&
-                   ExportInstrumentType.ThermoInstallationType(instrumentType) != null
+                   instrumentType != null && ExportInstrumentType.ThermoInstallationType(instrumentType) != null
                 ? ExportInstrumentType.THERMO
                 : instrumentType;
         }
 
+        /// <summary>
+        /// <para>Returns the long form of instrument type based on the selection in the instrument
+        /// type combo box. This only applies to "Thermo" in method export, where the full
+        /// instrument type name like "Thermo Astral" or "Thermo Stellar" is derived from
+        /// the Windows registry and files on disk.</para>
+        /// <para>This function will show a <see cref="MessageDlg"/> before returning null,
+        /// if the selection is "Thermo" but a valid installation for an explicit type cannot
+        /// be found.</para>
+        /// </summary>
+        /// <returns>A valid selection type or null if the passed in selection type is not valid.</returns>
         private string GetInstrumentTypeFromSelection()
         {
             return GetInstrumentTypeFromSelection(comboInstrument.SelectedItem.ToString(), false);
         }
 
+        /// <summary>
+        /// <para>Returns the long form of instrument type based a selection type string.
+        /// This only applies to "Thermo" in method export, where the full
+        /// instrument type name like "Thermo Astral" or "Thermo Stellar" is derived from
+        /// the Windows registry and files on disk.</para>
+        /// </summary>
+        /// <param name="selectionType">The starting selection type, which may be simply "Thermo" or any other instrument type</param>
+        /// <param name="silentMode">If false, this function will show a <see cref="MessageDlg"/> before returning null,
+        /// if the selection type is "Thermo" but a valid installation for an explicit type cannot be found.</param>
+        /// <returns>A valid selection type or null if the passed in selection type is not valid.</returns>
         private string GetInstrumentTypeFromSelection(string selectionType, bool silentMode)
         {
             if (_fileType != ExportFileType.Method || !Equals(selectionType, ExportInstrumentType.THERMO))

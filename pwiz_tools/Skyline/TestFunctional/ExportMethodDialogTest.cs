@@ -612,9 +612,40 @@ namespace pwiz.SkylineTestFunctional
                 // Should be set back to the first element in the list
                 RunUI(() => Assert.AreEqual(firstInstrumentType, exportMethodDlg.InstrumentType));
                 OkDialog(exportMethodDlg, exportMethodDlg.CancelDialog);
+
+                // Test instrument type restoring code
+                // Test failure silently selects the first element
+                Settings.Default.ExportInstrumentType = ExportInstrumentType.THERMO_ASTRAL;
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    dlg =>
+                    {
+                        Assert.AreEqual(firstInstrumentType, dlg.InstrumentType);
+                        dlg.CancelDialog();
+                    });
+                // Test a valid installation leaves "Thermo" selected
+                var testWithAstralSuccess = testsDllFinder[0];
+                ThermoDllFinder.DEFAULT_SERVICES = testWithAstralSuccess.DllFinderServices;
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    dlg =>
+                    {
+                        Assert.AreEqual(ExportInstrumentType.THERMO_ASTRAL, dlg.InstrumentType);
+                        Assert.AreEqual(ExportInstrumentType.THERMO, dlg.InstrumentTypeSelectedText);
+                        dlg.CancelDialog();
+                    });
+                // Test a valid installation with a different Thermo instrument type saved in user.config
+                // still starts with "Thermo" selected
+                Settings.Default.ExportInstrumentType = ExportInstrumentType.THERMO_STELLAR;
+                RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method),
+                    dlg =>
+                    {
+                        Assert.AreEqual(ExportInstrumentType.THERMO_ASTRAL, dlg.InstrumentType);
+                        Assert.AreEqual(ExportInstrumentType.THERMO, dlg.InstrumentTypeSelectedText);
+                        dlg.CancelDialog();
+                    });
             }
             finally
             {
+                Settings.Default.ExportInstrumentType = null;
                 ThermoDllFinder.DEFAULT_SERVICES = dllFinderServices;
             }
         }
