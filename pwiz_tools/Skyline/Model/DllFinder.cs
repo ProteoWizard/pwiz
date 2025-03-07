@@ -266,7 +266,7 @@ namespace pwiz.Skyline.Model
                 var infoForKey = new SoftwareInfo
                     { Path = keyPath.Path, InstrumentType = subKeyName, Version = version.Value };
                 // Return the first full installation with the DLLs
-                if (keyPath.IsFull)
+                if (keyPath.IsFullInstall)
                     return infoForKey;
                 // Otherwise, if the current best path is null, use this one
                 if (info.Path == null)
@@ -284,8 +284,8 @@ namespace pwiz.Skyline.Model
 
         private class ProgramPath
         {
-            public string Path;
-            public bool IsFull;
+            public string Path;         // ProgramPath registry value
+            public bool IsFullInstall;  // InstallType == "Full"
         }
 
         private ProgramPath GetMachineProgramPath(IDisposable versionKey)
@@ -297,7 +297,7 @@ namespace pwiz.Skyline.Model
                 return null;
             var installTypeObject = Services.GetValue(versionKey, @"InstallType");
             bool full = installTypeObject is @"Full";
-            return new ProgramPath { Path = programPath, IsFull = full };
+            return new ProgramPath { Path = programPath, IsFullInstall = full };
         }
 
         private IDisposable GetVersionSubKey(IDisposable parentKey, out double? version)
