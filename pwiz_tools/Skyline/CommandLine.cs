@@ -4012,7 +4012,8 @@ namespace pwiz.Skyline
                         var instrumentType = ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
                         if (instrumentType == null)
                         {
-                            _out.WriteLine(ModelResources.CommandLine_ExportInstrumentFile_Error__Unknown_Thermo_instrument_type___0___installed_, thermoSoftwareInfo.InstrumentType);
+                            _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_, 
+                                string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_, thermoSoftwareInfo.InstrumentType)));
                             return false;
                         }
 

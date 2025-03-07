@@ -337,16 +337,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: Unknown Thermo instrument type &apos;{0}&apos; installed..
-        /// </summary>
-        public static string CommandLine_ExportInstrumentFile_Error__Unknown_Thermo_instrument_type___0___installed_ {
-            get {
-                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_Error__Unknown_Thermo_instrument_type___0___inst" +
-                        "alled_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Use the instrument type &apos;Thermo&apos; to export a method with the installed software..
         /// </summary>
         public static string CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_ {
@@ -2057,6 +2047,16 @@ namespace pwiz.Skyline.Model {
             get {
                 return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be" +
                         "_installed_correctly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Thermo instrument type &apos;{0}&apos; installed..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___insta" +
+                        "lled_", resourceCulture);
             }
         }
         

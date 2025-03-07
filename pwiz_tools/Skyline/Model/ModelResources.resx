@@ -824,9 +824,6 @@
   <data name="ThermoMassListExporter_EnsureLibraries_The_installed_Thermo_instrument_type___0___does_not_match_the_requested_output_method_type___1___" xml:space="preserve">
       <value>The installed Thermo instrument type '{0}' does not match the requested output method type '{1}'.</value>
   </data>
-  <data name="CommandLine_ExportInstrumentFile_Error__Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
-      <value>Error: Unknown Thermo instrument type '{0}' installed.</value>
-  </data>
   <data name="CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___" xml:space="preserve">
       <value>Error: The specified instrument type '{0}' does not match the installed software '{1}'.</value>
   </data>
@@ -842,5 +839,8 @@
   <data name="ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath" xml:space="preserve">
       <value>Failed to find a machine name key with a valid ProgramPath value in the
 in the Windows registry key '{0}' from:</value>
+  </data>
+  <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
+      <value>Unknown Thermo instrument type '{0}' installed.</value>
   </data>
 </root>

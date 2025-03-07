@@ -341,7 +341,14 @@ namespace pwiz.Skyline.FileUI
                 return null;
             }
 
-            return ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
+            string thermoType = ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
+            if (thermoType == null && !silentMode)
+            {
+                MessageDlg.Show(this, string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_,
+                    thermoSoftwareInfo.InstrumentType));
+            }
+
+            return thermoType;
         }
 
         public bool IsSingleWindowInstrument
