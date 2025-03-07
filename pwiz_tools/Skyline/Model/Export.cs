@@ -1243,8 +1243,6 @@ namespace pwiz.Skyline.Model
                     instrumentType, expectedInstrumentType));
             }
             return true;
-
-            string failureMessage = ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_;
         }
     }
 
