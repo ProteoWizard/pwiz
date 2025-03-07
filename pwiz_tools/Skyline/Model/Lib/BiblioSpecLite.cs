@@ -672,33 +672,12 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
-                ILookup<int, KeyValuePair<int, double>> retentionTimesBySpectraIdAndFileId = null;
-                ILookup<int, KeyValuePair<int, IonMobilityAndCCS>> driftTimesBySpectraIdAndFileId = null;
-                ILookup<int, KeyValuePair<int, ExplicitPeakBounds>> peakBoundsBySpectraIdAndFileId = null;
                 var scoreTypesById = new Dictionary<int, string>();
                 var scoreTypesByName = new Dictionary<string, int>();
                 var proteinsBySpectraID = ProteinsBySpectraID();
 
                 if (schemaVer >= 1)
                 {
-                    if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes")) // Only a filtered library will have this table
-                    {
-                        using (var cmd = _sqliteConnection.Connection.CreateCommand())
-                        {
-                            cmd.CommandText = @"SELECT * FROM RetentionTimes";
-                            using (var dataReader = cmd.ExecuteReader())
-                            {
-                                var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
-                                retentionTimeReader.ReadAllRows();
-                                retentionTimesBySpectraIdAndFileId =
-                                    retentionTimeReader.SpectaIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                                driftTimesBySpectraIdAndFileId =
-                                    retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                                peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Key,
-                                    kvp => kvp.Value);
-                            }
-                        }
-                    }
                     if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"ScoreTypes"))
                     {
                         select.CommandText = @"SELECT id, scoreType FROM ScoreTypes";
@@ -810,21 +789,6 @@ namespace pwiz.Skyline.Model.Lib
                         // Newer versions that handle small molecules may reasonably use negative charges.
                         if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             continue;
-                        var retentionTimesByFileId = default(IndexedRetentionTimes);
-                        if (retentionTimesBySpectraIdAndFileId != null)
-                        {
-                            retentionTimesByFileId = new IndexedRetentionTimes(retentionTimesBySpectraIdAndFileId[id]);
-                        }
-                        var driftTimesByFileId = default(IndexedIonMobilities);
-                        if (driftTimesBySpectraIdAndFileId != null)
-                        {
-                            driftTimesByFileId = new IndexedIonMobilities(driftTimesBySpectraIdAndFileId[id]);
-                        }
-                        var peakBoundariesByFileId = ExplicitPeakBoundsDict<int>.EMPTY;
-                        if (peakBoundsBySpectraIdAndFileId != null)
-                        {
-                            peakBoundariesByFileId = new ExplicitPeakBoundsDict<int>(peakBoundsBySpectraIdAndFileId[id].Distinct());
-                        }
                         LibKey key;
                         if (isProteomic)
                         {
@@ -850,8 +814,7 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
 
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, protein,
-                                retentionTimesByFileId, driftTimesByFileId, peakBoundariesByFileId, score, scoreName));
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, protein, score, scoreName));
                         }
                     }
                 }
@@ -906,9 +869,6 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     outStream.Write(BitConverter.GetBytes(scoreType), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(info.Score ?? double.NaN), 0, sizeof(double));
-                    info.RetentionTimesByFileId.Write(outStream);
-                    info.IonMobilitiesByFileId.Write(outStream);
-                    WritePeakBoundaries(outStream, info.PeakBoundariesByFileId);
                 }
 
                 long sourcePosition = 0;
@@ -1183,13 +1143,43 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             score = null;
                         }
-                        var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
-                        var driftTimesByFileId = IndexedIonMobilities.Read(stream);
-                        ExplicitPeakBoundsDict<int> peakBoundaries =
-                            ReadPeakBoundaries(stream).ValueFromCache(valueCache);
-                        _anyExplicitPeakBounds = _anyExplicitPeakBounds || peakBoundaries.Count > 0;
-                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList,
-                            retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
+
+                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList, score: score, scoreType: scoreType); 
+                    }
+
+
+                    // Create a connection to the database from which the spectra will be read
+                    EnsureConnections(sm);
+
+                    if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes")) // Only a filtered library will have this table
+                    {
+                        using var cmd = _sqliteConnection.Connection.CreateCommand();
+                        cmd.CommandText = @"SELECT * FROM RetentionTimes";
+                        using var dataReader = cmd.ExecuteReader();
+                        var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
+                        retentionTimeReader.ReadAllRows();
+                        var retentionTimesBySpectraIdAndFileId =
+                            retentionTimeReader.SpectraIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                        var driftTimesBySpectraIdAndFileId =
+                            retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                        var peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Key,
+                            kvp => kvp.Value);
+                        for (int i = 0; i < libraryEntries.Length; i++)
+                        {
+                            var libraryEntry = libraryEntries[i];
+                            libraryEntry = libraryEntry.ChangeRetentionTimes(new IndexedRetentionTimes(retentionTimesBySpectraIdAndFileId[libraryEntry.Id]));
+                            libraryEntry = libraryEntry.ChangeIonMobilities(
+                                new IndexedIonMobilities(driftTimesBySpectraIdAndFileId[libraryEntry.Id]));
+                            var explicitPeakBoundDict = new ExplicitPeakBoundsDict<int>(
+                                peakBoundsBySpectraIdAndFileId[libraryEntry.Id].Distinct());
+                            if (explicitPeakBoundDict.Count > 0)
+                            {
+                                explicitPeakBoundDict = explicitPeakBoundDict.ValueFromCache(valueCache);
+                                _anyExplicitPeakBounds = true;
+                                libraryEntry = libraryEntry.ChangePeakBoundaries(explicitPeakBoundDict);
+                            }
+                            libraryEntries[i] = libraryEntry;
+                        }
                     }
 
                     // Checksum = checksum.ChecksumValue;
@@ -1197,8 +1187,6 @@ namespace pwiz.Skyline.Model.Lib
 
                     loader.UpdateProgress(status.Complete());
 
-                    // Create a connection to the database from which the spectra will be read
-                    EnsureConnections(sm);
                 }
 
                 return true;
@@ -1244,37 +1232,6 @@ namespace pwiz.Skyline.Model.Lib
                 string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath),
                 x.Message,
                 details);
-        }
-
-        private ExplicitPeakBoundsDict<int> ReadPeakBoundaries(Stream stream)
-        {
-            int peakBoundCount = PrimitiveArrays.ReadOneValue<int>(stream);
-            if (peakBoundCount == 0)
-            {
-                return ExplicitPeakBoundsDict<int>.EMPTY;
-            }
-            var peakBoundaryValues = new List<KeyValuePair<int, ExplicitPeakBounds>>();
-            for (int i = 0; i < peakBoundCount; i++)
-            {
-                int fileId = PrimitiveArrays.ReadOneValue<int>(stream);
-                float peakStart = PrimitiveArrays.ReadOneValue<float>(stream);
-                float peakEnd = PrimitiveArrays.ReadOneValue<float>(stream);
-                float score = PrimitiveArrays.ReadOneValue<float>(stream);
-                peakBoundaryValues.Add(new KeyValuePair<int, ExplicitPeakBounds>(fileId, new ExplicitPeakBounds(peakStart, peakEnd, score)));
-            }
-            return new ExplicitPeakBoundsDict<int>(peakBoundaryValues);
-        }
-
-        private void WritePeakBoundaries(Stream stream, ExplicitPeakBoundsDict<int> peakBoundaries)
-        {
-            PrimitiveArrays.WriteOneValue(stream, peakBoundaries.Count);
-            foreach (var entry in peakBoundaries)
-            {
-                PrimitiveArrays.WriteOneValue(stream, entry.Key);
-                PrimitiveArrays.WriteOneValue(stream, (float) entry.Value.StartTime);
-                PrimitiveArrays.WriteOneValue(stream, (float) entry.Value.EndTime);
-                PrimitiveArrays.WriteOneValue(stream, (float) entry.Value.Score);
-            }
         }
 
         public void WriteDebugMgf(string filepath, int? precision = null)
@@ -2400,7 +2357,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 PeakBoundaries = new List<KeyValuePair<int, KeyValuePair<int, ExplicitPeakBounds>>>();
                 SpectraIdFileIdIonMobilities = new List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>>();
-                SpectaIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
+                SpectraIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
                 _schemaVer = schemaVer;
                 _columnIndexes = new int?[(int) Column.MAX_COLUMN];
                 _reader = dataReader;
@@ -2415,7 +2372,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectaIdFileIdTimes { get; private set; }
+            public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectraIdFileIdTimes { get; private set; }
 
             // List of <RefSpectra Id, <FileId, ionMobility>>
             public List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>> SpectraIdFileIdIonMobilities { get; private set;
@@ -2441,7 +2398,7 @@ namespace pwiz.Skyline.Model.Lib
                     double? retentionTime = ReadRetentionTime();
                     if (retentionTime.HasValue)
                     {
-                        SpectaIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(refSpectraId.Value,
+                        SpectraIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(refSpectraId.Value,
                             new KeyValuePair<int, double>(spectrumSourceId.Value, retentionTime.Value)));
                     }
                     IonMobilityAndCCS ionMobilityInfo = ReadIonMobilityInfo();
@@ -2798,23 +2755,17 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public class BiblioLiteSpectrumInfo : ICachedSpectrumInfo
+    public class BiblioLiteSpectrumInfo : Immutable, ICachedSpectrumInfo
     {
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein,
-            IndexedRetentionTimes retentionTimesByFileId = default(IndexedRetentionTimes), 
-            IndexedIonMobilities ionMobilitiesByFileId = default(IndexedIonMobilities),
-            ExplicitPeakBoundsDict<int> peakBoundaries = null,
-            double? score = null, 
-            string scoreType = null)
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein, 
+            double? score = null, string scoreType = null)
         {
             Key = key;
             Copies = copies;
             NumPeaks = numPeaks;
             Id = id;
             Protein = protein;
-            RetentionTimesByFileId = retentionTimesByFileId;
-            IonMobilitiesByFileId = ionMobilitiesByFileId;
-            PeakBoundariesByFileId = peakBoundaries ?? ExplicitPeakBoundsDict<int>.EMPTY;
+            PeakBoundariesByFileId = ExplicitPeakBoundsDict<int>.EMPTY;
             Score = score;
             ScoreType = scoreType;
         }
@@ -2824,10 +2775,25 @@ namespace pwiz.Skyline.Model.Lib
         public int NumPeaks { get; }
         public int Id { get; }
         public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
-        public IndexedRetentionTimes RetentionTimesByFileId { get; }
-        public IndexedIonMobilities IonMobilitiesByFileId { get; }
-        public ExplicitPeakBoundsDict<int> PeakBoundariesByFileId { get; }
+        public IndexedRetentionTimes RetentionTimesByFileId { get; private set; }
+        public IndexedIonMobilities IonMobilitiesByFileId { get; private set; }
+        public ExplicitPeakBoundsDict<int> PeakBoundariesByFileId { get; private set; }
         public double? Score { get; }
         public string ScoreType { get; }
+
+        public BiblioLiteSpectrumInfo ChangeRetentionTimes(IndexedRetentionTimes retentionTimes)
+        {
+            return ChangeProp(ImClone(this), im => im.RetentionTimesByFileId = retentionTimes);
+        }
+
+        public BiblioLiteSpectrumInfo ChangeIonMobilities(IndexedIonMobilities ionMobilities)
+        {
+            return ChangeProp(ImClone(this), im => im.IonMobilitiesByFileId = ionMobilities);
+        }
+
+        public BiblioLiteSpectrumInfo ChangePeakBoundaries(ExplicitPeakBoundsDict<int> peakBoundaries)
+        {
+            return ChangeProp(ImClone(this), im => im.PeakBoundariesByFileId = peakBoundaries);
+        }
     }
 }
