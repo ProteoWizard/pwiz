@@ -683,7 +683,6 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes")) // Only a filtered library will have this table
                     {
-                        var startTime = DateTime.UtcNow;
                         using (var cmd = _sqliteConnection.Connection.CreateCommand())
                         {
                             cmd.CommandText = @"SELECT * FROM RetentionTimes";
@@ -699,7 +698,6 @@ namespace pwiz.Skyline.Model.Lib
                                     kvp => kvp.Value);
                             }
                         }
-                        Console.Out.WriteLine("Read all retention times in {0}", DateTime.UtcNow.Subtract(startTime));
                     }
                     if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"ScoreTypes"))
                     {
@@ -1073,7 +1071,6 @@ namespace pwiz.Skyline.Model.Lib
 
                 var sm = loader.StreamManager;
                 Stream stream;
-                DateTime startTime = DateTime.UtcNow;
                 if (cacheBytes != null)
                 {
                     cacheBytes.Seek(0, SeekOrigin.Begin);
@@ -1194,7 +1191,7 @@ namespace pwiz.Skyline.Model.Lib
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
                     }
-                    Console.Out.WriteLine("Load from cache in {0}", DateTime.UtcNow.Subtract(startTime));
+
                     // Checksum = checksum.ChecksumValue;
                     SetLibraryEntries(libraryEntries);
 
