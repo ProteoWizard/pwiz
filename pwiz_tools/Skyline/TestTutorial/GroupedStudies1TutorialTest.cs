@@ -368,7 +368,7 @@ namespace pwiz.SkylineTestTutorial
                 OkDialog(findDlg, findDlg.Close);
 
                 var findView = WaitForOpenForm<FindResultsForm>();
-                int expectedItems = IsFullData ? 454 : 290;
+                int expectedItems = IsFullData ? 228 : 151;
                 try
                 {
                     WaitForConditionUI(1000, () => findView.ItemCount == expectedItems);
@@ -610,9 +610,9 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(viewEditor, viewEditor.OkDialog);
 
             var pathTruncated = PropertyPath.Parse("Results!*.Value.CountTruncated");
-            int expectedItems = 148;
+            int expectedItems = 86;
             if (IsFullData)
-                expectedItems = 221; // initialTestExecution ? 223 : 221;
+                expectedItems = 129;
             try
             {
                 WaitForConditionUI(1000, () => documentGrid.RowCount == expectedItems &&
@@ -1155,7 +1155,7 @@ namespace pwiz.SkylineTestTutorial
 
                 PauseForScreenShot<DocumentGridForm>("Document Grid with MissingData field");
 
-                int expectedRows = IsFullData ? 222 : 149;
+                int expectedRows = IsFullData ? 133 : 89;
                 const int expectedRowsAbbreviated = 221; // When not all of the tests are run
                 RunUI(() =>
                 {
