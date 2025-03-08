@@ -41,7 +41,7 @@ class ErrorEstimator
 {
     public:
 
-    static std::auto_ptr<ErrorEstimator> create(const MassDatabase& massDatabase,
+    static std::unique_ptr<ErrorEstimator> create(const MassDatabase& massDatabase,
                                                 const std::vector<double>& massMeasurements,
                                                 double initialErrorEstimate,
                                                 const char* outputFilename = 0);

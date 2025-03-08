@@ -28,8 +28,8 @@
 namespace BiblioSpec {
 
 BuildParser::BuildParser(BlibBuilder& maker,
-                         const char* filename,
-                         const ProgressIndicator* parentProgress_)
+                             const char* filename,
+                             const ProgressIndicator* parentProgress_)
 : fullFilename_(filename),
   blibMaker_(maker),
   fileProgressIncrement_(0),
@@ -53,15 +53,7 @@ BuildParser::BuildParser(BlibBuilder& maker,
     this->curPSM_ = NULL;
     this->specReader_ = new PwizReader();
 
-    string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
-        "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
-        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, totalIonCurrent, fileID, "
-        "specIDinFile, score, scoreType" + 
-        SmallMolMetadata::sql_col_names_csv() + 
-        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
-    sqlite3_prepare(maker.getDb(), stmt.c_str(),
-     -1, &insertSpectrumStmt_, NULL);
-
+    prepareInsertSpectrumStatement();
 }
 
 BuildParser::~BuildParser() {
@@ -70,6 +62,19 @@ BuildParser::~BuildParser() {
     delete specProgress_;
     delete specReader_;
     sqlite3_finalize(insertSpectrumStmt_);
+}
+
+
+void BuildParser::prepareInsertSpectrumStatement()
+{
+    string stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "
+        "peptideModSeq, prevAA, nextAA, copies, numPeaks, ionMobility, collisionalCrossSectionSqA, "
+        "ionMobilityHighEnergyOffset, ionMobilityType, retentionTime, startTime, endTime, totalIonCurrent, fileID, "
+        "specIDinFile, score, scoreType" +
+        SmallMolMetadata::sql_col_names_csv() +
+        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ";
+    sqlite3_prepare(blibMaker_.getDb(), stmt.c_str(),
+        -1, &insertSpectrumStmt_, NULL);
 }
 
 
@@ -313,7 +318,7 @@ sqlite3_int64 BuildParser::insertSpectrumFilename(string& filename,
         throw BlibException(false, "Maximum limit of %d spectrum source files was exceeded. There "
                             "was most likely a problem reading the filenames.", MAX_SPECTRUM_FILES);
     }
-    Verbosity::debug("Input file %d has had %d spectrum source files inserted", curFile, inputLookup->second);
+    Verbosity::comment(V_DETAIL, "Input file %d has had %d spectrum source files inserted", curFile, inputLookup->second);
 
     return fileId;
 }
@@ -446,11 +451,11 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     blibMaker_.beginTransaction();
 
     // add the file name to the library
-    sqlite3_int64 fileId = -1;
+    int fileId;
     if( specFilename.empty() ){
-        fileId = insertSpectrumFilename(curSpecFileName_);
+        fileId = (int) insertSpectrumFilename(curSpecFileName_);
     } else {
-        fileId = insertSpectrumFilename(specFilename, true); // insert as is
+        fileId = (int) insertSpectrumFilename(specFilename, true); // insert as is
     }
 
     BiblioSpec::Verbosity::debug("BuildParser lookup method is %s", specIdTypeToString(lookUpBy_));
@@ -482,8 +487,8 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
             curSpectrum.numPeaks = 0;
         }
 
-        Verbosity::comment(V_DETAIL, "Adding spectrum %d (%s), charge %d.", 
-                           psm->specKey, psm->specName.c_str(), psm->charge);
+        Verbosity::comment(V_DETAIL, "Adding spectrum key=%d index=%d name=%s charge=%d.", 
+                           psm->specKey, psm->specIndex, psm->specName.c_str(), psm->charge);
 
         try{
             insertSpectrum(psm, curSpectrum, fileId, scoreType, proteinIds);
@@ -535,7 +540,7 @@ bool BuildParser::keepAmbiguous()
  */
 void BuildParser::insertSpectrum(PSM* psm, 
                                  const SpecData& curSpectrum, 
-                                 sqlite3_int64 fileId,
+                                 int fileId,
                                  PSM_SCORE_TYPE scoreType,
                                  map<const Protein*, sqlite3_int64>& proteins) {
     char sql_statement_buf[LARGE_BUFFER_SIZE];
@@ -564,6 +569,8 @@ void BuildParser::insertSpectrum(PSM* psm,
         return;
     }
 
+    auto nrpsm = dynamic_cast<NonRedundantPSM*>(psm);
+
     // this order must agree with insertSpectrumStmt_ as set in the ctor
     int field = 1;
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->unmodSeq.c_str(), -1, SQLITE_STATIC);
@@ -572,7 +579,7 @@ void BuildParser::insertSpectrum(PSM* psm,
     sqlite3_bind_text(insertSpectrumStmt_, field++, psm->modifiedSeq.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(insertSpectrumStmt_, field++, "-", -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(insertSpectrumStmt_, field++, 1);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, nrpsm ? nrpsm->copies : 1);
     sqlite3_bind_int(insertSpectrumStmt_, field++, curSpectrum.numPeaks);
     sqlite3_bind_double(insertSpectrumStmt_, field++, (psm->ionMobilityType == IONMOBILITY_NONE ? curSpectrum.ionMobility : psm->ionMobility));
     sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.ccs);
@@ -602,7 +609,7 @@ void BuildParser::insertSpectrum(PSM* psm,
     {
         sqlite3_bind_double(insertSpectrumStmt_, field++, curSpectrum.totalIonCurrent);
     }
-    sqlite3_bind_int(insertSpectrumStmt_, field++, fileId);
+    sqlite3_bind_int(insertSpectrumStmt_, field++, nrpsm ? nrpsm->fileId : fileId);
     sqlite3_bind_text(insertSpectrumStmt_, field++, 
         psm->isPrecursorOnly() ? "" : specIdStr.c_str(), // No spectrum ID for precursor-only records
         -1, SQLITE_STATIC);
@@ -617,7 +624,11 @@ void BuildParser::insertSpectrum(PSM* psm,
 
     
     // submit
-    sqlite3_step(insertSpectrumStmt_);
+    if (sqlite3_step(insertSpectrumStmt_) == SQLITE_ERROR)
+    {
+        sqlite3_reset(insertSpectrumStmt_);
+        Verbosity::error("Error inserting spectrum row: %s", sqlite3_errmsg(blibMaker_.getDb()));
+    }
     sqlite3_reset(insertSpectrumStmt_);
     
     // get library's ID for the spectrum

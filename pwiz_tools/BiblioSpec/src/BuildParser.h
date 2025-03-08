@@ -81,7 +81,7 @@ class BuildParser : protected SAXHandler{
   map<int, int> inputToSpec_; ///< map of input file index to spectrum file count for that input file
 
   void insertSpectrum(PSM* psm, const SpecData& curSpectrum, 
-                      sqlite3_int64 fileId, PSM_SCORE_TYPE scoreType,
+                      int fileId, PSM_SCORE_TYPE scoreType,
                       map<const Protein*, sqlite3_int64>& proteins);
   void sortPsmMods(PSM* psm);
   double calculatePeptideMass(PSM* psm);
@@ -109,6 +109,7 @@ class BuildParser : protected SAXHandler{
   void initSpecFileProgress(int numSpecFiles);
   void initSpecProgress(int numSpec);
   void setNextProgressSize(int size);
+  void prepareInsertSpectrumStatement();
 
   void setSpecFileName(std::string filename, bool checkFile = true);
   void setSpecFileName(std::string fileroot, 

@@ -69,6 +69,7 @@
 
 #include <ctype.h>
 #include <sstream>
+#include <random>
 
 using namespace boost::assign;
 using namespace boost::algorithm;
@@ -929,7 +930,8 @@ namespace pepitome
 
         void random_shuffle()
         {
-            std::random_shuffle( begin(), end() );
+            std::mt19937 rng(0);
+            std::shuffle(begin(), end(), rng);
         }
 
         void loadLibrary(const string& libName)
@@ -1046,7 +1048,7 @@ namespace pepitome
                 {
                     bal::split(tokens, buf, bal::is_any_of(":"));
                     string peakInput = tokens[1];
-                    peakInput.erase(peakInput.begin(), std::find_if(peakInput.begin(), peakInput.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
+                    bal::trim(peakInput);
                     numPeaks = lexical_cast<size_t>(peakInput);
                 }
                 else if(bal::starts_with(buf, "PrecursorMZ"))
