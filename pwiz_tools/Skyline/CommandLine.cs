@@ -3991,6 +3991,42 @@ namespace pwiz.Skyline
 
             if (Equals(type, ExportFileType.Method))
             {
+                // If the instrument type is either just Thermo or a Thermo instrument type that
+                // support the TNG XML method API
+                string thermoInstallationType = ExportInstrumentType.ThermoInstallationType(args.MethodInstrumentType);
+                if (thermoInstallationType != null || Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO))
+                {
+                    var dllFinder = new ThermoDllFinder();
+                    var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
+                    if (thermoSoftwareInfo.InstrumentType == null)
+                    {
+                        _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_,
+                            ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_));
+                        _out.WriteLine(thermoSoftwareInfo.FailureReason);
+                        return false;
+                    }
+                    // If not generally exporting a Thermo method, and the instrument type
+                    // specified does not match the installed type, then error.
+                    else if (Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO))
+                    {
+                        var instrumentType = ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
+                        if (instrumentType == null)
+                        {
+                            _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_, 
+                                string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_, thermoSoftwareInfo.InstrumentType)));
+                            return false;
+                        }
+
+                        args.MethodInstrumentType = instrumentType;
+                    }
+                    else if (!Equals(thermoSoftwareInfo.InstrumentType, thermoInstallationType))
+                    {
+                        _out.WriteLine(ModelResources.CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___,
+                            args.MethodInstrumentType, thermoSoftwareInfo.InstrumentType);
+                        _out.WriteLine(ModelResources.CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_);
+                        return false;
+                    }
+                }
                 if (string.IsNullOrEmpty(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);
