@@ -1030,7 +1030,8 @@ namespace pwiz.Skyline.Model.Results
             private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
                 var spectrum = spectrumInfo.DataSpectrum;
-                ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities);
+                ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities,
+                    spectrum.ScanningQuadMzLows, spectrum.ScanningQuadMzHighs); // In case it's diagonal PASEF
                 spectrumInfo.SortEvent.Set();
             }
 
