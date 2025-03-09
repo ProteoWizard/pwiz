@@ -127,83 +127,72 @@ namespace pwiz.Skyline.Controls.Databinding
             return true;
         }
 
-        protected override void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
-            BindingListSource bindingListSource, char separator)
+        protected override void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer,
+            RowItemEnumerator rowItemEnumerator, char separator)
         {
-            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
-            if (replicatePivotColumns.HasConstantAndVariableColumns())
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(rowItemEnumerator.ItemProperties);
+            if (true != replicatePivotColumns?.HasConstantAndVariableColumns())
             {
-                var dsvWriter = CreateDsvWriter(separator, bindingListSource.ColumnFormats);
+                base.WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
+                return;
+            }
+            var dsvWriter = CreateDsvWriter(separator, rowItemEnumerator.ColumnFormats);
 
-                // Filter columns for main grid to be written out.
-                var filteredColumnDescriptors = bindingListSource.ItemProperties.OfType<ColumnPropertyDescriptor>()
-                    .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor)).ToList();
+            // Filter columns for main grid to be written out.
+            var filteredColumnDescriptors = rowItemEnumerator.ItemProperties.OfType<ColumnPropertyDescriptor>()
+                .Where(columnDescriptor => !replicatePivotColumns.IsConstantColumn(columnDescriptor)).ToList();
 
-                // Count main grid columns to add spaces.
-                var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
-                    .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
+            // Count main grid columns to add spaces.
+            var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
+                .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
 
-                // Create header line with property column and replicate headers.
-                var headerLine = new List<string> { @"Property" };
-                AppendEmpty(headerLine, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1);
+            // Create header line with property column and replicate headers.
+            var headerLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1)
+                .Prepend(Model.Databinding.DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property).ToList();
 
-                var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
-                var propertyLines = new List<List<string>> { headerLine };
-                foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+            var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
+            var propertyLines = new List<List<string>> { headerLine };
+            var allRowItems = rowItemEnumerator.GetRowItems();
+            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+            {
+                // Add replicate to header line.
+                headerLine.Add(group.Key.ReplicateName);
+                headerLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[group.ToList()[0].PivotKey] - 1));
+
+                foreach (var column in group)
                 {
-                    // Add replicate to header line.
-                    headerLine.Add(group.Key.ReplicateName);
-                    AppendEmpty(headerLine, replicateVariablePropertyCounts[group.ToList()[0].PivotKey] - 1);
-
-                    foreach (var column in group)
+                    if (!replicatePivotColumns.IsConstantColumn(column))
                     {
-                        if (!replicatePivotColumns.IsConstantColumn(column))
-                        {   
-                            continue;
-                        }
-
-                        var propertyPath = column.DisplayColumn.PropertyPath;
-                        if (!propertyLineDictionary.ContainsKey(propertyPath))
-                        {
-                            // Create a new row if property line does not exist yet.
-                            var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
-                            var newRow = new List<string> { propertyDisplayName };
-                            AppendEmpty(newRow, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1);
-                            propertyLineDictionary[propertyPath] = newRow;
-                            propertyLines.Add(newRow);
-                        }
-
-                        // Add value to property line.
-                        var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(item => column.GetValue(item) != null);
-                        var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
-                        var propertyLine = propertyLineDictionary[propertyPath];
-                        propertyLine.Add(formattedValue);
-                        AppendEmpty(propertyLine, replicateVariablePropertyCounts[column.PivotKey] - 1);
+                        continue;
                     }
-                }
 
-                // Write pivot replicate data.
-                foreach (var line in propertyLines)
-                {
-                    dsvWriter.WriteRowValues(writer, line.AsEnumerable());
-                }
-                writer.WriteLine();
+                    var propertyPath = column.DisplayColumn.PropertyPath;
+                    if (!propertyLineDictionary.TryGetValue(propertyPath, out var propertyLine))
+                    {
+                        // Create a new row if property line does not exist yet.
+                        var propertyDisplayName = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                        propertyLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1).Prepend(propertyDisplayName).ToList();
+                        propertyLineDictionary[propertyPath] = propertyLine;
+                        propertyLines.Add(propertyLine);
+                    }
 
-                base.WriteData(progressMonitor, writer, new RowItemEnumerator(bindingListSource.Cast<RowItem>(), new ItemProperties(filteredColumnDescriptors), bindingListSource.ColumnFormats), separator);
+                    // Add value to property line.
+                    var rowItem = allRowItems.FirstOrDefault(item => column.GetValue(item) != null);
+                    var formattedValue = dsvWriter.GetFormattedValue(rowItem, column);
+                    propertyLine.AddRange(Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[column.PivotKey] - 1).Prepend(formattedValue));
+                }
             }
-            else
+
+            // Write pivot replicate data.
+            foreach (var line in propertyLines)
             {
-                base.WriteData(progressMonitor, writer, bindingListSource, separator);
+                dsvWriter.WriteRowValues(writer, line);
             }
+            writer.WriteLine();
+            var newRowItemEnumerator = new RowItemEnumerator(allRowItems, new ItemProperties(filteredColumnDescriptors), rowItemEnumerator.ColumnFormats);
+            base.WriteDataWithStatus(progressMonitor, ref status, writer, newRowItemEnumerator, separator);
         }
 
-        private void AppendEmpty(List<string> list, int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                list.Add(string.Empty);
-            }
-        }
         protected override void SaveViewSpecList(ViewGroupId viewGroup, ViewSpecList viewSpecList)
         {
             Settings.Default.PersistedViews.SetViewSpecList(viewGroup, viewSpecList);

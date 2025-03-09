@@ -2,7 +2,7 @@
  * Original author: Eduardo Armendariz <wardough .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2017 University of Washington - Seattle, WA
+ * Copyright 2024 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,11 @@ using System.Drawing;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.SkylineTestUtil;
 using System.Windows.Forms;
 
 namespace pwiz.SkylineTestFunctional
 {
-    // ReSharper disable LocalizableElement
     [TestClass]
     public class ReplicatePivotGridTest : AbstractFunctionalTest
     {
@@ -151,7 +149,7 @@ namespace pwiz.SkylineTestFunctional
                     kvp => kvp.Sum(column =>
                         boundDataGridView.Columns
                             .Cast<DataGridViewColumn>()
-                            .Where(col => col.DataPropertyName == column.Name)
+                            .Where(col => col.Visible && col.DataPropertyName == column.Name)
                             .Sum(col => onlyVisibleWidth ? CalculateColumnVisibleWidth(boundDataGridView, col) : col.Width)
                     )
                 );

@@ -24,7 +24,6 @@ using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Clustering;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Skyline.Model.Databinding;
 
 namespace pwiz.Skyline.Controls.Databinding
 {

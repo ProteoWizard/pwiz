@@ -27,7 +27,6 @@ using pwiz.Common.DataBinding.Internal;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.Properties;
 using pwiz.Common.SystemUtil;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ToolBar;
 
 namespace pwiz.Common.DataBinding.Controls
 {
