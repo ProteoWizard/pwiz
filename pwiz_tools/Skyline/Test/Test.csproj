@@ -171,6 +171,7 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
+    <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
@@ -286,6 +287,7 @@
     <Compile Include="MassListInputsTest.cs" />
     <Compile Include="EncyclopeDiaHelpersTest.cs" />
     <Compile Include="SrmSettingsNewTest.cs" />
+    <Compile Include="DllFinderUnitTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
@@ -339,7 +341,9 @@
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
+    <EmbeddedResource Include="CommandLineThermoMethodTest.json" />
     <None Include="DecoysTest.zip" />
+    <EmbeddedResource Include="DllFinderUnitTest.json" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="explicit-losses.sky" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />

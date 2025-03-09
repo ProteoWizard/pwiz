@@ -615,9 +615,9 @@ namespace pwiz.Skyline
             {
                 var documentAnnotations = new DocumentAnnotations(_doc);
                 using var stream = File.OpenRead(commandArgs.ImportAnnotations);
-                var progressStream = new ProgressStream(stream);
+                using var progressStream = new ProgressStream(stream);
                 var progressStatus = new ProgressStatus();
-                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus);
+                progressStream.SetProgressMonitor(new CommandProgressMonitor(_out, progressStatus), progressStatus, true);
                 var modifiedDocument =
                     documentAnnotations.ReadAnnotationsFromStream(CancellationToken.None, commandArgs.ImportAnnotations, progressStream);
                 ModifyDocument(DocumentModifier.FromResult(_doc, modifiedDocument));
@@ -1412,23 +1412,23 @@ namespace pwiz.Skyline
             try
             {
                 var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(string.Empty));
-                string hash;
-                using (var hashingStreamReader = new HashingStreamReaderWithProgress(skylineFile, progressMonitor))
-                {
-                    // Wrap stream in XmlReader so that BaseUri is known
-                    var reader = XmlReader.Create(hashingStreamReader, 
-                        new XmlReaderSettings() { IgnoreWhitespace = true }, 
-                        skylineFile);  
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
+                using var fileStream = File.OpenRead(skylineFile);
+                using var progressStream = new ProgressStream(fileStream);
+                progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(skylineFile)), true);
+                using var hashingStream = new HashingStream(progressStream, true);
+                // Wrap stream in XmlReader so that BaseUri is known
+                var reader = XmlReader.Create(new StreamReader(hashingStream, Encoding.UTF8), 
+                    new XmlReaderSettings { IgnoreWhitespace = true }, 
+                    skylineFile);  
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_Opening_file___);
 
-                    SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
-                    if (_doc == null)
-                        return false;
+                SetDocument(ConnectDocument((SrmDocument)xmlSerializer.Deserialize(reader), skylineFile));
+                if (_doc == null)
+                    return false;
 
-                    _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
-                    hash = hashingStreamReader.Stream.Done();
-                }
+                _out.WriteLine(Resources.CommandLine_OpenSkyFile_File__0__opened_, Path.GetFileName(skylineFile));
+                var hash = hashingStream.Done();
 
                 SetDocument(_doc.ReadAuditLog(skylineFile, hash, () => null));
 
@@ -3991,6 +3991,42 @@ namespace pwiz.Skyline
 
             if (Equals(type, ExportFileType.Method))
             {
+                // If the instrument type is either just Thermo or a Thermo instrument type that
+                // support the TNG XML method API
+                string thermoInstallationType = ExportInstrumentType.ThermoInstallationType(args.MethodInstrumentType);
+                if (thermoInstallationType != null || Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO))
+                {
+                    var dllFinder = new ThermoDllFinder();
+                    var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
+                    if (thermoSoftwareInfo.InstrumentType == null)
+                    {
+                        _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_,
+                            ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_));
+                        _out.WriteLine(thermoSoftwareInfo.FailureReason);
+                        return false;
+                    }
+                    // If not generally exporting a Thermo method, and the instrument type
+                    // specified does not match the installed type, then error.
+                    else if (Equals(args.MethodInstrumentType, ExportInstrumentType.THERMO))
+                    {
+                        var instrumentType = ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
+                        if (instrumentType == null)
+                        {
+                            _out.WriteLine(TextUtil.SpaceSeparate(Resources.CommandStatusWriter_WriteLine_Error_, 
+                                string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_, thermoSoftwareInfo.InstrumentType)));
+                            return false;
+                        }
+
+                        args.MethodInstrumentType = instrumentType;
+                    }
+                    else if (!Equals(thermoSoftwareInfo.InstrumentType, thermoInstallationType))
+                    {
+                        _out.WriteLine(ModelResources.CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___,
+                            args.MethodInstrumentType, thermoSoftwareInfo.InstrumentType);
+                        _out.WriteLine(ModelResources.CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_);
+                        return false;
+                    }
+                }
                 if (string.IsNullOrEmpty(args.TemplateFile))
                 {
                     _out.WriteLine(Resources.CommandLine_ExportInstrumentFile_Error__A_template_file_is_required_to_export_a_method_);

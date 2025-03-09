@@ -2100,6 +2100,15 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Reading annotations.
+        /// </summary>
+        public static string SkylineWindow_ImportAnnotations_Reading_annotations {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportAnnotations_Reading_annotations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to There is an existing library with the same name {0} as the document library to be created. Overwrite?.
         /// </summary>
         public static string SkylineWindow_ImportAssayLibrary_There_is_an_existing_library_with_the_same_name__0__as_the_document_library_to_be_created__Overwrite_ {

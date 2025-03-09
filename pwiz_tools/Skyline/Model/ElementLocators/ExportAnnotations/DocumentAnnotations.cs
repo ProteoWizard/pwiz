@@ -316,14 +316,13 @@ namespace pwiz.Skyline.Model.ElementLocators.ExportAnnotations
                 return null;
             }
 
-            if (_notFoundRefs.Count == 1)
-            {
-                return string.Format("The element '{0}' could not be found in the document", _notFoundRefs.First());
-            }
+            var message = _notFoundRefs.Count == 1
+                ? ElementLocatorsResources.DocumentAnnotations_GetWarningMessage_The_following_element_could_not_be_found_
+                : string.Format(ElementLocatorsResources.DocumentAnnotations_GetWarningMessage_The_following__0__elements_could_not_be_found_, _notFoundRefs.Count);
 
             return TextUtil.LineSeparate(
                 _notFoundRefs.Select(locator => locator.ToString()).OrderBy(s => s)
-                    .Prepend(string.Format("The following {0} elements could not be found", _notFoundRefs.Count)));
+                    .Prepend(message));
         }
     }
 }

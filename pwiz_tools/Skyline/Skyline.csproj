@@ -562,6 +562,8 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DllFinder.cs" />
+    <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -624,6 +626,7 @@
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
