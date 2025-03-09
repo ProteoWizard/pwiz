@@ -68,6 +68,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
                    totalDifference;
         }
 
+        public double? GetZScore(double? qValue)
+        {
+            if (_sortedList.Count == 0 || !qValue.HasValue)
+            {
+                return null;
+            }
+
+            var range = CollectionUtil.BinarySearch(_sortedList.Values, item => qValue.Value.CompareTo(item));
+            if (range.Start < 0 || range.Start >= _sortedList.Count)
+            {
+                return null;
+            }
+            return _sortedList.Keys[range.Start];
+        }
+
+
         public static ScoreQValueMap FromMoleculeGroups(IEnumerable<PeptideGroupDocNode> moleculeGroups)
         {
             return FromTransitionGroups(moleculeGroups.SelectMany(moleculeGroup => moleculeGroup.Molecules)

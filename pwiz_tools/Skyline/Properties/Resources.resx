@@ -3515,9 +3515,6 @@ Please contact the Panorama server administrator to upgrade the server.</value>
   <data name="SmallMoleculeTransitionListReader_ReadPrecursorOrProductColumns_Invalid_ion_mobility_value__0_" xml:space="preserve">
     <value>Invalid ion mobility value {0}</value>
   </data>
-  <data name="KdeAlignerFactory_ToString_KDE_Aligner" xml:space="preserve">
-    <value>KDE Aligner</value>
-  </data>
   <data name="PasteDlg_UpdateMoleculeType_Compensation_Voltage" xml:space="preserve">
     <value>Compensation Voltage</value>
   </data>

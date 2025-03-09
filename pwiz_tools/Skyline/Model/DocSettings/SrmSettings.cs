@@ -1152,7 +1152,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Adduct.EMPTY, true).Select(typedSequence => typedSequence.ModifiedSequence);
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                if (library == null || !library.UseExplicitPeakBounds)
+                if (library == null || library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.@false)
                 {
                     continue;
                 }
@@ -1165,6 +1165,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 if (peakBoundaries != null)
                 {
+                    if (library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.unless_missing)
+                    {
+                        if (peakBoundaries.IsEmpty)
+                        {
+                            return null;
+                        }
+                    }
                     return peakBoundaries;
                 }
             }
@@ -2087,6 +2094,33 @@ namespace pwiz.Skyline.Model.DocSettings
 
                     fullScan = fullScan.ChangeSpectrumFilter(default);
                     result = result.ChangeTransitionSettings(result.TransitionSettings.ChangeFullScan(fullScan));
+                }
+            }
+
+            if (documentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                if (!Equals(ImputationSettings.DEFAULT, result.PeptideSettings.Imputation))
+                {
+                    result = result.ChangePeptideSettings(
+                        result.PeptideSettings.ChangeImputation(ImputationSettings.DEFAULT));
+                }
+            }
+            if (documentFormat < DocumentFormat.VERSION_24_11)
+            {
+                var libraries = result.PeptideSettings.Libraries;
+                var newLibrarySpecs = libraries.LibrarySpecs.Select(spec =>
+                    spec?.UseExplicitPeakBounds == ExplicitPeakBoundsOption.unless_missing
+                        ? spec.ChangeUseExplicitPeakBounds(ExplicitPeakBoundsOption.@true)
+                        : spec).ToArray();
+                var newLibraries = libraries.Libraries.Select(lib =>
+                    lib?.UseExplicitPeakBounds == ExplicitPeakBoundsOption.unless_missing
+                        ? lib.ChangeUseExplicitPeakBounds(ExplicitPeakBoundsOption.@true)
+                        : lib).ToArray();
+
+                if (!ArrayUtil.ReferencesEqual(libraries.LibrarySpecs, newLibrarySpecs) || !ArrayUtil.ReferencesEqual(libraries.Libraries, newLibraries))
+                {
+                    result = result.ChangePeptideSettings(
+                        result.PeptideSettings.ChangeLibraries(libraries.ChangeLibraries(newLibrarySpecs, newLibraries)));
                 }
             }
 

@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static readonly PeptideRankId[] RANK_IDS = { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
-        public BiblioSpecLiteSpec(string name, string path, bool useExplicitPeakBounds = true)
+        public BiblioSpecLiteSpec(string name, string path, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.@true)
             : base(name, path, useExplicitPeakBounds)
         {
         }
@@ -144,6 +144,7 @@ namespace pwiz.Skyline.Model.Lib
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
+        private bool _hasExplicitBoundsQValues;
 
         public static string GetLibraryCachePath(string libraryPath)
         {
@@ -1188,6 +1189,7 @@ namespace pwiz.Skyline.Model.Lib
                         ExplicitPeakBoundsDict<int> peakBoundaries =
                             ReadPeakBoundaries(stream).ValueFromCache(valueCache);
                         _anyExplicitPeakBounds = _anyExplicitPeakBounds || peakBoundaries.Count > 0;
+                        _hasExplicitBoundsQValues |= peakBoundaries.Values.Select(v => v.Score).Distinct().Count() > 1;
                         libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList,
                             retentionTimesByFileId, driftTimesByFileId, peakBoundaries, score, scoreType);
                     }
@@ -1550,6 +1552,11 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
+        public override bool HasExplicitBoundsQValues
+        {
+            get { return _hasExplicitBoundsQValues; }
+        }
+
         public override bool HasExplicitBounds
         {
             get
@@ -1865,7 +1872,7 @@ namespace pwiz.Skyline.Model.Lib
         private int FindSource(MsDataFileUri filePath)
         {
             return _libraryFiles.FindIndexOf(filePath);
-        }
+            }
 
         public override IEnumerable<SpectrumInfoLibrary> GetSpectra(LibKey key, IsotopeLabelType labelType, LibraryRedundancy redundancy)
         {

@@ -39,7 +39,8 @@
             this.labelSpecLibLinks = new System.Windows.Forms.Label();
             this.linkPeptideAtlas = new System.Windows.Forms.LinkLabel();
             this.linkNIST = new System.Windows.Forms.LinkLabel();
-            this.cbxUseExplicitPeakBounds = new System.Windows.Forms.CheckBox();
+            this.lblUseExplicitPeakBounds = new System.Windows.Forms.Label();
+            this.comboUseExplicitPeakBounds = new System.Windows.Forms.ComboBox();
             this.SuspendLayout();
             // 
             // textName
@@ -103,13 +104,21 @@
             this.linkNIST.TabStop = true;
             this.linkNIST.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkNIST_LinkClicked);
             // 
-            // cbxUseExplicitPeakBounds
+            // lblUseExplicitPeakBounds
             // 
-            resources.ApplyResources(this.cbxUseExplicitPeakBounds, "cbxUseExplicitPeakBounds");
-            this.cbxUseExplicitPeakBounds.Checked = true;
-            this.cbxUseExplicitPeakBounds.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxUseExplicitPeakBounds.Name = "cbxUseExplicitPeakBounds";
-            this.cbxUseExplicitPeakBounds.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.lblUseExplicitPeakBounds, "lblUseExplicitPeakBounds");
+            this.lblUseExplicitPeakBounds.Name = "lblUseExplicitPeakBounds";
+            // 
+            // comboUseExplicitPeakBounds
+            // 
+            this.comboUseExplicitPeakBounds.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboUseExplicitPeakBounds.FormattingEnabled = true;
+            this.comboUseExplicitPeakBounds.Items.AddRange(new object[] {
+            resources.GetString("comboUseExplicitPeakBounds.Items"),
+            resources.GetString("comboUseExplicitPeakBounds.Items1"),
+            resources.GetString("comboUseExplicitPeakBounds.Items2")});
+            resources.ApplyResources(this.comboUseExplicitPeakBounds, "comboUseExplicitPeakBounds");
+            this.comboUseExplicitPeakBounds.Name = "comboUseExplicitPeakBounds";
             // 
             // EditLibraryDlg
             // 
@@ -117,7 +126,8 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbxUseExplicitPeakBounds);
+            this.Controls.Add(this.comboUseExplicitPeakBounds);
+            this.Controls.Add(this.lblUseExplicitPeakBounds);
             this.Controls.Add(this.linkNIST);
             this.Controls.Add(this.linkPeptideAtlas);
             this.Controls.Add(this.labelSpecLibLinks);
@@ -150,6 +160,7 @@
         private System.Windows.Forms.Label labelSpecLibLinks;
         private System.Windows.Forms.LinkLabel linkPeptideAtlas;
         private System.Windows.Forms.LinkLabel linkNIST;
-        private System.Windows.Forms.CheckBox cbxUseExplicitPeakBounds;
+        private System.Windows.Forms.Label lblUseExplicitPeakBounds;
+        private System.Windows.Forms.ComboBox comboUseExplicitPeakBounds;
     }
 }

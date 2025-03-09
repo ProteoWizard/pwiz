@@ -31,6 +31,7 @@ using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Controls.Spectra;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog.Databinding;
 using pwiz.Skyline.Model.Databinding;
@@ -52,7 +53,7 @@ namespace pwiz.SkylineTest.Reporting
         private static readonly IList<Type> STARTING_TYPES = ImmutableList.ValueOf(new[]
         {
             typeof(SkylineDocument), typeof(FoldChangeBindingSource.FoldChangeRow), typeof(AuditLogRow),
-            typeof(CandidatePeakGroup), typeof(MatchingPrecursors), typeof(SpectrumClass)
+            typeof(CandidatePeakGroup), typeof(MatchingPrecursors), typeof(SpectrumClass), typeof(PeakImputationForm.Row)
         });
         /// <summary>
         /// This test method just outputs the entire text that should go in "ColumnCaptions.resx".
@@ -102,7 +103,7 @@ namespace pwiz.SkylineTest.Reporting
                 return;
             }
             StringWriter message = new StringWriter();
-            WriteResXFile(message, missingCaptions);
+            WriteResXFile(message, missingCaptions, false);
             Assert.Fail("Missing localized column captions {0}", message);
         }
 
@@ -136,7 +137,7 @@ namespace pwiz.SkylineTest.Reporting
                 return;
             }
             StringWriter message = new StringWriter();
-            WriteResXFile(message, missingCaptions);
+            WriteResXFile(message, missingCaptions, true);
             Assert.Fail("Missing tooltips for column captions: {0}", message.ToString().Replace("<data","\r\n<data"));
         }
 
@@ -266,10 +267,10 @@ namespace pwiz.SkylineTest.Reporting
                     allColumnCaptions.Add(columnCaption);
                 }
             }
-            WriteResXFile(writer, allColumnCaptions);
+            WriteResXFile(writer, allColumnCaptions, false);
         }
 
-        public void WriteResXFile(TextWriter writer, ICollection<ColumnCaption> invariantColumnCaptions)
+        public void WriteResXFile(TextWriter writer, ICollection<ColumnCaption> invariantColumnCaptions, bool addTodo)
         {
             var allPropertyNames = new HashSet<string>(invariantColumnCaptions.Select(caption=>caption.InvariantCaption));
             var sortedPropertyNames = allPropertyNames.ToArray();
@@ -288,7 +289,12 @@ namespace pwiz.SkylineTest.Reporting
                 {
                     xmlWriter.WriteStartElement("data");
                     xmlWriter.WriteAttributeString("name", propertyName);
-                    xmlWriter.WriteElementString("value", InvariantToEnglishName(propertyName));
+                    var value = InvariantToEnglishName(propertyName);
+                    if (addTodo)
+                    {
+                        value = "TODO: " + value;
+                    }
+                    xmlWriter.WriteElementString("value", value);
                     xmlWriter.WriteEndElement();
                 }
                 xmlWriter.WriteEndElement();
