@@ -1550,6 +1550,19 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
+        public override IEnumerable<KeyValuePair<string, ExplicitPeakBounds>> GetAllExplicitPeakBounds(IEnumerable<Target> peptideSequences)
+        {
+            var filesById = _librarySourceFiles.ToDictionary(file => file.Id);
+            foreach (var item in LibraryEntriesWithSequences(peptideSequences))
+            {
+                foreach (var peakBoundaries in item.PeakBoundariesByFileId)
+                {
+                    yield return new KeyValuePair<string, ExplicitPeakBounds>(filesById[peakBoundaries.Key].FilePath,
+                        peakBoundaries.Value);
+                }
+            }
+        }
+
         public override bool HasExplicitBounds
         {
             get
