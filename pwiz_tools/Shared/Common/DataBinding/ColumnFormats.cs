@@ -79,9 +79,16 @@ namespace pwiz.Common.DataBinding
             return ChangeProp(ImClone(this), im => im.Width = width);
         }
 
+        public bool? Frozen { get; private set; }
+
+        public ColumnFormat ChangeFrozen(bool? frozen)
+        {
+            return ChangeProp(ImClone(this), im => im.Frozen = frozen);
+        }
+
         protected bool Equals(ColumnFormat other)
         {
-            return string.Equals(Format, other.Format) && Width == other.Width;
+            return string.Equals(Format, other.Format) && Width == other.Width && Frozen == other.Frozen;
         }
 
         public override bool Equals(object obj)
