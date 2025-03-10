@@ -2123,11 +2123,6 @@ namespace pwiz.Skyline.SettingsUI
             ChangeTooltip(listLibraries, librarySpec?.ItemDescription?.ToString() ?? _librariesOriginalTooltip);
         }
 
-        private void comboLodMethod_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            tbxMaxLoqBias.Enabled = comboLodMethod.SelectedItem != LodCalculation.TURNING_POINT_STDERR;
-        }
-
         private void comboRegressionFit_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateLodOptions(comboLodMethod.SelectedItem as LodCalculation);
