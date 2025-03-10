@@ -27,8 +27,16 @@ namespace pwiz.Skyline.Model.Results
     public abstract class Results<TItem> : Immutable, IList<ChromInfoList<TItem>>
         where TItem : ChromInfo
     {
-        protected ImmutableList<ReferenceValue<ChromFileInfoId>> FileIds { get; private set; }
-        protected ReplicatePositions ReplicatePositions { get; private set; }
+        private ReplicatePositions _replicatePositions;
+        private ImmutableList<ReferenceValue<ChromFileInfoId>> _fileIds;
+        protected ImmutableList<ReferenceValue<ChromFileInfoId>> FileIds
+        {
+            get { return _fileIds; }
+        }
+        protected ReplicatePositions ReplicatePositions
+        {
+            get { return _replicatePositions; }
+        }
         protected abstract TItem GetItemAt(int i);
         protected abstract void SetItems(IList<TItem> items);
 
@@ -52,7 +60,7 @@ namespace pwiz.Skyline.Model.Results
                 flatList.AddRange(chromInfoList);
             }
 
-            ReplicatePositions = ReplicatePositions.FromCounts(counts);
+            _replicatePositions = ReplicatePositions.FromCounts(counts);
             SetFlatList(flatList);
         }
 
@@ -61,7 +69,7 @@ namespace pwiz.Skyline.Model.Results
             var newFileIds = items.Select(item => ReferenceValue.Of(item.FileId)).ToImmutable();
             if (!Equals(newFileIds, FileIds))
             {
-                FileIds = newFileIds;
+                _fileIds = newFileIds;
             }
             SetItems(items);
         }
@@ -103,10 +111,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 chromInfoSet = chromInfoSet.Select(list => list ?? Array.Empty<TItem>()).ToList();
             }
-            if (ContentEquals(chromInfoSet))
-            {
-                return this;
-            }
+            // if (ContentEquals(chromInfoSet))
+            // {
+            //     return this;
+            // }
 
             return ChangeResults(chromInfoSet);
         }
@@ -363,27 +371,36 @@ namespace pwiz.Skyline.Model.Results
             throw new InvalidOperationException();
         }
 
-        public virtual Results<TItem> ValueFromCache(ValueCache valueCache)
+        public Results<TItem> ValueFromCache(ValueCache valueCache)
         {
-            bool changed = false;
-            var newReplicatePositions = CacheValue(valueCache, ReplicatePositions, ref changed);
-            var newFileIds = CacheValue(valueCache, FileIds, ref changed);
-            if (!changed)
+            bool anyChanges = false;
+            var result = ChangeProp(ImClone(this), im =>
             {
-                return this;
-            }
-            return ChangeProp(ImClone(this), im =>
-            {
-                im.ReplicatePositions = newReplicatePositions;
-                im.FileIds = newFileIds;
+                anyChanges = im.CacheMembers(valueCache);
             });
+            if (anyChanges)
+            {
+                return result;
+            }
+
+            return this;
         }
 
-        protected static T CacheValue<T>(ValueCache valueCache, T value, ref bool changed) where T : class
+        /// <summary>
+        /// Replace any field values that are duplicates of values that are in the <see cref="ValueCache"/>.
+        /// Returns true if any field value was changed by using an identical value from the ValueCache.
+        /// </summary>
+        protected virtual bool CacheMembers(ValueCache valueCache)
         {
-            var result = valueCache.CacheValue(value);
-            changed |= !ReferenceEquals(value, result);
-            return result;
+            return CacheValue(valueCache, ref _replicatePositions) | CacheValue(valueCache, ref _fileIds);
+        }
+
+        protected static bool CacheValue<T>(ValueCache valueCache, ref T value)
+        {
+            var newValue = valueCache.CacheValue(value);
+            bool changed = !ReferenceEquals(newValue, value);
+            value = newValue;
+            return changed;
         }
     }
 
@@ -553,33 +570,17 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override Results<TransitionChromInfo> ValueFromCache(ValueCache valueCache)
+        protected override bool CacheMembers(ValueCache valueCache)
         {
-            bool changed = false;
-            var newOptimizationSteps = CacheValue(valueCache, _optimizationSteps, ref changed);
-            var newRetentionTimes = CacheValue(valueCache, _retentionTimes, ref changed);
-            var newStartRetentionTimes = CacheValue(valueCache, _startRetentionTimes, ref changed);
-            var newEndRetentionTimes = CacheValue(valueCache, _endRetentionTimes, ref changed);
-            var newIonMobilities = CacheValue(valueCache, _ionMobilities, ref changed);
-            var newRanks = CacheValue(valueCache, _ranks, ref changed);
-            var newRanksByLevel = CacheValue(valueCache, _ranksByLevel, ref changed);
-            var newPeakIdentifications = CacheValue(valueCache, _peakIdentifications, ref changed);
-            var result = (TransitionResults) base.ValueFromCache(valueCache);
-            if (!changed)
-            {
-                return result;
-            }
-            return ChangeProp(ImClone(result), im =>
-            {
-                im._optimizationSteps = newOptimizationSteps;
-                im._retentionTimes = newRetentionTimes;
-                im._startRetentionTimes = newStartRetentionTimes;
-                im._endRetentionTimes = newEndRetentionTimes;
-                im._ionMobilities = newIonMobilities;
-                im._ranks = newRanks;
-                im._ranksByLevel = newRanksByLevel;
-                im._peakIdentifications = newPeakIdentifications;
-            });
+            return base.CacheMembers(valueCache)
+                   | CacheValue(valueCache, ref _optimizationSteps)
+                   | CacheValue(valueCache, ref _retentionTimes)
+                   | CacheValue(valueCache, ref _startRetentionTimes)
+                   | CacheValue(valueCache, ref _endRetentionTimes)
+                   | CacheValue(valueCache, ref _ionMobilities)
+                   | CacheValue(valueCache, ref _ranks)
+                   | CacheValue(valueCache, ref _ranksByLevel)
+                   | CacheValue(valueCache, ref _peakIdentifications);
         }
     }
 
@@ -727,32 +728,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public override Results<TransitionGroupChromInfo> ValueFromCache(ValueCache valueCache)
+        protected override bool CacheMembers(ValueCache valueCache)
         {
-            bool changed = false;
-            var newOptimizationSteps = CacheValue(valueCache, _optimizationSteps, ref changed);
-            var newPeakCountRatios = CacheValue(valueCache, _peakCountRatios, ref changed);
-            var newRetentionTimes = CacheValue(valueCache, _retentionTimes, ref changed);
-            var newStartTimes = CacheValue(valueCache, _startTimes, ref changed);
-            var newEndTimes = CacheValue(valueCache, _endTimes, ref changed);
-            var newIonMobilityInfos = CacheValue(valueCache, _ionMobilityInfos, ref changed);
-            var newPeakIdentifications = CacheValue(valueCache, _peakIdentifications, ref changed);
-            var result = (TransitionGroupResults) base.ValueFromCache(valueCache);
-            if (!changed)
-            {
-                return result;
-            }
-
-            return ChangeProp(ImClone(result), im =>
-            {
-                im._optimizationSteps = newOptimizationSteps;
-                im._peakCountRatios = newPeakCountRatios;
-                im._retentionTimes = newRetentionTimes;
-                im._startTimes = newStartTimes;
-                im._endTimes = newEndTimes;
-                im._ionMobilityInfos = newIonMobilityInfos;
-                im._peakIdentifications = newPeakIdentifications;
-            });
+            return base.CacheMembers(valueCache)
+                   | CacheValue(valueCache, ref _optimizationSteps)
+                   | CacheValue(valueCache, ref _peakCountRatios)
+                   | CacheValue(valueCache, ref _retentionTimes)
+                   | CacheValue(valueCache, ref _startTimes)
+                   | CacheValue(valueCache, ref _endTimes)
+                   | CacheValue(valueCache, ref _ionMobilityInfos)
+                   | CacheValue(valueCache, ref _peakIdentifications);
         }
     }
 
