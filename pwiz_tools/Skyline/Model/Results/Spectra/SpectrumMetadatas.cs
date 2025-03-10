@@ -281,7 +281,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return CollectionUtil.GetHashCodeDeep(this);
         }
 
-        private struct PrecursorWithLevel
+        private readonly struct PrecursorWithLevel : IEquatable<PrecursorWithLevel>
         {
             public PrecursorWithLevel(int msLevel, SpectrumPrecursor spectrumPrecursor)
             {
@@ -291,6 +291,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             public int MsLevel { get; }
             public SpectrumPrecursor Precursor { get; }
+
+            public bool Equals(PrecursorWithLevel other)
+            {
+                return MsLevel == other.MsLevel && Precursor.Equals(other.Precursor);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is PrecursorWithLevel other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (MsLevel * 397) ^ Precursor.GetHashCode();
+                }
+            }
         }
 
         private struct ScanId
