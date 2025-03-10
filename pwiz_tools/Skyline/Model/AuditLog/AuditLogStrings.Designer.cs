@@ -672,6 +672,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &gt;Renamed node {0} to {1} in the Files window.
+        /// </summary>
+        public static string files_tree_renamed_node {
+            get {
+                return ResourceManager.GetString("files_tree_renamed_node", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Filled down {0} values in the document grid.
         /// </summary>
         public static string fill_down_document_grid {
