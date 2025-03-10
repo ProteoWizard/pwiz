@@ -56,9 +56,9 @@ class MascotResultsReader : public BuildParser{
  private:
   enum { N_TERM_POS = 'n', C_TERM_POS = 'c' };
 
-  ms_mascotresfile* ms_file_;
+  ms_mascotresfile_dat* ms_file_;
   ms_searchparams* ms_params_;
-  ms_mascotresults* ms_results_;
+  ms_peptidesummary* ms_results_;
   double scoreThreshold_;
   MultiModTable staticMods_;
   map<string, ModTable* > methodModsMaps_;

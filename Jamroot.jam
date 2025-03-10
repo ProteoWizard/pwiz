@@ -337,7 +337,7 @@ project pwiz
         <toolset>msvc:<runtime-link>shared
 
         # avoid deprecation warnings
-        <define>BOOST_NO_AUTO_PTR
+        <toolset>gcc:<define>BOOST_NO_AUTO_PTR
         <define>BOOST_BIND_GLOBAL_PLACEHOLDERS
 
         <define>BOOST_REGEX_MATCH_EXTRA                 # enable access to all captures
@@ -384,11 +384,8 @@ project pwiz
         <toolset>gcc:<define>_DEFAULT_SOURCE
         <toolset>clang:<define>_DEFAULT_SOURCE
 
-        # msparser uses old libstd++ API, so with GCC 5+, the entire project has to use it as well
-        <toolset>gcc:<define>_GLIBCXX_USE_CXX11_ABI=0
-
-        # set standard to C++14
-        <toolset>msvc:<cxxflags>"/std:c++14"
+        # set standard to C++14, 17 for MSVC (due to Arrow)
+        <toolset>msvc:<cxxflags>"/std:c++17"
         <toolset>gcc:<cxxflags>-std=c++14
         <toolset>darwin:<cxxflags>-std=c++14
         <toolset>clang:<cxxflags>-std=c++14
@@ -611,7 +608,7 @@ if [ modules.peek : NT ]
             if ! --without-thermo in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Thermo.7z" ; }
             #if ! --without-unifi in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_UNIFI.7z" ; }
             if ! --without-waters in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api_Waters.7z" ; }
-            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)\\msparser_2_8_1_x86_win64.7z" ; }
+            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64.7z" ; }
             RESCAN ;
         }
         else
@@ -639,7 +636,7 @@ else
         if --i-agree-to-the-vendor-licenses in $(args)
         {
             echo "Extracting vendor APIs..." ;
-            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)/7zz x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64.7z" ; }
+            if ! --without-mascot in $(args) { SHELL "$(PWIZ_LIBRARIES_PATH)/7zz x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_LIBRARIES_PATH) $(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64.7z" ; }
             RESCAN ;
         }
         else
@@ -1237,7 +1234,7 @@ rule msparser-path ( properties * )
     {
         if [ feature.get-values <toolset-msvc:version> : $(properties) ] in "14.0" "14.1" "14.2" "14.3"
         {
-            lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_2_8_1_x86_win64\\vs2017" ;
+            lib-location = "$(PWIZ_LIBRARIES_PATH)\\msparser_3_1_0_x86_win64\\vs2015" ;
         }
         else
         {
@@ -1251,7 +1248,7 @@ rule msparser-path ( properties * )
     } 
     else if <toolset>gcc in $(properties)
     {
-        lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_2_8_1_x86_linux64/gnu" ;
+        lib-location = "$(PWIZ_LIBRARIES_PATH)/msparser_3_1_0_x86_linux64/gnu" ;
     }
     else
     {

@@ -33,7 +33,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-using std::binary_function;
 
 struct refData{ 
   string file;
@@ -75,7 +74,7 @@ class RefFile
 };
 
 //sort by both ms2 file name and scan number
-struct compRefData : public binary_function<refData, refData, bool>
+struct compRefData
 {
   bool operator()(refData r1, refData r2) {
     if( r1.file == r2.file ) {
