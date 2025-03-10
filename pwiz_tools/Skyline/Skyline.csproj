@@ -563,6 +563,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
+    <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">

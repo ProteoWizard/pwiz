@@ -738,4 +738,7 @@
   <data name="SharedPeptidesGene_Removed" xml:space="preserve">
     <value>Removed (peptides must be unique to a single gene)</value>
   </data>
+  <data name="SearchEngine_Comet" xml:space="preserve">
+    <value>Comet</value>
+  </data>
 </root>
