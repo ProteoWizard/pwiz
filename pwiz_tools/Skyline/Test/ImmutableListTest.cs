@@ -180,7 +180,10 @@ namespace pwiz.SkylineTest
             var veryLongList = new ConstantList<T>(int.MaxValue, value);
             Assert.AreEqual(int.MaxValue, veryLongList.Count);
             var veryLongList2 = new ConstantList<T>(int.MaxValue, value);
+            // The veryLongList is too large to call "GetHashCode" on but it's Equals method will work
             Assert.AreEqual(veryLongList, veryLongList2);
+            Assert.AreNotEqual(longList, veryLongList2);
+            Assert.AreNotEqual(singletonList, veryLongList2);
         }
         
 
