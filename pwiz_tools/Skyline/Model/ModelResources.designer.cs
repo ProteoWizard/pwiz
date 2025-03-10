@@ -1199,6 +1199,41 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///@echo off
+        ///setlocal enabledelayedexpansion
+        ///
+        ///:: Set paths and URIs (you need to define these)
+        ///set &quot;CudaVersion={{0}}&quot;
+        ///set &quot;CudaInstaller=cuda_%CudaVersion%_windows_network.exe&quot;
+        ///set &quot;CudaDownloadUri=https://developer.download.nvidia.com/compute/cuda/%CudaVersion%/network_installers/%CudaInstaller%&quot;
+        ///set &quot;CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%&quot;
+        ///
+        ///set &quot;CuDNNVersion={{1}}&quot;
+        ///set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
+        ///set &quot;CuDNNDownloadUri=https://developer.download.n [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string NvidiaInstaller_Batch_script {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Batch_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+        ///    {0}
+        ///	
+        ///        Would you like to continue?
+        ///	
+        ///	Hint: Clicking &apos;OK&apos; activates installation of Nvidia libraries....
+        /// </summary>
+        public static string NvidiaInstaller_Requesting_Administrator_elevation {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Requesting_Administrator_elevation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The precursor m/z {0} is not measureable with your current instrument settings..
         /// </summary>
         public static string PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_ {

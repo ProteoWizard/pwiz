@@ -33,6 +33,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private readonly SrmDocument _doc;
         private readonly MidasLibrary _library;
         private readonly LibrarySpec _libSpec;
+        public string BuilderLibraryPath => _library.FilePath;
 
         public MidasBlibBuilder(SrmDocument doc, MidasLibrary library, string libName, string blibPath)
         {
@@ -90,6 +91,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
             }
         }
 
+        public string ProductLibraryPath()
+        {
+            return _library.FilePath;
+
+        }
         public LibrarySpec LibrarySpec { get { return _libSpec; } }
     }
 }
