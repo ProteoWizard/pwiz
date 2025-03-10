@@ -195,8 +195,7 @@ void BuildParser::setSpecFileName
 {
     curSpecFileName_.clear();
     if( checkFile ){
-        ifstream file(specfile.c_str());
-        if(!file.good()) {
+        if(!boost::filesystem::exists(specfile)) {
             throw BlibException(true, "Could not open spectrum file '%s' for search results file '%s'.", 
                                 specfile.c_str(), fullFilename_.c_str());
         }

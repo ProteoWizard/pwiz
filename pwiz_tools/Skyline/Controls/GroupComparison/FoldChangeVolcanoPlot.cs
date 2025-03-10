@@ -388,10 +388,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _minPValueLine = CreateAndInsert(index, 0.0, 0.0, Settings.Default.PValueCutoff, Settings.Default.PValueCutoff);
             }
 
-            zedGraphControl.GraphPane.YAxis.Scale.Min = 0.0;
-            zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;       
-            zedGraphControl.GraphPane.AxisChange();
-            zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
+            if (_dataChanged)
+            {
+                zedGraphControl.GraphPane.YAxis.Scale.Min = 0.0;
+                zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = true;
+                zedGraphControl.GraphPane.AxisChange();
+                zedGraphControl.GraphPane.XAxis.Scale.MinAuto = zedGraphControl.GraphPane.XAxis.Scale.MaxAuto = zedGraphControl.GraphPane.YAxis.Scale.MaxAuto = false;
+                _dataChanged = false;
+            }
 
             if (Settings.Default.GroupComparisonAvoidLabelOverlap)
             {
@@ -511,6 +515,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             CurveItem nearestCurveItem = null;
             var index = -1;
             var isSelected = false;
+            // Moving over a data point
             if (TryGetNearestCurveItem(point, ref nearestCurveItem, ref index))
             {
                 var lineItem = nearestCurveItem as LineItem;
@@ -520,7 +525,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 _selectedRow = (FoldChangeBindingSource.FoldChangeRow) lineItem[index].Tag;
                 isSelected = true;
             }
-            else
+            else   // Moving over a label in an active layout
             {
                 var labPoint = zedGraphControl.GraphPane.OverLabel(point, out var isOverBoundary);
                 if (labPoint != null )
@@ -531,7 +536,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         isSelected = true;
                     }
                 }
-                else
+                else   // Moving over a label without layout
                 {
                     using (var g = Graphics.FromHwnd(IntPtr.Zero))
                     {
@@ -682,6 +687,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
         private bool zedGraphControl_LabelDragComplete(ZedGraphControl sender, MouseEventArgs mouseEvent)
         {
             _labelsLayouts[GroupComparisonName] = zedGraphControl.GraphPane.Layout.PointsLayout;
+
             return true;
         }
 
@@ -722,9 +728,15 @@ namespace pwiz.Skyline.Controls.GroupComparison
         /// </summary>
         private void OnLabelOverlapPropertyChange(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == @"GroupComparisonAvoidLabelOverlap")
+            if (e.PropertyName == nameof(Settings.Default.GroupComparisonAvoidLabelOverlap))
+            {
+                Settings.Default.PropertyChanged -= OnLabelOverlapPropertyChange;
+                Settings.Default.GroupComparisonSuspendLabelLayout = false;
+                Settings.Default.PropertyChanged += OnLabelOverlapPropertyChange;
+                _labelsLayouts.Clear();
                 UpdateGraph();
-            else if (e.PropertyName == @"GroupComparisonSuspendLabelLayout")
+            }
+            else if (e.PropertyName == nameof(Settings.Default.GroupComparisonSuspendLabelLayout))
             {
                 if (!Settings.Default.GroupComparisonSuspendLabelLayout)
                 {

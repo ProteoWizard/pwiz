@@ -235,7 +235,7 @@ namespace pwiz.Skyline.Model.ElementLocators
 
         protected sealed override IEnumerable<NodeRef> EnumerateSiblingNodeRefs(DocNodeParent parentNode)
         {
-            var counts = new Dictionary<ElementRef, int>();
+            var counts = new Dictionary<string, int>();
             foreach (TDocNode child in parentNode.Children)
             {
                 var elementRef = (NodeRef) ChangeDocNode(parentNode, child);
@@ -244,15 +244,15 @@ namespace pwiz.Skyline.Model.ElementLocators
                     elementRef = (NodeRef) elementRef.ChangeIndex(0);
                 }
                 int count;
-                if (counts.TryGetValue(elementRef, out count))
+                if (counts.TryGetValue(elementRef.Name, out count))
                 {
                     yield return (NodeRef) elementRef.ChangeIndex(count);
-                    counts[elementRef] = count + 1;
+                    counts[elementRef.Name] = count + 1;
                 }
                 else
                 {
                     yield return elementRef;
-                    counts.Add(elementRef, 1);
+                    counts.Add(elementRef.Name, 1);
                 }
             }
         }

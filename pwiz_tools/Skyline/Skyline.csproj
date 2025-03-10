@@ -555,6 +555,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -597,6 +598,7 @@
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -2349,12 +2351,6 @@
     </Compile>
     <Compile Include="SettingsUI\EditLibraryDlg.Designer.cs">
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
-    </Compile>
-    <Compile Include="SettingsUI\BuildLibraryNotification.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.cs">
       <SubType>Form</SubType>
@@ -4294,12 +4290,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.ja.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.zh-CHS.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
@@ -6747,10 +6737,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.resx">

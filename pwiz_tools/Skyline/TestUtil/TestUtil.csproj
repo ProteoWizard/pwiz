@@ -166,6 +166,7 @@
     <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
+    <Compile Include="DllFinderTestUtil.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="FileLockingProcessFinder.cs" />

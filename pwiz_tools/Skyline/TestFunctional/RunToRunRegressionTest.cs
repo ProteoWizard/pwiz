@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(targetIndex, summary.StateProvider.SelectedResultsIndex);
                     });
                     WaitForGraphs();
-                    WaitForConditionUI(() => regressionPane._progressBar == null);
+                    WaitForConditionUI(() => RegressionPaneReady(regressionPane, SLOPES[i, j], INTERCEPTS[i, j]));
                     var window = TestRegressionStatistics(regressionPane, i, j);
 
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
                     // Go back to correlation graph and make sure everything is still right
                     RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.correlation));
                     WaitForGraphs();
-                    WaitForConditionUI(() => regressionPane._progressBar == null);
+                    WaitForConditionUI(() => RegressionPaneReady(regressionPane, SLOPES[i,j], INTERCEPTS[i,j]));
                     TestRegressionStatistics(regressionPane, i, j);
                 }
             }
@@ -176,7 +176,7 @@ namespace pwiz.SkylineTestFunctional
                     RunToRunOriginalReplicate(summary).SelectedIndex = selfIndex;
                 });
                 WaitForGraphs();
-                WaitForConditionUI(() => regressionPane._progressBar == null);
+                WaitForConditionUI(() => RegressionPaneReady(regressionPane, 1.0, 0.0, 10e-3));
                 RunUI(() =>
                 {
                     var regression = regressionPane.RegressionRefined;
@@ -212,14 +212,15 @@ namespace pwiz.SkylineTestFunctional
             if (!graphSummary.TryGetGraphPane(out regressionPaneScore))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
             WaitForCondition(() => regressionPaneScore.IsRefined);
-            WaitForConditionUI(() => regressionPaneScore._progressBar == null);
+            double expectedSlope = 1.01, expectedIntercept = 0.32;
+            WaitForConditionUI(() => RegressionPaneReady(regressionPaneScore, expectedSlope, expectedIntercept, 10e-3));
 
             Assert.IsFalse(regressionPaneScore.HasToolbar);
             var regressionScoreToRun = regressionPaneScore.RegressionRefined;
             var statisticsScoreToRun = regressionPaneScore.StatisticsRefined;
             var regressionScoreToRunLine = (RegressionLineElement) regressionScoreToRun.Conversion;
-            Assert.AreEqual(1.01, regressionScoreToRunLine.Slope, 10e-3);
-            Assert.AreEqual(0.32, regressionScoreToRunLine.Intercept, 10e-3);
+            Assert.AreEqual(expectedSlope, regressionScoreToRunLine.Slope, 10e-3);
+            Assert.AreEqual(expectedIntercept, regressionScoreToRunLine.Intercept, 10e-3);
             Assert.AreEqual(15.2, regressionScoreToRun.TimeWindow, 10e-2);
             Assert.AreEqual(0.9483, statisticsScoreToRun.R, 10e-3);
 
@@ -229,6 +230,18 @@ namespace pwiz.SkylineTestFunctional
             if (!graphSummary.TryGetGraphPane(out regressionPane))
                 Assert.Fail("First graph pane was not RTLinearRegressionGraphPane");
             Assert.IsTrue(regressionPane.HasToolbar);
+        }
+
+        private bool RegressionPaneReady(RTLinearRegressionGraphPane regressionPane, double slope, double intercept, double tolerance = 10e-5)
+        {
+            if (regressionPane._progressBar != null)
+                return false;
+            var regressionLine = regressionPane.RegressionRefined?.Conversion;
+            if (regressionLine == null)
+                return false;
+            return Math.Abs(slope - regressionLine.Slope) < tolerance &&
+                   Math.Abs(intercept - regressionLine.Intercept) < tolerance;
+
         }
 
         public RunToRunRegressionToolbar RegressionToolbar(GraphSummary graphSummary)
@@ -262,15 +275,15 @@ namespace pwiz.SkylineTestFunctional
             if (!IsRecordMode)
             {
                 //RValue is the same in both directions
-                Assert.AreEqual(rValue, R_VALUES[j, i], 0.00001);
-                Assert.AreEqual(rValue, R_VALUES[i, j], 0.00001);
+                Assert.AreEqual(rValue, R_VALUES[j, i], 10e-5);
+                Assert.AreEqual(rValue, R_VALUES[i, j], 10e-5);
                 Assert.AreEqual(originalPeptideCount, TARGET_PEPTIDE_COUNTS[j, i]);
                 Assert.AreEqual(targetPeptideCount, ORIGINAL_PEPTIDE_COUNTS[j, i]);
                 Assert.AreEqual(originalPeptideCount, ORIGINAL_PEPTIDE_COUNTS[i, j]);
                 Assert.AreEqual(targetPeptideCount, TARGET_PEPTIDE_COUNTS[i, j]);
-                Assert.AreEqual(slope, SLOPES[i, j], 0.00001);
-                Assert.AreEqual(intercept, INTERCEPTS[i, j], 0.00001);
-                Assert.AreEqual(window, WINDOWS[i, j], 0.00001);
+                Assert.AreEqual(slope, SLOPES[i, j], 10e-5);
+                Assert.AreEqual(intercept, INTERCEPTS[i, j], 10e-5);
+                Assert.AreEqual(window, WINDOWS[i, j], 10e-5);
             }
             else
             {

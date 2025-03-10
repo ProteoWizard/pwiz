@@ -773,7 +773,7 @@ namespace pwiz.PanoramaClient
         public override void DownloadFile(string fileUrl, string fileName, long fileSize, string realName, IProgressMonitor pm, IProgressStatus progressStatus)
         {
             // TODO: Change this to use IRequestHelper
-            using var wc = new WebClientWithCredentials(ServerUri, Username, Password);
+            using var wc = new LabkeySessionWebClient(new PanoramaServer(ServerUri, Username, Password));
             wc.DownloadProgressChanged += (s, e) =>
             {
                 var progressPercent = e.ProgressPercentage > 0 ? e.ProgressPercentage : -1;
@@ -818,9 +818,10 @@ namespace pwiz.PanoramaClient
 
         public override IRequestHelper GetRequestHelper(bool forPublish = false)
         {
+            var panoramaServer = new PanoramaServer(ServerUri, Username, Password);
             var webClient = forPublish
-                ? new NonStreamBufferingWebClient(ServerUri, Username, Password)
-                : new WebClientWithCredentials(ServerUri, Username, Password);
+                ? new NonStreamBufferingWebClient(panoramaServer)
+                : new LabkeySessionWebClient(panoramaServer);
             return new PanoramaRequestHelper(webClient);
         }
 
@@ -839,7 +840,7 @@ namespace pwiz.PanoramaClient
             string data = null;
             Exception error = null;
 
-            using (var webClient = GetWebClientForServer(new PanoramaServer(ServerUri, Username, Password)))
+            using (var webClient = new LabkeySessionWebClient(new PanoramaServer(ServerUri, Username, Password)))
             {
                 bool finishedDownloading = false;
                 webClient.DownloadStringAsync(queryUri);
@@ -860,15 +861,6 @@ namespace pwiz.PanoramaClient
             if (error != null)
                 throw error;
             return data;
-        }
-
-        private static WebClient GetWebClientForServer(PanoramaServer server)
-        {
-            return server.HasUserAccount()
-                ? new WebClientWithCredentials(server.URI, server.Username, server.Password)
-                : new UTF8WebClient();// Use anonymous client if we were not given a username and password. Otherwise, request will fail.
-                                      // Prior to LK 24.11 a call that failed authentication would proceed as an unauthenticated user
-
         }
     }
 

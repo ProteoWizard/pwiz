@@ -162,6 +162,5 @@
   </data>
   <data name="ProteinAssociation_CalculateProteinOrGeneGroups_Calculating_gene_groups" xml:space="preserve">
     <value>遺伝子グループを計算中</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>
