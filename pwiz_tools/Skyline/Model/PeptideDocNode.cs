@@ -1411,7 +1411,7 @@ namespace pwiz.Skyline.Model
             {
                 var listChromInfoList = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList(TransitionGroupCount));
                 listChromInfoList = CopyChromInfoAttributes(nodePeptide, listChromInfoList);
-                var results = nodePeptide.Results??PeptideResults.Empty.Merge(listChromInfoList);
+                var results = (nodePeptide.Results??PeptideResults.Empty).Merge(listChromInfoList);
                 if (!ReferenceEquals(results, nodePeptide.Results))
                     nodePeptide = nodePeptide.ChangeResults(results);
 

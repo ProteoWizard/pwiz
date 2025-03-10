@@ -76,16 +76,20 @@ namespace pwiz.Common.Collections
         private class Bits : IntegerList
         {
             private readonly int _count;
-            private readonly BitVector32[] _bits;
+            private readonly int[] _bits;
 
             public Bits(int count, IEnumerable<bool> boolValues)
             {
                 _count = count;
-                _bits = new BitVector32[(count + 31) / 32];
+                _bits = new int[(count + 31) / 32];
                 int index = 0;
                 foreach (var boolValue in boolValues)
                 {
-                    _bits[index / 32][index % 32] = boolValue;
+                    if (boolValue)
+                    {
+                        _bits[index / 32] |= 1 << (index % 32);
+                    }
+                    index++;
                 }
             }
 
@@ -108,7 +112,8 @@ namespace pwiz.Common.Collections
                         throw new IndexOutOfRangeException();
                     }
 
-                    return _bits[index / 32][index % 32] ? 1 : 0;
+                    var mask = 1 << (index % 32);
+                    return 0 == (_bits[index / 32] & mask) ? 0 : 1;
                 }
             }
 

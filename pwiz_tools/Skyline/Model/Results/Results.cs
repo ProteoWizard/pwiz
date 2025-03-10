@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model.Results
     public abstract class Results<TItem> : Immutable, IList<ChromInfoList<TItem>>
         where TItem : ChromInfo
     {
-        protected ImmutableList<ReferenceValue<ChromFileInfoId>> FileIds { get; private set; }
+        protected ImmutableList<ChromFileInfoId> FileIds { get; private set; }
         protected ReplicatePositions ReplicatePositions { get; private set; }
         protected abstract TItem GetItemAt(int i);
         protected abstract void SetItems(IList<TItem> items);
@@ -58,7 +58,7 @@ namespace pwiz.Skyline.Model.Results
 
         private void SetFlatList(IList<TItem> items)
         {
-            FileIds = items.Select(item => ReferenceValue.Of(item.FileId)).ToImmutable();
+            FileIds = items.Select(item => item.FileId).ToImmutable();
             SetItems(items);
         }
 
