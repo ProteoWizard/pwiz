@@ -895,7 +895,7 @@ namespace pwiz.Skyline.Model
             var annotations = Annotations.Merge(nodePepMerge.Annotations);
             if (!ReferenceEquals(annotations, Annotations))
                 result = (PeptideDocNode) result.ChangeAnnotations(annotations);
-            return result.UpdateResults(settings);
+            return result.UpdateResults(settings, diff.ValueCache);
         }
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse = true)
@@ -1104,7 +1104,7 @@ namespace pwiz.Skyline.Model
             }
 
             if (diff.DiffResults || ChangedResults(nodeResult))
-                nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
+                nodeResult = nodeResult.UpdateResults(settingsNew, diff.ValueCache);
 
             return nodeResult;
         }
@@ -1271,7 +1271,7 @@ namespace pwiz.Skyline.Model
             return tranGroup.GetMatchingTransitions(settings, nodeGroupMatching, explicitMods);
         }
 
-        private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)
+        private PeptideDocNode UpdateResults(SrmSettings settingsNew, ValueCache valueCache)
         {
             // First check whether any child results are present
             if (!settingsNew.HasResults || Children.Count == 0)
@@ -1302,7 +1302,7 @@ namespace pwiz.Skyline.Model
                 resultsCalc.AddGroupChromInfo(nodeGroup);
             }
 
-            return resultsCalc.UpdateResults(this);
+            return resultsCalc.UpdateResults(this, valueCache);
         }
 
         private bool ChangedResults(DocNodeParent nodePeptide)
@@ -1407,13 +1407,13 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            public PeptideDocNode UpdateResults(PeptideDocNode nodePeptide)
+            public PeptideDocNode UpdateResults(PeptideDocNode nodePeptide, ValueCache valueCache)
             {
                 var listChromInfoList = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList(TransitionGroupCount));
                 listChromInfoList = CopyChromInfoAttributes(nodePeptide, listChromInfoList);
                 var results = (nodePeptide.Results??PeptideResults.Empty).Merge(listChromInfoList);
                 if (!ReferenceEquals(results, nodePeptide.Results))
-                    nodePeptide = nodePeptide.ChangeResults(results);
+                    nodePeptide = nodePeptide.ChangeResults(results.ValueFromCache(valueCache));
 
                 var listGroupsNew = new List<DocNode>();
                 foreach (TransitionGroupDocNode nodeGroup in nodePeptide.Children)
@@ -1427,7 +1427,7 @@ namespace pwiz.Skyline.Model
                     var resultsGroup = (nodeGroup.Results ?? TransitionGroupResults.Empty).Merge(listGroupInfoList);
                     var nodeGroupNew = nodeGroup;
                     if (!ReferenceEquals(resultsGroup, nodeGroup.Results))
-                        nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
+                        nodeGroupNew = nodeGroup.ChangeResults(resultsGroup.ValueFromCache(valueCache));
 
                     var listTransNew = new List<DocNode>();
                     foreach (TransitionDocNode nodeTran in nodeGroup.Children)
@@ -1436,7 +1436,7 @@ namespace pwiz.Skyline.Model
                         var nodeTranConvert = nodeTran;
                         var listTranInfoList = _listResultCalcs.ConvertAll(calc =>
                             calc.UpdateTransitionUserSetMatched(nodeTranConvert.Results[calc.ResultsIndex], isMatching));
-                        var resultsTran = (nodeTran.Results ?? TransitionResults.Empty).Merge(listTranInfoList);
+                        var resultsTran = (nodeTran.Results ?? TransitionResults.Empty).Merge(listTranInfoList).ValueFromCache(valueCache);
                         listTransNew.Add(ReferenceEquals(resultsTran, nodeTran.Results)
                                              ? nodeTran
                                              : nodeTran.ChangeResults(resultsTran));

@@ -27,7 +27,7 @@ namespace pwiz.Skyline.Model.Results
     public abstract class Results<TItem> : Immutable, IList<ChromInfoList<TItem>>
         where TItem : ChromInfo
     {
-        protected ImmutableList<ChromFileInfoId> FileIds { get; private set; }
+        protected ImmutableList<ReferenceValue<ChromFileInfoId>> FileIds { get; private set; }
         protected ReplicatePositions ReplicatePositions { get; private set; }
         protected abstract TItem GetItemAt(int i);
         protected abstract void SetItems(IList<TItem> items);
@@ -58,7 +58,11 @@ namespace pwiz.Skyline.Model.Results
 
         private void SetFlatList(IList<TItem> items)
         {
-            FileIds = items.Select(item => item.FileId).ToImmutable();
+            var newFileIds = items.Select(item => ReferenceValue.Of(item.FileId)).ToImmutable();
+            if (!Equals(newFileIds, FileIds))
+            {
+                FileIds = newFileIds;
+            }
             SetItems(items);
         }
 
@@ -109,7 +113,14 @@ namespace pwiz.Skyline.Model.Results
 
         protected bool Equals(Results<TItem> other)
         {
-            return FileIds.Equals(other.FileIds) && ReplicatePositions.Equals(other.ReplicatePositions);
+            if (!ReferenceEquals(FileIds, other.FileIds))
+            {
+                if (!FileIds.Select(id => id.Value).SequenceEqual(other.FileIds.Select(id => id.Value)))
+                {
+                    return false;
+                }
+            }
+            return ReplicatePositions.Equals(other.ReplicatePositions);
         }
 
         public override bool Equals(object obj)
@@ -122,10 +133,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                return (FileIds.GetHashCode() * 397) ^ ReplicatePositions.GetHashCode();
-            }
+            return ReplicatePositions.GetHashCode();
         }
 
         private bool ContentEquals<TList>(IList<TList> lists) where TList:IEnumerable<TItem>
@@ -354,6 +362,29 @@ namespace pwiz.Skyline.Model.Results
         {
             throw new InvalidOperationException();
         }
+
+        public virtual Results<TItem> ValueFromCache(ValueCache valueCache)
+        {
+            bool changed = false;
+            var newReplicatePositions = CacheValue(valueCache, ReplicatePositions, ref changed);
+            var newFileIds = CacheValue(valueCache, FileIds, ref changed);
+            if (!changed)
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ReplicatePositions = newReplicatePositions;
+                im.FileIds = newFileIds;
+            });
+        }
+
+        protected static T CacheValue<T>(ValueCache valueCache, T value, ref bool changed) where T : class
+        {
+            var result = valueCache.CacheValue(value);
+            changed |= !ReferenceEquals(value, result);
+            return result;
+        }
     }
 
     public class TransitionResults : Results<TransitionChromInfo>
@@ -379,7 +410,7 @@ namespace pwiz.Skyline.Model.Results
         private ImmutableList<Annotations> _annotations;
         [CanBeNull]
         private ImmutableList<UserSet> _userSets;
-        [CanBeNull]
+
         private ImmutableList<PeakShapeValues?> _peakShapeValues;
         private ImmutableList<Flags> _flags;
         [CanBeNull]
@@ -520,6 +551,35 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode * 397) ^ (_peakIdentifications != null ? _peakIdentifications.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        public override Results<TransitionChromInfo> ValueFromCache(ValueCache valueCache)
+        {
+            bool changed = false;
+            var newOptimizationSteps = CacheValue(valueCache, _optimizationSteps, ref changed);
+            var newRetentionTimes = CacheValue(valueCache, _retentionTimes, ref changed);
+            var newStartRetentionTimes = CacheValue(valueCache, _startRetentionTimes, ref changed);
+            var newEndRetentionTimes = CacheValue(valueCache, _endRetentionTimes, ref changed);
+            var newIonMobilities = CacheValue(valueCache, _ionMobilities, ref changed);
+            var newRanks = CacheValue(valueCache, _ranks, ref changed);
+            var newRanksByLevel = CacheValue(valueCache, _ranksByLevel, ref changed);
+            var newPeakIdentifications = CacheValue(valueCache, _peakIdentifications, ref changed);
+            var result = (TransitionResults) base.ValueFromCache(valueCache);
+            if (!changed)
+            {
+                return result;
+            }
+            return ChangeProp(ImClone(result), im =>
+            {
+                im._optimizationSteps = newOptimizationSteps;
+                im._retentionTimes = newRetentionTimes;
+                im._startRetentionTimes = newStartRetentionTimes;
+                im._endRetentionTimes = newEndRetentionTimes;
+                im._ionMobilities = newIonMobilities;
+                im._ranks = newRanks;
+                im._ranksByLevel = newRanksByLevel;
+                im._peakIdentifications = newPeakIdentifications;
+            });
         }
     }
 
@@ -665,6 +725,34 @@ namespace pwiz.Skyline.Model.Results
                 hashCode = (hashCode * 397) ^ (_userSets != null ? _userSets.GetHashCode() : 0);
                 return hashCode;
             }
+        }
+
+        public override Results<TransitionGroupChromInfo> ValueFromCache(ValueCache valueCache)
+        {
+            bool changed = false;
+            var newOptimizationSteps = CacheValue(valueCache, _optimizationSteps, ref changed);
+            var newPeakCountRatios = CacheValue(valueCache, _peakCountRatios, ref changed);
+            var newRetentionTimes = CacheValue(valueCache, _retentionTimes, ref changed);
+            var newStartTimes = CacheValue(valueCache, _startTimes, ref changed);
+            var newEndTimes = CacheValue(valueCache, _endTimes, ref changed);
+            var newIonMobilityInfos = CacheValue(valueCache, _ionMobilityInfos, ref changed);
+            var newPeakIdentifications = CacheValue(valueCache, _peakIdentifications, ref changed);
+            var result = (TransitionGroupResults) base.ValueFromCache(valueCache);
+            if (!changed)
+            {
+                return result;
+            }
+
+            return ChangeProp(ImClone(result), im =>
+            {
+                im._optimizationSteps = newOptimizationSteps;
+                im._peakCountRatios = newPeakCountRatios;
+                im._retentionTimes = newRetentionTimes;
+                im._startTimes = newStartTimes;
+                im._endTimes = newEndTimes;
+                im._ionMobilityInfos = newIonMobilityInfos;
+                im._peakIdentifications = newPeakIdentifications;
+            });
         }
     }
 

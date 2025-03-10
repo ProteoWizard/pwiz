@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Model.Serialization
     public class DocumentReader : DocumentSerializer
     {
         private readonly StringPool _stringPool = new StringPool();
+        private readonly ValueCache _valueCache = new ValueCache();
         private AnnotationScrubber _annotationScrubber;
         public DocumentFormat FormatVersion
         {
@@ -1315,7 +1316,7 @@ namespace pwiz.Skyline.Model.Serialization
         private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader)
         {
             if (reader.IsStartElement(EL.peptide_results))
-                return PeptideResults.Empty.ChangeResults(ReadResults(reader, EL.peptide_result, ReadPeptideChromInfo));
+                return PeptideResults.Empty.ChangeResults(ReadResults(reader, EL.peptide_result, ReadPeptideChromInfo)).ValueFromCache(_valueCache);
             return null;
         }
 
@@ -1433,7 +1434,7 @@ namespace pwiz.Skyline.Model.Serialization
         private Results<TransitionGroupChromInfo> ReadTransitionGroupResults(XmlReader reader)
         {
             if (reader.IsStartElement(EL.precursor_results))
-                return TransitionGroupResults.Empty.ChangeResults(ReadResults(reader, EL.precursor_peak, ReadTransitionGroupChromInfo));
+                return TransitionGroupResults.Empty.ChangeResults(ReadResults(reader, EL.precursor_peak, ReadTransitionGroupChromInfo)).ValueFromCache(_valueCache);
             return null;
         }
 
@@ -1669,13 +1670,13 @@ namespace pwiz.Skyline.Model.Serialization
                 var complexFragmentIon = new NeutralFragmentIon(parts, info.Losses);
                 var chargedIon = new ComplexFragmentIon(transition, complexFragmentIon, mods);
                 node = crosslinkBuilder.MakeTransitionDocNode(chargedIon, isotopeDist, info.Annotations, quantInfo,
-                    info.ExplicitValues, info.Results);
+                    info.ExplicitValues, info.Results?.ValueFromCache(_valueCache));
             }
             else
             {
                 var mass = Settings.GetFragmentMass(group, mods, transition, isotopeDist);
                 node = new TransitionDocNode(transition, info.Annotations, losses,
-                    mass, quantInfo, info.ExplicitValues, info.Results);
+                    mass, quantInfo, info.ExplicitValues, info.Results?.ValueFromCache(_valueCache));
             }
 
             ValidateSerializedVsCalculatedProductMz(declaredProductMz, node);  // Sanity check
