@@ -431,9 +431,11 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         }
     }
 
+    bool psmsAreNonRedundant = dynamic_cast<NonRedundantPSM*>(psms_.front()) != nullptr;
+
     // for reading spectrum file
     if( specReader_ ) {
-        if (needsSpectra)
+        if (!psmsAreNonRedundant && needsSpectra)
         {
             Verbosity::status("Loading %s.", curSpecFileName_.c_str());
             specReader_->openFile(curSpecFileName_.c_str());
@@ -451,11 +453,13 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
     blibMaker_.beginTransaction();
 
     // add the file name to the library
-    int fileId;
-    if( specFilename.empty() ){
-        fileId = (int) insertSpectrumFilename(curSpecFileName_);
-    } else {
-        fileId = (int) insertSpectrumFilename(specFilename, true); // insert as is
+    int fileId = 0;
+    if( !psmsAreNonRedundant ) {
+        if( specFilename.empty() ){
+            fileId = (int) insertSpectrumFilename(curSpecFileName_);
+        } else {
+            fileId = (int) insertSpectrumFilename(specFilename, true); // insert as is
+        }
     }
 
     BiblioSpec::Verbosity::debug("BuildParser lookup method is %s", specIdTypeToString(lookUpBy_));

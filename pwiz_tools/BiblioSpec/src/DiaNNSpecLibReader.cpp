@@ -1068,6 +1068,7 @@ bool DiaNNSpecLibReader::parseFile()
     std::string_view run, fileName, proteinGrp, precursorId;
     RtPSM redundantPSM;
     string firstRun; // used as a placeholder for setSpecFileName; SpectrumSourceFile/fileId is actually managed while reading rows
+    int64_t redundantPsmCount = 0;
 
     // build PSM list from speclib; but filename and retention time info will be missing
     // iterate through report rows, keep track of best PSM for each precursorId
@@ -1116,6 +1117,7 @@ bool DiaNNSpecLibReader::parseFile()
         {
             retentionTimes.emplace_back(redundantPSM);
             retentionTimes.back().fileId = insertSpectrumFilename(currentRunFilename, true);
+            ++redundantPsmCount;
         }
 
         auto psm = findItr->second;
@@ -1149,6 +1151,7 @@ bool DiaNNSpecLibReader::parseFile()
 
     filteredOutPsmCount_ = speclib.entries.size() - psms_.size();
 
+    Verbosity::status("Building retention time table with %ld entries.", redundantPsmCount);
     blibMaker_.beginTransaction();
     for (const auto& kvp : retentionTimesByPrecursorId)
     {
@@ -1190,8 +1193,9 @@ bool DiaNNSpecLibReader::parseFile()
     }
     blibMaker_.endTransaction();
 
+    Verbosity::status("Reading %d spectra from speclib.", psms_.size());
     setSpecFileName(firstRun, false);
-    buildTables(GENERIC_QVALUE, firstRun);
+    buildTables(GENERIC_QVALUE);
 
     return true;
 }
