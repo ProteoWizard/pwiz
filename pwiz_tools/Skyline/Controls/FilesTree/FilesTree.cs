@@ -67,6 +67,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public FilesTreeNode Root { get; private set; }
 
+        #region Testing helpers
+
         // Used for testing
         public string RootNodeText()
         {
@@ -85,15 +87,16 @@ namespace pwiz.Skyline.Controls.FilesTree
             return _fileSystemWatcher?.Path;
         }
 
-        public void ScrollToTop()
-        {
-            Nodes[0]?.EnsureVisible();
-        }
-
         // Used for testing
         public void ScrollToFolder<T>() where T : FileNode
         {
             Folder<T>().EnsureVisible();
+        }
+        #endregion
+
+        public void ScrollToTop()
+        {
+            Nodes[0]?.EnsureVisible();
         }
 
         public void CollapseNodesInFolder<T>() where T : FileNode
@@ -136,7 +139,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             DocumentContainer = documentUIContainer;
 
-            LabelEdit = false;
             DoubleBuffered = true;
 
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
@@ -181,7 +183,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     {
                         _fileSystemWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
                         _fileSystemWatcher.SynchronizingObject = this;
-                        _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName;
+                        _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
                         _fileSystemWatcher.IncludeSubdirectories = true;
                         _fileSystemWatcher.EnableRaisingEvents = true;
                         _fileSystemWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
@@ -555,13 +557,18 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Does minimal traversal of the tree only walking up to root 
         // from the given node.
         private static void UpdateFileImages(FilesTreeNode filesTreeNode)
-        { 
+        {
             do
             {
                 filesTreeNode.OnModelChanged();
                 filesTreeNode = (FilesTreeNode)filesTreeNode.Parent;
             }
             while (filesTreeNode.Parent != null);
+        }
+
+        public bool SupportsRename()
+        {
+            return Model.GetType() == typeof(Replicate);
         }
     }
 }

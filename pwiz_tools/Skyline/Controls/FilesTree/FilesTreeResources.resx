@@ -177,4 +177,7 @@
   <data name="FilesTree_TreeNode_RenderTip_LocalFilePath" xml:space="preserve">
       <value>Local File Path</value>
   </data>
+  <data name="Change_ReplicateName" xml:space="preserve">
+      <value>Change replicate name</value>
+  </data>
 </root>

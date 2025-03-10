@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Model.Results;
@@ -65,6 +66,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => SkylineWindow.FilesTree.IsMonitoringFileSystem());
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
+            Assert.IsTrue(OnlyContainsFilesTreeNodes(SkylineWindow.FilesTree.Root));
+
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
 
@@ -86,6 +89,8 @@ namespace pwiz.SkylineTestFunctional
             // FilesTree should only have one set of nodes after opening a new document
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+
+            Assert.IsTrue(OnlyContainsFilesTreeNodes(SkylineWindow.FilesTree.Root));
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
@@ -136,7 +141,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Expand());
             WaitForConditionUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded);
 
-            const string newName = "Test this name";
+            string newName = "Test this name";
             RunUI(() =>
             {
                 SkylineWindow.ModifyDocument("Rename replicate in FilesTree test", srmDoc =>
@@ -157,16 +162,19 @@ namespace pwiz.SkylineTestFunctional
             doc = WaitForDocumentChange(doc);
 
             CheckReplicateEquivalence(42);
-            // make sure UI updated without adding new top-level folders
+            // make sure no new top-level folders were added
             Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
 
-            // make sure model name updated 
             Assert.AreEqual(newName, doc.Settings.MeasuredResults.Chromatograms[3].Name);
-            // make sure correct TreeNode updated with new name
             Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Name);
-            // folder was expanded before rename and should remain expanded. If not expanded, make sure
-            // the model associated with the node has the same Identity as the model it replaced
+            // make sure expanded folder remains expanded. If not, the TreeNode may be new indicating a problem with the model.
             RunUI(() => Assert.IsTrue(SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded));
+
+            // Change Replicate name by editing the FilesTree directly
+            newName = "NEW REPLICATE NAME";
+            var treeNode = (FilesTreeNode)SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0];
+            RunUI(() => SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName));
+            Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
 
             // Selecting replicate should update selected index / graphs
             var filesTreeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[4] as FilesTreeNode;
@@ -296,7 +304,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ChromatogramCache));
 
             //
-            // Watch for changes on the file system
+            // Watch for file system changes
             //
             var replicateFolderModel = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var sampleFileTreeNode = (FilesTreeNode)replicateFolderModel.Nodes[0].Nodes[0];
@@ -331,6 +339,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent).ImageAvailable, sampleFileTreeNode.Parent.ImageIndex);
             Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageAvailable, sampleFileTreeNode.Parent.Parent.ImageIndex);
             Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
+
+            Assert.IsTrue(OnlyContainsFilesTreeNodes(SkylineWindow.FilesTree.Root));
 
             // // Project Files => Audit Log Action
             // RunUI(() =>
@@ -376,6 +386,23 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(docNodes[i].Name, replicateFolderModel.Files[i].Name);
                 Assert.AreEqual(docNodes[i].Name, treeNodes[i].Name);
             }
+        }
+
+        // FilesTree assumes the tree only contains nodes extending FilesTreeNode
+        // so make sure other TreeNode types (ex: TreeNodeMS subclasses) were not 
+        // inadvertently added to the tree.
+        private static bool OnlyContainsFilesTreeNodes(TreeNode node)
+        {
+            if (!typeof(FilesTreeNode).IsAssignableFrom(node.GetType()))
+                return false;
+
+            foreach (TreeNode n in node.Nodes)
+            {
+                if (!OnlyContainsFilesTreeNodes(n))
+                    return false;
+            }
+
+            return true;
         }
     }
 

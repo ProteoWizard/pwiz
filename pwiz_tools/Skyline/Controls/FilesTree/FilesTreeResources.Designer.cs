@@ -61,6 +61,15 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change replicate name.
+        /// </summary>
+        public static string Change_ReplicateName {
+            get {
+                return ResourceManager.GetString("Change_ReplicateName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquired Time.
         /// </summary>
         public static string FilesTree_TreeNode_RenderTip_AcquiredTime {

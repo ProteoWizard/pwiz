@@ -678,4 +678,7 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="added_spectrum_filter" xml:space="preserve">
     <value>Added spectrum filter</value>
   </data>
+  <data name="files_tree_renamed_node" xml:space="preserve">
+    <value>>Renamed node {0} to {1} in the Files window</value>
+  </data>
 </root>

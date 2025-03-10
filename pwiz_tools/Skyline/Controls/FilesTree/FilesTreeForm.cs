@@ -17,8 +17,11 @@
 using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using Process = System.Diagnostics.Process;
@@ -43,6 +46,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
+            filesTree.LabelEdit = true;
+            filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
+            filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
 
             // FilesTree => context menu
             filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
@@ -131,6 +137,45 @@ namespace pwiz.Skyline.Controls.FilesTree
         public void OpenLibraryExplorerDialog()
         {
             SkylineWindow.ViewSpectralLibraries();
+        }
+
+        public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
+        {
+            var chromatogramSetId = (ChromatogramSetId)node.Model.IdentityPath.GetIdentity(0);
+            var chromatogram = SkylineWindow.Document.MeasuredResults.FindChromatogramSet(chromatogramSetId);
+
+            if (chromatogram == null)
+                return true;
+
+            var oldName = chromatogram.Name;
+            var newName = newLabel;
+
+            // CONSIDER: using IdentityPath (and DocNode.ReplaceChild?) to simplify replicate name changes
+            //           But IdentityPath support is missing on ChromatogramSet because it does not inherit
+            //           from DocNode so will revisit this later.
+            SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, 
+                document =>
+                {
+                    var newChromatogram = (ChromatogramSet)chromatogram.ChangeName(newName);
+                    var measuredResults = SkylineWindow.Document.MeasuredResults;
+
+                    var chromatograms = measuredResults.Chromatograms.ToArray();
+                    for (var i = 0; i < chromatograms.Length; i++)
+                    {
+                        if (ReferenceEquals(chromatograms[i].Id, newChromatogram.Id))
+                        {
+                            chromatograms[i] = newChromatogram;
+                        }
+                    }
+
+                    measuredResults = measuredResults.ChangeChromatograms(chromatograms);
+                    return document.ChangeMeasuredResults(measuredResults);
+                },
+                docPair => 
+                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_renamed_node, docPair.NewDocumentType, oldName, newName)
+            );
+
+            return false;
         }
 
         #region ITipDisplayer implementation
@@ -291,6 +336,26 @@ namespace pwiz.Skyline.Controls.FilesTree
             else
             {
                 _nodeTip?.HideTip();
+            }
+        }
+
+        private static void FilesTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
+        {
+            var filesTreeNode = (FilesTreeNode)e.Node;
+
+            // Only allow edit on Replicate tree nodes
+            if (!filesTreeNode.SupportsRename())
+            {
+                e.CancelEdit = true;
+            }
+        }
+
+        private void FilesTree_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        {
+            var cancel = EditTreeNodeLabel((FilesTreeNode)e.Node, e.Label);
+            if (cancel)
+            {
+                e.CancelEdit = true;
             }
         }
     }
