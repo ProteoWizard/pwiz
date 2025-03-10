@@ -175,6 +175,7 @@
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="IntegerListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
