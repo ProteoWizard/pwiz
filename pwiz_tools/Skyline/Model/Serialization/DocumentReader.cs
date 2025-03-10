@@ -444,7 +444,7 @@ namespace pwiz.Skyline.Model.Serialization
                     return TransitionChromInfo.FromProtoTransitionResults(_documentReader._annotationScrubber, Settings, protoTransitionResults);
                 }
                 if (reader.IsStartElement(EL.transition_results))
-                    return _documentReader.ReadResults(reader, EL.transition_peak, ReadTransitionPeak);
+                    return TransitionResults.Empty.ChangeResults(_documentReader.ReadResults(reader, EL.transition_peak, ReadTransitionPeak));
                 return null;
             }
 
@@ -525,7 +525,7 @@ namespace pwiz.Skyline.Model.Serialization
             }
         }
 
-        private Results<TItem> ReadResults<TItem>(XmlReader reader, string start,
+        private IList<ChromInfoList<TItem>> ReadResults<TItem>(XmlReader reader, string start,
             Func<XmlReader, ChromFileInfo, TItem> readInfo)
             where TItem : ChromInfo
         {
@@ -583,7 +583,7 @@ namespace pwiz.Skyline.Model.Serialization
                 if (arrayListChromInfos[i] != null)
                     arrayChromInfoLists[i] = new ChromInfoList<TItem>(arrayListChromInfos[i]);
             }
-            return new Results<TItem>(arrayChromInfoLists);
+            return arrayChromInfoLists;
         }
 
         /// <summary>
@@ -1315,7 +1315,7 @@ namespace pwiz.Skyline.Model.Serialization
         private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader)
         {
             if (reader.IsStartElement(EL.peptide_results))
-                return ReadResults(reader, EL.peptide_result, ReadPeptideChromInfo);
+                return PeptideResults.Empty.ChangeResults(ReadResults(reader, EL.peptide_result, ReadPeptideChromInfo));
             return null;
         }
 
@@ -1433,7 +1433,7 @@ namespace pwiz.Skyline.Model.Serialization
         private Results<TransitionGroupChromInfo> ReadTransitionGroupResults(XmlReader reader)
         {
             if (reader.IsStartElement(EL.precursor_results))
-                return ReadResults(reader, EL.precursor_peak, ReadTransitionGroupChromInfo);
+                return TransitionGroupResults.Empty.ChangeResults(ReadResults(reader, EL.precursor_peak, ReadTransitionGroupChromInfo));
             return null;
         }
 

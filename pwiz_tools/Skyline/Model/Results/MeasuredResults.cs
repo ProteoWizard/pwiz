@@ -104,9 +104,9 @@ namespace pwiz.Skyline.Model.Results
                     chromFileInfo.ExplicitGlobalStandardArea.HasValue);
 
                 // Pre-allocate empty arrays in case they are needed
-                EmptyPeptideResults = new Results<PeptideChromInfo>(new ChromInfoList<PeptideChromInfo>[count]);
-                EmptyTransitionGroupResults = new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[count]);
-                EmptyTransitionResults = new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[count]);
+                EmptyPeptideResults = PeptideResults.Empty.ChangeResults(new ChromInfoList<PeptideChromInfo>[count]);
+                EmptyTransitionGroupResults = TransitionGroupResults.Empty.ChangeResults(new ChromInfoList<TransitionGroupChromInfo>[count]);
+                EmptyTransitionResults = TransitionResults.Empty.ChangeResults(new ChromInfoList<TransitionChromInfo>[count]);
                 CheckForNewChromatogramData();
                 _medianTicArea = CalculateMedianTicArea();
             }

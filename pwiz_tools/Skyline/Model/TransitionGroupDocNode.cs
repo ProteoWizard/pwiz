@@ -2040,7 +2040,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 var listChromInfoLists = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList());
-                var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
+                var results = (nodeGroup.Results ?? TransitionGroupResults.Empty).Merge(listChromInfoLists);
 
                 var nodeGroupNew = nodeGroup;
                 if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
@@ -2053,7 +2053,7 @@ namespace pwiz.Skyline.Model
             private TransitionDocNode UpdateTransitionNode(TransitionDocNode nodeTran, int iTran)
             {
                 var chromInfoSet = _arrayTransitionChromInfoSets[iTran];
-                var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, chromInfoSet.ChromInfoLists);
+                var results = (nodeTran.Results??TransitionResults.Empty).Merge(chromInfoSet.ChromInfoLists);
                 if (!Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
                     nodeTran = nodeTran.ChangeResults(results);
                 if (nodeTran.ResultsRank != chromInfoSet.AverageRank)
@@ -2792,9 +2792,7 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(string.Format(ModelResources.TransitionGroupDocNode_ChangePrecursorAnnotations_File_Id__0__does_not_match_any_file_in_document_,
                                                fileId.GlobalIndex));
             groupChromInfo = groupChromInfo.ChangeAnnotations(annotations);
-            return ChangeResults(Results<TransitionGroupChromInfo>.ChangeChromInfo(Results,
-                                                                                   fileId,
-                                                                                   groupChromInfo));
+            return ChangeResults(Results.ChangeChromInfo(fileId, groupChromInfo));
         }
 
         public TransitionGroupDocNode AddPrecursorAnnotations(ChromFileInfoId fileId, Dictionary<string, string> annotations)
@@ -3131,7 +3129,7 @@ namespace pwiz.Skyline.Model
             }
             if (ArrayUtil.InnerReferencesEqual<TransitionGroupChromInfo, ChromInfoList<TransitionGroupChromInfo>>(listResults, Results))
                 return Results;
-            return new Results<TransitionGroupChromInfo>(listResults);
+            return Results.ChangeResults(listResults);
         }
 
         #endregion

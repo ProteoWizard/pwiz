@@ -19,6 +19,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace pwiz.Common.Collections
 {
@@ -72,11 +73,41 @@ namespace pwiz.Common.Collections
             }
             return list;
         }
+        
+        [CanBeNull]
+        public static ImmutableList<T> UnlessAllEqual<T>(this ImmutableList<T> list, T value)
+        {
+            var maybeConstantList = MaybeConstant(list);
+            if (maybeConstantList == null || maybeConstantList.Count == 0 || !Equals(maybeConstantList[0], value))
+            {
+                return maybeConstantList;
+            }
+            if (maybeConstantList is ConstantList<T>)
+            {
+                return null;
+            }
+            return maybeConstantList;
+        }
+        
+        [CanBeNull]
+        public static ImmutableList<T> UnlessAllNull<T>(this ImmutableList<T> list)
+        {
+            var maybeConstantList = MaybeConstant(list);
+            if (maybeConstantList == null || maybeConstantList.Count == 0 || !Equals(maybeConstantList[0], null))
+            {
+                return maybeConstantList;
+            }
+            if (maybeConstantList is ConstantList<T>)
+            {
+                return null;
+            }
+            return maybeConstantList;
+        }
 
         /// <summary>
         /// Returns a <see cref="NullableList{T}"/>
         /// </summary>
-        public static ImmutableList<T?> Nullables<T>(this IEnumerable<T?> list) where T:struct
+        public static NullableList<T> Nullables<T>(this IEnumerable<T?> list) where T:struct
         {
             return list as NullableList<T> ?? new NullableList<T>(list);
         }

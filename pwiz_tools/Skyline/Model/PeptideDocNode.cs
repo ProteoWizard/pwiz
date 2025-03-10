@@ -1411,7 +1411,7 @@ namespace pwiz.Skyline.Model
             {
                 var listChromInfoList = _listResultCalcs.ConvertAll(calc => calc.CalcChromInfoList(TransitionGroupCount));
                 listChromInfoList = CopyChromInfoAttributes(nodePeptide, listChromInfoList);
-                var results = Results<PeptideChromInfo>.Merge(nodePeptide.Results, listChromInfoList);
+                var results = nodePeptide.Results??PeptideResults.Empty.Merge(listChromInfoList);
                 if (!ReferenceEquals(results, nodePeptide.Results))
                     nodePeptide = nodePeptide.ChangeResults(results);
 
@@ -1424,7 +1424,7 @@ namespace pwiz.Skyline.Model
                     var listGroupInfoList = _listResultCalcs.ConvertAll(calc =>
                         calc.UpdateTransitionGroupUserSetMatched(nodeGroupConvert.GetSafeChromInfo(calc.ResultsIndex),
                             isMatching));
-                    var resultsGroup = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listGroupInfoList);
+                    var resultsGroup = (nodeGroup.Results ?? TransitionGroupResults.Empty).Merge(listGroupInfoList);
                     var nodeGroupNew = nodeGroup;
                     if (!ReferenceEquals(resultsGroup, nodeGroup.Results))
                         nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
@@ -1436,7 +1436,7 @@ namespace pwiz.Skyline.Model
                         var nodeTranConvert = nodeTran;
                         var listTranInfoList = _listResultCalcs.ConvertAll(calc =>
                             calc.UpdateTransitionUserSetMatched(nodeTranConvert.Results[calc.ResultsIndex], isMatching));
-                        var resultsTran = Results<TransitionChromInfo>.Merge(nodeTran.Results, listTranInfoList);
+                        var resultsTran = (nodeTran.Results ?? TransitionResults.Empty).Merge(listTranInfoList);
                         listTransNew.Add(ReferenceEquals(resultsTran, nodeTran.Results)
                                              ? nodeTran
                                              : nodeTran.ChangeResults(resultsTran));
