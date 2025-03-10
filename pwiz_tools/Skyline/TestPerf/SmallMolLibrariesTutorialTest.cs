@@ -450,10 +450,18 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 
             if (IsCoverShotMode)
             {
+                Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
+
                 RestoreCoverViewOnScreen();
                 // Need to click again to get the full-scan graph populated after restoring view
                 ClickChromatogram(F_A_018, 14.807, 152.0E3, PaneKey.PRECURSORS);
-                TakeCoverShot();
+                var fullScanForm = FindOpenForm<GraphFullScan>();
+                RunUI(() =>
+                {
+                    var frame = fullScanForm.Parent.Parent;
+                    frame.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - frame.Height - 10);
+                });
+                TakeCoverShot(fullScanForm);
                 return;
             }
 

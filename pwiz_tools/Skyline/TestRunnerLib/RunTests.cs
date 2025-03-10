@@ -51,6 +51,7 @@ namespace TestRunnerLib
         public readonly int? MinidumpLeakThreshold;
         public readonly bool DoNotRunInParallel;
         public readonly bool DoNotRunInNightly;
+        public bool DoNotLeakTest; // If true, test is too lengthy to run multiple iterations for leak checks (we invert this in perftest runs)
         public readonly bool DoNotUseUnicode; // If true, test is known to have trouble with unicode (3rd party tool, mz5, etc)
         public readonly bool DoNotTestOddTmpPath; // If true, test is known to have trouble with odd characters in TMP path (Java)
         public readonly DateTime? SkipTestUntil; // If set, test will be skipped if the current (UTC) date is before the SkipTestUntil date
@@ -75,6 +76,9 @@ namespace TestRunnerLib
 
             var noNightlyTestAttr = RunTests.GetAttribute(testMethod, "NoNightlyTestingAttribute");
             DoNotRunInNightly = noNightlyTestAttr != null;
+
+            var noNightlyLeakTestAttr = RunTests.GetAttribute(testMethod, "NoLeakTestingAttribute");
+            DoNotLeakTest = noNightlyLeakTestAttr != null; // Running this multiple times would take too long
 
             var skipTestUntilAttr = RunTests.GetAttribute(testMethod, "SkipTestUntilAttribute") as SkipTestUntilAttribute;
             SkipTestUntil = skipTestUntilAttr?.SkipTestUntil;
@@ -350,6 +354,7 @@ namespace TestRunnerLib
                 TestContext.Properties["RunSmallMoleculeTestVersions"] = RunsSmallMoleculeVersions.ToString(); // Run the AsSmallMolecule version of tests when available?
                 TestContext.Properties["TestName"] = test.TestMethod.Name;
                 TestContext.Properties["RecordAuditLogs"] = RecordAuditLogs.ToString();
+                TestContext.Properties["TestPass"] = pass.ToString();
                 if (IsParallelClient)
                 {
                     Environment.SetEnvironmentVariable(@"SKYLINE_TESTER_PARALLEL_CLIENT_ID", ParallelClientId); // Accessed in pwiz_tools\Skyline\Util\Util.cs

@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override bool ShowStartPage
         {
-            get { return !IsPauseForScreenShots; }  // So we can point out the UI mode control
+            get { return !IsRecordingScreenShots; }  // So we can point out the UI mode control
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.SHARED_DIRECTORY_WRITE)]
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            if (IsPauseForScreenShots)
+            if (!ShowStartPage)
                 RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.small_molecules));
             else // old way of doing things
             {
@@ -214,8 +214,13 @@ namespace pwiz.SkylineTestTutorial
                     var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                     string impliedLabeled2 = GetCsvFileText(GetTestPath("SMTutorial_TransitionList.csv"));
                     var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = impliedLabeled2);
+                    RunUI(() =>
+                    {
+                        colDlg.Height -= 55;
+                        colDlg.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - colDlg.Height - 10);
+                    });
 
-                    TakeCoverShot();
+                    TakeCoverShot(colDlg);
 
                     OkDialog(colDlg, colDlg.CancelDialog);
                 }

@@ -175,6 +175,22 @@ namespace pwiz.SkylineTestUtil
     }
 
     /// <summary>
+    /// Test method attribute which specifies a test is not suitable for automated nightly leak testing
+    /// (e.g. memory hungry or excessively time consuming given that it has to be run many times for leak detection)
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoLeakTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for Nightly
+
+        public NoLeakTestingAttribute(string reason)
+        {
+            Reason = reason; // Usually one of the strings in TestExclusionReason
+        }
+
+    }
+
+    /// <summary>
     /// All Skyline functional tests MUST derive from this base class.
     /// Perf tests (long running, huge-data-downloading) should be declared
     /// in the TestPerf namespace, where they receive special handling so as
@@ -1269,7 +1285,7 @@ namespace pwiz.SkylineTestUtil
                     MessageBoxIcon.Information);
         }
 
-        private static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
+        protected static bool IsRecordingScreenShots => IsPauseForScreenShots || IsCoverShotMode;
 
         /// <summary>
         /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
@@ -1307,7 +1323,8 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static bool IsTranslationRequired => IsAutoScreenShotMode && !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
+        public static bool IsTranslationRequired => (IsAutoScreenShotMode || IsCoverShotMode) &&
+                                                    !Equals("en", GetFolderNameForLanguage(CultureInfo.CurrentCulture));
 
         private static bool _isCoverShotMode;
 
@@ -1326,18 +1343,17 @@ namespace pwiz.SkylineTestUtil
 
         public string CoverShotName { get; set; }
 
-        private string GetCoverShotPath(string folderPath = null, string suffix = null)
+        private string GetCoverShotPath()
         {
-            if (CoverShotName == null)
-            {
-                return null;
-            }
+            Assume.IsNotNull(CoverShotName);
+            return Path.Combine(TutorialPath, "cover.png");
+        }
 
-            if (folderPath == null)
-                folderPath = Path.Combine(PathEx.GetDownloadsPath(), "covershots");
-            if (suffix == null)
-                suffix = string.Format("-{0}_{1}", Install.MajorVersion, Install.MinorVersion);
-            string cultureSuffix = CultureInfo.CurrentCulture.Name;
+        private string GetCoverShotPath([NotNull] string folderPath, [NotNull] string suffix)
+        {
+            Assume.IsNotNull(CoverShotName);
+
+            string cultureSuffix = GetFolderNameForLanguage(CultureInfo.CurrentCulture);
             if (Equals(cultureSuffix, "en"))
                 cultureSuffix = string.Empty;
             else
@@ -1873,19 +1889,22 @@ namespace pwiz.SkylineTestUtil
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
         {
             // Override to modify the cover shot before it is saved or put on the clipboard
-            return bmp;
+            return bmp.CleanupBorder();
         }
 
-        public void TakeCoverShot()
+        public void TakeCoverShot(Control activateControl = null)
         {
             Thread.Sleep(1000); // Give windows time to repaint
             RunUI(() =>
             {
+                AssertEx.AreEqual(1.0, (new Size(1, 1) * ScreenshotManager.GetScalingFactor()).Width,
+                    "Cover shots must be taken at a scale factor of 100% (96DPI)");
                 var screenRect = Screen.FromControl(SkylineWindow).Bounds;
-                AssertEx.IsTrue(screenRect.Width == 1920 && screenRect.Height == 1080,
-                    "Cover shots must be taken at screen resolution 1920x1080 at scale factor 100% (96DPI)");
+                AssertEx.IsTrue(screenRect.Width >= 1920 && screenRect.Height >= 1080,
+                    "Cover shots must be taken at screen resolution of at least 1920x1080");
             });
             var coverSavePath = GetCoverShotPath();
+            ScreenshotManager.ActivateScreenshotForm(activateControl ?? SkylineWindow);
             _shotManager.TakeShot(SkylineWindow, false, coverSavePath, ProcessCoverShot);
             string coverSavePath2 = null;
             if (coverSavePath != null)
@@ -2531,9 +2550,6 @@ namespace pwiz.SkylineTestUtil
 
                 if (Program.TestExceptions.Count == 0)
                 {
-                    // Long wait for library build notifications
-                    SkylineWindow.RemoveLibraryBuildNotification(); // Remove off UI thread to avoid deadlocking
-                    WaitForConditionUI(() => !OpenForms.Any(f => f is BuildLibraryNotification));
                     // Short wait for anything else
                     WaitForConditionUI(5000, () => OpenForms.Count() == 1);
                 }

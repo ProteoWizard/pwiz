@@ -1741,11 +1741,9 @@
   <data name="cbExportSciexOSQuantMethod.Text" xml:space="preserve">
     <value>创建 SCIEX OS 
  Quant 方法(&amp;O)</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="cbExportSciexOSQuantMethod.ToolTip" xml:space="preserve">
     <value>将 SCIEX OS Quant 兼容的分析方法导出到相同目录，基本名称与 Analyst 采集方法相同。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbExportSciexOSQuantMethod.Name" xml:space="preserve">
     <value>cbExportSciexOSQuantMethod</value>
@@ -1779,7 +1777,6 @@
   </data>
   <data name="labelXICWidth.Text" xml:space="preserve">
     <value>XIC 宽度 (Da):</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelXICWidth.Name" xml:space="preserve">
     <value>labelXICWidth</value>

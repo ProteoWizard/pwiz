@@ -58,7 +58,12 @@ namespace pwiz.SkylineTest
         public void NistLoadLibrary()
         {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(PATH_NIST_LIB, MODS_USING_PARENS + TEXT_LIB_YEAST_NIST + TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT + TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE + LIB_TEXT_MONA + LIB_TEXT_MZVAULT + LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS);
+            streamManager.TextFiles.Add(PATH_NIST_LIB, MODS_USING_PARENS + TEXT_LIB_YEAST_NIST +
+                                                       TEXT_LIB_BICINE_NIST + TEXT_LIB_NO_ADDUCT +
+                                                       TEXT_LIB_FORMULA_PLUS + TEXT_LIB_MINE +
+                                                       LIB_TEXT_MONA + LIB_TEXT_MZVAULT +
+                                                       LIB_TEXT_RTINSECONDS + TEXT_NIST_PARENTHESIS +
+                                                       LIB_TEXT_NO_ADDUCT + TEXT_RIKEN + TEXT_USING_EXACTMASS_COMMENT);
             var loader = new TestLibraryLoader {StreamManager = streamManager};
             var expectedFragmentAnnotations = new Dictionary<int, List<SpectrumPeakAnnotation>>
             {
@@ -100,11 +105,15 @@ namespace pwiz.SkylineTest
 
             // Check ability to parse strangely decorated formula
             Assert.AreEqual(5, lib2Keys.Count(k => Equals("[M+]", k.Adduct.AdductFormula)));
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals("[M3H2+]", k.Adduct.AdductFormula))); // Label found in InChi description as ".../i1D3"
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("C11H22NO4", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
             Assert.AreEqual(1, lib2Keys.Count(k => Equals("C6H14FO2P1", k.SmallMoleculeLibraryAttributes.ChemicalFormula)));
 
             // Check use of "MW:"
             Assert.AreEqual(1, lib2Keys.Count(k => Equals(324.6, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
+
+            // Check use of "ExactMass" in a comment
+            Assert.AreEqual(1, lib2Keys.Count(k => Equals(330.991, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
 
             // Check use of GC not declaring mass at all
             Assert.AreEqual(1, lib2Keys.Count(k => Equals(NistLibraryBase.DUMMY_GC_ESI_MASS, k.Target?.Molecule?.MonoisotopicMass.Value ?? 0)));
@@ -133,17 +142,19 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(28, peaksInfo.Peaks.Length);
 
             // Check use of ion mobility
-            var ccsDict = new Dictionary<string, double>()
+            var ccsDict = new Dictionary<string, double?>()
             {
                 {"Withanone; PlaSMA ID-2558", 220.9656493},
                 {"ACar 4:0", 23.145},
-                {"C6:OH b", 123.45}
+                {"C6:OH b", 123.45},
+                {"Glucolesquerellin", 189.9914404},
+                {"PRZ_M632a", null} // CCS given as "-1"
             };
             foreach (var kvp in ccsDict)
             {
                 var libEntry = lib2Keys.First(l => l.Target.DisplayName.Equals(kvp.Key));
-                AssertEx.IsTrue(lib2.TryGetIonMobilityInfos(new LibKey(libEntry.LibraryKey), null, out var ionMobilities));
-                AssertEx.AreEqual(kvp.Value,ionMobilities.First().CollisionalCrossSectionSqA??-1);
+                AssertEx.AreEqual(kvp.Value.HasValue, lib2.TryGetIonMobilityInfos(new LibKey(libEntry.LibraryKey), null, out var ionMobilities));
+                AssertEx.AreEqual(kvp.Value ?? -1,ionMobilities?.FirstOrDefault()?.CollisionalCrossSectionSqA??-1);
             }
 
         }
@@ -1289,6 +1300,47 @@ namespace pwiz.SkylineTest
             "235.1690 76988.90\n" +
             "235.2054 61542.45\n";
 
+        private const string LIB_TEXT_NO_ADDUCT =
+            "Name: (2,2,2,-2H3)ACETOPHENONE\n" +
+            "Spectrum_type: in-source\n" +
+            "InChIKey: KWOLFJPFCHCOCG-FIBGUPNXSA-N\n" +
+            "Spectrum_type: MS1\n" +
+            "Instrument_type: EI-B\n" +
+            "Instrument: HITACHI RMU-6M\n" +
+            "Ion_mode: P\n" +
+            "Formula: C8H8O\n" +
+            "MW: 123\n" +
+            "ExactMass: 123.076345\n" +
+            "DB#: 18525\n" +
+            "Comments: \"SMILES=[2H]C([2H])([2H])C(=O)c(c1)cccc1\" \"InChI=InChI=1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1D3\" \"computed SMILES=C([2H])([2H])([2H])C(=O)C1=CC=CC=C1\" \"accession=JP001492\" \"date=2016.01.19 (Created 2008.10.21, modified 2011.05.06)\" \"author=YAMAMOTO M, DEP. CHEMISTRY, FAC. SCIENCE, NARA WOMEN'S UNIV.\" \"license=CC BY-NC-SA\" \"exact mass=120.05751\" \"ionization energy=70 eV\" \"ion type=[M]+*\" \"SPLASH=splash10-0a6r-9700000000-d60fa0e8b56fa3eac3dd\" \"submitter=University of Tokyo Team (Faculty of Engineering, University of Tokyo)\" \"MoNA Rating=3.75\"\n" +
+            "Num Peaks: 26\n" +
+            "18 45.96\n" +
+            "27 23.98\n" +
+            "28 23.48\n" +
+            "37 11.79\n" +
+            "38 21.68\n" +
+            "38.5 11.49\n" +
+            "39 27.28\n" +
+            "40 13.39\n" +
+            "46 179.84\n" +
+            "50 110.80\n" +
+            "51 266.66\n" +
+            "52 31.57\n" +
+            "52.5 14.19\n" +
+            "53 13.19\n" +
+            "63 11.19\n" +
+            "74 37.77\n" +
+            "75 25.58\n" +
+            "76 30.27\n" +
+            "77 808.57\n" +
+            "78 64.64\n" +
+            "79 25.68\n" +
+            "105 999.00\n" +
+            "106 81.03\n" +
+            "122 13.69\n" +
+            "123 454.09\n" +
+            "124 43.66\n";
+
         private const string LIB_TEXT_RTINSECONDS =
             "Name: IDAGLSESYTCYLLSKGK/2\n" +
             "MW: 2003.9873686836993\n" +
@@ -1324,6 +1376,47 @@ namespace pwiz.SkylineTest
             "1801.867676	0	\"b16\"\n" +
             "1858.889160	13	\"b17\"\n" +
             "1891.910645	15	\"y17\"\n";
+
+        private const string TEXT_RIKEN =
+            "\n" +
+            "NAME: Glucolesquerellin\n" +
+            "PRECURSORMZ: 448.0775180239999\n" +
+            "PRECURSORTYPE: [M-H]-\n" +
+            "IONMODE: Negative\n" +
+            "FORMULA: C14H27NO9S3\n" +
+            "SMILES: CSCCCCCCC(=NOS(=O)(=O)O)S[C@H]1[C@@H]([C@H]([C@@H]([C@H](O1)CO)O)O)O\n" +
+            "INCHIKEY: ZAKICGFSIJSCSF-LPUQOGTASA-N\n" +
+            "IONIZATION: ESI\n" +
+            "INSTRUMENTTYPE: LC-ESI-QTOF\n" +
+            "COLLISIONENERGY: 30 eV\n" +
+            "RETENTIONTIME: 4.0667\n" +
+            "CCS: 189.9914404\n" +
+            "ONTOLOGY: Alkylglucosinolates\n" +
+            "COMMENT: DB#=SMI00033; origin=MassBank High Quality Mass Spectral Database\n" +
+            "Num Peaks: 4\n" +
+            "95.949\t819\n" +
+            "96.957\t1000\n" +
+            "259.012\t221\n" +
+            "274.987\t104\n" +
+            "\n" +
+            "NAME: PRZ_M632a\n" +
+            "PRECURSORMZ: 632.02808644783\n" +
+            "PRECURSORTYPE: [M-H]-\n" +
+            "FORMULA: C21H26Cl3N3O11S\n" +
+            "Ontology: NA\n" +
+            "INCHIKEY: UNCSXZRCRHPBJA-UHFFFAOYNA-N\n" +
+            "SMILES: CCCN(CCOC=1C(=CC(=C(C1Cl)OC2C(C(C(C(COS(O)(=O)=O)O2)O)O)O)Cl)Cl)C(N3C=CN=C3)=O\n" +
+            "RETENTIONTIME: \n" +
+            "CCS: -1\n" + // Note negative CCS, presumably means N/A
+            "IONMODE: Negative\n" +
+            "INSTRUMENTTYPE: LC-ESI-QFT\n" +
+            "INSTRUMENT: Q Exactive Orbitrap Thermo Scientific\n" +
+            "COLLISIONENERGY: 40 (nominal)\n" +
+            "Comment: DB#=ET201352; origin=MassBank-EU\n" +
+            "Num Peaks: 3\n" +
+            "67.0295	10\n" +
+            "96.9602	1000\n" +
+            "241.0032	9200\n";
 
         private const string TEXT_NIST_PARENTHESIS =
             "\n" +
@@ -1815,5 +1908,106 @@ namespace pwiz.SkylineTest
             "2299.9441\t65307.3\t\"b18+2i/-9.8ppm\"\r\n" +
             "\r\n";
 
+        private const string TEXT_USING_EXACTMASS_COMMENT = // As in MoNA-export-GNPS.msp
+            "Name: \"1,1-dioxo-6-(trifluoromethyl)-3,4-dihydro-2H-1$l^{6},2,4-benzothiadiazine-7-sulfonamide\"\r\n" +
+            "Synon: $:00in-source\r\n" +
+            "DB#: CCMSLIB00000076973\r\n" +
+            "Spectrum_type: 2\r\n" +
+            "Instrument: qTof\r\n" +
+            "Comments: \"SMILES=NS(=O)(=O)c1cc2c(NCNS2(=O)=O)cc1C(F)(F)F\" \"ion source=LC-ESI\" \"compound source=Commercial\" \"adduct=[M+H]+\" \"exactmass=330.991\" \"charge=1\" \"ion mode=Positive\" \"source file=NCP002928_A2_B11_BA2_01_15696.mzXML\" \"origin=GNPS-NIH-CLINICALCOLLECTION2\" \"authors=Garg_Neha, negarg, Dorrestein\" \"submitter=GNPS Team (University of California, San Diego)\"\r\n" +
+            "Num Peaks: 92\r\n" +
+            "45.035854 144.000000\r\n" +
+            "65.534843 220.000000\r\n" +
+            "84.186409 148.000000\r\n" +
+            "85.804817 176.000000\r\n" +
+            "116.466408 168.000000\r\n" +
+            "126.015266 188.000000\r\n" +
+            "140.034027 168.000000\r\n" +
+            "147.003082 168.000000\r\n" +
+            "147.994156 148.000000\r\n" +
+            "148.045547 160.000000\r\n" +
+            "151.457245 156.000000\r\n" +
+            "158.018539 128.000000\r\n" +
+            "159.025208 312.000000\r\n" +
+            "159.045288 160.000000\r\n" +
+            "160.035797 168.000000\r\n" +
+            "163.002869 188.000000\r\n" +
+            "163.048615 180.000000\r\n" +
+            "167.035721 176.000000\r\n" +
+            "168.034363 176.000000\r\n" +
+            "169.987930 180.000000\r\n" +
+            "170.006088 196.000000\r\n" +
+            "172.031082 200.000000\r\n" +
+            "173.037598 220.000000\r\n" +
+            "174.016815 776.000000\r\n" +
+            "175.015503 140.000000\r\n" +
+            "176.029800 152.000000\r\n" +
+            "181.015976 172.000000\r\n" +
+            "182.682724 200.000000\r\n" +
+            "183.460999 176.000000\r\n" +
+            "185.122681 192.000000\r\n" +
+            "186.036453 880.000000\r\n" +
+            "187.047455 3112.000000\r\n" +
+            "188.032974 220.000000\r\n" +
+            "188.052200 172.000000\r\n" +
+            "189.231659 164.000000\r\n" +
+            "191.040237 236.000000\r\n" +
+            "198.991821 172.000000\r\n" +
+            "199.081680 172.000000\r\n" +
+            "201.057251 140.000000\r\n" +
+            "207.988678 140.000000\r\n" +
+            "214.981384 184.000000\r\n" +
+            "218.024139 160.000000\r\n" +
+            "218.950851 152.000000\r\n" +
+            "219.009552 164.000000\r\n" +
+            "219.398743 180.000000\r\n" +
+            "223.093369 164.000000\r\n" +
+            "237.978195 196.000000\r\n" +
+            "239.003174 308.000000\r\n" +
+            "240.025101 204.000000\r\n" +
+            "240.996201 156.000000\r\n" +
+            "251.009552 784.000000\r\n" +
+            "251.196213 148.000000\r\n" +
+            "253.003830 144.000000\r\n" +
+            "253.494766 148.000000\r\n" +
+            "255.002914 128.000000\r\n" +
+            "256.495026 148.000000\r\n" +
+            "267.003876 1340.000000\r\n" +
+            "268.008209 220.000000\r\n" +
+            "268.995422 116.000000\r\n" +
+            "269.596619 152.000000\r\n" +
+            "270.024902 184.000000\r\n" +
+            "271.974396 172.000000\r\n" +
+            "274.949738 148.000000\r\n" +
+            "275.851471 180.000000\r\n" +
+            "282.998962 280.000000\r\n" +
+            "285.017914 172.000000\r\n" +
+            "289.070160 164.000000\r\n" +
+            "289.940491 216.000000\r\n" +
+            "298.980682 172.000000\r\n" +
+            "302.966553 180.000000\r\n" +
+            "308.495148 148.000000\r\n" +
+            "310.206970 244.000000\r\n" +
+            "311.990326 144.000000\r\n" +
+            "313.038849 144.000000\r\n" +
+            "314.972351 6400.000000\r\n" +
+            "315.119934 192.000000\r\n" +
+            "315.971069 944.000000\r\n" +
+            "316.968140 648.000000\r\n" +
+            "320.982697 924.000000\r\n" +
+            "330.991455 152.000000\r\n" +
+            "331.161652 164.000000\r\n" +
+            "331.875549 148.000000\r\n" +
+            "331.958954 164.000000\r\n" +
+            "331.997070 412.000000\r\n" +
+            "332.220093 156.000000\r\n" +
+            "332.984955 320.000000\r\n" +
+            "333.203949 144.000000\r\n" +
+            "333.989166 200.000000\r\n" +
+            "334.281769 216.000000\r\n" +
+            "335.146851 236.000000\r\n" +
+            "346.204071 164.000000\r\n" +
+            "426.735748 152.000000\r\n" +
+            "\r\n";
     }
 }

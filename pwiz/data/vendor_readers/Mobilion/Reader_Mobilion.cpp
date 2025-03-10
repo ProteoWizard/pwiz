@@ -97,9 +97,9 @@ void fillInMetadata(const string& rawpath, MBIFile* rawdata, MSData& msd)
     bfs::path sourcePath(rawpath);
 
     SourceFilePtr sourceFile(new SourceFile);
-    sourceFile->id = BFS_STRING(sourcePath.leaf());
-    sourceFile->name = BFS_STRING(sourcePath.leaf());
-    sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.branch_path()));
+    sourceFile->id = BFS_STRING(sourcePath.filename());
+    sourceFile->name = BFS_STRING(sourcePath.filename());
+    sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.parent_path()));
     sourceFile->set(MS_Mobilion_MBI_nativeID_format);
     sourceFile->set(MS_Mobilion_MBI_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);

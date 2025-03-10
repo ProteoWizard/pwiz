@@ -57,13 +57,15 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class TargetedMsmsTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestTargetedMSMSTutorial()
         {
             DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.none);
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMolecules()
@@ -71,7 +73,8 @@ namespace pwiz.SkylineTestTutorial
             DoTestTargetedMSMSTutorial(RefinementSettings.ConvertToSmallMoleculesMode.formulas);
         }
 
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once 
         // N.B. it's not clear to me that this test makes perfect sense right now, but implementing it
         // did uncover some issues with the new small molecule work so it is still worthwhile
         public void TestTargetedMSMSTutorialAsSmallMoleculeMasses()
@@ -247,8 +250,8 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             RunUI(() =>
             {
-                exportMethodDlg.SetInstrument("Thermo LTQ");
-                Assert.AreEqual("Thermo LTQ", exportMethodDlg.InstrumentType);
+                exportMethodDlg.SetInstrument(ExportInstrumentType.THERMO_LTQ);
+                Assert.AreEqual(ExportInstrumentType.THERMO_LTQ, exportMethodDlg.InstrumentType);
                 exportMethodDlg.SetMethodType(ExportMethodType.Standard);
                 exportMethodDlg.SetTemplateFile(GetTestPath(@"Low Res\TargetedMSMS_template.meth"), true);
             });
@@ -479,7 +482,7 @@ namespace pwiz.SkylineTestTutorial
             // TODO: figure out why these assertions fail when taking screenshots. During screenshots, the expected / actual values:
             //      expected20TransitionCount = 88. Actual = 87
             //      expected80TransitionCount = 87. Actual = 86
-            if (!IsPauseForScreenShots)
+            if (!IsRecordingScreenShots)
             {
                 AssertResult.IsDocumentResultsState(SkylineWindow.Document, shortLowRes20FileName,
                     expectedMoleculeCount, expectedTransitionGroupCount, 0, expected20TransitionCount, 0);

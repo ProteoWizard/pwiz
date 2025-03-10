@@ -139,7 +139,7 @@
     <value>0</value>
   </data>
   <data name="availableFieldsTreeFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>314, 307</value>
+    <value>313, 307</value>
   </data>
   <data name="availableFieldsTreeFilter.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -155,6 +155,12 @@
   </data>
   <data name="&gt;&gt;availableFieldsTreeFilter.ZOrder" xml:space="preserve">
     <value>0</value>
+  </data>
+  <data name="panel1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="panel1.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
   </data>
   <data name="btnAddFilter.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -190,10 +196,10 @@
     <value>Right</value>
   </data>
   <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>314, 0</value>
+    <value>313, 0</value>
   </data>
   <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>56, 307</value>
+    <value>57, 307</value>
   </data>
   <data name="panel1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -247,7 +253,7 @@
     <value>0, 0</value>
   </data>
   <data name="dataGridViewFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>475, 307</value>
+    <value>483, 307</value>
   </data>
   <data name="dataGridViewFilter.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -256,7 +262,7 @@
     <value>dataGridViewFilter</value>
   </data>
   <data name="&gt;&gt;dataGridViewFilter.Type" xml:space="preserve">
-    <value>System.Windows.Forms.DataGridView, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>pwiz.Common.Controls.CommonDataGridView, pwiz.Common, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;dataGridViewFilter.Parent" xml:space="preserve">
     <value>splitContainerFilter.Panel2</value>
@@ -274,16 +280,16 @@
     <value>Magenta</value>
   </data>
   <data name="btnDeleteFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>29, 20</value>
+    <value>21, 20</value>
   </data>
   <data name="btnDeleteFilter.Text" xml:space="preserve">
     <value>删除</value>
   </data>
   <data name="toolStripFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>475, 0</value>
+    <value>483, 0</value>
   </data>
   <data name="toolStripFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 307</value>
+    <value>24, 307</value>
   </data>
   <data name="toolStripFilter.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>

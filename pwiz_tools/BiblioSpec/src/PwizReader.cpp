@@ -437,6 +437,8 @@ void PwizReader::transferSpec(BiblioSpec::SpecData& returnData,
     returnData.retentionTime = specInfo->retentionTime/60;  // seconds to minutes
     if (specInfo->msLevel > 1)
     {
+        if (specInfo->precursors.empty())
+            BiblioSpec::Verbosity::error("MS2 spectrum %s does not have a precursor", specInfo->scanNumber);
         returnData.mz = specInfo->precursors[0].mz;
     }
     returnData.numPeaks = specInfo->data.size();

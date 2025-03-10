@@ -617,7 +617,6 @@
   </data>
   <data name="labelPPM.Text" xml:space="preserve">
     <value>PPM</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelPPM.Name" xml:space="preserve">
     <value>labelPPM</value>
@@ -645,7 +644,6 @@
   </metadata>
   <data name="textHardklorMinIntensityPPM.ToolTip" xml:space="preserve">
     <value>忽略相对于样品中所有检测到的特征强度总和小于此值的特征</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorMinIntensityPPM.Name" xml:space="preserve">
     <value>textHardklorMinIntensityPPM</value>
@@ -673,7 +671,6 @@
   </data>
   <data name="labelMinIntensityPPM.Text" xml:space="preserve">
     <value>最小强度比例(&amp;I)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelMinIntensityPPM.Name" xml:space="preserve">
     <value>labelMinIntensityPPM</value>
@@ -725,7 +722,6 @@
   </data>
   <data name="labelHardklorMinIdotP.Text" xml:space="preserve">
     <value>最小同位素点积(&amp;D)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;labelHardklorMinIdotP.Name" xml:space="preserve">
     <value>labelHardklorMinIdotP</value>
@@ -750,7 +746,6 @@
   </data>
   <data name="textHardklorSignalToNoise.ToolTip" xml:space="preserve">
     <value>设置 Hardklor 配置的信噪比阈值，即峰在谱图窗口中要被纳入得分算法考虑范围而必须超过的相对丰度。请注意，这是局部噪声阈值，适用于识别该肽段的谱图面积。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textHardklorSignalToNoise.Name" xml:space="preserve">
     <value>textHardklorSignalToNoise</value>
@@ -781,7 +776,6 @@
   </data>
   <data name="lblHardklorSignalToNoise.Text" xml:space="preserve">
     <value>最小信噪比(&amp;S)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblHardklorSignalToNoise.Name" xml:space="preserve">
     <value>lblHardklorSignalToNoise</value>
@@ -806,7 +800,6 @@
   </data>
   <data name="groupBoxHardklor.Text" xml:space="preserve">
     <value>搜索参数</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;groupBoxHardklor.Name" xml:space="preserve">
     <value>groupBoxHardklor</value>
@@ -832,7 +825,6 @@
   <data name="textCutoff.ToolTip" xml:space="preserve">
     <value>得分为 1.0 至 0，1.0 最有可能正确，用来为将包含在库结果中的谱图提供截止值。
 对于 TPP pepXML，此值为 PeptideProphet 的最小概率。对于 Mascot，此值为 1，即最大预期值。对于 SEQUEST SQT，此值为 1，即最大 FDR。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;textCutoff.Name" xml:space="preserve">
     <value>textCutoff</value>
@@ -863,10 +855,6 @@
   </data>
   <data name="labelCutoff.Text" xml:space="preserve">
     <value>截止得分(&amp;C)：</value>
-    <comment>Needs Review:English text changed
-Old English:Q value cutoff:
-Current English:&amp;Cut-off score:
-Old Localized:Q 值截止：</comment>
   </data>
   <data name="&gt;&gt;labelCutoff.Name" xml:space="preserve">
     <value>labelCutoff</value>

@@ -83,8 +83,12 @@ namespace AutoQC
             }
             try
             {
-                // User should have admin permissions in the folder, and the folder should be of type TargetedMS
-                panoramaClient.ValidateFolder(PanoramaFolder, FolderPermission.admin);
+                // User should have at least Editor role in the folder, and the folder should be of type TargetedMS
+                // Editor role has Insert, Update and Delete permissions
+                // Insert permission is required to upload documents.
+                // Update is required for AutoQCPingAction.
+                // Delete is required for deleting redundant results and documents in the folder.
+                panoramaClient.ValidateFolder(PanoramaFolder, PermissionSet.EDITOR);
             }
             catch (Exception ex)
             {
@@ -325,8 +329,8 @@ namespace AutoQC
 
         public void Init()
         {
-            _requestHelper = new PanoramaRequestHelper(new WebClientWithCredentials(_panoramaSettings.PanoramaServerUri,
-                _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword));
+            _requestHelper = new PanoramaRequestHelper(new LabkeySessionWebClient(new PanoramaServer(_panoramaSettings.PanoramaServerUri,
+                _panoramaSettings.PanoramaUserEmail, _panoramaSettings.PanoramaPassword)));
             _timer = new Timer(e => { PingPanoramaServer(); });
             _timer.Change(TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(5)); // Ping Panorama every 5 minutes.
         }

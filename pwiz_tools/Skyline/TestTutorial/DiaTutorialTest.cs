@@ -451,7 +451,7 @@ namespace pwiz.SkylineTestTutorial
                     isolationSchemeGraph.Left = SkylineWindow.Left;
                     isolationSchemeGraph.Width = 480;
                 });
-                TakeCoverShot();
+                TakeCoverShot(isolationSchemeGraph);
                 OkDialog(isolationSchemeGraph, isolationSchemeGraph.CloseButton);
                 OkDialog(isolationSchemeForm, isolationSchemeForm.OkDialog);
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);

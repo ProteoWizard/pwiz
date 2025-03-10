@@ -182,7 +182,7 @@ PWIZ_API_DECL void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostr
             SpectrumListFactory::wrap(msd, filters);
 
             MSDataAnalyzer::DataInfo dataInfo(msd);
-            dataInfo.sourceFilename = BFS_STRING(bfs::path(filename).leaf());
+            dataInfo.sourceFilename = BFS_STRING(bfs::path(filename).filename());
             dataInfo.outputDirectory = outputDirectory;
             dataInfo.log = log;
 

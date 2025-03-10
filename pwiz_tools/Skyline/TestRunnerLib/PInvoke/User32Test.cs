@@ -54,6 +54,9 @@ namespace TestRunnerLib.PInvoke
         public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        public static extern bool AllowSetForegroundWindow(uint dwProcessId);
+
+        [DllImport("user32.dll")]
         public static extern bool SetKeyboardState(byte[] lpKeyState);
 
         [DllImport("user32.dll", SetLastError = true)]

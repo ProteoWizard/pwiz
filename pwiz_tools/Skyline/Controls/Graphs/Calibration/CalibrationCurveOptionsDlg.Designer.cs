@@ -40,7 +40,6 @@
             this.cbxSingleBatch = new System.Windows.Forms.CheckBox();
             this.cbxShowLegend = new System.Windows.Forms.CheckBox();
             this.cbxShowFiguresOfMerit = new System.Windows.Forms.CheckBox();
-            this.cbxShowBootstrapCurves = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
@@ -112,12 +111,6 @@
             this.cbxShowFiguresOfMerit.Name = "cbxShowFiguresOfMerit";
             this.cbxShowFiguresOfMerit.UseVisualStyleBackColor = true;
             // 
-            // cbxShowBootstrapCurves
-            // 
-            resources.ApplyResources(this.cbxShowBootstrapCurves, "cbxShowBootstrapCurves");
-            this.cbxShowBootstrapCurves.Name = "cbxShowBootstrapCurves";
-            this.cbxShowBootstrapCurves.UseVisualStyleBackColor = true;
-            // 
             // btnCancel
             // 
             resources.ApplyResources(this.btnCancel, "btnCancel");
@@ -161,7 +154,6 @@
             this.Controls.Add(this.textLineWidth);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Controls.Add(this.cbxShowBootstrapCurves);
             this.Controls.Add(this.cbxShowFiguresOfMerit);
             this.Controls.Add(this.cbxShowLegend);
             this.Controls.Add(this.cbxSingleBatch);
@@ -195,7 +187,6 @@
         private System.Windows.Forms.CheckBox cbxSingleBatch;
         private System.Windows.Forms.CheckBox cbxShowLegend;
         private System.Windows.Forms.CheckBox cbxShowFiguresOfMerit;
-        private System.Windows.Forms.CheckBox cbxShowBootstrapCurves;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.ToolTip toolTip1;
