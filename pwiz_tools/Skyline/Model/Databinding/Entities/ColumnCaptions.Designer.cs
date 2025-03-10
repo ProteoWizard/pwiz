@@ -3184,6 +3184,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Proportion Truncated.
+        /// </summary>
+        public static string ProportionTruncated {
+            get {
+                return ResourceManager.GetString("ProportionTruncated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein.
         /// </summary>
         public static string Protein {

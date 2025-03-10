@@ -116,6 +116,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public double? AverageMassErrorPPM { get { return ChromInfo.MassError; } }
         [Format(NullValue = TextUtil.EXCEL_NA)]
         public int? CountTruncated { get { return ChromInfo.Truncated; } }
+        [Format(Formats.Percent, NullValue = TextUtil.EXCEL_NA)]
+        public double? ProportionTruncated { get { return CalculateProportionTruncated(); } }
         public PeakIdentification Identified { get { return ChromInfo.Identified; } }
         [Format(Formats.STANDARD_RATIO, NullValue = TextUtil.EXCEL_NA)]
         public double? LibraryDotProduct { get { return ChromInfo.LibraryDotProduct; } }
@@ -487,6 +489,49 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return lcPeakIonMetrics;
+        }
+
+        private double? CalculateProportionTruncated()
+        {
+            double totalArea = 0;
+            double truncatedArea = 0;
+            var srmSettings = DataSchema.Document.Settings;
+            var resultFile = GetResultFile();
+            foreach (var transition in Precursor.DocNode.Transitions)
+            {
+                if (!transition.IsQuantitative(srmSettings))
+                {
+                    continue;
+                }
+
+                foreach (var transitionChromInfo in transition.GetSafeChromInfo(
+                             resultFile.Replicate.ReplicateIndex))
+                {
+                    if (transitionChromInfo.OptimizationStep != resultFile.OptimizationStep ||
+                        !ReferenceEquals(transitionChromInfo.FileId, resultFile.ChromFileInfoId))
+                    {
+                        continue;
+                    }
+
+                    if (!transitionChromInfo.IsTruncated.HasValue || transitionChromInfo.Area <= 0)
+                    {
+                        continue;
+                    }
+
+                    totalArea += transitionChromInfo.Area;
+                    if (transitionChromInfo.IsTruncated.Value)
+                    {
+                        truncatedArea += transitionChromInfo.Area;
+                    }
+                }
+            }
+
+            if (totalArea <= 0)
+            {
+                return null;
+            }
+
+            return truncatedArea / totalArea;
         }
     }
 }
