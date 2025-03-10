@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -49,6 +50,7 @@ namespace pwiz.SkylineTest
         private ImmutableList<int> IntegerListFromIntegers(IEnumerable<int> values)
         {
             var list = values.ToList();
+            VerifyEquivalentLists(list);
             var intList = IntegerList.FromIntegers(list);
             CollectionAssert.AreEqual(list, intList.ToList());
             if (list.Count == 0)
@@ -60,7 +62,7 @@ namespace pwiz.SkylineTest
             {
                 Assert.IsInstanceOfType(intList, typeof(ConstantList<int>));
             }
-
+            VerifyEquivalentLists(intList);
             return intList;
         }
 
@@ -81,9 +83,11 @@ namespace pwiz.SkylineTest
         private Factor<T> ToFactorList<T>(IEnumerable<T> items)
         {
             var list = items.ToList();
+            VerifyEquivalentLists(list);
             var factorList = list.ToFactor();
             CollectionAssert.AreEqual(list, factorList.ToList());
             CollectionAssert.AreEqual(factorList.Levels.ToList(), factorList.Distinct().ToList());
+            VerifyEquivalentLists(factorList);
             return factorList;
         }
 
@@ -96,12 +100,14 @@ namespace pwiz.SkylineTest
             Assert.AreSame(ImmutableList.Empty<object>(), ImmutableList.ValueOf(Array.Empty<object>()));
             
             var oneFruitList = ImmutableList.Singleton("apple");
+            VerifyEquivalentLists(oneFruitList);
             var oneFruitOtherList = new[] { "apple" }.ToImmutable();
             Assert.AreEqual(oneFruitList, oneFruitOtherList);
             Assert.AreEqual(oneFruitList.GetType(), oneFruitOtherList.GetType());
             Assert.AreSame(oneFruitList, oneFruitList.MaybeConstant());
 
             var twoFruits = new[] { "apple", "orange" };
+            VerifyEquivalentLists(twoFruits);
             var twoFruitList = ImmutableList.ValueOf(twoFruits);
             var twoFruitOtherList = twoFruits.ToImmutable();
             Assert.AreEqual(twoFruitList.GetType(), twoFruitOtherList.GetType());
@@ -139,6 +145,148 @@ namespace pwiz.SkylineTest
             var values = new float?[] { 1, 2, null, 3 };
             var nullables = values.Nullables();
             CollectionAssert.AreEqual(values, nullables.ToList());
+            VerifyEquivalentLists(values);
+        }
+
+        [TestMethod]
+        public void TestConstantList()
+        {
+            VerifyConstantList("hello");
+            VerifyConstantList(1.0);
+            VerifyConstantList(1);
+            VerifyConstantList(default(float?));
+            VerifyConstantList((float?) 1.0);
+        }
+
+        [SuppressMessage("ReSharper", "CollectionNeverUpdated.Local")]
+        private void VerifyConstantList<T>(T value)
+        {
+            var emptyList = new ConstantList<T>(0, value);
+            Assert.AreEqual(ImmutableList<T>.EMPTY, emptyList);
+            VerifyEquivalentLists(emptyList);
+
+            var singletonList = new ConstantList<T>(1, value);
+            Assert.AreEqual(ImmutableList<T>.Singleton(value), singletonList);
+            VerifyEquivalentLists(singletonList);
+
+            var twoItemList = new ConstantList<T>(2, value);
+            CollectionAssert.AreEqual(Enumerable.Repeat(value, 2).ToList(), twoItemList.ToList());
+            VerifyEquivalentLists(twoItemList);
+
+            var longList = new ConstantList<T>(1000, value);
+            Assert.AreEqual(1000, longList.Count);
+            VerifyEquivalentLists(longList);
+
+            var veryLongList = new ConstantList<T>(int.MaxValue, value);
+            Assert.AreEqual(int.MaxValue, veryLongList.Count);
+            var veryLongList2 = new ConstantList<T>(int.MaxValue, value);
+            Assert.AreEqual(veryLongList, veryLongList2);
+        }
+        
+
+        /// <summary>
+        /// Verifies that all the sorts of ImmutableList's that can be created from a list of elements
+        /// are equal to each other and have the same hash code.
+        /// </summary>
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+        private void VerifyEquivalentLists<T>(IEnumerable<T> enumerable)
+        {
+            var equivalentLists = new List<ImmutableList<T>>();
+            bool alreadyImmutableList;
+            if (enumerable is ImmutableList<T> immutableList)
+            {
+                equivalentLists.Add(immutableList);
+                alreadyImmutableList = true;
+            }
+            else
+            {
+                alreadyImmutableList = false;
+            }
+
+            equivalentLists.Add(ImmutableList.ValueOf(enumerable));
+            equivalentLists.Add(enumerable.ToImmutable());
+
+            int count = enumerable.Count();
+            int distinctCount = enumerable.Distinct().Count();
+
+            if (typeof(T) == typeof(int))
+            {
+                var integerList = (ImmutableList<T>)(object)IntegerList.FromIntegers((IEnumerable<int>)enumerable);
+                equivalentLists.Add(integerList);
+                if (distinctCount == 1 && count > 1)
+                {
+                    Assert.IsInstanceOfType(integerList, typeof(ConstantList<T>));
+                }
+            }
+
+            var maybeConstantList = enumerable.ToImmutable().MaybeConstant();
+            equivalentLists.Add(maybeConstantList);
+            Assert.AreSame(maybeConstantList, maybeConstantList.MaybeConstant());
+
+            if (distinctCount == 1)
+            {
+                if (count == 1)
+                {
+                    var singletonList = ImmutableList.Singleton(enumerable.First());
+                    if (!alreadyImmutableList)
+                    {
+                        Assert.AreEqual(singletonList.GetType(), maybeConstantList.GetType());
+                    }
+                    equivalentLists.Add(singletonList);
+                }
+                else
+                {
+                    Assert.IsInstanceOfType(maybeConstantList, typeof(ConstantList<T>));
+                }
+                equivalentLists.Add(new ConstantList<T>(enumerable.Count(), enumerable.First()));
+            }
+
+            if (count == 1)
+            {
+                Assert.AreEqual(1, distinctCount);
+                equivalentLists.Add(ImmutableList.Singleton(enumerable.First()));
+            }
+            
+            if (count == 0)
+            {
+                Assert.AreEqual(0, distinctCount);
+                if (!alreadyImmutableList)
+                {
+                    foreach (var list in equivalentLists)
+                    {
+                        Assert.AreSame(ImmutableList<T>.EMPTY, list);
+                    }
+                }
+            }
+
+            var factorList = enumerable.ToFactor();
+            equivalentLists.Add(factorList);
+            CollectionAssert.AreEqual(enumerable.Distinct().ToList(), factorList.Levels.ToList());
+            if (distinctCount == count)
+            {
+                equivalentLists.Add(factorList.Levels);
+            }
+            equivalentLists.Add(enumerable.ToFactor().MaybeConstant());
+            equivalentLists.Add(enumerable.ToImmutable().MaybeConstant());
+
+            if (typeof(T).IsGenericType && typeof(T).GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                var nullableListType = typeof(NullableList<>).MakeGenericType(typeof(T).GetGenericArguments());
+                var enumerableType = typeof(IEnumerable<>).MakeGenericType(typeof(T));
+                var constructor = nullableListType.GetConstructor(new[] { enumerableType });
+                Assert.IsNotNull(constructor);
+                var nullableListObject = constructor.Invoke(new[]{enumerable});
+                equivalentLists.Add((ImmutableList<T>)nullableListObject);
+            }
+
+            for (int i = 0; i < equivalentLists.Count; i++)
+            {
+                for (int j = 0; j < equivalentLists.Count; j++)
+                {
+                    Assert.AreEqual(equivalentLists[i], equivalentLists[j]);
+                    Assert.AreEqual(equivalentLists[i].GetHashCode(), equivalentLists[j].GetHashCode());
+                }
+            }
         }
     }
 }
