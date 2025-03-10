@@ -466,6 +466,12 @@
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
     <value>Adjusting peak boundaries</value>
   </data>
+  <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
+    <value>Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+    {0}
+	
+        Would you like to continue building this predicted library?</value>
+  </data>
   <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
     <value>Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
     {0}

@@ -23,7 +23,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
@@ -99,17 +101,45 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             InputFilePath = inputFilePath;
 
         }
-        public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
+        public bool PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(@"Preparing input file")
                 .ChangePercentComplete(0));
 
-            var precursorTable = GetPrecursorTable(Document, toolName);
-            File.WriteAllLines(InputFilePath, precursorTable);
+            var warningMods = GetWarningMods(Document, toolName);
 
+            bool write = true;
+            if (warningMods.Count > 0)
+            {
+                string warningModString = string.Join(Environment.NewLine, warningMods);
+                AlertDlg warnMessageDlg =
+                    new AlertDlg(
+                        string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                            warningModString), MessageBoxButtons.OKCancel);
+                var warnModChoice = warnMessageDlg.ShowDialog();
+                                              
+                if (warnModChoice == DialogResult.Cancel)
+                {
+                    write = false;
+
+                }
+                else if (warnModChoice == DialogResult.OK)
+                {
+                    // Attempt to build
+                    write = true;
+                }
+            }
+
+            if (write)
+            {
+                var precursorTable = GetPrecursorTable(Document, toolName, warningMods);
+                File.WriteAllLines(InputFilePath, precursorTable);
+            }
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
+            
+            return write;
         }
 
         public static IEnumerable<Tuple<ModifiedSequence, int>> GetPrecursors(SrmDocument document)
@@ -126,7 +156,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
         }
 
-        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, string toolName)
+        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, string toolName, List<string> warningMods = null)
         {
             var result = new List<string>();
             string header;
@@ -157,7 +187,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
                 {
                     var mod = modifiedSequence.ExplicitMods[i];
-                    if (!mod.UnimodId.HasValue)
+                    var modWarns = warningMods.Where(m => m == mod.Name).ToArray();
+                    if (!mod.UnimodId.HasValue && modWarns.Length == 0)
                     {
                         var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, toolName);
                         Messages.WriteAsyncUserMessage(msg);
@@ -167,7 +198,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                     var unimodIdAA = mod.UnimodIdAA;
                     var modNames = ModificationNames.Where(m => m.Accession == unimodIdAA).ToArray();
-                    if (modNames.Length == 0)
+                   
+                    if (modNames.Length == 0 && modWarns.Length == 0 )
                     {
                         var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA, toolName);
                         Messages.WriteAsyncUserMessage(msg);
@@ -175,6 +207,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                         continue;
                     }
+                    if (modNames.Length == 0) continue;
 
                     string modName = "";
 
@@ -237,7 +270,46 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             return result;
         }
+        public List<string> GetWarningMods(SrmDocument Document, string toolName)
+        {
+            var resultList = new List<string>(); 
+           
+            bool alphapeptDeepFormat = toolName.Equals(@"alphapeptdeep");
+            
+            // Build precursor table row by row
+            foreach (var peptide in Document.Peptides)
+            {
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
 
+                var ModificationNames =
+                    alphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
+
+                for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
+                {
+                    var mod = modifiedSequence.ExplicitMods[i];
+                    if (!mod.UnimodId.HasValue)
+                    {
+                        var haveMod = resultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            resultList.Add(mod.Name);
+                        }
+                    }
+
+                    var unimodIdAA = mod.UnimodIdAA;
+                    var modNames = ModificationNames.Where(m => m.Accession == unimodIdAA).ToArray();
+                    if (modNames.Length == 0)
+                    {
+                        var haveMod = resultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            resultList.Add(mod.Name);
+                        }
+                    }
+                }
+            }
+            return resultList;
+        }
         public static string LabelPrecursor(TransitionGroup tranGroup, double precursorMz,
             string resultsText)
         {
@@ -439,24 +511,31 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
+            bool haveInputFile = false;
             progressStatus = progressStatus.ChangeSegments(0, 5);
             Directory.CreateDirectory(RootDir);
             if (Document.DocumentHash != null)
             {
-                LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+                haveInputFile = LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
             }
             progressStatus = progressStatus.NextSegment();
 
-            PrepareSettingsFile(progress, ref progressStatus);
+            if (haveInputFile) 
+                PrepareSettingsFile(progress, ref progressStatus);
+
             progressStatus = progressStatus.NextSegment();
 
-            ExecutePeptdeep(progress, ref progressStatus);
+            if (haveInputFile)
+                ExecutePeptdeep(progress, ref progressStatus);
+
             progressStatus = progressStatus.NextSegment();
 
-            TransformPeptdeepOutput(progress, ref progressStatus);
+            if (haveInputFile)
+                TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-
-            ImportSpectralLibrary(progress, ref progressStatus);
+            
+            if (haveInputFile)
+                ImportSpectralLibrary(progress, ref progressStatus);
         }
 
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)

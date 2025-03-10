@@ -213,6 +213,18 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+        ///    {0}
+        ///	
+        ///        Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Alphapeptdeep_Warn_unknown_modification {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Warn_unknown_modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
         public static string AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__ {
