@@ -1018,7 +1018,7 @@ bool DiaNNSpecLibReader::parseFile()
         vector<bfs::path> siblingFiles;
         siblingFiles.insert(siblingFiles.end(), siblingParquetFiles.begin(), siblingParquetFiles.end());
         siblingFiles.insert(siblingFiles.end(), siblingTsvFiles.begin(), siblingTsvFiles.end());
-        map<int, vector<bfs::path>> tsvFilepathBySharedPrefixLength;
+        map<int, vector<bfs::path>, std::greater<int>> tsvFilepathBySharedPrefixLength;
         auto speclibFilename = bfs::path(impl_->specLibFile_).filename().string();
         for (const auto& tsvFilepath : siblingFiles)
         {
@@ -1032,24 +1032,26 @@ bool DiaNNSpecLibReader::parseFile()
                 if (tsvFilename[i] != speclibFilename[i])
                     break;
             sharedPrefixLength = i;
-            if (sharedPrefixLength < 1)
-                continue;
             tsvFilepathBySharedPrefixLength[sharedPrefixLength].emplace_back(tsvFilepath);
         }
 
         diannReportFilepath.clear();
-        if (!tsvFilepathBySharedPrefixLength.empty())
-            for (const auto& tsvFilepath : tsvFilepathBySharedPrefixLength.rbegin()->second)
+        for (const auto& sharedPrefixLengthAndFilepathsPair : tsvFilepathBySharedPrefixLength)
+        {
+            for (const auto& tsvFilepath : sharedPrefixLengthAndFilepathsPair.second)
             {
                 Impl::Reader<3> reader;
                 reader.open_file(tsvFilepath.string());
-                reader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id", "Q.Value", "RT");
-                if (reader.has_column("Precursor.Id") && reader.has_column("Q.Value") && reader.has_column("RT"))
+                reader.read_header(io::ignore_extra_column | io::ignore_missing_column, "Precursor.Id", "Global.Q.Value", "RT");
+                if (reader.has_column("Precursor.Id") && reader.has_column("Global.Q.Value") && reader.has_column("RT"))
                 {
                     diannReportFilepath = tsvFilepath.string();
                     break;
                 }
             }
+            if (!diannReportFilepath.empty())
+                break;
+        }
 
         if (diannReportFilepath.empty())
             throw BlibException(true, "unable to determine DIA-NN report filename for '%s': the Parquet or TSV report is required to read speclib files and must be in the same directory as the speclib and share some leading characters (e.g. somedata-tsv.speclib and somedata-report.parquet)",
@@ -1062,7 +1064,7 @@ bool DiaNNSpecLibReader::parseFile()
     Verbosity::debug("Opened report file %s.", diannReportFilepath.c_str());
     const char* fileNameColumn = reader.is_parquet(diannReportFilepath) ? "Run" : "File.Name"; // DIANN v2 doesn't provide File.Name column
     Verbosity::status("Reading report headers.");
-    reader.read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
+    reader.read_header(io::ignore_extra_column, "Run", fileNameColumn, "Protein.Group", "Precursor.Id", "Global.Q.Value", "RT", "RT.Start", "RT.Stop", "IM");
     Verbosity::debug("Read report headers.");
 
     std::string_view run, fileName, proteinGrp, precursorId;
@@ -1151,6 +1153,8 @@ bool DiaNNSpecLibReader::parseFile()
 
     filteredOutPsmCount_ = speclib.entries.size() - psms_.size();
 
+
+    // CONSIDER: when/if another input type needs to build a non-redundant library directly, move this code to a common location
     Verbosity::status("Building retention time table with %ld entries.", redundantPsmCount);
     blibMaker_.beginTransaction();
     for (const auto& kvp : retentionTimesByPrecursorId)
@@ -1196,6 +1200,11 @@ bool DiaNNSpecLibReader::parseFile()
     Verbosity::status("Reading %d spectra from speclib.", psms_.size());
     setSpecFileName(firstRun, false);
     buildTables(GENERIC_QVALUE);
+
+    // update RetentionTimes.RefSpectraID field after filtering
+    blibMaker_.sql_stmt("UPDATE RetentionTimes SET RefSpectraID = newId "
+                        "FROM (SELECT t.[RefSpectraID] as oldId, s.[id] as newId FROM RefSpectra s, RetentionTimes t WHERE s.[SpecIdInFile] = t.[RefSpectraID]) AS IdMapping "
+                        "WHERE RefSpectraID == IdMapping.oldId");
 
     return true;
 }

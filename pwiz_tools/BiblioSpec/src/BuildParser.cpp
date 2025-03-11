@@ -431,7 +431,7 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename, boo
         }
     }
 
-    bool psmsAreNonRedundant = dynamic_cast<NonRedundantPSM*>(psms_.front()) != nullptr;
+    bool psmsAreNonRedundant = hasMatches ? dynamic_cast<NonRedundantPSM*>(psms_.front()) != nullptr : false;
 
     // for reading spectrum file
     if( specReader_ ) {
