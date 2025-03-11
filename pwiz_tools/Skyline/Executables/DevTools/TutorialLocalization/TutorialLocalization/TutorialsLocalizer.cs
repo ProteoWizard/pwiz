@@ -16,9 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using CsvHelper;
 using HtmlAgilityPack;
@@ -29,10 +32,12 @@ namespace TutorialLocalization
     public class TutorialsLocalizer
     {
         private Dictionary<string, List<LocalizationRecord>> _localizationRecords;
+        private Dictionary<string, List<LocalizationRecord>> _localizationRecordOverrides;
         public TutorialsLocalizer(ZipFile zipFile)
         {
             ZipFile = zipFile;
             _localizationRecords = new Dictionary<string, List<LocalizationRecord>>();
+            _localizationRecordOverrides = new Dictionary<string, List<LocalizationRecord>>();
         }
 
         public ZipFile ZipFile { get; }
@@ -115,9 +120,36 @@ namespace TutorialLocalization
 
         public void AddHtmlDocument(HtmlDocument htmlDocument, string relativePath)
         {
+            ZipFile.AddEntry(relativePath, ToUtf8Bytes(GetHtml(htmlDocument)));
+        }
+
+        public void AddFileBytes(byte[] bytes, string relativePath)
+        {
+            ZipFile.AddEntry(relativePath, bytes);
+        }
+
+        /// <summary>
+        /// Gets the HTML for the document. In order to be consistent with the files that
+        /// are already in the repository, empty tags in the &lt;head> end in ">" but
+        /// empty tags in the &lt;body> end in "/>".
+        /// </summary>
+        public static string GetHtml(HtmlDocument document)
+        {
             var stringWriter = new StringWriter();
-            htmlDocument.Save(stringWriter);
-            ZipFile.AddEntry(relativePath, ToUtf8Bytes(stringWriter.ToString()));
+            document.Save(stringWriter);
+            var document2 = new HtmlDocument();
+            document2.LoadHtml(stringWriter.ToString());
+            var parts = new List<string> { "<html>", string.Empty };
+            // Empty nodes (e.g. "link") in the head should end in ">"
+            document2.OptionWriteEmptyNodes = false;
+            parts.Add(document2.DocumentNode.SelectSingleNode("//head").OuterHtml);
+            parts.Add(string.Empty);
+            // Empty nodes (e.g. "img") in the body should end in "/>"
+            document2.OptionWriteEmptyNodes = true;
+            parts.Add(document2.DocumentNode.SelectSingleNode("//body").OuterHtml);
+            parts.Add(string.Empty);
+            parts.Add("</html>");
+            return string.Join(Environment.NewLine, parts);
         }
 
         public void AddLocalizationRecord(string language, LocalizationRecord record)
@@ -141,11 +173,44 @@ namespace TutorialLocalization
         public byte[] ToUtf8Bytes(string str)
         {
             var memoryStream = new MemoryStream();
-            using (var writer = new StreamWriter(memoryStream, new UTF8Encoding(true)))
+            using (var writer = new StreamWriter(memoryStream, new UTF8Encoding(false)))
             {
                 writer.Write(str);
             }
             return memoryStream.ToArray();
+        }
+
+        public void ReadLocalizationCsvFiles(string folderPath)
+        {
+            foreach (var file in Directory.GetFiles(folderPath))
+            {
+                string prefix = "localization_";
+                string suffix = ".csv";
+                string fileName = Path.GetFileName(file);
+                if (fileName.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase) &&
+                    fileName.EndsWith(suffix, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    var language = fileName.Substring(prefix.Length, fileName.Length - prefix.Length - suffix.Length);
+                    using var fileReader = File.OpenText(file);
+                    using var csvReader = new CsvReader(fileReader, CultureInfo.InvariantCulture);
+                    if (!_localizationRecordOverrides.TryGetValue(language, out var list))
+                    {
+                        list = new List<LocalizationRecord>();
+                        _localizationRecordOverrides[language] = list;
+                    }
+                    list.AddRange(csvReader.GetRecords<LocalizationRecord>());
+                }
+            }
+        }
+
+        public IEnumerable<LocalizationRecord> GetLocalizationRecordOverrides(string language, string tutorial)
+        {
+            if (!_localizationRecordOverrides.TryGetValue(language, out var list))
+            {
+                return Array.Empty<LocalizationRecord>();
+            }
+
+            return list.Where(r => r.TutorialName == tutorial);
         }
     }
 }
