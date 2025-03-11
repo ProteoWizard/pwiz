@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
 
@@ -34,12 +35,15 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private readonly MidasLibrary _library;
         private readonly LibrarySpec _libSpec;
         public string BuilderLibraryPath => _library.FilePath;
-
+        public SrmDocument Document { get => _doc; }
+        public string ToolName { get; }
         public MidasBlibBuilder(SrmDocument doc, MidasLibrary library, string libName, string blibPath)
         {
             _doc = doc;
             _library = library;
+            LibraryHelper = null;
             _libSpec = new BiblioSpecLiteSpec(libName, blibPath);
+            ToolName = @"midas";
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -90,6 +94,8 @@ namespace pwiz.Skyline.Model.Lib.Midas
                 return blibDb.CreateLibraryFromSpectra(new BiblioSpecLiteSpec(BLIB_NAME_INTERNAL, _libSpec.FilePath), bestSpectra, BLIB_NAME_INTERNAL, progress) != null;
             }
         }
+
+        public LibraryHelper LibraryHelper { get; }
 
         public string ProductLibraryPath()
         {

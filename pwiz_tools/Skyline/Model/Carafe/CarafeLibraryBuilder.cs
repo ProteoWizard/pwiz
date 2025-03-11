@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
         private const string SPACE = TextUtil.SPACE;
         private const string TAB = "\t";
-        private LibraryHelper LibraryHelper { get; set; }
+        public LibraryHelper LibraryHelper { get; private set; }
         public string AmbiguousMatchesMessage
         {
             //TODO(xgwang): implement
@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Carafe
         public LibrarySpec LibrarySpec { get; private set; }
         private string PythonVersion { get; }
         private string PythonVirtualEnvironmentName { get; }
-        private SrmDocument Document { get; }
+        public SrmDocument Document { get; private set; }
         [CanBeNull] private string ProteinDatabaseFilePath { get;  }
         internal string ExperimentDataFilePath { get; set;  }
         internal string ExperimentDataTuningFilePath { get; set; }
@@ -119,7 +119,6 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
         private string InputFileName => INPUT + TextUtil.UNDERSCORE + Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
-
         private IList<ArgumentAndValue> CommandArguments =>
             new []
             {
@@ -186,7 +185,8 @@ namespace pwiz.Skyline.Model.Carafe
         {
             return CarafeOutputLibraryFilePath;
         }
-
+    
+        public string ToolName { get; }
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
@@ -197,6 +197,7 @@ namespace pwiz.Skyline.Model.Carafe
             SrmDocument document)
         {
             Document = document;
+            ToolName = @"carafe";
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeDir);

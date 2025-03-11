@@ -23,9 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
@@ -101,7 +99,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             InputFilePath = inputFilePath;
 
         }
-        public bool PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
+        public void PrepareInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(@"Preparing input file")
@@ -109,37 +107,10 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             var warningMods = GetWarningMods(Document, toolName);
 
-            bool write = true;
-            if (warningMods.Count > 0)
-            {
-                string warningModString = string.Join(Environment.NewLine, warningMods);
-                AlertDlg warnMessageDlg =
-                    new AlertDlg(
-                        string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
-                            warningModString), MessageBoxButtons.OKCancel);
-                var warnModChoice = warnMessageDlg.ShowDialog();
-                                              
-                if (warnModChoice == DialogResult.Cancel)
-                {
-                    write = false;
-
-                }
-                else if (warnModChoice == DialogResult.OK)
-                {
-                    // Attempt to build
-                    write = true;
-                }
-            }
-
-            if (write)
-            {
-                var precursorTable = GetPrecursorTable(Document, toolName, warningMods);
+            var precursorTable = GetPrecursorTable(Document, toolName, warningMods);
                 File.WriteAllLines(InputFilePath, precursorTable);
-            }
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
-            
-            return write;
         }
 
         public static IEnumerable<Tuple<ModifiedSequence, int>> GetPrecursors(SrmDocument document)
@@ -437,7 +408,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public LibrarySpec LibrarySpec { get; private set; }
         public string BuilderLibraryPath => OutputSpectraLibFilepath;
 
-        private LibraryHelper LibraryHelper { get; set; }
+        public LibraryHelper LibraryHelper { get; private set; }
 
         private static readonly DateTime _nowTime = DateTime.Now;
 
@@ -454,7 +425,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
-        private SrmDocument Document { get; }
+        public string ToolName { get; }
+        public SrmDocument Document { get; private set; }
         /// <summary>
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
         /// This is how the peptdeep CLI supports command line arguments.
@@ -486,11 +458,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
-        {            Document = document;
+        {           
+            Document = document;
             Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
+            ToolName = @"alphapeptdeep";
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -511,31 +485,24 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            bool haveInputFile = false;
             progressStatus = progressStatus.ChangeSegments(0, 5);
             Directory.CreateDirectory(RootDir);
-            if (Document.DocumentHash != null)
-            {
-                haveInputFile = LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
-            }
+            LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+            
             progressStatus = progressStatus.NextSegment();
 
-            if (haveInputFile) 
-                PrepareSettingsFile(progress, ref progressStatus);
+            PrepareSettingsFile(progress, ref progressStatus);
 
             progressStatus = progressStatus.NextSegment();
 
-            if (haveInputFile)
-                ExecutePeptdeep(progress, ref progressStatus);
+            ExecutePeptdeep(progress, ref progressStatus);
 
             progressStatus = progressStatus.NextSegment();
 
-            if (haveInputFile)
-                TransformPeptdeepOutput(progress, ref progressStatus);
+            TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             
-            if (haveInputFile)
-                ImportSpectralLibrary(progress, ref progressStatus);
+            ImportSpectralLibrary(progress, ref progressStatus);
         }
 
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)

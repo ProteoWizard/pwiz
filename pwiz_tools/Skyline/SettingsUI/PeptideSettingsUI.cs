@@ -765,7 +765,25 @@ namespace pwiz.Skyline.SettingsUI
             IsBuildingLibrary = true;
 
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
+          
+            var warningMods = builder.LibraryHelper.GetWarningMods(builder.Document, builder.ToolName);
 
+            if (warningMods.Count > 0)
+            {
+                string warningModString = string.Join(Environment.NewLine, warningMods);
+                AlertDlg warnMessageDlg =
+                    new AlertDlg(
+                        string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                            warningModString), MessageBoxButtons.OKCancel);
+                var warnModChoice = warnMessageDlg.ShowDialog();
+
+                if (warnModChoice == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+
+            //_libraryManager.TestModifications();
             bool retry;
             do
             {
@@ -800,6 +818,11 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                         }
                     }
+                    else if (status.IsCanceled)
+                    {
+                        return;
+                    }
+
                     retry = false;
                 }
             } while (retry);

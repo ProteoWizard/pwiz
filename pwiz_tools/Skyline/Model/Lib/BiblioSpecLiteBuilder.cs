@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -73,11 +74,17 @@ namespace pwiz.Skyline.Model.Lib
 
         private ReadOnlyCollection<string> _inputFiles;
 
+        public SrmDocument Document { get; }
+        public string ToolName { get; }
+
         public BiblioSpecLiteBuilder(string name, string outputPath, IList<string> inputFiles, IList<Target> targetSequences = null, bool useExplicitPeakBounds = true)
         {
             LibrarySpec = new BiblioSpecLiteSpec(name, outputPath, useExplicitPeakBounds);
 
             InputFiles = inputFiles;
+            LibraryHelper = null;
+            Document = null;
+            ToolName = @"bibliospeclite";
 
             // FUTURE(bspratt) small molecule workflows
             if (targetSequences != null)
@@ -239,6 +246,8 @@ namespace pwiz.Skyline.Model.Lib
 
             return true;
         }
+
+        public LibraryHelper LibraryHelper { get; }
 
         public static bool HasEmbeddedSpectra(string libraryInputFilepath)
         {
