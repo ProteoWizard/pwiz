@@ -304,22 +304,22 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ChromatogramCache));
 
             //
-            // Watch for file system changes
+            // File system - watch for file renamed
             //
             var replicateFolderModel = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
             var sampleFileTreeNode = (FilesTreeNode)replicateFolderModel.Nodes[0].Nodes[0];
-            var replicateSampleFileModel = sampleFileTreeNode.Model as ReplicateSampleFile;
+            var sampleFileModel = sampleFileTreeNode.Model as ReplicateSampleFile;
 
-            Assert.IsNotNull(replicateSampleFileModel);
+            Assert.IsNotNull(sampleFileModel);
 
-            var filePath = replicateSampleFileModel.LocalFilePath;
+            var filePath = sampleFileModel.LocalFilePath;
             Assert.IsTrue(File.Exists(filePath));
 
             File.Move(filePath, filePath + "RENAMED");
             WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageMissing);
 
             // replicate sample file
-            Assert.AreEqual(FileState.missing, replicateSampleFileModel.FileState);
+            Assert.AreEqual(FileState.missing, sampleFileModel.FileState);
             Assert.AreEqual((int)sampleFileTreeNode.ImageMissing, sampleFileTreeNode.ImageIndex);
 
             // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
@@ -332,13 +332,41 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageAvailable);
 
             // now check that icons changed back
-            Assert.AreEqual(FileState.available, replicateSampleFileModel.FileState);
+            Assert.AreEqual(FileState.available, sampleFileModel.FileState);
             Assert.AreEqual((int)sampleFileTreeNode.ImageAvailable, sampleFileTreeNode.ImageIndex);
 
             // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
             Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent).ImageAvailable, sampleFileTreeNode.Parent.ImageIndex);
             Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageAvailable, sampleFileTreeNode.Parent.Parent.ImageIndex);
             Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
+
+            CheckReplicateEquivalence(42);
+
+            //
+            // File system - watch for file deleted
+            //
+            sampleFileTreeNode = (FilesTreeNode)replicateFolderModel.Nodes[2].Nodes[0]; // [3] doesn't work for some reason
+            sampleFileModel = sampleFileTreeNode.Model as ReplicateSampleFile;
+
+            Assert.IsNotNull(sampleFileModel);
+
+            filePath = sampleFileModel.LocalFilePath;
+            Assert.IsTrue(File.Exists(filePath));
+
+            File.Delete(filePath);
+            WaitForCondition(() => !File.Exists(filePath));
+            WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageMissing);
+
+            // replicate sample file
+            Assert.AreEqual(FileState.missing, sampleFileModel.FileState);
+            Assert.AreEqual((int)sampleFileTreeNode.ImageMissing, sampleFileTreeNode.ImageIndex);
+
+            // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
+            Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent).ImageMissing, sampleFileTreeNode.Parent.ImageIndex);
+            Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageMissing, sampleFileTreeNode.Parent.Parent.ImageIndex);
+            Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
+
+            CheckReplicateEquivalence(42);
 
             Assert.IsTrue(OnlyContainsFilesTreeNodes(SkylineWindow.FilesTree.Root));
 

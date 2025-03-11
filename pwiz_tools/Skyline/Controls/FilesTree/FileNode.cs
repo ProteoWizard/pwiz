@@ -44,8 +44,6 @@ using pwiz.Skyline.Model;
         https://skyline.ms/wiki/home/software/Skyline/page.view?name=file-types
 
  */
-// TODO: rebuild detection for file delete, rename
-// TODO: initialize local file on a background thread
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
@@ -92,17 +90,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             LocalFilePath = FILE_PATH_NOT_SET;
         }
 
+        // Initialize the path to a local file. This tries exactly once to find a file locally
+        // matching the name of a file from the model.
+        //
+        // Note, this accesses the file system (possibly more than once) so should
+        // not be executed on the UI thread.
         public void InitLocalFile()
         {
-            if (IsBackedByFile && !IsLocalFilePathConfigured())
+            if (IsBackedByFile && ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET))
             {
                 LocalFilePath = LookForFileInPotentialLocations(DocumentPath, FileName);
+                FileState = LocalFilePath != null ? FileState.available : FileState.missing;
             }
-        }
-
-        private bool IsLocalFilePathConfigured()
-        {
-            return !ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET);
         }
 
         public SrmDocument Document { get; }
@@ -116,7 +115,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public ImageId ImageAvailable { get; }
         public ImageId ImageMissing { get; }
-        public FileState FileState { get; private set; }
+        public FileState FileState { get; set; }
 
         public virtual bool IsBackedByFile => false;
 
@@ -125,23 +124,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         public virtual IList<FileNode> Files => new List<FileNode>();
         public virtual bool HasFiles() => Files != null && Files.Count > 0;
 
-        public virtual bool LocalFileExists()
-        {
-            return File.Exists(LocalFilePath);
-        }
-
-        public void FileAvailable()
-        {
-            FileState = FileState.available;
-        }
-
-        public void FileMissing()
-        {
-            FileState = FileState.missing;
-        }
-
         ///
-        /// LOOK FOR FILES ON DISK - ALL FILES EXCEPT REPLICATE SAMPLE FILES
+        /// LOOK FOR A FILE ON DISK
         ///
         /// SkylineFiles uses this approach to locate file paths found in SrmSettings. It starts with
         /// the given path but those paths may be set on others machines. If not available locally, use
@@ -150,9 +134,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// <param name="relativeFilePath">Usually the SrmDocument path.</param>
         /// <param name="fileName"></param>
         ///
-        /// TODO: is this the same way Skyline finds replicate sample files?
-        /// Chromatogram.GetExistingDataFilePath
-        internal static string LookForFileInPotentialLocations(string relativeFilePath, string fileName)
+        /// TODO: is this the same way Skyline finds replicate sample files? Ex: Chromatogram.GetExistingDataFilePath
+        internal string LookForFileInPotentialLocations(string relativeFilePath, string fileName)
         {
             if (File.Exists(fileName) || Directory.Exists(fileName))
                 return fileName;

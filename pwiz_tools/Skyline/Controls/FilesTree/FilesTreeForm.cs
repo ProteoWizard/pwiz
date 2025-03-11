@@ -194,10 +194,10 @@ namespace pwiz.Skyline.Controls.FilesTree
         // TreeNode => Open Context Menu
         private void FilesTree_ContextMenuStrip_Opening(object sender, CancelEventArgs e)
         {
+            var filesTreeNode = (FilesTreeNode)FilesTree.SelectedNode;
+
             _nodeTip.HideTip();
 
-            var filesTreeNode = FilesTree.SelectedNode as FilesTreeNode;
-            
             libraryExplorerToolStripMenuItem.Visible = false;
             manageResultsToolStripMenuItem.Visible = false;
             openAuditLogMenuItem.Visible = false;
@@ -205,7 +205,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             openContainingFolderMenuStripItem.Visible = false;
             selectReplicateMenuItem.Visible = false;
 
-            switch (filesTreeNode?.Model)
+            // Offer "Open Containing Folder" if supported by this tree node and the file
+            // is available (e.g. not removed or deleted)
+            if (filesTreeNode.SupportsOpenContainingFolder())
+            {
+                openContainingFolderMenuStripItem.Visible = true;
+                openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.FileState == FileState.available;
+            }
+
+            switch (filesTreeNode.Model)
             {
                 case ReplicatesFolder _:
                     manageResultsToolStripMenuItem.Visible = true;
@@ -214,41 +222,15 @@ namespace pwiz.Skyline.Controls.FilesTree
                 case Replicate _:
                 case ReplicateSampleFile _:
                     selectReplicateMenuItem.Visible = true;
-
-                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
-                    openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
                     break;
                 case SpectralLibrariesFolder _:
                     libraryExplorerToolStripMenuItem.Visible = true;
                     return;
                 case SpectralLibrary _:
                     openLibraryInLibraryExplorerMenuItem.Visible = true;
-
-                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
-                    openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
                     break;
                 case SkylineAuditLog _:
                     openAuditLogMenuItem.Visible = true;
-                    
-                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
-                    openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
-                    break;
-                case BackgroundProteome _:
-                case IonMobilityLibrary _:
-                case OptimizationLibrary _:
-                case RTCalc _:
-                case SkylineChromatogramCache _:
-                case SkylineViewFile _:
-                case RootFileNode _:
-                    // only offer Open Containing Folder option if the file currently exists - e.g. it hasn't been removed or deleted
-                    openContainingFolderMenuStripItem.Visible = true;
-                    openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.LocalFileExists();
-                    return;
-                default:
-                    e.Cancel = true;
                     break;
             }
         }

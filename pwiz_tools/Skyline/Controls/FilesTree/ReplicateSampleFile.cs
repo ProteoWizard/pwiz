@@ -15,7 +15,6 @@
  */
 
 using System;
-using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -39,23 +38,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         public override string FileName => _chromFileInfo.Value.FilePath.GetFileName();
 
         public override bool IsBackedByFile => true;
-        public override bool LocalFileExists()
-        {
-            return DoesReplicateSampleFileExist(LocalFilePath);
-        }
 
         private ChromFileInfo FindChromFileInfo()
         {
             return Document.MeasuredResults?.FindChromatogramSet(
                 (ChromatogramSetId)IdentityPath.GetIdentity(0)).FindChromFileInfo(
                 (ChromFileInfoId)  IdentityPath.GetIdentity(1));
-        }
-
-        // Customize how replicate sample files are found - might be a file (ex: foo.raw) or a directory (ex: bar.d)
-        internal static bool DoesReplicateSampleFileExist(string filePath)
-        {
-            // includes a directory check because some replicate samples live in nested directories (*.d)
-            return File.Exists(filePath) || Directory.Exists(filePath);
         }
     }
 }
