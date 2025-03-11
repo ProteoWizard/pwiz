@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestAccessServer()
         {
             TestFilesZip = @"TestFunctional\AccessServerTest.zip";
-            using (new FakeKoina(null))
+            using (new FakeKoina(true, null))
             {
                 RunFunctionalTest();
             }
@@ -473,27 +473,7 @@ namespace pwiz.SkylineTestFunctional
 
         static JObject CreateFolder(string name, bool write, bool targeted)
         {
-            JObject obj = new JObject();
-            obj["name"] = name;
-            obj["path"] = "/" + name + "/";
-            obj["userPermissions"] = write ? 3 : 1;
-            if (!write || !targeted)
-            {
-                // Create a writable subfolder if this folder is not writable, i.e. it is
-                // not a targetedMS folder or the user does not have write permissions in this folder.
-                // Otherwise, it will not get added to the folder tree (PublishDocumentDlg.AddChildContainers()).
-                obj["children"] = new JArray(CreateFolder("Subfolder", true, true));
-            }
-            else
-            {
-                obj["children"] = new JArray();
-            }
-
-            obj["folderType"] = targeted ? "Targeted MS" : "Collaboration";
-            obj["activeModules"] = targeted
-                ? new JArray("MS0", "MS1", "TargetedMS", "MS3")
-                : new JArray("MS0", "MS1", "MS3");
-            return obj;
+            return new BaseTestPanoramaClient.PanoramaFolder(name, write, targeted).ToJson();
         }
 
         public class TestPanoramaClient : BaseTestPanoramaClient
@@ -542,7 +522,7 @@ namespace pwiz.SkylineTestFunctional
                 throw new PanoramaServerException(new ErrorMessageBuilder(ServerStateEnum.unknown.Error(ServerUri)).Uri(ServerUri).ErrorDetail("Test WebException - unknown failure").ToString());
             }
 
-            public override void ValidateFolder(string folderPath, FolderPermission? permission, bool checkTargetedMs = true)
+            public override void ValidateFolder(string folderPath, PermissionSet permissionSet, bool checkTargetedMs = true)
             {
             }
 

@@ -124,11 +124,6 @@
   <data name="EditIrtCalcDlg_RecalibrateStandards_Could_not_get_a_minimum_or_maximum_standard_peptide_" xml:space="preserve">
     <value>无法获得最少或最多的标准肽段。</value>
   </data>
-  <data name="IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__" xml:space="preserve">
-    <value>计算器 {0} 要求其标准肽段的所有 {1} 都在目标列表中，以便确定回归。缺少以下 {2} 肽段:
-
-{3}</value>
-  </data>
   <data name="IrtDb_FILTER_IRTDB_iRT_Database_Files" xml:space="preserve">
     <value>iRT 数据库文件</value>
   </data>

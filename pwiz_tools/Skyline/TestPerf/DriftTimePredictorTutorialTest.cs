@@ -249,6 +249,8 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
                 if (IsCoverShotMode)
                 {
+                    Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
+
                     RunUI(() =>
                     {
                         Settings.Default.ChromatogramFontSize = 14;
@@ -258,14 +260,20 @@ namespace TestPerf // This would be in tutorial tests if it didn't take about 10
 
                     RestoreCoverViewOnScreen();
 
-                    ClickChromatogram(clickTime2, 5.8E+4, PaneKey.PRODUCTS);
-
                     var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
                     RenameReplicate(manageResultsDlg, 0, "BSA");
                     RenameReplicate(manageResultsDlg, 1, "Yeast_BSA");
                     OkDialog(manageResultsDlg, manageResultsDlg.OkDialog);
 
-                    RunUI(SkylineWindow.FocusDocument);
+                    ClickChromatogram(clickTime2, 5.8E+4, PaneKey.PRODUCTS);
+
+                    fullScanGraph = FindOpenForm<GraphFullScan>();
+                    RunUI(() =>
+                    {
+                        var frame = fullScanGraph.Parent.Parent;
+                        frame.Location = new Point(SkylineWindow.Left + 10, SkylineWindow.Bottom - frame.Height - 10);
+                    });
+                    FocusDocument();
 
                     TakeCoverShot();
                     return;

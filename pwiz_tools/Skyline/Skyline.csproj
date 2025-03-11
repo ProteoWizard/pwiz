@@ -555,7 +555,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\BootstrapFiguresOfMeritCalculator.cs" />
+    <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -589,6 +589,7 @@
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
+    <Compile Include="Model\Results\LcPeakIonMetrics.cs" />
     <Compile Include="Model\Results\Scoring\ReintegrateDlgSettings.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\BinnedSpectrum.cs" />
     <Compile Include="Model\Results\Spectra\Alignment\SimilarityGrid.cs" />
@@ -596,6 +597,7 @@
     <Compile Include="Model\Results\Spectra\Alignment\SpectrumSummaryList.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumClassFilter.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
+    <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -2349,12 +2351,6 @@
     <Compile Include="SettingsUI\EditLibraryDlg.Designer.cs">
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\BuildLibraryNotification.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -2763,6 +2759,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\Calibration\CalibrationGraphControl.resx">
       <DependentUpon>CalibrationGraphControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\DetectionsToolbar.ja.resx">
       <DependentUpon>DetectionsToolbar.cs</DependentUpon>
@@ -2973,13 +2970,16 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.ja.resx">
       <DependentUpon>TutorialImageResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>TutorialImageResources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialImageResources.zh-CHS.resx">
       <DependentUpon>TutorialImageResources.resx</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Startup\TutorialLinkResources.ja.resx">
       <DependentUpon>TutorialLinkResources.resx</DependentUpon>
@@ -3861,7 +3861,7 @@
       <Link>QTFLDebugLog.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content  Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Mobilion\MBI_SDK.dll">
       <Link>MBI_SDK.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4082,6 +4082,7 @@
     <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Model\Irt\StandardsDocuments\CiRT_all.sky" />
     <None Include="Method\Agilent\6400\BuildAgilentMethod.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -4191,9 +4192,6 @@
     <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start-ja.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start-zh-CHS.png" />
     <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\TargetedMSMS_start.png" />
     <EmbeddedResource Include="Resources\LogoAmanda_32.bmp" />
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -4222,6 +4220,19 @@
     <None Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
     <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
+    <Content Include="Resources\StartPage\DDASearch_start-ja.png" />
+    <Content Include="Resources\StartPage\DDASearch_start-zh-CHS.png" />
+    <Content Include="Resources\StartPage\DDASearch_start.png" />
+    <Content Include="Resources\StartPage\DIA-PASEF_start-ja.png" />
+    <Content Include="Resources\StartPage\DIA-PASEF_start-zh-CHS.png" />
+    <Content Include="Resources\StartPage\DIA-PASEF_start.png" />
+    <Content Include="Resources\StartPage\DIA-QE_start.png" />
+    <Content Include="Resources\StartPage\DIA-TTOF_start.png" />
+    <Content Include="Resources\StartPage\DIA-Umpire-TTOF_start.png" />
+    <Content Include="Resources\StartPage\PRM_start-ja.png" />
+    <Content Include="Resources\StartPage\PRM_start-zh-CHS.png" />
+    <Content Include="Resources\StartPage\PRM_start.png" />
+    <Content Include="Resources\StartPage\SmallMoleculeIMSLibraries_start.png" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -4278,12 +4289,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.ja.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.zh-CHS.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
@@ -6731,10 +6736,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildBackgroundProteomeDlg.resx">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.resx">
-      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.resx">

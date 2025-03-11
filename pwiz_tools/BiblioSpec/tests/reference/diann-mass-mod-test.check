@@ -792,7 +792,7 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 444	KLVDATQGGPNITFSSIR	1364.92602539	3	KLVDATQGGPN[+2188.7]ITFSSIR	-	-	1	7	0.0	0.0	0.0	0	24.96589851	24.85079765	25.08440017	3.23755607	N/A	N/A	N/A	N/A	N/A	1	505	0.00100401	19
 445	KLVDATQGGPNITFSSIR	1418.94360351	3	KLVDATQGGPN[+2350.8]ITFSSIR	-	-	1	14	0.0	0.0	0.0	0	24.91099929	24.79570007	25.08699989	4.65936931	N/A	N/A	N/A	N/A	N/A	1	506	0.00027532	19
 id	fileName	idFileName	cutoffScore
-1	fissionyeast_NGP_DIA_1	/BiblioSpec/tests/inputs/diann-mass-mods.tsv.speclib	-1.0
+1	fissionyeast_NGP_DIA_1.mzML	/BiblioSpec/tests/inputs/diann-mass-mods.tsv.speclib	-1.0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

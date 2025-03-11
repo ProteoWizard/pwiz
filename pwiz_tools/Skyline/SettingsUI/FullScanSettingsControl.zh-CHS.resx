@@ -465,18 +465,6 @@
   <data name="radioKeepAllTime.Text" xml:space="preserve">
     <value>包含所有匹配的扫描</value>
   </data>
-  <data name="&gt;&gt;cbIgnoreSim.Name" xml:space="preserve">
-    <value>cbIgnoreSim</value>
-  </data>
-  <data name="&gt;&gt;cbIgnoreSim.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;cbIgnoreSim.Parent" xml:space="preserve">
-    <value>groupBoxMS1</value>
-  </data>
-  <data name="&gt;&gt;cbIgnoreSim.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
   <data name="&gt;&gt;labelPrecursorPPM.Name" xml:space="preserve">
     <value>labelPrecursorPPM</value>
   </data>
@@ -487,7 +475,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorPPM.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.Name" xml:space="preserve">
     <value>comboEnrichments</value>
@@ -499,7 +487,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboEnrichments.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>1</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.Name" xml:space="preserve">
     <value>labelEnrichments</value>
@@ -511,7 +499,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelEnrichments.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilterPercent</value>
@@ -523,7 +511,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilterPercent.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>textPrecursorIsotopeFilter</value>
@@ -535,7 +523,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorIsotopeFilter.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.Name" xml:space="preserve">
     <value>labelPrecursorIsotopeFilter</value>
@@ -547,7 +535,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorIsotopeFilter.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>5</value>
   </data>
   <data name="&gt;&gt;label23.Name" xml:space="preserve">
     <value>label23</value>
@@ -559,7 +547,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;label23.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>6</value>
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.Name" xml:space="preserve">
     <value>comboPrecursorIsotopes</value>
@@ -571,7 +559,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboPrecursorIsotopes.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>7</value>
   </data>
   <data name="&gt;&gt;labelPrecursorAt.Name" xml:space="preserve">
     <value>labelPrecursorAt</value>
@@ -583,7 +571,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorAt.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>8</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.Name" xml:space="preserve">
     <value>textPrecursorAt</value>
@@ -595,7 +583,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorAt.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>9</value>
   </data>
   <data name="&gt;&gt;labelPrecursorTh.Name" xml:space="preserve">
     <value>labelPrecursorTh</value>
@@ -607,7 +595,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorTh.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>10</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.Name" xml:space="preserve">
     <value>textPrecursorRes</value>
@@ -619,7 +607,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;textPrecursorRes.ZOrder" xml:space="preserve">
-    <value>12</value>
+    <value>11</value>
   </data>
   <data name="&gt;&gt;labelPrecursorRes.Name" xml:space="preserve">
     <value>labelPrecursorRes</value>
@@ -631,7 +619,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;labelPrecursorRes.ZOrder" xml:space="preserve">
-    <value>13</value>
+    <value>12</value>
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.Name" xml:space="preserve">
     <value>comboPrecursorAnalyzerType</value>
@@ -643,7 +631,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;comboPrecursorAnalyzerType.ZOrder" xml:space="preserve">
-    <value>14</value>
+    <value>13</value>
   </data>
   <data name="&gt;&gt;label32.Name" xml:space="preserve">
     <value>label32</value>
@@ -655,7 +643,7 @@
     <value>groupBoxMS1</value>
   </data>
   <data name="&gt;&gt;label32.ZOrder" xml:space="preserve">
-    <value>15</value>
+    <value>14</value>
   </data>
   <data name="groupBoxMS1.Location" type="System.Drawing.Point, System.Drawing">
     <value>17, 13</value>
@@ -680,30 +668,6 @@
   </data>
   <data name="&gt;&gt;groupBoxMS1.ZOrder" xml:space="preserve">
     <value>5</value>
-  </data>
-  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
-  <data name="cbIgnoreSim.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="cbIgnoreSim.Enabled" type="System.Boolean, mscorlib">
-    <value>False</value>
-  </data>
-  <data name="cbIgnoreSim.Location" type="System.Drawing.Point, System.Drawing">
-    <value>157, 164</value>
-  </data>
-  <data name="cbIgnoreSim.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 17</value>
-  </data>
-  <data name="cbIgnoreSim.TabIndex" type="System.Int32, mscorlib">
-    <value>15</value>
-  </data>
-  <data name="cbIgnoreSim.Text" xml:space="preserve">
-    <value>忽略 SIM 扫描</value>
-  </data>
-  <data name="cbIgnoreSim.ToolTip" xml:space="preserve">
-    <value>忽略质荷比范围小于 {0} 的 SIM 谱图。</value>
   </data>
   <data name="labelPrecursorPPM.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -906,6 +870,9 @@
   <data name="labelPrecursorRes.Text" xml:space="preserve">
     <value>分辨力(&amp;R)：</value>
   </data>
+  <metadata name="toolTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <data name="comboPrecursorAnalyzerType.Enabled" type="System.Boolean, mscorlib">
     <value>False</value>
   </data>
@@ -1400,7 +1367,7 @@
     <value>usercontrolIonMobilityFiltering</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;usercontrolIonMobilityFiltering.Parent" xml:space="preserve">
     <value>$this</value>

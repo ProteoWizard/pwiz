@@ -170,26 +170,23 @@ namespace pwiz.Skyline.Model.RetentionTimes
         #endregion
     }
 
-    public class RetentionTimeAlignmentIndices : List<RetentionTimeAlignmentIndex>
+    public class RetentionTimeAlignmentIndexes : List<RetentionTimeAlignmentIndex> 
     {
-        public RetentionTimeAlignmentIndices(FileRetentionTimeAlignments alignments)
+        public RetentionTimeAlignmentIndexes(IEnumerable<RetentionTimeAlignmentIndex> indexes) : base(indexes)
         {
-            if (alignments != null)
-            {
-                foreach (var alignment in alignments.RetentionTimeAlignments.Values)
-                    Add(new RetentionTimeAlignmentIndex(alignment));
-            }
         }
     }
 
     public class RetentionTimeAlignmentIndex
     {
-        public RetentionTimeAlignmentIndex(RetentionTimeAlignment alignment)
+        public RetentionTimeAlignmentIndex(string name, AlignmentFunction alignment)
         {
+            Name = name;
             Alignment = alignment;
         }
 
-        public RetentionTimeAlignment Alignment { get; private set; }
+        public string Name { get; }
+        public AlignmentFunction Alignment { get; }
         public int? FileIndex { get; set; }
     }
 }

@@ -55,7 +55,8 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
-        [TestMethod, MinidumpLeakThreshold(15)]
+        [TestMethod, MinidumpLeakThreshold(15),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -446,9 +447,16 @@ namespace pwiz.SkylineTestTutorial
                 });
 
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
-                    bmp => ClipRegionAndEraseBackground(bmp,
-                        new Control[] { peakAreas }, new[] { menuStrip, subMenuStrip },
-                        Color.White));
+                    bmp =>
+                    {
+                        bmp = bmp.CleanupBorder(ScreenshotManager.GetFramedWindowBounds(peakAreas),
+                            ScreenshotProcessingExtensions.CornerToolWindow, 
+                            Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
+
+                        return ClipRegionAndEraseBackground(bmp,
+                            new Control[] { peakAreas }, new[] { menuStrip, subMenuStrip },
+                            Color.White);
+                    });
 
                 RunUI(() =>
                 {
@@ -512,6 +520,7 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0]);
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = selectedNode);
+                FocusDocument();
                 TakeCoverShot();
                 return;
             }
@@ -1039,6 +1048,7 @@ namespace pwiz.SkylineTestTutorial
                     }
                 },
                 {"MzCount",37828.ToString(@"N0", CultureInfo.CurrentCulture)},
+                {"TotalIonCurrent", 692070},
                 {"IsCentroided","False"},
                 {"idotp",0.73.ToString(CultureInfo.CurrentCulture)}
             };
@@ -1065,6 +1075,8 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsNotNull(currentProperties);
             // To write new json string for the expected property values into the output stream uncomment the next line
             //Trace.Write(currentProperties.Serialize());
+            var difference = expectedProperties.GetDifference(currentProperties);
+
             Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
             Assert.IsTrue(propertiesButton.Checked);
 

@@ -212,22 +212,29 @@ namespace pwiz.Skyline.Controls
                     IntPtr ptr1 = User32.GetDC(IntPtr.Zero);
                     IntPtr ptr2 = Gdi32.CreateCompatibleDC(ptr1);
                     IntPtr ptr3 = bmp.GetHbitmap(Color.FromArgb(0));
-                    IntPtr ptr4 = Gdi32.SelectObject(ptr2, ptr3);
-                    size1.cx = size.Width;
-                    size1.cy = size.Height;
-                    point1.x = point.X;
-                    point1.y = point.Y;
-                    point2.x = 0;
-                    point2.y = 0;
-                    User32.BLENDFUNCTION blendfunction1 = new User32.BLENDFUNCTION
+                    try
                     {
-                        BlendOp = 0,
-                        BlendFlags = 0,
-                        SourceConstantAlpha = alpha,
-                        AlphaFormat = 1
-                    };
-                    User32.UpdateLayeredWindow(Handle, ptr1, ref point1, ref size1, ptr2, ref point2, 0, ref blendfunction1, 2);
-                    Gdi32.SelectObject(ptr2, ptr4);
+                        IntPtr ptr4 = Gdi32.SelectObject(ptr2, ptr3);
+                        size1.cx = size.Width;
+                        size1.cy = size.Height;
+                        point1.x = point.X;
+                        point1.y = point.Y;
+                        point2.x = 0;
+                        point2.y = 0;
+                        User32.BLENDFUNCTION blendfunction1 = new User32.BLENDFUNCTION
+                        {
+                            BlendOp = 0,
+                            BlendFlags = 0,
+                            SourceConstantAlpha = alpha,
+                            AlphaFormat = 1
+                        };
+                        User32.UpdateLayeredWindow(Handle, ptr1, ref point1, ref size1, ptr2, ref point2, 0, ref blendfunction1, 2);
+                        Gdi32.SelectObject(ptr2, ptr4);
+                    }
+                    finally
+                    {
+                        Gdi32.DeleteObject(ptr3);
+                    }
                     User32.ReleaseDC(IntPtr.Zero, ptr1);
                     Gdi32.DeleteDC(ptr2);
                 }

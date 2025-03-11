@@ -854,12 +854,12 @@ void TimsSpectrum::getIsolationData(std::vector<IsolationInfo>& isolationInfo) c
     if (HasPasefPrecursorInfo())
     {
         const auto& info = GetPasefPrecursorInfo();
-        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy, info.intensity });
     }
     else if (!frame_.diaPasefIsolationInfoByScanNumber_.empty())
     {
         const auto& info = getDiaPasefIsolationInfo();
-        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy });
+        isolationInfo.resize(1, IsolationInfo{ info.isolationMz, IsolationMode_On, info.collisionEnergy, 0 });
     }
     else if (frame_.precursorMz_.is_initialized())
     {

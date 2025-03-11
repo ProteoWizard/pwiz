@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Controls.Startup
                 new TutorialActionBoxControl
                 {
                     Caption = TutorialTextResources.TargetedMSMS_Caption,
-                    Icon = TutorialImageResources.TargetedMSMS_start,
+                    Icon = TutorialImageResources.PRM_start,
                     EventAction = () => Tutorial(
                         TutorialLinkResources.TargetedMSMS_zip,
                         TutorialLinkResources.TargetedMSMS_pdf,

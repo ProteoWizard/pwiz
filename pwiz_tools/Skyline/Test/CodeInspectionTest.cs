@@ -548,7 +548,7 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Gdi32), 3 },
+                { typeof(Gdi32), 4 },
                 { typeof(Kernel32), 6 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
@@ -559,7 +559,7 @@ namespace pwiz.SkylineTest
                 { typeof(Kernel32Test), 5 },
                 { typeof(Ole32Test), 1 },
                 { typeof(Shell32Test), 1 },
-                { typeof(User32Test), 8 }
+                { typeof(User32Test), 9 }
             };
 
             // add types from production code

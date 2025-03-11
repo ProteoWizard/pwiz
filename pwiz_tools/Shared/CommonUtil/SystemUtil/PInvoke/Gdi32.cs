@@ -29,5 +29,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("gdi32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr SelectObject(IntPtr hDC, IntPtr hObject);
+
+        [DllImport("gdi32.dll", SetLastError = true)]
+        public static extern bool DeleteObject(IntPtr hObject);
     }
 }

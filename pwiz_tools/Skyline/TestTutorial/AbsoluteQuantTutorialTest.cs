@@ -345,6 +345,7 @@ namespace pwiz.SkylineTestTutorial
                     calibrationFloatingWindow.Left = SkylineWindow.Left + 15;
 
                 });
+                FocusDocument();
                 TakeCoverShot();
                 return;
             }

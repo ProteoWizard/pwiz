@@ -23,7 +23,10 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.Controls;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -492,6 +495,83 @@ namespace pwiz.SkylineTestUtil
         {
             // compute top-left corner of data grid's cells, 4px offset puts shapes in the correct place
             return documentGridForm.NavBar.Height + documentGridForm.DataGridView.ColumnHeadersHeight - 4;
+        }
+
+        /// <summary>
+        /// Draws the state of a ProgressBar on the ProgressBar to cover up
+        /// any animation that Windows may have drawn on the completed progress
+        /// </summary>
+        public static Bitmap FillProgressBar(this Bitmap bmp, ProgressBar progressBar)
+        {
+            var bitmapForm = FormEx.GetParentForm(progressBar);
+            var formRect = ScreenshotManager.GetFramedWindowBounds(bitmapForm);
+            var progressControlRect = progressBar.RectangleToScreen(progressBar.ClientRectangle);
+            progressControlRect.Offset(-formRect.Left, -formRect.Top);  // Into bitmap coordinates
+            var progressRect = progressControlRect; // Copy values for percent complete bar
+            progressRect.Inflate(-1, -1);   // Exclude the border
+
+            // Do the necessary drawing
+            return bmp.RenderAsControl(progressBar, g =>
+            {
+                using var brushControl = new SolidBrush(Color.FromArgb(230, 230, 230)); // Slightly darker than Control
+                g.FillRectangle(brushControl, progressRect);
+
+                progressRect.Width = (int)Math.Round(progressRect.Width * progressBar.Value / 100.0);
+                using var brush = new SolidBrush(Color.FromArgb(6, 176, 37));   // The color that gets used
+                g.FillRectangle(brush, progressRect);
+
+                if (progressBar is CustomTextProgressBar customProgressBar)
+                {
+                    customProgressBar.DrawText(g, progressControlRect);
+                }
+
+                using var pen = new Pen(Color.FromArgb(188, 188, 188));
+                progressControlRect.Width -= 1; // Pens draw to the right
+                progressControlRect.Height -= 1; // Pens draw below
+                g.DrawRectangle(pen, progressControlRect);
+            });
+        }
+
+        /// <summary>
+        /// Creates a MemoryDC based on a control and renders with it using the
+        /// rendering function argument.
+        /// </summary>
+        /// <param name="bmp">The Bitmap to draw on</param>
+        /// <param name="control">The control to match as closely as possible</param>
+        /// <param name="render">The function that does the actual drawing</param>
+        private static Bitmap RenderAsControl(this Bitmap bmp, Control control, Action<Graphics> render)
+        {
+            var hdc = User32.GetDC(control.Handle);
+            try
+            {
+                var memDc = Gdi32.CreateCompatibleDC(hdc);
+                try
+                {
+                    var hBmp = bmp.GetHbitmap();
+                    var oldBmp = Gdi32.SelectObject(memDc, hBmp);
+
+                    using (var g = Graphics.FromHdc(memDc))
+                    {
+                        render(g);
+                    }
+
+                    Gdi32.SelectObject(memDc, oldBmp);
+                    
+                    var result = Image.FromHbitmap(hBmp);
+                    
+                    Gdi32.DeleteObject(hBmp);
+
+                    return result;
+                }
+                finally
+                {
+                    Gdi32.DeleteDC(memDc);
+                }
+            }
+            finally
+            {
+                User32.ReleaseDC(control.Handle, hdc);
+            }
         }
     }
 }

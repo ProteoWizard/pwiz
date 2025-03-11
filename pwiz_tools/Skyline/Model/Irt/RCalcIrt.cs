@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Irt
 {
@@ -149,7 +150,7 @@ namespace pwiz.Skyline.Model.Irt
                 inStandardButNotTargets.ExceptWith(pepArr);
                 //Console.Out.WriteLine(@"Database standards: {0}", string.Join(@"; ", _database.StandardPeptides));
                 //Console.Out.WriteLine(@"Chosen ({0}): {1}", pepArr.Length, string.Join(@"; ", pepArr.Select(pep => pep.ToString())));
-                throw new IncompleteStandardException(this, databaseCount, inStandardButNotTargets);
+                throw new IncompleteStandardException(this, databaseCount, MinStandardCount(databaseCount), inStandardButNotTargets);
             }
 
             minCount = MinStandardCount(databaseCount);
@@ -159,6 +160,13 @@ namespace pwiz.Skyline.Model.Irt
         public override IEnumerable<Target> GetStandardPeptides(IEnumerable<Target> peptides)
         {
             return ChooseRegressionPeptides(peptides, out _);
+        }
+
+        public bool IsStandard(Target seq)
+        {
+            RequireUsable();
+
+            return _database.IsStandard(seq);
         }
 
         public override double? ScoreSequence(Target seq)
@@ -874,7 +882,7 @@ namespace pwiz.Skyline.Model.Irt
                 var inStandardButNotTargets = new SortedSet<Target>(_dictStandards.Keys);
                 inStandardButNotTargets.ExceptWith(peptideArray);
 
-                throw new IncompleteStandardException(this, standardsCount, inStandardButNotTargets);
+                throw new IncompleteStandardException(this, standardsCount, RCalcIrt.MinStandardCount(standardsCount), inStandardButNotTargets);
             }
 
             minCount = RCalcIrt.MinStandardCount(standardsCount);
@@ -889,17 +897,27 @@ namespace pwiz.Skyline.Model.Irt
 
     public class IncompleteStandardException : CalculatorException
     {
-        //This will only be thrown by ChooseRegressionPeptides so it is OK to have an error specific to regressions.
-        private static string ERROR => IrtResources
-            .IncompleteStandardException_The_calculator__0__requires_all__1__of_its_standard_peptides_to_be_in_the_targets_list_in_order_to_determine_a_regression_The_following__2__peptides_are_missing___3__;
-
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
-        public IncompleteStandardException(RetentionScoreCalculatorSpec calc, int standardPeptideCount, ICollection<Target> missingPeptides)
-            : base(String.Format(ERROR, calc.Name, standardPeptideCount, missingPeptides.Count,
-                string.Join(Environment.NewLine, missingPeptides.Select(o => o.Sequence))))
+        public IncompleteStandardException(RetentionScoreCalculatorSpec calc, int standardCount, int minStandardCount,
+            ICollection<Target> missingTargets) : base(MissingTargetsMessage(calc, standardCount, minStandardCount,
+            missingTargets))
         {
             Calculator = calc;
+        }
+
+        private static string MissingTargetsMessage(RetentionScoreCalculatorSpec calc, int standardCount,
+            int minStandardCount, ICollection<Target> missingTargets)
+        {
+            var lines = new List<string>
+            {
+                string.Format(
+                    IrtResources.IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_,
+                    calc.Name, standardCount, minStandardCount, missingTargets.Count),
+                string.Empty
+            };
+            lines.AddRange(missingTargets.Select(target => target.ToString()));
+            return TextUtil.LineSeparate(lines);
         }
     }
 }

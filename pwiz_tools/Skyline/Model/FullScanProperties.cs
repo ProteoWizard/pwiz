@@ -122,6 +122,7 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string DataPoints { get; set; }
         [Category("AcquisitionInfo")] public string MzCount { get; set; }
         [Category("AcquisitionInfo")] public string IonMobilityCount { get; set; }
+        [Category("AcquisitionInfo")] public string TotalIonCurrent { get; set; }
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
         [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
         [Category("MatchInfo")] public string dotp { get; set; }

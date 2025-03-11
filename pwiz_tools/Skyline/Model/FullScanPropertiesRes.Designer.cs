@@ -430,6 +430,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sum of the intensities of all detected ions in this spectrum.
+        /// </summary>
+        internal static string Description_TotalIonCurrent {
+            get {
+                return ResourceManager.GetString("Description_TotalIonCurrent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Detector.
         /// </summary>
         internal static string Detector {
@@ -669,6 +678,15 @@ namespace pwiz.Skyline.Model {
         internal static string ScanId {
             get {
                 return ResourceManager.GetString("ScanId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Total Ion Current.
+        /// </summary>
+        internal static string TotalIonCurrent {
+            get {
+                return ResourceManager.GetString("TotalIonCurrent", resourceCulture);
             }
         }
     }

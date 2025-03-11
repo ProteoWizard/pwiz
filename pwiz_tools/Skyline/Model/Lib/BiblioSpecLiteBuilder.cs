@@ -160,54 +160,41 @@ namespace pwiz.Skyline.Model.Lib
                 Charges = Charges,
             };
 
-            bool retry = true;
-            do
+            try
             {
-                try
+                if (!blibBuilder.BuildLibrary(Action, progress, ref status,
+                    out _buildCommandArgs, out _buildOutput, out _ambiguousMatches))
                 {
-                    if (!blibBuilder.BuildLibrary(Action, progress, ref status,
-                        out _buildCommandArgs, out _buildOutput, out _ambiguousMatches))
-                    {
-                        return false;
-                    }
-
-                    retry = false;
-                }
-                catch (IOException x)
-                {
-                    if (IsLibraryMissingExternalSpectraError(x, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
-                    {
-                        // replace the relative path to the results file (e.g. msms.txt) with the absolute path
-                        string fullResultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(resultsFilepath)) ??
-                            throw new InvalidDataException(@"no results filepath from BiblioSpec error message", x);
-
-                        // TODO: this will break if BiblioSpec output is translated to other languages
-                        string messageWithFullFilepath =
-                            x.Message.Replace(@"search results file '" + resultsFilepath,
-                                              @"search results file '" + fullResultsFilepath);
-
-                        var response =
-                            progress.UpdateProgress(
-                                status.ChangeErrorException(new IOException(messageWithFullFilepath, x)));
-                        if (response == UpdateProgressResponse.cancel)
-                            return false;
-                        else if (response == UpdateProgressResponse.normal)
-                            blibBuilder.PreferEmbeddedSpectra = true;
-                        continue;
-                    }
-
-                    progress.UpdateProgress(status.ChangeErrorException(x));
                     return false;
                 }
-                catch (Exception x)
+            }
+            catch (IOException x)
+            {
+                if (IsLibraryMissingExternalSpectraError(x, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath))
                 {
-                    Console.WriteLine(x.Message);
-                    progress.UpdateProgress(status.ChangeErrorException(
-                        new Exception(string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
-                                                    redundantLibrary), x)));
-                    return false;
+                    // replace the relative path to the results file (e.g. msms.txt) with the absolute path
+                    string fullResultsFilepath = InputFiles.SingleOrDefault(o => o.EndsWith(resultsFilepath));
+                    if (fullResultsFilepath == null)
+                        throw new InvalidDataException(@"no results filepath from BiblioSpec error message", x);
+
+                    // TODO: this will break if BiblioSpec output is translated to other languages
+                    string messageWithFullFilepath =
+                        x.Message.Replace(@"search results file '" + resultsFilepath,
+                                          @"search results file '" + fullResultsFilepath);
+                    x = new IOException(messageWithFullFilepath, x);
                 }
-            } while (retry);
+
+                progress.UpdateProgress(status.ChangeErrorException(x));
+                return false;
+            }
+            catch (Exception x)
+            {
+                Console.WriteLine(x.Message);
+                progress.UpdateProgress(status.ChangeErrorException(
+                    new Exception(string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
+                                                redundantLibrary), x)));
+                return false;
+            }
 
             var blibFilter = new BlibFilter();
             status = new ProgressStatus(message);

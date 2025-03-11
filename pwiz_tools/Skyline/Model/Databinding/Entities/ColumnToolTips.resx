@@ -126,6 +126,33 @@ replicate data. Or #N/A if the file was imported with a version older than 1.1.<
     <value>The type of analyzer that was used to collect the spectrum.
 If more than one analyzer was used, the names of the analyzers will be separated by slashes.</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>Product of the total transition intensity and the injection time of the spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>Product of the total transition intensity and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>Identifier of the spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>Identifier of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>Identifier of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity</value>
+  </data>
   <data name="Area">
     <value>Area under the curve (AUC), minus background, for the transition peak.</value>
   </data>
@@ -599,6 +626,39 @@ indicating which isotope modifications are applied</value>
   <data name="LastPosition">
     <value>The position of the last (C-terminal) amino acid of the peptide within its
 containing protein sequence, or #N/A if no protein sequence is available</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>Sum of the products of the transition intensities and the injection time of the spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>Sum of the products of the transition intensities and the injection time of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>Sum of the products of the total precursor intensity and the injection time of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>Values related to the number of ions in the mass spectrometer while collecting MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>Values related to the number of ions in the mass spectrometer while collecting MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>Sum of the products of the total ion current and the injection time of the spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>Sum of the products of the total ion current and the injection time of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>Sum of the products of the total ion current and the injection time of the MS1 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>Integral of the total ion current between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>Integral of the total ion current of the MS2 spectra between the peak integration boundaries</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>Integral of the total ion current of the MS1 spectra between the peak integration boundaries</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>The collision cross section for the precursor from the ion mobility library</value>
