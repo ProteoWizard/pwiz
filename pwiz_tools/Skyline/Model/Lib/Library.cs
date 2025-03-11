@@ -798,6 +798,11 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
+        public virtual IEnumerable<KeyValuePair<string, ExplicitPeakBounds>> GetAllExplicitPeakBounds(IEnumerable<Target> peptideSequences)
+        {
+            return Array.Empty<KeyValuePair<string, ExplicitPeakBounds>>();
+        }
+
         /// <summary>
         /// Attempts to get iRT information from the library.
         /// </summary>
@@ -1718,7 +1723,8 @@ namespace pwiz.Skyline.Model.Lib
     {
         @true,
         @false,
-        unless_missing
+        when_missing_detect,
+        when_missing_impute
     }
 
     /// <summary>

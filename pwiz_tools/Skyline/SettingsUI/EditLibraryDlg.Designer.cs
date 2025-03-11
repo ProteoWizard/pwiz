@@ -39,8 +39,13 @@
             this.labelSpecLibLinks = new System.Windows.Forms.Label();
             this.linkPeptideAtlas = new System.Windows.Forms.LinkLabel();
             this.linkNIST = new System.Windows.Forms.LinkLabel();
-            this.lblUseExplicitPeakBounds = new System.Windows.Forms.Label();
-            this.comboUseExplicitPeakBounds = new System.Windows.Forms.ComboBox();
+            this.groupBoxExplicitPeakBounds = new System.Windows.Forms.GroupBox();
+            this.radioIfPresentElseImpute = new System.Windows.Forms.RadioButton();
+            this.radioIfPresentElseDetect = new System.Windows.Forms.RadioButton();
+            this.radioExplicitBoundsUseAlways = new System.Windows.Forms.RadioButton();
+            this.radioExplicitBoundsIgnore = new System.Windows.Forms.RadioButton();
+            this.lblExplicitPeakBounds = new System.Windows.Forms.Label();
+            this.groupBoxExplicitPeakBounds.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -104,21 +109,49 @@
             this.linkNIST.TabStop = true;
             this.linkNIST.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkNIST_LinkClicked);
             // 
-            // lblUseExplicitPeakBounds
+            // groupBoxExplicitPeakBounds
             // 
-            resources.ApplyResources(this.lblUseExplicitPeakBounds, "lblUseExplicitPeakBounds");
-            this.lblUseExplicitPeakBounds.Name = "lblUseExplicitPeakBounds";
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioIfPresentElseImpute);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioIfPresentElseDetect);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioExplicitBoundsUseAlways);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioExplicitBoundsIgnore);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.lblExplicitPeakBounds);
+            resources.ApplyResources(this.groupBoxExplicitPeakBounds, "groupBoxExplicitPeakBounds");
+            this.groupBoxExplicitPeakBounds.Name = "groupBoxExplicitPeakBounds";
+            this.groupBoxExplicitPeakBounds.TabStop = false;
             // 
-            // comboUseExplicitPeakBounds
+            // radioIfPresentElseImpute
             // 
-            this.comboUseExplicitPeakBounds.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboUseExplicitPeakBounds.FormattingEnabled = true;
-            this.comboUseExplicitPeakBounds.Items.AddRange(new object[] {
-            resources.GetString("comboUseExplicitPeakBounds.Items"),
-            resources.GetString("comboUseExplicitPeakBounds.Items1"),
-            resources.GetString("comboUseExplicitPeakBounds.Items2")});
-            resources.ApplyResources(this.comboUseExplicitPeakBounds, "comboUseExplicitPeakBounds");
-            this.comboUseExplicitPeakBounds.Name = "comboUseExplicitPeakBounds";
+            resources.ApplyResources(this.radioIfPresentElseImpute, "radioIfPresentElseImpute");
+            this.radioIfPresentElseImpute.Name = "radioIfPresentElseImpute";
+            this.radioIfPresentElseImpute.TabStop = true;
+            this.radioIfPresentElseImpute.UseVisualStyleBackColor = true;
+            // 
+            // radioIfPresentElseDetect
+            // 
+            resources.ApplyResources(this.radioIfPresentElseDetect, "radioIfPresentElseDetect");
+            this.radioIfPresentElseDetect.Name = "radioIfPresentElseDetect";
+            this.radioIfPresentElseDetect.TabStop = true;
+            this.radioIfPresentElseDetect.UseVisualStyleBackColor = true;
+            // 
+            // radioExplicitBoundsUseAlways
+            // 
+            resources.ApplyResources(this.radioExplicitBoundsUseAlways, "radioExplicitBoundsUseAlways");
+            this.radioExplicitBoundsUseAlways.Name = "radioExplicitBoundsUseAlways";
+            this.radioExplicitBoundsUseAlways.TabStop = true;
+            this.radioExplicitBoundsUseAlways.UseVisualStyleBackColor = true;
+            // 
+            // radioExplicitBoundsIgnore
+            // 
+            resources.ApplyResources(this.radioExplicitBoundsIgnore, "radioExplicitBoundsIgnore");
+            this.radioExplicitBoundsIgnore.Name = "radioExplicitBoundsIgnore";
+            this.radioExplicitBoundsIgnore.TabStop = true;
+            this.radioExplicitBoundsIgnore.UseVisualStyleBackColor = true;
+            // 
+            // lblExplicitPeakBounds
+            // 
+            resources.ApplyResources(this.lblExplicitPeakBounds, "lblExplicitPeakBounds");
+            this.lblExplicitPeakBounds.Name = "lblExplicitPeakBounds";
             // 
             // EditLibraryDlg
             // 
@@ -126,8 +159,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.comboUseExplicitPeakBounds);
-            this.Controls.Add(this.lblUseExplicitPeakBounds);
+            this.Controls.Add(this.groupBoxExplicitPeakBounds);
             this.Controls.Add(this.linkNIST);
             this.Controls.Add(this.linkPeptideAtlas);
             this.Controls.Add(this.labelSpecLibLinks);
@@ -143,6 +175,8 @@
             this.MinimizeBox = false;
             this.Name = "EditLibraryDlg";
             this.ShowInTaskbar = false;
+            this.groupBoxExplicitPeakBounds.ResumeLayout(false);
+            this.groupBoxExplicitPeakBounds.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -160,7 +194,11 @@
         private System.Windows.Forms.Label labelSpecLibLinks;
         private System.Windows.Forms.LinkLabel linkPeptideAtlas;
         private System.Windows.Forms.LinkLabel linkNIST;
-        private System.Windows.Forms.Label lblUseExplicitPeakBounds;
-        private System.Windows.Forms.ComboBox comboUseExplicitPeakBounds;
+        private System.Windows.Forms.GroupBox groupBoxExplicitPeakBounds;
+        private System.Windows.Forms.RadioButton radioExplicitBoundsUseAlways;
+        private System.Windows.Forms.RadioButton radioExplicitBoundsIgnore;
+        private System.Windows.Forms.Label lblExplicitPeakBounds;
+        private System.Windows.Forms.RadioButton radioIfPresentElseImpute;
+        private System.Windows.Forms.RadioButton radioIfPresentElseDetect;
     }
 }

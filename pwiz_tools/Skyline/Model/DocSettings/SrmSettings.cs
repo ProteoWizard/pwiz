@@ -1161,20 +1161,46 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Do not worry about multiple enumerations of modifiedSequences. Most libraries do not have 
                 // any explicit peak boundaries, so modifiedSequences gets enumerated zero times.
                 var peakBoundaries = library.GetExplicitPeakBounds(filePath, modifiedSequences);
-                // ReSharper restore PossibleMultipleEnumeration
 
                 if (peakBoundaries != null)
                 {
-                    if (library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.unless_missing)
+                    if (peakBoundaries.IsEmpty)
                     {
-                        if (peakBoundaries.IsEmpty)
+                        if (library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.when_missing_detect)
                         {
                             return null;
+                        }
+
+                        if (library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.when_missing_impute)
+                        {
+                            return GetImputedPeakBounds(filePath, modifiedSequences, library);
                         }
                     }
                     return peakBoundaries;
                 }
+                // ReSharper restore PossibleMultipleEnumeration
             }
+            return null;
+        }
+
+        private ExplicitPeakBounds GetImputedPeakBounds(MsDataFileUri filePath, IEnumerable<Target> targets, Library library)
+        {
+            foreach (var entry in library.GetAllExplicitPeakBounds(targets).OrderBy(bounds => bounds.Value.Score))
+            {
+                
+                var alignmentIndexes = DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(filePath.GetFileNameWithoutExtension());
+                var regressionFunction = DocumentRetentionTimes.GetMappingFunction(filePath.GetFileNameWithoutExtension(),
+                    entry.Key, 3);
+                if (regressionFunction == null)
+                {
+                    continue;
+                }
+                var exemplaryBounds = entry.Value;
+                var alignedTime = regressionFunction.GetY((exemplaryBounds.StartTime + exemplaryBounds.EndTime) / 2);
+                var halfWidth = (exemplaryBounds.EndTime - exemplaryBounds.StartTime) / 2;
+                return new ExplicitPeakBounds(alignedTime - halfWidth, alignedTime + halfWidth, double.MaxValue);
+            }
+
             return null;
         }
 
@@ -2109,15 +2135,15 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var libraries = result.PeptideSettings.Libraries;
                 var newLibrarySpecs = libraries.LibrarySpecs.Select(spec =>
-                    spec?.UseExplicitPeakBounds == ExplicitPeakBoundsOption.unless_missing
-                        ? spec.ChangeUseExplicitPeakBounds(ExplicitPeakBoundsOption.@true)
-                        : spec).ToArray();
+                    spec?.ChangeUseExplicitPeakBounds(spec.UseExplicitPeakBounds == ExplicitPeakBoundsOption.@false
+                        ? ExplicitPeakBoundsOption.@false
+                        : ExplicitPeakBoundsOption.@true)).ToList();
                 var newLibraries = libraries.Libraries.Select(lib =>
-                    lib?.UseExplicitPeakBounds == ExplicitPeakBoundsOption.unless_missing
-                        ? lib.ChangeUseExplicitPeakBounds(ExplicitPeakBoundsOption.@true)
-                        : lib).ToArray();
+                    lib?.ChangeUseExplicitPeakBounds(lib.UseExplicitPeakBounds == ExplicitPeakBoundsOption.@false
+                        ? ExplicitPeakBoundsOption.@false
+                        : ExplicitPeakBoundsOption.@true)).ToList();
 
-                if (!ArrayUtil.ReferencesEqual(libraries.LibrarySpecs, newLibrarySpecs) || !ArrayUtil.ReferencesEqual(libraries.Libraries, newLibraries))
+                if (!libraries.LibrarySpecs.SequenceEqual( newLibrarySpecs) || !libraries.Libraries.SequenceEqual(newLibraries))
                 {
                     result = result.ChangePeptideSettings(
                         result.PeptideSettings.ChangeLibraries(libraries.ChangeLibraries(newLibrarySpecs, newLibraries)));

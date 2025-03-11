@@ -38,13 +38,20 @@ namespace pwiz.Skyline.SettingsUI
     {
         private LibrarySpec _librarySpec;
         private readonly IEnumerable<LibrarySpec> _existing;
+        private Dictionary<ExplicitPeakBoundsOption, RadioButton> _explicitBoundsOptionRadios;
 
         public EditLibraryDlg(IEnumerable<LibrarySpec> existing)
         {
             _existing = existing;
 
             InitializeComponent();
-
+            _explicitBoundsOptionRadios = new Dictionary<ExplicitPeakBoundsOption, RadioButton>
+            {
+                { ExplicitPeakBoundsOption.@true, radioExplicitBoundsUseAlways },
+                { ExplicitPeakBoundsOption.@false, radioExplicitBoundsIgnore },
+                { ExplicitPeakBoundsOption.when_missing_detect, radioIfPresentElseDetect },
+                { ExplicitPeakBoundsOption.when_missing_impute, radioIfPresentElseImpute }
+            };
             textName.Focus();
         }
 
@@ -59,17 +66,17 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = string.Empty;
                     textPath.Text = string.Empty;
-                    comboUseExplicitPeakBounds.SelectedIndex = (int) ExplicitPeakBoundsOption.@true;
                 }
                 else
                 {
                     textName.Text = _librarySpec.Name;
                     textPath.Text = _librarySpec.FilePath;
-                    comboUseExplicitPeakBounds.SelectedIndex = (int)_librarySpec.UseExplicitPeakBounds;
                 }
-
-                comboUseExplicitPeakBounds.SelectedIndex =
-                    (int)(_librarySpec?.UseExplicitPeakBounds ?? ExplicitPeakBoundsOption.@true);
+                ExplicitPeakBoundsOption explicitPeakBoundsOption = _librarySpec?.UseExplicitPeakBounds ?? ExplicitPeakBoundsOption.@true;
+                if (_explicitBoundsOptionRadios.TryGetValue(explicitPeakBoundsOption, out var radio))
+                {
+                    radio.Checked = true;
+                }
             }
         }
 
@@ -109,7 +116,8 @@ namespace pwiz.Skyline.SettingsUI
                 textPath.Focus();
                 return;
             }
-            librarySpec = librarySpec.ChangeUseExplicitPeakBounds((ExplicitPeakBoundsOption) comboUseExplicitPeakBounds.SelectedIndex);
+
+            librarySpec = librarySpec.ChangeUseExplicitPeakBounds(UseExplicitPeakBounds);
             if (librarySpec is ChromatogramLibrarySpec)
             {
                 using (var longWait = new LongWaitDlg())
@@ -271,17 +279,32 @@ namespace pwiz.Skyline.SettingsUI
             set { textPath.Text = value; }
         }
 
-        public ComboBox ComboUseExplicitPeakBounds { get { return comboUseExplicitPeakBounds; } }
-
         public ExplicitPeakBoundsOption UseExplicitPeakBounds
         {
             get
             {
-                return (ExplicitPeakBoundsOption)comboUseExplicitPeakBounds.SelectedIndex;
+                foreach (var entry in _explicitBoundsOptionRadios)
+                {
+                    if (entry.Value.Checked)
+                    {
+                        return entry.Key;
+                    }
+                }
+
+                return ExplicitPeakBoundsOption.@true;
             }
             set
             {
-                comboUseExplicitPeakBounds.SelectedIndex = (int)value;
+                foreach (var entry in _explicitBoundsOptionRadios)
+                {
+                    if (entry.Key == value)
+                    {
+                        entry.Value.Checked = true;
+                        return;
+                    }
+                }
+
+                throw new ArgumentException(@"Invalid option " + value);
             }
         }
 

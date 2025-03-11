@@ -82,7 +82,6 @@ namespace pwiz.SkylineTestFunctional
             var editLibraryDlg = ShowDialog<EditLibraryDlg>(editLibraryList.EditItem);
             RunUI(() =>
             {
-                Assert.IsTrue(editLibraryDlg.ComboUseExplicitPeakBounds.Enabled);
                 Assert.AreEqual(ExplicitPeakBoundsOption.@true, editLibraryDlg.UseExplicitPeakBounds);
                 editLibraryDlg.UseExplicitPeakBounds = ExplicitPeakBoundsOption.@false;
             });
