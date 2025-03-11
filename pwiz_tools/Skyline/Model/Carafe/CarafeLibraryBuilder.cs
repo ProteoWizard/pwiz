@@ -79,6 +79,7 @@ namespace pwiz.Skyline.Model.Carafe
                 _libraryHelper = value;
             }
         }
+
         public string AmbiguousMatchesMessage
         {
             //TODO(xgwang): implement
@@ -117,7 +118,7 @@ namespace pwiz.Skyline.Model.Carafe
 
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_LIBRARY);
         private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
-        private SrmDocument Document { get; }
+        public SrmDocument Document { get; }
         private SrmDocument TrainingDocument { get; }
         public string DbInputFilePath { get; private set; }
         internal string ExperimentDataFilePath { get; set;  }
@@ -224,7 +225,6 @@ namespace pwiz.Skyline.Model.Carafe
             set { _trainingFilePath = value; }
         }
 
-
         private IList<ArgumentAndValue> CommandArguments =>
             new List<ArgumentAndValue>
             {
@@ -288,7 +288,8 @@ namespace pwiz.Skyline.Model.Carafe
         {
             return CarafeOutputLibraryFilePath();
         }
-
+    
+        public string ToolName { get; }
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
@@ -304,6 +305,10 @@ namespace pwiz.Skyline.Model.Carafe
             bool diann_training)
         {
             Document = document;
+            ToolName = @"carafe";
+            Directory.CreateDirectory(RootDir);
+            Directory.CreateDirectory(JavaDir);
+            Directory.CreateDirectory(CarafeDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             
             //if (LibraryHelper == null)

@@ -159,9 +159,10 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 .ChangeMessage(@"Preparing prediction input file")
                 .ChangePercentComplete(0));
 
-            var precursorTable = GetInputTable(Document, toolName);
-            File.WriteAllLines(InputFilePath, precursorTable);
+            var warningMods = GetWarningMods(Document, toolName);
 
+            var precursorTable = GetPrecursorTable(Document, toolName, warningMods);
+                File.WriteAllLines(InputFilePath, precursorTable);
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
         }
@@ -171,7 +172,9 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 .ChangeMessage(@"Preparing training input file")
                 .ChangePercentComplete(0));
 
-            var trainingTable = GetInputTable(Document, toolName, true);
+            var warningMods = GetWarningMods(Document, toolName);
+
+            var trainingTable = GetPrecursorTable(Document, toolName, warningMods,true);
             File.WriteAllLines(TrainingFilePath, trainingTable);
 
             progress.UpdateProgress(progressStatus = progressStatus
@@ -191,14 +194,9 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 }
             }
         }
-        /// <summary>
-        /// Returns an input table
-        /// </summary>
-        /// <param name="Document">Skyline document</param>
-        /// <param name="toolName">carafe or alphapeptdeep</param>
-        /// <param name="training">generate a training file for carafe or prediction file (default)</param>
-        /// <returns></returns>
-        public IEnumerable<string> GetInputTable(SrmDocument Document, string toolName, bool training = false)
+
+
+        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, string toolName, List<string> warningMods = null, bool training = false)
         {
             var result = new List<string>();
             string header;
@@ -233,7 +231,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
                 {
                     var mod = modifiedSequence.ExplicitMods[i];
-                    if (!mod.UnimodId.HasValue)
+                    var modWarns = warningMods.Where(m => m == mod.Name).ToArray();
+                    if (!mod.UnimodId.HasValue && modWarns.Length == 0)
                     {
                         var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, toolName);
                         Messages.WriteAsyncUserMessage(msg);
@@ -243,7 +242,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                     var unimodIdAA = mod.UnimodIdAA;
                     var modNames = ModificationNames.Where(m => m.Accession == unimodIdAA).ToArray();
-                    if (modNames.Length == 0)
+                   
+                    if (modNames.Length == 0 && modWarns.Length == 0 )
                     {
                         var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdAA, toolName);
                         Messages.WriteAsyncUserMessage(msg);
@@ -251,6 +251,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                         continue;
                     }
+                    if (modNames.Length == 0) continue;
 
                     string modName = "";
 
@@ -329,7 +330,46 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             return result;
         }
+        public List<string> GetWarningMods(SrmDocument Document, string toolName)
+        {
+            var resultList = new List<string>(); 
+           
+            bool alphapeptDeepFormat = toolName.Equals(@"alphapeptdeep");
+            
+            // Build precursor table row by row
+            foreach (var peptide in Document.Peptides)
+            {
+                var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
 
+                var ModificationNames =
+                    alphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
+
+                for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
+                {
+                    var mod = modifiedSequence.ExplicitMods[i];
+                    if (!mod.UnimodId.HasValue)
+                    {
+                        var haveMod = resultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            resultList.Add(mod.Name);
+                        }
+                    }
+
+                    var unimodIdAA = mod.UnimodIdAA;
+                    var modNames = ModificationNames.Where(m => m.Accession == unimodIdAA).ToArray();
+                    if (modNames.Length == 0)
+                    {
+                        var haveMod = resultList.FirstOrDefault(m => m == mod.Name);
+                        if (haveMod == null)
+                        {
+                            resultList.Add(mod.Name);
+                        }
+                    }
+                }
+            }
+            return resultList;
+        }
         public static string LabelPrecursor(TransitionGroup tranGroup, double precursorMz,
             string resultsText)
         {
@@ -472,11 +512,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             set => BuilderLibraryPath = value;
         }
 
-        private LibraryHelper LibraryHelper { get; set; }
-
-        private DateTime _nowTime = DateTime.Now;
-
-        public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
+        public LibraryHelper LibraryHelper { get; private set; }
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
 
@@ -501,7 +537,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string OutputSpectraLibFilepath;
         private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
-        private SrmDocument Document { get; }
+        public string ToolName { get; }
+        public SrmDocument Document { get; private set; }
         /// <summary>
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
         /// This is how the peptdeep CLI supports command line arguments.
@@ -533,31 +570,34 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
-        {            
+
+        {           
             Document = document;
             Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             LibraryHelper = new LibraryHelper(ALPHAPEPTDEEP);
             if (Document.DocumentHash != null) LibraryHelper.InitializeLibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
-            OutputSpectraLibFilepath = Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
+
+            ToolName = @"alphapeptdeep";
         }
 
-
+        private void InitializeLibraryHelper()
+        {
+            if (LibraryHelper == null)
+            {
+                LibraryHelper = new LibraryHelper(ALPHAPEPTDEEP);
+                //LibraryHelper.StampDateTimeNow();
+                RootDir = LibraryHelper.GetRootDir(ALPHAPEPTDEEP);
+                LibraryHelper.InitializeLibraryHelper(InputFilePath);
+            }
+        }
         public bool BuildLibrary(IProgressMonitor progress)
         {
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
-
-                if (LibraryHelper == null)
-                {
-                    LibraryHelper = new LibraryHelper(ALPHAPEPTDEEP);
-                    //LibraryHelper.StampDateTimeNow();
-                    RootDir = LibraryHelper.GetRootDir(ALPHAPEPTDEEP);
-                    LibraryHelper.InitializeLibraryHelper(InputFilePath);
-                }
-
+                InitializeLibraryHelper();
                 RunAlphapeptdeep(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
                 LibraryHelper = null;
@@ -575,18 +615,21 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             progressStatus = progressStatus.ChangeSegments(0, 5);
 
-            if (Document.DocumentHash != null) LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+            LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
+
             progressStatus = progressStatus.NextSegment();
 
             PrepareSettingsFile(progress, ref progressStatus);
+
             progressStatus = progressStatus.NextSegment();
 
             ExecutePeptdeep(progress, ref progressStatus);
+
             progressStatus = progressStatus.NextSegment();
 
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
-
+            
             ImportSpectralLibrary(progress, ref progressStatus);
         }
 

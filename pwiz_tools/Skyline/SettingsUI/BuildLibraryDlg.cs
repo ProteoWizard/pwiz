@@ -458,8 +458,7 @@ namespace pwiz.Skyline.SettingsUI
 
                     if (Builder == null && newBuilder)
                     {
-                        Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(),
-                            targetPeptidesChosen)
+                        Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
                         {
                             Action = LibraryBuildAction,
                             IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,

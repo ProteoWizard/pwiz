@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
@@ -55,6 +56,11 @@ namespace pwiz.Skyline.Model.Koina
             get { return _outPath; }
             set { _outPath = value; }
         }
+
+        public SrmDocument Document { get => _document; }
+
+        public string ToolName { get; }
+
         public KoinaLibraryBuilder(SrmDocument doc, string name, string outPath, Func<bool> replaceLibrary,
             IrtStandard irtStandard, IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors, int nce)
         {
@@ -69,6 +75,8 @@ namespace pwiz.Skyline.Model.Koina
             _replaceLibrary = replaceLibrary;
             IrtStandard = irtStandard;
             _nce = nce;
+            LibraryHelper = null;
+            ToolName = @"koina";
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -187,6 +195,7 @@ namespace pwiz.Skyline.Model.Koina
             return true;
         }
 
+        public LibraryHelper LibraryHelper { get; }
         public string ProductLibraryPath()
         {
             return LibrarySpec.FilePath;

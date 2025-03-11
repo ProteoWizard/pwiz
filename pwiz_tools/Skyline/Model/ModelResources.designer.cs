@@ -213,6 +213,18 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+        ///    {0}
+        ///	
+        ///        Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Alphapeptdeep_Warn_unknown_modification {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Warn_unknown_modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
         public static string AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__ {
@@ -323,6 +335,26 @@ namespace pwiz.Skyline.Model {
         public static string ChromatogramExporter_GetExtractorName_Invalid_extractor_name_ {
             get {
                 return ResourceManager.GetString("ChromatogramExporter_GetExtractorName_Invalid_extractor_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: The specified instrument type &apos;{0}&apos; does not match the installed software &apos;{1}&apos;..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_" +
+                        "not_match_the_installed_software___1___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the instrument type &apos;Thermo&apos; to export a method with the installed software..
+        /// </summary>
+        public static string CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_ {
+            get {
+                return ResourceManager.GetString("CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_met" +
+                        "hod_with_the_installed_software_", resourceCulture);
             }
         }
         
@@ -1995,12 +2027,53 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to find a machine name key with a valid ProgramPath value in the
+        ///in the Windows registry key &apos;{0}&apos; from:.
+        /// </summary>
+        public static string ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_ProgramPath {
+            get {
+                return ResourceManager.GetString("ThermoDllFinder_GetSoftwareInfo_Failed_to_find_a_machine_name_key_with_a_valid_Pr" +
+                        "ogramPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The key &apos;{0}&apos; was not found in the Windows registry..
+        /// </summary>
+        public static string ThermoDllFinder_GetSoftwareInfo_The_key__0__was_not_found_in_the_Windows_registry_ {
+            get {
+                return ResourceManager.GetString("ThermoDllFinder_GetSoftwareInfo_The_key__0__was_not_found_in_the_Windows_registry" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ProgramPath {0} for the instrument {1} is missing required files:.
+        /// </summary>
+        public static string ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_missing_required_files_ {
+            get {
+                return ResourceManager.GetString("ThermoDllFinder_GetSoftwareInfo_The_ProgramPath__0__for_the_instrument__1__is_mis" +
+                        "sing_required_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to find a valid Thermo instrument installation..
         /// </summary>
         public static string ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_ {
             get {
                 return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_i" +
                         "nstallation_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The installed Thermo instrument type &apos;{0}&apos; does not match the requested output method type &apos;{1}&apos;..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_The_installed_Thermo_instrument_type___0___does_not_match_the_requested_output_method_type___1___ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_The_installed_Thermo_instrument_type___0__" +
+                        "_does_not_match_the_requested_output_method_type___1___", resourceCulture);
             }
         }
         
@@ -2021,6 +2094,16 @@ namespace pwiz.Skyline.Model {
             get {
                 return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be" +
                         "_installed_correctly_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Thermo instrument type &apos;{0}&apos; installed..
+        /// </summary>
+        public static string ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_ {
+            get {
+                return ResourceManager.GetString("ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___insta" +
+                        "lled_", resourceCulture);
             }
         }
         

@@ -34,16 +34,22 @@ namespace pwiz.Skyline.ToolsUI
     {
         private static string _userAnswerToCuda;
         public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
+
+        private static IList<PythonTask> _tasks;
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
             var result = DialogResult.OK;
-            var tasks = pythonInstaller.PendingTasks.IsNullOrEmpty() ? pythonInstaller.ValidatePythonVirtualEnvironment() : pythonInstaller.PendingTasks;
+            
+            _tasks = new List<PythonTask>(pythonInstaller.PendingTasks.IsNullOrEmpty()
+                ? pythonInstaller.ValidatePythonVirtualEnvironment()
+                : pythonInstaller.PendingTasks);
+
             _userAnswerToCuda = null;
-            pythonInstaller.NumTotalTasks = tasks.Count;
+            pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
             List<PythonTask> abortedTasks = new List<PythonTask>();
             bool abortTask = false;
-            foreach (var task in tasks)
+            foreach (var task in _tasks)
             {
                 try
                 {
