@@ -34,7 +34,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Diagnostics;
 
-[assembly: InternalsVisibleTo("TestFunctional")]
+[assembly: InternalsVisibleTo("TestPerf")]
 
 namespace pwiz.Skyline.Model.Carafe
 {
@@ -60,6 +60,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string JAVA_SDK_DOWNLOAD_URL = @"https://download.oracle.com/java/21/latest/";
         private const string OUTPUT_LIBRARY = @"output_library";
         private const string OUTPUT_LIBRARY_FILE_NAME = "SkylineAI_spectral_library.blib";
+        private const string OUTPUT_SPECTRAL_LIB_FILE_NAME = @"test_res_fine_tuned.csv";
         private const string SPACE = TextUtil.SPACE;
         private const string TAB = @"\t";
 
@@ -68,7 +69,16 @@ namespace pwiz.Skyline.Model.Carafe
         public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
-        private LibraryHelper LibraryHelper { get; set; }
+
+        private LibraryHelper _libraryHelper;
+        public LibraryHelper LibraryHelper
+        {
+            get { return _libraryHelper; }
+            private set
+            {
+                _libraryHelper = value;
+            }
+        }
         public string AmbiguousMatchesMessage
         {
             //TODO(xgwang): implement
@@ -90,8 +100,23 @@ namespace pwiz.Skyline.Model.Carafe
             get { return null; }
         }
         public LibrarySpec LibrarySpec { get; private set; }
+
+        string ILibraryBuilder.BuilderLibraryPath
+        {
+            get { return _builderLibraryPath; }
+            set { _builderLibraryPath = value;  }
+        }
+        string ILibraryBuilder.TestLibraryPath
+        {
+            get { return _testLibraryPath; }
+            set { _testLibraryPath = value; }
+        }
+
         private string PythonVersion { get; }
         private string PythonVirtualEnvironmentName { get; }
+
+        private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_LIBRARY);
+        private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         private SrmDocument Document { get; }
         private SrmDocument TrainingDocument { get; }
         public string DbInputFilePath { get; private set; }
@@ -104,9 +129,33 @@ namespace pwiz.Skyline.Model.Carafe
         private string PythonVirtualEnvironmentActivateScriptPath =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentActivationScriptPath(PythonVersion,
                 PythonVirtualEnvironmentName);
-        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE, LibraryHelper.TimeStamp);
+
+
+        private string _rootDir;
+        private string RootDir
+        {
+            get
+            {
+                return _rootDir;
+            }
+            set
+            {
+                _rootDir = value;
+            }
+        }
+
+
         private string JavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), JAVA);
-        private string CarafeDir => Path.Combine(RootDir, CARAFE); 
+
+        private string CarafeDir
+        {
+            get
+            {
+                InitializeLibraryHelper();
+                return Path.Combine(RootDir, CARAFE);
+            }
+        }
+ 
         private string CarafeJavaDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         private DirectoryInfo JavaDirInfo => new DirectoryInfo(JavaDir);
@@ -119,28 +168,51 @@ namespace pwiz.Skyline.Model.Carafe
         private string CarafeFileBaseName => CARAFE + HYPHEN + CARAFE_VERSION;
         private string CarafeJarZipFileName => CarafeFileBaseName + CARAFE_DEV_VERSION + DOT_ZIP;
         private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
-        private Uri CarafeJarZipDownloadUrl =
-            new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/{CARAFE}-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}"); 
+
+        private Uri CarafeJarZipDownloadUrl()
+        {
+            return new Uri(@$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/{CARAFE}-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}"); 
+        }
 
         //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}-dev/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");
-        private Uri CarafeJarZipUri => new Uri(CarafeJarZipDownloadUrl + CarafeJarZipFileName);
+        private Uri CarafeJarZipUri()
+        {
+            return new Uri(CarafeJarZipDownloadUrl() + CarafeJarZipFileName);
+        }
         private string CarafeJarZipLocalPath => Path.Combine(UserDir, DOWNLOADS, CarafeJarZipFileName);
         private Uri CarafeJarZipLocalUri => new Uri(@$"file:///{CarafeJarZipLocalPath}");
         private string CarafeJarZipDownloadPath => Path.Combine(CarafeJavaDir, CarafeJarZipFileName);
-        private string CarafeOutputLibraryDir => Path.Combine(CarafeDir, OUTPUT_LIBRARY);
-        private string CarafeOutputLibraryFilePath => Path.Combine(CarafeOutputLibraryDir, OUTPUT_LIBRARY_FILE_NAME);
 
-        public string BuilderLibraryPath => CarafeOutputLibraryFilePath;
+        private string CarafeOutputLibraryDir()
+        {
+            return Path.Combine(CarafeDir, OUTPUT_LIBRARY); 
+        }
+
+        private string CarafeOutputLibraryFilePath(bool test = false)
+        {
+            if (!test)
+                return Path.Combine(CarafeOutputLibraryDir(), OUTPUT_LIBRARY_FILE_NAME);
+            return Path.Combine(CarafeOutputLibraryDir(), OUTPUT_SPECTRAL_LIB_FILE_NAME); 
+        }
+
+        //        public string BuilderLibraryPath;
 
         private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName + CARAFE_DEV);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
         private string InputFileName => INPUT + TextUtil.UNDERSCORE + TextUtil.EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + TextUtil.EXT_TSV;
         private string TrainingFileName => TRAIN + TextUtil.UNDERSCORE + TextUtil.EXT_TSV;
-        private string InputFilePath => Path.Combine(RootDir, InputFileName);
+
+        private string InputFilePath
+        {
+            get { return Path.Combine(RootDir, InputFileName); }
+        }
 
         private bool _diann_training;
 
         private string _trainingFilePath;
+        private string _builderLibraryPath;
+        private string _testLibraryPath;
+
         private string TrainingFilePath
         {
             get
@@ -158,7 +230,7 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 new ArgumentAndValue(@"jar", CarafeJarFilePath, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ms", ExperimentDataFilePath, TextUtil.HYPHEN),
-                new ArgumentAndValue(@"o", CarafeOutputLibraryDir, TextUtil.HYPHEN),
+                new ArgumentAndValue(@"o", CarafeOutputLibraryDir(), TextUtil.HYPHEN),
                 new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"cor", @"0.8", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"device", @"gpu", TextUtil.HYPHEN),
@@ -214,7 +286,7 @@ namespace pwiz.Skyline.Model.Carafe
 
         public string ProductLibraryPath()
         {
-            return CarafeOutputLibraryFilePath;
+            return CarafeOutputLibraryFilePath();
         }
 
         public CarafeLibraryBuilder(
@@ -233,7 +305,13 @@ namespace pwiz.Skyline.Model.Carafe
         {
             Document = document;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            LibraryHelper = new LibraryHelper(InputFilePath, TrainingFilePath, experimentDataFilePath);
+            
+            //if (LibraryHelper == null)
+            //{
+            //    LibraryHelper = new LibraryHelper();
+            //    LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, experimentDataFilePath);
+            //}
+
             Writer = textWriter;
             TrainingDocument = trainingDocument;
             DbInputFilePath = dbInputFilePath;
@@ -244,14 +322,14 @@ namespace pwiz.Skyline.Model.Carafe
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
 
             _diann_training = diann_training;
+            //_builderLibraryPath = builderLibraryPath;
             if (_diann_training)
                 TrainingFilePath = experimentDataTuningFilePath;
 
             Document = document;
-            Directory.CreateDirectory(RootDir);
-            Directory.CreateDirectory(JavaDir);
-            //Directory.CreateDirectory(CarafeDir);
-            Directory.CreateDirectory(CarafeJavaDir);
+            _builderLibraryPath = CarafeOutputLibraryFilePath();
+            _testLibraryPath = CarafeOutputLibraryFilePath(true);
+
         }
 
         public CarafeLibraryBuilder(
@@ -275,6 +353,7 @@ namespace pwiz.Skyline.Model.Carafe
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             Document = document;
             TrainingDocument = trainingDocument;
+            //_builderLibraryPath = builderLibraryPath;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
             //Directory.CreateDirectory(CarafeDir);
@@ -282,18 +361,38 @@ namespace pwiz.Skyline.Model.Carafe
 
         }
 
+        private void InitializeLibraryHelper()
+        {
+            if (LibraryHelper == null)
+            {
+                LibraryHelper = new LibraryHelper(CARAFE);
+                //LibraryHelper.StampDateTimeNow();
+                RootDir = LibraryHelper.GetRootDir(CARAFE);
+                LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, ExperimentDataFilePath);
+            }
+        }
         public bool BuildLibrary(IProgressMonitor progress)
         {
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
+                InitializeLibraryHelper();
+                
+                Directory.CreateDirectory(RootDir);
+                Directory.CreateDirectory(JavaDir);
+                Directory.CreateDirectory(CarafeJavaDir);
+
+
+                
                 RunCarafe(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
+                LibraryHelper = null;
                 return true;
             }
             catch (Exception exception)
             {
                 progress.UpdateProgress(progressStatus.ChangeErrorException(exception));
+                LibraryHelper = null;
                 return false;
             }
         }
@@ -391,7 +490,7 @@ namespace pwiz.Skyline.Model.Carafe
 
                 // download carafe jar package
                 using var webClient = new MultiFileAsynchronousDownloadClient(progress, 1);
-                if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl, CarafeJarZipDownloadPath, out var exception))
+                if (!webClient.DownloadFileAsync(CarafeJarZipDownloadUrl(), CarafeJarZipDownloadPath, out var exception))
                     throw new Exception(
                         @"Failed to download carafe jar package", exception);
 
@@ -524,7 +623,7 @@ namespace pwiz.Skyline.Model.Carafe
                 .ChangeMessage(@"Importing spectral library")
                 .ChangePercentComplete(0));
 
-            var source = CarafeOutputLibraryFilePath;
+            var source = CarafeOutputLibraryFilePath();
             var dest = LibrarySpec.FilePath;
             try
             {

@@ -33,7 +33,16 @@ namespace pwiz.Skyline.Model.Lib.Midas
         private readonly SrmDocument _doc;
         private readonly MidasLibrary _library;
         private readonly LibrarySpec _libSpec;
-        public string BuilderLibraryPath => _library.FilePath;
+        public string BuilderLibraryPath
+        {
+            get => _library.FilePath;
+            set => throw new NotImplementedException();
+        }
+        public string TestLibraryPath
+        {
+            get => _library.FilePath;
+            set => throw new NotImplementedException();
+        }
 
         public MidasBlibBuilder(SrmDocument doc, MidasLibrary library, string libName, string blibPath)
         {

@@ -604,7 +604,8 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         LibrarySpec LibrarySpec { get; }
 
-        string BuilderLibraryPath { get; }
+        string BuilderLibraryPath { get; set; }
+        string TestLibraryPath { get; set; }
     }
 
     public enum LibraryRedundancy { best, all, all_redundant }

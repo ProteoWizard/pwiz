@@ -137,6 +137,7 @@
     <Compile Include="AlphapeptdeepBuildLibraryTest.cs" />
     <Compile Include="AreaCVHistogramQValueAndRatioTest.cs" />
     <Compile Include="BullseyeSharpTest.cs" />
+    <Compile Include="CarafeBuildLibraryTest.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
     <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />

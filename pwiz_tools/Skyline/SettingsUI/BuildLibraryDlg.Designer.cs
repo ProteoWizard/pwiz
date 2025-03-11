@@ -1,4 +1,6 @@
-﻿namespace pwiz.Skyline.SettingsUI
+﻿using System.Runtime.CompilerServices;
+
+namespace pwiz.Skyline.SettingsUI
 {
     partial class BuildLibraryDlg
     {
@@ -446,6 +448,11 @@
             this.buttonDoc.UseVisualStyleBackColor = true;
             this.buttonDoc.Click += new System.EventHandler(this.buttonDoc_Click);
             // 
+            // textBoxDoc
+            // 
+            resources.ApplyResources(this.textBoxDoc, "textBoxDoc");
+            this.textBoxDoc.Name = "textBoxDoc";
+            // 
             // labelMsMsData
             // 
             resources.ApplyResources(this.labelMsMsData, "labelMsMsData");
@@ -701,7 +708,11 @@
         private System.Windows.Forms.Button buttonDoc;
         private System.Windows.Forms.TextBox textBoxDoc;
         private System.Windows.Forms.TabPage tabPage1;
-
+        internal string TextBoxProteinDatabase
+        {
+            get => textBoxProteinDatabase.Text;
+            set => textBoxProteinDatabase.Text = value;
+        }
         internal string TextBoxMsMsDataFile
         {
             get => textBoxMsMsData.Text;
@@ -711,6 +722,12 @@
         {
             get => textBoxDoc.Text;
             set => textBoxDoc.Text = value;
+        }
+
+        internal LearningOptions ComboLearnFrom
+        {
+            get => (LearningOptions) comboLearnFrom.SelectedIndex;
+            set => comboLearnFrom.SelectedIndex = (int) value;
         }
     }
 }

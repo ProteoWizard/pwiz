@@ -89,8 +89,22 @@ namespace pwiz.Skyline.Model.Lib
             return "";
         }
 
-        public string OutputPath { get { return LibrarySpec.FilePath; } }
+        public string OutputPath
+        {
+            get { return LibrarySpec.FilePath; }
+            set => throw new NotImplementedException();
+        }
 
+        string ILibraryBuilder.BuilderLibraryPath
+        {
+            get { return OutputPath; }
+            set { OutputPath = value; }
+        }
+        string ILibraryBuilder.TestLibraryPath
+        {
+            get { return OutputPath; }
+            set { OutputPath = value; }
+        }
         public LibraryBuildAction Action { get; set; }
         public bool KeepRedundant { get; set; }
         public double? CutOffScore { get; set; }

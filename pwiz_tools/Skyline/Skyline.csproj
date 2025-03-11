@@ -36,7 +36,7 @@
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
     <MascotParserPath>..\..\libraries\msparser_2_8_1_x86_win64</MascotParserPath>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
-    <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
+    <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -46,10 +46,10 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</InstallUrl>
-    <UpdateUrl>https://skyline.gs.washington.edu/software/Skyline-daily13-64/</UpdateUrl>
+    <InstallUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview/</InstallUrl>
+    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline-Carafe-Preview</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
@@ -7179,7 +7179,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
-    <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+    <!--  <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />  -->
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>

@@ -62,13 +62,24 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string FILE_NAME = @"File Name";
         private const string Q_VALUE = @"Detection Q Value";
 
-        private static readonly DateTime _nowTime = DateTime.Now;
+        private DateTime _nowTime = DateTime.Now;
 
-        public static string TimeStamp
+        public void StampDateTimeNow()
+        {
+            _nowTime = DateTime.Now;
+        }
+        public string TimeStamp
         {
             get => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
         }
 
+        private string _rootDir;
+        public string GetRootDir(string tool)
+        {
+            if (_rootDir == null)
+                _rootDir = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), tool, TimeStamp);
+            return _rootDir;
+        }
         public string InputFilePath { get; private set; }
         public string TrainingFilePath { get; private set; }
 
@@ -121,7 +132,15 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             return modList;
         }
-        public LibraryHelper(string inputFilePath, string trainingFilePath = null, string dataFilePath = null)
+
+        public LibraryHelper(string tool = null)
+        {
+            StampDateTimeNow();
+            if (!tool.IsNullOrEmpty())
+                GetRootDir(tool);
+        }
+
+        public void InitializeLibraryHelper(string inputFilePath, string trainingFilePath = null, string dataFilePath = null)
         {
             InputFilePath = inputFilePath;
             DataFilePath = dataFilePath;
@@ -413,8 +432,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
         private const string UNDERSCORE = TextUtil.UNDERSCORE;
 
-
-
         public string AmbiguousMatchesMessage
         {
             //TODO(xgwang): implement
@@ -436,22 +453,52 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             get { return null; }
         }
         public LibrarySpec LibrarySpec { get; private set; }
-        public string BuilderLibraryPath => OutputSpectraLibFilepath;
+
+        private string BuilderLibraryPath
+        {
+            get { return OutputSpectraLibFilepath; }
+            set { OutputSpectraLibFilepath = value; }
+        }
+
+        string ILibraryBuilder.BuilderLibraryPath
+        {
+            get => BuilderLibraryPath;
+            set => BuilderLibraryPath = value;
+        }
+
+        string ILibraryBuilder.TestLibraryPath
+        {
+            get => BuilderLibraryPath;
+            set => BuilderLibraryPath = value;
+        }
 
         private LibraryHelper LibraryHelper { get; set; }
 
-        private static readonly DateTime _nowTime = DateTime.Now;
+        private DateTime _nowTime = DateTime.Now;
 
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
         private string PythonVirtualEnvironmentScriptsDir { get; }
         private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
-        private string RootDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), ALPHAPEPTDEEP, TimeStamp);
+
+        private string _rootDir;
+        private string RootDir
+        {
+            get
+            {
+                return _rootDir;
+            }
+            set
+            {
+                _rootDir = value;
+            }
+        }
+
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
         private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
-        private string OutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
+        private string OutputSpectraLibFilepath;
         private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
         private SrmDocument Document { get; }
@@ -490,8 +537,10 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             Document = document;
             Directory.CreateDirectory(RootDir);
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            if (Document.DocumentHash != null) LibraryHelper = new LibraryHelper(InputFilePath);
+            LibraryHelper = new LibraryHelper(ALPHAPEPTDEEP);
+            if (Document.DocumentHash != null) LibraryHelper.InitializeLibraryHelper(InputFilePath);
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
+            OutputSpectraLibFilepath = Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         }
 
 
@@ -500,13 +549,24 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
+
+                if (LibraryHelper == null)
+                {
+                    LibraryHelper = new LibraryHelper(ALPHAPEPTDEEP);
+                    //LibraryHelper.StampDateTimeNow();
+                    RootDir = LibraryHelper.GetRootDir(ALPHAPEPTDEEP);
+                    LibraryHelper.InitializeLibraryHelper(InputFilePath);
+                }
+
                 RunAlphapeptdeep(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
+                LibraryHelper = null;
                 return true;
             }
             catch (Exception exception)
             {
                 progress.UpdateProgress(progressStatus.ChangeErrorException(exception));
+                LibraryHelper = null;
                 return false;
             }
         }

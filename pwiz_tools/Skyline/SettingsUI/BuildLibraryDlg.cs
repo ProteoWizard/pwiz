@@ -349,7 +349,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
                             msMsDataFilePath, textBoxDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _skylineWindow.GetTextWriter(), _trainingDocument, labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document));
-
+                        TestLibFilepath = Builder.TestLibraryPath;
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }
 
@@ -484,6 +484,12 @@ namespace pwiz.Skyline.SettingsUI
             set => _libFilepath = value;
         }
 
+        private string _testLibFilepath;
+        public string TestLibFilepath
+        {
+            get => _testLibFilepath;
+            set => _testLibFilepath = value;
+        }
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
         {
             // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
@@ -1433,6 +1439,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (this.labelDoc.Text == SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document)
                 {
+                    LoadTrainingDocument(dlg.FileName);
                     _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
 
                     using (var reader = new StreamReader(PathEx.SafePath(dlg.FileName)))
@@ -1445,6 +1452,21 @@ namespace pwiz.Skyline.SettingsUI
 
             if (textBoxProteinDatabase.Text != "" && textBoxDoc.Text != "")
                 btnNext.Enabled = true;
+        }
+
+        internal void UnloadTrainingDocument()
+        {
+            _trainingDocument = null;
+        }
+        internal void LoadTrainingDocument(string fileName)
+        {
+            _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
+
+            using (var reader = new StreamReader(PathEx.SafePath(fileName)))
+            {
+                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                _trainingDocument = (SrmDocument)ser.Deserialize(reader);
+            }
         }
     }
 }
