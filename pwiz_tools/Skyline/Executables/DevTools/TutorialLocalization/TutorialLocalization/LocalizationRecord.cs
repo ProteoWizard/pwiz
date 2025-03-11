@@ -33,7 +33,13 @@ namespace TutorialLocalization
             English = english;
         }
 
+        
+        /// <summary>
+        /// Constructor used by <see cref="CsvHelper.CsvReader.GetRecords{T}()"/>
+        /// The names of the constructor parameters must exactly match the column names in the CSV file.
+        /// </summary>
         [SuppressMessage("ReSharper", "InconsistentNaming")]
+        [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public LocalizationRecord(string TutorialName, string XPath, string English, string Localized,
             string OriginalEnglish)
         {

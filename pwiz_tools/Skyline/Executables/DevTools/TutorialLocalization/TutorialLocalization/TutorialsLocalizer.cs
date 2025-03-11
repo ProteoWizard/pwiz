@@ -129,7 +129,9 @@ namespace TutorialLocalization
         }
 
         /// <summary>
-        /// Gets the HTML for the document.
+        /// Gets the HTML for the document. In order to be consistent with the files that
+        /// are already in the repository, empty tags in the &lt;head> end in ">" but
+        /// empty tags in the &lt;body> end in "/>".
         /// </summary>
         public static string GetHtml(HtmlDocument document)
         {
@@ -142,7 +144,7 @@ namespace TutorialLocalization
             document2.OptionWriteEmptyNodes = false;
             parts.Add(document2.DocumentNode.SelectSingleNode("//head").OuterHtml);
             parts.Add(string.Empty);
-            // Empty nodes (e.g. "img") 
+            // Empty nodes (e.g. "img") in the body should end in "/>"
             document2.OptionWriteEmptyNodes = true;
             parts.Add(document2.DocumentNode.SelectSingleNode("//body").OuterHtml);
             parts.Add(string.Empty);
