@@ -2587,6 +2587,7 @@ namespace pwiz.Skyline.Model.DocSettings
 // ReSharper restore InconsistentNaming
 
         private readonly bool _isUnexplainedExplicitModificationAllowed;
+        private ValueCache _valueCache = new ValueCache();
 
         /// <summary>
         /// For use in creating new nodes, where everything should be created
@@ -3043,5 +3044,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return SettingsOld == null || _isUnexplainedExplicitModificationAllowed; }
         }
+
+        public ValueCache ValueCache => _valueCache;
     }
 }

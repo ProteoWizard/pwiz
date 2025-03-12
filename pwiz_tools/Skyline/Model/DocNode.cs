@@ -267,7 +267,7 @@ namespace pwiz.Skyline.Model
             }
             if (fResult)
             {
-                results = new Results<TItem>(newResults);
+                results = results.ChangeResults(newResults);
             }
             return fResult;
         }
