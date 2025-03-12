@@ -187,13 +187,13 @@ namespace pwiz.Common.DataBinding
 
         public Icon ApplicationIcon { get; protected set; }
 
-        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+        protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
         {
             WriteData(progressMonitor, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
         }
 
-        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+        protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             RowItemEnumerator rowItemEnumerator, char separator)
         {
             IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, rowItemEnumerator.Count));

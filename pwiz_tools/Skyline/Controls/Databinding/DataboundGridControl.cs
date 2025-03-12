@@ -51,6 +51,9 @@ namespace pwiz.Skyline.Controls.Databinding
         private DataGridViewPasteHandler _dataGridViewPasteHandler;
         private bool _inColumnChange;
         private IViewContext _viewContext;
+        private ItemProperties _replicateGridItemProperties;
+        private Dictionary<PropertyPath, DataGridViewRow> _replicateGridRows;
+        private Dictionary<string, DataGridViewColumn> _replicateGridColumns;
 
         public DataboundGridControl()
         {
@@ -62,6 +65,9 @@ namespace pwiz.Skyline.Controls.Databinding
                 heatMapContextMenuItem_Click));
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_PCA_Plot, null,
                 pCAToolStripMenuItem_Click));
+
+            // Attach the event handlers for the BindingListSource
+            BindingListSource = bindingListSource;
         }
 
         public BindingListSource BindingListSource
@@ -900,7 +906,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     {
                         var dataGridViewColumn = boundColumns[column.Name];
                         var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
-                        var widthToAdd = (int)replicateColumnsRounder.Round(replicatePivotDataGridView.Columns[grouping.Key.ReplicateName]!.Width * columnRatio);
+                        var widthToAdd = (int)replicateColumnsRounder.Round(_replicateGridColumns[grouping.Key.ReplicateName].Width * columnRatio);
                         dataGridViewColumn.Width = widthToAdd;
                         lastColumn = dataGridViewColumn;
                     }
@@ -1000,30 +1006,15 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
         {
-            var readOnlyCellColor = Color.FromArgb(245, 245, 245);
-
-            // Clear existing data
-            replicatePivotDataGridView.Columns.Clear();
-            replicatePivotDataGridView.Rows.Clear();
-
-            // Add a column for property names
-            replicatePivotDataGridView.Columns.Add(colReplicateProperty);
-
-            var rowPropertyPaths = new List<PropertyPath>();
-            var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
-                .ToDictionary(col => col.DataPropertyName);
-
+            UpdateReplicateGridRowsAndColumns(replicatePivotColumns);
             // Iterate through item properties to create columns and rows
             foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
             {
                 var resultKey = group.Key;
                 var replicateName = resultKey.ReplicateName;
-
-                // Add a column for the replicate name if it doesn't already exist
-                if (!replicatePivotDataGridView.Columns.Contains(replicateName))
+                if (!_replicateGridColumns.TryGetValue(replicateName, out var dataGridViewColumn))
                 {
-                    var columnIndex = replicatePivotDataGridView.Columns.Add(replicateName, replicateName);
-                    replicatePivotDataGridView.Columns[columnIndex].SortMode = DataGridViewColumnSortMode.NotSortable;
+                    continue;
                 }
 
                 foreach (var column in group)
@@ -1034,34 +1025,80 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
 
                     var propertyPath = column.DisplayColumn.PropertyPath;
-                    int iRow = rowPropertyPaths.IndexOf(propertyPath);
-
-                    if (iRow < 0)
+                    if (!_replicateGridRows.TryGetValue(propertyPath, out var dataGridViewRow))
                     {
-                        // Add a new row if the property path is not found
-                        iRow = replicatePivotDataGridView.Rows.Add();
-                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].Value = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
-                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].ReadOnly = true;
-                        replicatePivotDataGridView.Rows[iRow].Cells[colReplicateProperty.Index].Style.BackColor = readOnlyCellColor;
-                        rowPropertyPaths.Add(propertyPath);
+                        continue;
                     }
 
-                    // Get the value for the current column
                     var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
                         .FirstOrDefault(v => v != null);
 
-                    var cell = (DataGridViewCell)boundColumns[column.Name].CellTemplate.Clone();
-                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName] = cell;
-                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Value = value;
-                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ReadOnly = column.IsReadOnly;
-                    replicatePivotDataGridView.Rows[iRow].Cells[replicateName].ValueType = column.PropertyType;
-                    if (column.IsReadOnly)
+                    dataGridViewRow.Cells[dataGridViewColumn.Index].Value = value;
+                }
+            }
+        }
+
+        private void UpdateReplicateGridRowsAndColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            if (Equals(replicatePivotColumns.ItemProperties, _replicateGridItemProperties))
+            {
+                return;
+            }
+            replicatePivotDataGridView.Columns.Clear();
+            replicatePivotDataGridView.Rows.Clear();
+            _replicateGridItemProperties = replicatePivotColumns.ItemProperties;
+            _replicateGridRows = new Dictionary<PropertyPath, DataGridViewRow>();
+            _replicateGridColumns = new Dictionary<string, DataGridViewColumn>();
+            // Add a column for property names
+            replicatePivotDataGridView.Columns.Add(colReplicateProperty);
+            var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
+                .ToDictionary(col => col.DataPropertyName);
+
+            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+            {
+                var resultKey = group.Key;
+                var replicateName = resultKey.ReplicateName;
+
+                // Add a column for the replicate name if it doesn't already exist
+                if (!_replicateGridColumns.TryGetValue(replicateName, out var dataGridViewColumn))
+                {
+                    dataGridViewColumn = new DataGridViewTextBoxColumn
                     {
-                        replicatePivotDataGridView.Rows[iRow].Cells[replicateName].Style.BackColor = readOnlyCellColor;
+                        HeaderText = replicateName,
+                        SortMode = DataGridViewColumnSortMode.NotSortable
+                    };
+                    replicatePivotDataGridView.Columns.Add(dataGridViewColumn);
+                    _replicateGridColumns.Add(replicateName, dataGridViewColumn);
+                }
+
+                foreach (var column in group)
+                {
+                    if (!replicatePivotColumns.IsConstantColumn(column))
+                    {
+                        continue;
+                    }
+
+                    var propertyPath = column.DisplayColumn.PropertyPath;
+                    if (!_replicateGridRows.TryGetValue(propertyPath, out var dataGridViewRow))
+                    {
+                        dataGridViewRow = replicatePivotDataGridView.Rows[replicatePivotDataGridView.Rows.Add()];
+                        dataGridViewRow.Cells[colReplicateProperty.Index].Value = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                        _replicateGridRows.Add(propertyPath, dataGridViewRow);
+                    }
+
+                    var hiddenMainGridColumn = boundColumns[column.Name];
+
+                    var cell = (DataGridViewCell)hiddenMainGridColumn.CellTemplate.Clone();
+                    if (cell != null)
+                    {
+                        dataGridViewRow.Cells[dataGridViewColumn.Index] = cell;
+                        cell.Style = hiddenMainGridColumn.DefaultCellStyle;
+                        cell.ReadOnly = column.IsReadOnly;
+                        cell.ValueType = column.PropertyType;
                     }
                 }
             }
-            
+
         }
 
         private void UpdateMainGridDefaultFrozenState()
