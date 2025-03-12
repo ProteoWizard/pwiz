@@ -50,6 +50,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _dataGridViewPasteHandler;
         private bool _inColumnChange;
+        private IViewContext _viewContext;
 
         public DataboundGridControl()
         {
@@ -81,6 +82,32 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
                 NavBar.BindingListSource = bindingListSource;
                 boundDataGridView.DataSource = bindingListSource;
+            }
+        }
+
+        public IViewContext ViewContext
+        {
+            get
+            {
+                return _viewContext;
+            }
+            set
+            {
+                if (ReferenceEquals(ViewContext, value))
+                {
+                    return;
+                }
+
+                if (null != ViewContext)
+                {
+                    replicatePivotDataGridView.DataError -= ViewContext.OnDataError;
+                }
+
+                _viewContext = value;
+                if (null != ViewContext)
+                {
+                    replicatePivotDataGridView.DataError += ViewContext.OnDataError;
+                }
             }
         }
 
@@ -1166,6 +1193,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 return;
             }
 
+            ViewContext = BindingListSource.ViewContext;
             try
             {
                 _inColumnChange = true;
