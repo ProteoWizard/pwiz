@@ -68,7 +68,7 @@ function addTableOfContents(){
 
         var headings = [].slice.call(document.body.querySelectorAll('h1, h2, h3, h4, h5, h6'));
         headings.forEach(function (heading, index) {
-            if(!heading.classList.contains("document-title")){
+        if(!heading.classList.contains("document-title")){
                 var headingTextContent = heading.textContent.trim();
                 //remove English and Chinese/Japanese colons
                 if (headingTextContent.endsWith(":") || headingTextContent.endsWith("：")){
@@ -103,6 +103,13 @@ function addTableOfContents(){
 
 function scrollToAnchor(){
     if(location.hash){
-        document.getElementById(location.hash.substring(1)).scrollIntoView();
+        const regex = /^#xpath:((\/[a-zA-Z0-9]+\[[0-9]+\])*)$/
+        var match = regex.exec(location.hash)    
+        if (match) {
+            var el = document.evaluate(match[1], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            el.scrollIntoView();
+        } else {
+            document.getElementById(location.hash.substring(1)).scrollIntoView();
+        }
     }
 }
