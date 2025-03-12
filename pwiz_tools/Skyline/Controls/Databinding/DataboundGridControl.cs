@@ -1175,7 +1175,7 @@ namespace pwiz.Skyline.Controls.Databinding
             ReplicatePivotGridResized();
         }
 
-        private void replicatePivotDataGridView_OnCellContentClick(object sender, DataGridViewCellEventArgs e)
+        public void replicatePivotDataGridView_OnCellContentClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
             {

@@ -79,9 +79,20 @@ namespace pwiz.SkylineTestFunctional
             ResizeGridColumns(documentGrid.DataboundGridControl.DataGridView);
             verifyColumnSizesAligned(documentGrid);
 
-            // Update horizontal scroll position of main grid and validate it remains aligned.
-            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = 50);
-            Assert.AreEqual(50, documentGrid.DataboundGridControl.ReplicatePivotDataGridView.HorizontalScrollingOffset);
+            // Verify columns begin frozen by default, since partial freezing the scroll offset shrinks replicate grid column by scroll offset.
+            var scrollOffset = 10;
+            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = scrollOffset);
+            Assert.AreEqual(0, documentGrid.DataboundGridControl.ReplicatePivotDataGridView.HorizontalScrollingOffset);
+            Assert.AreEqual(GetMainGridPropertyColumnsWidth(documentGrid), GetMainGridPropertyColumnsWidth(documentGrid, true) + scrollOffset);
+            Assert.AreEqual(GetReplicateGridPropertyWidth(documentGrid, true), GetMainGridPropertyColumnsWidth(documentGrid, true));
+
+            // Select frozen column do disable freezing and verify columns are not frozen
+            RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[0].PerformClick());
+            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = GetReplicateGridPropertyWidth(documentGrid));
+            Assert.AreEqual(0, GetReplicateGridPropertyWidth(documentGrid, true));
+            Assert.AreEqual(0, GetMainGridPropertyColumnsWidth(documentGrid, true));
 
             // Freeze all eligible columns and verify they remain visible after scrolling.
             RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
@@ -91,22 +102,30 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(GetReplicateGridPropertyWidth(documentGrid), GetReplicateGridPropertyWidth(documentGrid, true));
             Assert.AreEqual(GetMainGridPropertyColumnsWidth(documentGrid), GetMainGridPropertyColumnsWidth(documentGrid, true));
 
-            // Select same option to unfreeze columns and verify they don't remain visible
-            RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
-            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
-            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[6].PerformClick());
-            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = GetReplicateGridPropertyWidth(documentGrid));
-            Assert.AreEqual(0, GetReplicateGridPropertyWidth(documentGrid, true));
-            Assert.AreEqual(0, GetMainGridPropertyColumnsWidth(documentGrid, true));
 
-            // Freeze only some of the columns and validate that property columns visible width remains the same
-            var scrollOffset = 10;
-            RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
-            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
-            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[2].PerformClick()); // Freeze up to column 3
-            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = scrollOffset);
-            Assert.AreEqual(GetMainGridPropertyColumnsWidth(documentGrid), GetMainGridPropertyColumnsWidth(documentGrid, true) + scrollOffset);
-            Assert.AreEqual(GetReplicateGridPropertyWidth(documentGrid, true), GetMainGridPropertyColumnsWidth(documentGrid, true));
+            // Verify link cell can be clicked and updates replicate selection
+            Assert.AreEqual("H_146_REP1", GetCurrentReplicateSelection());
+            var cellToClick = GetReplicateGridCell(documentGrid, "Replicate", "D_102_REP3") as DataGridViewLinkCell;
+            Assert.IsNotNull(cellToClick);
+            RunUI(() => documentGrid.DataboundGridControl.replicatePivotDataGridView_OnCellContentClick(null, new DataGridViewCellEventArgs(cellToClick.ColumnIndex, cellToClick.RowIndex)));
+            Assert.AreEqual("D_102_REP3", GetCurrentReplicateSelection());
+        }
+
+        private string GetCurrentReplicateSelection()
+        {
+            return CallUI(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[SkylineWindow.SelectedResultsIndex]).ToString();
+        }
+
+        private DataGridViewCell GetReplicateGridCell(DocumentGridForm documentGrid, string rowName, string columnName)
+        {
+            var row = FindReplicateGridRow(documentGrid, rowName);
+            return row.Cells[columnName];
+        }
+        private DataGridViewRow FindReplicateGridRow(DocumentGridForm documentGrid, string rowName)
+        {
+            return documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Rows
+                .Cast<DataGridViewRow>()
+                .First(row => rowName.Equals(row.Cells[0].Value?.ToString()));
         }
 
         private void verifyColumnSizesAligned(DocumentGridForm documentGrid)
