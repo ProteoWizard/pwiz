@@ -31,6 +31,7 @@
 #include "Qonverter.hpp"
 #include "Embedder.hpp"
 #include "TotalCounts.hpp"
+#include "IdpSqlExtensions.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/assert.hpp"
 #include "boost/atomic.hpp"
@@ -514,7 +515,7 @@ struct Filter::Impl
         else
             idpDb.reset(new sqlite3pp::database(idpDbConnection, false));
 
-        idpDb->load_extension("IdpSqlExtensions");
+        idpDb->load_extension(&sqlite3_idpsqlextensions_init);
 
         hasGeneMetadata = Embedder::hasGeneMetadata(idpDb->connected());
     }

@@ -34,6 +34,7 @@
 #include "boost/variant.hpp"
 #include "boost/variant/get.hpp"
 #include "boost/bind.hpp"
+#include "IdpSqlExtensions.hpp"
 #include "Embedder.hpp"
 #include "SchemaUpdater.hpp"
 #include "Parser.hpp"
@@ -431,7 +432,7 @@ void testGeneMapping()
 {
     if (bfs::exists("embedderDoctest.idpDB")) bfs::remove("embedderDoctest.idpDB");
     sqlite::database db("embedderDoctest.idpDB");
-    db.load_extension("IdpSqlExtensions");
+    db.load_extension(&sqlite3_idpsqlextensions_init);
 
     db.execute("CREATE TABLE About AS SELECT " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + " AS SchemaRevision;"
                "CREATE TABLE IF NOT EXISTS Protein(Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT, GeneId TEXT, GeneGroup INT);"
