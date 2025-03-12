@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -122,33 +123,13 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 20;
-        // V19 add protein/MoleculeGroupName
-        // V18 crosslinks
-        // V17 add ID file (alongside already-cached spectrum source file)
-        // V16 scores and score types
-        // V15 add score to peak boundaries
-        // V14 adds peak annotations
-        // V13 adds variable precision modifications
-        // v12 adds small molecule support
-        // v11 startTime and endTime in RetentionTimes table
-        // v10 changes ion mobility encoding
-
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
-
-        public const string EXT_CACHE = ".slc";
-
         private PooledSqliteConnection _sqliteConnection;
         private PooledSqliteConnection _sqliteConnectionRedundant;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
-
-        public static string GetLibraryCachePath(string libraryPath)
-        {
-            return Path.ChangeExtension(libraryPath, EXT_CACHE);
-        }
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
@@ -176,7 +157,6 @@ namespace pwiz.Skyline.Model.Lib
         {
             _librarySourceFiles = new BiblioLiteSourceInfo[0];
             FilePath = spec.FilePath;
-            CachePath = GetLibraryCachePath(FilePath);
         }
 
         /// <summary>
@@ -629,23 +609,30 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        private MemoryStream CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
+        private bool ReadFromDatabase(ILoadMonitor loader, IProgressStatus status)
         {
-            MemoryStream outStream;
             var sm = loader.StreamManager;
             EnsureConnections(sm);
+            int rows;
+            string lsid;
+            int dataRev, schemaVer;
+            var scoreTypesById = new Dictionary<int, string>();
+            var proteinsBySpectraID = ProteinsBySpectraID();
+            var librarySourceFiles = new List<BiblioLiteSourceInfo>();
+            bool hasRetentionTimesTable = SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes");
+            int segmentCount = hasRetentionTimesTable ? 2 : 1;
+            status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format("Reading entries from {0} library", Path.GetFileName(FilePath)));
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
-                int rows;
-                string lsid;
-                int dataRev, schemaVer;
 
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     if (!reader.Read())
-                        throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
+                        throw new IOException(string.Format(
+                            LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
+                            FilePath));
 
                     rows = reader.GetInt32(LibInfo.numSpecs);
 
@@ -667,14 +654,14 @@ namespace pwiz.Skyline.Model.Lib
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (!reader.Read())
-                            throw new InvalidDataException(string.Format(LibResources.BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__, FilePath));
+                            throw new InvalidDataException(string.Format(
+                                LibResources
+                                    .BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__,
+                                FilePath));
                         rows = reader.GetInt32(0);
                     }
                 }
 
-                var scoreTypesById = new Dictionary<int, string>();
-                var scoreTypesByName = new Dictionary<string, int>();
-                var proteinsBySpectraID = ProteinsBySpectraID();
 
                 if (schemaVer >= 1)
                 {
@@ -688,122 +675,171 @@ namespace pwiz.Skyline.Model.Lib
                                 var id = reader.GetInt32(0);
                                 var name = reader.GetString(1);
                                 scoreTypesById[id] = name;
-                                scoreTypesByName[name] = id;
                             }
                         }
                     }
                 }
 
-                var setLibKeys = new HashSet<LibKey>(rows);
-                var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
-                var librarySourceFiles = new List<BiblioLiteSourceInfo>();
-
-                select.CommandText = @"SELECT * FROM [RefSpectra]";
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                if (schemaVer > 0)
                 {
-                    int iId = reader.GetOrdinal(RefSpectra.id);
-                    //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
-                    int iModSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
-                    int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
-                    int iCopies = reader.GetOrdinal(RefSpectra.copies);
-                    int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
-                    int iAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
-                    int iMoleculeName = reader.GetOrdinal(RefSpectra.moleculeName);
-                    int iChemicalFormula = reader.GetOrdinal(RefSpectra.chemicalFormula);
-                    int iInChiKey = reader.GetOrdinal(RefSpectra.inchiKey);
-                    int iOtherKeys = reader.GetOrdinal(RefSpectra.otherKeys);
-                    int iScore = reader.GetOrdinal(RefSpectra.score);
-                    int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
-                    int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
-                    int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
-
-                    int rowsRead = 0;
-                    while (reader.Read())
+                    select.CommandText = @"SELECT * FROM [SpectrumSourceFiles]";
+                    using (SQLiteDataReader reader = select.ExecuteReader())
                     {
-                        int percentComplete = rowsRead++*percent/rows;
-                        if (status.PercentComplete != percentComplete)
-                        {
-                            // Check for cancellation after each integer change in percent loaded.
-                            if (loader.IsCanceled)
-                            {
-                                loader.UpdateProgress(status.Cancel());
-                                return null;
-                            }
+                        int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
+                        int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+                        int iIdFilename =
+                            reader.GetOrdinal(SpectrumSourceFiles
+                                .idFileName); // Save the search result file, too (may be distinct from the spectra source file)
 
-                            // If not cancelled, update progress.
+                        while (reader.Read())
+                        {
+                            string filename = reader.GetString(iFilename);
+                            string idFilename = iIdFilename < 0 || reader.IsDBNull(iIdFilename)
+                                ? null
+                                : reader.GetString(iIdFilename);
+                            int id = reader.GetInt32(iId);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty));
+                        }
+                    }
+
+                }
+
+
+            }
+
+            var setLibKeys = new HashSet<LibKey>(rows);
+            var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
+
+            int threadCount = ParallelEx.GetThreadCount(4);
+            int rowsRead = 0;
+            object lockObject = new object();
+            ParallelEx.For(0, threadCount, threadIndex =>
+            {
+                using var connection = SqliteOperations.OpenConnection(FilePath);
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = "SELECT * FROM RefSpectra WHERE id % " + threadCount + " = " + threadIndex;
+                using var reader = cmd.ExecuteReader();
+
+                int iId = reader.GetOrdinal(RefSpectra.id);
+                //int iSeq = reader.GetOrdinal(RefSpectra.peptideSeq);
+                int iModSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
+                int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
+                int iCopies = reader.GetOrdinal(RefSpectra.copies);
+                int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
+                int iAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
+                int iMoleculeName = reader.GetOrdinal(RefSpectra.moleculeName);
+                int iChemicalFormula = reader.GetOrdinal(RefSpectra.chemicalFormula);
+                int iInChiKey = reader.GetOrdinal(RefSpectra.inchiKey);
+                int iOtherKeys = reader.GetOrdinal(RefSpectra.otherKeys);
+                int iScore = reader.GetOrdinal(RefSpectra.score);
+                int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
+                int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
+                int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
+
+                while (reader.Read())
+                {
+                    lock (lockObject)
+                    {
+                        rowsRead++;
+                        if (loader.IsCanceled)
+                        {
+                            return;
+                        }
+
+                        int percentComplete = Math.Min(99, rowsRead * 100 / rows);
+                        if (percentComplete != status.PercentComplete)
+                        {
                             loader.UpdateProgress(status = status.ChangePercentComplete(percentComplete));
                         }
+                    }
 
-                        int id = reader.GetInt32(iId);
-                        proteinsBySpectraID.TryGetValue(id, out var protein);
+                    int id = reader.GetInt32(iId);
+                    proteinsBySpectraID.TryGetValue(id, out var protein);
 
-                        string sequence = reader.GetString(iModSeq);
-                        int charge = reader.GetInt16(iCharge);
-                        string adduct = iAdduct >= 0 && !reader.IsDBNull(iAdduct) ? reader.GetString(iAdduct) : null;
-                        int copies = reader.GetInt32(iCopies);
-                        int numPeaks = reader.GetInt32(iPeaks);
-                        double? score = !reader.IsDBNull(iScore) ? reader.GetDouble(iScore) : (double?) null;
-                        int? scoreType = !reader.IsDBNull(iScoreType) ? reader.GetInt32(iScoreType) : (int?) null;
-                        var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula) ? reader.GetString(iChemicalFormula) : null;
-                        bool isProteomic = (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) && 
-                                           !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
-                        SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes;
-                        if (isProteomic)
+                    string sequence = reader.GetString(iModSeq);
+                    int charge = reader.GetInt16(iCharge);
+                    string adduct = iAdduct >= 0 && !reader.IsDBNull(iAdduct) ? reader.GetString(iAdduct) : null;
+                    int copies = reader.GetInt32(iCopies);
+                    int numPeaks = reader.GetInt32(iPeaks);
+                    double? score = !reader.IsDBNull(iScore) ? reader.GetDouble(iScore) : (double?)null;
+                    int? scoreType = !reader.IsDBNull(iScoreType) ? reader.GetInt32(iScoreType) : (int?)null;
+                    var chemicalFormula = iChemicalFormula >= 0 && !reader.IsDBNull(iChemicalFormula)
+                        ? reader.GetString(iChemicalFormula)
+                        : null;
+                    bool isProteomic =
+                        (string.IsNullOrEmpty(adduct) || Adduct.FromStringAssumeProtonated(adduct).IsProtonated) &&
+                        !string.IsNullOrEmpty(sequence); // We may write an adduct like [M+H] for peptides
+                    SmallMoleculeLibraryAttributes smallMoleculeLibraryAttributes;
+                    if (isProteomic)
+                    {
+                        smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.EMPTY;
+                    }
+                    else
+                    {
+                        var moleculeName = iMoleculeName >= 0 && !reader.IsDBNull(iMoleculeName)
+                            ? reader.GetString(iMoleculeName)
+                            : null;
+                        var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey)
+                            ? reader.GetString(iInChiKey)
+                            : null;
+                        var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys)
+                            ? reader.GetString(iOtherKeys)
+                            : null;
+                        if (string.IsNullOrEmpty(chemicalFormula))
                         {
-                            smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.EMPTY;
-                        }
-                        else
-                        {
-                            var moleculeName = iMoleculeName >= 0 && !reader.IsDBNull(iMoleculeName) ? reader.GetString(iMoleculeName) : null;
-                            var inChiKey = iInChiKey >= 0 && !reader.IsDBNull(iInChiKey) ? reader.GetString(iInChiKey) : null;
-                            var otherKeys = iOtherKeys >= 0 && !reader.IsDBNull(iOtherKeys) ? reader.GetString(iOtherKeys) : null;
-                            if (string.IsNullOrEmpty(chemicalFormula))
+                            var precursorMz = reader.GetDouble(iPrecursorMZ);
+                            Adduct precursorAdduct;
+                            if (string.IsNullOrEmpty(adduct))
                             {
-                                var precursorMz = reader.GetDouble(iPrecursorMZ);
-                                Adduct precursorAdduct;
-                                if (string.IsNullOrEmpty(adduct))
-                                {
-                                    precursorAdduct = Adduct.FromChargeNoMass(charge);
-                                }
-                                else
-                                {
-                                    precursorAdduct = Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic,
-                                        charge);
-                                }
-                                TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
-                                TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
-                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
-                                    ParsedMolecule.Create(monoMass, avgMass), inChiKey, otherKeys);
+                                precursorAdduct = Adduct.FromChargeNoMass(charge);
                             }
                             else
                             {
-                                smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey, otherKeys);
+                                precursorAdduct = Adduct.FromString(adduct, Adduct.ADDUCT_TYPE.non_proteomic,
+                                    charge);
                             }
-                            // Construct a custom molecule so we can be sure we're using the same keys
-                            var mol = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
-                            sequence = mol.PrimaryEquivalenceKey;
-                        }
 
-                        // Avoid creating a cache which will just report it is corrupted.
-                        // Older versions of BlibBuild used to create matches with charge 0.
-                        // Newer versions that handle small molecules may reasonably use negative charges.
-                        if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                            continue;
-                        LibKey key;
-                        if (isProteomic)
-                        {
-                            LibraryKey libraryKey =
-                                CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge);
-                            if (libraryKey == null)
-                            {
-                                libraryKey = new PeptideLibraryKey(sequence, charge);
-                            }
-                            key = new LibKey(libraryKey);
+                            TypedMass monoMass = precursorAdduct.MassFromMz(precursorMz, MassType.Monoisotopic);
+                            TypedMass avgMass = precursorAdduct.MassFromMz(precursorMz, MassType.Average);
+                            smallMoleculeLibraryAttributes = SmallMoleculeLibraryAttributes.Create(moleculeName,
+                                ParsedMolecule.Create(monoMass, avgMass), inChiKey, otherKeys);
                         }
                         else
                         {
-                            key = new LibKey(smallMoleculeLibraryAttributes, Adduct.FromStringAssumeChargeOnly(adduct));
+                            smallMoleculeLibraryAttributes =
+                                SmallMoleculeLibraryAttributes.Create(moleculeName, chemicalFormula, inChiKey,
+                                    otherKeys);
                         }
+
+                        // Construct a custom molecule so we can be sure we're using the same keys
+                        var mol = CustomMolecule.FromSmallMoleculeLibraryAttributes(smallMoleculeLibraryAttributes);
+                        sequence = mol.PrimaryEquivalenceKey;
+                    }
+
+                    // Avoid creating a cache which will just report it is corrupted.
+                    // Older versions of BlibBuild used to create matches with charge 0.
+                    // Newer versions that handle small molecules may reasonably use negative charges.
+                    if (charge == 0 || Math.Abs(charge) > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                        continue;
+                    LibKey key;
+                    if (isProteomic)
+                    {
+                        LibraryKey libraryKey =
+                            CrosslinkSequenceParser.TryParseCrosslinkLibraryKey(sequence, charge);
+                        if (libraryKey == null)
+                        {
+                            libraryKey = new PeptideLibraryKey(sequence, charge);
+                        }
+
+                        key = new LibKey(libraryKey);
+                    }
+                    else
+                    {
+                        key = new LibKey(smallMoleculeLibraryAttributes, Adduct.FromStringAssumeChargeOnly(adduct));
+                    }
+
+                    lock (lockObject)
+                    {
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
                         if (setLibKeys.Add(key))
@@ -814,134 +850,64 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
 
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, protein, score, scoreName));
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, protein,
+                                scoreName == null ? null : score, scoreName));
                         }
                     }
                 }
-
-                libraryEntries = FilterInvalidLibraryEntries(ref status, libraryEntries);
-
-                if (schemaVer > 0)
-                {
-                    select.CommandText = @"SELECT * FROM [SpectrumSourceFiles]";
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
-                        int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
-                        int iIdFilename = reader.GetOrdinal(SpectrumSourceFiles.idFileName); // Save the search result file, too (may be distinct from the spectra source file)
-
-                        while (reader.Read())
-                        {
-                            string filename = reader.GetString(iFilename);
-                            string idFilename = iIdFilename < 0 || reader.IsDBNull(iIdFilename) ? null : reader.GetString(iIdFilename);
-                            int id = reader.GetInt32(iId);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty));
-                        }
-                    }
-
-                }
-
-                outStream = new MemoryStream();
-                foreach (var info in libraryEntries)
-                {
-                    // Write the spectrum header - order must match enum SpectrumCacheHeader
-                    info.Key.Write(outStream);
-                    outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
-                    outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
-                    outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
-
-                    // Optional protein name or molecule list name
-                    if (string.IsNullOrEmpty(info.Protein))
-                    {
-                        const int len = 0;
-                        outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
-                    }
-                    else
-                    {
-                        var proteinOrMoleculeListBytes = Encoding.UTF8.GetBytes(info.Protein);
-                        outStream.Write(BitConverter.GetBytes(proteinOrMoleculeListBytes.Length), 0, sizeof(int));
-                        outStream.Write(proteinOrMoleculeListBytes, 0, proteinOrMoleculeListBytes.Length);
-                    }
-
-                    if (info.ScoreType == null || !scoreTypesByName.TryGetValue(info.ScoreType, out var scoreType))
-                    {
-                        scoreType = -1;
-                    }
-                    outStream.Write(BitConverter.GetBytes(scoreType), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(info.Score ?? double.NaN), 0, sizeof(double));
-                }
-
-                long sourcePosition = 0;
-                if (librarySourceFiles.Count > 0)
-                {
-                    // Write all source files
-                    sourcePosition = outStream.Position;
-                    foreach (var librarySourceFile in librarySourceFiles)
-                    {
-                        outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
-                        // Spectra source filename
-                        var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
-                        // ID source (e.g. Mascot search results) filename
-                        var searchResultsFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.IdFilePath ?? string.Empty);
-                        outStream.Write(BitConverter.GetBytes(librarySourceFileNameBytes.Length), 0, sizeof(int));
-                        outStream.Write(BitConverter.GetBytes(searchResultsFileNameBytes.Length), 0, sizeof(int));
-                        outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
-                        outStream.Write(searchResultsFileNameBytes, 0, searchResultsFileNameBytes.Length);
-                    }
-                    // Terminate with zero ID and zero name length
-                    var zeroBytes = BitConverter.GetBytes(0);
-                    outStream.Write(zeroBytes, 0, sizeof(int));
-                    outStream.Write(zeroBytes, 0, sizeof(int));
-                    outStream.Write(zeroBytes, 0, sizeof(int));
-                    outStream.Write(zeroBytes, 0, sizeof(int));
-                }
-
-                long scoreTypesPosition = 0;
-                if (scoreTypesById.Count > 0)
-                {
-                    scoreTypesPosition = outStream.Position;
-                    foreach (var score in scoreTypesById.OrderBy(kvp => kvp.Key))
-                    {
-                        outStream.Write(BitConverter.GetBytes(score.Key), 0, sizeof(int));
-                        var scoreTypeNameBytes = Encoding.UTF8.GetBytes(score.Value);
-                        outStream.Write(BitConverter.GetBytes(scoreTypeNameBytes.Length), 0, sizeof(int));
-                        outStream.Write(scoreTypeNameBytes, 0, scoreTypeNameBytes.Length);
-                    }
-                    // Terminate with zero ID and zero name length
-                    var zeroBytes = BitConverter.GetBytes(0);
-                    outStream.Write(zeroBytes, 0, sizeof(int));
-                    outStream.Write(zeroBytes, 0, sizeof(int));
-                }
-
-                byte[] lsidBytes = Encoding.UTF8.GetBytes(lsid);
-                outStream.Write(lsidBytes, 0, lsidBytes.Length);
-                outStream.Write(BitConverter.GetBytes(lsidBytes.Length), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(dataRev), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(schemaVer), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
-                outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
-                outStream.Write(BitConverter.GetBytes(scoreTypesPosition), 0, sizeof(long));
-                try
-                {
-                    using (FileSaver fs = new FileSaver(CachePath, sm))
-                    using (Stream cacheFileStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
-                    {
-                        outStream.Seek(0, SeekOrigin.Begin);
-                        outStream.CopyTo(cacheFileStream);
-                        sm.Finish(cacheFileStream);
-                        fs.Commit();
-                        sm.SetCache(FilePath, CachePath);
-                    }
-                }
-                catch
-                {
-                    // ignore
-                }
+            }, maxThreads:threadCount);
+            if (loader.IsCanceled)
+            {
+                loader.UpdateProgress(status.Cancel());
+                return false;
             }
 
-            loader.UpdateProgress(status.Complete());
-            return outStream;
+            var valueCache = new ValueCache();
+            var startTime = DateTime.UtcNow;
+            if (hasRetentionTimesTable) // Only a filtered library will have this table
+            {
+                status = status.ChangeSegments(1, segmentCount).ChangeMessage(string.Format("Reading retention times from {0}", Path.GetFileName(FilePath)));
+                var retentionTimeReader = new RetentionTimeReader(FilePath, schemaVer);
+                retentionTimeReader.ReadAllRows(loader, ref status, rows);
+                if (loader.IsCanceled)
+                {
+                    loader.UpdateProgress(status.Cancel());
+                    return false;
+                }
+                var retentionTimesBySpectraId = retentionTimeReader.GetRetentionTimes();
+                var driftTimesBySpectraId = retentionTimeReader.GetIonMobilities();
+                var peakBoundsBySpectraId = retentionTimeReader.GetExplicitPeakBounds();
+                for (int i = 0; i < libraryEntries.Count; i++)
+                {
+                    var libraryEntry = libraryEntries[i];
+                    if (retentionTimesBySpectraId.TryGetValue(libraryEntry.Id, out var retentionTimes))
+                    {
+                        libraryEntry = libraryEntry.ChangeRetentionTimes(retentionTimes);
+                    }
+
+                    if (driftTimesBySpectraId.TryGetValue(libraryEntry.Id, out var driftTimes))
+                    {
+                        libraryEntry = libraryEntry.ChangeIonMobilities(driftTimes);
+                    }
+
+                    if (peakBoundsBySpectraId.TryGetValue(libraryEntry.Id, out var peakBounds) && peakBounds.Count > 0)
+                    {
+                        _anyExplicitPeakBounds = true;
+                        peakBounds = peakBounds.ValueFromCache(valueCache);
+                        libraryEntry = libraryEntry.ChangePeakBoundaries(peakBounds);
+                    }
+                    libraryEntries[i] = libraryEntry;
+                }
+            }
+            Console.Out.WriteLine("Read retention times in {0}", DateTime.UtcNow.Subtract(startTime));
+
+
+            _librarySourceFiles = librarySourceFiles.ToArray();
+            _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
+            SetLibraryEntries(FilterInvalidLibraryEntries(ref status, libraryEntries.OrderBy(spec=>spec.Id)));
+            EnsureConnections(sm);
+            loader.UpdateProgress(status.ChangeSegments(segmentCount - 1, segmentCount).Complete());
+            return true;
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
@@ -976,22 +942,31 @@ namespace pwiz.Skyline.Model.Lib
         {
             ProgressStatus status = new ProgressStatus(string.Empty);
             loader.UpdateProgress(status);
-
-            bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
-            if (Load(loader, status, cached))
-                return true;
-
-            // If loading from the cache failed, rebuild it.
-            if (cached)
+            try
             {
-                // Reset readStream so we don't read corrupt file.
-                if (_sqliteConnection != null)
+                var start = DateTime.UtcNow;
+                bool result = ReadFromDatabase(loader, status);
+                Console.Out.WriteLine("Load Library {0} in {1}", FilePath, DateTime.UtcNow.Subtract(start));
+                if (result)
                 {
-                    _sqliteConnection.CloseStream();
-                    _sqliteConnection = null;
-                }
-                if (Load(loader, status, false))
                     return true;
+                }
+            }
+            catch (Exception x)
+            {
+                // SQLiteExceptions are not considered programming defects and should be shown to the user
+                // as an ordinary error message
+                if (x is SQLiteException || x is TargetInvocationException && x.InnerException is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
+                {
+                    var message = string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath);
+                    // This will show the user the error message after which the operation can be treated as canceled.
+                    loader.UpdateProgress(status.ChangeErrorException(new Exception(message, x)));
+                }
+                else
+                {
+                    // Other sorts of exceptions should be posted to the Exception Web
+                    throw new Exception(FormatErrorMessage(x), x);
+                }
             }
 
             // Close any streams that got opened
@@ -999,222 +974,6 @@ namespace pwiz.Skyline.Model.Lib
                 pooledStream.CloseStream();
 
             return false;
-        }
-
-        private bool Load(ILoadMonitor loader, IProgressStatus status, bool cached)
-        {
-            try
-            {
-                var valueCache = new ValueCache();
-                int loadPercent = 100;
-                MemoryStream cacheBytes = null;
-                if (!cached)
-                {
-                    // Building the cache will take 95% of the load time.
-                    loadPercent = 5;
-                    status = status.ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library,
-                                                           Path.GetFileName(FilePath)));
-                    status = status.ChangePercentComplete(0);
-                    loader.UpdateProgress(status);
-
-                    cacheBytes = CreateCache(loader, status, 100 - loadPercent);
-                    if (cacheBytes == null)
-                    {
-                        return false;
-                    }
-
-                }
-
-                status = status.ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibraryLoadLoading__0__library,
-                                                            Path.GetFileName(FilePath)));
-                loader.UpdateProgress(status);
-
-                var sm = loader.StreamManager;
-                Stream stream;
-                if (cacheBytes != null)
-                {
-                    cacheBytes.Seek(0, SeekOrigin.Begin);
-                    stream = cacheBytes;
-                }
-                else
-                {
-                    stream = sm.CreateStream(CachePath, FileMode.Open, true);
-                }
-                using (stream)
-                {
-                    // Read library header from the end of the cache
-                    int countHeader = (int) LibHeaders.count*sizeof (int);
-                    stream.Seek(-countHeader, SeekOrigin.End);
-
-                    byte[] libHeader = new byte[countHeader];
-                    ReadComplete(stream, libHeader, countHeader);
-
-                    int version = GetInt32(libHeader, (int) LibHeaders.format_version);
-                    if (version != FORMAT_VERSION_CACHE)
-                        return false;
-
-                    int countLsidBytes = GetInt32(libHeader, (int) LibHeaders.lsid_byte_count);
-                    stream.Seek(-countHeader-countLsidBytes, SeekOrigin.End);
-                    Lsid = ReadString(stream, countLsidBytes);
-                    int dataRev = GetInt32(libHeader, (int)LibHeaders.data_rev);
-                    int schemaVer = GetInt32(libHeader, (int) LibHeaders.schema_ver);
-                    SetRevision(dataRev, schemaVer);
-
-                    int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
-
-                    var libraryEntries = new BiblioLiteSpectrumInfo[numSpectra];
-                    var librarySourceFiles = new List<BiblioLiteSourceInfo>();
-
-                    long locationSources = BitConverter.ToInt64(libHeader,
-                                                                ((int) LibHeaders.location_sources_lo)*sizeof (int));
-                    long locationScoreTypes = BitConverter.ToInt64(libHeader,
-                                                                ((int) LibHeaders.location_score_types_lo)*sizeof (int));
-
-                    if (locationSources != 0)
-                    {
-                        stream.Seek(locationSources, SeekOrigin.Begin);
-                        const int countSourceBytes = (int)SourceHeader.count * sizeof(int);
-                        byte[] sourceHeader = new byte[countSourceBytes];
-                        for (;;)
-                        {
-                            ReadComplete(stream, sourceHeader, countSourceBytes);
-                            int sourceId = GetInt32(sourceHeader, (int)SourceHeader.id);
-                            int filenameLength = GetInt32(sourceHeader, (int)SourceHeader.filename_length);
-                            if (filenameLength == 0)
-                                break;
-                            int idfilenameLength = GetInt32(sourceHeader, (int)SourceHeader.id_filename_length);
-                            string filename = ReadString(stream, filenameLength);
-                            string idfilename = ReadString(stream, idfilenameLength);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId, filename, idfilename)); 
-                        }
-                    }
-
-                    _librarySourceFiles = librarySourceFiles.ToArray();
-                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
-
-                    var scoreTypes = new Dictionary<int, string>();
-                    if (locationScoreTypes != 0)
-                    {
-                        stream.Seek(locationScoreTypes, SeekOrigin.Begin);
-                        const int countScoreTypeBytes = (int) ScoreTypeHeader.count * sizeof(int);
-                        var scoreTypeHeader = new byte[countScoreTypeBytes];
-                        for (;;)
-                        {
-                            ReadComplete(stream, scoreTypeHeader, countScoreTypeBytes);
-                            var id = GetInt32(scoreTypeHeader, (int) ScoreTypeHeader.id);
-                            var nameLen = GetInt32(scoreTypeHeader, (int) ScoreTypeHeader.name_length);
-                            if (nameLen == 0)
-                            {
-                                break;
-                            }
-                            scoreTypes[id] = ReadString(stream, nameLen);
-                        }
-                    }
-
-                    // Seek to beginning of spectrum headers, which is the beginning of the
-                    // files, since spectra are not stored in the cache.
-                    stream.Seek(0, SeekOrigin.Begin);
-                    for (int i = 0; i < numSpectra; i++)
-                    {
-                        int percent = (100 - loadPercent) + (i*loadPercent/numSpectra);
-                        if (status.PercentComplete != percent)
-                        {
-                            // Check for cancellation after each integer change in percent loaded.
-                            if (loader.IsCanceled)
-                            {
-                                loader.UpdateProgress(status.Cancel());
-                                return false;
-                            }
-                            // If not cancelled, update progress.
-                            loader.UpdateProgress(status = status.ChangePercentComplete(percent));
-                        }
-
-                        // Read spectrum header
-                        var key = LibKey.Read(valueCache, stream);
-                        int copies = PrimitiveArrays.ReadOneValue<int>(stream);
-                        int numPeaks = PrimitiveArrays.ReadOneValue<int>(stream);
-                        int id = PrimitiveArrays.ReadOneValue<int>(stream);
-                        int proteinLength = PrimitiveArrays.ReadOneValue<int>(stream);
-                        var proteinOrMoleculeList = proteinLength == 0 ? null : ReadString(stream, proteinLength);
-
-                        var scoreTypeId = PrimitiveArrays.ReadOneValue<int>(stream);
-                        var score = (double?) PrimitiveArrays.ReadOneValue<double>(stream);
-                        if (!scoreTypes.TryGetValue(scoreTypeId, out var scoreType))
-                        {
-                            score = null;
-                        }
-
-                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, proteinOrMoleculeList, score: score, scoreType: scoreType); 
-                    }
-
-
-                    // Create a connection to the database from which the spectra will be read
-                    EnsureConnections(sm);
-
-                    if (SqliteOperations.TableExists(_sqliteConnection.Connection, @"RetentionTimes")) // Only a filtered library will have this table
-                    {
-                        using var cmd = _sqliteConnection.Connection.CreateCommand();
-                        cmd.CommandText = @"SELECT * FROM RetentionTimes";
-                        using var dataReader = cmd.ExecuteReader();
-                        var retentionTimeReader = new RetentionTimeReader(dataReader, schemaVer);
-                        retentionTimeReader.ReadAllRows();
-                        var retentionTimesBySpectraIdAndFileId =
-                            retentionTimeReader.SpectraIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                        var driftTimesBySpectraIdAndFileId =
-                            retentionTimeReader.SpectraIdFileIdIonMobilities.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
-                        var peakBoundsBySpectraIdAndFileId = retentionTimeReader.PeakBoundaries.ToLookup(kvp => kvp.Key,
-                            kvp => kvp.Value);
-                        for (int i = 0; i < libraryEntries.Length; i++)
-                        {
-                            var libraryEntry = libraryEntries[i];
-                            libraryEntry = libraryEntry.ChangeRetentionTimes(new IndexedRetentionTimes(retentionTimesBySpectraIdAndFileId[libraryEntry.Id]));
-                            libraryEntry = libraryEntry.ChangeIonMobilities(
-                                new IndexedIonMobilities(driftTimesBySpectraIdAndFileId[libraryEntry.Id]));
-                            var explicitPeakBoundDict = new ExplicitPeakBoundsDict<int>(
-                                peakBoundsBySpectraIdAndFileId[libraryEntry.Id].Distinct());
-                            if (explicitPeakBoundDict.Count > 0)
-                            {
-                                explicitPeakBoundDict = explicitPeakBoundDict.ValueFromCache(valueCache);
-                                _anyExplicitPeakBounds = true;
-                                libraryEntry = libraryEntry.ChangePeakBoundaries(explicitPeakBoundDict);
-                            }
-                            libraryEntries[i] = libraryEntry;
-                        }
-                    }
-
-                    // Checksum = checksum.ChecksumValue;
-                    SetLibraryEntries(libraryEntries);
-
-                    loader.UpdateProgress(status.Complete());
-
-                }
-
-                return true;
-            }
-
-            catch (Exception x)
-            {
-                // Skyline first tries to load the library passing in "true" for "cached", and, if that fails, it tries
-                // again passing in "false" for "cached". So, any errors encountered during that first cached=true pass
-                // should be suppressed because we know Skyline is going to try again.
-                if (!cached)
-                {
-                    // SQLiteExceptions are not considered programming defects and should be shown to the user
-                    // as an ordinary error message
-                    if (x is SQLiteException || !ExceptionUtil.IsProgrammingDefect(x))
-                    {
-                        var message = string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath);
-                        // This will show the user the error message after which the operation can be treated as canceled.
-                        loader.UpdateProgress(status.ChangeErrorException(new Exception(message, x)));
-                    }
-                    else
-                    {
-                        // Other sorts of exceptions should be posted to the Exception Web
-                        throw new Exception(FormatErrorMessage(x), x);
-                    }
-                }
-                return false;
-            }
         }
 
         string FormatErrorMessage(Exception x)
@@ -2350,80 +2109,230 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             private int?[] _columnIndexes;
-            private int _schemaVer;
-            private IDataReader _reader;
+            private readonly int _schemaVer;
+            private readonly string _dbPath;
 
-            public RetentionTimeReader(IDataReader dataReader, int schemaVer)
+            private Dictionary<int, IndexedRetentionTimes> _retentionTimes =
+                new Dictionary<int, IndexedRetentionTimes>();
+
+            private Dictionary<int, IndexedIonMobilities> _ionMobilities =
+                new Dictionary<int, IndexedIonMobilities>();
+
+            private Dictionary<int, ExplicitPeakBoundsDict<int>> _explicitPeakBounds =
+                new Dictionary<int, ExplicitPeakBoundsDict<int>>();
+
+            private IProgressMonitor _progressMonitor;
+            private IProgressStatus _progressStatus;
+            private int _progressValue;
+            private int _completedSpectraCount;
+            private int _refSpectraCount;
+
+            public RetentionTimeReader(string dbPath, int schemaVer)
             {
-                PeakBoundaries = new List<KeyValuePair<int, KeyValuePair<int, ExplicitPeakBounds>>>();
-                SpectraIdFileIdIonMobilities = new List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>>();
-                SpectraIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
+                _dbPath = dbPath;
                 _schemaVer = schemaVer;
-                _columnIndexes = new int?[(int) Column.MAX_COLUMN];
-                _reader = dataReader;
-                for (int colEnum = 0; colEnum < (int) Column.MAX_COLUMN; colEnum++)
-                {
-                    string columnName = ((Column)colEnum).ToString();
-                    int ordinal = dataReader.GetOrdinal(columnName);
-                    if (ordinal >= 0)
-                    {
-                        _columnIndexes[colEnum] = ordinal;
-                    }
-                }
             }
 
-            public List<KeyValuePair<int, KeyValuePair<int, double>>> SpectraIdFileIdTimes { get; private set; }
-
-            // List of <RefSpectra Id, <FileId, ionMobility>>
-            public List<KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>> SpectraIdFileIdIonMobilities { get; private set;
-            }
-
-            public List<KeyValuePair<int, KeyValuePair<int, ExplicitPeakBounds>>> PeakBoundaries
+            // ReSharper disable InconsistentlySynchronizedField
+            public Dictionary<int, IndexedRetentionTimes> GetRetentionTimes()
             {
-                get;
-                private set;
+                return _retentionTimes;
             }
 
-
-            public void ReadAllRows()
+            public Dictionary<int, IndexedIonMobilities> GetIonMobilities()
             {
-                while (_reader.Read())
+                return _ionMobilities;
+            }
+
+            public Dictionary<int, ExplicitPeakBoundsDict<int>> GetExplicitPeakBounds()
+            {
+                return _explicitPeakBounds;
+            }
+            // ReSharper restore InconsistentlySynchronizedField
+
+            public void ReadAllRows(IProgressMonitor progressMonitor, ref IProgressStatus status, int refSpectraCount)
+            {
+                _progressMonitor = progressMonitor;
+                _progressStatus = status;
+                _refSpectraCount = refSpectraCount;
+                int threadCount = ParallelEx.GetThreadCount();
+                ParallelEx.For(0, threadCount, threadIndex =>
                 {
-                    int? refSpectraId = GetInt(Column.RefSpectraID);
-                    int? spectrumSourceId = GetInt(Column.SpectrumSourceID);
-                    if (!refSpectraId.HasValue || !spectrumSourceId.HasValue)
+                    using var conn = SqliteOperations.OpenConnection(_dbPath);
+                    using var stmt = conn.CreateCommand();
+                    stmt.CommandText = "SELECT * From RetentionTimes WHERE RefSpectraId % "
+                                       + threadCount + " = " + threadIndex;
+                    using var reader = stmt.ExecuteReader();
+                    ReadSubset(reader);
+                }, maxThreads: threadCount);
+                status = _progressStatus;
+            }
+
+            private void ReadSubset(IDataReader reader)
+            {
+                InitializeColumnIndexes(reader);
+                List<object[]> rows = new List<object[]>();
+                int columnCount = reader.FieldCount;
+                int? lastRefSpectraId = null;
+                while (reader.Read())
+                {
+                    var row = new object[columnCount];
+                    reader.GetValues(row);
+                    int? refSpectraId = GetInt(Column.RefSpectraID, row);
+                    if (refSpectraId == null)
                     {
                         continue;
                     }
-                    double? retentionTime = ReadRetentionTime();
-                    if (retentionTime.HasValue)
+                    if (refSpectraId != lastRefSpectraId)
                     {
-                        SpectraIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(refSpectraId.Value,
-                            new KeyValuePair<int, double>(spectrumSourceId.Value, retentionTime.Value)));
+                        if (rows.Count != 0)
+                        {
+                            if (!ConsumeRows(rows))
+                            {
+                                return;
+                            }
+                            rows = new List<object[]>();
+                        }
+
+                        lastRefSpectraId = refSpectraId;
                     }
-                    IonMobilityAndCCS ionMobilityInfo = ReadIonMobilityInfo();
-                    if (!IonMobilityAndCCS.IsNullOrEmpty(ionMobilityInfo))
+                    rows.Add(row);
+                }
+
+                if (rows.Count != 0)
+                {
+                    ConsumeRows(rows);
+                }
+            }
+
+            private void InitializeColumnIndexes(IDataReader dataReader)
+            {
+                lock (this)
+                {
+                    if (_columnIndexes != null)
                     {
-                        SpectraIdFileIdIonMobilities.Add(
-                            new KeyValuePair<int, KeyValuePair<int, IonMobilityAndCCS>>(refSpectraId.Value,
-                                new KeyValuePair<int, IonMobilityAndCCS>(spectrumSourceId.Value, ionMobilityInfo)));
+                        return;
                     }
-                    var peakBounds = ReadPeakBounds();
-                    if (peakBounds != null)
+                    _columnIndexes = new int?[(int)Column.MAX_COLUMN];
+                    for (int colEnum = 0; colEnum < (int)Column.MAX_COLUMN; colEnum++)
                     {
-                        PeakBoundaries.Add(
-                            new KeyValuePair<int, KeyValuePair<int, ExplicitPeakBounds>>(refSpectraId.Value,
-                                new KeyValuePair<int, ExplicitPeakBounds>(spectrumSourceId.Value, peakBounds)));
+                        string columnName = ((Column)colEnum).ToString();
+                        int ordinal = dataReader.GetOrdinal(columnName);
+                        if (ordinal >= 0)
+                        {
+                            _columnIndexes[colEnum] = ordinal;
+                        }
                     }
                 }
             }
 
-            public double? ReadRetentionTime()
+            private bool ConsumeRows(List<object[]> rows)
             {
-                return GetDouble(Column.retentionTime);
+                var refSpectraId = GetInt(Column.RefSpectraID, rows[0]);
+                var retentionTimes = new List<KeyValuePair<int, double>>();
+                var ionMobilities = new List<KeyValuePair<int, IonMobilityAndCCS>>();
+                var explicitPeakBounds = new List<KeyValuePair<int, ExplicitPeakBounds>>();
+                foreach (var row in rows)
+                {
+                    int? fileId = GetInt(Column.SpectrumSourceID, row);
+                    if (!fileId.HasValue)
+                    {
+                        continue;
+                    }
+
+                    var retentionTime = GetDouble(Column.retentionTime, row);
+                    if (retentionTime.HasValue)
+                    {
+                        retentionTimes.Add(new KeyValuePair<int, double>(fileId.Value, retentionTime.Value));
+                    }
+
+                    var ionMobility = ReadIonMobilityInfo(row);
+                    if (ionMobility != null)
+                    {
+                        ionMobilities.Add(new KeyValuePair<int, IonMobilityAndCCS>(fileId.Value, ionMobility));
+                    }
+
+                    var peakBounds = ReadPeakBounds(row);
+                    if (peakBounds != null)
+                    {
+                        explicitPeakBounds.Add(new KeyValuePair<int, ExplicitPeakBounds>(fileId.Value, peakBounds));
+                    }
+                }
+
+                if (retentionTimes.Count > 0)
+                {
+                    var indexedRetentionTimes = new IndexedRetentionTimes(retentionTimes);
+                    lock (_retentionTimes)
+                    {
+                        if (_retentionTimes.TryGetValue(refSpectraId.Value, out var existing))
+                        {
+                            _retentionTimes[refSpectraId.Value] = existing.MergeWith(indexedRetentionTimes);
+                        }
+                        else
+                        {
+                            _retentionTimes.Add(refSpectraId.Value, indexedRetentionTimes);
+                        }
+                    }
+                }
+
+                if (ionMobilities.Count > 0)
+                {
+                    var indexedIonMobilities = new IndexedIonMobilities(ionMobilities);
+                    lock (_ionMobilities)
+                    {
+                        if (_ionMobilities.TryGetValue(refSpectraId.Value, out var existing))
+                        {
+                            _ionMobilities[refSpectraId.Value] = existing.MergeWith(indexedIonMobilities);
+                        }
+                        else
+                        {
+                            _ionMobilities.Add(refSpectraId.Value, indexedIonMobilities);
+                        }
+                    }
+                }
+
+                if (explicitPeakBounds.Count > 0)
+                {
+                    var explicitPeakBoundsDict = new ExplicitPeakBoundsDict<int>(explicitPeakBounds.Distinct());
+                    lock (_explicitPeakBounds)
+                    {
+                        if (_explicitPeakBounds.TryGetValue(refSpectraId.Value, out var existing))
+                        {
+                            _explicitPeakBounds[refSpectraId.Value] =
+                                new ExplicitPeakBoundsDict<int>(existing.Concat(explicitPeakBounds));
+                        }
+                        else
+                        {
+                            _explicitPeakBounds.Add(refSpectraId.Value, explicitPeakBoundsDict);
+                        }
+                    }
+                }
+
+                return SpectrumCompleted();
             }
 
-            public IonMobilityAndCCS ReadIonMobilityInfo()
+            private bool SpectrumCompleted()
+            {
+                lock (this)
+                {
+                    if (_progressMonitor.IsCanceled)
+                    {
+                        return false;
+                    }
+                    _completedSpectraCount++;
+                    int newProgressValue = Math.Min(99, _completedSpectraCount * 100 / _refSpectraCount);
+                    if (newProgressValue != _progressValue)
+                    {
+                        _progressStatus = _progressStatus.ChangePercentComplete(newProgressValue);
+                        _progressValue = newProgressValue;
+                        _progressMonitor.UpdateProgress(_progressStatus);
+                    }
+
+                    return true;
+                }
+            }
+
+            public IonMobilityAndCCS ReadIonMobilityInfo(object[] row)
             {
                 if (_schemaVer < 2)
                 {
@@ -2433,12 +2342,12 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     default:
                     {
-                        double mobility = GetDouble(Column.ionMobility).GetValueOrDefault();
+                        double mobility = GetDouble(Column.ionMobility, row).GetValueOrDefault();
                         double collisionalCrossSection =
-                            GetDouble(Column.collisionalCrossSectionSqA).GetValueOrDefault();
+                            GetDouble(Column.collisionalCrossSectionSqA, row).GetValueOrDefault();
                         double highEnergyOffset =
-                            GetDouble(Column.ionMobilityHighEnergyOffset).GetValueOrDefault();
-                        var units = (eIonMobilityUnits)GetInt(Column.ionMobilityType).GetValueOrDefault();
+                            GetDouble(Column.ionMobilityHighEnergyOffset, row).GetValueOrDefault();
+                        var units = (eIonMobilityUnits)GetInt(Column.ionMobilityType, row).GetValueOrDefault();
                         if (mobility == 0 && collisionalCrossSection == 0 &&
                             highEnergyOffset == 0)
                         {
@@ -2450,11 +2359,11 @@ namespace pwiz.Skyline.Model.Lib
                     case 5:
                     case 4:
                     {
-                        double driftTimeMsec = GetDouble(Column.driftTimeMsec).GetValueOrDefault();
+                        double driftTimeMsec = GetDouble(Column.driftTimeMsec, row).GetValueOrDefault();
                         double collisionalCrossSection =
-                            GetDouble(Column.collisionalCrossSectionSqA).GetValueOrDefault();
+                            GetDouble(Column.collisionalCrossSectionSqA, row).GetValueOrDefault();
                         double highEnergyOffset =
-                            GetDouble(Column.driftTimeHighEnergyOffsetMsec).GetValueOrDefault();
+                            GetDouble(Column.driftTimeHighEnergyOffsetMsec, row).GetValueOrDefault();
                         if (driftTimeMsec == 0 && collisionalCrossSection == 0 &&
                             highEnergyOffset == 0)
                         {
@@ -2466,9 +2375,9 @@ namespace pwiz.Skyline.Model.Lib
                     case 3:
                     case 2:
                     {
-                        int ionMobilityType = GetInt(Column.ionMobilityType).GetValueOrDefault();
-                        double ionMobilityValue = GetDouble(Column.ionMobilityValue).GetValueOrDefault();
-                        double highEnergyOffset = GetDouble(Column.ionMobilityHighEnergyDriftTimeOffsetMsec).GetValueOrDefault();
+                        int ionMobilityType = GetInt(Column.ionMobilityType, row).GetValueOrDefault();
+                        double ionMobilityValue = GetDouble(Column.ionMobilityValue, row).GetValueOrDefault();
+                        double highEnergyOffset = GetDouble(Column.ionMobilityHighEnergyDriftTimeOffsetMsec, row).GetValueOrDefault();
                         if (ionMobilityValue == 0 && highEnergyOffset == 0)
                         {
                             return IonMobilityAndCCS.EMPTY;
@@ -2479,11 +2388,11 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            public ExplicitPeakBounds ReadPeakBounds()
+            public ExplicitPeakBounds ReadPeakBounds(object[] row)
             {
-                double? startTime = GetDouble(Column.startTime);
-                double? endTime = GetDouble(Column.endTime);
-                double score = GetDouble(Column.score) ?? ExplicitPeakBounds.UNKNOWN_SCORE;
+                double? startTime = GetDouble(Column.startTime, row);
+                double? endTime = GetDouble(Column.endTime, row);
+                double score = GetDouble(Column.score, row) ?? ExplicitPeakBounds.UNKNOWN_SCORE;
                 if (startTime.HasValue && endTime.HasValue)
                 {
                     return new ExplicitPeakBounds(startTime.Value, endTime.Value, score);
@@ -2491,39 +2400,48 @@ namespace pwiz.Skyline.Model.Lib
                 return null;
             }
 
-            private object GetValue(Column column)
+            private object GetValue(Column column, object[] row)
             {
-                int? columnIndex = _columnIndexes[(int) column];
+                int? columnIndex = _columnIndexes[(int)column];
                 if (!columnIndex.HasValue)
                 {
                     return null;
                 }
-                object value = _reader.GetValue(columnIndex.Value);
+
+                object value = row[columnIndex.Value];
                 if (value is DBNull)
                 {
                     return null;
                 }
+
                 return value;
             }
 
-            private double? GetDouble(Column column)
+            private int? GetInt(Column column, object[] row)
             {
-                object value = GetValue(column);
+                var value = GetValue(column, row);
                 if (value == null)
                 {
                     return null;
                 }
-                return Convert.ToDouble(value);
+
+                if (value is int intValue)
+                {
+                    return intValue;
+                }
+
+                return Convert.ToInt32(value);
             }
 
-            private int? GetInt(Column column)
+            private double? GetDouble(Column column, object[] row)
             {
-                object value = GetValue(column);
+                var value = GetValue(column, row);
                 if (value == null)
                 {
                     return null;
                 }
-                return Convert.ToInt32(value);
+
+                return Convert.ToDouble(value);
             }
         }
 
@@ -2662,6 +2580,13 @@ namespace pwiz.Skyline.Model.Lib
             }
             return new IndexedRetentionTimes(keyValuePairs);
         }
+
+        public IndexedRetentionTimes MergeWith(params IndexedRetentionTimes[] other)
+        {
+            return new IndexedRetentionTimes(other.Prepend(this).SelectMany(item =>
+                item._timesById.SelectMany(
+                    kvp => kvp.Value.Select(time => new KeyValuePair<int, double>(kvp.Key, time)))));
+        }
     }
 
     public struct IndexedIonMobilities
@@ -2752,6 +2677,12 @@ namespace pwiz.Skyline.Model.Lib
                 keyValuePairs[i] = new KeyValuePair<int, IonMobilityAndCCS[]>(id, driftTimes.ToArray());
             }
             return new IndexedIonMobilities(keyValuePairs);
+        }
+
+        public IndexedIonMobilities MergeWith(params IndexedIonMobilities[] all)
+        {
+            return new IndexedIonMobilities(all.Prepend(this).SelectMany(item => item._ionMobilityById.SelectMany(kvp =>
+                kvp.Value.Select(ionMobility => new KeyValuePair<int, IonMobilityAndCCS>(kvp.Key, ionMobility)))));
         }
     }
 
