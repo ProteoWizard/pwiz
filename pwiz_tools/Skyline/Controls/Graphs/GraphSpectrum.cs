@@ -454,9 +454,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         comboSpectrum.Items.Clear();
                         comboMirrorSpectrum.Items.Clear();
-                        selectedSpectrum = null;
                         selectedSpectrumIndex = -1;
-                        selectedMirror = null;
                     }
                 }
 
