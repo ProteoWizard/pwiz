@@ -561,7 +561,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 dbRefSpectrum.Copies,
                                 dbRefSpectrum.NumPeaks,
                                 (int)(dbRefSpectrum.Id ?? 0),
-                                spectrum.Protein).ChangeIonMobilities(ionMobilitiesByFileId));
+                                spectrum.Protein,
+                                default(IndexedRetentionTimes),
+                                ionMobilitiesByFileId));
                             proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
                             if (progressMonitor != null)
                             {
