@@ -8,7 +8,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -121,14 +120,7 @@ namespace pwiz.Skyline.Model.Results
 
         protected bool Equals(Results<TItem> other)
         {
-            if (!ReferenceEquals(FileIds, other.FileIds))
-            {
-                if (!FileIds.Select(id => id.Value).SequenceEqual(other.FileIds.Select(id => id.Value)))
-                {
-                    return false;
-                }
-            }
-            return ReplicatePositions.Equals(other.ReplicatePositions);
+            return Equals(ReplicatePositions, other.ReplicatePositions);
         }
 
         public override bool Equals(object obj)
@@ -142,6 +134,11 @@ namespace pwiz.Skyline.Model.Results
         public override int GetHashCode()
         {
             return ReplicatePositions.GetHashCode();
+        }
+
+        public bool EqualsIncludingFileIds(Results<TItem> results)
+        {
+            return Equals(this, results) && Equals(_fileIds, results._fileIds);
         }
 
         private bool ContentEquals<TList>(IList<TList> lists) where TList:IEnumerable<TItem>
@@ -197,30 +194,7 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             if (resultsOld == null || results == null)
                 return false;
-            if (resultsOld.Count != results.Count)
-                return false;
-            for (int i = 0, len = results.Count; i < len; i++)
-            {
-                if (!EqualsDeep(resultsOld[i], results[i]))
-                    return false;
-            }
-            return true;
-        }
-
-        private static bool EqualsDeep(IList<TItem> chromInfosOld, IList<TItem> chromInfos)
-        {
-            if (!ArrayUtil.EqualsDeep(chromInfosOld, chromInfos))
-                return false;
-            if (chromInfos == null)
-                return true;
-
-            // If the arrays are otherwise equal, check the FileIds
-            for (int i = 0; i < chromInfos.Count; i++)
-            {
-                if (!ReferenceEquals(chromInfosOld[i].FileId, chromInfos[i].FileId))
-                    return false;
-            }
-            return true;
+            return resultsOld.EqualsIncludingFileIds(results);
         }
 
         public float? GetAverageValue(Func<TItem, float?> getVal)
@@ -548,24 +522,24 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (_optimizationSteps != null ? _optimizationSteps.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_massErrorInts != null ? _massErrorInts.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_retentionTimes != null ? _retentionTimes.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_startRetentionTimes != null ? _startRetentionTimes.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_endRetentionTimes != null ? _endRetentionTimes.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_ionMobilities != null ? _ionMobilities.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_areas != null ? _areas.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreas != null ? _backgroundAreas.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_heights != null ? _heights.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_fwhms != null ? _fwhms.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_ranks != null ? _ranks.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_ranksByLevel != null ? _ranksByLevel.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_annotations != null ? _annotations.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_userSets != null ? _userSets.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_peakShapeValues != null ? _peakShapeValues.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_flags != null ? _flags.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_pointsAcrossPeaks != null ? _pointsAcrossPeaks.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_peakIdentifications != null ? _peakIdentifications.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_optimizationSteps?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_massErrorInts?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_retentionTimes?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_startRetentionTimes?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_endRetentionTimes?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_ionMobilities?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_areas?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_backgroundAreas?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_heights?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_fwhms?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_ranks?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_ranksByLevel?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_annotations?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_userSets?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_peakShapeValues?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_flags?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_pointsAcrossPeaks?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_peakIdentifications?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
@@ -701,29 +675,29 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (_optimizationSteps != null ? _optimizationSteps.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_peakCountRatios != null ? _peakCountRatios.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_retentionTimes != null ? _retentionTimes.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_startTimes != null ? _startTimes.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_endTimes != null ? _endTimes.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_ionMobilityInfos != null ? _ionMobilityInfos.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_fwhms != null ? _fwhms.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_areas != null ? _areas.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_areasMs1 != null ? _areasMs1.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_areasFragment != null ? _areasFragment.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreas != null ? _backgroundAreas.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreasMs1 != null ? _backgroundAreasMs1.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreasFragment != null ? _backgroundAreasFragment.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_heights != null ? _heights.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_massErrors != null ? _massErrors.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_truncateds != null ? _truncateds.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_peakIdentifications != null ? _peakIdentifications.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_libraryDotProducts != null ? _libraryDotProducts.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_isotopeDotProducts != null ? _isotopeDotProducts.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_qValues != null ? _qValues.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_zScores != null ? _zScores.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_annotations != null ? _annotations.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_userSets != null ? _userSets.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_optimizationSteps?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_peakCountRatios?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_retentionTimes?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_startTimes?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_endTimes?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_ionMobilityInfos?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_fwhms?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_areas?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_areasMs1?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_areasFragment?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_backgroundAreas?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_backgroundAreasMs1?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_backgroundAreasFragment?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_heights?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_massErrors?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_truncateds?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_peakIdentifications?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_libraryDotProducts?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_isotopeDotProducts?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_qValues?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_zScores?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_annotations?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_userSets?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
@@ -789,11 +763,11 @@ namespace pwiz.Skyline.Model.Results
             unchecked
             {
                 int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (_labelRatios != null ? _labelRatios.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_peakCountRatios != null ? _peakCountRatios.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_retentionTimes != null ? _retentionTimes.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_excludeFromCalibration != null ? _excludeFromCalibration.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_analyteConcentrations != null ? _analyteConcentrations.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_labelRatios?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_peakCountRatios?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_retentionTimes?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_excludeFromCalibration?.GetHashCode() ?? 0);
+                hashCode = (hashCode * 397) ^ (_analyteConcentrations?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
