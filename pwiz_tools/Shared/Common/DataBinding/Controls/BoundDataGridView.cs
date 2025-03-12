@@ -188,7 +188,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 return null;
             }
-            return _itemProperties.FirstOrDefault(pd => pd.Name == column.DataPropertyName);
+            return _itemProperties.FindByName(column.DataPropertyName);
         }
 
         protected override void OnColumnDividerDoubleClick(DataGridViewColumnDividerDoubleClickEventArgs e)
@@ -291,6 +291,12 @@ namespace pwiz.Common.DataBinding.Controls
             foreach (DataGridViewColumn column in Columns)
             {
                 var currentPropertyDescriptor = GetPropertyDescriptor(column);
+                if (currentPropertyDescriptor == null)
+                {
+                    shouldFreeze = false;
+                    column.Frozen = false;
+                    continue;
+                }
                 var currentColumnId = ColumnId.GetColumnId(currentPropertyDescriptor);
                 column.Frozen = shouldFreeze;
 
