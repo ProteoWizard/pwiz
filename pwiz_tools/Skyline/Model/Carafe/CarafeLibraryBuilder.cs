@@ -255,7 +255,7 @@ namespace pwiz.Skyline.Model.Carafe
             progressStatus = progressStatus.NextSegment();
             if (BuildLibraryForCurrentSkylineDocument)
             {
-                LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"carafe");
+                //LibraryHelper.PrepareInputFile(Document, progress, ref progressStatus, @"carafe");
                 
             }
             ExecuteCarafe(progress, ref progressStatus);

@@ -53,6 +53,15 @@ namespace pwiz.Common.SystemUtil
 
         public bool EnableImmediateLog { get; set; }
 
+        public bool EnableRunningTimeMessage { get; set; }
+
+        private Stopwatch _timer;
+
+        public TimeSpan ElapsedRunningTime()
+        {
+            return _timer.Elapsed;
+        }
+
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
         /// but we dont want that output to be shown to the user when we display the output
@@ -78,6 +87,7 @@ namespace pwiz.Common.SystemUtil
             Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
             bool updateProgressPercentage = true)
         {
+            _timer = new Stopwatch();
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
@@ -95,6 +105,7 @@ namespace pwiz.Common.SystemUtil
 
             Process proc = null;
             var msgFailureStartingCommand = $@"Failure starting command ""{cmd}"".";
+            _timer.Start();
             try
             {
                 proc = Process.Start(psi);
@@ -156,7 +167,32 @@ namespace pwiz.Common.SystemUtil
                 while ((line = reader.ReadLine(progress)) != null)
                 {
                     if (EnableImmediateLog)
-                        Messages.WriteAsyncUserMessage(line);
+                    {
+                        string adjustedLine = line;
+                        string[] peptdeep_logo_strings =
+                        {
+                            @"     ____             __  ____",
+                            @"    / __ \___  ____  / /_/ __ \___  ___  ____",
+                            @"   / /_/ / _ \/ __ \/ __/ / / / _ \/ _ \/ __ \",
+                            @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
+                            @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
+                            @"           /_/                       /_/"
+                        };
+                        bool skip_line = false;
+
+                        if (line.Contains(@"DiaNN/Spectronaut")) {
+                            adjustedLine = line.Replace(@"DiaNN/Spectronaut", @"Skyline");
+                        }
+                        else
+                        {
+                            skip_line = FilterOutputLine(line, peptdeep_logo_strings);
+                        }
+
+                        if (!skip_line)
+                        {
+                            Messages.WriteAsyncUserMessage(adjustedLine);
+                        }
+                    }
 
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                         writer.WriteLine(line);
@@ -176,6 +212,7 @@ namespace pwiz.Common.SystemUtil
                             }
                             progress.UpdateProgress(status = status.Cancel());
                             CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
+                            _timer.Stop();
                             return;
                         }
 
@@ -213,7 +250,17 @@ namespace pwiz.Common.SystemUtil
                     }
                 }
                 proc.WaitForExit();
+                _timer.Stop();
+
                 int exit = proc.ExitCode;
+                if (EnableRunningTimeMessage)
+                {
+                    string message = string.Format(Resources.ProcessRunner_Process_Finished_in_time,
+                        ElapsedRunningTime().Minutes, ElapsedRunningTime().Seconds);
+                    Messages.WriteAsyncUserMessage(message);
+                }
+
+                _timer = null;
 
                 if (!outputAndExitCodeAreGoodFunc(reader.GetErrorLines(), exit))
                 {
@@ -342,6 +389,19 @@ namespace pwiz.Common.SystemUtil
             return tmpDirForCleanup;
         }
 
+        private bool FilterOutputLine(string line, string[] filters)
+        {
+            foreach (string logo in filters)
+            {
+                if (line.Contains(logo))
+                {
+                    return true;
+                    
+                }
+            }
+
+            return false;
+        }
         public IEnumerable<string> MessageLog()
         {
             return _messageLog;

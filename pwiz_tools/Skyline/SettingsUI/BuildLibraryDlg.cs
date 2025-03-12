@@ -1147,6 +1147,7 @@ namespace pwiz.Skyline.SettingsUI
             // Only respond to the checking event, or this will happen
             // twice for every change.
             var radioSender = (RadioButton)sender;
+            
             if (!radioSender.Checked)
                 return;
 
@@ -1159,6 +1160,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
                 }
+                comboStandards.Enabled = true;
+
             }
             else
             {
@@ -1172,12 +1175,14 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                    comboStandards.Enabled = false;
                 }
                 else // must be Koina
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.koina;
                     KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                    comboStandards.Enabled = true;
                 }
             }
             _driverStandards.LoadList(selectedStandard.GetKey());

@@ -61,6 +61,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Process Finished in {0} minutes {1} seconds.
+        /// </summary>
+        internal static string ProcessRunner_Process_Finished_in_time {
+            get {
+                return ResourceManager.GetString("ProcessRunner_Process_Finished_in_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Run command:.
         /// </summary>
         internal static string ProcessRunner_Run_Run_command_ {
