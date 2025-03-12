@@ -59,6 +59,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Lists;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Menus;
@@ -103,6 +104,7 @@ namespace pwiz.Skyline
             IRemoteAccountUserInteraction
     {
         private SequenceTreeForm _sequenceTreeForm;
+        private FilesTreeForm _filesTreeForm;
         private ImmediateWindow _immediateWindow;
 
         private SrmDocument _document;
@@ -459,6 +461,11 @@ namespace pwiz.Skyline
             get { return _sequenceTreeForm != null ? _sequenceTreeForm.SequenceTree : null; }
         }
 
+        public FilesTree FilesTree
+        {
+            get { return _filesTreeForm != null ? _filesTreeForm.FilesTree : null; }
+        }
+
         public ToolStripComboBox ComboResults
         {
             get { return _sequenceTreeForm != null ? _sequenceTreeForm.ComboResults : null; }
@@ -580,6 +587,13 @@ namespace pwiz.Skyline
                 // the tree, and the graph UI depends on the tree being up to date.
                 _sequenceTreeForm.UpdateResultsUI(settingsNew, settingsOld);
                 _sequenceTreeForm.SequenceTree.OnDocumentChanged(this, e);
+            }
+
+            // Update files tree 
+            // TODO (ekoneil): why isn't FilesTreeForm just registered as a listener for DocumentUIChangedEvent? Same question for SequenceTree above.
+            if (_filesTreeForm != null)
+            {
+                _filesTreeForm.FilesTree.OnDocumentChanged(this, e);
             }
 
             // Fire event to allow listeners to update.
@@ -3111,6 +3125,67 @@ namespace pwiz.Skyline
                 about.ShowDialog(this);
             }
             
+        }
+
+        #endregion
+
+        #region FilesTree
+
+        public FilesTreeForm FilesTreeForm => _filesTreeForm;
+
+        public bool FilesTreeFormIsVisible
+        {
+            get { return _filesTreeForm != null && _filesTreeForm.Visible; }
+        }
+
+        public void ShowFilesTreeForm(bool show, string persistentState = null)
+        {
+            if (show)
+            {
+                if (_filesTreeForm != null)
+                {
+                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                    _filesTreeForm.FilesTree.ScrollToTop();
+                }
+                else
+                {
+                    _filesTreeForm = CreateFilesTreeForm(persistentState);
+                    _filesTreeForm.Show(dockPanel, DockState.DockLeft);
+                }
+            }
+            else
+            {
+                _filesTreeForm.Hide();
+            }
+        }
+
+        private FilesTreeForm CreateFilesTreeForm(string persistentString)
+        {
+            string expansionAndSelection = null;
+            if (persistentString != null)
+            {
+                var sepIndex = persistentString.IndexOf('|');
+                if (sepIndex != -1)
+                    expansionAndSelection = persistentString.Substring(sepIndex + 1);
+            }
+
+            _filesTreeForm = new FilesTreeForm(this);
+
+            if (expansionAndSelection != null)
+            {
+                _filesTreeForm.FilesTree.RestoreExpansionAndSelection(expansionAndSelection);
+            }
+
+            return _filesTreeForm;
+        }
+
+        public void DestroyFilesTreeForm()
+        {
+            if (_filesTreeForm != null)
+            {
+                _filesTreeForm.Close();
+                _filesTreeForm = null;
+            }
         }
 
         #endregion
