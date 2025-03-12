@@ -1082,7 +1082,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     if (!_replicateGridRows.TryGetValue(propertyPath, out var dataGridViewRow))
                     {
                         dataGridViewRow = replicatePivotDataGridView.Rows[replicatePivotDataGridView.Rows.Add()];
-                        dataGridViewRow.Cells[colReplicateProperty.Index].Value = column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                        dataGridViewRow.Cells[colReplicateProperty.Index].Value = column.DisplayColumn.ColumnDescriptor?.GetColumnCaption(ColumnCaptionType.localized);
                         _replicateGridRows.Add(propertyPath, dataGridViewRow);
                     }
 
