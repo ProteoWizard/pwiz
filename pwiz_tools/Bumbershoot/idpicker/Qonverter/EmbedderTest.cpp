@@ -493,7 +493,7 @@ void testGeneMapping()
         int column = 0;
         for (const string& value : vector<string>{ "A2M", "9606", "alpha-2-macroglobulin", "12p13.31", "" })
         {
-            CHECK(itr->get<string>(column++) == value);
+            unit_assert_operator_equal(value, itr->get<string>(column++));
         }
         ++itr;
     }
@@ -503,7 +503,7 @@ void testGeneMapping()
         int column = 0;
         for (const string& value : vector<string>{ "ABCA2", "9606", "ATP binding cassette subfamily A member 2", "9q34.3", "ABCA" })
         {
-            CHECK(itr->get<string>(column++) == value);
+            unit_assert_operator_equal(value, itr->get<string>(column++));
         }
         ++itr;
     }
@@ -513,7 +513,7 @@ void testGeneMapping()
         int column = 0;
         for (const string& value : vector<string>{ "Abca1", "10090", "ATP-binding cassette, sub-family A (ABC1), member 1", "4:53030787-53159895", "" })
         {
-            CHECK(itr->get<string>(column++) == value);
+            unit_assert_operator_equal(value, itr->get<string>(column++));
         }
         ++itr;
     }
@@ -523,7 +523,7 @@ void testGeneMapping()
         int column = 0;
         for (const auto& value : vector<sqlite::null_type>(5))
         {
-            CHECK(itr->get<sqlite::null_type>(column++) == value);
+            unit_assert(value == itr->get<sqlite::null_type>(column++));
         }
         ++itr;
     }
