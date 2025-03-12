@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return _fileIds; }
         }
-        protected ReplicatePositions ReplicatePositions
+        public ReplicatePositions ReplicatePositions
         {
             get { return _replicatePositions; }
         }
@@ -492,6 +492,14 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return flags;
+        }
+
+        public IEnumerable<Tuple<ChromFileInfoId, UserSet>> GetUserSetValues()
+        {
+            for (int i = 0; i < FileIds.Count; i++)
+            {
+                yield return Tuple.Create(FileIds[i].Value, _userSets?[i] ?? UserSet.FALSE);
+            }
         }
 
         protected bool Equals(TransitionResults other)
