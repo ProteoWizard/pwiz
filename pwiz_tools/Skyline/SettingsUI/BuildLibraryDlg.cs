@@ -1175,7 +1175,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
-                    comboStandards.Enabled = false;
+                    comboStandards.Enabled = true;
                 }
                 else // must be Koina
                 {
