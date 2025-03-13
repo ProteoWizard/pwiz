@@ -588,6 +588,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _driverIsolationScheme = new SettingsListComboDriver<IsolationScheme>(comboIsolationScheme,
                                                                                   Settings.Default.IsolationSchemeList);
+            _driverIsolationScheme.EditItemEvent += DriverIsolationScheme_OnEditItemEvent;
 
             string sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
@@ -613,6 +614,11 @@ namespace pwiz.Skyline.SettingsUI
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
+        }
+
+        private void DriverIsolationScheme_OnEditItemEvent(object sender, SettingsListComboDriver<IsolationScheme>.EditItemEventArgs e)
+        {
+            e.Tag = _documentContainer.Document.Settings;
         }
 
         /// <summary>

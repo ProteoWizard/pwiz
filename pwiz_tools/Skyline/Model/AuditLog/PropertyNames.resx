@@ -1814,4 +1814,7 @@
   <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
     <value>Deconvolute spectra with DIA-Umpire</value>
   </data>
+  <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
+    <value>Spectrum Filter</value>
+  </data>
 </root>
