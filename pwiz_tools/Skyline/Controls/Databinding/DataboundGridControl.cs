@@ -917,41 +917,99 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
 
+            if (IsMainGridFrozen())
+            {
+                AlignFrozenDataBoundGridPropertyColumns(replicatePivotColumns);
+            }
+            else
+            {
+                AlignDataBoundGridPropertyColumns(replicatePivotColumns);
+            }
+        }
+
+        private void AlignFrozenDataBoundGridPropertyColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            // Resizing of non-replicate columns behaves differently if columns are frozen.
+            // Only frozen columns are resized and non-froze columns are shown or hidden by scrolling.
+            // The calculations in this scenario rely on visible widths as only some columns might be frozen.
             var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
                 .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
 
-            var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
-            var nonReplicateVisibleWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+            var mainGridNonReplicateVisibleWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
                 .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
-                
+            var mainGridNonReplicateNonFrozenVisibleWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && !col.Frozen).Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
+            var mainGridNonReplicateNonFrozenWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && !col.Frozen).Sum(col => col.Width);
+
+
+            // Before updating the width of columns we check if it is possible to scroll based
+            // on whether some of the non-frozen property columns can be scrolled to be 
+            // hidden or shown more.
+            var propertyWidthToAdd = colReplicateProperty.Width - mainGridNonReplicateVisibleWidth;
+            var nonReplicateNonFrozenHiddenWidth = mainGridNonReplicateNonFrozenWidth - mainGridNonReplicateNonFrozenVisibleWidth;
+            int scrollOffset = 0;
+            if (propertyWidthToAdd < 0 && mainGridNonReplicateNonFrozenVisibleWidth > 0)
+            {
+                scrollOffset = Math.Max(propertyWidthToAdd, -mainGridNonReplicateNonFrozenVisibleWidth);
+            }
+            else if (propertyWidthToAdd > 0 && nonReplicateNonFrozenHiddenWidth > 0)
+            {
+                scrollOffset = Math.Min(propertyWidthToAdd, nonReplicateNonFrozenHiddenWidth);
+            }
+
+            if (scrollOffset != 0)
+            {
+                boundDataGridView.HorizontalScrollingOffset -= scrollOffset;
+                UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+                propertyWidthToAdd -= scrollOffset;
+            }
+
             var propertyColumnRounder = new AdjustingRounder();
             DataGridViewColumn lastPropertyColumn = null;
             foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
             {
                 if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
                 {
-                    // Resizing of non replicate columns behaves differently if columns are frozen.
-                    // If columns are frozen then we have to consider the visible column widths as 
-                    // the current property column width can be dependent on scrolling. 
-                    if (IsMainGridFrozen())
-                    {
+                        // Only resize columns which are not frozen
+                        if (!dataGridViewColumn.Frozen)
+                        {
+                            continue;
+                        }
+
                         var visibleWidth = CalculateColumnVisibleWidth(boundDataGridView, dataGridViewColumn);
                         if (visibleWidth > 0)
                         {
-                            var propertyWidthToAdd = colReplicateProperty.Width - nonReplicateVisibleWidth;
-                            var columnRatio = (double)visibleWidth / nonReplicateVisibleWidth;
+                            // Ratio denominator only counts for frozen columns
+                            var columnRatio = (double)visibleWidth / (mainGridNonReplicateVisibleWidth - mainGridNonReplicateNonFrozenVisibleWidth);
                             dataGridViewColumn.Width += (int)propertyColumnRounder.Round(propertyWidthToAdd * columnRatio);
                             lastPropertyColumn = dataGridViewColumn;
                         }
-                    }
-                    else
-                    {
-                        var propertyWidth = colReplicateProperty.Width;
-                        var columnRatio = (double)dataGridViewColumn.Width / nonReplicateWidth;
-                        dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
-                        lastPropertyColumn = dataGridViewColumn;
-                    }
+                }
+            }
+            if (lastPropertyColumn != null)
+            {
+                lastPropertyColumn.Width -= propertyColumnRounder.RoundRemainder();
+            }
+        }
+
+        private void AlignDataBoundGridPropertyColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+            var mainGridNonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
+
+            var propertyColumnRounder = new AdjustingRounder();
+            DataGridViewColumn lastPropertyColumn = null;
+            foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
+            {
+                if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
+                {
+                    var propertyWidth = colReplicateProperty.Width;
+                    var columnRatio = (double)dataGridViewColumn.Width / mainGridNonReplicateWidth;
+                    dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
+                    lastPropertyColumn = dataGridViewColumn;
                 }
             }
             if (lastPropertyColumn != null)
