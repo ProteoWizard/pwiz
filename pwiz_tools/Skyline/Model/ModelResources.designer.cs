@@ -232,9 +232,9 @@ namespace pwiz.Skyline.Model {
         
         /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
-        ///        {0}
+        ///{0}
         ///	
-        ///	Would you like to continue building this predicted library?.
+        ///Would you like to continue building this predicted library?.
         /// </summary>
         public static string Alphapeptdeep_Warn_unknown_modification {
             get {

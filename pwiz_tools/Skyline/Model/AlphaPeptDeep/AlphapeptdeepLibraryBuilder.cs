@@ -329,7 +329,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
                 }
             }
-
             return result;
         }
         public List<string> GetWarningMods(SrmDocument Document, string toolName)
@@ -369,6 +368,12 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         }
                     }
                 }
+            }
+
+            // For better readability
+            for (int i = 0; i < resultList.Count; i++)
+            {
+                resultList[i] = $@"{TextUtil.SPACE}{TextUtil.SPACE}{TextUtil.SPACE}{TextUtil.SPACE}{resultList[i]}";
             }
             return resultList;
         }
@@ -651,7 +656,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
-                pr.EnableImmediateLog = true;
+                pr.EnableImmediateLog = false;
                 pr.EnableRunningTimeMessage = false;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
@@ -690,6 +695,16 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
+                pr.FilterStrings = new[]
+                {
+                    @"     ____             __  ____",
+                    @"    / __ \___  ____  / /_/ __ \___  ___  ____",
+                    @"   / /_/ / _ \/ __ \/ __/ / / / _ \/ _ \/ __ \",
+                    @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
+                    @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
+                    @"           /_/                       /_/"
+                };
+
                 pr.EnableImmediateLog = true;
                 pr.EnableRunningTimeMessage = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);

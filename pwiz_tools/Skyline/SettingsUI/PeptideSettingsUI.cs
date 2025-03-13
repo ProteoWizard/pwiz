@@ -765,10 +765,9 @@ namespace pwiz.Skyline.SettingsUI
             IsBuildingLibrary = true;
 
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
-          
             var warningMods = builder.LibraryHelper.GetWarningMods(builder.Document, builder.ToolName);
 
-            if (warningMods.Count > 0)
+            if (warningMods?.Count > 0)
             {
                 string warningModString = string.Join(Environment.NewLine, warningMods);
                 AlertDlg warnMessageDlg =

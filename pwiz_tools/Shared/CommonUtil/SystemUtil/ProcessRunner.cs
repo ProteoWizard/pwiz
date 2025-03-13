@@ -52,6 +52,7 @@ namespace pwiz.Common.SystemUtil
         private string _tmpDirForCleanup;
 
         public bool EnableImmediateLog { get; set; }
+        public string[] FilterStrings { get; set; }
 
         public bool EnableRunningTimeMessage { get; set; }
 
@@ -169,29 +170,15 @@ namespace pwiz.Common.SystemUtil
                     if (EnableImmediateLog)
                     {
                         string adjustedLine = line;
-                        string[] peptdeep_logo_strings =
-                        {
-                            @"     ____             __  ____",
-                            @"    / __ \___  ____  / /_/ __ \___  ___  ____",
-                            @"   / /_/ / _ \/ __ \/ __/ / / / _ \/ _ \/ __ \",
-                            @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
-                            @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
-                            @"           /_/                       /_/"
-                        };
                         bool skip_line = false;
-
-                        if (line.Contains(@"DiaNN/Spectronaut")) {
+                        
+                        if (line.Contains(@"DiaNN/Spectronaut"))
                             adjustedLine = line.Replace(@"DiaNN/Spectronaut", @"Skyline");
-                        }
                         else
-                        {
-                            skip_line = FilterOutputLine(line, peptdeep_logo_strings);
-                        }
-
+                            skip_line = FilterOutputLine(line, FilterStrings);
+                          
                         if (!skip_line)
-                        {
                             Messages.WriteAsyncUserMessage(adjustedLine);
-                        }
                     }
 
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
@@ -389,19 +376,24 @@ namespace pwiz.Common.SystemUtil
             return tmpDirForCleanup;
         }
 
+        /// <summary>
+        /// Filtering Lines of Output
+        /// </summary>
+        /// <param name="line">line considered for filtering</param>
+        /// <param name="filters">filters</param>
+        /// <returns>true when filter matches, false otherwise</returns>
         private bool FilterOutputLine(string line, string[] filters)
         {
-            foreach (string logo in filters)
+            foreach (string filter in filters)
             {
-                if (line.Contains(logo))
+                if (line.Contains(filter))
                 {
                     return true;
-                    
                 }
             }
-
             return false;
         }
+
         public IEnumerable<string> MessageLog()
         {
             return _messageLog;

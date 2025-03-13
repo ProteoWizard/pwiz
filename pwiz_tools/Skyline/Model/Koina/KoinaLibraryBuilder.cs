@@ -62,8 +62,9 @@ namespace pwiz.Skyline.Model.Koina
             _replaceLibrary = replaceLibrary;
             IrtStandard = irtStandard;
             _nce = nce;
-            LibraryHelper = null;
             ToolName = @"koina";
+            LibraryHelper = new LibraryHelper(ToolName);
+
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
