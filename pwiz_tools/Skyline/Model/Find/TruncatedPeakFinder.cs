@@ -35,12 +35,13 @@ namespace pwiz.Skyline.Model.Find
             get { return FindResources.TruncatedPeakFinder_DisplayName_Truncated_peaks; }
         }
 
+        protected override bool InspectTransitionGroupsOnly
+        {
+            get { return true; }
+        }
+
         protected override FindMatch MatchTransition(Bookmark bookmark, TransitionChromInfo transitionChromInfo)
         {
-            if (transitionChromInfo.IsTruncated.GetValueOrDefault(false))
-            {
-                return new FindMatch(bookmark, FindResources.TruncatedPeakFinder_MatchTransition_Truncated_peak);
-            }
             return null;
         }
 

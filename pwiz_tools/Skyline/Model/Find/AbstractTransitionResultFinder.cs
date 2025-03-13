@@ -18,7 +18,6 @@
  */
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
@@ -26,14 +25,14 @@ namespace pwiz.Skyline.Model.Find
 {
     /// <summary>
     /// Base implementation of an IFinder that applies to TransitionChromInfo's.
-    /// If each of the Transitions in the TransitionGroup satifies the find
+    /// If each of the Transitions in the TransitionGroup satisfies the find
     /// criteria, then only one FindResult for the TransitionGroup is displayed.
     /// </summary>
     public abstract class AbstractTransitionResultFinder : IFinder
     {
-        public abstract string Name { get;}
+        public abstract string Name { get; }
 
-        public abstract string DisplayName {get;}
+        public abstract string DisplayName { get; }
 
         public FindMatch Match(BookmarkEnumerator bookmarkEnumerator)
         {
@@ -42,193 +41,138 @@ namespace pwiz.Skyline.Model.Find
             {
                 return MatchTransitionGroup(bookmarkEnumerator.Current, transitionGroupChromInfo);
             }
+
             var transitionChromInfo = bookmarkEnumerator.CurrentChromInfo as TransitionChromInfo;
             if (transitionChromInfo != null)
             {
                 return MatchTransition(bookmarkEnumerator.Current, transitionChromInfo);
             }
+
             return null;
         }
 
         protected abstract FindMatch MatchTransition(Bookmark bookmark, TransitionChromInfo transitionChromInfo);
-        protected abstract FindMatch MatchTransitionGroup(Bookmark bookmark, TransitionGroupChromInfo transitionGroupChromInfo);
 
-        public FindMatch NextMatch(BookmarkStartPosition start, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        protected abstract FindMatch MatchTransitionGroup(Bookmark bookmark,
+            TransitionGroupChromInfo transitionGroupChromInfo);
+
+        protected virtual bool InspectTransitionGroupsOnly
         {
-            var nextBookmark = FindAll(start.Document, progressMonitor, ref status).OrderBy(x => x, start).FirstOrDefault();
+            get { return false; }
+        }
+
+        public FindMatch NextMatch(BookmarkStartPosition start, IProgressMonitor progressMonitor,
+            ref IProgressStatus status)
+        {
+            var nextBookmark = FindAll(start.Document, progressMonitor, ref status).OrderBy(x => x, start)
+                .FirstOrDefault();
             if (nextBookmark == null)
             {
                 return null;
             }
+
             var bookmarkEnumerator = BookmarkEnumerator.TryGet(start.Document, nextBookmark);
             if (bookmarkEnumerator == null)
             {
                 return null;
             }
+
             var findMatch = Match(bookmarkEnumerator);
             if (findMatch != null)
             {
                 return findMatch;
             }
+
             return null;
         }
 
-        public IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor, ref IProgressStatus status)
-        {
-            return FindAll(IdentityPath.ROOT, document, progressMonitor, ref status);
-        }
-        private IEnumerable<Bookmark> FindAll(IdentityPath identityPath, DocNode docNode, IProgressMonitor progressMonitor, ref IProgressStatus status)
+        public IEnumerable<Bookmark> FindAll(SrmDocument document, IProgressMonitor progressMonitor,
+            ref IProgressStatus status)
         {
             var results = new List<Bookmark>();
-            if (progressMonitor.IsCanceled)
+            foreach (var moleculeGroup in document.MoleculeGroups)
             {
-                return results;
-            }
-            var transitionGroupDocNode = docNode as TransitionGroupDocNode;
-            if (transitionGroupDocNode == null)
-            {
-                var docNodeParent = docNode as DocNodeParent;
-                if (docNodeParent == null)
+                foreach (var molecule in moleculeGroup.Molecules)
                 {
-                    return results;
-                }
-                foreach (var child in docNodeParent.Children)
-                {
-                    results.AddRange(FindAll(new IdentityPath(identityPath, child.Id), child, progressMonitor, ref status));
-                }
-                return results;
-            }
-            if (!transitionGroupDocNode.HasResults)
-            {
-                return results;
-            }
-            for (int iReplicate = 0; iReplicate < transitionGroupDocNode.Results.Count; iReplicate++)
-            {
-                if (progressMonitor.IsCanceled)
-                {
-                    return results;
-                }
-                var replicate = transitionGroupDocNode.Results[iReplicate];
-                if (replicate.IsEmpty)
-                {
-                    continue;
-                }
-                var fileDatas = new Dictionary<FinderChromFileKey, FinderChromFileData>();
-                foreach (var transitionGroupChromInfo in replicate)
-                {
-                    FinderChromFileData chromFileData;
-                    var chromFileKey = new FinderChromFileKey(transitionGroupChromInfo);
-                    if (!fileDatas.TryGetValue(chromFileKey, out chromFileData))
+                    var moleculeIdentityPath = new IdentityPath(moleculeGroup.Id, molecule.Id);
+                    foreach (var transitionGroup in molecule.TransitionGroups)
                     {
-                        chromFileData = new FinderChromFileData
-                                            {
-                                                TransitionGroupChromInfo = transitionGroupChromInfo,
-                                                MatchingTransitionBookmarks = new List<Bookmark>(),
-                                                AllTransitionsMatch = true,
-                                            };
-                        fileDatas.Add(chromFileKey, chromFileData);
-                    }
-                }
-                foreach (var transitionDocNode in transitionGroupDocNode.Transitions)
-                {
-                    if (!transitionDocNode.HasResults || iReplicate >= transitionDocNode.Results.Count)
-                    {
-                        continue;
-                    }
-                    var transitionResults = transitionDocNode.Results[iReplicate];
-                    if (transitionResults.IsEmpty)
-                    {
-                        continue;
-                    }
-                    var transitionId = new IdentityPath(identityPath, transitionDocNode.Id);
-                    foreach (var chromInfo in transitionResults)
-                    {
-                        FinderChromFileData chromFileData;
-                        var transitionBookmark = new Bookmark(transitionId, iReplicate, chromInfo.FileId,
-                            chromInfo.OptimizationStep);
-                        bool match = MatchTransition(transitionBookmark, chromInfo) != null;
-                        var chromFileKey = new FinderChromFileKey(chromInfo);
-                        if (!fileDatas.TryGetValue(chromFileKey, out chromFileData))
+                        if (progressMonitor.IsCanceled)
                         {
-                            if (match)
-                            {
-                                results.Add(transitionBookmark);
-                            }
+                            return results;
                         }
-                        else
-                        {
-                            if (match)
-                            {
-                                chromFileData.MatchingTransitionBookmarks.Add(transitionBookmark);
-                            }
-                            else
-                            {
-                                chromFileData.AllTransitionsMatch = false;
-                            }
-                        }
+                        results.AddRange(FindAllInTransitionGroup(document, moleculeIdentityPath, transitionGroup));
                     }
                 }
-                foreach (var fileDataEntry in fileDatas)
-                {
-                    if (fileDataEntry.Value.AllTransitionsMatch && fileDataEntry.Value.MatchingTransitionBookmarks.Count > 0)
-                    {
-                        var bookmark = new Bookmark(identityPath, iReplicate,
-                            fileDataEntry.Value.TransitionGroupChromInfo.FileId,
-                            fileDataEntry.Value.TransitionGroupChromInfo.OptimizationStep);
+            }
 
-                        var transitionGroupMatch = MatchTransitionGroup(bookmark, fileDataEntry.Value.TransitionGroupChromInfo);
+            return results;
+        }
+
+        private IEnumerable<Bookmark> FindAllInTransitionGroup(SrmDocument document, IdentityPath peptideIdentityPath,
+            TransitionGroupDocNode transitionGroup)
+        {
+            List<Bookmark> results = new List<Bookmark>();
+            if (!transitionGroup.HasResults)
+            {
+                return results;
+            }
+
+            var transitionGroupId =
+                new IdentityPath(peptideIdentityPath, transitionGroup.TransitionGroup);
+            for (int iReplicate = 0; iReplicate < transitionGroup.Results.Count; iReplicate++)
+            {
+                foreach (var transitionGroupChromInfo in transitionGroup.GetSafeChromInfo(iReplicate))
+                {
+                    var transitionMatches = new List<Bookmark>();
+                    bool allTransitionsMatch = true;
+                    if (!InspectTransitionGroupsOnly)
+                    {
+                        foreach (var transitionDocNode in transitionGroup.Transitions)
+                        {
+                            if (!transitionDocNode.HasResults || iReplicate >= transitionDocNode.Results.Count)
+                            {
+                                continue;
+                            }
+
+                            var transitionResults = transitionDocNode.Results[iReplicate];
+                            if (transitionResults.IsEmpty)
+                            {
+                                continue;
+                            }
+                            var transitionId = new IdentityPath(transitionGroupId, transitionDocNode.Id);
+                            foreach (var chromInfo in transitionResults)
+                            {
+                                var transitionBookmark = new Bookmark(transitionId, iReplicate, chromInfo.FileId,
+                                    chromInfo.OptimizationStep);
+                                bool match = MatchTransition(transitionBookmark, chromInfo) != null;
+                                if (match)
+                                {
+                                    transitionMatches.Add(transitionBookmark);
+                                }
+                                else
+                                {
+                                    allTransitionsMatch = false;
+                                }
+                            }
+                        }
+                    }
+
+                    if (allTransitionsMatch)
+                    {
+                        var bookmark = new Bookmark(transitionGroupId, iReplicate, transitionGroupChromInfo.FileId, transitionGroupChromInfo.OptimizationStep);
+                        var transitionGroupMatch = MatchTransitionGroup(bookmark, transitionGroupChromInfo);
                         if (transitionGroupMatch != null)
                         {
                             results.Add(bookmark);
                             continue;
                         }
                     }
-                    results.AddRange(fileDataEntry.Value.MatchingTransitionBookmarks);
+                    results.AddRange(transitionMatches);
                 }
             }
+
             return results;
-        }
-        class FinderChromFileData
-        {
-            public TransitionGroupChromInfo TransitionGroupChromInfo { get; set;}
-            public List<Bookmark> MatchingTransitionBookmarks { get; set;}
-            public bool AllTransitionsMatch { get; set;}
-        }
-        class FinderChromFileKey
-        {
-            public FinderChromFileKey(TransitionChromInfo transitionChromInfo)
-            {
-                ChromFileInfoId = transitionChromInfo.FileId;
-                OptStep = transitionChromInfo.OptimizationStep;
-            }
-            public FinderChromFileKey(TransitionGroupChromInfo transitionGroupChromInfo)
-            {
-                ChromFileInfoId = transitionGroupChromInfo.FileId;
-                OptStep = transitionGroupChromInfo.OptimizationStep;
-            }
-
-            private ChromFileInfoId ChromFileInfoId { get; set; }
-            private int OptStep { get; set; }
-
-            public override int GetHashCode()
-            {
-                return RuntimeHelpers.GetHashCode(ChromFileInfoId)*397 ^ OptStep.GetHashCode();
-            }
-
-            public override bool Equals(object obj)
-            {
-                var that = obj as FinderChromFileKey;
-                if (this == that)
-                {
-                    return true;
-                }
-                if (null == that)
-                {
-                    return false;
-                }
-                return ReferenceEquals(ChromFileInfoId, that.ChromFileInfoId) 
-                    && Equals(OptStep, that.OptStep);
-            }
         }
     }
 }
