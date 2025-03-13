@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using JetBrains.Annotations;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -331,8 +332,12 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             return result;
         }
-        public List<string> GetWarningMods(SrmDocument Document, string toolName)
+        [CanBeNull]
+        public List<string> GetWarningMods([CanBeNull] SrmDocument Document, string toolName)
         {
+            if (Document == null)
+                return null;
+
             var resultList = new List<string>();
 
             bool alphapeptDeepFormat = toolName.Equals(@"alphapeptdeep");
@@ -342,8 +347,18 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             {
                 var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
 
-                var ModificationNames =
-                    alphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
+                IList<ModificationType> ModificationNames = null;
+
+                switch (toolName)
+                {
+                    case "alphapeptdeep":
+                        ModificationNames = AlphapeptdeepModificationNames;
+                        break;
+
+                    case "carafe":
+                        ModificationNames = CarafeSupportedModificationNames;
+                        break;
+                }
 
                 for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
                 {
@@ -358,8 +373,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
 
                     var unimodIdAA = mod.UnimodIdAA;
-                    var modNames = ModificationNames.Where(m => m.Accession == unimodIdAA).ToArray();
-                    if (modNames.Length == 0)
+                    var modNames = ModificationNames?.Where(m => m.Accession == unimodIdAA).ToArray();
+                    if (modNames?.Length == 0)
                     {
                         var haveMod = resultList.FirstOrDefault(m => m == mod.Name);
                         if (haveMod == null)
