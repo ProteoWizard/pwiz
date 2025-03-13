@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -49,16 +49,25 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _dataGridViewPasteHandler;
+        private bool _inColumnChange;
+        private IViewContext _viewContext;
+        private ItemProperties _replicateGridItemProperties;
+        private Dictionary<PropertyPath, DataGridViewRow> _replicateGridRows;
+        private Dictionary<string, DataGridViewColumn> _replicateGridColumns;
 
         public DataboundGridControl()
         {
             InitializeComponent();
             _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
+            replicatePivotDataGridView.CellValueChanged += replicatePivotDataGridView_CellValueChanged;
             NavBar.ClusterSplitButton.Visible = true;
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
                 heatMapContextMenuItem_Click));
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_PCA_Plot, null,
                 pCAToolStripMenuItem_Click));
+
+            // Attach the event handlers for the BindingListSource
+            BindingListSource = bindingListSource;
         }
 
         public BindingListSource BindingListSource
@@ -82,9 +91,35 @@ namespace pwiz.Skyline.Controls.Databinding
             }
         }
 
+        public IViewContext ViewContext
+        {
+            get
+            {
+                return _viewContext;
+            }
+            set
+            {
+                if (ReferenceEquals(ViewContext, value))
+                {
+                    return;
+                }
+
+                if (null != ViewContext)
+                {
+                    replicatePivotDataGridView.DataError -= ViewContext.OnDataError;
+                }
+
+                _viewContext = value;
+                if (null != ViewContext)
+                {
+                    replicatePivotDataGridView.DataError += ViewContext.OnDataError;
+                }
+            }
+        }
+
         private void BindingListSource_OnAllRowsChanged(object sender, EventArgs e)
         {
-            UpdateDendrograms();
+            MainGridPopulated();
         }
 
         /// <summary>
@@ -676,7 +711,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         private void boundDataGridView_DataBindingComplete(object sender, DataGridViewBindingCompleteEventArgs e)
         {
-            UpdateDendrograms();
+            MainGridPopulated();
         }
 
         public void UpdateDendrograms()
@@ -693,6 +728,11 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 splitContainerVertical.Panel1Collapsed = false;
                 int dendrogramTop = 0;
+                if (!dataGridSplitContainer.Panel1Collapsed)
+                {
+                    dendrogramTop += dataGridSplitContainer.Panel1.Height;
+                    dendrogramTop += dataGridSplitContainer.SplitterWidth;
+                }
                 if (!splitContainerHorizontal.Panel1Collapsed)
                 {
                     dendrogramTop += splitContainerHorizontal.Panel1.Height;
@@ -733,9 +773,12 @@ namespace pwiz.Skyline.Controls.Databinding
             List<KeyValuePair<double, double>> columnLocations = new List<KeyValuePair<double, double>>();
             Dictionary<string, int> nameToIndex = new Dictionary<string, int>();
             double currentPosition = 0 - DataGridView.HorizontalScrollingOffset;
+            var frozenColumnWidth = DataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => col.Frozen && col.Visible).Sum(col => col.Width);
             if (DataGridView.RowHeadersVisible)
             {
                 currentPosition += DataGridView.RowHeadersWidth;
+                frozenColumnWidth += DataGridView.RowHeadersWidth;
             }
             foreach (var column in DataGridView.Columns.Cast<DataGridViewColumn>())
             {
@@ -803,26 +846,524 @@ namespace pwiz.Skyline.Controls.Databinding
             }
             columnDendrogram.SetDendrogramDatas(datas);
             splitContainerHorizontal.Panel1Collapsed = false;
+            columnDendrogramClipPanel.Bounds = new Rectangle(frozenColumnWidth, 0, Math.Max(0, splitContainerHorizontal.Panel1.Width - frozenColumnWidth),
+                splitContainerHorizontal.Panel1.Height);
+            columnDendrogram.Bounds = new Rectangle(-frozenColumnWidth, 0, splitContainerHorizontal.Panel1.Width, splitContainerHorizontal.Panel1.Height);
+        }
+
+        private void AlignPivotByReplicateGridColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            var replicateTotalWidthMap = GetMainGridReplicateColumnWidths(replicatePivotColumns);
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+
+            // If columns are frozen we size the property column based on visible width
+            var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && col.Visible)
+                .Sum(col =>
+                {
+                    if (IsMainGridFrozen())
+                    {
+                        return CalculateColumnVisibleWidth(boundDataGridView, col);
+                    }
+                    else
+                    {
+                        return col.Width;
+                    }
+                });
+
+            colReplicateProperty.Width = nonReplicateWidth;
+            foreach (DataGridViewColumn column in replicatePivotDataGridView.Columns)
+            {
+                if (replicateTotalWidthMap.TryGetValue(column.Name, out var replicateTotalWidth))
+                {
+                    column.Width = replicateTotalWidth;
+                }
+            }
+        }
+
+        private int CalculateColumnVisibleWidth(DataGridView view, DataGridViewColumn column)
+        {
+            Rectangle columnRect = view.GetColumnDisplayRectangle(column.Index, false);
+            var visibleLeft = Math.Max(columnRect.Left, view.DisplayRectangle.Left);
+            var visibleRight = Math.Min(columnRect.Right, view.DisplayRectangle.Right);
+            var visibleWidth = Math.Max(0, visibleRight - visibleLeft);
+            return visibleWidth;
+        }
+
+        private void AlignDataBoundGridColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            var replicateTotalWidthMap = GetMainGridReplicateColumnWidths(replicatePivotColumns);
+            var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
+                .ToDictionary(col => col.DataPropertyName);
+            foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
+            {
+                var replicateColumnsRounder = new AdjustingRounder();
+                DataGridViewColumn lastColumn = null;
+                foreach (var column in grouping)
+                {
+                    if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
+                    {
+                        var dataGridViewColumn = boundColumns[column.Name];
+                        var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
+                        var widthToAdd = (int)replicateColumnsRounder.Round(_replicateGridColumns[grouping.Key.ReplicateName].Width * columnRatio);
+                        dataGridViewColumn.Width = widthToAdd;
+                        lastColumn = dataGridViewColumn;
+                    }
+                }
+                if (lastColumn != null)
+                {
+                    lastColumn.Width -= replicateColumnsRounder.RoundRemainder();
+                }
+            }
+
+            if (IsMainGridFrozen())
+            {
+                AlignFrozenDataBoundGridPropertyColumns(replicatePivotColumns);
+            }
+            else
+            {
+                AlignDataBoundGridPropertyColumns(replicatePivotColumns);
+            }
+        }
+
+        private void AlignFrozenDataBoundGridPropertyColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            // Resizing of non-replicate columns behaves differently if columns are frozen.
+            // Only frozen columns are resized and non-froze columns are shown or hidden by scrolling.
+            // The calculations in this scenario rely on visible widths as only some columns might be frozen.
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+
+            var mainGridNonReplicateVisibleWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
+            var mainGridNonReplicateNonFrozenVisibleWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && !col.Frozen).Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
+            var mainGridNonReplicateNonFrozenWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && !col.Frozen).Sum(col => col.Width);
+
+
+            // Before updating the width of columns we check if it is possible to scroll based
+            // on whether some of the non-frozen property columns can be scrolled to be 
+            // hidden or shown more.
+            var propertyWidthToAdd = colReplicateProperty.Width - mainGridNonReplicateVisibleWidth;
+            var nonReplicateNonFrozenHiddenWidth = mainGridNonReplicateNonFrozenWidth - mainGridNonReplicateNonFrozenVisibleWidth;
+            int scrollOffset = 0;
+            if (propertyWidthToAdd < 0 && mainGridNonReplicateNonFrozenVisibleWidth > 0)
+            {
+                scrollOffset = Math.Max(propertyWidthToAdd, -mainGridNonReplicateNonFrozenVisibleWidth);
+            }
+            else if (propertyWidthToAdd > 0 && nonReplicateNonFrozenHiddenWidth > 0)
+            {
+                scrollOffset = Math.Min(propertyWidthToAdd, nonReplicateNonFrozenHiddenWidth);
+            }
+
+            if (scrollOffset != 0)
+            {
+                boundDataGridView.HorizontalScrollingOffset -= scrollOffset;
+                UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+                propertyWidthToAdd -= scrollOffset;
+            }
+
+            var propertyColumnRounder = new AdjustingRounder();
+            DataGridViewColumn lastPropertyColumn = null;
+            foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
+            {
+                if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
+                {
+                        // Only resize columns which are not frozen
+                        if (!dataGridViewColumn.Frozen)
+                        {
+                            continue;
+                        }
+
+                        var visibleWidth = CalculateColumnVisibleWidth(boundDataGridView, dataGridViewColumn);
+                        if (visibleWidth > 0)
+                        {
+                            // Ratio denominator only counts for frozen columns
+                            var columnRatio = (double)visibleWidth / (mainGridNonReplicateVisibleWidth - mainGridNonReplicateNonFrozenVisibleWidth);
+                            dataGridViewColumn.Width += (int)propertyColumnRounder.Round(propertyWidthToAdd * columnRatio);
+                            lastPropertyColumn = dataGridViewColumn;
+                        }
+                }
+            }
+            if (lastPropertyColumn != null)
+            {
+                lastPropertyColumn.Width -= propertyColumnRounder.RoundRemainder();
+            }
+        }
+
+        private void AlignDataBoundGridPropertyColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+            var mainGridNonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName)).Sum(col => col.Width);
+
+            var propertyColumnRounder = new AdjustingRounder();
+            DataGridViewColumn lastPropertyColumn = null;
+            foreach (DataGridViewColumn dataGridViewColumn in boundDataGridView.Columns)
+            {
+                if (!replicateColumnNames.Contains(dataGridViewColumn.DataPropertyName))
+                {
+                    var propertyWidth = colReplicateProperty.Width;
+                    var columnRatio = (double)dataGridViewColumn.Width / mainGridNonReplicateWidth;
+                    dataGridViewColumn.Width = (int)propertyColumnRounder.Round(propertyWidth * columnRatio);
+                    lastPropertyColumn = dataGridViewColumn;
+                }
+            }
+            if (lastPropertyColumn != null)
+            {
+                lastPropertyColumn.Width -= propertyColumnRounder.RoundRemainder();
+            }
+        }
+
+        private Dictionary<string, int> GetMainGridReplicateColumnWidths(ReplicatePivotColumns replicatePivotColumns)
+        {
+            var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
+                .Where(col => col.Visible)
+                .ToDictionary(col => col.DataPropertyName);
+            var replicateTotalWidthMap = replicatePivotColumns.GetReplicateColumnGroups()
+                .ToDictionary(
+                    kvp => kvp.Key.ReplicateName,
+                    kvp => kvp.Where(column => boundColumns.ContainsKey(column.Name)).Sum(column => boundColumns[column.Name].Width));
+            return replicateTotalWidthMap;
+        }
+
+        private void UpdateReplicateDataGridFrozenState()
+        {
+            if (IsMainGridFrozen())
+            {
+                colReplicateProperty.Frozen = true;
+            }
+            else
+            {
+                colReplicateProperty.Frozen = false;
+            }
+        }
+
+        private bool IsMainGridFrozen()
+        {
+            return DataGridView.Columns.Cast<DataGridViewColumn>().Any(column => column.Frozen);
+        }
+
+        private void UpdateReplicateDataGridScrollPosition(int scrollPosition)
+        {
+            // The pivot by replicate grid can resize the property column depending on frozen state.
+            // For this reason we have special logic to calculate the scroll offset based on the width offset
+            var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+            var replicateColumnNames = replicatePivotColumns.GetReplicateColumnGroups()
+                .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
+            var nonReplicateColumnsWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && col.Visible)
+                .Sum(col => col.Width);
+            var columnWidthOffset = nonReplicateColumnsWidth - colReplicateProperty.Width;
+            var offsetScrollPosition = scrollPosition - columnWidthOffset;
+            replicatePivotDataGridView.HorizontalScrollingOffset = (offsetScrollPosition > 0) ? offsetScrollPosition : 0;
+        }
+
+        private void PopulateReplicateDataGridView(ReplicatePivotColumns replicatePivotColumns)
+        {
+            UpdateReplicateGridRowsAndColumns(replicatePivotColumns);
+            // Iterate through item properties to create columns and rows
+            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+            {
+                var resultKey = group.Key;
+                var replicateName = resultKey.ReplicateName;
+                if (!_replicateGridColumns.TryGetValue(replicateName, out var dataGridViewColumn))
+                {
+                    continue;
+                }
+
+                foreach (var column in group)
+                {
+                    if (!replicatePivotColumns.IsConstantColumn(column))
+                    {
+                        continue;
+                    }
+
+                    var propertyPath = column.DisplayColumn.PropertyPath;
+                    if (!_replicateGridRows.TryGetValue(propertyPath, out var dataGridViewRow))
+                    {
+                        continue;
+                    }
+
+                    var value = bindingListSource.OfType<RowItem>().Select(column.GetValue)
+                        .FirstOrDefault(v => v != null);
+
+                    dataGridViewRow.Cells[dataGridViewColumn.Index].Value = value;
+                }
+            }
+        }
+
+        private void UpdateReplicateGridRowsAndColumns(ReplicatePivotColumns replicatePivotColumns)
+        {
+            if (Equals(replicatePivotColumns.ItemProperties, _replicateGridItemProperties))
+            {
+                return;
+            }
+            replicatePivotDataGridView.Columns.Clear();
+            replicatePivotDataGridView.Rows.Clear();
+            _replicateGridItemProperties = replicatePivotColumns.ItemProperties;
+            _replicateGridRows = new Dictionary<PropertyPath, DataGridViewRow>();
+            _replicateGridColumns = new Dictionary<string, DataGridViewColumn>();
+            // Add a column for property names
+            replicatePivotDataGridView.Columns.Add(colReplicateProperty);
+            var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
+                .ToDictionary(col => col.DataPropertyName);
+
+            foreach (var group in replicatePivotColumns.GetReplicateColumnGroups())
+            {
+                var resultKey = group.Key;
+                var replicateName = resultKey.ReplicateName;
+
+                // Add a column for the replicate name if it doesn't already exist
+                if (!_replicateGridColumns.TryGetValue(replicateName, out var dataGridViewColumn))
+                {
+                    dataGridViewColumn = new DataGridViewTextBoxColumn
+                    {
+                        HeaderText = replicateName,
+                        SortMode = DataGridViewColumnSortMode.NotSortable
+                    };
+                    replicatePivotDataGridView.Columns.Add(dataGridViewColumn);
+                    _replicateGridColumns.Add(replicateName, dataGridViewColumn);
+                }
+
+                foreach (var column in group)
+                {
+                    if (!replicatePivotColumns.IsConstantColumn(column))
+                    {
+                        continue;
+                    }
+
+                    var propertyPath = column.DisplayColumn.PropertyPath;
+                    if (!_replicateGridRows.TryGetValue(propertyPath, out var dataGridViewRow))
+                    {
+                        dataGridViewRow = replicatePivotDataGridView.Rows[replicatePivotDataGridView.Rows.Add()];
+                        dataGridViewRow.Cells[colReplicateProperty.Index].Value = column.DisplayColumn.ColumnDescriptor?.GetColumnCaption(ColumnCaptionType.localized);
+                        _replicateGridRows.Add(propertyPath, dataGridViewRow);
+                    }
+
+                    var hiddenMainGridColumn = boundColumns[column.Name];
+
+                    var cell = (DataGridViewCell)hiddenMainGridColumn.CellTemplate.Clone();
+                    if (cell != null)
+                    {
+                        dataGridViewRow.Cells[dataGridViewColumn.Index] = cell;
+                        cell.Style = hiddenMainGridColumn.DefaultCellStyle;
+                        cell.ReadOnly = column.IsReadOnly;
+                        cell.ValueType = column.PropertyType;
+                    }
+                }
+            }
+
+        }
+
+        private void UpdateMainGridDefaultFrozenState()
+        {
+            var firstColumn = boundDataGridView.Columns
+                .Cast<DataGridViewColumn>()
+                .First(col => col.Visible);
+            var firstColumnId = ColumnId.GetColumnId(GetPropertyDescriptor(firstColumn));
+            var firstColumnFormat = bindingListSource.ColumnFormats.GetFormat(firstColumnId);
+
+            // We check for false because we only want to enable the column if a state has not been set.
+            if (firstColumnFormat.Frozen != false)
+            {
+                var updatedColumnFormat = firstColumnFormat.ChangeFrozen(true);
+                BindingListSource.ColumnFormats.SetFormat(firstColumnId, updatedColumnFormat);
+            }
+            
+        }
+
+        private void ResizePivotByReplicateGridToFit()
+        {
+            int rowLimit = 10;
+            // We also add pixels here to account for border
+            int totalHeight = replicatePivotDataGridView.ColumnHeadersHeight + 2;
+
+            int rowCount = Math.Min(replicatePivotDataGridView.Rows.Count, rowLimit);
+            for (int i = 0; i < rowCount; i++)
+            {
+                totalHeight += replicatePivotDataGridView.Rows[i].Height;
+            }
+
+            replicatePivotDataGridView.Height = totalHeight;
+            boundDataGridView.Height = dataGridSplitContainer.Height - totalHeight - dataGridSplitContainer.SplitterWidth;
+            dataGridSplitContainer.SplitterDistance = totalHeight;
+        }
+
+        private void replicatePivotDataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (_inColumnChange)
+            {
+                return;
+            }
+
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                var cellValue = replicatePivotDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+
+                foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
+                {
+                    var modifiedReplicate = replicatePivotDataGridView.Columns[e.ColumnIndex].HeaderText;
+                    var modifiedProperty = replicatePivotDataGridView.Rows[e.RowIndex].Cells[0].Value;
+                    if (grouping.Key.ReplicateName.Equals(modifiedReplicate))
+                    {
+                        foreach (var column in grouping)
+                        {
+                            if (column.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized).Equals(modifiedProperty))
+                            {
+                                var columnDescriptor = column.DisplayColumn.ColumnDescriptor;
+                                var rowItem = bindingListSource.OfType<RowItem>().FirstOrDefault(r => columnDescriptor.Parent.GetPropertyValue(r, column.PivotKey) != null);
+                                if (rowItem != null)
+                                {
+                                    column.SetValue(rowItem, cellValue);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void replicatePivotDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            ReplicatePivotGridResized();
+        }
+
+        public void replicatePivotDataGridView_OnCellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex >= 0 && e.RowIndex >= 0)
+            {
+                var value = replicatePivotDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                var linkValue = value as ILinkValue;
+                if (linkValue != null)
+                {
+                    linkValue.ClickEventHandler(this, e);
+                }
+            }
         }
 
         private void boundDataGridView_Resize(object sender, EventArgs e)
         {
-            UpdateDendrograms();
+            MainGridResized();
+        }
+        private void boundDataGridView_ColumnWidthChanged(object sender, DataGridViewColumnEventArgs e)
+        {
+            MainGridResized();
+        }
+
+        private void ReplicatePivotGridResized()
+        {
+            if (_inColumnChange)
+            {
+                return;
+            }
+            try
+            {
+                _inColumnChange = true;
+                if (replicatePivotDataGridView.Visible && replicatePivotDataGridView.RowCount > 0)
+                {
+                    var replicatePivotColumns =
+                        ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                    AlignDataBoundGridColumns(replicatePivotColumns);
+                    UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+                }
+
+                UpdateDendrograms();
+            }
+            finally
+            {
+                _inColumnChange = false;
+            }
+            
+        }
+
+        private void MainGridPopulated()
+        {
+            if (_inColumnChange)
+            {
+                return;
+            }
+
+            ViewContext = BindingListSource.ViewContext;
+            try
+            {
+                _inColumnChange = true;
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                if (replicatePivotColumns != null && replicatePivotColumns.HasConstantAndVariableColumns())
+                {
+                    replicatePivotDataGridView.Show();
+                    dataGridSplitContainer.Panel1Collapsed = false;
+                    PopulateReplicateDataGridView(replicatePivotColumns);
+                    UpdateMainGridDefaultFrozenState();
+                    ResizePivotByReplicateGridToFit();
+                    AlignPivotByReplicateGridColumns(replicatePivotColumns);
+                }
+                else
+                {
+                    dataGridSplitContainer.Panel1Collapsed = true;
+                    if (replicatePivotDataGridView.Visible)
+                    {
+                        replicatePivotDataGridView.Hide();
+                    }
+                }
+
+                UpdateDendrograms();
+            }
+            finally
+            {
+                _inColumnChange = false;
+            }
+        }
+
+        private void MainGridResized()
+        {
+            if (_inColumnChange)
+            {
+                return;
+            }
+
+            try
+            {
+                _inColumnChange = true;
+                var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(bindingListSource.ItemProperties);
+                if (replicatePivotDataGridView.RowCount > 0 && replicatePivotColumns != null && replicatePivotColumns.HasConstantAndVariableColumns())
+                {
+                    UpdateReplicateDataGridFrozenState();
+                    ResizePivotByReplicateGridToFit();
+                    AlignPivotByReplicateGridColumns(replicatePivotColumns);
+                    UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
+                }
+
+                UpdateDendrograms();
+            }
+            finally
+            {
+                _inColumnChange = false;
+            }
         }
 
         private void boundDataGridView_Scroll(object sender, ScrollEventArgs e)
         {
-            UpdateDendrograms();
+            MainGridResized();
+        }
+        
+        private void boundDataGridView_ColumnStateChanged(object sender, DataGridViewColumnStateChangedEventArgs e)
+        {
+            MainGridResized();
         }
 
         private void bindingListSource_BindingComplete(object sender, BindingCompleteEventArgs e)
         {
-            UpdateDendrograms();
+            MainGridPopulated();
         }
 
         private void bindingListSource_ListChanged(object sender, ListChangedEventArgs e)
         {
-            UpdateDendrograms();
+            MainGridPopulated();
         }
 
         private void pCAToolStripMenuItem_Click(object sender, EventArgs e)
@@ -838,6 +1379,8 @@ namespace pwiz.Skyline.Controls.Databinding
                 return (ParentForm as IDataboundGridForm);
             }
         }
+
+        public DataGridViewEx ReplicatePivotDataGridView { get { return replicatePivotDataGridView; } }
 
         public void ShowPcaPlot()
         {
@@ -859,6 +1402,42 @@ namespace pwiz.Skyline.Controls.Databinding
             };
             formGroup.ShowSibling(pcaPlot);
             pcaPlot.ClusterInput = CreateClusterInput();
+        }
+        
+        private class AdjustingRounder
+        {
+            private double _roundedDifference;
+            public double Round(double value)
+            {
+                double roundedValue = Math.Round(value);
+                double difference = roundedValue - value;
+
+                if (_roundedDifference + difference >= 1)
+                {
+                    roundedValue -= 1;
+                    difference = roundedValue - value;
+                }
+                else if (_roundedDifference + difference <= -1)
+                {
+                    roundedValue += 1;
+                    difference = roundedValue - value;
+                }
+                _roundedDifference += difference;
+                return roundedValue;
+            }
+            
+            public int RoundRemainder()
+            {
+                // Allows for ignoring potential insignificant floating point deviations from calculations
+                if (Math.Abs(_roundedDifference) < 1e-10)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return _roundedDifference > 0 ? 1 : -1;
+                }
+            }
         }
     }
 }

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -117,14 +118,7 @@ namespace pwiz.Common.DataBinding.Controls
                     return;
                 }
 
-                var columnsToHide = new HashSet<string>();
-                var clusteredProperties =
-                    (bindingListSource.ReportResults as ClusteredReportResults)?.ClusteredProperties;
-                if (clusteredProperties != null)
-                {
-                    columnsToHide.UnionWith(clusteredProperties.GetAllColumnHeaderProperties().Select(p => p.Name));
-                }
-
+                var columnsToHide = new HashSet<string>(GetColumnsToHide(bindingListSource.ReportResults).Select(pd=>pd.Name));
                 var newItemProperties = bindingListSource.ItemProperties;
                 if (!Equals(newItemProperties, _itemProperties))
                 {
@@ -132,15 +126,15 @@ namespace pwiz.Common.DataBinding.Controls
                     for (int i = 0; i < newItemProperties.Count; i++)
                     {
                         var propertyDescriptor = newItemProperties[i];
-                        if (columnsToHide.Contains(propertyDescriptor.Name))
-                        {
-                            continue;
-                        }
 
                         var column = _viewContext.CreateGridViewColumn(propertyDescriptor);
                         if (null != column)
                         {
                             newColumns.Add(column);
+                            if (columnsToHide.Contains(propertyDescriptor.Name))
+                            {
+                                column.Visible = false;
+                            }
                         }
                     }
 
@@ -161,7 +155,16 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 _inUpdateColumns = false;
             }
+        }
 
+        protected virtual IEnumerable<PropertyDescriptor> GetColumnsToHide(ReportResults reportResults)
+        {
+            if (reportResults is ClusteredReportResults clusteredReportResults)
+            {
+                return clusteredReportResults.ClusteredProperties.GetAllColumnHeaderProperties();
+            }
+
+            return Array.Empty<PropertyDescriptor>();
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)
@@ -185,7 +188,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 return null;
             }
-            return _itemProperties.FirstOrDefault(pd => pd.Name == column.DataPropertyName);
+            return _itemProperties.FindByName(column.DataPropertyName);
         }
 
         protected override void OnColumnDividerDoubleClick(DataGridViewColumnDividerDoubleClickEventArgs e)
@@ -281,9 +284,41 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
+        private void UpdateColumnsFrozen()
+        {
+            var lastFrozenColumn = FindLastFrozenColumn();
+            var shouldFreeze = lastFrozenColumn != null;
+            foreach (DataGridViewColumn column in Columns)
+            {
+                var currentPropertyDescriptor = GetPropertyDescriptor(column);
+                if (currentPropertyDescriptor == null)
+                {
+                    shouldFreeze = false;
+                    column.Frozen = false;
+                    continue;
+                }
+                var currentColumnId = ColumnId.GetColumnId(currentPropertyDescriptor);
+                column.Frozen = shouldFreeze;
+
+                // Set Frozen to false once we reach target column. 
+                if (currentColumnId.Equals(lastFrozenColumn))
+                {
+                    shouldFreeze = false;
+                }
+            }
+        }
+
+        private ColumnId FindLastFrozenColumn()
+        {
+            return _bindingListSource.ItemProperties
+                .Select(ColumnId.GetColumnId)
+                .LastOrDefault(columnId => _bindingListSource.ColumnFormats.GetFormat(columnId).Frozen ?? false);
+        }
+
         protected void OnFormatsChanged()
         {
             UpdateColumnFormats(true);
+            UpdateColumnsFrozen();
         }
 
         protected override void OnRowValidating(DataGridViewCellCancelEventArgs e)
