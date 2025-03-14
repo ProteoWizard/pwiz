@@ -620,7 +620,7 @@ namespace {
         public:
         static constexpr TSVColumnTranslator requiredColumns[] =
         {
-            {"NormalizedRetentionTime", -1, TSVLine::insertRtNormalized},
+            {"NormalizedRetentionTime", -1, TSVLine::insertRtMinutes},
             {"ModifiedPeptideSequence", -1, TSVLine::insertSequence},
             {"PrecursorCharge", -1, TSVLine::insertCharge},
             {"PrecursorMz", -1, TSVLine::insertMz},
