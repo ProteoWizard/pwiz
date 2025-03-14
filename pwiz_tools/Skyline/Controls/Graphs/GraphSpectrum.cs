@@ -139,9 +139,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private ImmutableList<Precursor> Precursors => _updateManager.Precursors;
         private int PrecursorCount => Precursors?.Count ?? 0;
 
-        private SpectrumDisplayInfo _mirrorSpectrum;
         private SpectrumDisplayInfo _spectrum;
-                
+        private string _userSelectedSpectrum;
+        private SpectrumDisplayInfo _mirrorSpectrum;
+        private string _userSelectedMirrorSpectrum;
 
         private bool _inToolbarUpdate;
         // TODO
@@ -314,6 +315,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 !ReferenceEquals(DocumentUI.Settings.PeptideSettings.Libraries.Libraries,
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
+                _userSelectedSpectrum = _userSelectedMirrorSpectrum = null;
                 ZoomSpectrumToSettings();
                 Settings.Default.ShowLosses = DocumentUI.Settings.PeptideSettings.Modifications.StaticModsLosses.ToString(@",");
                 _updateManager.ClearPrecursors();
@@ -453,8 +455,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!Equals(selectedPrecursor, comboPrecursor.SelectedItem))
                     {
                         comboSpectrum.Items.Clear();
-                        comboMirrorSpectrum.Items.Clear();
                         selectedSpectrumIndex = -1;
+                        selectedSpectrum = _userSelectedSpectrum;
+                        comboMirrorSpectrum.Items.Clear();
+                        selectedMirror = _userSelectedMirrorSpectrum;
                     }
                 }
 
@@ -1644,6 +1648,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!_inToolbarUpdate)
             {
+                _userSelectedSpectrum = comboSpectrum.SelectedItem.ToString();
                 _updateManager.QueueUpdate(true);
             }
         }
@@ -1652,6 +1657,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (!_inToolbarUpdate)
             {
+                _userSelectedMirrorSpectrum = comboMirrorSpectrum.SelectedItem.ToString();
                 UpdateUI();
             }
         }

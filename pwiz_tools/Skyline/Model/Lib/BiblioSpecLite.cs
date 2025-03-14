@@ -630,13 +630,29 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        private MemoryStream CreateCache(ILoadMonitor loader, IProgressStatus status, int percent)
+        /// <summary>
+        /// Read entries from the database and create a .slc file.
+        /// Returns true if successful, otherwise false.
+        /// <paramref name="memoryStream"/> will be set to 
+        /// </summary>
+        private bool CreateCache(ILoadMonitor loader, IProgressStatus status, int percent, out MemoryStream memoryStream)
         {
-            MemoryStream outStream;
+            memoryStream = null;
             var sm = loader.StreamManager;
             EnsureConnections(sm);
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            using FileSaver fs = new FileSaver(CachePath, sm);
+            Stream cacheFileStream = null;
+            try
             {
+                cacheFileStream = sm.CreateStream(fs.SafeName, FileMode.Create, true);
+            }
+            catch (Exception)
+            {
+                // The cache will be entirely kept in memory if the file stream could not be created
+            }
+            using (cacheFileStream) 
+            {
+                using SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection);
                 int rows;
                 string lsid;
                 int dataRev, schemaVer;
@@ -742,14 +758,14 @@ namespace pwiz.Skyline.Model.Lib
                     int rowsRead = 0;
                     while (reader.Read())
                     {
-                        int percentComplete = rowsRead++*percent/rows;
+                        int percentComplete = rowsRead++ * percent / rows;
                         if (status.PercentComplete != percentComplete)
                         {
                             // Check for cancellation after each integer change in percent loaded.
                             if (loader.IsCanceled)
                             {
                                 loader.UpdateProgress(status.Cancel());
-                                return null;
+                                return false;
                             }
 
                             // If not cancelled, update progress.
@@ -878,10 +894,24 @@ namespace pwiz.Skyline.Model.Lib
                     }
 
                 }
-
-                outStream = new MemoryStream();
+                
+                // Start out writing to a memory stream
+                Stream outStream = memoryStream = new MemoryStream();
+                // Write the memory stream out to disk when it gets bigger maxMemoryStreamSize
+                const long maxMemoryStreamSize = 10_000_000;
+                
                 foreach (var info in libraryEntries)
                 {
+                    if (cacheFileStream != null && memoryStream?.Length > maxMemoryStreamSize)
+                    {
+                        // Write out the memory stream if it is too big and switch to using the file stream
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        memoryStream.CopyTo(cacheFileStream);
+                        outStream = cacheFileStream;
+                        // The memory stream is now incomplete and should not be used by the caller
+                        memoryStream = null;
+                    }
+
                     // Write the spectrum header - order must match enum SpectrumCacheHeader
                     info.Key.Write(outStream);
                     outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
@@ -963,26 +993,31 @@ namespace pwiz.Skyline.Model.Lib
                 outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
                 outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
                 outStream.Write(BitConverter.GetBytes(scoreTypesPosition), 0, sizeof(long));
-                try
+                if (cacheFileStream != null)
                 {
-                    using (FileSaver fs = new FileSaver(CachePath, sm))
-                    using (Stream cacheFileStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
+                    if (memoryStream != null)
                     {
-                        outStream.Seek(0, SeekOrigin.Begin);
-                        outStream.CopyTo(cacheFileStream);
-                        sm.Finish(cacheFileStream);
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        memoryStream.CopyTo(cacheFileStream);
+                    }
+                    sm.Finish(cacheFileStream);
+                    try
+                    {
                         fs.Commit();
                         sm.SetCache(FilePath, CachePath);
                     }
-                }
-                catch
-                {
-                    // ignore
+                    catch
+                    {
+                        // failure to commit the FileSaver can be ignored if we still have the memoryStream
+                        if (memoryStream == null)
+                        {
+                            throw;
+                        }
+                    }
                 }
             }
-
             loader.UpdateProgress(status.Complete());
-            return outStream;
+            return true;
         }
 
         private Dictionary<int, string> ProteinsBySpectraID()
@@ -1058,12 +1093,10 @@ namespace pwiz.Skyline.Model.Lib
                     status = status.ChangePercentComplete(0);
                     loader.UpdateProgress(status);
 
-                    cacheBytes = CreateCache(loader, status, 100 - loadPercent);
-                    if (cacheBytes == null)
+                    if (!CreateCache(loader, status, 100 - loadPercent, out cacheBytes))
                     {
                         return false;
                     }
-
                 }
 
                 status = status.ChangeMessage(string.Format(LibResources.BiblioSpecLiteLibraryLoadLoading__0__library,

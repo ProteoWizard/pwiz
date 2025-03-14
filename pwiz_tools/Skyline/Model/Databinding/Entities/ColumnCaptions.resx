@@ -1218,6 +1218,9 @@
   <data name="ProductNeutralMass">
     <value>Product Neutral Mass</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>Proportion Truncated</value>
+  </data>
   <data name="Protein">
     <value>Protein</value>
   </data>

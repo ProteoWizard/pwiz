@@ -252,9 +252,9 @@ namespace TestPerf
                         new[] { 2.2, 4.6 },
                         new[] { 1.9, 4.7 },
                     },
-                    DiffPeptideCounts = new[] { 10459, 6387, 2238, 1823 },
-                    UnpolishedProteins = 1647,
-                    PolishedProteins = 1647,
+                    DiffPeptideCounts = new[] { 10467, 6391, 2242, 1823 },
+                    UnpolishedProteins = 1653,
+                    PolishedProteins = 2031,
                 };
             }
             else
