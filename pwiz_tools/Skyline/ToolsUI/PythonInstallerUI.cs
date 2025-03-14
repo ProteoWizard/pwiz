@@ -253,11 +253,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 waitDlg.Message = task.InProgressMessage;
                 waitDlg.PerformWork(parent, 50, task.AsActionWithLongWaitBroker);
-            }   
-                
-            //if (proStatus != null && proStatus.IsCanceled)
-            //    return false;
-            
+            }
             return !waitDlg.IsCanceled;
         }
     }

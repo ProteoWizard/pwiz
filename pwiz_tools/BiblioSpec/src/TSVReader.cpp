@@ -992,6 +992,8 @@ namespace {
     };
 
     // TODO: remove when switching to C++17
+    constexpr const TSVColumnTranslator AlphaPeptDeepReader::requiredColumns[];
+    constexpr const TSVColumnTranslator AlphaPeptDeepReader::optionalColumns[];
     constexpr const TSVColumnTranslator OpenSwathResultReader::requiredColumns[];
     constexpr const TSVColumnTranslator OpenSwathResultReader::optionalColumns[];
     constexpr const TSVColumnTranslator OpenSwathAssayReader::requiredColumns[];
