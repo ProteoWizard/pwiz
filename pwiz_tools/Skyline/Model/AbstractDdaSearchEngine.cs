@@ -36,6 +36,8 @@ namespace pwiz.Skyline.Model
     {
         public abstract string[] FragmentIons { get; }
         public abstract string[] Ms2Analyzers { get; }
+        public virtual MzTolerance.Units[] PrecursorIonToleranceUnitTypes { get; } = { MzTolerance.Units.mz, MzTolerance.Units.ppm };
+        public virtual MzTolerance.Units[] FragmentIonToleranceUnitTypes { get; } = { MzTolerance.Units.mz, MzTolerance.Units.ppm };
         public abstract string EngineName { get; }
         public abstract string CutoffScoreName { get; }
         public abstract string CutoffScoreLabel { get; }

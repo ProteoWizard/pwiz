@@ -577,6 +577,7 @@
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
+    <EmbeddedResource Include="ExportMethodDialogThermoTest.json" />
     <None Include="ExportSpectralLibraryTest.zip" />
     <None Include="ExpressionAnnotationsTest.zip" />
     <None Include="FiguresOfMeritTest.zip" />
