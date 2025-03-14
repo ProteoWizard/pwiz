@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -479,6 +480,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string LEFT_SQUARE_BRACKET = TextUtil.LEFT_SQUARE_BRACKET;
         private const string LIBRARY_COMMAND = @"library";
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
+        private const string NORMALIZED_RT = "RT";
         private const string MODS = @"mods";
         private const string OUTPUT = @"output";
         private const string OUTPUT_MODELS = @"output_models";
@@ -574,10 +576,10 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 new ArgumentAndValue(@"device", @"gpu"),
             };
 
-        private Dictionary<string, string> OpenSwathAssayColName =>
+        private Dictionary<string, string> OpenSwathAssayLikeColName =>
             new Dictionary<string, string>()
             {
-                { @"RT", @"NormalizedRetentionTime" },
+                { @"RT", @"NormalizedRetentionTimeAPD" },
                 { @"ModifiedPeptide", @"ModifiedPeptideSequence" },
                 { @"FragmentMz", @"ProductMz" },
                 { @"RelativeIntensity", @"LibraryIntensity" },
@@ -743,7 +745,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             foreach (var colName in colNames)
             {
                 string newColName;
-                if (!OpenSwathAssayColName.TryGetValue(colName, out newColName))
+                if (!OpenSwathAssayLikeColName.TryGetValue(colName, out newColName))
                 {
                     newColName = colName;
                 }
@@ -765,6 +767,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                             .Replace(LEFT_SQUARE_BRACKET, LEFT_PARENTHESIS)
                             .Replace(RIGHT_SQUARE_BRACKET, RIGHT_PARENTHESIS);
                         line.Add(transformedCell);
+                    }
+                    else if (colName == NORMALIZED_RT)
+                    {
+                        double transformedCell = double.Parse(cell) * 100;
+                        line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
                     }
                     else
                     {

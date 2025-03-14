@@ -155,9 +155,7 @@
     <Compile Include="FindWindow.Designer.cs">
       <DependentUpon>FindWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Main.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Include="Main.cs" />
     <Compile Include="MemoryChartWindow.cs">
       <SubType>Form</SubType>
     </Compile>
