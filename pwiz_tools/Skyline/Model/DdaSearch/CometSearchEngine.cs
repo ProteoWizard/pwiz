@@ -498,9 +498,9 @@ namespace pwiz.Skyline.Model.DdaSearch
                         var m = Regex.Match(line, "\\[([^]]+)\\]\\[([^]]+)\\]");
                         if (!m.Success)
                             throw new InvalidDataException(@"found back to back brackets but could not parse them with regex: " + line);
-                        if (!double.TryParse(m.Groups[1].Value, out double modMass1))
+                        if (!double.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double modMass1))
                             throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[1].Value);
-                        if (!double.TryParse(m.Groups[2].Value, out double modMass2))
+                        if (!double.TryParse(m.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out double modMass2))
                             throw new InvalidDataException(@"could not parse mod mass from " + m.Groups[2].Value);
                         line = Regex.Replace(line, "\\[([^]]+\\]\\[[^]]+)\\]", $"[{modMass1 + modMass2:F4}]");
                     }
