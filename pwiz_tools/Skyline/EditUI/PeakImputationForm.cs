@@ -59,6 +59,7 @@ namespace pwiz.Skyline.EditUI
         private SkylineDataSchema _dataSchema;
         private PeakImputationRows _data;
         private SequenceTree _sequenceTree;
+        private SrmDocument _lastDocumentUpdateUi;
 
         public PeakImputationForm(SkylineWindow skylineWindow)
         {
@@ -208,7 +209,16 @@ namespace pwiz.Skyline.EditUI
             SetSequenceTree(SkylineWindow.SequenceTree);
             var document = SkylineWindow.DocumentUI;
             var imputationSettings = document.Settings.PeptideSettings.Imputation;
-            var alignmentOptions = RtValueType.GetChoicesWithCalculators(document).ToList();
+            List<RtValueType> alignmentOptions;
+            if (ReferenceEquals(_lastDocumentUpdateUi, document))
+            {
+                alignmentOptions = comboRtCalculator.Items.OfType<RtValueType>().ToList();
+            }
+            else
+            {
+                alignmentOptions = RtValueType.GetChoicesWithCalculators(document).ToList();
+                _lastDocumentUpdateUi = document;
+            }
             ComboHelper.ReplaceItems(comboRtCalculator, alignmentOptions.Cast<object>().Prepend(string.Empty));
             comboRtCalculator.SelectedItem =
                 alignmentOptions.FirstOrDefault(option => option.Name == imputationSettings.RtCalcName);

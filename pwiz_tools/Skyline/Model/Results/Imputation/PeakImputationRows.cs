@@ -64,6 +64,30 @@ namespace pwiz.Skyline.Model.Results.Imputation
             {
                 return ChangeProp(ImClone(this), im => im.PeptideIdentityPaths = value);
             }
+
+            protected bool Equals(Parameters other)
+            {
+                return ReferenceEquals(Document, other.Document) && OverwriteManualPeaks == other.OverwriteManualPeaks && Equals(PeptideIdentityPaths, other.PeptideIdentityPaths);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is null) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((Parameters)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = RuntimeHelpers.GetHashCode(Document);
+                    hashCode = (hashCode * 397) ^ OverwriteManualPeaks.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (PeptideIdentityPaths != null ? PeptideIdentityPaths.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
         }
 
         private class Producer : Producer<Parameters, PeakImputationRows>

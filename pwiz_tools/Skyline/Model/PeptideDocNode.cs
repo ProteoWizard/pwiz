@@ -1712,7 +1712,7 @@ namespace pwiz.Skyline.Model
                 return listInfoNew;
             }
 
-                        public UserSet? GetUserSetNew(ChromFileInfoId fileId)
+            public UserSet? GetUserSetNew(ChromFileInfoId fileId)
             {
                 PeptideChromInfoCalculator calc;
                 if (TryGetCalculator(fileId, out calc))

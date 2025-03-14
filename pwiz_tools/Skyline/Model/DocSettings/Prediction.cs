@@ -1442,7 +1442,10 @@ namespace pwiz.Skyline.Model.DocSettings
             RetentionTime = retentionTime;
             IsStandard = isStandard;
             _allowNegative = allowNegative;
-
+            if (double.IsNaN(retentionTime))
+            {
+                Console.Out.WriteLine("NaN: {0}", peptideSequence);
+            }
             Validate();
         }
 

@@ -212,6 +212,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
                 {
                     return true;
                 }
+
                 foreach (var chromatogramSet in measuredResults.Chromatograms)
                 {
                     foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
