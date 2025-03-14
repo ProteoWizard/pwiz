@@ -81,6 +81,9 @@ public:
     static void insertRtMinutes(TSVLine& line, const std::string& value) {
         line.rt = value.empty() ? 0 : lexical_cast<double>(value);
     }
+    static void insertRtNormalized(TSVLine& line, const std::string& value) {
+        line.rt = value.empty() ? 0 : lexical_cast<double>(value);
+    }
     static void insertRtStartMinutes(TSVLine& line, const std::string& value) {
         line.leftWidth = value.empty() ? 0 : lexical_cast<double>(value);
     }

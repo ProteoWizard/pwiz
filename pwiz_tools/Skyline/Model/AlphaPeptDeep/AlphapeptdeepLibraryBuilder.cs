@@ -519,7 +519,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string BuilderLibraryPath
         {
             get { return OutputSpectraLibFilepath; }
-            set { OutputSpectraLibFilepath = value; }
+            set => OutputSpectraLibFilepath = value;
         }
 
         string ILibraryBuilder.BuilderLibraryPath
@@ -535,14 +535,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string _rootDir;
         private string RootDir
         {
-            get
-            {
-                return _rootDir;
-            }
-            set
-            {
-                _rootDir = value;
-            }
+            get => _rootDir;
+            set => _rootDir = value;
         }
 
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);

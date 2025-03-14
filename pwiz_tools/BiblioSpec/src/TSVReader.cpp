@@ -314,7 +314,7 @@ namespace {
         public:
         static constexpr const TSVColumnTranslator requiredColumns[] =
         {
-            {"NormalizedRetentionTime", -1, TSVLine::insertRt},
+            {"NormalizedRetentionTime", -1, TSVLine::insertRtNormalized},
             {"ModifiedPeptideSequence", -1, TSVLine::insertSequence},
             {"PrecursorCharge", -1, TSVLine::insertCharge},
             {"PrecursorMz", -1, TSVLine::insertMz},
@@ -329,6 +329,7 @@ namespace {
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
             {"CollisionEnergy", -1, TSVLine::insertCE},
+            {"IonMobility", -1, TSVLine::insertIonMobility},
             {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
 
@@ -475,7 +476,7 @@ namespace {
         public:
         static constexpr TSVColumnTranslator requiredColumns[] =
         {
-            {"NormalizedRetentionTime", -1, TSVLine::insertRtMinutes},
+            {"NormalizedRetentionTime", -1, TSVLine::insertRtNormalized},
             {"ModifiedPeptideSequence", -1, TSVLine::insertSequence},
             {"PrecursorCharge", -1, TSVLine::insertCharge},
             {"PrecursorMz", -1, TSVLine::insertMz},
@@ -490,6 +491,7 @@ namespace {
         static constexpr TSVColumnTranslator optionalColumns[] =
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
+            {"IonMobility", -1, TSVLine::insertIonMobility},
             {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
 
