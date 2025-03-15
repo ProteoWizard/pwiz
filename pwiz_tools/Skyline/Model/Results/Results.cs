@@ -55,8 +55,15 @@ namespace pwiz.Skyline.Model.Results
             List<TItem> flatList = new List<TItem>();
             foreach (var chromInfoList in chromInfoLists)
             {
-                counts.Add(chromInfoList.Count);
-                flatList.AddRange(chromInfoList);
+                if (chromInfoList == null)
+                {
+                    counts.Add(0);
+                }
+                else
+                {
+                    counts.Add(chromInfoList.Count);
+                    flatList.AddRange(chromInfoList);
+                }
             }
 
             _replicatePositions = ReplicatePositions.FromCounts(counts);
