@@ -1152,7 +1152,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Adduct.EMPTY, true).Select(typedSequence => typedSequence.ModifiedSequence);
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                if (library == null || !library.UseExplicitPeakBounds)
+                if (library == null || library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.@false)
                 {
                     continue;
                 }
@@ -1161,13 +1161,46 @@ namespace pwiz.Skyline.Model.DocSettings
                 // Do not worry about multiple enumerations of modifiedSequences. Most libraries do not have 
                 // any explicit peak boundaries, so modifiedSequences gets enumerated zero times.
                 var peakBoundaries = library.GetExplicitPeakBounds(filePath, modifiedSequences);
-                // ReSharper restore PossibleMultipleEnumeration
 
                 if (peakBoundaries != null)
                 {
+                    if (peakBoundaries.IsEmpty)
+                    {
+                        if (library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.when_missing_detect)
+                        {
+                            return null;
+                        }
+
+                        if (library.UseExplicitPeakBounds == ExplicitPeakBoundsOption.when_missing_impute)
+                        {
+                            return GetImputedPeakBounds(filePath, modifiedSequences, library);
+                        }
+                    }
                     return peakBoundaries;
                 }
+                // ReSharper restore PossibleMultipleEnumeration
             }
+            return null;
+        }
+
+        private ExplicitPeakBounds GetImputedPeakBounds(MsDataFileUri filePath, IEnumerable<Target> targets, Library library)
+        {
+            foreach (var entry in library.GetAllExplicitPeakBounds(targets).OrderBy(bounds => bounds.Value.Score))
+            {
+                
+                var alignmentIndexes = DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(filePath.GetFileNameWithoutExtension());
+                var regressionFunction = DocumentRetentionTimes.GetMappingFunction(filePath.GetFileNameWithoutExtension(),
+                    entry.Key, 3);
+                if (regressionFunction == null)
+                {
+                    continue;
+                }
+                var exemplaryBounds = entry.Value;
+                var alignedTime = regressionFunction.GetY((exemplaryBounds.StartTime + exemplaryBounds.EndTime) / 2);
+                var halfWidth = (exemplaryBounds.EndTime - exemplaryBounds.StartTime) / 2;
+                return new ExplicitPeakBounds(alignedTime - halfWidth, alignedTime + halfWidth, double.MaxValue);
+            }
+
             return null;
         }
 
@@ -2090,6 +2123,33 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            if (documentFormat < DocumentFormat.PEAK_IMPUTATION)
+            {
+                if (!Equals(ImputationSettings.DEFAULT, result.PeptideSettings.Imputation))
+                {
+                    result = result.ChangePeptideSettings(
+                        result.PeptideSettings.ChangeImputation(ImputationSettings.DEFAULT));
+                }
+            }
+            if (documentFormat < DocumentFormat.VERSION_24_11)
+            {
+                var libraries = result.PeptideSettings.Libraries;
+                var newLibrarySpecs = libraries.LibrarySpecs.Select(spec =>
+                    spec?.ChangeUseExplicitPeakBounds(spec.UseExplicitPeakBounds == ExplicitPeakBoundsOption.@false
+                        ? ExplicitPeakBoundsOption.@false
+                        : ExplicitPeakBoundsOption.@true)).ToList();
+                var newLibraries = libraries.Libraries.Select(lib =>
+                    lib?.ChangeUseExplicitPeakBounds(lib.UseExplicitPeakBounds == ExplicitPeakBoundsOption.@false
+                        ? ExplicitPeakBoundsOption.@false
+                        : ExplicitPeakBoundsOption.@true)).ToList();
+
+                if (!libraries.LibrarySpecs.SequenceEqual( newLibrarySpecs) || !libraries.Libraries.SequenceEqual(newLibraries))
+                {
+                    result = result.ChangePeptideSettings(
+                        result.PeptideSettings.ChangeLibraries(libraries.ChangeLibraries(newLibrarySpecs, newLibraries)));
+                }
+            }
+
             return result;
         }
 
@@ -2527,6 +2587,7 @@ namespace pwiz.Skyline.Model.DocSettings
 // ReSharper restore InconsistentNaming
 
         private readonly bool _isUnexplainedExplicitModificationAllowed;
+        private ValueCache _valueCache = new ValueCache();
 
         /// <summary>
         /// For use in creating new nodes, where everything should be created
@@ -2983,5 +3044,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return SettingsOld == null || _isUnexplainedExplicitModificationAllowed; }
         }
+
+        public ValueCache ValueCache => _valueCache;
     }
 }

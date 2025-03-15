@@ -430,7 +430,10 @@ namespace pwiz.Common.Collections
                 hasValues.Add(item.HasValue ? 1 : 0);
             }
 
-            _hasValueList = IntegerList.FromIntegers(hasValues);
+            if (hasValues.Contains(0))
+            {
+                _hasValueList = IntegerList.FromIntegers(hasValues);
+            }
             if (typeof(T) == typeof(int))
             {
                 _values = (ImmutableList<T>)(object)IntegerList.FromIntegers((List<int>)(object) values);
@@ -454,7 +457,7 @@ namespace pwiz.Common.Collections
         {
             get
             {
-                return _hasValueList[index] == 0 ? (T?) null : _values[index];
+                return _hasValueList?[index] == 0 ? (T?) null : _values[index];
             }
         }
     }

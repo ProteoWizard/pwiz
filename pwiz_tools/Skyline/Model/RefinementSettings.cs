@@ -879,8 +879,7 @@ namespace pwiz.Skyline.Model
                 }
                 listResultsNew.Add(new ChromInfoList<TransitionGroupChromInfo>(infoNew));
             }
-            var resultsNew = new Results<TransitionGroupChromInfo>(listResultsNew);
-            return resultsNew;
+            return TransitionGroupResults.Empty.ChangeResults(listResultsNew);
         }
 
         public static CustomMolecule ConvertToSmallMolecule(ConvertToSmallMoleculesMode mode,
