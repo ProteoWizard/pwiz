@@ -187,7 +187,7 @@ install data_dependencies
 
 install extension_dependencies
     : # sources
-        Qonverter//IdpSqlExtensions
+        Qonverter//IdpSqlExtensions/<link>shared
     : # requirements
         <conditional>@install-location
         <install-dependencies>on

@@ -98,6 +98,7 @@ namespace sqlite3pp
         /// If the file cannot be loaded directly, attempts are made to load with various operating - system specific extensions added.
         /// So for example, if "samplelib" cannot be loaded, then names like "samplelib.so" or "samplelib.dylib" or "samplelib.dll" might be tried also.
         void load_extension(const std::string& name);
+        void load_extension(int (*init_extension_func)(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi));
 
         int load_from_file(const std::string& dbname);
         int save_to_file(const std::string& dbname);

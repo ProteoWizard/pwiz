@@ -232,7 +232,8 @@ namespace freicore
 
     void proteinStore::random_shuffle()
     {
-        std::random_shuffle( storeIndex.begin(), storeIndex.end() );
+        std::mt19937 rng(0);
+        std::shuffle(storeIndex.begin(), storeIndex.end(), rng);
     }
 
     size_t proteinStore::size() const {return storeIndex.size();}

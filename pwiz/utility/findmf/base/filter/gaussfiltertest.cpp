@@ -46,7 +46,7 @@ namespace {
     double sumfilter = std::accumulate(y.begin(),y.end(),0.);
     std::pair<double,double> tmp;
     ralab::base::stats::scale(y.begin(),y.end(),tmp,true);
-    std::transform(y.begin(),y.end(),y.begin(),std::bind2nd(std::plus<double>(),( 1./x.size() ) ) );
+    std::transform(y.begin(),y.end(),y.begin(),std::bind(std::plus<double>(), std::placeholders::_1, ( 1./x.size() ) ) );
     sumfilter = std::accumulate(y.begin(),y.end(),0.);
     unit_assert_equal(sumfilter,1.,epsilon);
   }

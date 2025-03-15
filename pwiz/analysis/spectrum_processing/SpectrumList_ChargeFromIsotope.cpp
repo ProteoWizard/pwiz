@@ -700,9 +700,9 @@ void SpectrumList_ChargeFromIsotope::simulateKL(const double finalRetentionTime,
             int peaksInWindow = windowIntensity.size();
             while ( peaksInWindow > maxNumberPeaks ) 
             {
-
-                vector<double>::iterator minIt = min_element( windowIntensity.begin(), windowIntensity.end() );
-                vector<double>::iterator maxIt = max_element( windowIntensity.begin(), windowIntensity.end() );
+                auto minMax = std::minmax_element(windowIntensity.begin(), windowIntensity.end());
+                vector<double>::iterator minIt = minMax.first;
+                vector<double>::iterator maxIt = minMax.second;
                 vector<int> elementsForDeletion;
 
                 for (int w=0, wend = windowIntensity.size(); w < wend; ++w)
@@ -897,7 +897,7 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
             while ( peaksInWindow > maxNumberPeaks ) 
             {
 
-                BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
+                BinaryData<double>::iterator minIt = std::min_element( peakIntensities.begin(), peakIntensities.end() );
 
                 elementsForDeletion.clear();
                 for (int w=0, wend = peakIntensities.size(); w < wend; ++w)
@@ -930,8 +930,9 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
             BinaryData<double>& peakMZs = sPar->getMZArray()->data;
             BinaryData<double>& peakIntensities = sPar->getIntensityArray()->data;
 
-            BinaryData<double>::iterator minIt = min_element(peakIntensities.begin(), peakIntensities.end());
-            BinaryData<double>::iterator maxIt = max_element(peakIntensities.begin(), peakIntensities.end());
+            auto minMax = std::minmax_element(peakIntensities.begin(), peakIntensities.end());
+            BinaryData<double>::iterator minIt = minMax.first;
+            BinaryData<double>::iterator maxIt = minMax.second;
             vector<int> elementsForDeletion;
 
             for (int j=0, jend = peakIntensities.size(); j < jend; ++j)
@@ -956,7 +957,7 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
             while ( peaksInWindow > maxNumberPeaks ) 
             {
 
-                BinaryData<double>::iterator minIt = min_element( peakIntensities.begin(), peakIntensities.end() );
+                BinaryData<double>::iterator minIt = std::min_element( peakIntensities.begin(), peakIntensities.end() );
 
                 elementsForDeletion.clear();
                 for (int w=0, wend = peakIntensities.size(); w < wend; ++w)

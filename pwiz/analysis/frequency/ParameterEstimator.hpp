@@ -46,7 +46,7 @@ class ParameterEstimator
     typedef ublas::vector<double> Parameters;
 
     // instantiation
-    static std::auto_ptr<ParameterEstimator> create(const Function& function,
+    static std::unique_ptr<ParameterEstimator> create(const Function& function,
                                                         const Data& data,
                                                         const Parameters& initialEstimate);
     virtual ~ParameterEstimator(){}

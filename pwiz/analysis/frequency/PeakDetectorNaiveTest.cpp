@@ -40,7 +40,7 @@ void testCreation()
 {
     const double noiseFactor = 666;
     const unsigned int detectionRadius = 13;
-    auto_ptr<PeakDetectorNaive> pd = PeakDetectorNaive::create(noiseFactor, detectionRadius);
+    unique_ptr<PeakDetectorNaive> pd = PeakDetectorNaive::create(noiseFactor, detectionRadius);
     unit_assert(pd->noiseFactor() == noiseFactor);
     unit_assert(pd->detectionRadius() == detectionRadius);
 }
@@ -79,15 +79,15 @@ void testFind()
 
     const double noiseFactor = 1;
 
-    auto_ptr<PeakDetectorNaive> pdn1 = PeakDetectorNaive::create(noiseFactor, 1);
+    unique_ptr<PeakDetectorNaive> pdn1 = PeakDetectorNaive::create(noiseFactor, 1);
     pdn1->findPeaks(fd, pd.scans[0]);
     unit_assert(pd.scans[0].peakFamilies.size() == 3);
 
-    auto_ptr<PeakDetectorNaive> pdn2 = PeakDetectorNaive::create(noiseFactor, 2);
+    unique_ptr<PeakDetectorNaive> pdn2 = PeakDetectorNaive::create(noiseFactor, 2);
     pdn2->findPeaks(fd, pd.scans[1]);
     unit_assert(pd.scans[1].peakFamilies.size() == 2);
 
-    auto_ptr<PeakDetectorNaive> pdn3 = PeakDetectorNaive::create(noiseFactor, 3);
+    unique_ptr<PeakDetectorNaive> pdn3 = PeakDetectorNaive::create(noiseFactor, 3);
     pdn3->findPeaks(fd, pd.scans[2]);
     unit_assert(pd.scans[2].peakFamilies.size() == 1);
 
