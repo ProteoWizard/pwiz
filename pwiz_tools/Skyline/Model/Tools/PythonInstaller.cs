@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Model.Tools
         private const string SPACE = TextUtil.SPACE;
         private const string VIRTUALENV = @"virtualenv";
         private const string GIT = @"git";
+        private const string HTTP = @"http";
         internal const string REG_ADD_COMMAND = @"reg add";
         internal const string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
         internal const string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
@@ -842,7 +843,7 @@ namespace pwiz.Skyline.Model.Tools
                     {
                         arg = package.Name;
                     }
-                    else if (package.Version.StartsWith(GIT))
+                    else if (package.Version.StartsWith(HTTP))
                     {
                         arg = package.Version;
                         arg = TextUtil.Quote(arg);
