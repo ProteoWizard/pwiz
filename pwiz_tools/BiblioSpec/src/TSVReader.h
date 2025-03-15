@@ -57,7 +57,10 @@ public:
     std::string filename;
     double rt;
     std::string sequence;
+    std::string stripped_sequence;
     int charge;
+    int fragment_charge;
+    std::string fragment_loss_type;
     double mz;
     std::string proteinName;
     bool decoy;
@@ -81,6 +84,9 @@ public:
     static void insertRtMinutes(TSVLine& line, const std::string& value) {
         line.rt = value.empty() ? 0 : lexical_cast<double>(value);
     }
+    static void insertRtNormalized(TSVLine& line, const std::string& value) {
+        line.rt = value.empty() ? 0 : lexical_cast<double>(value) / 60;
+    }
     static void insertRtStartMinutes(TSVLine& line, const std::string& value) {
         line.leftWidth = value.empty() ? 0 : lexical_cast<double>(value);
     }
@@ -89,6 +95,15 @@ public:
     }
     static void insertSequence(TSVLine& line, const std::string& value) {
         line.sequence = value;
+    }
+    static void insertStrippedSequence(TSVLine& line, const std::string& value) {
+        line.stripped_sequence = value;
+    }
+    static void insertFragmentLossType(TSVLine& line, const std::string& value) {
+        line.fragment_loss_type = value;
+    }
+    static void insertFragmentCharge(TSVLine& line, const std::string& value) {
+        line.fragment_charge = value.empty() ? 0 : lexical_cast<int>(value);
     }
     static void insertCharge(TSVLine& line, const std::string& value) {
         line.charge = value.empty() ? 0 : lexical_cast<int>(value);

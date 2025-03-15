@@ -308,13 +308,16 @@ namespace {
         }
     };
 
-
-    class OpenSwathAssayReader : public TSVReader
+    class AlphaPeptDeepReader : public TSVReader
     {
         public:
         static constexpr const TSVColumnTranslator requiredColumns[] =
         {
-            {"NormalizedRetentionTime", -1, TSVLine::insertRt},
+            {"IonMobility", -1, TSVLine::insertIonMobility},
+            {"StrippedPeptide", -1, TSVLine::insertStrippedSequence},
+            {"FragmentCharge", -1, TSVLine::insertFragmentCharge},
+            {"FragmentLossType", -1, TSVLine::insertFragmentLossType},
+            {"NormalizedRetentionTimeAPD", -1, TSVLine::insertRtMinutes},  // unique to AlphaPeptDeep
             {"ModifiedPeptideSequence", -1, TSVLine::insertSequence},
             {"PrecursorCharge", -1, TSVLine::insertCharge},
             {"PrecursorMz", -1, TSVLine::insertMz},
@@ -329,6 +332,148 @@ namespace {
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
             {"CollisionEnergy", -1, TSVLine::insertCE},
+            {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
+        };
+
+        AlphaPeptDeepReader(BlibBuilder& maker, const char* tsvName, const ProgressIndicator* parentProgress)
+            : TSVReader(maker, tsvName, parentProgress), currentPsm(new TSVPSM)
+        {
+            for (const auto& requiredColumn : requiredColumns)
+                targetColumns_.push_back(requiredColumn);
+            for (const auto& optionalColumn : optionalColumns)
+                optionalColumns_.push_back(optionalColumn);
+
+            string line;
+            getlinePortable(tsvFile_, line);
+            LineParser headerLine(line, separator_);
+            parseHeader(headerLine, targetColumns_, optionalColumns_);
+        }
+
+        static bool hasExpectedColumns(LineParser& headerLine)
+        {
+            set<string> headerColumns(headerLine.begin(), headerLine.end());
+            for (const auto& requiredColumn : requiredColumns)
+                if (headerColumns.find(requiredColumn.name_) == headerColumns.end())
+                    return false;
+            return true;
+        }
+
+        bool parseFile()
+        {
+            if (!tsvFile_)
+                return false;
+
+            Verbosity::debug("Collecting PSMs");
+            map<string, Protein> proteins;
+            collectPsms(proteins);
+
+            // insert last PSM
+            if (!currentSequence.empty())
+            {
+                auto& filePsms = fileMap_[tsvName_];
+                filePsms.push_back(currentPsm.release());
+            }
+
+            Verbosity::debug("Building tables");
+            initSpecFileProgress(fileMap_.size());
+            for (map< string, vector<TSVPSM*> >::iterator i = fileMap_.begin(); i != fileMap_.end(); ++i) {
+                psms_.assign(i->second.begin(), i->second.end());
+                setSpecFileName(i->first.c_str(), false);
+                buildTables(UNKNOWN_SCORE_TYPE, i->first, false);
+            }
+
+            return true;
+        }
+
+        vector<PSM_SCORE_TYPE> getScoreTypes() {
+            return vector<PSM_SCORE_TYPE>(1, UNKNOWN_SCORE_TYPE);
+        }
+
+        private:
+        double currentPrecursorMz = 0;
+        std::string currentSequence = "";
+        unique_ptr<TSVPSM> currentPsm;
+        void storeLine(const TSVLine& line, std::map<std::string, Protein>& proteins)
+        {
+            if (line.decoy) {
+                Verbosity::comment(V_DETAIL, "Not saving decoy PSM (line %d)", lineNum_);
+                return;
+            }
+
+            if (!currentPsm)
+                throw std::runtime_error("NULL currentPsm");
+
+            if (line.mz != currentPsm->mz || line.sequence != currentSequence)
+            {
+                if (!currentSequence.empty())
+                {
+                    // insert current PSM and start a new one
+                    auto& filePsms = fileMap_[tsvName_];
+                    filePsms.push_back(currentPsm.release());
+                    currentPsm.reset(new TSVPSM);
+                }
+                currentSequence = line.sequence;
+
+                // store peptide-level attributes
+
+                //currentPsm->filename = tsvName_;
+                currentPsm->specKey = lineNum_;
+                currentPsm->rt = line.rt;
+                if (!parseSequence(unimod_, line.sequence, &(currentPsm->unmodSeq), &(currentPsm->mods), &lineNum_))
+                    return;
+
+                currentPsm->charge = line.charge;
+                currentPsm->mz = line.mz;
+                if (!line.proteinName.empty()) {
+                    vector<string> proteinNames;
+                    boost::split(proteinNames, line.proteinName, boost::is_any_of(";"));
+                    for (vector<string>::const_iterator i = proteinNames.begin() + 1; i != proteinNames.end(); ++i) {
+                        map<string, Protein>::const_iterator j = proteins.find(*i);
+                        if (j != proteins.end()) {
+                            currentPsm->proteins.insert(&j->second);
+                        }
+                        else {
+                            proteins[*i] = Protein(*i);
+                            currentPsm->proteins.insert(&proteins[*i]);
+                        }
+                    }
+                }
+
+                if (line.ionMobility > 0)
+                {
+                    currentPsm->ionMobility = line.ionMobility;
+                    currentPsm->ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
+                }
+            }
+
+            // add product m/z and intensity to current PSM
+            currentPsm->mzs.push_back(line.leftWidth);
+            currentPsm->intensities.push_back(lexical_cast<double>(line.peakArea));
+        }
+
+    };
+
+    class OpenSwathAssayReader : public TSVReader
+    {
+        public:
+        static constexpr const TSVColumnTranslator requiredColumns[] =
+        {
+            {"NormalizedRetentionTime", -1, TSVLine::insertRtNormalized},
+            {"ModifiedPeptideSequence", -1, TSVLine::insertSequence},
+            {"PrecursorCharge", -1, TSVLine::insertCharge},
+            {"PrecursorMz", -1, TSVLine::insertMz},
+            {"Decoy", -1, TSVLine::insertDecoy},
+            {"ProductMz", -1, TSVLine::insertProductMz}, // populates leftWidth field
+            {"LibraryIntensity", -1, TSVLine::insertPeakArea},
+            {"FragmentType", -1, TSVLine::insertFragmentAnnotation},
+            {"FragmentSeriesNumber", -1, TSVLine::insertFragmentSeriesNumber}
+        };
+
+        static constexpr const TSVColumnTranslator optionalColumns[] =
+        {
+            {"ProteinId", -1, TSVLine::insertProteinName},
+            {"CollisionEnergy", -1, TSVLine::insertCE},
+            {"IonMobility", -1, TSVLine::insertIonMobility},
             {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
 
@@ -490,6 +635,7 @@ namespace {
         static constexpr TSVColumnTranslator optionalColumns[] =
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
+            {"IonMobility", -1, TSVLine::insertIonMobility},
             {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
 
@@ -846,6 +992,8 @@ namespace {
     };
 
     // TODO: remove when switching to C++17
+    constexpr const TSVColumnTranslator AlphaPeptDeepReader::requiredColumns[];
+    constexpr const TSVColumnTranslator AlphaPeptDeepReader::optionalColumns[];
     constexpr const TSVColumnTranslator OpenSwathResultReader::requiredColumns[];
     constexpr const TSVColumnTranslator OpenSwathResultReader::optionalColumns[];
     constexpr const TSVColumnTranslator OpenSwathAssayReader::requiredColumns[];
@@ -894,6 +1042,8 @@ std::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* tsv
     }
     LineParser headerLine(line, separator_);
 
+    if (AlphaPeptDeepReader::hasExpectedColumns(headerLine))
+        return std::make_shared<AlphaPeptDeepReader>(maker, tsvName, parentProgress);
     if (PaserLibraryReader::hasExpectedColumns(headerLine))
         return std::make_shared<PaserLibraryReader>(maker, tsvName, parentProgress);
     if (PaserResultReader::hasExpectedColumns(headerLine))
