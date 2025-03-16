@@ -86,17 +86,17 @@ namespace pwiz.Skyline.ToolsUI
                                 //if (!PythonInstaller.IsRunningElevated())
                                  //   adminMessageDlg.FindButton(DialogResult.OK).Enabled = false;
 
-                                var nvidiaChoice = adminMessageDlg.ShowDialog();
+                                var nvidiaAdminChoice = adminMessageDlg.ShowDialog();
                                 //Download
-                                if (nvidiaChoice == DialogResult.Cancel)
+                                if (nvidiaAdminChoice == DialogResult.Cancel)
                                 {
                                     _userAnswerToCuda = @"Cancel";
                                     if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
                                     if (!EnableNvidiaGpuDlg.IsDisposed) EnableNvidiaGpuDlg.Dispose();
                                     if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
-                                    return nvidiaChoice;
+                                    return nvidiaAdminChoice;
                                 }
-                                else if (nvidiaChoice == DialogResult.OK)
+                                else if (nvidiaAdminChoice == DialogResult.OK)
                                 {
                                     // Attempt to run
                                     abortTask = !PerformTaskAction(parent, task);
@@ -149,6 +149,8 @@ namespace pwiz.Skyline.ToolsUI
                     else
                     {
                         abortedTasks.Add(task);
+                        if (_userAnswerToCuda == @"No" && abortedTasks.Count == 1)
+                            return DialogResult.No;
                         return DialogResult.Cancel;
                     }
                 }
@@ -159,6 +161,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");
+            
             if (_resultAlertDlg != null && ! _resultAlertDlg.IsDisposed) _resultAlertDlg.Dispose();
 
             pythonInstaller.CheckPendingTasks();
@@ -224,6 +227,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
 
+            Dispose();
             return result;
         }
         public static void Dispose()
