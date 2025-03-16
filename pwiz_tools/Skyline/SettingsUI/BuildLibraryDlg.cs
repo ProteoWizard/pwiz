@@ -122,7 +122,7 @@ namespace pwiz.Skyline.SettingsUI
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(CARAFE_PYTHON_VERSION, CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         // TODO(xgwang): update this to the ssh link to the remote repo
-        private string AlphapeptdeepDiaRepo = @"https://github.com/wenbostar/alphapeptdeep_dia";
+        private string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0"; //@"https://github.com/wenbostar/alphapeptdeep_dia";
         // TODO(xgwang): update this to user input value from the dlg
         //private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
@@ -586,7 +586,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     PythonDlg.Dispose();
-                    PythonInstallerUI.Dispose();
+//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
@@ -594,24 +594,24 @@ namespace pwiz.Skyline.SettingsUI
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
                     if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-                    PythonInstallerUI.Dispose();
+//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
-                PythonInstallerUI.Dispose();
+                //PythonInstallerUI.Dispose();
 
             }
             else if (!pythonInstaller.IsNvidiaEnvironmentReady())
             {
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
-                    PythonInstallerUI.Dispose();
+                    //PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
-                PythonInstallerUI.Dispose();
+                //PythonInstallerUI.Dispose();
 
             }
             Cursor = Cursors.Default;
@@ -623,10 +623,8 @@ namespace pwiz.Skyline.SettingsUI
             var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
             var packages = new List<PythonPackage>()
             {
-                //new PythonPackage
-                //    { Name = PEPTDEEP, Version = @$"git+{AlphapeptdeepDiaRepo}" },
                 new PythonPackage
-                    { Name = PEPTDEEP, Version = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0" },
+                    { Name = PEPTDEEP, Version = AlphapeptdeepDiaRepo },
                 new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
                 new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
                 new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
@@ -663,7 +661,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     PythonDlg.Dispose();
-                    PythonInstallerUI.Dispose();
+//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
@@ -671,25 +669,25 @@ namespace pwiz.Skyline.SettingsUI
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
                     if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-                    PythonInstallerUI.Dispose();
+                    //PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
 
-                PythonInstallerUI.Dispose();
+                //PythonInstallerUI.Dispose();
             }
             else if (!pythonInstaller.IsNvidiaEnvironmentReady())
             {
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
                     PythonDlg.Dispose();
-                    PythonInstallerUI.Dispose();
+//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
-                PythonInstallerUI.Dispose();
+                //PythonInstallerUI.Dispose();
 
             }
             if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
@@ -1226,6 +1224,7 @@ namespace pwiz.Skyline.SettingsUI
             // Only respond to the checking event, or this will happen
             // twice for every change.
             var radioSender = (RadioButton)sender;
+            
             if (!radioSender.Checked)
                 return;
 
@@ -1238,6 +1237,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
                 }
+                comboStandards.Enabled = true;
+
             }
             else
             {
@@ -1251,12 +1252,14 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                    comboStandards.Enabled = true;
                 }
                 else // must be Koina
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.koina;
                     KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                    comboStandards.Enabled = true;
                 }
             }
             _driverStandards.LoadList(selectedStandard.GetKey());

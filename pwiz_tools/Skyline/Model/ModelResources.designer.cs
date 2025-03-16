@@ -213,10 +213,28 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder completed ok.
+        /// </summary>
+        public static string Alphapeptdeep_Blib_completed_ok {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Blib_completed_ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder failed to complete.
+        /// </summary>
+        public static string Alphapeptdeep_Blib_failed_to_complete {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Blib_failed_to_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
-        ///    {0}
+        ///{0}
         ///	
-        ///        Would you like to continue building this predicted library?.
+        ///Would you like to continue building this predicted library?.
         /// </summary>
         public static string Alphapeptdeep_Warn_unknown_modification {
             get {

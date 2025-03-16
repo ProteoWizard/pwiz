@@ -1135,10 +1135,12 @@ namespace pwiz.Skyline.Model.Tools
             using (var sha256 = SHA256.Create())
             {
                 byte[] hash = { };
+                string fullPath = Path.GetFullPath(filePath);
+
                 RetryAction(() =>
                 {
 
-                    using (var stream = File.OpenRead($@"\\?\{filePath}"))
+                    using (var stream = File.OpenRead($@"\\?\{fullPath}"))
                     {
                         hash = sha256.ComputeHash(stream);
 

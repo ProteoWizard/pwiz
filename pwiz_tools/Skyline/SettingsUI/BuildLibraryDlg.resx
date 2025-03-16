@@ -823,6 +823,9 @@ you can append more spectra in the future.</value>
   <data name="gridInputFiles.RowHeadersWidth" type="System.Int32, mscorlib">
     <value>62</value>
   </data>
+  <data name="gridInputFiles.RowHeadersWidth" type="System.Int32, mscorlib">
+    <value>62</value>
+  </data>
   <data name="gridInputFiles.Size" type="System.Drawing.Size, System.Drawing">
     <value>1035, 835</value>
   </data>

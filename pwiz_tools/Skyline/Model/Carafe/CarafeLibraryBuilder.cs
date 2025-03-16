@@ -110,9 +110,9 @@ namespace pwiz.Skyline.Model.Carafe
         string ILibraryBuilder.TestLibraryPath
         {
             get { return _testLibraryPath; }
+
             set { _testLibraryPath = value; }
         }
-
         private string PythonVersion { get; }
         private string PythonVirtualEnvironmentName { get; }
 
@@ -288,8 +288,12 @@ namespace pwiz.Skyline.Model.Carafe
         {
             return CarafeOutputLibraryFilePath();
         }
-    
-        public string ToolName { get; }
+
+        private string _toolName; 
+        public string ToolName { 
+            get => _toolName;
+            private set => _toolName = value;
+        }
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,

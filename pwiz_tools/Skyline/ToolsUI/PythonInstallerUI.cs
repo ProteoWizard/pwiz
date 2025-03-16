@@ -142,7 +142,7 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         throw new PythonInstallerUnsupportedTaskException(task);
                     }
-                    if (!abortTask)
+                    if (abortTask)
                     {
                         pythonInstaller.NumCompletedTasks++;
                     }
@@ -223,10 +223,10 @@ namespace pwiz.Skyline.ToolsUI
                     }
                 }
             }
-
+            Dispose();
             return result;
         }
-        public static void Dispose()
+        private static void Dispose()
         {
             if (_resultAlertDlg != null && !_resultAlertDlg.IsDisposed)
             {
@@ -253,11 +253,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 waitDlg.Message = task.InProgressMessage;
                 waitDlg.PerformWork(parent, 50, task.AsActionWithLongWaitBroker);
-            }   
-                
-            //if (proStatus != null && proStatus.IsCanceled)
-            //    return false;
-            
+            }
             return !waitDlg.IsCanceled;
         }
     }
