@@ -70,6 +70,15 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Drag and drop nodes.
+        /// </summary>
+        public static string Drag_and_Drop_Nodes {
+            get {
+                return ResourceManager.GetString("Drag_and_Drop_Nodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Acquired Time.
         /// </summary>
         public static string FilesTree_TreeNode_RenderTip_AcquiredTime {
@@ -246,6 +255,24 @@ namespace pwiz.Skyline.Controls.FilesTree {
         public static string FilesTree_TreeNodeLabel_ViewFile {
             get {
                 return ResourceManager.GetString("FilesTree_TreeNodeLabel_ViewFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove all replicate nodes.
+        /// </summary>
+        public static string Remove_All_Replicate_Nodes {
+            get {
+                return ResourceManager.GetString("Remove_All_Replicate_Nodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove replicate node.
+        /// </summary>
+        public static string Remove_Replicate_Node {
+            get {
+                return ResourceManager.GetString("Remove_Replicate_Node", resourceCulture);
             }
         }
     }

@@ -145,7 +145,7 @@
     <value>filesTree</value>
   </data>
   <data name="&gt;&gt;filesTree.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.FilesTree, Skyline-daily, Version=24.1.1.402, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.FilesTree.FilesTree, Skyline-daily, Version=24.1.1.402, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;filesTree.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -180,31 +180,31 @@
   <metadata name="filesTreeContextMenu.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>199, 17</value>
   </metadata>
-  <data name="libraryExplorerToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+  <data name="libraryExplorerMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
-  <data name="libraryExplorerToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="libraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
-  <data name="libraryExplorerToolStripMenuItem.Text" xml:space="preserve">
+  <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
     <value>Open Library Explorer</value>
   </data>
-  <data name="manageResultsToolStripMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+  <data name="manageResultsMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
-  <data name="manageResultsToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="manageResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
-  <data name="manageResultsToolStripMenuItem.Text" xml:space="preserve">
+  <data name="manageResultsMenuItem.Text" xml:space="preserve">
     <value>Manage Results</value>
   </data>
-  <data name="openContainingFolderMenuStripItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+  <data name="openContainingFolderMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
-  <data name="openContainingFolderMenuStripItem.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>201, 22</value>
   </data>
-  <data name="openContainingFolderMenuStripItem.Text" xml:space="preserve">
+  <data name="openContainingFolderMenuItem.Text" xml:space="preserve">
     <value>Show Containing Folder</value>
   </data>
   <data name="openLibraryInLibraryExplorerMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -225,8 +225,20 @@
   <data name="openAuditLogMenuItem.Text" xml:space="preserve">
     <value>Open Audit Log</value>
   </data>
+  <data name="removeAllMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="removeAllMenuItem.Text" xml:space="preserve">
+    <value>Remove All</value>
+  </data>
+  <data name="removeMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="removeMenuItem.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
   <data name="filesTreeContextMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>202, 136</value>
+    <value>202, 202</value>
   </data>
   <data name="&gt;&gt;filesTreeContextMenu.Name" xml:space="preserve">
     <value>filesTreeContextMenu</value>
@@ -279,22 +291,22 @@
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
     <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.402, Culture=neutral, PublicKeyToken=null</value>
   </data>
-  <data name="&gt;&gt;libraryExplorerToolStripMenuItem.Name" xml:space="preserve">
-    <value>libraryExplorerToolStripMenuItem</value>
+  <data name="&gt;&gt;libraryExplorerMenuItem.Name" xml:space="preserve">
+    <value>libraryExplorerMenuItem</value>
   </data>
-  <data name="&gt;&gt;libraryExplorerToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;libraryExplorerMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;manageResultsToolStripMenuItem.Name" xml:space="preserve">
-    <value>manageResultsToolStripMenuItem</value>
+  <data name="&gt;&gt;manageResultsMenuItem.Name" xml:space="preserve">
+    <value>manageResultsMenuItem</value>
   </data>
-  <data name="&gt;&gt;manageResultsToolStripMenuItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;manageResultsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;openContainingFolderMenuStripItem.Name" xml:space="preserve">
-    <value>openContainingFolderMenuStripItem</value>
+  <data name="&gt;&gt;openContainingFolderMenuItem.Name" xml:space="preserve">
+    <value>openContainingFolderMenuItem</value>
   </data>
-  <data name="&gt;&gt;openContainingFolderMenuStripItem.Type" xml:space="preserve">
+  <data name="&gt;&gt;openContainingFolderMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;openLibraryInLibraryExplorerMenuItem.Name" xml:space="preserve">
@@ -313,6 +325,18 @@
     <value>openAuditLogMenuItem</value>
   </data>
   <data name="&gt;&gt;openAuditLogMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeAllMenuItem.Name" xml:space="preserve">
+    <value>removeAllMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeAllMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;removeMenuItem.Name" xml:space="preserve">
+    <value>removeMenuItem</value>
+  </data>
+  <data name="&gt;&gt;removeMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

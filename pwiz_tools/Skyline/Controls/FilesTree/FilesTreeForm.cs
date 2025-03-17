@@ -15,17 +15,20 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using Process = System.Diagnostics.Process;
 
+// TODO: drag-and-drop for spectral libraries
 namespace pwiz.Skyline.Controls.FilesTree
 {
     public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
@@ -43,12 +46,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow = skylineWindow;
 
             // FilesTree
+            filesTree.LabelEdit = true;
+            filesTree.AllowDrop = true;
             filesTree.NodeMouseDoubleClick += FilesTree_TreeNodeMouseDoubleClick;
             filesTree.MouseMove += FilesTree_MouseMove;
             filesTree.LostFocus += FilesTree_LostFocus;
-            filesTree.LabelEdit = true;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
             filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
+            filesTree.ItemDrag += FilesTree_ItemDrag;
+            filesTree.DragEnter += FilesTree_DragEnter;
+            filesTree.DragOver += FilesTree_DragOver;
+            filesTree.DragDrop += FilesTree_DragDrop;
+            filesTree.KeyDown += FilesTree_KeyDown;
 
             // FilesTree => context menu
             filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
@@ -139,8 +148,56 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ViewSpectralLibraries();
         }
 
+        public void RemoveAll()
+        {
+            SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicate_Nodes,
+                document =>
+                {
+                    var newDoc = document.ChangeMeasuredResults(null);
+                    newDoc.ValidateResults();
+                    return newDoc;
+                },
+                docPair =>
+                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_nodes_remove_all, docPair.NewDocumentType)
+            );
+        }
+
+        public void RemoveSelected(IEnumerable<TreeNodeMS> nodes)
+        {
+            var selectedNodeIds = nodes?.Select(item => ((FilesTreeNode)item).Model.IdentityPath.Child).ToList();
+
+            if (selectedNodeIds == null || selectedNodeIds.Count == 0)
+                return;
+
+            SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node,
+                document =>
+                {
+                    var oldMeasuredResults = SkylineWindow.Document.MeasuredResults;
+                    var oldChromatograms = oldMeasuredResults.Chromatograms.ToArray();
+
+                    var newChromatograms = new List<ChromatogramSet>(oldChromatograms.Length - selectedNodeIds.Count);
+                    for (var i = 0; i < oldChromatograms.Length; i++)
+                    {
+                        // skip replicates selected for removal
+                        if (!ContainsCheckReferenceEquals(selectedNodeIds, oldChromatograms[i].Id))
+                        {
+                            newChromatograms.Add(oldChromatograms[i]);
+                        }
+                    }
+
+                    var newMeasuredResults = oldMeasuredResults.ChangeChromatograms(newChromatograms);
+                    return document.ChangeMeasuredResults(newMeasuredResults);
+                },
+                docPair =>
+                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedNodeIds)
+            );
+        }
+
         public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
         {
+            if (string.IsNullOrEmpty(newLabel))
+                return false;
+
             var chromatogramSetId = (ChromatogramSetId)node.Model.IdentityPath.GetIdentity(0);
             var chromatogram = SkylineWindow.Document.MeasuredResults.FindChromatogramSet(chromatogramSetId);
 
@@ -172,10 +229,86 @@ namespace pwiz.Skyline.Controls.FilesTree
                     return document.ChangeMeasuredResults(measuredResults);
                 },
                 docPair => 
-                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_renamed_node, docPair.NewDocumentType, oldName, newName)
+                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_renamed, docPair.NewDocumentType, oldName, newName)
             );
 
             return false;
+        }
+
+        // CONSIDER: use IdentityPath to save and restore selected nodes? Caveat, all draggable nodes
+        //           types must subclass DocNode, which is not true of replicates.
+        public void DropNodes(FilesTreeNode dropNode, IList<FilesTreeNode> draggedNodes, DragDropEffects effect)
+        {
+            if (dropNode == null || !dropNode.IsDroppable() || draggedNodes.Contains(dropNode))
+                return;
+
+            if (effect == DragDropEffects.Move)
+            {
+                SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
+                    doc =>
+                    {
+                        var draggedImmutables = draggedNodes.Select(item => (ChromatogramSet)item.Model.Immutable).ToList();
+
+                        var newChromatogramSets = new List<ChromatogramSet>(doc.MeasuredResults.Chromatograms);
+
+                        foreach (var item in draggedImmutables)
+                        {
+                            newChromatogramSets.Remove(item);
+                        }
+
+                        int insertIndex;
+                        // Insert at 0 if dropping on Replicates\ folder
+                        if (dropNode.Model.GetType() == typeof(ReplicatesFolder))
+                        {
+                            insertIndex = 0;
+                        }
+                        else
+                        {
+                            insertIndex = newChromatogramSets.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
+                        }
+
+                        newChromatogramSets.InsertRange(insertIndex, draggedImmutables);
+
+                        var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatogramSets);
+                        var newDoc = doc.ChangeMeasuredResults(newMeasuredResults);
+
+                        return newDoc;
+                    },
+                    docPair => {
+                        var entry = AuditLogEntry.CreateCountChangeEntry(
+                            MessageType.files_tree_node_drag_and_drop,
+                            MessageType.files_tree_nodes_drag_and_drop,
+                            docPair.NewDocumentType,
+                            draggedNodes.Select(node => node.Text),
+                            draggedNodes.Count,
+                            str => MessageArgs.Create(str, dropNode.Text),
+                            MessageArgs.Create(draggedNodes.Count, dropNode.Text)
+                        );
+
+                        if (draggedNodes.Count > 1)
+                        {
+                            entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, docPair.NewDocumentType, node.Text, dropNode.Text)).ToList());
+                        }
+
+                        return entry;
+                    }
+                );
+
+                // After the drop, reset selection so dragged nodes are blue
+                filesTree.SelectedNodes.Clear();
+
+                // make the last node a person clicked the selected node, which appears dark blue
+                if (draggedNodes.Count > 0)
+                    filesTree.SelectedNode = draggedNodes.LastOrDefault();
+
+                foreach (var node in draggedNodes)
+                {
+                    filesTree.SelectNode(node, true);
+                }
+
+                filesTree.Invalidate();
+                filesTree.Focus();
+            }
         }
 
         #region ITipDisplayer implementation
@@ -198,33 +331,41 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             _nodeTip.HideTip();
 
-            libraryExplorerToolStripMenuItem.Visible = false;
-            manageResultsToolStripMenuItem.Visible = false;
+            libraryExplorerMenuItem.Visible = false;
+            manageResultsMenuItem.Visible = false;
             openAuditLogMenuItem.Visible = false;
             openLibraryInLibraryExplorerMenuItem.Visible = false;
-            openContainingFolderMenuStripItem.Visible = false;
+            openContainingFolderMenuItem.Visible = false;
             selectReplicateMenuItem.Visible = false;
+            removeAllMenuItem.Visible = false;
+            removeMenuItem.Visible = false;
 
-            // Offer "Open Containing Folder" if supported by this tree node and the file
-            // is available (e.g. not removed or deleted)
+            // Only offer "Open Containing Folder" if (1) supported by this tree node
+            // and (2) the file's state is "available"
             if (filesTreeNode.SupportsOpenContainingFolder())
             {
-                openContainingFolderMenuStripItem.Visible = true;
-                openContainingFolderMenuStripItem.Enabled = filesTreeNode.Model.FileState == FileState.available;
+                openContainingFolderMenuItem.Visible = true;
+                openContainingFolderMenuItem.Enabled = filesTreeNode.Model.FileState == FileState.available;
             }
+
+            if (filesTreeNode.SupportsRemoveItem())
+                removeMenuItem.Visible = true;
+
+            if (filesTreeNode.SupportsRemoveAllItems())
+                removeAllMenuItem.Visible = true;
 
             switch (filesTreeNode.Model)
             {
                 case ReplicatesFolder _:
-                    manageResultsToolStripMenuItem.Visible = true;
-                    manageResultsToolStripMenuItem.Enabled = true;
+                    manageResultsMenuItem.Visible = true;
+                    manageResultsMenuItem.Enabled = true;
                     return;
                 case Replicate _:
                 case ReplicateSampleFile _:
                     selectReplicateMenuItem.Visible = true;
                     break;
                 case SpectralLibrariesFolder _:
-                    libraryExplorerToolStripMenuItem.Visible = true;
+                    libraryExplorerMenuItem.Visible = true;
                     return;
                 case SpectralLibrary _:
                     openLibraryInLibraryExplorerMenuItem.Visible = true;
@@ -283,6 +424,16 @@ namespace pwiz.Skyline.Controls.FilesTree
             OpenLibraryExplorerDialog(FilesTree.SelectedNode);
         }
 
+        private void FilesTree_RemoveAllMenuItem(object sender, EventArgs e)
+        {
+            RemoveAll();
+        }
+
+        private void FilesTree_RemoveMenuItem(object sender, EventArgs e)
+        {
+            RemoveSelected(FilesTree.SelectedNodes);
+        }
+
         // FilesTree => display ToolTip
         private void FilesTree_MouseMove(object sender, MouseEventArgs e)
         {
@@ -339,6 +490,93 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 e.CancelEdit = true;
             }
+        }
+
+        private void FilesTree_KeyDown(object sender, KeyEventArgs e)
+        {
+            _nodeTip.HideTip();
+        }
+
+        // Select the expected drop location
+        private void FilesTree_DragOver(object sender, DragEventArgs e)
+        {
+            var point = filesTree.PointToClient(new Point(e.X, e.Y));
+            var node = filesTree.GetNodeAt(point);
+
+            // Select node at the drop target
+            if (node != null)
+            {
+                e.Effect = DragDropEffects.Move;
+                filesTree.SelectedNode = node;
+            }
+
+            // CONSIDER: does setting AutoScroll on the form negate the need for this code?
+            // Auto-scroll if near the top or bottom edge.
+            var ptView = FilesTree.PointToClient(new Point(e.X, e.Y));
+            if (ptView.Y < 10)
+            {
+                var nodeTop = FilesTree.TopNode;
+                if (nodeTop != null && nodeTop.PrevVisibleNode != null)
+                    FilesTree.TopNode = nodeTop.PrevVisibleNode;
+            }
+            if (ptView.Y > FilesTree.Bottom - 10)
+            {
+                var nodeTop = FilesTree.TopNode;
+                if (nodeTop != null && nodeTop.NextVisibleNode != null)
+                    FilesTree.TopNode = nodeTop.NextVisibleNode;
+            }
+        }
+
+        private void FilesTree_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(typeof(FilesTreeNode)))
+                e.Effect = DragDropEffects.Move;
+        }
+
+        private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
+        {
+            var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
+
+            _nodeTip.HideTip();
+
+            var draggedNodes = new List<FilesTreeNode>();
+            foreach (var node in selectedNodes)
+            {
+                if (node.IsDraggable())
+                {
+                    draggedNodes.Add(node);
+                }
+                else if (((FilesTreeNode)node.Parent).IsDraggable() && selectedNodes.Contains(node.Parent))
+                {
+                    /* ignore node and keep going - node's parent is selected and will be added to draggedNodes */
+                }
+                else return;
+            }
+
+            var dataObj = new DataObject();
+            dataObj.SetData(typeof(FilesTreeNode), draggedNodes);
+
+            filesTree.DoDragDrop(dataObj, DragDropEffects.Move);
+        }
+
+        private void FilesTree_DragDrop(object sender, DragEventArgs e)
+        {
+            var dropPoint = filesTree.PointToClient(new Point(e.X, e.Y));
+            var dropNode = (FilesTreeNode)filesTree.GetNodeAt(dropPoint);
+
+            var dragNodeList = (IList<FilesTreeNode>)e.Data.GetData(typeof(FilesTreeNode));
+
+            DropNodes(dropNode, dragNodeList, e.Effect);
+        }
+
+        private static bool ContainsCheckReferenceEquals(IList<Identity> list, Identity item)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (ReferenceEquals(list[i], item))
+                    return true;
+            }
+            return false;
         }
     }
 }

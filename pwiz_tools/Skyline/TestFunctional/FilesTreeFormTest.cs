@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -369,6 +370,30 @@ namespace pwiz.SkylineTestFunctional
             CheckReplicateEquivalence(42);
 
             Assert.IsTrue(OnlyContainsFilesTreeNodes(SkylineWindow.FilesTree.Root));
+
+            //
+            // Drag-and-drop
+            //
+            var draggedNodes = new List<FilesTreeNode> {
+                (FilesTreeNode)replicateFolderModel.Nodes[3],
+                (FilesTreeNode)replicateFolderModel.Nodes[4],
+                (FilesTreeNode)replicateFolderModel.Nodes[5]
+            };
+
+            var dropNode = (FilesTreeNode)replicateFolderModel.Nodes[9];
+
+            doc = SkylineWindow.Document;
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.DropNodes(dropNode, draggedNodes, DragDropEffects.Move);
+            });
+            WaitForDocumentChangeLoaded(doc);
+
+            replicateFolderModel = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            Assert.AreEqual(draggedNodes[0], replicateFolderModel.Nodes[6]);
+            Assert.AreEqual(draggedNodes[1], replicateFolderModel.Nodes[7]);
+            Assert.AreEqual(draggedNodes[2], replicateFolderModel.Nodes[8]);
+            Assert.AreEqual(dropNode, replicateFolderModel.Nodes[9]);
 
             // // Project Files => Audit Log Action
             // RunUI(() =>

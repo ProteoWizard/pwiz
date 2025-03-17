@@ -672,11 +672,47 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &gt;Renamed node {0} to {1} in the Files window.
+        ///   Looks up a localized string similar to Drag and dropped {0} node to {1} in the Files window.
         /// </summary>
-        public static string files_tree_renamed_node {
+        public static string files_tree_node_drag_and_drop {
             get {
-                return ResourceManager.GetString("files_tree_renamed_node", resourceCulture);
+                return ResourceManager.GetString("files_tree_node_drag_and_drop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed replicate node {0} in the Files window.
+        /// </summary>
+        public static string files_tree_node_remove {
+            get {
+                return ResourceManager.GetString("files_tree_node_remove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renamed node {0} to {1} in the Files window.
+        /// </summary>
+        public static string files_tree_node_renamed {
+            get {
+                return ResourceManager.GetString("files_tree_node_renamed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drag and dropped {0} nodes to {1} in the Files window.
+        /// </summary>
+        public static string files_tree_nodes_drag_and_drop {
+            get {
+                return ResourceManager.GetString("files_tree_nodes_drag_and_drop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed all replicate nodes in the Files window.
+        /// </summary>
+        public static string files_tree_nodes_remove_all {
+            get {
+                return ResourceManager.GetString("files_tree_nodes_remove_all", resourceCulture);
             }
         }
         

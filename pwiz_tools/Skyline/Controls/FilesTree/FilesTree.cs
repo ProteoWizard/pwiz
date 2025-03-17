@@ -365,7 +365,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public void FileRenamed(string oldFileName, string newFileName)
         {
             // Look for a tree node with the file's previous name. If a node with that name is found
-            // treat the file as missing. ;
+            // treat the file as missing.
             if (FindTreeNodeForFileName(Root, oldFileName, out var missingFileTreeNode))
             {
                 missingFileTreeNode.Model.FileState = FileState.missing;
@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         protected override bool IsParentNode(TreeNode node)
         {
-            return node.Parent == null;
+            return node.Nodes.Count == 0;
         }
 
         protected override int EnsureChildren(TreeNode node)
@@ -585,6 +585,27 @@ namespace pwiz.Skyline.Controls.FilesTree
         public bool SupportsOpenContainingFolder()
         {
             return Model.IsBackedByFile;
+        }
+
+        public bool SupportsRemoveItem()
+        {
+            return Model.GetType() == typeof(Replicate);
+        }
+
+        public bool SupportsRemoveAllItems()
+        {
+            return Model.GetType() == typeof(ReplicatesFolder);
+        }
+
+        public bool IsDraggable()
+        {
+            return Model.GetType() == typeof(Replicate);
+        }
+
+        public bool IsDroppable()
+        {
+            return Model.GetType() == typeof(Replicate) ||
+                   Model.GetType() == typeof(ReplicatesFolder);
         }
     }
 }

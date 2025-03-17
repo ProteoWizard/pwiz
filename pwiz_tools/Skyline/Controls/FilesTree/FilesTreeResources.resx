@@ -180,4 +180,13 @@
   <data name="Change_ReplicateName" xml:space="preserve">
       <value>Change replicate name</value>
   </data>
+  <data name="Drag_and_Drop_Nodes" xml:space="preserve">
+      <value>Drag and drop nodes</value>
+  </data>
+  <data name="Remove_All_Replicate_Nodes" xml:space="preserve">
+      <value>Remove all replicate nodes</value>
+  </data>
+  <data name="Remove_Replicate_Node" xml:space="preserve">
+      <value>Remove replicate node</value>
+  </data>
 </root>
