@@ -885,6 +885,10 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode ChangeResults(Results<TransitionChromInfo> prop)
         {
+            if (true == Results?.EqualsIncludingFileIds(prop))
+            {
+                return this;
+            }
             return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 

@@ -692,6 +692,10 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeResults(Results<PeptideChromInfo> prop)
         {
+            if (true == Results?.EqualsIncludingFileIds(prop))
+            {
+                return this;
+            }
             return ChangeProp(ImClone(this), im =>
                                                  {
                                                      im.Results = prop;
