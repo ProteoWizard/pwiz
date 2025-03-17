@@ -520,8 +520,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private string BuilderLibraryPath
         {
-            get { return OutputSpectraLibFilepath; }
-            set => OutputSpectraLibFilepath = value;
+            get => TransformedOutputSpectraLibFilepath; 
         }
 
         string ILibraryBuilder.BuilderLibraryPath
