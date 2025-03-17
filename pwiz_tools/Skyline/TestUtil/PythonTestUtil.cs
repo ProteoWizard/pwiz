@@ -108,7 +108,7 @@ namespace pwiz.SkylineTestUtil
             installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
-            AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
+            AbstractFunctionalTest.OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
         }
 
         /// <summary>

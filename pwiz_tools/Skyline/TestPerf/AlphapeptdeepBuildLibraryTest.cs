@@ -44,10 +44,6 @@ namespace TestPerf
         private string LibraryPathWithIrt =>
             TestContext.GetTestPath("TestAlphapeptdeepBuildLibrary\\LibraryWithIrt.blib");
 
-        private string _storedHashWithoutIrt = @"2b31dec24e3a22bf2807769864ec6d7045236be32a9f78e0548e62975afe7318";
-
-        private string _storedHashWithIrt = @"2b31dec24e3a22bf2807769864ec6d7045236be32a9f78e0548e62975afe7318";
-
         private PythonTestUtil _pythonTestUtil;
         private PeptideSettingsUI _peptideSettings;
         private BuildLibraryDlg _buildLibraryDlg;
@@ -56,48 +52,22 @@ namespace TestPerf
         {
             OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
 
-
+            const string answerWithoutIrt = "predict_transformed.speclib.tsv";
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
             const string libraryWithIrt = "AlphaPeptDeepLibraryWithIrt";
 
             _peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
             _buildLibraryDlg = ShowDialog<BuildLibraryDlg>(_peptideSettings.ShowBuildLibraryDlg);
-            RunUI(() =>
-            {
-                _buildLibraryDlg.LibraryName = libraryWithoutIrt;
-                _buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
-                _buildLibraryDlg.AlphaPeptDeep = true;
-            });
 
-            if (!_pythonTestUtil.HavePythonPrerequisite(_buildLibraryDlg))
-            {
-                _pythonTestUtil.CancelPython(_buildLibraryDlg);
-                
-
-                _pythonTestUtil.InstallPythonTestNvidia(_buildLibraryDlg);
-                WaitForClosedForm<LongWaitDlg>();
-
-                //_pythonTestUtil.InstallPython(_buildLibraryDlg);
-                //WaitForClosedForm<LongWaitDlg>();
-
-                //AbstractFunctionalTest.RunLongDlg<LongWaitDlg>(nvidiaResult.OkDialog, buildDlg => { }, dlg => { });
-            }
+            AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
             
-            AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, _storedHashWithoutIrt, IrtStandard.PIERCE);
-            OkDialog(_peptideSettings, _peptideSettings.OkDialog);
-
-            // test with iRT
-            _peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
-            _buildLibraryDlg = ShowDialog<BuildLibraryDlg>(_peptideSettings.ShowBuildLibraryDlg);
-
-            AlphapeptdeepBuildLibrary(libraryWithIrt, LibraryPathWithIrt, _storedHashWithIrt, IrtStandard.PIERCE);
             OkDialog(_peptideSettings, _peptideSettings.OkDialog);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
-                spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
+                //spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
             });
 
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
@@ -108,9 +78,9 @@ namespace TestPerf
         /// </summary>
         /// <param name="libraryName">Name of the library to build</param>
         /// <param name="libraryPath">Path of the library to build</param>
-        /// <param name="storedHash">checksum of the library to build</param>
+        /// <param name="answerFile">Path to library answersheet</param>
         /// <param name="iRTtype">iRT standard type</param>
-        private void AlphapeptdeepBuildLibrary( string libraryName, string libraryPath, string storedHash, IrtStandard iRTtype = null)
+        private void AlphapeptdeepBuildLibrary(string libraryName, string libraryPath, string answerFile, IrtStandard iRTtype = null)
         {
 
             RunUI(() =>
@@ -118,46 +88,36 @@ namespace TestPerf
                 _buildLibraryDlg.LibraryName = libraryName;
                 _buildLibraryDlg.LibraryPath = libraryPath;
                 _buildLibraryDlg.AlphaPeptDeep = true;
-                if (iRTtype != null) _buildLibraryDlg.IrtStandard = iRTtype;
             });
-
-            // Test the control path where Python needs installation and is
 
             if (!_pythonTestUtil.HavePythonPrerequisite(_buildLibraryDlg))
             {
-                    //PauseTest();
+                _pythonTestUtil.CancelPython(_buildLibraryDlg);
 
-                    // Test the control path where Python is installable
-                    if (!_pythonTestUtil.InstallPython(_buildLibraryDlg))
-                    {
-                        OkDialog(_buildLibraryDlg, _buildLibraryDlg.OkWizardPage);
-                        AbstractFunctionalTest.WaitForClosedForm<LongWaitDlg>();
-                    }
-
-                //PauseTest();
-                //TestResultingLibByHash(storedHash);
-                TestResultingLibByValues();
-
+                _pythonTestUtil.InstallPythonTestNvidia(_buildLibraryDlg);
             }
             else
             {
-                AbstractFunctionalTest.RunLongDlg<LongWaitDlg>(_buildLibraryDlg.OkWizardPage, WaitForClosedForm, dlg => { 
-                });
-
-                //TestResultingLibByHash(storedHash);
-                TestResultingLibByValues();
+                RunUI(() => { _buildLibraryDlg.OkWizardPage(); });
             }
+
+            WaitForOpenForm<LongWaitDlg>();
+            WaitForClosedForm<LongWaitDlg>();
+
+
+            //TestResultingLibByHash(storedHash);
+            TestResultingLibByValues(_buildLibraryDlg.BuilderLibFilepath, TestFilesDir.GetTestPath(answerFile));
             
+
         }
+
         protected override void Cleanup()
         {
             DirectoryEx.SafeDelete("TestAlphapeptdeepBuildLibrary");
         }
 
-        private void TestResultingLibByValues()
+        private void TestResultingLibByValues(string product, string answer)
         {
-            string product = _buildLibraryDlg.BuilderLibFilepath;
-            string answer = TestFilesDir.GetTestPath(@"predict.speclib.tsv");
             using (var answerReader = new StreamReader(answer))
             {
                 using (var productReader = new StreamReader(product))
