@@ -586,7 +586,6 @@ namespace pwiz.Skyline.SettingsUI
                 if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     PythonDlg.Dispose();
-//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
@@ -594,25 +593,19 @@ namespace pwiz.Skyline.SettingsUI
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
                     if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
-                //PythonInstallerUI.Dispose();
-
             }
             else if (!pythonInstaller.IsNvidiaEnvironmentReady())
             {
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
-                    //PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
-                    return false;
+                    return false;  //Install was cancelled, 
                 }
-                //PythonInstallerUI.Dispose();
-
             }
             Cursor = Cursors.Default;
             btnNext.Enabled = true;
@@ -661,7 +654,6 @@ namespace pwiz.Skyline.SettingsUI
                 if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     PythonDlg.Dispose();
-//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
@@ -669,26 +661,19 @@ namespace pwiz.Skyline.SettingsUI
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
                     if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-                    //PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
-
-                //PythonInstallerUI.Dispose();
             }
             else if (!pythonInstaller.IsNvidiaEnvironmentReady())
             {
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
-                    PythonDlg.Dispose();
-//PythonInstallerUI.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
-                //PythonInstallerUI.Dispose();
-
             }
             if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
             Cursor = Cursors.Default;
@@ -718,9 +703,8 @@ namespace pwiz.Skyline.SettingsUI
         
             if (_lastUpdatedFileName.IsNullOrEmpty() || _lastUpdatedFileName == _lastUpdatedLibName)
             {
-                textPath.Text = id.Length == 0
-                              ? outputPath
-                              : Path.Combine(outputPath, id + BiblioSpecLiteSpec.EXT);
+                textPath.Text = id.Length == 0 ? outputPath 
+                    : Path.Combine(outputPath, id + BiblioSpecLiteSpec.EXT);
                 _lastUpdatedFileName = id;
                 _lastUpdatedLibName = id;
 
