@@ -2780,6 +2780,10 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
         {
+            if (true == Results?.EqualsIncludingFileIds(prop))
+            {
+                return this;
+            }
             return Results<TransitionGroupChromInfo>.EqualsDeep(Results, prop) ? 
                    this : 
                    ChangeProp(ImClone(this), im => im.Results = prop);

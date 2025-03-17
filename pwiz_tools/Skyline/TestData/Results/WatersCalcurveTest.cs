@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestData.Results
                         for (int j = 0; j < len - 1; j++)
                         {
                             var chromInfoPrevious = transOld[i].Results[j][0];
-                            Assert.AreSame(chromInfoPrevious, nodeTranNew.Results[j][0]);
+                            Assert.AreEqual(chromInfoPrevious, nodeTranNew.Results[j][0]);
                             if ((chromInfo.IsEmpty && !chromInfoPrevious.IsEmpty) ||
                                     (!chromInfo.IsEmpty && chromInfoPrevious.Area >= chromInfo.Area))
                                 outOfOrder++;
