@@ -540,7 +540,7 @@ powershell -NoLogo -NoProfile -Command "%PS_COMMAND%"
 REM echo Installation complete!
 
 endlocal
-pause
+exit
 ]]>
   </value>
   </data>

@@ -691,7 +691,7 @@ namespace pwiz.Skyline.Model.Tools
             cmd += cmdBuilder;
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             if (broker != null) cancelToken = broker.CancellationToken;
-            if (pipedProcessRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
+            if (pipedProcessRunner.RunProcess(cmd, true, Writer, false, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
         private void DownloadCudaLibrary(IProgressMonitor progressMonitor)
