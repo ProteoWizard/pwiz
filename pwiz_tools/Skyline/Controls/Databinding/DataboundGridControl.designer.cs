@@ -232,6 +232,7 @@ namespace pwiz.Skyline.Controls.Databinding
             resources.ApplyResources(this.replicatePivotDataGridView, "replicatePivotDataGridView");
             this.replicatePivotDataGridView.Name = "replicatePivotDataGridView";
             this.replicatePivotDataGridView.ColumnWidthChanged += new System.Windows.Forms.DataGridViewColumnEventHandler(this.replicatePivotDataGridView_ColumnWidthChanged);
+            this.replicatePivotDataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.replicatePivotDataGridView_OnCellContentClick);
             // 
             // colReplicateProperty
             // 
