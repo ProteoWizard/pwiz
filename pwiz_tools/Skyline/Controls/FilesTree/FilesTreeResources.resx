@@ -189,4 +189,7 @@
   <data name="Remove_Replicate_Node" xml:space="preserve">
       <value>Remove replicate node</value>
   </data>
+  <data name="FilesTreeForm_ConfirmItemDeletion_Replicates" xml:space="preserve">
+      <value>Are you sure you want to delete these replicates?</value>
+  </data>
 </root>

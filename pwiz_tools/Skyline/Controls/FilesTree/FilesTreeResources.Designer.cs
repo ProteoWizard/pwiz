@@ -259,6 +259,15 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these replicates?.
+        /// </summary>
+        public static string FilesTreeForm_ConfirmItemDeletion_Replicates {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_ConfirmItemDeletion_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove all replicate nodes.
         /// </summary>
         public static string Remove_All_Replicate_Nodes {

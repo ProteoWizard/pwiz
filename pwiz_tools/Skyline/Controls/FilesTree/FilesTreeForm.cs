@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -28,7 +29,11 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using Process = System.Diagnostics.Process;
 
+// CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
+//           But replicates do not have IdentityPath support becaxuse ChromatogramSet does not
+//           inherit from DocNode. Will revisit later.
 // TODO: drag-and-drop for spectral libraries
+// ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
     public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
@@ -148,8 +153,20 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ViewSpectralLibraries();
         }
 
+        private DialogResult ConfirmItemDeletion()
+        {
+            return MultiButtonMsgDlg.Show(this, 
+                                          FilesTreeResources.FilesTreeForm_ConfirmItemDeletion_Replicates, 
+                                          MultiButtonMsgDlg.BUTTON_YES, 
+                                          MultiButtonMsgDlg.BUTTON_NO,
+                                          false);
+        }
+
         public void RemoveAll()
         {
+            if (ConfirmItemDeletion() == DialogResult.No)
+                return;
+
             SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicate_Nodes,
                 document =>
                 {
@@ -164,6 +181,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public void RemoveSelected(IEnumerable<TreeNodeMS> nodes)
         {
+            if (ConfirmItemDeletion() == DialogResult.No)
+                return;
+
             var selectedNodeIds = nodes?.Select(item => ((FilesTreeNode)item).Model.IdentityPath.Child).ToList();
 
             if (selectedNodeIds == null || selectedNodeIds.Count == 0)
@@ -207,9 +227,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             var oldName = chromatogram.Name;
             var newName = newLabel;
 
-            // CONSIDER: using IdentityPath (and DocNode.ReplaceChild?) to simplify replicate name changes
-            //           But IdentityPath support is missing on ChromatogramSet because it does not inherit
-            //           from DocNode so will revisit this later.
             SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, 
                 document =>
                 {

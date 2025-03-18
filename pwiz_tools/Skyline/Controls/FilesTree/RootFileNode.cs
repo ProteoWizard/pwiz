@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
 
         public override Immutable Immutable => Document;
-        public override bool IsBackedByFile => FilePath != null;
+        public override bool IsBackedByFile => true;
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }

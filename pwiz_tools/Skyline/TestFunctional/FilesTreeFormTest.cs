@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System.Collections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -394,6 +393,28 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(draggedNodes[1], replicateFolderModel.Nodes[7]);
             Assert.AreEqual(draggedNodes[2], replicateFolderModel.Nodes[8]);
             Assert.AreEqual(dropNode, replicateFolderModel.Nodes[9]);
+
+            //
+            // Remove
+            // 
+            // doc = SkylineWindow.Document;
+            // RunUI(() =>
+            // {
+            //     var removeNodes = new List<FilesTreeNode> {
+            //         (FilesTreeNode)replicateFolderModel.Nodes[1],
+            //         (FilesTreeNode)replicateFolderModel.Nodes[2]
+            //     };
+            //
+            //     SkylineWindow.FilesTreeForm.RemoveSelected(removeNodes);
+            // });
+            //
+            // var confirmDlg = WaitForMultiButtonMsgDlg(FilesTreeResources.FilesTreeForm_ConfirmItemDeletion_Replicates);
+            // OkDialog(confirmDlg, confirmDlg.BtnYesClick);
+            //
+            // WaitForDocumentChangeLoaded(doc);
+            //
+            // // Expecting two fewer replicates than previous version of SrmDocument
+            // CheckReplicateEquivalence(doc.MeasuredResults.Chromatograms.Count - 2);
 
             // // Project Files => Audit Log Action
             // RunUI(() =>
