@@ -19,10 +19,13 @@
 
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -40,9 +43,9 @@ namespace TestPerf
         }
 
         private string LibraryPathWithoutIrt =>
-            TestContext.GetTestPath("TestAlphapeptdeepBuildLibrary\\LibraryWithoutIrt.blib");
+            TestContext.GetTestPath($"{TestFilesDir.FullPath}\\LibraryWithoutIrt.blib");
         private string LibraryPathWithIrt =>
-            TestContext.GetTestPath("TestAlphapeptdeepBuildLibrary\\LibraryWithIrt.blib");
+            TestContext.GetTestPath($"{TestFilesDir.FullPath}\\LibraryWithIrt.blib");
 
         private PythonTestUtil _pythonTestUtil;
         private PeptideSettingsUI _peptideSettings;
@@ -50,7 +53,7 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky"));
+            RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
             const string answerWithoutIrt = "predict_transformed.speclib.tsv";
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
@@ -69,8 +72,13 @@ namespace TestPerf
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
                 //spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
             });
-
+            
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
+
+            MultiButtonMsgDlg saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
+            AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes, saveChangesDlg.Message);
+            OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
+            
         }
 
         /// <summary>
@@ -107,12 +115,18 @@ namespace TestPerf
 
             //TestResultingLibByHash(storedHash);
             TestResultingLibByValues(_buildLibraryDlg.BuilderLibFilepath, TestFilesDir.GetTestPath(answerFile));
-            
+
 
         }
 
         protected override void Cleanup()
         {
+            TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+
+            DirectoryEx.SafeDelete(TestFilesDir.FullPath);
+
+            TestFilesDir.CheckForFileLocks("TestAlphapeptdeepBuildLibrary");
+
             DirectoryEx.SafeDelete("TestAlphapeptdeepBuildLibrary");
         }
 
