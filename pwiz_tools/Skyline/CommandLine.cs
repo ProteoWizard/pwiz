@@ -54,6 +54,7 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using ZedGraph;
 
 namespace pwiz.Skyline
 {
@@ -2293,8 +2294,8 @@ namespace pwiz.Skyline
                 if (fastaPath.IsNullOrEmpty())
                     throw new ArgumentException(Resources.CommandLine_AssociateProteins_a_FASTA_file_must_be_imported_before_associating_proteins);
                 _out.WriteLine(Resources.CommandLine_AssociateProteins_Associating_peptides_with_proteins_from_FASTA_file__0_, Path.GetFileName(fastaPath));
-                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(String.Empty));
-                var proteinAssociation = new ProteinAssociation(Document, progressMonitor);
+                var progressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree));
+                var proteinAssociation = new ProteinAssociation(Document, progressMonitor.CancellationToken);
                 proteinAssociation.UseFastaFile(fastaPath, progressMonitor);
                 proteinAssociation.ApplyParsimonyOptions(commandArgs.AssociateProteinsGroupProteins.GetValueOrDefault(),
                     commandArgs.AssociateProteinsGeneLevelParsimony.GetValueOrDefault(),

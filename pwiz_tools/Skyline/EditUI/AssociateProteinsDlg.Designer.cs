@@ -73,6 +73,8 @@
             this.panelStatusBarResult = new System.Windows.Forms.FlowLayoutPanel();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.proteinSourcePanel = new System.Windows.Forms.Panel();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.btnError = new System.Windows.Forms.Button();
             this.gbParsimonyOptions.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).BeginInit();
@@ -419,12 +421,28 @@
             this.proteinSourcePanel.Controls.Add(this.tbxFastaTargets);
             this.proteinSourcePanel.Name = "proteinSourcePanel";
             // 
+            // progressBar1
+            // 
+            resources.ApplyResources(this.progressBar1, "progressBar1");
+            this.progressBar1.Name = "progressBar1";
+            // 
+            // btnError
+            // 
+            resources.ApplyResources(this.btnError, "btnError");
+            this.btnError.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnError.FlatAppearance.BorderSize = 0;
+            this.btnError.Name = "btnError";
+            this.btnError.UseVisualStyleBackColor = true;
+            this.btnError.Click += new System.EventHandler(this.btnError_Click);
+            // 
             // AssociateProteinsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnError);
+            this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.proteinSourcePanel);
             this.Controls.Add(this.panelStatusBarResult);
             this.Controls.Add(this.lblResults);
@@ -495,5 +513,7 @@
         private System.Windows.Forms.Panel proteinSourcePanel;
         private System.Windows.Forms.CheckBox cbGeneLevel;
         private System.Windows.Forms.Label lblGroupAtGeneLevel;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Button btnError;
     }
 }

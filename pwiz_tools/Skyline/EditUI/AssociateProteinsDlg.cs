@@ -25,6 +25,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -42,12 +43,11 @@ namespace pwiz.Skyline.EditUI
                   IAuditLogModifier<AssociateProteinsSettings>
     {
         private readonly SrmDocument _document;
-        private bool? _isFasta;
+        private Receiver<AssociateProteinsResults.Parameters, AssociateProteinsResults> _receiver;
         private ProteinAssociation _proteinAssociation;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         public SrmDocument DocumentFinal { get; private set; }
 
-        private bool _reuseLastFasta;
         private string _overrideFastaPath;
         private bool _fastaFileIsTemporary;
         private bool _hasExistingProteinAssociations;
@@ -77,8 +77,12 @@ namespace pwiz.Skyline.EditUI
         public AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
         {
             InitializeComponent();
+            btnError.Image = SystemIcons.Error.ToBitmap();
             _document = document;
-            _reuseLastFasta = reuseLastFasta;
+            if (reuseLastFasta && !string.IsNullOrEmpty(Settings.Default.LastProteinAssociationFastaFilepath))
+            {
+                tbxFastaTargets.Text = Settings.Default.LastProteinAssociationFastaFilepath;
+            }
             _statusBarResultFormat = string.Format(@"{{0}} {0}, {{1}} {1}, {{2}} {2}, {{3}} {3}",
                 Resources.AnnotationDef_AnnotationTarget_Proteins,
                 Resources.AnnotationDef_AnnotationTarget_Peptides,
@@ -112,6 +116,64 @@ namespace pwiz.Skyline.EditUI
             helpTip.SetToolTip(numMinPeptides, helpTip.GetToolTip(lblMinPeptides));
         }
 
+        private void RefreshResults()
+        {
+            if (_receiver == null)
+            {
+                return;
+            }
+            var parameters = GetParameters();
+            if (_receiver.TryGetProduct(parameters, out var results))
+            {
+                DisplayResults(results);
+            }
+            else
+            {
+                progressBar1.Visible = true;
+                UpdateProgress();
+                btnOk.Enabled = false;
+            }
+
+        }
+
+        private void UpdateProgress()
+        {
+            progressBar1.Value = _receiver.GetProgressValue();
+            var error = _receiver.GetError();
+            if (error == null)
+            {
+                btnError.Visible = false;
+            }
+            else
+            {
+                btnError.Visible = true;
+                helpTip.SetToolTip(btnError, TextUtil.LineSeparate(error.Message, "(Click for more info)"));
+            }
+        }
+
+        private void DisplayResults(AssociateProteinsResults results)
+        {
+            _proteinAssociation = results.ProteinAssociation;
+            DocumentFinal = results.DocumentFinal;
+            progressBar1.Visible = false;
+            btnOk.Enabled = DocumentFinal != null;
+            if (DocumentFinal != null)
+            {
+                UpdateTargetCounts();
+            }
+
+            var error = _receiver.GetError();
+            if (error == null)
+            {
+                btnError.Visible = false;
+            }
+            else
+            {
+                btnError.Visible = true;
+                helpTip.SetToolTip(btnError, TextUtil.LineSeparate(error.Message, "(Click for more info)"));
+            }
+        }
+
         /// <summary>
         /// Show the Associate Proteins dialog without allowing the user to control the source of the FASTA records (e.g. when called from the Import Peptide Search wizard).
         /// </summary>
@@ -136,9 +198,9 @@ namespace pwiz.Skyline.EditUI
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-
             if (_overrideFastaPath != null)
             {
+                tbxFastaTargets.Text = _overrideFastaPath;
                 proteinSourcePanel.Visible = false;
                 gbParsimonyOptions.Location = FormUtil.Offset(gbParsimonyOptions.Location, 0, -proteinSourcePanel.Height);
                 MinimumSize = new Size(MinimumSize.Width, MinimumSize.Height - proteinSourcePanel.Height);
@@ -170,12 +232,37 @@ namespace pwiz.Skyline.EditUI
                     return;
                 }
             }
+            _receiver = AssociateProteinsResults.PRODUCER.RegisterCustomer(this, RefreshResults);
+            _receiver.ProgressChange += UpdateProgress;
 
-            if (_overrideFastaPath != null)
-                tbxFastaTargets.Text = _overrideFastaPath;
-            else if (_reuseLastFasta && !Settings.Default.LastProteinAssociationFastaFilepath.IsNullOrEmpty())
-                tbxFastaTargets.Text = Settings.Default.LastProteinAssociationFastaFilepath;
+            UpdateParsimonyResults();
+        }
 
+        private AssociateProteinsResults.Parameters GetParameters()
+        {
+            var parameters = new AssociateProteinsResults.Parameters(_document)
+                .ChangeIrtStandard(_irtStandard)
+                .ChangeDecoyGenerationMethod(_decoyGenerationMethod)
+                .ChangeDecoysPerTarget(_decoysPerTarget);
+            if (rbFASTA.Checked)
+            {
+                parameters = parameters.ChangeFastaFilePath(tbxFastaTargets.Text);
+            }
+
+            if (rbBackgroundProteome.Checked)
+            {
+                var backgroundProteome = new BackgroundProteome(_driverBackgroundProteome.SelectedItem);
+                if (!backgroundProteome.Equals(BackgroundProteome.NONE))
+                {
+                    parameters = parameters.ChangeBackgroundProteome(backgroundProteome);
+                }
+            }
+
+            var parsimonySettings = new ProteinAssociation.ParsimonySettings(GroupProteins, GeneLevelParsimony,
+                FindMinimalProteinList, RemoveSubsetProteins, SelectedSharedPeptides, MinPeptidesPerProtein);
+            parameters = parameters.ChangeParsimonySettings(parsimonySettings);
+            
+            return parameters;
         }
 
         private void Initialize()
@@ -189,7 +276,8 @@ namespace pwiz.Skyline.EditUI
                 {
                     longWaitDlg.PerformWork(this, 1000, broker =>
                     {
-                        _proteinAssociation = new ProteinAssociation(_document, broker);
+                        broker.Message = ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree;
+                        _proteinAssociation = new ProteinAssociation(_document, broker.CancellationToken);
                     });
                 }
                 catch (Exception ex)
@@ -257,31 +345,8 @@ namespace pwiz.Skyline.EditUI
 
         private void UpdateParsimonyResults()
         {
-            DocumentFinal = null;
-            if (AssociatedProteins == null)
-            {
-                if (_isFasta == true)
-                    UseFastaFile(FastaFileName);
-                else if (_isFasta == false)
-                    UseBackgroundProteome();
-                return;
-            }
-
-            var groupProteins = GroupProteins;
-            var geneLevel = GeneLevelParsimony;
-            var findMinimalProteinList = FindMinimalProteinList;
-            var removeSubsetProteins = RemoveSubsetProteins;
-            var selectedSharedPeptides = SelectedSharedPeptides;
-            var minPeptidesPerProtein = MinPeptidesPerProtein;
-
-            using (var longWaitDlg = new LongWaitDlg())
-            {
-                longWaitDlg.PerformWork(this, 1000,
-                    broker => _proteinAssociation.ApplyParsimonyOptions(groupProteins, geneLevel, findMinimalProteinList, removeSubsetProteins, selectedSharedPeptides, minPeptidesPerProtein, broker));
-                if (longWaitDlg.IsCanceled)
-                    return;
-            }
-
+            RefreshResults();
+            return;
             DocumentFinal = CreateDocTree(_document);
             UpdateTargetCounts();
         }
@@ -396,41 +461,7 @@ namespace pwiz.Skyline.EditUI
         // find matches using the background proteome
         public void UseBackgroundProteome()
         {
-            var backgroundProteome = new BackgroundProteome(_driverBackgroundProteome.SelectedItem);
-            if (backgroundProteome.Equals(BackgroundProteome.NONE))
-                return;
-
-            Initialize();
-
-            _isFasta = false;
-            //FastaFileName = _parent.Document.Settings.PeptideSettings.BackgroundProteome.DatabasePath;
-
-            if (_document.PeptideCount == 0)
-                return;
-
-            try
-            {
-                using (var longWaitDlg = new LongWaitDlg())
-                {
-                    longWaitDlg.PerformWork(this, 1000, broker => 
-                        _proteinAssociation.UseBackgroundProteome(backgroundProteome, broker));
-                    if (longWaitDlg.IsCanceled)
-                        return;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageDlg.ShowWithException(this,
-                    TextUtil.LineSeparate(
-                        Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
-                        ex.Message), ex, true);
-                return;
-            }
-
-            if (Results.PeptidesMapped == 0)
-                MessageDlg.Show(this, EditUIResources.AssociateProteinsDlg_UseBackgroundProteome_No_matches_were_found_using_the_background_proteome_);
             UpdateParsimonyResults();
-            btnOk.Enabled = true;
         }
 
         private void btnUseFasta_Click(object sender, EventArgs e)
@@ -479,36 +510,8 @@ namespace pwiz.Skyline.EditUI
         // needed for Testing purposes so we can skip ImportFasta() because of the OpenFileDialog
         public void UseFastaFile(string file)
         {
-            Initialize();
-
-            _isFasta = true;
-            //FastaFileName = file;
-
-            if (_document.PeptideCount == 0)
-                return;
-
-            try
-            {
-                using (var longWaitDlg = new LongWaitDlg())
-                {
-                    longWaitDlg.PerformWork(this, 1000, broker => _proteinAssociation.UseFastaFile(file, broker));
-                    if (longWaitDlg.IsCanceled)
-                        return;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageDlg.ShowWithException(this,
-                    TextUtil.LineSeparate(
-                        Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
-                        ex.Message), ex, true);
-                return;
-            }
-
-            if (Results.PeptidesMapped == 0)
-                MessageDlg.Show(this, EditUIResources.AssociateProteinsDlg_FindProteinMatchesWithFasta_No_matches_were_found_using_the_imported_fasta_file_);
-            UpdateParsimonyResults();
-            btnOk.Enabled = true;
+            tbxFastaTargets.Text = file;
+            RefreshResults();
         }
 
         private SrmDocument CreateDocTree(SrmDocument current)
@@ -568,9 +571,9 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var fileName = FastaFileName;
-                return new AssociateProteinsSettings(_proteinAssociation,
-                    _isFasta == true && _overrideFastaPath == null ? fileName : null,
-                    _isFasta == true ? null : fileName);
+                return new AssociateProteinsSettings(_proteinAssociation, null, null); 
+                    // _isFasta == true && _overrideFastaPath == null ? fileName : null,
+                    // _isFasta == true ? null : fileName);
             }
         }
 
@@ -779,6 +782,15 @@ namespace pwiz.Skyline.EditUI
             peptides = doc.PeptideCount;
             precursors = doc.PeptideTransitionGroupCount;
             transitions = doc.PeptideTransitionCount;
+        }
+
+        private void btnError_Click(object sender, EventArgs e)
+        {
+            var exception = _receiver.GetError();
+            if (exception != null)
+            {
+                MessageDlg.ShowException(this, exception);
+            }
         }
     }
 }
