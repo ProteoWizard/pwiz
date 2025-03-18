@@ -75,12 +75,14 @@
             this.proteinSourcePanel = new System.Windows.Forms.Panel();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.btnError = new System.Windows.Forms.Button();
+            this.progressPanel = new System.Windows.Forms.Panel();
             this.gbParsimonyOptions.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAssociateResults)).BeginInit();
             this.panelStatusBarResult.SuspendLayout();
             this.proteinSourcePanel.SuspendLayout();
+            this.progressPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -428,12 +430,19 @@
             // 
             // btnError
             // 
-            resources.ApplyResources(this.btnError, "btnError");
             this.btnError.Cursor = System.Windows.Forms.Cursors.Hand;
+            resources.ApplyResources(this.btnError, "btnError");
             this.btnError.FlatAppearance.BorderSize = 0;
             this.btnError.Name = "btnError";
             this.btnError.UseVisualStyleBackColor = true;
             this.btnError.Click += new System.EventHandler(this.btnError_Click);
+            // 
+            // progressPanel
+            // 
+            resources.ApplyResources(this.progressPanel, "progressPanel");
+            this.progressPanel.Controls.Add(this.btnError);
+            this.progressPanel.Controls.Add(this.progressBar1);
+            this.progressPanel.Name = "progressPanel";
             // 
             // AssociateProteinsDlg
             // 
@@ -441,8 +450,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.btnError);
-            this.Controls.Add(this.progressBar1);
+            this.Controls.Add(this.progressPanel);
             this.Controls.Add(this.proteinSourcePanel);
             this.Controls.Add(this.panelStatusBarResult);
             this.Controls.Add(this.lblResults);
@@ -467,6 +475,7 @@
             this.panelStatusBarResult.PerformLayout();
             this.proteinSourcePanel.ResumeLayout(false);
             this.proteinSourcePanel.PerformLayout();
+            this.progressPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -515,5 +524,6 @@
         private System.Windows.Forms.Label lblGroupAtGeneLevel;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button btnError;
+        private System.Windows.Forms.Panel progressPanel;
     }
 }

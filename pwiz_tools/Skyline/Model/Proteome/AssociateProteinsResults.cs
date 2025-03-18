@@ -9,7 +9,9 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Proteome
 {
@@ -150,8 +152,26 @@ namespace pwiz.Skyline.Model.Proteome
                 var longWaitBroker = new LongWaitBrokerImpl(productionMonitor);
                 if (!string.IsNullOrEmpty(parameter.FastaFilePath))
                 {
-                    proteinAssociation.UseFastaFile(parameter.FastaFilePath, longWaitBroker);
+                    if (!File.Exists(parameter.FastaFilePath))
+                    {
+                        throw new FileNotFoundException(string.Format(
+                            Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist,
+                            parameter.FastaFilePath));
+                    }
+                    try
+                    {
+                        proteinAssociation.UseFastaFile(parameter.FastaFilePath, longWaitBroker);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception(
+                            TextUtil.LineSeparate(
+                                Resources
+                                    .AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
+                                ex.Message), ex);
+                    }
                 }
+
                 else if (parameter.BackgroundProteome != null)
                 {
                     proteinAssociation.UseBackgroundProteome(

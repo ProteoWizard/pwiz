@@ -80,7 +80,10 @@ namespace pwiz.SkylineTestFunctional
                 "PEPTID\u0002EK"
             });
             // ReSharper restore LocalizableElement
-            var errorDlg = ShowDialog<MessageDlg>(() => associateProteinsDlg.FastaFileName = invalidFastaFilepath);
+            RunUI(()=>associateProteinsDlg.FastaFileName = invalidFastaFilepath);
+            WaitForConditionUI(() => associateProteinsDlg.IsComplete);
+            var errorDlg = ShowDialog<MessageDlg>(associateProteinsDlg.ClickErrorButton);
+            
             AssertEx.Contains(errorDlg.Message, Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_, "\x02");
             OkDialog(errorDlg, errorDlg.OkDialog);
             OkDialog(associateProteinsDlg, associateProteinsDlg.CancelDialog);
@@ -752,7 +755,7 @@ namespace pwiz.SkylineTestFunctional
                             dlg.SelectedSharedPeptides = optionsAndResult.SharedPeptides;
                             dlg.MinPeptidesPerProtein = optionsAndResult.MinPeptidesPerProtein;
                         });
-
+                        WaitForConditionUI(() => dlg.IsComplete);
                         RunUI(() =>
                         {
                             if (IsRecordMode)
@@ -819,7 +822,7 @@ namespace pwiz.SkylineTestFunctional
                             dlg.SelectedSharedPeptides = optionsAndResult.SharedPeptides;
                             dlg.MinPeptidesPerProtein = optionsAndResult.MinPeptidesPerProtein;
                         });
-                        //PauseTest();
+                        WaitForConditionUI(() => dlg.IsComplete);
                         RunUI(() =>
                         {
                             Assert.AreEqual(optionsAndResult.ExpectedFinalProteins, dlg.FinalResults.FinalProteinCount, $"Test case {i + 1}.{j + 1} FinalProteinCount");

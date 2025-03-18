@@ -78,6 +78,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
             btnError.Image = SystemIcons.Error.ToBitmap();
+            btnError.Text = string.Empty;
             _document = document;
             if (reuseLastFasta && !string.IsNullOrEmpty(Settings.Default.LastProteinAssociationFastaFilepath))
             {
@@ -133,7 +134,6 @@ namespace pwiz.Skyline.EditUI
                 UpdateProgress();
                 btnOk.Enabled = false;
             }
-
         }
 
         private void UpdateProgress()
@@ -142,10 +142,12 @@ namespace pwiz.Skyline.EditUI
             var error = _receiver.GetError();
             if (error == null)
             {
+                progressBar1.Visible = true;
                 btnError.Visible = false;
             }
             else
             {
+                progressBar1.Visible = false;
                 btnError.Visible = true;
                 helpTip.SetToolTip(btnError, TextUtil.LineSeparate(error.Message, "(Click for more info)"));
             }
@@ -791,6 +793,23 @@ namespace pwiz.Skyline.EditUI
             {
                 MessageDlg.ShowException(this, exception);
             }
+        }
+
+        public bool IsComplete
+        {
+            get
+            {
+                return !progressBar1.Visible;
+            }
+        }
+
+        public void ClickErrorButton()
+        {
+            if (!btnError.Visible)
+            {
+                throw new InvalidOperationException();
+            }
+            btnError.PerformClick();
         }
     }
 }
