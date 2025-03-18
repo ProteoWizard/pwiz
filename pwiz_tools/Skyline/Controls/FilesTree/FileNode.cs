@@ -47,13 +47,6 @@ using pwiz.Skyline.Model;
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
-    public enum FileState
-    {
-        available,
-        missing,
-        unknown
-    }
-
     public enum ImageId
     {
         blank,
@@ -73,9 +66,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     public abstract class FileNode
     {
-        // ReSharper disable once LocalizableElement
-        private static string FILE_PATH_NOT_SET = "# local path #";
-
         protected FileNode(SrmDocument document, string documentPath, IdentityPath identityPath,
                            ImageId available = ImageId.file, ImageId missing = ImageId.file_missing)
         {
@@ -84,24 +74,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             IdentityPath = identityPath;
             ImageAvailable = available;
             ImageMissing = missing;
-
-            FileState = FileState.unknown;
-
-            LocalFilePath = FILE_PATH_NOT_SET;
-        }
-
-        // Initialize the path to a local file. This tries exactly once to find a file locally
-        // matching the name of a file from the model.
-        //
-        // Note, this accesses the file system (possibly more than once) so should
-        // not be executed on the UI thread.
-        public void InitLocalFile()
-        {
-            if (IsBackedByFile && ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET))
-            {
-                LocalFilePath = LookForFileInPotentialLocations(DocumentPath, FileName);
-                FileState = LocalFilePath != null ? FileState.available : FileState.missing;
-            }
         }
 
         public SrmDocument Document { get; }
@@ -110,37 +82,15 @@ namespace pwiz.Skyline.Controls.FilesTree
         public abstract Immutable Immutable { get; }
 
         public abstract string Name { get; }
+        public virtual bool IsBackedByFile => false;
         public abstract string FilePath { get; }
         public virtual string FileName => Path.GetFileName(FilePath);
 
         public ImageId ImageAvailable { get; }
         public ImageId ImageMissing { get; }
-        public FileState FileState { get; set; }
 
-        public virtual bool IsBackedByFile => false;
-
-        public virtual string LocalFilePath { get; private set; }
 
         public virtual IList<FileNode> Files => new List<FileNode>();
         public virtual bool HasFiles() => Files != null && Files.Count > 0;
-
-        ///
-        /// LOOK FOR A FILE ON DISK
-        ///
-        /// SkylineFiles uses this approach to locate file paths found in SrmSettings. It starts with
-        /// the given path but those paths may be set on others machines. If not available locally, use
-        /// <see cref="PathEx.FindExistingRelativeFile"/> to search for the file locally.
-        ///
-        /// <param name="relativeFilePath">Usually the SrmDocument path.</param>
-        /// <param name="fileName"></param>
-        ///
-        /// TODO: is this the same way Skyline finds replicate sample files? Ex: Chromatogram.GetExistingDataFilePath
-        internal string LookForFileInPotentialLocations(string relativeFilePath, string fileName)
-        {
-            if (File.Exists(fileName) || Directory.Exists(fileName))
-                return fileName;
-            else
-                return PathEx.FindExistingRelativeFile(relativeFilePath, fileName);
-        }
     }
 }

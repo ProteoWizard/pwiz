@@ -362,7 +362,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (filesTreeNode.SupportsOpenContainingFolder())
             {
                 openContainingFolderMenuItem.Visible = true;
-                openContainingFolderMenuItem.Enabled = filesTreeNode.Model.FileState == FileState.available;
+                openContainingFolderMenuItem.Enabled = filesTreeNode.FileState == FileState.available;
             }
 
             if (filesTreeNode.SupportsRemoveItem())

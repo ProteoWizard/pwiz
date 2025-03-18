@@ -312,14 +312,14 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsNotNull(sampleFileModel);
 
-            var filePath = sampleFileModel.LocalFilePath;
+            var filePath = sampleFileTreeNode.LocalFilePath;
             Assert.IsTrue(File.Exists(filePath));
 
             File.Move(filePath, filePath + "RENAMED");
             WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageMissing);
 
             // replicate sample file
-            Assert.AreEqual(FileState.missing, sampleFileModel.FileState);
+            Assert.AreEqual(FileState.missing, sampleFileTreeNode.FileState);
             Assert.AreEqual((int)sampleFileTreeNode.ImageMissing, sampleFileTreeNode.ImageIndex);
 
             // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
@@ -332,7 +332,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageAvailable);
 
             // now check that icons changed back
-            Assert.AreEqual(FileState.available, sampleFileModel.FileState);
+            Assert.AreEqual(FileState.available, sampleFileTreeNode.FileState);
             Assert.AreEqual((int)sampleFileTreeNode.ImageAvailable, sampleFileTreeNode.ImageIndex);
 
             // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
@@ -350,7 +350,7 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsNotNull(sampleFileModel);
 
-            filePath = sampleFileModel.LocalFilePath;
+            filePath = sampleFileTreeNode.LocalFilePath;
             Assert.IsTrue(File.Exists(filePath));
 
             File.Delete(filePath);
@@ -358,7 +358,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => sampleFileTreeNode.ImageIndex == (int)sampleFileTreeNode.ImageMissing);
 
             // replicate sample file
-            Assert.AreEqual(FileState.missing, sampleFileModel.FileState);
+            Assert.AreEqual(FileState.missing, sampleFileTreeNode.FileState);
             Assert.AreEqual((int)sampleFileTreeNode.ImageMissing, sampleFileTreeNode.ImageIndex);
 
             // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
