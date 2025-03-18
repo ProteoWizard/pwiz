@@ -25,7 +25,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
