@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 else // rename as non-redundant
                 {
-                    File.Move(redundantLibrary, OutputPath);
+                    File.Move(redundantLibrary, OutputPath!);
                 }
             }
             catch (IOException x)
