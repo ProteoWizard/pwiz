@@ -413,8 +413,8 @@ namespace BuildWatersMethod
                             var precursorId = proteinPeptide.Replace(peptideName, "").Trim() + "," + peptideName + "," + peptideMz;
                             if (precursorInfo.ContainsKey(precursorId))
                             {
-                                if (precursorInfo[precursorId].is_negative)
-                                    functionLine.SetProperty("FunctionPolarity", "Negative");
+                                functionLine.SetProperty("FunctionPolarity", precursorInfo[precursorId].is_negative ? "Negative" : "Positive");
+
                                 if (precursorInfo[precursorId].rt_start.HasValue)
                                     functionLine.SetProperty("FunctionStartTime(min)", precursorInfo[precursorId].rt_start);
                                 if (precursorInfo[precursorId].rt_end.HasValue)
@@ -443,7 +443,9 @@ namespace BuildWatersMethod
 
         public FunctionLine(string line)
         {
-            this.AddRange(line.Split('\n')); 
+            var lineReader = new StringReader(line);
+            while(lineReader.ReadLine() is { } functionLine)
+                Add(functionLine);
         }
 
         public void SetProperty(string propName, object value)
@@ -456,7 +458,9 @@ namespace BuildWatersMethod
 
         public override string ToString()
         {
-            return string.Join("\n", ToArray());
+            var sw = new StringWriter();
+            ForEach(line => sw.WriteLine(line));
+            return sw.ToString();
         }
 
     }
