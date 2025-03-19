@@ -172,6 +172,36 @@ namespace pwiz.Skyline.Controls.Graphs
                 skylineWindow.SequenceTree.SelectedPaths.FirstOrDefault(p => IsPathSelected(p, identityPath)) : null;
         }
 
+        /// <summary>
+        /// Returns the set of paths from <paramref name="identityPaths"/> for which <see cref="IsPathSelected"/> would return true
+        /// when passed one of the paths from <paramref name="selectedPaths"/>.
+        /// </summary>
+        public static IEnumerable<IdentityPath> FindSelectedPaths(IList<IdentityPath> selectedPaths,
+            IEnumerable<IdentityPath> identityPaths)
+        {
+            var selectedPathSet = selectedPaths.ToHashSet();
+            var selectedMoleculeGroupsOfMolecules = selectedPaths
+                .Where(path => path.Depth == (int)SrmDocument.Level.Molecules)
+                .Select(path => path.GetPathTo((int)SrmDocument.Level.MoleculeGroups)).ToHashSet();
+            foreach (var identityPath in identityPaths)
+            {
+                if (identityPath?.Depth == (int) SrmDocument.Level.Molecules)
+                {
+                    if (selectedPathSet.Contains(identityPath) || selectedPathSet.Contains(identityPath.GetPathTo((int)SrmDocument.Level.MoleculeGroups)))
+                    {
+                        yield return identityPath;
+                    }
+                }
+                else if (identityPath?.Depth == (int)SrmDocument.Level.MoleculeGroups)
+                {
+                    if (selectedPathSet.Contains(identityPath) || selectedMoleculeGroupsOfMolecules.Contains(identityPath))
+                    {
+                        yield return identityPath;
+                    }
+                }
+            }
+        }
+
         public static bool IsTargetSelected(SkylineWindow skylineWindow, Peptide peptide, Protein protein)
         {
             var docNode = peptide ?? (SkylineDocNode)protein;
