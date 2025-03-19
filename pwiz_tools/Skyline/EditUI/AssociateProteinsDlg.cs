@@ -23,7 +23,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
@@ -65,8 +64,7 @@ namespace pwiz.Skyline.EditUI
             set { tbxFastaTargets.Text = value; }
         }
 
-        public bool IsBusy => DocumentFinal == null;
-        public bool DocumentFinalCalculated => !IsBusy || _document.PeptideCount == 0;
+        public bool DocumentFinalCalculated => IsComplete;
 
 
         /// <summary>
@@ -117,63 +115,60 @@ namespace pwiz.Skyline.EditUI
             helpTip.SetToolTip(numMinPeptides, helpTip.GetToolTip(lblMinPeptides));
         }
 
-        private void RefreshResults()
+        private void DisplayResults()
         {
-            if (_receiver == null)
-            {
-                return;
-            }
-            var parameters = GetParameters();
-            if (_receiver.TryGetProduct(parameters, out var results))
-            {
-                DisplayResults(results);
-            }
-            else
-            {
-                progressBar1.Visible = true;
-                UpdateProgress();
-                btnOk.Enabled = false;
-            }
-        }
-
-        private void UpdateProgress()
-        {
-            progressBar1.Value = _receiver.GetProgressValue();
-            var error = _receiver.GetError();
-            if (error == null)
+            var results = GetCurrentResults();
+            btnOk.Enabled = results?.DocumentFinal != null;
+            ErrorMessage = results?.ErrorMessage;
+            ErrorException = results?.ErrorException;
+            IsComplete = false;
+            if (results == null)
             {
                 progressBar1.Visible = true;
                 btnError.Visible = false;
+                progressBar1.Value = _receiver?.GetProgressValue() ?? 0;
+                return;
             }
-            else
-            {
-                progressBar1.Visible = false;
-                btnError.Visible = true;
-                helpTip.SetToolTip(btnError, TextUtil.LineSeparate(error.Message, "(Click for more info)"));
-            }
-        }
 
-        private void DisplayResults(AssociateProteinsResults results)
-        {
+            progressBar1.Visible = false;
+            IsComplete = true;
+            if (results.IsErrorResult)
+            {
+                btnError.Visible = true;
+                var message = results.ErrorMessage;
+                if (results.ErrorException != null)
+                {
+                    message = TextUtil.LineSeparate(message, "(Click for more information)");
+                }
+                helpTip.SetToolTip(btnError, message);
+                return;
+            }
             _proteinAssociation = results.ProteinAssociation;
             DocumentFinal = results.DocumentFinal;
-            progressBar1.Visible = false;
-            btnOk.Enabled = DocumentFinal != null;
             if (DocumentFinal != null)
             {
                 UpdateTargetCounts();
             }
+        }
 
+        private AssociateProteinsResults GetCurrentResults()
+        {
+            if (_receiver == null)
+            {
+                return null;
+            }
+            var parameters = GetParameters();
+            if (_receiver.TryGetProduct(parameters, out var results))
+            {
+                return results;
+            }
             var error = _receiver.GetError();
-            if (error == null)
+            if (error != null)
             {
-                btnError.Visible = false;
+                return new AssociateProteinsResults(parameters).ChangeError(null, error);
             }
-            else
-            {
-                btnError.Visible = true;
-                helpTip.SetToolTip(btnError, TextUtil.LineSeparate(error.Message, "(Click for more info)"));
-            }
+
+            return null;
         }
 
         /// <summary>
@@ -234,8 +229,8 @@ namespace pwiz.Skyline.EditUI
                     return;
                 }
             }
-            _receiver = AssociateProteinsResults.PRODUCER.RegisterCustomer(this, RefreshResults);
-            _receiver.ProgressChange += UpdateProgress;
+            _receiver = AssociateProteinsResults.PRODUCER.RegisterCustomer(this, DisplayResults);
+            _receiver.ProgressChange += DisplayResults;
 
             UpdateParsimonyResults();
         }
@@ -245,7 +240,8 @@ namespace pwiz.Skyline.EditUI
             var parameters = new AssociateProteinsResults.Parameters(_document)
                 .ChangeIrtStandard(_irtStandard)
                 .ChangeDecoyGenerationMethod(_decoyGenerationMethod)
-                .ChangeDecoysPerTarget(_decoysPerTarget);
+                .ChangeDecoysPerTarget(_decoysPerTarget)
+                .ChangeSharedPeptides(SelectedSharedPeptides);
             if (rbFASTA.Checked)
             {
                 parameters = parameters.ChangeFastaFilePath(tbxFastaTargets.Text);
@@ -347,7 +343,7 @@ namespace pwiz.Skyline.EditUI
 
         private void UpdateParsimonyResults()
         {
-            RefreshResults();
+            DisplayResults();
             return;
             DocumentFinal = CreateDocTree(_document);
             UpdateTargetCounts();
@@ -513,7 +509,7 @@ namespace pwiz.Skyline.EditUI
         public void UseFastaFile(string file)
         {
             tbxFastaTargets.Text = file;
-            RefreshResults();
+            DisplayResults();
         }
 
         private SrmDocument CreateDocTree(SrmDocument current)
@@ -788,20 +784,21 @@ namespace pwiz.Skyline.EditUI
 
         private void btnError_Click(object sender, EventArgs e)
         {
-            var exception = _receiver.GetError();
-            if (exception != null)
+            var exception = ErrorException;
+            if (exception == null)
             {
-                MessageDlg.ShowException(this, exception);
+                return;
             }
+            MessageDlg.ShowWithException(this, ErrorMessage, exception);
         }
 
         public bool IsComplete
         {
-            get
-            {
-                return !progressBar1.Visible;
-            }
+            get; private set;
         }
+
+        public string ErrorMessage { get; private set; }
+        public Exception ErrorException { get; private set; }
 
         public void ClickErrorButton()
         {

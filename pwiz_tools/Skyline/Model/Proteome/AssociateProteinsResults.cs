@@ -26,12 +26,7 @@ namespace pwiz.Skyline.Model.Proteome
                 Document = document;
             }
 
-            public SrmDocument Document { get; private set; }
-
-            public Parameters ChangeDocument(SrmDocument value)
-            {
-                return ChangeProp(ImClone(this), im => im.Document = value);
-            }
+            public SrmDocument Document { get; }
 
             public string FastaFilePath { get; private set; }
 
@@ -46,8 +41,6 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return ChangeProp(ImClone(this), im => im.BackgroundProteome = value);
             }
-
-            
 
             public ProteinAssociation.SharedPeptides SharedPeptides { get; private set; }
 
@@ -124,6 +117,26 @@ namespace pwiz.Skyline.Model.Proteome
             Params = parameters;
         }
         public Parameters Params { get; }
+        public string ErrorMessage { get; private set; }
+        public Exception ErrorException { get; private set; }
+
+        public bool IsErrorResult
+        {
+            get
+            {
+                return ErrorException != null || !string.IsNullOrEmpty(ErrorMessage);
+            }
+        }
+
+        public AssociateProteinsResults ChangeError(string errorMessage, Exception exception)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ErrorMessage = errorMessage ?? exception?.Message;
+                im.ErrorException = exception;
+            });
+        }
+
         public ProteinAssociation ProteinAssociation { get; private set; }
 
         public AssociateProteinsResults ChangeProteinAssociation(ProteinAssociation value)
@@ -154,9 +167,9 @@ namespace pwiz.Skyline.Model.Proteome
                 {
                     if (!File.Exists(parameter.FastaFilePath))
                     {
-                        throw new FileNotFoundException(string.Format(
+                        return results.ChangeError(string.Format(
                             Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist,
-                            parameter.FastaFilePath));
+                            parameter.FastaFilePath), null);
                     }
                     try
                     {
@@ -164,11 +177,10 @@ namespace pwiz.Skyline.Model.Proteome
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception(
-                            TextUtil.LineSeparate(
-                                Resources
-                                    .AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
-                                ex.Message), ex);
+                        return results.ChangeError(TextUtil.LineSeparate(
+                            Resources
+                                .AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
+                            ex.Message), ex);
                     }
                 }
 
@@ -221,7 +233,6 @@ namespace pwiz.Skyline.Model.Proteome
                 var peptideSequences = document.Peptides.Select(peptide => peptide.Target.Sequence).ToImmutable();
                 yield return _stringSearchProducer.MakeWorkOrder(peptideSequences);
             }
-
         }
 
         private class LongWaitBrokerImpl : ILongWaitBroker

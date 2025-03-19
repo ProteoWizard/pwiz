@@ -551,10 +551,12 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("yeast-10.fasta")));
 
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            RunUI(() => { peptidesPerProteinDlg.MinPeptides = 1; });
+            WaitForConditionUI(() => peptidesPerProteinDlg.IsComplete);
             RunUI(() =>
             {
-                peptidesPerProteinDlg.MinPeptides = 1;
-                peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out unmappedOrRemoved);
+                peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions,
+                    out unmappedOrRemoved);
                 Assert.AreEqual(2, proteins);
                 Assert.AreEqual(2, peptides);
                 Assert.AreEqual(2, precursors);
@@ -562,7 +564,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, unmappedOrRemoved);
                 peptidesPerProteinDlg.MinPeptides = 2;
             });
-            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated && peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out unmappedOrRemoved);
@@ -573,7 +575,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, unmappedOrRemoved);
                 peptidesPerProteinDlg.MinPeptides = 1;
             });
-            WaitForConditionUI(() => peptidesPerProteinDlg2.DocumentFinalCalculated);
+            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out unmappedOrRemoved);
