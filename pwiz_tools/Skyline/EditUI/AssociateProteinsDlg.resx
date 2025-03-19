@@ -1144,7 +1144,7 @@
     <value>0, 0</value>
   </data>
   <data name="progressBar1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>321, 32</value>
+    <value>321, 33</value>
   </data>
   <data name="progressBar1.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -1171,7 +1171,7 @@
     <value>0, 0</value>
   </data>
   <data name="btnError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>32, 32</value>
+    <value>33, 33</value>
   </data>
   <data name="btnError.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -1195,10 +1195,10 @@
     <value>Bottom, Left, Right</value>
   </data>
   <data name="progressPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 523</value>
+    <value>12, 522</value>
   </data>
   <data name="progressPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>321, 32</value>
+    <value>321, 33</value>
   </data>
   <data name="progressPanel.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>

@@ -350,8 +350,6 @@
             this.dgvAssociateResults.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
             this.dgvAssociateResults.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.dgvAssociateResults.ShowEditingIcon = false;
-            this.dgvAssociateResults.VirtualMode = true;
-            this.dgvAssociateResults.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.dgvAssociateResults_CellValueNeeded);
             // 
             // headerColumn
             // 

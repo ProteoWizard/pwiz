@@ -135,8 +135,13 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
 
+            DocumentFinal = results.DocumentFinal;
+            _proteinAssociation = results.ProteinAssociation;
             progressBar1.Visible = false;
             IsComplete = true;
+
+            UpdateTargetCounts();
+
             if (results.IsErrorResult)
             {
                 btnError.Visible = true;
@@ -148,11 +153,8 @@ namespace pwiz.Skyline.EditUI
                 helpTip.SetToolTip(btnError, message);
                 return;
             }
-            _proteinAssociation = results.ProteinAssociation;
-            DocumentFinal = results.DocumentFinal;
             if (DocumentFinal != null)
             {
-                UpdateTargetCounts();
                 if (cbGeneLevel.Checked)
                     Settings.Default.ShowPeptidesDisplayMode = ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString();
             }
@@ -308,12 +310,44 @@ namespace pwiz.Skyline.EditUI
 
         private void UpdateTargetCounts()
         {
-            dgvAssociateResults.RowCount = 3;
-            dgvAssociateResults.ClearSelection();
-            dgvAssociateResults.Invalidate();
-
+            var finalDocument = DocumentFinal;
             lblStatusBarResult.Text = GetStatusBarResultString();
+            if (finalDocument == null)
+            {
+                dgvAssociateResults.Rows.Clear();
+                return;
+            }
 
+            if (dgvAssociateResults.RowCount != 3)
+            {
+                dgvAssociateResults.Rows.Clear();
+                dgvAssociateResults.Rows.Add(3);
+            }
+
+            var proteinRow = dgvAssociateResults.Rows[0];
+            var peptideRow = dgvAssociateResults.Rows[1];
+            var sharedRow = dgvAssociateResults.Rows[2];
+            proteinRow.Cells[headerColumn.Index].Value = Resources.AnnotationDef_AnnotationTarget_Proteins;
+            SetCellValue(proteinRow.Cells[mappedColumn.Index], FinalResults.ProteinsMapped);
+            SetCellValue(proteinRow.Cells[unmappedColumn.Index], FinalResults.ProteinsUnmapped);
+            SetCellValue(proteinRow.Cells[targetsColumn.Index], FinalResults.FinalProteinCount);
+            
+            peptideRow.Cells[headerColumn.Index].Value = Resources.AnnotationDef_AnnotationTarget_Peptides;
+            SetCellValue(peptideRow.Cells[mappedColumn.Index], FinalResults.PeptidesMapped);
+            SetCellValue(peptideRow.Cells[unmappedColumn.Index], FinalResults.PeptidesUnmapped);
+            SetCellValue(peptideRow.Cells[targetsColumn.Index], FinalResults.FinalPeptideCount);
+
+            sharedRow.Cells[headerColumn.Index].Value =
+                EditUIResources.AssociateProteinsDlg_CellValueNeeded_Shared_Peptides;
+            SetCellValue(sharedRow.Cells[mappedColumn.Index], FinalResults.TotalSharedPeptideCount);
+            sharedRow.Cells[unmappedColumn.Index].Value = null;
+            SetCellValue(sharedRow.Cells[targetsColumn.Index], FinalResults.FinalSharedPeptideCount);
+        }
+
+        private void SetCellValue(DataGridViewCell cell, int value)
+        {
+            cell.Value = value;
+            cell.Style.Format = value >= 10_000 ? @"N0" : string.Empty;
         }
 
         private void UpdateParsimonyResults()
@@ -610,55 +644,6 @@ namespace pwiz.Skyline.EditUI
                 resultToString(DocumentFinal.PeptideCount),
                 resultToString(DocumentFinal.PeptideTransitionGroupCount),
                 resultToString(DocumentFinal.PeptideTransitionCount));
-        }
-
-        private void dgvAssociateResults_CellValueNeeded(object sender, DataGridViewCellValueEventArgs e)
-        {
-            if (FinalResults == null || DocumentFinal == null)
-                return;
-
-            const int separatorThreshold = 10000;
-            var culture = LocalizationHelper.CurrentCulture;
-            Func<int, string> resultToString = count => count < separatorThreshold ? count.ToString(culture) : count.ToString(@"N0", culture);
-            
-            const int proteinRowIndex = 0;
-            const int peptideRowIndex = 1;
-            const int sharedRowIndex = 2;
-
-            if (e.ColumnIndex == headerColumn.Index)
-            {
-                if (e.RowIndex == proteinRowIndex)
-                    e.Value = Resources.AnnotationDef_AnnotationTarget_Proteins;
-                else if (e.RowIndex == peptideRowIndex)
-                    e.Value = Resources.AnnotationDef_AnnotationTarget_Peptides;
-                else if (e.RowIndex == sharedRowIndex)
-                    e.Value = EditUIResources.AssociateProteinsDlg_CellValueNeeded_Shared_Peptides;
-            }
-            else if (e.ColumnIndex == mappedColumn.Index)
-            {
-                if (e.RowIndex == proteinRowIndex)
-                    e.Value = resultToString(FinalResults.ProteinsMapped);
-                else if (e.RowIndex == peptideRowIndex)
-                    e.Value = resultToString(FinalResults.PeptidesMapped);
-                else if (e.RowIndex == sharedRowIndex)
-                    e.Value = resultToString(FinalResults.TotalSharedPeptideCount);
-            }
-            else if (e.ColumnIndex == unmappedColumn.Index)
-            {
-                if (e.RowIndex == proteinRowIndex)
-                    e.Value = resultToString(FinalResults.ProteinsUnmapped);
-                else if (e.RowIndex == peptideRowIndex)
-                    e.Value = resultToString(FinalResults.PeptidesUnmapped);
-            }
-            else if (e.ColumnIndex == targetsColumn.Index)
-            {
-                if (e.RowIndex == proteinRowIndex)
-                    e.Value = resultToString(FinalResults.FinalProteinCount);
-                else if (e.RowIndex == peptideRowIndex)
-                    e.Value = resultToString(FinalResults.FinalPeptideCount);
-                else if (e.RowIndex == sharedRowIndex)
-                    e.Value = resultToString(FinalResults.FinalSharedPeptideCount);
-            }
         }
 
         private void lnkHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
