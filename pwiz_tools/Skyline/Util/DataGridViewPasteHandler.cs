@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Layout;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -37,48 +38,40 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class DataGridViewPasteHandler
     {
-        protected DataGridViewPasteHandler(DataGridView boundDataGridView, SkylineDataSchema skylineDataSchema, string viewName)
+        protected DataGridViewPasteHandler(DataGridView boundDataGridView, BindingListSource bindingListSource)
         {
             DataGridView = boundDataGridView;
-            SkylineDataSchema = skylineDataSchema;
-            ViewName = viewName;
+            BindingListSource = bindingListSource;
             DataGridView.KeyDown += DataGridViewOnKeyDown;
         }
 
         /// <summary>
         /// Attaches a DataGridViewPasteHandler to the specified DataGridView.
         /// </summary>
-        public static DataGridViewPasteHandler Attach(DataGridView boundDataGridView, SkylineDataSchema skylineDataSchema, string viewName)
+        public static DataGridViewPasteHandler Attach(DataGridView boundDataGridView, BindingListSource bindingListSource)
         {
-            return new DataGridViewPasteHandler(boundDataGridView, skylineDataSchema, viewName);
-        }
-
-
-        /// <summary>
-        /// Attaches a DataGridViewPasteHandler to the specified BoundDataGridView.
-        /// </summary>
-        public static DataGridViewPasteHandler Attach(BoundDataGridView boundDataGridView)
-        {
-            var bindingListSource = boundDataGridView.DataSource as BindingListSource;
-            var skylineDataSchema = bindingListSource?.ViewInfo?.DataSchema as SkylineDataSchema;
-            var viewName = bindingListSource?.ViewInfo?.Name;
-            
-            return new DataGridViewPasteHandler(boundDataGridView, skylineDataSchema, viewName);
+            return new DataGridViewPasteHandler(boundDataGridView, bindingListSource);
         }
 
         public DataGridView DataGridView { get; }
 
-        public SkylineDataSchema SkylineDataSchema { get; }
+        public BindingListSource BindingListSource { get; }
 
-        public string ViewName { get; }
+        private SkylineDataSchema SkylineDataSchema => BindingListSource?.ViewInfo?.DataSchema as SkylineDataSchema;
+
+        private string ViewName => BindingListSource?.ViewInfo?.Name;
+
+        private RowFilter RowFilter => BindingListSource?.RowFilter ?? RowFilter.Empty;
+
         public enum BatchModifyAction { Paste, Clear, FillDown }
 
         public class BatchModifyInfo : AuditLogOperationSettings<BatchModifyInfo> // TODO: this is a little lazy, consider rewriting
         {
-            public BatchModifyInfo(BatchModifyAction batchModifyAction, string viewName , string extraInfo = null)
+            public BatchModifyInfo(BatchModifyAction batchModifyAction, string viewName, RowFilter rowFilter, string extraInfo = null)
             {
                 BatchModifyAction = batchModifyAction;
                 ViewName = viewName;
+                Filter = rowFilter;
                 ExtraInfo = extraInfo;
             }
 
@@ -86,6 +79,7 @@ namespace pwiz.Skyline.Util
             [Track(defaultValues: typeof(DefaultValuesNull))]
             public string ViewName { get; private set; }
             [TrackChildren]
+            public RowFilter Filter { get; private set; }
             public string ExtraInfo { get; private set; }
         }
 
@@ -112,14 +106,14 @@ namespace pwiz.Skyline.Util
                     e.Handled = PerformUndoableOperation(UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
                         monitor => Paste(monitor, reader),
                         new BatchModifyInfo(BatchModifyAction.Paste, ViewName,
-                            clipboardText));
+                            RowFilter, clipboardText));
                 }
             }
             else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
             {
                 e.Handled = PerformUndoableOperation(
                     UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
-                    new BatchModifyInfo(BatchModifyAction.Clear, ViewName));
+                    new BatchModifyInfo(BatchModifyAction.Clear, ViewName, RowFilter));
             }
         }
 
