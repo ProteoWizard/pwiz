@@ -2098,14 +2098,13 @@ namespace pwiz.ProteowizardWrapper
             if (_ionMobilities != null && _ionMobilities.Value.Count > 0)
             {
                 // For diagonal DIA these will all be the same, will vary for regular diaPASEF
-                var span = _ionMobilities.Value.Array.AsSpan(offset, length);
-                var im = span[0];
+                var im = IonMobilities[offset];
                 var singleIM = true;
                 if (!dataFile.IsCombinedDiagonalPASEF)
                 {
                     for (var i = 1; i < length; i++)
                     {
-                        if (span[i] != im)
+                        if (IonMobilities[offset + i] != im)
                         {
                             // Multiple IM values (regular diaPASEF)
                             slice._ionMobilities = new ArraySegment<double>(_ionMobilities.Value.Array, offset, length);
