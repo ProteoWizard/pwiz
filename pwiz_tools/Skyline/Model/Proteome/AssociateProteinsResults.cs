@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Proteome
 {
     public class AssociateProteinsResults : Immutable
     {
-        public static readonly Producer<Parameters, AssociateProteinsResults> PRODUCER = new Producer();
+        public static readonly Producer<Parameters, AssociateProteinsResults> PRODUCER = new ResultsProducer();
 
         public class Parameters : Immutable
         {
@@ -169,14 +169,19 @@ namespace pwiz.Skyline.Model.Proteome
         }
 
 
-        private class Producer : Producer<Parameters, AssociateProteinsResults>
+        private class ResultsProducer : Producer<Parameters, AssociateProteinsResults>
         {
             public override AssociateProteinsResults ProduceResult(ProductionMonitor productionMonitor,
                 Parameters parameter,
                 IDictionary<WorkOrder, object> inputs)
             {
-                var results = new AssociateProteinsResults(parameter);
                 var stringSearch = inputs.Values.OfType<StringSearch>().First();
+                return ProduceResults(productionMonitor, parameter, stringSearch);
+            }
+
+            public AssociateProteinsResults ProduceResults(ProductionMonitor productionMonitor, Parameters parameter, StringSearch stringSearch) 
+            {
+                var results = new AssociateProteinsResults(parameter);
                 var proteinAssociation =
                     new ProteinAssociation(parameter.Document, stringSearch);
                 var longWaitBroker = new LongWaitBrokerImpl(productionMonitor);
@@ -298,14 +303,9 @@ namespace pwiz.Skyline.Model.Proteome
                 get { return _productionMonitor.CancellationToken; }
             }
         }
-        private static readonly Producer<ImmutableList<string>, StringSearch> _stringSearchProducer = new StringSearchProducer();
 
-        private class StringSearchProducer : Producer<ImmutableList<string>, StringSearch>
-        {
-            public override StringSearch ProduceResult(ProductionMonitor productionMonitor, ImmutableList<string> parameter, IDictionary<WorkOrder, object> inputs)
-            {
-                return new StringSearch(parameter, productionMonitor.CancellationToken);
-            }
-        }
+        private static readonly Producer<ImmutableList<string>, StringSearch> _stringSearchProducer =
+            Producer.FromFunction<ImmutableList<string>, StringSearch>((productionMonitor, peptides) =>
+                new StringSearch(peptides, productionMonitor.CancellationToken));
     }
 }

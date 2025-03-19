@@ -148,8 +148,8 @@ namespace pwiz.Skyline.EditUI
             if (DocumentFinal != null)
             {
                 UpdateTargetCounts();
-            if (cbGeneLevel.Checked)
-                Settings.Default.ShowPeptidesDisplayMode = ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString();
+                if (cbGeneLevel.Checked)
+                    Settings.Default.ShowPeptidesDisplayMode = ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString();
             }
         }
 
@@ -216,20 +216,11 @@ namespace pwiz.Skyline.EditUI
                 Height -= minPeptidesHeight;
             }
 
-            if (_document.PeptideCount == 0)
+            if (_document.PeptideCount == 0 && _overrideFastaPath == null)
             {
-                if (_overrideFastaPath == null)
-                {
-                    MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
-                    Close();
-                }
-                else
-                {
-                    DocumentFinal = AddIrtAndDecoys(_document);
-                    UpdateTargetCounts();
-                    btnOk.Enabled = true;
-                    return;
-                }
+                MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
+                Close();
+                return;
             }
             _receiver = AssociateProteinsResults.PRODUCER.RegisterCustomer(this, DisplayResults);
             _receiver.ProgressChange += DisplayResults;
@@ -539,10 +530,9 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
-                var fileName = FastaFileName;
-                return new AssociateProteinsSettings(_proteinAssociation, null, null); 
-                    // _isFasta == true && _overrideFastaPath == null ? fileName : null,
-                    // _isFasta == true ? null : fileName);
+                var parameters = GetParameters();
+                return new AssociateProteinsSettings(_proteinAssociation, parameters.FastaFilePath,
+                    parameters.BackgroundProteome?.DatabasePath);
             }
         }
 
@@ -582,6 +572,10 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
+            if (!IsOkEnabled)
+            {
+                throw new InvalidOperationException();
+            }
             if (rbFASTA.Checked && !_fastaFileIsTemporary)
                 Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
 
