@@ -63,7 +63,7 @@ namespace BuildThermoMethod
             // Thermo libraries can sometimes throw exceptions with multi-line errors
             // Any lines that do not get ERROR: prepended will not get reported
             var sb = new StringBuilder();
-            var reader = new StringReader(x.Message);
+            var reader = new StringReader(x.ToString());
             string line;
             while ((line = reader.ReadLine()) != null)
                 sb.AppendLine("ERROR: " + line);
@@ -77,14 +77,7 @@ namespace BuildThermoMethod
                     "   Takes template Thermo method file and a Skyline generated Thermo\n" +
                     "   scheduled transition list as inputs, to generate a method file\n" +
                     "   as output.\n" +
-                    "   -f               Fusion method [default]\n" +
-                    "   -e               Endura method\n" +
-                    "   -q               Quantiva method\n" +
-                    "   -a               Altis method\n" +
-                    "   -p               Exploris method\n" +
-                    "   -l               Fusion Lumos method\n" +
-                    "   -c               Eclipse method\n" +
-                    "   -t               Stellar method\n" +
+                    "   -t <inst type>   as in registry [default TSQAltis]\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -x               Export method XML to <basename>.xml file\n" +
                     "   -s               Transition list is read from stdin.\n" +
@@ -343,13 +336,24 @@ namespace BuildThermoMethod
     {
         private const string ThermoMethodExt = ".meth";
         private const string InstrumentFusion = "OrbitrapFusion";
-        private const string InstrumentExploris = "OrbitrapExploris480";
         private const string InstrumentFusionLumos = "OrbitrapFusionLumos";
         private const string InstrumentEclipse = "OrbitrapEclipse";
+        private const string InstrumentAscend = "OrbitrapAscend";
+        private const string InstrumentAstral = "OrbitrapAstral";
+        private const string InstrumentExploris = "OrbitrapExploris480";
         private const string InstrumentEndura = "TSQEndura";
         private const string InstrumentQuantiva = "TSQQuantiva";
         private const string InstrumentAltis = "TSQAltis";
         private const string InstrumentStellar = "Stellar";
+
+        private static readonly string[] KnownInstruments =
+        {
+            InstrumentFusion, InstrumentFusionLumos, InstrumentEclipse, InstrumentAscend,   // tribrids
+            InstrumentAstral, // tofs
+            InstrumentExploris, // exactives
+            InstrumentEndura, InstrumentQuantiva, InstrumentAltis,  // tsqs
+            InstrumentStellar, // qits
+        };
 
         private string InstrumentType { get; set; }
         private string InstrumentVersion { get; set; }
@@ -359,7 +363,7 @@ namespace BuildThermoMethod
 
         public BuildThermoMethod()
         {
-            InstrumentType = InstrumentQuantiva;
+            InstrumentType = InstrumentAltis;
             InstrumentVersion = null;
             TemplateMethod = null;
             MethodTrans = new List<MethodTransitions>();
@@ -377,29 +381,12 @@ namespace BuildThermoMethod
                 string arg = args[i++];
                 switch (arg[1])
                 {
-                    case 'f':
-                        InstrumentType = InstrumentFusion;
-                        break;
-                    case 'e':
-                        InstrumentType = InstrumentEndura;
-                        break;
-                    case 'q':
-                        InstrumentType = InstrumentQuantiva;
-                        break;
-                    case 'a':
-                        InstrumentType = InstrumentAltis;
-                        break;
-                    case 'p':
-                        InstrumentType = InstrumentExploris;
-                        break;
-                    case 'l':
-                        InstrumentType = InstrumentFusionLumos;
-                        break;
-                    case 'c':
-                        InstrumentType = InstrumentEclipse;
-                        break;
                     case 't':
-                        InstrumentType = InstrumentStellar;
+                        if (i >= args.Length)
+                            throw new UsageException();
+                        InstrumentType = args[i++];
+                        if (!KnownInstruments.Contains(InstrumentType))
+                            throw new UsageException(string.Format("Unknown instrument type {0}", InstrumentType));
                         break;
                     case 'o':
                         if (i >= args.Length)
@@ -423,7 +410,7 @@ namespace BuildThermoMethod
             InstrumentVersion = MethodXMLFactory.GetLatestInstalledVersion(InstrumentType);
 
             if (multiFile && !string.IsNullOrEmpty(outputMethod))
-                Usage("Multi-file and specific output are not compatibile.");
+                Usage("Multi-file and specific output are not compatible.");
 
             int argcLeft = args.Length - i;
             if (argcLeft < 1 || (!readStdin && argcLeft < 2))
@@ -572,11 +559,11 @@ namespace BuildThermoMethod
                             case InstrumentFusion:
                                 mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(InstrumentType, listItems, outMeth));
                                 break;
+                            case InstrumentAstral:
                             case InstrumentExploris:
                                 mx.ApplyMethodModificationsFromXML(GetExplorisXml(InstrumentType, listItems, outMeth));
                                 break;
                             case InstrumentEclipse:
-                            // case InstrumentFusion:
                             case InstrumentFusionLumos:
                                 mx.ApplyMethodModificationsFromXML(GetCalciumXml(InstrumentType, listItems, outMeth));
                                 break;
