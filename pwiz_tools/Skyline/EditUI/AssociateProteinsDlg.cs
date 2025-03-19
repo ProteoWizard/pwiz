@@ -138,7 +138,7 @@ namespace pwiz.Skyline.EditUI
                 var message = results.ErrorMessage;
                 if (results.ErrorException != null)
                 {
-                    message = TextUtil.LineSeparate(message, "(Click for more information)");
+                    message = TextUtil.LineSeparate(message, EditUIResources.AssociateProteinsDlg_DisplayResults__Click_for_more_information_);
                 }
                 helpTip.SetToolTip(btnError, message);
                 return;
@@ -148,6 +148,8 @@ namespace pwiz.Skyline.EditUI
             if (DocumentFinal != null)
             {
                 UpdateTargetCounts();
+            if (cbGeneLevel.Checked)
+                Settings.Default.ShowPeptidesDisplayMode = ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString();
             }
         }
 
@@ -263,35 +265,6 @@ namespace pwiz.Skyline.EditUI
             return parameters;
         }
 
-        private void Initialize()
-        {
-            if (_proteinAssociation != null || _document.PeptideCount == 0)
-                return;
-
-            using (var longWaitDlg = new LongWaitDlg())
-            {
-                try
-                {
-                    longWaitDlg.PerformWork(this, 1000, broker =>
-                    {
-                        broker.Message = ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree;
-                        _proteinAssociation = new ProteinAssociation(_document, broker.CancellationToken);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    MessageDlg.ShowWithException(this,
-                        TextUtil.LineSeparate(
-                            Resources.AssociateProteinsDlg_UseFastaFile_An_error_occurred_during_protein_association_,
-                            ex.Message), ex, true);
-                    return;
-                }
-
-                if (longWaitDlg.IsCanceled)
-                    _proteinAssociation = null;
-            }
-        }
-
         public IEnumerable<KeyValuePair<ProteinAssociation.IProteinRecord, ProteinAssociation.PeptideAssociationGroup>> AssociatedProteins => _proteinAssociation?.AssociatedProteins;
         public IEnumerable<KeyValuePair<ProteinAssociation.IProteinRecord, ProteinAssociation.PeptideAssociationGroup>> ParsimoniousProteins => _proteinAssociation?.ParsimoniousProteins;
         public ProteinAssociation.IMappingResults Results => _proteinAssociation?.Results;
@@ -339,14 +312,12 @@ namespace pwiz.Skyline.EditUI
             dgvAssociateResults.Invalidate();
 
             lblStatusBarResult.Text = GetStatusBarResultString();
+
         }
 
         private void UpdateParsimonyResults()
         {
             DisplayResults();
-            return;
-            DocumentFinal = CreateDocTree(_document);
-            UpdateTargetCounts();
         }
 
         private void checkBoxParsimony_CheckedChanged(object sender, EventArgs e)

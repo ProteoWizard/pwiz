@@ -54,7 +54,6 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using ZedGraph;
 
 namespace pwiz.Skyline
 {
