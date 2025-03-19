@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
@@ -694,7 +695,24 @@ namespace pwiz.SkylineTestFunctional
             {
                 var testCase = _parsimonyTestCases[i];
                 string fastaFilePath = TestFilesDir.GetTestPath("testProteins.fasta");
-                using (var fastaFile = new StreamWriter(fastaFilePath))
+                StreamWriter fastaFile = null;
+                for (int retry = 0;; retry++)
+                {
+                    try
+                    {
+                        fastaFile = new StreamWriter(fastaFilePath);
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        if (retry >= 100)
+                        {
+                            throw;
+                        }
+                        Thread.Sleep(10);
+                    }
+                }
+                using (fastaFile)
                 {
                     Assume.IsTrue(testCase.ProteinDescriptions.IsNullOrEmpty() || testCase.Proteins.Length == testCase.ProteinDescriptions.Length);
                     if (testCase.ProteinDescriptions != null && testCase.ProteinDescriptions.Length > 0)
