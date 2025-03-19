@@ -115,6 +115,11 @@ namespace pwiz.Skyline.EditUI
             helpTip.SetToolTip(numMinPeptides, helpTip.GetToolTip(lblMinPeptides));
         }
 
+        /// <summary>
+        /// If results for the current settings are available, then display them.
+        /// Otherwise, ensure that the results being worked on match the current settings and
+        /// update the progress bar.
+        /// </summary>
         private void DisplayResults()
         {
             var results = GetCurrentResults();
@@ -151,6 +156,11 @@ namespace pwiz.Skyline.EditUI
                 if (cbGeneLevel.Checked)
                     Settings.Default.ShowPeptidesDisplayMode = ProteinMetadataManager.ProteinDisplayMode.ByGene.ToString();
             }
+        }
+
+        private void ProgressChange()
+        {
+            progressBar1.Value = _receiver?.GetProgressValue() ?? 0;
         }
 
         private AssociateProteinsResults GetCurrentResults()
@@ -223,7 +233,7 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
             _receiver = AssociateProteinsResults.PRODUCER.RegisterCustomer(this, DisplayResults);
-            _receiver.ProgressChange += DisplayResults;
+            _receiver.ProgressChange += ProgressChange;
 
             UpdateParsimonyResults();
         }
@@ -531,7 +541,12 @@ namespace pwiz.Skyline.EditUI
             get
             {
                 var parameters = GetParameters();
-                return new AssociateProteinsSettings(_proteinAssociation, parameters.FastaFilePath,
+                string fastaPath = parameters.FastaFilePath;
+                if (_overrideFastaPath != null)
+                {
+                    fastaPath = null;
+                }
+                return new AssociateProteinsSettings(_proteinAssociation, fastaPath,
                     parameters.BackgroundProteome?.DatabasePath);
             }
         }

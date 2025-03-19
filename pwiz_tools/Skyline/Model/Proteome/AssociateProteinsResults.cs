@@ -184,7 +184,6 @@ namespace pwiz.Skyline.Model.Proteome
                 var results = new AssociateProteinsResults(parameter);
                 var proteinAssociation =
                     new ProteinAssociation(parameter.Document, stringSearch);
-                var longWaitBroker = new LongWaitBrokerImpl(productionMonitor);
                 if (!string.IsNullOrEmpty(parameter.FastaFilePath))
                 {
                     if (!File.Exists(parameter.FastaFilePath))
@@ -195,7 +194,7 @@ namespace pwiz.Skyline.Model.Proteome
                     }
                     try
                     {
-                        proteinAssociation.UseFastaFile(parameter.FastaFilePath, longWaitBroker);
+                        proteinAssociation.UseFastaFile(parameter.FastaFilePath, new ProgressImpl(productionMonitor, 0, 30));
                     }
                     catch (Exception ex)
                     {
@@ -209,7 +208,7 @@ namespace pwiz.Skyline.Model.Proteome
                 else if (parameter.BackgroundProteome != null)
                 {
                     proteinAssociation.UseBackgroundProteome(
-                        parameter.BackgroundProteome, longWaitBroker);
+                        parameter.BackgroundProteome, new ProgressImpl(productionMonitor, 0, 30));
                 }
                 else
                 {
@@ -224,9 +223,9 @@ namespace pwiz.Skyline.Model.Proteome
                 var parsimony = parameter.ParsimonySettings;
                 proteinAssociation.ApplyParsimonyOptions(parsimony.GroupProteins, parsimony.GeneLevelParsimony,
                     parsimony.FindMinimalProteinList, parsimony.RemoveSubsetProteins, parsimony.SharedPeptides,
-                    parsimony.MinPeptidesPerProtein, longWaitBroker);
+                    parsimony.MinPeptidesPerProtein, new ProgressImpl(productionMonitor, 30, 60));
                 var documentFinal =
-                    proteinAssociation.CreateDocTree(parameter.Document, new SilentProgressMonitor());
+                    proteinAssociation.CreateDocTree(parameter.Document, new ProgressImpl(productionMonitor, 60, 100));
                 if (documentFinal != null && parameter.DecoysPerTarget != 0)
                 {
                     var numDecoys = (int)Math.Round(parameter.DecoysPerTarget *
@@ -257,12 +256,17 @@ namespace pwiz.Skyline.Model.Proteome
             }
         }
 
-        private class LongWaitBrokerImpl : ILongWaitBroker
+        private class ProgressImpl : ILongWaitBroker, IProgressMonitor
         {
             private ProductionMonitor _productionMonitor;
-            public LongWaitBrokerImpl(ProductionMonitor productionMonitor)
+            private int _minProgress;
+            private int _maxProgress;
+
+            public ProgressImpl(ProductionMonitor productionMonitor, int min, int max)
             {
                 _productionMonitor = productionMonitor;
+                _minProgress = min;
+                _maxProgress = max;
             }
 
             public bool IsCanceled
@@ -272,23 +276,22 @@ namespace pwiz.Skyline.Model.Proteome
 
             public int ProgressValue
             {
-                get
-                {
-                    return -1;
-                }
+                get { return -1; }
                 set
                 {
-                    _productionMonitor.SetProgress(value);
+                    _productionMonitor.SetProgress(GetPercentComplete(value));
                 }
             }
 
             public string Message { get; set; }
+
             public bool IsDocumentChanged(SrmDocument docOrig)
             {
                 return false;
             }
 
-            public System.Windows.Forms.DialogResult ShowDialog(Func<System.Windows.Forms.IWin32Window, System.Windows.Forms.DialogResult> show)
+            public System.Windows.Forms.DialogResult ShowDialog(
+                Func<System.Windows.Forms.IWin32Window, System.Windows.Forms.DialogResult> show)
             {
                 throw new InvalidOperationException();
             }
@@ -301,6 +304,26 @@ namespace pwiz.Skyline.Model.Proteome
             public CancellationToken CancellationToken
             {
                 get { return _productionMonitor.CancellationToken; }
+            }
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                _productionMonitor.SetProgress(GetPercentComplete(status.PercentComplete));
+                return _productionMonitor.CancellationToken.IsCancellationRequested
+                    ? UpdateProgressResponse.cancel
+                    : UpdateProgressResponse.normal;
+            }
+
+            private int GetPercentComplete(int percentComplete)
+            {
+                return Math.Max(_minProgress,
+                    Math.Min(_maxProgress,
+                        (_maxProgress * percentComplete + _minProgress * (100 - percentComplete)) / 100));
+            }
+
+            public bool HasUI
+            {
+                get { return false; }
             }
         }
 

@@ -1162,13 +1162,13 @@
     <value>1</value>
   </data>
   <data name="btnError.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Right</value>
+    <value>Left</value>
   </data>
   <data name="btnError.FlatStyle" type="System.Windows.Forms.FlatStyle, System.Windows.Forms">
     <value>Flat</value>
   </data>
   <data name="btnError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>289, 0</value>
+    <value>0, 0</value>
   </data>
   <data name="btnError.Size" type="System.Drawing.Size, System.Drawing">
     <value>32, 32</value>
