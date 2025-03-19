@@ -254,9 +254,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         // CONSIDER: use IdentityPath to save and restore selected nodes? Caveat, all draggable nodes
         //           types must subclass DocNode, which is not true of replicates.
-        public void DropNodes(FilesTreeNode dropNode, IList<FilesTreeNode> draggedNodes, DragDropEffects effect)
+        public void DropNodes(FilesTreeNode dropNode, FilesTreeNode primaryDraggedNode, IList<FilesTreeNode> draggedNodes, DragDropEffects effect)
         {
-            if (dropNode == null || !dropNode.IsDroppable() || draggedNodes.Contains(dropNode))
+            if (dropNode == null || !dropNode.IsDroppable() || draggedNodes.Count == 0 || draggedNodes.Contains(dropNode))
                 return;
 
             if (effect == DragDropEffects.Move)
@@ -265,26 +265,37 @@ namespace pwiz.Skyline.Controls.FilesTree
                     doc =>
                     {
                         var draggedImmutables = draggedNodes.Select(item => (ChromatogramSet)item.Model.Immutable).ToList();
-
                         var newChromatogramSets = new List<ChromatogramSet>(doc.MeasuredResults.Chromatograms);
+
+                        var primaryDraggedNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)primaryDraggedNode.Model.Immutable);
 
                         foreach (var item in draggedImmutables)
                         {
                             newChromatogramSets.Remove(item);
                         }
 
-                        int insertIndex;
-                        // Insert at 0 if dropping on Replicates\ folder
+                        // CONSIDER: make it possible to drag to the bottom of the list without precisely dropping on the last
+                        //           node. Maybe highlight a blue "bar" drop target when dragging below the last item?
                         if (dropNode.Model.GetType() == typeof(ReplicatesFolder))
                         {
-                            insertIndex = 0;
+                            newChromatogramSets.InsertRange(0, draggedImmutables);
                         }
-                        else
-                        {
-                            insertIndex = newChromatogramSets.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
-                        }
+                        else {
+                            var dropNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
 
-                        newChromatogramSets.InsertRange(insertIndex, draggedImmutables);
+                            if (primaryDraggedNodeIndex < dropNodeIndex)
+                            {
+                                newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
+                            }
+                            else if (primaryDraggedNodeIndex > dropNodeIndex)
+                            {
+                                newChromatogramSets.InsertRange(dropNodeIndex, draggedImmutables);
+                            }
+                            else if (primaryDraggedNodeIndex == dropNodeIndex)
+                            {
+                                newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
+                            }
+                        }
 
                         var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatogramSets);
                         var newDoc = doc.ChangeMeasuredResults(newMeasuredResults);
@@ -314,9 +325,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // After the drop, reset selection so dragged nodes are blue
                 filesTree.SelectedNodes.Clear();
 
-                // make the last node a person clicked the selected node, which appears dark blue
-                if (draggedNodes.Count > 0)
-                    filesTree.SelectedNode = draggedNodes.LastOrDefault();
+                filesTree.SelectedNode = primaryDraggedNode;
 
                 foreach (var node in draggedNodes)
                 {
@@ -552,6 +561,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
         {
+            var selectedNode = FilesTree.SelectedNode;
             var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
 
             _nodeTip.HideTip();
@@ -571,6 +581,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
 
             var dataObj = new DataObject();
+            dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
             dataObj.SetData(typeof(FilesTreeNode), draggedNodes);
 
             filesTree.DoDragDrop(dataObj, DragDropEffects.Move);
@@ -581,9 +592,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             var dropPoint = filesTree.PointToClient(new Point(e.X, e.Y));
             var dropNode = (FilesTreeNode)filesTree.GetNodeAt(dropPoint);
 
+            var primaryDraggedNode = (FilesTreeNode)e.Data.GetData(typeof(PrimarySelectedNode));
             var dragNodeList = (IList<FilesTreeNode>)e.Data.GetData(typeof(FilesTreeNode));
 
-            DropNodes(dropNode, dragNodeList, e.Effect);
+            DropNodes(dropNode, primaryDraggedNode, dragNodeList, e.Effect);
         }
 
         private static bool ContainsCheckReferenceEquals(IList<Identity> list, Identity item)
@@ -596,4 +608,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             return false;
         }
     }
+
+    // Type used as a key for data passed around during drag-and-drop
+    internal sealed class PrimarySelectedNode { }
 }

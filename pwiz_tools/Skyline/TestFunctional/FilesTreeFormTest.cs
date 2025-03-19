@@ -155,7 +155,7 @@ namespace pwiz.SkylineTestFunctional
                     chromatograms[3] = newChromSet; // replace existing with modified ChromatogramSet
 
                     measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-                    return doc.ChangeMeasuredResults(measuredResults); 
+                    return doc.ChangeMeasuredResults(measuredResults);
                 });
             });
 
@@ -194,14 +194,14 @@ namespace pwiz.SkylineTestFunctional
                     var measuredResults = doc.MeasuredResults;
                     var chromatograms = measuredResults.Chromatograms.ToArray();
                     var reversedChromatograms = new List<ChromatogramSet>(chromatograms.Reverse());
-            
+
                     measuredResults = measuredResults.ChangeChromatograms(reversedChromatograms);
                     return doc.ChangeMeasuredResults(measuredResults);
                 });
             });
-            
+
             WaitForDocumentChange(doc);
-            
+
             CheckReplicateEquivalence(42);
 
             // Delete replicate
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.FilesTree.ScrollToFolder<ProjectFilesFolder>();
             });
             WaitForConditionUI(() => projectFilesRoot.IsVisible);
-            
+
             Assert.AreEqual(2, projectFilesRoot.Nodes.Count);
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ViewFile));
             Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ChromatogramCache));
@@ -373,30 +373,36 @@ namespace pwiz.SkylineTestFunctional
             //
             // Drag-and-drop
             //
-            var draggedNodes = new List<FilesTreeNode> {
-                (FilesTreeNode)replicateFolderModel.Nodes[3],
-                (FilesTreeNode)replicateFolderModel.Nodes[4],
-                (FilesTreeNode)replicateFolderModel.Nodes[5]
-            };
-
-            var dropNode = (FilesTreeNode)replicateFolderModel.Nodes[9];
-
-            doc = SkylineWindow.Document;
-            RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.DropNodes(dropNode, draggedNodes, DragDropEffects.Move);
-            });
-            WaitForDocumentChangeLoaded(doc);
+                // Reopen a clean document
+                documentPath = TestFilesDir.GetTestPath("Rat_plasma.sky");
+                RunUI(() => {
+                    SkylineWindow.OpenFile(documentPath);
+                    SkylineWindow.ShowFilesTreeForm(true);
+                });
+                WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            replicateFolderModel = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-            Assert.AreEqual(draggedNodes[0], replicateFolderModel.Nodes[6]);
-            Assert.AreEqual(draggedNodes[1], replicateFolderModel.Nodes[7]);
-            Assert.AreEqual(draggedNodes[2], replicateFolderModel.Nodes[8]);
-            Assert.AreEqual(dropNode, replicateFolderModel.Nodes[9]);
+                var lastItemIndex = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
+
+                // TODO: disjoint drag tests
+                DragDropAndVerify(new[] { 0 }, 1, DragDirection.down);
+                DragDropAndVerify(new[] { 1 }, 0, DragDirection.up);
+
+                DragDropAndVerify(new[] { 0 }, lastItemIndex, DragDirection.down);
+                DragDropAndVerify(new[] { lastItemIndex }, 0, DragDirection.up);
+
+                DragDropAndVerify(new[] { 3, 4, 5 }, 9, DragDirection.down);
+                DragDropAndVerify(new[] { 7, 8, 9 }, 3, DragDirection.up);
+
+                DragDropAndVerify(new[] { 3, 4, 5 }, lastItemIndex, DragDirection.down);
+                DragDropAndVerify(new[] { lastItemIndex - 2, lastItemIndex - 1, lastItemIndex }, 0, DragDirection.up);
+            }
 
             //
             // Remove
             // 
+            // TODO: figure out how to click Ok on dialog to confirm node removals
+            //
             // doc = SkylineWindow.Document;
             // RunUI(() =>
             // {
@@ -428,6 +434,55 @@ namespace pwiz.SkylineTestFunctional
             {
                 SkylineWindow.DestroyFilesTreeForm();
             });
+        }
+
+        internal enum DragDirection { up, down }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="dragNodeIndexes"></param>
+        /// <param name="dropNodeIndex"></param>
+        /// <param name="direction"></param>
+        /// <param name="selectedIndex">item in dragNodeIndexes to use as the dragged node</param>
+        ///
+        // TODO: support disjoint dragged items where items could be *below* the dropNodeIndex
+        private static void DragDropAndVerify(int[] dragNodeIndexes, int dropNodeIndex, DragDirection direction, int selectedIndex = 0)
+        {
+            var folder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+
+            var dragNodes = new List<FilesTreeNode>();
+            foreach (var index in dragNodeIndexes)
+            {
+                dragNodes.Add((FilesTreeNode)folder.Nodes[index]);
+            }
+
+            var selectedNode = dragNodes[0];
+            var dropNode = (FilesTreeNode)folder.Nodes[dropNodeIndex];
+
+            var oldDoc = SkylineWindow.Document;
+            RunUI(() =>
+            {
+                SkylineWindow.FilesTreeForm.DropNodes(dropNode, selectedNode, dragNodes, DragDropEffects.Move);
+            });
+            var newDoc = WaitForDocumentChangeLoaded(oldDoc);
+
+            Assert.IsFalse(ReferenceEquals(oldDoc.MeasuredResults.Chromatograms, newDoc.MeasuredResults.Chromatograms));
+            CheckReplicateEquivalence(folder.Nodes.Count);
+
+            folder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+
+            var dropNodeExpectedIndex = direction == DragDirection.down ? dropNodeIndex - dragNodeIndexes.Length : dropNodeIndex + dragNodeIndexes.Length;
+
+            Assert.AreEqual(dropNode, folder.Nodes[dropNodeExpectedIndex]);
+
+            for(var i = 0; i < dragNodeIndexes.Length; i++)
+            {
+                var expectedIndex = 
+                    direction == DragDirection.down ? dropNodeExpectedIndex + 1 + i : dropNodeExpectedIndex - dragNodes.Count + i; // dropNodeIndex + i;
+
+                Assert.AreEqual(dragNodes[i], folder.Nodes[expectedIndex]);
+            }
         }
 
         private static void CheckReplicateEquivalence(int expectedCount)
