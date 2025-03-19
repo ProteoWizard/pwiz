@@ -105,29 +105,41 @@ namespace TestPerf
                 Assert.AreEqual(84198, proteinsDlg.FinalResults.ProteinsMapped);
                 Assert.AreEqual(4281, proteinsDlg.FinalResults.ProteinsUnmapped);
             });
-            
+
             RunUI(() =>
             {
                 proteinsDlg.GroupProteins = true;
                 proteinsDlg.FindMinimalProteinList = false;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.AssignedToBestProtein;
+            });
+            WaitForConditionUI(() => proteinsDlg.IsComplete);
+            RunUI(()=>{
                 //Console.WriteLine($"KeepAllProteins AssignedToBestProtein {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
                 Assert.AreEqual(471387, proteinsDlg.FinalResults.FinalPeptideCount);
                 Assert.AreEqual(48572, proteinsDlg.FinalResults.FinalProteinCount);
 
                 proteinsDlg.FindMinimalProteinList = true;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.DuplicatedBetweenProteins;
+            });
+            WaitForConditionUI(() => proteinsDlg.IsComplete);
+            RunUI(() => {                
                 //Console.WriteLine($"MinimalProteinList DuplicatedBetweenProteins {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
                 Assert.AreEqual(744438, proteinsDlg.FinalResults.FinalPeptideCount);
                 Assert.AreEqual(49193, proteinsDlg.FinalResults.FinalProteinCount);
 
                 proteinsDlg.FindMinimalProteinList = false;
                 proteinsDlg.SelectedSharedPeptides = ProteinAssociation.SharedPeptides.Removed;
+            });
+            WaitForConditionUI(() => proteinsDlg.IsComplete);
+            RunUI(() => {
                 //Console.WriteLine($"KeepAllProteins Removed {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
                 Assert.AreEqual(167189, proteinsDlg.FinalResults.FinalPeptideCount);
                 Assert.AreEqual(41606, proteinsDlg.FinalResults.FinalProteinCount);
 
                 proteinsDlg.GeneLevelParsimony = true;
+            });
+            WaitForConditionUI(() => proteinsDlg.IsComplete);
+            RunUI(() => {
                 //Console.WriteLine($"GeneLevelParsimony {proteinsDlg.FinalResults.FinalProteinCount} {proteinsDlg.FinalResults.FinalPeptideCount}");
                 Assert.AreEqual(408175, proteinsDlg.FinalResults.FinalPeptideCount);
                 Assert.AreEqual(20649, proteinsDlg.FinalResults.FinalProteinCount);

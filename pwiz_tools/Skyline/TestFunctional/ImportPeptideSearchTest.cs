@@ -564,7 +564,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, unmappedOrRemoved);
                 peptidesPerProteinDlg.MinPeptides = 2;
             });
-            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated && peptidesPerProteinDlg.DocumentFinalCalculated);
+            WaitForConditionUI(() => peptidesPerProteinDlg.DocumentFinalCalculated);
             RunUI(() =>
             {
                 peptidesPerProteinDlg.NewTargetsFinalSync(out proteins, out peptides, out precursors, out transitions, out unmappedOrRemoved);
