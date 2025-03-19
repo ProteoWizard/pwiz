@@ -26,6 +26,7 @@ using System.Text;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.SkylineTestUtil;
@@ -399,9 +400,9 @@ namespace pwiz.SkylineTest
                 array4[i] = arrayBase[i];
             }
             int[] sortIndexes;
-            ArrayUtil.Sort(arrayBase, out sortIndexes);
+            ArraySortUtil.Sort(arrayBase, out sortIndexes);
             AssertEx.AreEqualDeep(new[] {2, 1, 3, 0, 4}, sortIndexes);
-            ArrayUtil.Sort(array2, array3, array4);
+            ArraySortUtil.Sort(array2, array3, array4);
             AssertEx.AreEqualDeep(arrayBase, array2);
             AssertEx.AreEqualDeep(arrayBase, array3);
             AssertEx.AreEqualDeep(arrayBase, array4);

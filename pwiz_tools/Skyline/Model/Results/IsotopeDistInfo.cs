@@ -91,8 +91,9 @@ namespace pwiz.Skyline.Model.Results
             var filter = new SpectrumFilterPair(key, PeptideDocNode.UNKNOWN_COLOR, 0, null, null, false, false);
             filter.AddQ1FilterValues(signedQ1FilterValues, calcFilterWindow);
 
-            var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
-            { Mzs = massDistribution.Keys.ToArray(), Intensities = massDistribution.Values.ToArray(), NegativeCharge = (adduct.AdductCharge < 0) } });
+            var spec = new MsDataSpectrum(massDistribution.Keys.ToArray(), massDistribution.Values.ToArray()) { NegativeCharge = (adduct.AdductCharge < 0) };
+            var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { spec });
+            
 
             int startIndex = expectedSpectrum.Intensities.IndexOf(inten => inten >= minimumAbundance);
             if (startIndex == -1)

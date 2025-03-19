@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Model.Results
                     for (var t = 0; t < transitions.Count; t++)
                     {
                         var mzHigh = FindRangeMz(mzTolerance, transitions[t], scan, out var first);
-                        for (var i = first; i < scan.Mzs.Length; i++)
+                        for (var i = first; i < scan.Length; i++)
                         {
                             if (scan.Mzs[i] > mzHigh)
                                 break;
@@ -579,7 +579,7 @@ namespace pwiz.Skyline.Model.Results
                     for (var t = 0; t < transitions.Count; t++)
                     {
                         var mzHigh = FindRangeMz(mzTolerance, transitions[t], scan, out var first);
-                        for (var i = first; i < scan.Mzs.Length; i++)
+                        for (var i = first; i < scan.Length; i++)
                         {
                             if (scan.Mzs[i] > mzHigh)
                                 break;
@@ -741,9 +741,7 @@ namespace pwiz.Skyline.Model.Results
             var halfwin = (t.ExtractionWidth ?? tolerance) / 2;
             var mzLow = mzPeak - halfwin;
             var mzHigh = mzPeak + halfwin;
-            first = Array.BinarySearch(scan.Mzs, mzLow);
-            if (first < 0)
-                first = ~first;
+            first = scan.FindMzIndex(mzLow);
             return mzHigh;
         }
 

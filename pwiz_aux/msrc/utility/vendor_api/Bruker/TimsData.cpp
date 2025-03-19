@@ -877,15 +877,19 @@ void TimsSpectrum::getCombinedSpectrumData(BinaryData<double>& mz, BinaryData<do
         const auto& isolationMzHighByScanNumber = frame_.timsDataImpl_.isolationMzHighByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
         double* itr3 = &isolationWindowStart[0];
         double* itr4 = &isolationWindowEnd[0];
+        // TODO: need an array of CE per scan
         for (int i = 0; i <= range; ++i)
         {
             auto intensityCounts = frameProxy.getScanY(i);
-            for (size_t j = 0; j < intensityCounts.size(); ++j, ++itr, ++itr2, ++itr3, ++itr4)
+            auto im = frame_.oneOverK0_[scanBegin_ + i];
+            auto isoMzLow = isolationMzLowByScanNumber[scanBegin_ + i];
+            auto isoMzHigh = isolationMzHighByScanNumber[scanBegin_ + i];
+            for (size_t j = 0; j < intensityCounts.size();)
             {
-                *itr = intensityCounts[j];
-                *itr2 = frame_.oneOverK0_[scanBegin_ + i];
-                *itr3 = isolationMzLowByScanNumber[scanBegin_ + i];
-                *itr4 = isolationMzHighByScanNumber[scanBegin_ + i];
+                *itr++ = intensityCounts[j++];
+                *itr2++ = im;
+                *itr3++ = isoMzLow;
+                *itr4++ = isoMzHigh;
                 /*if (*itr2 < 0.0001 || *itr2 > 2)
                     throw runtime_error("bad 1/k0 value at i=" + lexical_cast<string>(i) +
                                         " j=" + lexical_cast<string>(j) +

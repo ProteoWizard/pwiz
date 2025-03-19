@@ -74,10 +74,10 @@ namespace pwiz.Skyline.Model.Lib.Midas
             IntensityBytes = intensityBytes;
         }
 
-        public DbSpectrum(DbResultsFile resultsFile, double precursorMz, double? matchedPrecursorMz, string documentPeptide, int? documentPrecursorCharge, double retentionTime, double[] mzs, double[] intensities)
+        public DbSpectrum(DbResultsFile resultsFile, double precursorMz, double? matchedPrecursorMz, string documentPeptide, int? documentPrecursorCharge, double retentionTime, ArraySegment<double> mzs, ArraySegment<double> intensities)
             : this(resultsFile, precursorMz, matchedPrecursorMz, documentPeptide, documentPrecursorCharge, retentionTime, CompressBytes(mzs), CompressBytes(intensities))
         {
-        }
+        }   
 
         #region object overrides
 
@@ -125,10 +125,11 @@ namespace pwiz.Skyline.Model.Lib.Midas
 
         #endregion
 
-        private static byte[] CompressBytes(double[] doubles)
+        private static byte[] CompressBytes(ArraySegment<double> doubles)
         {
-            var doubleBytes = new byte[doubles.Length * sizeof(double)];
-            Buffer.BlockCopy(doubles, 0, doubleBytes, 0, doubleBytes.Length);
+            var doubleBytes = new byte[doubles.Count * sizeof(double)];
+            // ReSharper disable once AssignNullToNotNullAttribute
+            Buffer.BlockCopy(doubles.Array, doubles.Offset, doubleBytes, 0, doubleBytes.Length);
             using (var ms = new MemoryStream())
             {
                 using (var compressor = new ZlibStream(ms, CompressionMode.Compress, CompressionLevel.Level3))

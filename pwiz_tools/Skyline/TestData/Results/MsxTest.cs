@@ -335,7 +335,7 @@ namespace pwiz.SkylineTestData.Results
                 foreach (var transition in expectedTransitions)
                 {
                     // What bin does this transition fall into?
-                    var bins = transBinner.BinsFromValues(new[]{transition}, true).ToArray();
+                    var bins = transBinner.BinsFromValues(new[]{transition}).ToArray();
 
                     // Each transition maps to a single transition bin in this test
                     // m/z values mapping to multiple (overlapping) transitions is tested in
@@ -357,7 +357,7 @@ namespace pwiz.SkylineTestData.Results
             // Check BinInPrecursor
             // Positive control
             // Bin for 1465.6376 is in precursor 602.6211
-            var binsFromValue = transBinner.BinsFromValues(new[] { 1465.6376 }, true).ToArray();
+            var binsFromValue = transBinner.BinsFromValues(new[] { 1465.6376 }).ToArray();
             Assert.AreEqual(binsFromValue.Length, 1);
             var binTwo = binsFromValue[0].Value;
             int deconvIndexTwo;
@@ -426,7 +426,7 @@ namespace pwiz.SkylineTestData.Results
 
             // m/z values to test mapping of m/z value -> multiplex matching transition bins
             var queryVals = new[] {252.0, 377.0, 379.92, 379.95};
-            var bins = transitionBinner.BinsFromValues(queryVals, true).ToList();
+            var bins = transitionBinner.BinsFromValues(queryVals).ToList();
 
             var expectedBins = new List<KeyValuePair<int, int>>
                                    {
@@ -535,8 +535,8 @@ namespace pwiz.SkylineTestData.Results
 
             for (int i = 0; i < deconvIndices.Length; ++i)
             {
-                deconvIntensities[i] = new double[testSpectrum.Mzs.Length];
-                deconvMzs[i] = new double[testSpectrum.Mzs.Length];
+                deconvIntensities[i] = new double[testSpectrum.Length];
+                deconvMzs[i] = new double[testSpectrum.Length];
             }
 
             List<int> binIndicesList = binIndicesSet.ToList();
@@ -593,7 +593,7 @@ namespace pwiz.SkylineTestData.Results
             int numBinIndices = binIndicesList.Count;
             for (int i = 0; i < numBinIndices; ++i)
                 binToDeconvIndex[binIndicesList[i]] = i;
-            var queryBinEnumerator = transBinner.BinsFromValues(testSpectrum.Mzs, true);
+            var queryBinEnumerator = transBinner.BinsFromValues(testSpectrum.Mzs);
             demultiplexer.SpectrumProcessor = new SpectrumProcessor(165, isoMapper, transBinner);
             // Apply the peak intensity correction
             demultiplexer.CorrectPeakIntensitiesTest(testSpectrum, binIndicesSet, peakSums,
@@ -664,7 +664,7 @@ namespace pwiz.SkylineTestData.Results
                                                 int deconvIndex)
         {
             var deconvSpectra = demultiplexer.GetDeconvolvedSpectra(spectrumIndex, originalSpectrum);
-            int numberMzPoints = originalSpectrum.Intensities.Length;
+            int numberMzPoints = originalSpectrum.Intensities.Count;
             double[] peakSums = new double[numberMzPoints];
             for (int i = 0; i < numberMzPoints; ++i)
             {
@@ -672,7 +672,7 @@ namespace pwiz.SkylineTestData.Results
             }
             foreach (var deconvSpectrum in deconvSpectra)
             {
-                Assert.AreEqual(deconvSpectrum.Intensities.Length, originalSpectrum.Intensities.Length);
+                Assert.AreEqual(deconvSpectrum.Intensities.Count, originalSpectrum.Intensities.Count);
                 for (int i = 0; i < numberMzPoints; ++i)
                 {
                     peakSums[i] += deconvSpectrum.Intensities[i];

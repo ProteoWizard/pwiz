@@ -697,6 +697,8 @@ namespace pwiz.ProteowizardWrapper
 
         public bool HasCombinedIonMobilitySpectra => SpectrumList != null && IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.hasCombinedIonMobility();
 
+        public bool IsCombinedDiagonalPASEF => HasCombinedIonMobilitySpectra && _ionMobilitySpectrumList.isDiagonalPASEF();
+
         /// <summary>
         /// Gets the value of the MS_sample_name CV param of first sample in the MSData object, or null if there is no sample information.
         /// </summary>
@@ -967,14 +969,14 @@ namespace pwiz.ProteowizardWrapper
                 return -1;
             return index;
         }
-
+/* obsolete?
         public void GetSpectrum(int spectrumIndex, out double[] mzArray, out double[] intensityArray)
         {
             var spectrum = GetSpectrum(spectrumIndex);
             mzArray = spectrum.Mzs;
             intensityArray = spectrum.Intensities;
         }
-
+*/
         public MsDataSpectrum GetSpectrum(int spectrumIndex)
         {
             using (_perf.CreateTimer(@"GetSpectrum(index)"))
@@ -1073,15 +1075,7 @@ namespace pwiz.ProteowizardWrapper
         {
             if (spectrum == null)
             {
-                return new MsDataSpectrum
-                {
-                    Centroided = true,
-                    Mzs = new double[0],
-                    Intensities = new double[0],
-                    IonMobilities = null,
-                    ScanningQuadMzLows = null,
-                    ScanningQuadMzHighs = null
-                };
+                return new MsDataSpectrum();
             }
             string idText = spectrum.id;
             if (idText.Trim().Length == 0)
@@ -1125,9 +1119,7 @@ namespace pwiz.ProteowizardWrapper
 
             if (spectrum.binaryDataArrays.Count <= 1)
             {
-                msDataSpectrum.Mzs = new double[0];
-                msDataSpectrum.Intensities = new double[0];
-                msDataSpectrum.IonMobilities = null;
+                msDataSpectrum.SetArrays(Array.Empty<double>(), Array.Empty<double>());
                 if (expectIonMobilityValue)
                 {
                     msDataSpectrum.IonMobility = GetIonMobility(spectrum);
@@ -1137,20 +1129,11 @@ namespace pwiz.ProteowizardWrapper
             {
                 try
                 {
-                    msDataSpectrum.Mzs = ToArray(spectrum.getMZArray());
-                    msDataSpectrum.Intensities = ToArray(spectrum.getIntensityArray());
-                    msDataSpectrum.IonMobilities = GetIonMobilityArray(spectrum);
-                    if (msDataSpectrum.Level > 1)
-                    {
-                        // For diagonal PASEF
-                        msDataSpectrum.ScanningQuadMzLows = GetScanningQuadMzLowArray(spectrum);
-                        msDataSpectrum.ScanningQuadMzHighs = GetScanningQuadMzHighArray(spectrum);
-                    }
-                    else
-                    {
-                        msDataSpectrum.ScanningQuadMzLows = null;
-                        msDataSpectrum.ScanningQuadMzHighs = null;
-                    }
+                    msDataSpectrum.SetArrays(ToArray(spectrum.getMZArray()),
+                        ToArray(spectrum.getIntensityArray()),
+                        GetIonMobilityArray(spectrum),
+                        GetScanningQuadMzLowArray(spectrum),GetScanningQuadMzHighArray(spectrum));
+
                     if (msDataSpectrum.IonMobilities != null)
                     {
                         // One more linear walk should be fine, given how much copying and walking gets done
@@ -1166,14 +1149,6 @@ namespace pwiz.ProteowizardWrapper
                     else if (expectIonMobilityValue)
                     {
                         msDataSpectrum.IonMobility = GetIonMobility(spectrum);
-                    }
-
-                    if (msDataSpectrum.ScanningQuadMzLows != null)
-                    {
-                        // One more linear walk should be fine, given how much copying and walking gets done
-                        // N.B its possible that this range goes slightly outside the declared isolation window
-                        msDataSpectrum.MinScanningQuadMz = msDataSpectrum.ScanningQuadMzLows.Min();
-                        msDataSpectrum.MaxScanningQuadMz = msDataSpectrum.ScanningQuadMzLows.Max();
                     }
 
                     if (msDataSpectrum.Level == 1 && _config.simAsSpectra &&
@@ -1978,10 +1953,43 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
         }
+
+        public double IsolationWindowBoundsLow =>
+            (IsolationWindowTargetMz ?? 0.0) - IsolationWindowLower ?? 0;
+        public double IsolationWindowBoundsHigh =>
+            (IsolationWindowTargetMz ?? double.MaxValue) + IsolationWindowUpper ?? 0;
     }
 
     public sealed class MsDataSpectrum
     {
+        public MsDataSpectrum()
+        {
+            Centroided = true;
+            SetArrays(Array.Empty<double>(), Array.Empty<double>());
+        }
+
+        public MsDataSpectrum(double[] mzs, double[] intensities, double[] ionMobilities = null)
+        {
+            SetArrays(mzs, intensities, ionMobilities);
+        }
+
+        public void SetArrays(double[] mzs, double[] intensities, double[] ionMobilities = null,
+            double[] scanningQuadMzLows = null, double[] scanningQuadMzHighs = null)
+        {
+            MzValues = new ArraySegment<double>(mzs);
+            IntensityValues = new ArraySegment<double>(intensities);
+            if (ionMobilities != null)
+            {
+                _ionMobilities = new ArraySegment<double>(ionMobilities);
+            }
+            _scanningQuadMzLows = scanningQuadMzLows;
+            _scanningQuadMzHighs = scanningQuadMzHighs;
+        }
+
+        public void SetEmptyArrays()
+        {
+            SetArrays(Array.Empty<double>(), Array.Empty<double>());
+        }
 
         private IonMobilityValue _ionMobility;
         public SpectrumMetadata Metadata { get; set; }
@@ -1989,6 +1997,7 @@ namespace pwiz.ProteowizardWrapper
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
+        public int Length => MzValues.Count;
         public double? RetentionTime { get; set; }
 
         /// <summary>
@@ -2032,22 +2041,123 @@ namespace pwiz.ProteowizardWrapper
 
         public bool Centroided { get; set; }
         public bool NegativeCharge { get; set; } // True if negative ion mode
-        public double[] Mzs { get; set; }
-        public double[] Intensities { get; set; }
-        public double[] IonMobilities { get; set; } // for combined-mode IMS (may be null)
+        public IList<double> Mzs => MzValues;
+        public ArraySegment<double> MzValues { get; private set; } // Slice of values that may be shared across scans as in Diagonal PASEF
+        public int FindMzIndex(double mzTarget, int startAt = 0)
+        {
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var iPeak = Array.BinarySearch(MzValues.Array, startAt + MzValues.Offset, MzValues.Count - startAt, mzTarget);
+            if (iPeak < 0)
+                iPeak = ~iPeak; // No exact hit in the binary search
+            return iPeak - MzValues.Offset; // Convert index from shared array space to slice space
+        }
+
+        public IList<double> Intensities => IntensityValues;
+        public ArraySegment<double> IntensityValues { get; private set; } // Slice of values that may be shared across scans as in Diagonal PASEF
+
+        public IList<double> IonMobilities => _ionMobilities;
+        private ArraySegment<double>? _ionMobilities; // Slice of values that may be shared across scans as in Diagonal PASEF
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
-        public double[] ScanningQuadMzLows { get; set; } // for combined-mode Bruker diagonal PASEF
-        public double[] ScanningQuadMzHighs { get; set; } // for combined-mode Bruker diagonal PASEF
-        public double? MinScanningQuadMz { get; set; }
-        public double? MaxScanningQuadMz { get; set; }
+        public bool IsDiagonalPASEF => _scanningQuadMzLows != null;
+
+        public double[] ScanningQuadMzLows => _scanningQuadMzLows;
+        public double[] ScanningQuadMzHighs => _scanningQuadMzHighs;
+        internal double[] _scanningQuadMzLows { get; set; } // for combined-mode Bruker diagonal PASEF
+        internal double[] _scanningQuadMzHighs { get; set; } // for combined-mode Bruker diagonal PASEF
 
         public string ScanDescription { get; set; }
 
         public MsInstrumentConfigInfo InstrumentInfo { get; set; }
         public string InstrumentSerialNumber { get; set; }
         public string InstrumentVendor { get; set; }
+
+
+        public void SortByMz()
+        {
+            // ReSharper disable once PossibleNullReferenceException
+            if (MzValues.Count != MzValues.Array.Length)
+                return; // This is a slice of a diagonal PASEF frame - assume already sorted
+            ArraySortUtil.Sort(MzValues, IntensityValues, _ionMobilities);
+        }
+
+        // For dealing with Diagonal PASEF, where we get the entire frame at once -
+        // slice it up into individual spectra so the general code base can handle it
+        public MsDataSpectrum CreateSlice(int offset, int length, MsDataFileImpl dataFile)
+        {
+            var slice = (MsDataSpectrum)MemberwiseClone();
+
+            // ReSharper disable AssignNullToNotNullAttribute
+            slice.MzValues = new ArraySegment<double>(MzValues.Array, offset, length);
+            slice.IntensityValues = new ArraySegment<double>(IntensityValues.Array, offset, length);
+            if (slice.Metadata.TotalIonCurrent.HasValue)
+            {
+                slice.Metadata = slice.Metadata.ChangeTotalIonCurrent(slice.IntensityValues.Sum());
+            }
+            if (_ionMobilities != null && _ionMobilities.Value.Count > 0)
+            {
+                // For diagonal DIA these will all be the same, will vary for regular diaPASEF
+                var span = _ionMobilities.Value.Array.AsSpan(offset, length);
+                var im = span[0];
+                var singleIM = true;
+                if (!dataFile.IsCombinedDiagonalPASEF)
+                {
+                    for (var i = 1; i < length; i++)
+                    {
+                        if (span[i] != im)
+                        {
+                            // Multiple IM values (regular diaPASEF)
+                            slice._ionMobilities = new ArraySegment<double>(_ionMobilities.Value.Array, offset, length);
+                            slice.IonMobilityMeasurementRangeLow = slice._ionMobilities.Min();
+                            slice.IonMobilityMeasurementRangeHigh = slice._ionMobilities.Max();
+                            singleIM = false;
+                            break;
+                        }
+                    }
+                }
+                if (singleIM)
+                {
+                    // Single IM value
+                    slice.IonMobility = IonMobilityValue.GetIonMobilityValue(im, dataFile.IonMobilityUnits);
+                    slice._ionMobilities = null;
+                    slice.MaxIonMobility = im;
+                    slice.MinIonMobility = im;
+                    slice.IonMobilityMeasurementRangeLow = im; // Single value for this slice
+                    slice.IonMobilityMeasurementRangeHigh = im;
+                }
+            }
+            // ReSharper restore AssignNullToNotNullAttribute
+
+            if (_scanningQuadMzLows != null)
+            {
+                // Diagonal PASEF
+                var isolationWidth = (_scanningQuadMzHighs[offset] - _scanningQuadMzLows[offset]) / 2;
+                var precursor = new MsPrecursor()
+                {
+                    IsolationWindowLower = isolationWidth,
+                    IsolationWindowUpper = isolationWidth,
+                    IsolationWindowTargetMz =
+                        new SignedMz(_scanningQuadMzLows[offset] + isolationWidth, NegativeCharge)
+                };
+                slice.Precursors = ImmutableList.ValueOf(new[] { precursor });
+
+                // TODO(bspratt) CE value varies with isolation window in diagonal PASEF
+
+                var spectrumPrecursor = new SpectrumPrecursor(precursor.IsolationMz ?? SignedMz.ZERO,
+                    precursor.IsolationWindowLower, precursor.IsolationWindowUpper);
+   
+                var precursorsByMsLevel = new List<List<SpectrumPrecursor>>() {new List<SpectrumPrecursor>(){spectrumPrecursor}};
+                slice.Metadata = slice.Metadata.ChangePrecursors(precursorsByMsLevel);
+                slice._scanningQuadMzLows = null; // Single value for this slice
+                slice._scanningQuadMzHighs = null;
+            }
+
+
+            return slice;
+        }
+
+
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {
@@ -2056,7 +2166,7 @@ namespace pwiz.ProteowizardWrapper
 
         public override string ToString() // For debugging convenience, not user-facing
         {
-            return $@"id={Id} idx={Index} mslevel={Level} rt={RetentionTime} im={MinIonMobility??_ionMobility?.Mobility}:{MaxIonMobility??_ionMobility?.Mobility}";
+            return $@"id={Id} idx={Index} msN={Level} rt={RetentionTime:F2} iso={string.Join(@",",Precursors?.Select(p=>p.IsolationMz?.RawValue.ToString(@"F2")) ?? Array.Empty<string>())} im={MinIonMobility??_ionMobility?.Mobility:F4}:{MaxIonMobility??_ionMobility?.Mobility:F4}";
         }
     }
 

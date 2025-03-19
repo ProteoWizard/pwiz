@@ -273,7 +273,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
         int windowGroup = spectrum->getWindowGroup();
         if (oneOverK0 > 0)
         {
-            scan.set(MS_inverse_reduced_ion_mobility, oneOverK0, MS_Vs_cm_2);
+            if (!config_.combineIonMobilitySpectra)
+                scan.set(MS_inverse_reduced_ion_mobility, oneOverK0, MS_Vs_cm_2);
             if (windowGroup > 0)
                 scan.userParams.push_back(UserParam("windowGroup", lexical_cast<string>(windowGroup))); // diaPASEF data
         }
@@ -338,8 +339,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                         case FragmentationMode_PTR:
                             break;
                         }
-
-                        precursor.selectedIons.push_back(selectedIon);
+                        if (!compassDataPtr_->isDiagonalPASEF())
+                            precursor.selectedIons.push_back(selectedIon); // Isolation window is reported in arrays
                     }
 
                     if (isolationInfo[i].isolationMz > 0)
@@ -459,7 +460,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                     double isolationWindowHalfWidth = (isoUpper - isoLower)/2;
 
                     precursor.isolationWindow.set(MS_isolation_window_target_m_z, isoLower + isolationWindowHalfWidth, MS_m_z);
-                    precursor.selectedIons[0].set(MS_selected_ion_m_z, isoLower + isolationWindowHalfWidth, MS_m_z);
                     if (isolationWindowHalfWidth > 0)
                     {
                         precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWindowHalfWidth, MS_m_z);
@@ -832,6 +832,11 @@ PWIZ_API_DECL bool SpectrumList_Bruker::hasPASEF() const
     return compassDataPtr_->hasPASEFData();
 }
 
+PWIZ_API_DECL bool SpectrumList_Bruker::isDiagonalPASEF()  const
+{
+    return compassDataPtr_->isDiagonalPASEF();
+}
+
 PWIZ_API_DECL bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const
 {
     return format_ == Reader_Bruker_Format_TDF;
@@ -880,6 +885,7 @@ SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBinaryData, cons
 SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 bool SpectrumList_Bruker::hasIonMobility() const { return false; }
 bool SpectrumList_Bruker::hasCombinedIonMobility() const { return false; }
+bool SpectrumList_Bruker::isDiagonalPASEF() const { return false; };
 bool SpectrumList_Bruker::hasPASEF() const { return false; }
 bool SpectrumList_Bruker::canConvertIonMobilityAndCCS() const { return false; }
 double SpectrumList_Bruker::ionMobilityToCCS(double ionMobility, double mz, int charge) const {return 0;}

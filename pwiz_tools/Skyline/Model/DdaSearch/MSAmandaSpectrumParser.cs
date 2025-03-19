@@ -197,10 +197,10 @@ namespace pwiz.Skyline.Model.DdaSearch
             return amandaSpectrum;
         }
 
-        private List<AMassCentroid> GetFragmentPeaks(double[] spectrumMzs, double[] spectrumIntensities)
+        private List<AMassCentroid> GetFragmentPeaks(IList<double> spectrumMzs, IList<double> spectrumIntensities)
         {
             List<AMassCentroid> peaks = new List<AMassCentroid>();
-            for (int i = 0; i < spectrumMzs.Length; ++i)
+            for (int i = 0; i < spectrumMzs.Count; ++i)
             {
                 peaks.Add(new AMassCentroid() { Charge = 1, Intensity = spectrumIntensities[i], Position = spectrumMzs[i] });
             }

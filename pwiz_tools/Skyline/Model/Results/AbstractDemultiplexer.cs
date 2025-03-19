@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NHibernate.Mapping;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
@@ -213,7 +214,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 originalSpectrum.Intensities.CopyTo(deconvIntensities[i], 0);
                 originalSpectrum.Mzs.CopyTo(deconvMzs[i], 0);
-                for (int j = 0; j < originalSpectrum.Intensities.Length; ++j)
+                for (int j = 0; j < originalSpectrum.Intensities.Count; ++j)
                 {
                     deconvIntensities[i][j] = deconvIntensities[i][j]/deconvIntensities.Length;
                 }
@@ -354,8 +355,7 @@ namespace pwiz.Skyline.Model.Results
                 // Return a blank spectrum
                 returnSpectra = new MsDataSpectrum[1];
                 returnSpectra[0] = originalSpectrum;
-                returnSpectra[0].Intensities = new double[0];
-                returnSpectra[0].Mzs = new double[0];
+                returnSpectra[0].SetEmptyArrays();
                 return returnSpectra;
             }
 
@@ -402,12 +402,12 @@ namespace pwiz.Skyline.Model.Results
             double[][] deconvMzs = new double[deconvIndices.Length][];
             for (int i = 0; i < deconvIndices.Length; ++i)
             {
-                deconvIntensities[i] = new double[originalSpectrum.Mzs.Length];
-                deconvMzs[i] = new double[originalSpectrum.Mzs.Length];
+                deconvIntensities[i] = new double[originalSpectrum.Length];
+                deconvMzs[i] = new double[originalSpectrum.Length];
             }
             try
             {
-                var queryBinEnumerator = _spectrumProcessor.TransBinner.BinsFromValues(originalSpectrum.Mzs, true);
+                var queryBinEnumerator = _spectrumProcessor.TransBinner.BinsFromValues(originalSpectrum.Mzs);
                 CorrectPeakIntensities(ref originalSpectrum, binIndicesList, peakSums,
                                        queryBinEnumerator, ref deconvIntensities, ref deconvMzs);
             }
@@ -417,18 +417,15 @@ namespace pwiz.Skyline.Model.Results
                 // Return a blank spectrum
                 returnSpectra = new MsDataSpectrum[1];
                 returnSpectra[0] = originalSpectrum;
-                returnSpectra[0].Intensities = new double[0];
-                returnSpectra[0].Mzs = new double[0];
+                returnSpectra[0].SetEmptyArrays();
                 return returnSpectra;
             }
             returnSpectra = new MsDataSpectrum[deconvIndices.Length];
             for (int deconvSpecIndex = 0; deconvSpecIndex < deconvIndices.Length; ++deconvSpecIndex)
             {
                 var deconvRegion = _isoMapper.GetDeconvRegion(deconvIndices[deconvSpecIndex]);
-                var deconvSpec = new MsDataSpectrum
+                var deconvSpec = new MsDataSpectrum(deconvMzs[deconvSpecIndex], deconvIntensities[deconvSpecIndex])
                 {
-                    Intensities = deconvIntensities[deconvSpecIndex],
-                    Mzs = deconvMzs[deconvSpecIndex],
                     Precursors = ImmutableList.Singleton(new MsPrecursor
                     {
                         PrecursorMz = new SignedMz(deconvRegion.CenterMz, originalSpectrum.NegativeCharge),
@@ -1076,10 +1073,10 @@ namespace pwiz.Skyline.Model.Results
             _allTransitions.Add(new TransitionInfo(windowStart, windowEnd, deconvIndex));
         }
 
-        public void BinData(double[] mzVals, double[] intensityVals, ref double[] binnedData)
+        public void BinData(IList<double> mzVals, IList<double> intensityVals, ref double[] binnedData)
         {
-            if (mzVals.Length != intensityVals.Length)
-                throw new IndexOutOfRangeException(String.Format(ResultsResources.TransitionBinner_BinData_, mzVals.Length, intensityVals.Length));
+            if (mzVals.Count != intensityVals.Count)
+                throw new IndexOutOfRangeException(String.Format(ResultsResources.TransitionBinner_BinData_, mzVals.Count, intensityVals.Count));
             if (binnedData.Length != NumBins)
                 binnedData = new double[NumBins];
             else
@@ -1087,7 +1084,7 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = 0; i < NumBins; ++i)
                     binnedData[i] = 0.0;
             }
-            foreach (var queryBin in BinsFromValues(mzVals, true))
+            foreach (var queryBin in BinsFromValues(mzVals))
             {
                 var queryIndex = queryBin.Key;
                 var binIndex = queryBin.Value;
@@ -1095,11 +1092,10 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public IEnumerable<KeyValuePair<int, int>> BinsFromValues(double[] queries, bool sorted)
+        public IEnumerable<KeyValuePair<int, int>> BinsFromValues(IList<double> queries)
         {
-            if (!sorted)
-                Array.Sort(queries);
-            int numQueries = queries.Length;
+            // N.B. queries array must be sorted
+            int numQueries = queries.Count;
             int binStartIndex = 0;
             for (int queryIndex = 0; queryIndex < numQueries; ++queryIndex)
             {

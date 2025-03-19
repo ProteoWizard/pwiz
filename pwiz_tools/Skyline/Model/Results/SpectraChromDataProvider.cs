@@ -509,7 +509,7 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Process a list of spectra - typically of length one,
-        /// but possibly a set of drift bins all with same retention time,
+        /// but possibly a set of drift bins all with same retention time (but possibly changing isolation window)
         /// or a set of Agilent ramped-CE Mse scans to be averaged
         /// </summary>
         private void ProcessSpectrumList(MsDataSpectrum[] spectra,
@@ -538,12 +538,12 @@ namespace pwiz.Skyline.Model.Results
                                                Color peptideColor,
                                                SignedMz precursorMz,
                                                int filterIndex,
-                                               double[] mzs,
-                                               double[] intensities,
+                                               IList<double> mzs,
+                                               IList<double> intensities,
                                                ChromDataCollectorSet chromMap)
         {
-            float[] intensityFloats = new float[intensities.Length];
-            for (int i = 0; i < intensities.Length; i++)
+            float[] intensityFloats = new float[intensities.Count];
+            for (int i = 0; i < intensities.Count; i++)
                 intensityFloats[i] = (float) intensities[i];
             var productFilters = mzs.Select(mz => new SpectrumProductFilter(new SignedMz(mz, precursorMz.IsNegative), 0, 0)).ToArray();
             var spectrum = new ExtractedSpectrum(chromatogramGroupId, peptideColor, precursorMz,
@@ -1030,8 +1030,7 @@ namespace pwiz.Skyline.Model.Results
             private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
                 var spectrum = spectrumInfo.DataSpectrum;
-                ArrayUtil.Sort(spectrum.Mzs, spectrum.Intensities, spectrum.IonMobilities,
-                    spectrum.ScanningQuadMzLows, spectrum.ScanningQuadMzHighs); // In case it's diagonal PASEF
+                spectrum.SortByMz();
                 spectrumInfo.SortEvent.Set();
             }
 
@@ -1093,7 +1092,7 @@ namespace pwiz.Skyline.Model.Results
                                     continue;
                                 }
 
-                                if (msLevel > 1)
+                                if (msLevel > 1 && !_filter.IsCombinedDiagonalPASEF) // Need to actually load frame to know about isolation windows
                                 {
                                     var precursors = _lookaheadContext.GetPrecursors(i, 1);
                                     if (precursors.Any() && !_filter.HasProductFilterPairs(rtCheck, precursors))
@@ -1114,7 +1113,7 @@ namespace pwiz.Skyline.Model.Results
                             // Assertion for testing ID to spectrum index support
                             //                        int iFromId = dataFile.GetSpectrumIndex(dataSpectrum.Id);
                             //                        Assume.IsTrue(i == iFromId);
-                            if (nextSpectrum.Mzs.Length == 0)
+                            if (nextSpectrum.Length == 0)
                                 continue;
 
                             double? rt = nextSpectrum.RetentionTime;
@@ -1181,7 +1180,7 @@ namespace pwiz.Skyline.Model.Results
                     if (allSpectra != null)
                     {
                         DataSpectrum = allSpectra[0];
-                        arrayLen = allSpectra.Sum(s => s.Intensities.Length);
+                        arrayLen = allSpectra.Sum(s => s.Intensities.Count);
                         arrayCount = 2;
                     }
 
@@ -1462,7 +1461,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue && dataSpectrum.Length != 0)
                         {
                             spectrumList.Add(dataSpectrum);
                             if (!rtReported.HasValue)
@@ -1518,7 +1517,7 @@ namespace pwiz.Skyline.Model.Results
                     while (_lookAheadIndex++ < _lenSpectra)
                     {
                         _rt = dataSpectrum.RetentionTime;
-                        if (_rt.HasValue && dataSpectrum.Mzs.Length != 0)
+                        if (_rt.HasValue && dataSpectrum.Length != 0)
                         {
                             spectrumList.Add(dataSpectrum);
                             rtTotal += dataSpectrum.RetentionTime.Value;
@@ -1533,11 +1532,37 @@ namespace pwiz.Skyline.Model.Results
                     if (spectrumList.Count > 0)
                         rtReported = rtTotal / spectrumList.Count;
                 }
+                else if (_lookAheadDataSpectrum.IsDiagonalPASEF)
+                {
+                    // Diagonal PASEF - pick apart the frame into constituent scans
+                    var sliceStart = 0;
+                    var currentMzQuadLow = double.MinValue;
+                    var i = 0;
+                    for (i = 0; i < _lookAheadDataSpectrum.ScanningQuadMzLows.Length; i++)
+                    {
+                        if (_lookAheadDataSpectrum.ScanningQuadMzLows[i] != currentMzQuadLow)
+                        {
+                            if (i != sliceStart)
+                            {
+                                var slice = _lookAheadDataSpectrum.CreateSlice(sliceStart, i - sliceStart, _dataFile);
+                                spectrumList.Add(slice);
+                                sliceStart = i;
+                            }
+                            currentMzQuadLow = _lookAheadDataSpectrum.ScanningQuadMzLows[i];
+                        }
+                    }
+                    // Last slice
+                    if (i != sliceStart)
+                    {
+                        spectrumList.Add(_lookAheadDataSpectrum.CreateSlice(sliceStart, i - sliceStart, _dataFile));
+                    }
+                    rtReported = _lookAheadDataSpectrum.RetentionTime;
+                }
                 else
                 {
                     // No need to search forward, this isn't IMS or Agilent ramped-CE data
                     rtReported = dataSpectrum.RetentionTime;
-                    if (rtReported.HasValue && dataSpectrum.Mzs.Length != 0)
+                    if (rtReported.HasValue && dataSpectrum.Length != 0)
                     {
                         spectrumList.Add(dataSpectrum);
                     }
@@ -1591,7 +1616,7 @@ namespace pwiz.Skyline.Model.Results
         public bool ProvidesCollisionalCrossSectionConverter { get { return _dataFile.ProvidesCollisionalCrossSectionConverter; } }
         public eIonMobilityUnits IonMobilityUnits { get { return _dataFile.IonMobilityUnits; } }
         public bool HasCombinedIonMobility { get { return _dataFile.HasCombinedIonMobilitySpectra; } } // When true, data source provides IMS data in 3-array format, which affects spectrum ID format
-
+        public bool IsCombinedDiagonalPASEF { get { return _dataFile.IsCombinedDiagonalPASEF; } } // When true, data source provides IMS data in 6-array format, which affects spectrum ID format
         public IonMobilityValue IonMobilityFromCCS(double ccs, double mz, int charge, object obj)
         {
             var im = _dataFile.IonMobilityFromCCS(ccs, mz, charge);
