@@ -16,17 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Databinding;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.DataBinding.Layout;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.AuditLog;
-using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
@@ -38,39 +37,55 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class DataGridViewPasteHandler
     {
-        private DataGridViewPasteHandler(BoundDataGridView boundDataGridView)
+        protected DataGridViewPasteHandler(DataGridView boundDataGridView, SkylineDataSchema skylineDataSchema, string viewName)
         {
             DataGridView = boundDataGridView;
+            SkylineDataSchema = skylineDataSchema;
+            ViewName = viewName;
             DataGridView.KeyDown += DataGridViewOnKeyDown;
         }
 
         /// <summary>
         /// Attaches a DataGridViewPasteHandler to the specified DataGridView.
         /// </summary>
-        public static DataGridViewPasteHandler Attach(BoundDataGridView boundDataGridView)
+        public static DataGridViewPasteHandler Attach(DataGridView boundDataGridView, SkylineDataSchema skylineDataSchema, string viewName)
         {
-            return new DataGridViewPasteHandler(boundDataGridView);
+            return new DataGridViewPasteHandler(boundDataGridView, skylineDataSchema, viewName);
         }
 
-        public BoundDataGridView DataGridView { get; private set; }
 
+        /// <summary>
+        /// Attaches a DataGridViewPasteHandler to the specified BoundDataGridView.
+        /// </summary>
+        public static DataGridViewPasteHandler Attach(BoundDataGridView boundDataGridView)
+        {
+            var bindingListSource = boundDataGridView.DataSource as BindingListSource;
+            var skylineDataSchema = bindingListSource?.ViewInfo?.DataSchema as SkylineDataSchema;
+            var viewName = bindingListSource?.ViewInfo?.Name;
+            
+            return new DataGridViewPasteHandler(boundDataGridView, skylineDataSchema, viewName);
+        }
+
+        public DataGridView DataGridView { get; }
+
+        public SkylineDataSchema SkylineDataSchema { get; }
+
+        public string ViewName { get; }
         public enum BatchModifyAction { Paste, Clear, FillDown }
 
         public class BatchModifyInfo : AuditLogOperationSettings<BatchModifyInfo> // TODO: this is a little lazy, consider rewriting
         {
-            public BatchModifyInfo(BatchModifyAction batchModifyAction, string viewName, RowFilter rowFilter, string extraInfo = null)
+            public BatchModifyInfo(BatchModifyAction batchModifyAction, string viewName , string extraInfo = null)
             {
                 BatchModifyAction = batchModifyAction;
                 ViewName = viewName;
-                Filter = rowFilter;
                 ExtraInfo = extraInfo;
             }
 
             public BatchModifyAction BatchModifyAction { get; private set; }
-            [Track(defaultValues:typeof(DefaultValuesNull))]
+            [Track(defaultValues: typeof(DefaultValuesNull))]
             public string ViewName { get; private set; }
             [TrackChildren]
-            public RowFilter Filter { get; private set; }
             public string ExtraInfo { get; private set; }
         }
 
@@ -84,9 +99,6 @@ namespace pwiz.Skyline.Util
             {
                 return;
             }
-            var bindingListSource = DataGridView.DataSource as BindingListSource;
-            var rowFilter = bindingListSource == null ? RowFilter.Empty : bindingListSource.RowFilter;
-            var viewName = bindingListSource == null ? null : bindingListSource.ViewInfo.Name;
 
             if (Equals(e.KeyData, Keys.Control | Keys.V))
             {
@@ -99,22 +111,21 @@ namespace pwiz.Skyline.Util
                 {
                     e.Handled = PerformUndoableOperation(UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
                         monitor => Paste(monitor, reader),
-                        new BatchModifyInfo(BatchModifyAction.Paste, viewName,
-                            rowFilter, clipboardText));
+                        new BatchModifyInfo(BatchModifyAction.Paste, ViewName,
+                            clipboardText));
                 }
             }
             else if (e.KeyCode == Keys.Delete && 0 == e.Modifiers)
             {
                 e.Handled = PerformUndoableOperation(
                     UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Clear_cells, ClearCells,
-                    new BatchModifyInfo(BatchModifyAction.Clear, viewName, rowFilter));
+                    new BatchModifyInfo(BatchModifyAction.Clear, ViewName));
             }
         }
 
         public bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation, BatchModifyInfo batchModifyInfo)
         {
-            var skylineDataSchema = GetDataSchema();
-            if (skylineDataSchema == null)
+            if (SkylineDataSchema == null)
             {
                 return false;
             }
@@ -132,9 +143,9 @@ namespace pwiz.Skyline.Util
                     return false;
                 }
                 DataGridView.CurrentCell = DataGridView.Rows[cellAddress.Y].Cells[cellAddress.X];
-                lock (skylineDataSchema.SkylineWindow.GetDocumentChangeLock())
+                lock (SkylineDataSchema.SkylineWindow.GetDocumentChangeLock())
                 {
-                    skylineDataSchema.BeginBatchModifyDocument();
+                    SkylineDataSchema.BeginBatchModifyDocument();
                     var longOperationRunner = new LongOperationRunner
                     {
                         ParentControl = FormUtil.FindTopLevelOwner(DataGridView),
@@ -142,7 +153,7 @@ namespace pwiz.Skyline.Util
                     };
                     if (longOperationRunner.CallFunction(operation))
                     {
-                        skylineDataSchema.CommitBatchModifyDocument(description, batchModifyInfo);
+                        SkylineDataSchema.CommitBatchModifyDocument(description, batchModifyInfo);
                         return true;
                     }
                 }
@@ -156,21 +167,11 @@ namespace pwiz.Skyline.Util
                     DataGridView.Focus();
                 }
                 Settings.Default.ResultsGridSynchSelection = resultsGridSynchSelectionOld;
-                skylineDataSchema.RollbackBatchModifyDocument();
+                SkylineDataSchema.RollbackBatchModifyDocument();
 
                 // Call "PerformLayout" so that the scrollbar displays the correct scroll position
                 DataGridView.PerformLayout();
             }
-        }
-
-        private SkylineDataSchema GetDataSchema()
-        {
-            var bindingListSource = DataGridView.DataSource as BindingListSource;
-            if (bindingListSource == null || bindingListSource.ViewInfo == null)
-            {
-                return null;
-            }
-            return bindingListSource.ViewInfo.DataSchema as SkylineDataSchema;
         }
 
         /// <summary>

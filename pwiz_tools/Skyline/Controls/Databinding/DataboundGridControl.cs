@@ -48,7 +48,8 @@ namespace pwiz.Skyline.Controls.Databinding
         private readonly object _errorMessageLock = new object();
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
-        private DataGridViewPasteHandler _dataGridViewPasteHandler;
+        private DataGridViewPasteHandler _boundDataGridViewPasteHandler;
+        private DataGridViewPasteHandler _replicateGridViewPasteHandler;
         private bool _inColumnChange;
         private IViewContext _viewContext;
         private ItemProperties _replicateGridItemProperties;
@@ -58,7 +59,8 @@ namespace pwiz.Skyline.Controls.Databinding
         public DataboundGridControl()
         {
             InitializeComponent();
-            _dataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
+            _boundDataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView);
+            _replicateGridViewPasteHandler = DataGridViewPasteHandler.Attach(ReplicatePivotDataGridView, bindingListSource?.ViewInfo?.DataSchema as SkylineDataSchema, bindingListSource?.ViewInfo?.Name);
             replicatePivotDataGridView.CellValueChanged += replicatePivotDataGridView_CellValueChanged;
             NavBar.ClusterSplitButton.Visible = true;
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
@@ -474,10 +476,10 @@ namespace pwiz.Skyline.Controls.Databinding
                 return false;
             }
 
-            _dataGridViewPasteHandler.PerformUndoableOperation(DatabindingResources.DataboundGridControl_FillDown_Fill_Down,
+            _boundDataGridViewPasteHandler.PerformUndoableOperation(DatabindingResources.DataboundGridControl_FillDown_Fill_Down,
                 longWaitBroker => DoFillDown(longWaitBroker, propertyDescriptors, firstRowIndex, lastRowIndex),
                 new DataGridViewPasteHandler.BatchModifyInfo(DataGridViewPasteHandler.BatchModifyAction.FillDown,
-                    BindingListSource.ViewInfo.Name, BindingListSource.RowFilter));
+                    BindingListSource.ViewInfo.Name));
             return false;
         }
         
