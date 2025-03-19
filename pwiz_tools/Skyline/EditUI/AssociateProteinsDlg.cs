@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.EditUI
     public partial class AssociateProteinsDlg : ModeUIInvariantFormEx,  // This dialog has nothing to do with small molecules, always display as proteomic even in mixed mode
                   IAuditLogModifier<AssociateProteinsSettings>
     {
-        private readonly SrmDocument _document;
+        private SrmDocument _document;
         private Receiver<AssociateProteinsResults.Parameters, AssociateProteinsResults> _receiver;
         private ProteinAssociation _proteinAssociation;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
@@ -57,6 +58,7 @@ namespace pwiz.Skyline.EditUI
 
         private string _statusBarResultFormat;
         private static string[] _sharedPeptideOptionNames = Enum.GetNames(typeof(ProteinAssociation.SharedPeptides));
+        private SkylineWindow _skylineWindow;
 
         public string FastaFileName
         {
@@ -66,13 +68,18 @@ namespace pwiz.Skyline.EditUI
 
         public bool DocumentFinalCalculated => IsComplete;
 
+        public AssociateProteinsDlg(SkylineWindow skylineWindow) : this(skylineWindow.DocumentUI)
+        {
+            _skylineWindow = skylineWindow;
+        }
+
 
         /// <summary>
         /// Show the Associate Proteins dialog.
         /// </summary>
         /// <param name="document">The Skyline document for which to associate peptides to proteins.</param>
         /// <param name="reuseLastFasta">Set to false to prevent the dialog from using the previously used FASTA filepath as the default textbox value.</param>
-        public AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
+        private AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
         {
             InitializeComponent();
             btnError.Image = SystemIcons.Error.ToBitmap();
@@ -162,7 +169,8 @@ namespace pwiz.Skyline.EditUI
 
         private void ProgressChange()
         {
-            progressBar1.Value = _receiver?.GetProgressValue() ?? 0;
+            var progressValue = _receiver?.GetProgressValue() ?? 0;
+            progressBar1.Value = progressValue;
         }
 
         private AssociateProteinsResults GetCurrentResults()
@@ -209,6 +217,10 @@ namespace pwiz.Skyline.EditUI
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
+            if (_skylineWindow != null)
+            {
+                _skylineWindow.DocumentUIChangedEvent += SkylineWindowOnDocumentUIChangedEvent;
+            }
             if (_overrideFastaPath != null)
             {
                 tbxFastaTargets.Text = _overrideFastaPath;
@@ -240,6 +252,22 @@ namespace pwiz.Skyline.EditUI
             UpdateParsimonyResults();
         }
 
+        
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            if (_skylineWindow != null)
+            {
+                _skylineWindow.DocumentUIChangedEvent -= SkylineWindowOnDocumentUIChangedEvent;
+            }
+            base.OnFormClosed(e);
+        }
+
+        private void SkylineWindowOnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
+        {
+            _document = _skylineWindow.DocumentUI;
+            UpdateParsimonyResults();
+        }
+        
         private AssociateProteinsResults.Parameters GetParameters()
         {
             var parameters = new AssociateProteinsResults.Parameters(_document)
@@ -625,10 +653,85 @@ namespace pwiz.Skyline.EditUI
             {
                 throw new InvalidOperationException();
             }
+
+            if (!ModifyDocumentInDocumentContainer())
+            {
+                return;
+            }
             if (rbFASTA.Checked && !_fastaFileIsTemporary)
                 Settings.Default.LastProteinAssociationFastaFilepath = tbxFastaTargets.Text;
 
             DialogResult = DialogResult.OK;
+        }
+
+        /// <summary>
+        /// If <see cref="_skylineWindow"/> is not null, call "ModifyDocument" with the result of
+        /// the protein association.
+        /// Returns false if the operation was cancelled.
+        /// </summary>
+        private bool ModifyDocumentInDocumentContainer()
+        {
+            if (_skylineWindow == null)
+            {
+                return true;
+            }
+
+            lock (_skylineWindow.GetDocumentChangeLock())
+            {
+                if (!ReferenceEquals(_skylineWindow.Document, _document))
+                {
+                    using var longWaitDlg = new LongWaitDlg();
+                    longWaitDlg.PerformWork(this, 1000, WaitUntilDocumentCurrent);
+                    if (!ReferenceEquals(_skylineWindow.Document, _document) || DocumentFinal == null)
+                    {
+                        return false;
+                    }
+                }
+
+                _skylineWindow.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
+                    current =>
+                    {
+                        Assume.IsTrue(ReferenceEquals(current, _document));
+                        return DocumentFinal;
+                    },
+                    FormSettings.EntryCreator.Create);
+                return true;
+            }
+        }
+
+        private void WaitUntilDocumentCurrent(ILongWaitBroker longWaitBroker)
+        {
+            object notifyObject = new object();
+            Action progressChange = () => longWaitBroker.ProgressValue = _receiver.GetProgressValue();
+            Action productAvailable = () =>
+            {
+                lock (notifyObject)
+                {
+                    Monitor.Pulse(notifyObject);
+                }
+            };
+            try
+            {
+                _receiver.ProgressChange += progressChange;
+                _receiver.ProductAvailable += productAvailable;
+                using var cancellationTokenRegistration = longWaitBroker.CancellationToken.Register(productAvailable);
+                while (true)
+                {
+                    lock (notifyObject)
+                    {
+                        if (DocumentFinal != null && ReferenceEquals(_document, _skylineWindow.Document))
+                        {
+                            return;
+                        }
+                    }
+                    Monitor.Wait(notifyObject);
+                }
+            }
+            finally
+            {
+                _receiver.ProductAvailable -= productAvailable;
+                _receiver.ProgressChange -= progressChange;
+            }
         }
 
         private string GetStatusBarResultString()
