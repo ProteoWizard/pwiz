@@ -2297,10 +2297,7 @@ namespace pwiz.Skyline.FileUI
 
         public void SetInstrument(string instrument)
         {
-            if(ExportInstrumentType.TRANSITION_LIST_TYPES.ToList().Find(inst => Equals(inst, instrument)) == default(string))
-                return;
-
-            comboInstrument.SelectedText = instrument;
+            comboInstrument.SelectedItem = instrument;
         }
 
         public void SetMethodType(ExportMethodType type)

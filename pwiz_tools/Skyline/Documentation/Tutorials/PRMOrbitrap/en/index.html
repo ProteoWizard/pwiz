@@ -38,32 +38,32 @@
         C:\Users\brendanx\Documents\PRM-Orbi
     </p>
     <p>
-        To begin this tutorial: 
+        <a id="_Hlk95062123"></a><a id="_Hlk95062185"></a>To begin this tutorial: 
     </p>
     <ul>
         <li>Start Skyline.</li>
-        <li>If you have previously unchecked <b>Show start page at startup</b>,<br />On the <b>File</b> menu, click
-            <b>Start</b>.</li>
-        <li>On the <b>Start Page</b>, click <b>Import Peptide List</b> which looks like this: </li>
+        <li>If you have previously unchecked <strong>Show start page at startup</strong>,<br />On the <strong>File</strong> menu, click
+            <strong>Start</strong>.</li>
+        <li>On the <strong>Start Page, </strong>click <strong>Import Peptide List </strong>which looks like this: </li>
     </ul>
     <p>
-        <img src="s-01.png" />
+        <img src="../../shared/en/import-pep-list.png" />
     </p>
     <ul>
-        <li>If you do not see this option,<br />Click the user interface button in the upper right-hand corner of the <b>Start Page</b> and
-            select <b>Proteomics Interface</b> which looks like this: </li>
+        <li>If you do not see this option,<br />Click the user interface button in the upper right-hand corner of the <strong>Start Page</strong> and
+            select <strong>Proteomics Interface </strong>which looks like this: </li>
     </ul>
     <p>
         <img src="../../shared/en/proteomics-interface.png" />
     </p>
     <p>
-        Once you have clicked <b>Import FASTA</b>, Skyline should appear and show a <b>Settings</b> form:
+        Once you have clicked <strong>Import Peptide List</strong>, Skyline should appear and show a <strong>Settings</strong> form:
     </p>
     <ul>
-        <li>In the <b>Experiment Type</b> box, click <b>Quantifications</b>.</li>
+        <li>In the <strong>Experiment Type</strong> box, click <strong>Quantifications</strong>.</li>
     </ul>
     <p>
-        <img src="s-02.png" />
+        <img src="s-01.png" />
     </p>
     <p>
         For a consistent and reliable set of steps through this tutorial, it is simplest to start from default settings. Otherwise, Skyline will
@@ -71,66 +71,66 @@
         for this tutorial:
     </p>
     <ul>
-        <li>Click the <b>Reset Default Settings</b> button.</li>
-        <li>Click the <b>OK</b> button on the message Skyline shows confirming this operation.</li>
+        <li>Click the <strong>Reset Default Settings</strong> button.</li>
+        <li>Click the <strong>OK</strong> button on the message Skyline shows confirming this operation.</li>
     </ul>
     <h1>Settings for PRM methods</h1>
     <p>
-        It is often a good idea to do a complete review of all the <b>Peptide Settings</b> and <b>Transition Settings</b> when
+        It is often a good idea to do a complete review of all the <strong>Peptide Settings</strong> and <strong>Transition Settings</strong> when
         starting new blank document like this, before adding any of the proteins and peptides you will target.
     </p>
     <ul>
-        <li>Click the <b>Peptide Settings</b> button.</li>
-        <li>Click the <b>Digestion</b> tab if it is not already showing.</li>
+        <li>Click the <strong>Peptide Settings</strong> button.</li>
+        <li>Click the <strong>Digestion</strong> tab if it is not already showing.</li>
     </ul>
     <h2>Peptide Settings – Digestion tab</h2>
     <p>
-        <b>Enzyme</b>: Select the proteolytic specificity of the enzyme that was used with your samples. The most frequent enzyme used in
+        <strong>Enzyme</strong>: Select the proteolytic specificity of the enzyme that was used with your samples. The most frequent enzyme used in
         proteomics is trypsin, which cleaves after the C-terminal of lysine and arginine except if they are followed by proline. In this tutorial you
         may leave “Trypsin [KR|P]” selected.
     </p>
     <p>
-        <b>Max missed cleavages</b>: Set the number of missed cleavages that you would like to consider in your analysis. Fully tryptic
+        <strong>Max missed cleavages</strong>: Set the number of missed cleavages that you would like to consider in your analysis. Fully tryptic
         peptides are preferable, but sometimes peptides with missed cleavages are also usable for quantification.
     </p>
     <ul>
-        <li>In the <b>Max missed cleavages</b> field enter “1”.</li>
+        <li>In the <strong>Max missed cleavages </strong>field enter “1”.</li>
     </ul>
     <p>
-        <b>Background proteome</b>: This setting allows you to build a background proteome from a protein FASTA file using the digestion
+        <strong>Background proteome</strong>: This setting allows you to build a background proteome from a protein FASTA file using the digestion
         settings defined above. Alternatively, you can directly add an already in-silico digested proteome file (file.protdb). The background proteome
         is useful to determine if a particular peptide is unique to your protein or if it is shared with other proteins present in your database. To
         generate a background proteome according to the digestion settings above do the following:
     </p>
     <ul>
-        <li>From the <b>Background proteome</b> drop-list, choose <b>&lt;Add…&gt;</b>.</li>
-        <li>Click the <b>Create</b> button in the <b>Edit Background Proteome</b> form.</li>
+        <li>From the <strong>Background proteome</strong> drop-list, choose <strong>&lt;Add…&gt;</strong>.</li>
+        <li>Click the <strong>Create</strong> button in the <strong>Edit Background Proteome</strong> form.</li>
         <li>Navigate to the “PRM-Orbi” folder you created for this tutorial.</li>
-        <li>In the <b>File name</b> field, enter “mouse-proteome”.</li>
-        <li>Click the <b>Save</b> button.</li>
-        <li>Click the <b>Add File</b> button.</li>
+        <li>In the <strong>File name</strong> field, enter “mouse-proteome”.</li>
+        <li>Click the <strong>Save</strong> button.</li>
+        <li>Click the <strong>Add File</strong> button.</li>
         <li>Double-click the “uniprot-mouse.fasta” file.</li>
     </ul>
     <p class="keep-next">
         When the file is generated a warning message will appear to warn you about 6 repeated sequences in the FASTA file:
     </p>
     <p>
-        <img src="s-03.png" />
+        <img src="s-02.png" />
     </p>
     <ul>
-        <li>Click the <b>OK</b> button.</li>
+        <li>Click the <strong>OK</strong> button.</li>
     </ul>
     <p>
         The generated proteome file should contain 16,800 proteins.
     </p>
     <ul>
-        <li>Click the <b>OK</b> button.</li>
+        <li>Click the <strong>OK</strong> button.</li>
     </ul>
     <p>
         The background proteome file you just created can now be used in different projects.
     </p>
     <p>
-        <b>Enforce peptide uniqueness by</b>: offers the options –
+        <strong>Enforce peptide uniqueness by</strong>: offers the options –
     </p>
     <ol>
         <li>“None” - do not enforce peptide uniqueness.</li>
@@ -139,87 +139,87 @@
         <li>“Species” - do not use peptides associated with multiple species in the background proteome.</li>
     </ol>
     <ul>
-        <li>In the <b>Enforce peptide uniqueness by</b> dropdown list, click “Protein”.</li>
+        <li>In the <strong>Enforce peptide uniqueness by</strong> dropdown list, click “Protein”.</li>
     </ul>
     <p class="keep-next">
-        The <b>Peptide Settings – Digestion</b> tab should now look like this:
+        The <strong>Digestion</strong> tab should look like this:
+    </p>
+    <p>
+        <img src="s-03.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>Prediction</strong> tab.</li>
+    </ul>
+    <h2>Peptide Settings – Prediction tab</h2>
+    <p>
+        <strong>Retention time predictor</strong>: A retention time predictor can be used to create scheduled methods and to support data analysis.
+        This tutorial does not require retention time prediction. So, leave is as “None”.
+    </p>
+    <p>
+        <strong>Use measured retention times when present</strong>: Checking this option allows Skyline to use use measured retention times (instead of
+        predicted) for retention time scheduling.
+    </p>
+    <ul>
+        <li>Check<strong> Use measured retention times when present</strong>.</li>
+    </ul>
+    <p>
+        <strong>Time window</strong>: Specify the range of time you would like to use for your scheduled measurements.
+    </p>
+    <ul>
+        <li>For this tutorial, in the <strong>Time window</strong> field, enter “5” <strong>min</strong>.</li>
+    </ul>
+    <p class="keep-next">
+        The <strong>Prediction</strong> tab should look like this:
     </p>
     <p>
         <img src="s-04.png" />
     </p>
     <ul>
-        <li>Click the <b>Prediction</b> tab.</li>
-    </ul>
-    <h2>Peptide Settings – Prediction tab</h2>
-    <p>
-        <b>Retention time predictor</b>: A retention time predictor can be used to create scheduled methods and to support data analysis.
-        This tutorial does not require retention time prediction. So, leave is as “None”.
-    </p>
-    <p>
-        <b>Use measured retention times when present</b>: Checking this option allows Skyline to use use measured retention times (instead of
-        predicted) for retention time scheduling.
-    </p>
-    <ul>
-        <li>Check <b>Use measured retention times when present</b>.</li>
-    </ul>
-    <p>
-        <b>Time window</b>: Specify the range of time you would like to use for your scheduled measurements.
-    </p>
-    <ul>
-        <li>For this tutorial, in the <b>Time window</b> field, enter “5” <b>min</b>.</li>
-    </ul>
-    <p class="keep-next">
-        The <b>Peptide Settings – Prediction</b> tab should now look like this:
-    </p>
-    <p>
-        <img src="s-05.png" />
-    </p>
-    <ul>
-        <li>Click the <b>Filter</b> tab.</li>
+        <li>Click the <strong>Filter</strong> tab.</li>
     </ul>
     <h2>Peptide Settings – Filter tab</h2>
     <p>
         In this tab you can define filters to select peptides with certain properties.
     </p>
     <p>
-        <b>Min length/Max length</b>: You can use these fields to restrict the number of amino acid residues you are willing to allow in your
+        <strong>Min length/Max length</strong>: You can use these fields to restrict the number of amino acid residues you are willing to allow in your
         target peptides.
     </p>
     <ul>
-        <li>In the <b>Min length</b> field enter “7 “, and in the <b>Max length</b> field enter “26”.</li>
+        <li>In the <strong>Min length</strong> field enter “7 “, and in the <strong>Max length</strong> field enter “26”.</li>
     </ul>
     <p>
-        <b>Exclude N-terminal amino acids</b>: The N-terminus of a protein might be post-translationally processed (modified and/or cleaved).
+        <strong>Exclude N-terminal amino acids</strong>: The N-terminus of a protein might be post-translationally processed (modified and/or cleaved).
         Therefore, it may not be suited for protein quantification. You can use this field to exclude these peptides from analysis. In this tutorial,
         you will simply trust the peptide spectrum matching results from a DDA experiment and not rely on this exclusion.
     </p>
     <ul>
-        <li>In the <b>Exclude N-terminal amino acids</b> field, enter “0”.</li>
+        <li>In the <strong>Exclude N-terminal amino acids</strong> field, enter “0”.</li>
     </ul>
     <p>
-        <b>Exclude potential ragged ends</b>: Ragged ends are peptides with KK, RR, RK or KR sequences at one or both ends. Such peptides
+        <strong>Exclude potential ragged ends</strong>: Ragged ends are peptides with KK, RR, RK or KR sequences at one or both ends. Such peptides
         might not be fully cleaved and hence may not be suited for quantification. However, if no alternative peptides are available one might rather
         quantify with a ragged end peptide then not at all. In this tutorial, you can leave this option unchecked.
     </p>
     <p>
-        <b>Exclude peptides containing</b>: This option allows you to discard a priori peptides that, based on sequence would undergo
+        <strong>Exclude peptides containing</strong>: This option allows you to discard a priori peptides that, based on sequence would undergo
         secondary reactions. The residues “Cys, Met, His” are prone to modifications, such as oxidation. The option “NXT/NXS” is a glycosylation
         motif. The option “RP/KP” describes Lysine or Arginine followed by Proline which sometimes can be cleaved by trypsin. In this tutorial, you
         will not use any of these options.
     </p>
     <p>
-        <b>Auto-select all matching peptides</b>: When this option is activated peptides for target proteins are automatically selected from
+        <strong>Auto-select all matching peptides</strong>: When this option is activated peptides for target proteins are automatically selected from
         a spectral library or from a background proteome file. If unchecked, you would need to make these choices manually. In this tutorial, you
         should leave this option checked.
     </p>
     <p class="keep-next">
-        The <b>Peptide Settings - Filter</b> tab should look like this:
+        The <strong>Filter</strong> tab should look like this:
     </p>
     <p>
-        <img src="s-06.png" />
+        <img src="s-05.png" />
     </p>
     <ul>
-        <li>Click the <b>Library</b> tab.</li>
+        <li>Click the <strong>Library</strong> tab.</li>
     </ul>
     <h2>Peptide Settings – Library tab</h2>
     <p>
@@ -234,126 +234,1370 @@
         pep.xml format and the raw data in the standard mzXML format.
     </p>
     <ul>
-        <li>Click the button <b>Build</b>.</li>
-        <li>In the <b>Name</b> field enter “heavy”.</li>
-        <li>Click the <b>Browse</b> button to specify the output path where your library should be saved.</li>
+        <li>Click the button <strong>Build</strong>.</li>
+        <li>In the <strong>Name</strong> field enter “heavy”.</li>
+        <li>Click the <strong>Browse</strong> button to specify the output path where your library should be saved.</li>
         <li>Place it in the “PRM-Orbi/Heavy Library” folder.</li>
-        <li>Do not check the <b>Keep redundant library</b> option, as you want only the single best spectrum for every peptide.</li>
-        <li>Do not check <b>Include ambiguous matches</b> to avoid using multiple peptide assignments for a single spectrum if the search
+        <li>Do not check the <strong>Keep redundant library</strong> option, as you want only the single best spectrum for every peptide.</li>
+        <li>Do not check <strong>Include ambiguous matches</strong> to avoid using multiple peptide assignments for a single spectrum if the search
             software supports that type of assignment.</li>
-        <li>Leave the dropdown list <b>iRT standard peptides</b> blank as you are not going to use any iRT peptides in this tutorial.</li>
-        <li>Click the <b>Next</b> button.</li>
-        <li>Click the <b>Add Files</b> button to choose the “heavy-01.pep.xml” and “heavy-02.pep.xml” files, located in the PRM-Orbi/Heavy
-            Library folder and click <b>Open</b>.</li>
-        <li>Click one of the <b>Score Threshold</b> fields and enter “0.1” which in this case should give you below a 1% false discovery
+        <li>Leave the dropdown list <strong>iRT standard peptides</strong> blank as you are not going to use any iRT peptides in this tutorial.</li>
+        <li>Click the <strong>Next</strong> button.</li>
+        <li>Click the <strong>Add Files</strong> button to choose the “heavy-01.pep.xml” and “heavy-02.pep.xml” files, located in the “PRM-Orbi/Heavy
+            Library” folder and click <strong>Open</strong>. </li>
+        <li>Click one of the <strong>Score Threshold</strong> fields and enter “0.1” which in this case should give you below a 1% false discovery
             rate. The score threshold for both files will change because they have the same score type.</li>
-        <li>Click the <b>Finish</b> button.</li>
+        <li>Click the <strong>Finish</strong> button.</li>
     </ul>
     <p>
         You will use a second library with shotgun data from the same samples that you will analyse using PRM. These data were acquired in an Orbitrap
         Fusion Lumos using an HCD method. As the generation of this library takes longer than the previous one, you will upload an already generated
-        library file. In the <b>Library</b> tab do the following to add the second library:
+        library file. In the <strong>Library</strong> tab do the following to add the second library:
     </p>
     <ul>
-        <li>Click the <b>Edit List</b> button.</li>
-        <li>Click the <b>Add</b> button in the <b>Edit Libraries</b> form.</li>
-        <li>In the <b>Name</b> field enter “shotgun”.</li>
-        <li>Click the <b>Browse</b> button.</li>
+        <li>Click the <strong>Edit List</strong> button.</li>
+        <li>Click the <strong>Add</strong> button in the <strong>Edit Libraries</strong> form.</li>
+        <li>In the <strong>Name</strong> field enter “shotgun”.</li>
+        <li>Click the <strong>Browse</strong> button.</li>
         <li>Navigate to the path “PRM-Orbi/Shotgun Library” and select the “shotgun.blib” file.</li>
-        <li>Click the <b>Open</b> button.</li>
-        <li>Uncheck <b>Use explicit peak bounds</b>. (though there are none in this library)</li>
-        <li>Click the <b>OK</b> button.</li>
-        <li>Click the Up button to promote the “shotgun” library to being first in the <b>Edit Libraries</b> form.</li>
-        <li>Click the <b>OK</b> button.</li>
-        <li>Check the checkboxes beside both libraries in the <b>Library</b> tab.</li>
+        <li>Click the <strong>Open</strong> button.</li>
+        <li>Uncheck <strong>Use explicit peak bounds</strong>. (though there are none in this library)</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the Up button to promote the “shotgun” library to being first in the <strong>Edit Libraries</strong> form.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Check the checkboxes beside both libraries in the <strong>Library</strong> tab.</li>
     </ul>
     <p>
-        <b><span class="green">Tip!</span></b> You can visualize and browse all peptides of your library in the Spectral Library Explorer
-        under <br /><b>View</b> → <b>Spectral Libraries</b>.
+        <strong><span class="green">Tip!</span></strong> You can visualize and browse all peptides of your library in the Spectral Library Explorer
+        under <br /><strong>View</strong> → <strong>Spectral Libraries</strong>.
     </p>
     <p>
-        <b><span class="green">Tip!</span></b> Skyline supports building libraries from many peptide spectrum matching pipeline outputs. The
+        <strong><span class="green">Tip!</span></strong> Skyline supports building libraries from many peptide spectrum matching pipeline outputs. The
         list of supported files can be found online: <a href="https://skyline.ms/build-blib.url">https://skyline.ms/build-blib.url</a>
     </p>
     <p>
-        <b><span class="green">Tip!</span></b> In case you have more than one library, once you have a list of peptides uploaded, if both
+        <strong><span class="green">Tip!</span></strong> In case you have more than one library, once you have a list of peptides uploaded, if both
         libraries contain an MS2 spectrum, at the top of the MS/MS spectrum tab you can select from the drop-down menu, which library spectrum you
         would like to see plotted.
     </p>
     <p>
-        Once the libraries are built, uploaded and activated, you can continue reviewing the other parameters in the <b>Library</b> tab:
+        Once the libraries are built, uploaded and activated, you can continue reviewing the other parameters in the <strong>Library</strong> tab:
     </p>
     <p>
-        <b>Pick peptide matching</b>: Select if peptides should be automatically selected according to the filter settings (defined in the
-        <b>Filter</b> tab) before or according to the library settings defined below. In this tutorial you will use all pre-selected
+        <strong>Pick peptide matching</strong>: Select if peptides should be automatically selected according to the filter settings (defined in the
+        <strong>Filter</strong> tab) before or according to the library settings defined below. In this tutorial you will use all pre-selected
         targeted peptides that appear in the library. You can leave the default setting (“Library”).
     </p>
     <p>
-        <b>Rank peptides by</b>: Here you can define a ranking of all peptides available for a given protein in the library based on peak
+        <strong>Rank peptides by</strong>: Here you can define a ranking of all peptides available for a given protein in the library based on peak
         intensities, number of spectra for a given peptide, or score for spectrum quality. In this tutorial you should leave this option inactive.
     </p>
     <p>
-        <b>Limit peptides per protein</b>: Limits the number of automatically selected peptides per protein from the library. In this
+        <strong>Limit peptides per protein</strong>: Limits the number of automatically selected peptides per protein from the library. In this
         tutorial you may leave this option blank.
     </p>
     <p class="keep-next">
-        The <b>Library</b> tab should look like this:
+        The <strong>Library</strong> tab should look like this:
     </p>
     <p>
-        <img src="s-07.png" />
+        <img src="s-06.png" />
     </p>
     <ul>
-        <li>Click the <b>Modifications</b> tab.</li>
+        <li>Click the <strong>Modifications</strong> tab.</li>
     </ul>
     <h2>Peptide Settings – Modifications tab</h2>
     <p>
-        <b>Structural modifications</b>: Structural modifications concern chemical modifications of peptides. They can either be static
+        <strong>Structural modifications</strong>: Structural modifications concern chemical modifications of peptides. They can either be static
         (always present) or variable (sometimes present, sometimes not). By default “Carbamidomethyl (C)” is checked, which comes from the reduction
         and alkylation step during sample preparation to avoid formation of disulphide bonds between cysteine residues. Keep this modification.
     </p>
     <p>
-        <b>Max variable mods</b> and <b>Max neutral losses</b>: Select the maximal number of variable modifications and neutral
+        <strong>Max variable mods</strong> and <strong>Max neutral losses</strong>: Select the maximal number of variable modifications and neutral
         losses according to your project. Leave the default setting (3 variable modifications and 1 neutral loss).
     </p>
     <p>
-        <b>Isotope label type</b>: Here you can define the isotope label type you plan to work with. For this tutorial leave the default
+        <strong>Isotope label type</strong>: Here you can define the isotope label type you plan to work with. For this tutorial leave the default
         “heavy” as the label type.
     </p>
     <p>
-        <b>Isotope modifications</b>: Here you can define the chemical composition of your isotopic modifications. To select the isotopic
+        <strong>Isotope modifications</strong>: Here you can define the chemical composition of your isotopic modifications. To select the isotopic
         modifications:
     </p>
     <ul>
-        <li>Click the <b>Edit List</b> button and then the <b>Add</b> button.</li>
-        <li>From the <b>Name</b> dropdown list, select the following isotopic moditications for this case study (one-by-one) and click the
-            <b>OK</b> button.</li>
-        <li>Click the <b>OK</b> button in the <b>Edit Modifications</b> button.</li>
+        <li>Click the <strong>Edit List</strong> button and then the <strong>Add</strong> button.</li>
+        <li>From the <strong>Name </strong>dropdown list, select the isotopic modifications specified below for this case study (one-by-one) and click the
+            <strong>OK</strong> button.</li>
+        <li>Click the <strong>OK</strong> button in the <strong>Edit Modifications</strong> form.</li>
         <li>Check the checkboxes for the newly added modifications<br />“Label:13C(6)15N(2) (C-term K)” and “Label:13C(6)15N(4) (C-term R)”</li>
     </ul>
     <p>
-        <b>Internal standard type</b>: Define which labelling state should be your internal standard. In this tutorial, you will use
+        <strong>Internal standard type</strong>: Define which labelling state should be your internal standard. In this tutorial, you will use
         spiked-in heavy reference peptides. So, you can keep the default setting “heavy”.
     </p>
     <p class="keep-next">
-        The <b>Modifications</b> tab should now look like this:
+        The <strong>Modifications</strong> tab should look like this:
+    </p>
+    <p>
+        <img src="s-07.png" />
+    </p>
+    <p>
+        <strong>Tip! </strong>This tab might be slightly different in your case (you might have fewer or more modifications than the displayed in the
+        screenshot if you have used Skyline before). You just need to make sure you select the indicated modifications.
+    </p>
+    <ul>
+        <li>Click the <strong>Quantification</strong> tab.</li>
+    </ul>
+    <h2>Peptide Settings – Quantification tab</h2>
+    <p>
+        <strong>Regression fit</strong>: This option calculates a regression fit from consecutive standard dilutions to produce a calibration curve for
+        peptide quantitation. Options for the regression fit can be i) none, ii) linear, iii) linear through zero, iv) bilinear, v) quadratic, and vi)
+        linear in log space. Leave the default setting “None”.
+    </p>
+    <p>
+        <strong>Normalization Method:</strong> It allows the use of an internal heavy standard for intensity normalization.
+    </p>
+    <ul>
+        <li>Choose “Ratio to Heavy”.</li>
+    </ul>
+    <p>
+        <strong>Regression Weighting:</strong> It sets the regression weighting factor which can be i) none, ii) 1/x, or iii) 1/(x*x). Leave the
+        default setting “None”.
+    </p>
+    <p>
+        <strong>MS Level:</strong> It determines whether peptide quantitation is performed at the MS1 or MS2 level.
+    </p>
+    <ul>
+        <li>Choose “2”.</li>
+    </ul>
+    <p>
+        <strong>Units:</strong> In this box you can include the concentration or amount units of your standards.
+    </p>
+    <ul>
+        <li>Enter “fmol”.</li>
+    </ul>
+    <p>
+        The <strong>Quantitation</strong> tab provides settings to facilitate the peptide quantitation by PRM, SRM, DIA, or MS1 acquisition methods
+        using calibration curves which can be single point (internal or external) or multiple point (external) calibration curves with a regression
+        fit.
+    </p>
+    <p>
+        Later in this tutorial you will perform a single point internal calibration using a heavy-labeled internal standard by simply spiking a known
+        amount of heavy labeled peptide into a sample to quantify endogenous proteins.
+    </p>
+    <p class="keep-next">
+        The <strong>Quantification</strong> tab should look like this:
     </p>
     <p>
         <img src="s-08.png" />
     </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button to confirm all the peptide settings.</li>
+        <li>Click the <strong>Transition Settings</strong> button.</li>
+        <li>Click the <strong>Prediction</strong> tab if it is not already showing.</li>
+    </ul>
+    <h2>Transition Settings – Prediction tab</h2>
+    <p>
+        <strong>Precursor mass </strong>and <strong>Product ion mass</strong>: Here you define the basic MS parameters of your data. For both,
+        precursor and product ion mass, this tutorial will use the default monoisotopic mass.
+    </p>
+    <p>
+        <strong>Collision energy: </strong>In this<strong> </strong>PRM experiment you will not use this option as the collision energy is calculated
+        by the instrument. Use the default “None”.
+    </p>
+    <p>
+        <strong>Declustering potential: </strong>Define the declustering potential that should be applied to your sample when it is injected into the
+        mass spectrometer. Use the default “None”.
+    </p>
+    <p>
+        <strong>Optimization Library</strong>: Skyline can store the results of a collision energy optimization experiment into a library and
+        therefore, use the optimized values in future experiments. Use the default “None”.
+    </p>
+    <p>
+        <strong>Use optimization values when present</strong>: If you have carried out a collision energy optimisation experiment within Skyline, you
+        can directly apply the optimised values. Use the default “None”.
+    </p>
+    <p class="keep-next">
+        The <strong>Prediction</strong> tab should look like this:
+    </p>
+    <p>
+        <img src="s-09.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>Filter</strong> tab.</li>
+    </ul>
+    <h2>Transition Settings – Filter tab</h2>
+    <p>
+        <strong>Precursor charges:<em> </em></strong>Define which precursor charge states you would like to consider for your PRM measurements.
+    </p>
+    <ul>
+        <li>Enter “2, 3” to include doubly and triply charged precursor ions.</li>
+    </ul>
+    <p>
+        <strong>Product ion charges:<em> </em></strong>Define which product ion charge states you would like to consider for your SRM measurements.
+    </p>
+    <ul>
+        <li>Enter “1, 2” to include singly and doubly charged product ions.</li>
+    </ul>
+    <p>
+        <strong>Ion types: </strong>Define which product ion types you would like to consider for your PRM measurement (you can define a, b, c, x, y, z
+        and p ions, p stands for precursor).
+    </p>
+    <ul>
+        <li>Enter “y, b” to include y- and b- fragment ions.</li>
+    </ul>
+    <p>
+        <strong>Product ion selection:<em> </em></strong>In this region, you can define a filter to automatically select transitions for all peptides
+        in your Skyline document. For example, to filter for the whole y-ion series, ranging from the first to the last y-ion of a peptide, enter:
+        <strong>From:</strong> “ion 1” and <strong>To:</strong> “last ion”. The MacCoss lab frequently used “ion 3” to exclude y1, y2, b1, and b2.
+    </p>
+    <ul>
+        <li>Choose <strong>From:<em> </em></strong>“ion 1” <strong>To:<em> </em></strong>“last ion” to use the entire ion series for this tutorial.
+        </li>
+    </ul>
+    <p>
+        <strong>Special ions: </strong>With this<strong> </strong>option, you can select other types of ions than the standard y or b like immonium
+        ions or iTRAQ/TMT reporter ions. Further criteria to automatically include typically very intense transitions, such as N-terminal to Pro or
+        C-terminal to Glu or Asp, can be selected or custom defined.
+    </p>
+    <ul>
+        <li>Uncheck the default option “N-terminal to Proline” to select transitions based on a library spectrum only.</li>
+    </ul>
+    <p>
+        <strong>Precursor <em>m/z</em> exclusion window:<em> </em></strong>Here you can exclude a certain mass window around the precursor <em>m/z</em>
+        value for transition selection. In this <em>m/z</em> range transitions are typically very noisy and therefore not suited for identification
+        and quantification. Or, if you are using resonance excitation CID there may be no signal at all in this range.
+    </p>
+    <ul>
+        <li>Set the precursor exclusion window to “5” <em>m/z</em> (which is ± 2.5 <em>m/z</em> around the precursor).</li>
+    </ul>
+    <p>
+        <strong>Auto-select all matching transitions: </strong>Needs to be checked if transitions should be automatically selected for all peptides
+        based either on the filter settings or the library. The default is checked.
+    </p>
+    <p class="keep-next">
+        The <strong>Filter</strong> tab should look like this:
+    </p>
+    <p>
+        <img src="s-10.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>Library</strong> tab.</li>
+    </ul>
+    <h2>Transition Settings – Library tab</h2>
+    <p>
+        <strong>Ion match tolerance: </strong>Here you can define the mass accuracy you would like to tolerate for the selection of fragment ions from
+        your spectral library. This depends on the instrument type that was used to acquire the library spectra. Lower values help to get a more
+        specific peak assignment of the spectra, but if the instrument did not have this accuracy, Skyline may fail to annotate peaks. The MS/MS
+        spectra used to build the library were acquired on an Orbitrap mass analyser.
+    </p>
+    <ul>
+        <li>Enter “0.05” <em>m/z</em>.</li>
+    </ul>
+    <p>
+        <strong>If a library spectrum is available, pick its most intense ions: </strong>Here you can specify if the library should be used to guide
+        transition selection and how many transitions per precursor should be considered. The default is checked.
+    </p>
+    <p>
+        <strong>Pick:</strong> Here you can specify the maximum and minimum numbers of product ions you wish to use for transitions. If the spectrum
+        does not contain enough annotated peaks that match your selection criteria, then the peptide precursor will be skipped.
+    </p>
+    <ul>
+        <li>Enter “10” product ions as the maximum.</li>
+        <li>Enter “3” minimum product ions.</li>
+    </ul>
+    <p>
+        <strong>Note: </strong>In PRM the number of selected transitions does not affect the cycle time because the MS2 data is acquired in full scan
+        mode. Therefore, the information of all the ions is available in the data. You can decide to extract more ions now and later select only the
+        most intense or the ones without interferences. In contrast, in SRM each transition “costs” a certain time (dwell time), and therefore one
+        needs to limit the number of transitions monitored within a method not to exceed a cycle time value that ranges from 1 to 3 seconds. For this
+        reason, in SRM the number of transitions extracted per peptide is often limited to 3-5.
+    </p>
+    <p>
+        <strong>From filtered...</strong>: Here you can choose which settings from the <strong>Filter</strong> tab you would like to consider for the
+        automatic transition selection.
+    </p>
+    <ul>
+        <li>Choose <strong>From filtered product ions</strong> to use all the settings applied above.</li>
+    </ul>
+    <p class="keep-next">
+        The <strong>Library</strong> tab should look like this:
+    </p>
+    <p>
+        <img src="s-11.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>Instrument</strong> tab.</li>
+    </ul>
+    <h2>Transition Settings – Instrument tab</h2>
+    <p>
+        <strong>Min m/z</strong> and <strong>Max m/z:</strong> Here you specify the <em>m/z</em> range of you instrument or your acquired data.
+    </p>
+    <ul>
+        <li>Enter “340” to “1200” respectively.</li>
+    </ul>
+    <p>
+        <strong>Dynamic min product m/z:</strong><em> </em>This function is only useful for chromatograms from LTQ MS2 data. It allows to restrict the
+        product m/z values to being greater than a dynamic minimum, based on the precursor m/z, consistent with the limits the LTQ imposes. Leave the
+        default of unchecked.
+    </p>
+    <p>
+        <strong>Method match tolerance m/z:</strong><em> </em>Here you can define the tolerance in <em>m/z</em> difference between the theoretical
+        <em>m/z</em> calculated by Skyline and the <em>m/</em>z given in an imported raw file. Raw files acquired with methods generated with Skyline
+        should have differences less than 0.0001 between Skyline and raw file <em>m/z</em> values. However, if other <em>m/</em>z calculators have
+        been used for method generation minor <em>m/</em>z differences and even mistakes can occur. Leave the default setting of “0.055” <em>m/z</em>
+        which accounts for one decimal place of precision in <em>m/z</em> specification with some extra for human error in rounding.
+    </p>
+    <p>
+        <strong>Firmware transition limit:</strong> In case your instrument of choice is an older triple quadrupole with a maximum number of
+        transitions it will accept, you can enter this here. Leave blank.
+    </p>
+    <p>
+        <strong>Firmware inclusion limit: </strong>In case your instrument of choice is a full scan instrument with a maximum number of precursor
+        <em>m/z</em> values it will accept for PRM, you can enter this hear. Leave blank.
+    </p>
+    <p>
+        <strong>Min time</strong> and<strong> Max time:</strong><em> </em>Here you can limit the part of the HPLC gradient to extract data from. Leave
+        blank.
+    </p>
+    <p class="keep-next">
+        The <strong>Instrument</strong> tab should look like this:
+    </p>
+    <p>
+        <img src="s-12.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>Full-Scan</strong> tab.</li>
+    </ul>
+    <h2>Transition Settings – Full-Scan tab</h2>
+    <p>
+        <strong>MS1 filtering: </strong>You are not going to extract MS1 data in this tutorial. Leave the default for <strong>Isotope peaks
+            included</strong> as “None”.
+    </p>
+    <p>
+        <strong>MS/MS filtering:</strong> Here you specify how the MS/MS spectra in your data were acquired and how to extract chromatograms from these
+        spectra.
+    </p>
+    <ul>
+        <li>For <strong>Acquisition method</strong> choose “PRM”.</li>
+        <li>For <strong>Product mass analyzer</strong> choose “Centroided”. This tells Skyline to use spectra with the instrument vendor centroiding
+            algorithm applied instead of raw profile spectra. You should generally choose this option for Orbitrap spectra.</li>
+        <li>For <strong>Mass accuracy</strong> enter “10” ppm. This tells Skyline to include spectrum peaks within +/- 10 ppm of the expected
+            <em>m/z</em> values in the extracted ion chromatograms. This value requires high accuracy spectra. Values like 15 or 20 may be safer
+            without sacrificing much in selectivity.</li>
+    </ul>
+    <p>
+        <strong>Retention time filtering:</strong> Here you can choose from several options to limit the part of the HPLC gradient to extract data
+        from. These are most useful when spectra are present across the entire gradient, as with MS1 in DDA, or both MS1 and MS/MS in DIA.
+    </p>
+    <ul>
+        <li>Choose <strong>Include all matching scans</strong> because you will use retention time scheduling for the PRM acquisition in this
+            tutorial.</li>
+    </ul>
+    <p class="keep-next">
+        The <strong>Full-Scan</strong> tab should look like this:
+    </p>
+    <p>
+        <img src="s-13.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>Ion Mobility</strong> tab.</li>
+    </ul>
+    <h2>Transition Settings – Ion Mobility tab</h2>
+    <p>
+        These settings allow prediction of ion mobility values (compensation voltage for FAIMS, drift time for drift tube or traveling wave IMS,
+        inverse reduced ion mobility – 1/K0 – for TIMS). Leave the default “None” because this tutorial does not use ion mobility.
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button in the <strong>Transition Settings</strong> form.</li>
+        <li>Click the <strong>Next&gt;</strong> button in the <strong>Settings</strong> form.</li>
+    </ul>
+    <h1>Preparing an Instrument Acquisition Method for PRM</h1>
+    <p>
+        After setting up all peptide and transition settings in the Skyline document, you will now generate a precursor list for the PRM measurements
+        and automatically select the best transitions for each peptide based on the information found in a spectral library.
+    </p>
+    <p>
+        Depending on the level of available information you can directly insert a transition list into Skyline (Edit &gt; Insert &gt; Transition list).
+        If you just know your target proteins and their best representative peptides, you can insert peptide sequences (<strong>Edit</strong> &gt;
+        <strong>Insert</strong> &gt; <strong>Peptides</strong>). Finally, if you only have a number of target proteins, you can insert a protein list
+        (<strong>Edit</strong> &gt; <strong>Insert</strong> &gt; <strong>Proteins</strong>) and Skyline will automatically select peptides and
+        transitions according to your settings.
+    </p>
+    <p>
+        In this tutorial, you will monitor 19 target proteins, each represented by 1-3 proteotypic peptides (31 peptides in total). The optimal
+        proteotypic peptides have been selected based on previously acquired data.
+    </p>
+    <h2>Adding targets</h2>
+    <p>
+        Because you chose the <strong>Import Peptide List</strong> to start this tutorial, Skyline should now be showing the <strong>Insert</strong>
+        form with the <strong>Peptide List</strong> tab. To provide the peptide list for this tutorial do the following:
+    </p>
+    <ul>
+        <li>Navigate to the “PRM-Orbi” folder and open “target_peptides.csv” in Excel.</li>
+        <li>Copy only the sequences in the “Peptide Modified Sequence” column.</li>
+        <li>In Skyline press Ctrl-V to paste the peptide sequences into the <strong>Insert</strong> form.</li>
+    </ul>
+    <p class="keep-next">
+        The <strong>Insert</strong> form should now look like this:
+    </p>
+    <p>
+        <img src="s-14.png" />
+    </p>
+    <p>
+        Skyline has found the peptides in the background proteome and automatically added the corresponding protein information. If you add a peptide
+        sequence which is not unique for a single protein Skyline will ask you how to proceed in these cases.
+    </p>
+    <p>
+        To insert peptides carrying modifications you can indicate these modifications in the peptide sequences using squared brackets containing the
+        mass difference. For example, peptides carrying carbamidomethylated cysteines are inserted as: 
+    </p>
+    <p>
+        GVDC[+57]QEVSQEK
+    </p>
+    <p>
+        In this case, it is not strictly necessary because the “Carbamidomethyl (C)” modification applies to all cysteines by default. A plain peptide
+        sequence containing C’s and no modification annotations will have this modification automatically applied.
+    </p>
+    <p>
+        <strong><span class="green">Tip!</span></strong> You can also insert modifications in a particular sequence after the peptides are inserted by
+        selecting the peptide in the <strong>Targets</strong> view, right-click and choose <strong>Modify</strong>.
+    </p>
+    <ul>
+        <li>Click the <strong>Insert</strong> button.</li>
+    </ul>
+    <p>
+        If all settings are setup correctly, Skyline will automatically insert the 31 target peptides under the correct protein name with selected
+        transitions according to the filter and library definition. If the peptide was identified in the library with charge 2 and 3 both will appear
+        (and each will have a light and heavy form). 
+    </p>
+    <p>
+        In total you should end up with a document containing (see lower right corner):
+    </p>
+    <p>
+        <strong>19 proteins, 31 peptides, 106 precursors and 896 transitions</strong>
+    </p>
+    <p>
+        To see all the chosen transitions in the <strong>Targets</strong> view:
+    </p>
+    <ul>
+        <li>On the <strong>Edit</strong> menu, choose <strong>Expand All</strong> and click <strong>Precursors</strong>.</li>
+    </ul>
+    <p>
+        The <strong>Edit</strong> &gt; <strong>Collapse All</strong>/<strong>Expand All</strong> functions are very useful for quickly changing views
+        for all proteins/peptides/precursors.
+    </p>
+    <p>
+        <strong><span class="green">Tip!</span></strong> Hover with the cursor over the protein/peptide/precursor/transition to get specific
+        information on the respective item.
+    </p>
+    <p>
+        <strong><span class="green">Tip!</span></strong> The numbers in the square brackets behind the peptide sequence indicate the position of the
+        peptide in the protein.
+    </p>
+    <p>
+        <strong><span class="green">Tip!</span></strong> Right-click on protein/peptide/precursor to see several options for refining and/or modifying.
+        If you click <strong>Pick Children</strong> on any level, you can add or remove selected peptides per protein, precursor charge
+        states/isotypes per peptide, and transitions per precursor. Click on the funnel icon to see all options.
+    </p>
+    <p>
+        <strong><span class="green">Tip!</span></strong> For each target peptide you can view the matching MS/MS spectrum of the library in the
+        <strong>Spectrum Match</strong> tab (usually by default visible, if not, try <strong>View</strong> &gt; <strong>Library Match</strong>). To
+        select the ion type that you want to label in the MS2 spectrum right-click on the spectrum and select any additional ion types you are
+        interested in.
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, click <strong>Save</strong> (Ctrl-S).</li>
+        <li>Save in the “PRM-Orbi” folder as “PRM_Proteome.sky”.</li>
+    </ul>
+    <p class="keep-next">
+        Your Skyline document should now look like this:
+    </p>
+    <p>
+        <img src="s-15.png" />
+    </p>
+    <ul>
+        <li>Select each target peptide and check its automatically chosen transitions in the <strong>Targets</strong> view and the quality of the
+            MS/MS library spectrum in the <strong>Library Match</strong> view.</li>
+    </ul>
+    <h2>Exporting an unscheduled isolation list</h2>
+    <p>
+        To create a PRM acquisition method for your instrument you need to generate a list of precursors to be isolated fragmented. The “isolation
+        list” must include the precursor <em>m/z</em>, the precursor charge (z) and a unique name. To generate the list, this tutorial will use
+        built-in Skyline support:
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Export</strong> and click <strong>Isolation List</strong>.</li>
+        <li>In the <strong>Instrument type</strong> field, select “Thermo Fusion”.</li>
+    </ul>
+    <p>
+        <img src="s-16.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Save the isolation list in the “PRM-Orbi” folder with the name “PRM_precursor_list.csv”.</li>
+    </ul>
+    <h2>Exporting a scheduled isolation list</h2>
+    <p>
+        The term “scheduled PRM” refers to a method where the precursors are fragmented only for a short time window around their expected retention
+        time. Using this approach, the number of measurable precursors per run can be greatly increased. The more precisely retention times of
+        peptides can be predicted, the narrower a measurement window can be used, and the more peptides can be measured in a single run without loss
+        of sensitivity.
+    </p>
+    <p>
+        Here you will learn how to generate a scheduled method using retention time information from previous experiments. You will use the information
+        of the retention time from a previous injection of the target peptides. 
+    </p>
+    <p>
+        To import the run you will use for its retention time information, do the following:
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
+    </ul>
+    <p>
+        The <strong>Import Results</strong> form should appear looking like this:
+    </p>
+    <p>
+        <img src="s-17.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>In the “PRM-Orbi\Standards” folder, select the “heavy-PRM.mzXML” file.</li>
+        <li>Click the <strong>Open</strong> button.</li>
+    </ul>
+    <p>
+        Once the import has completed, you have measurements of targeted peptides with retention times. In peptides with 2 precursors in the library
+        (charge +2 and charge +3), only one of the two precursors has been acquired.
+    </p>
+    <ul>
+        <li>On the <strong>Refine</strong> menu, click <strong>Remove Missing Results</strong> to remove the precursors that were not acquired.</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Retention Times</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>Drag and drop the <strong>Peak Areas</strong> and <strong>Retention Times</strong> panes to place them beside the PRM chromatograms with
+            <strong>Peak Areas</strong> above <strong>Retention Times</strong>.</li>
+        <li>Arrange the library pane below the targets pane.</li>
+    </ul>
+    <p class="keep-next">
+        The Skyline Window should look like this:
+    </p>
+    <p>
+        <img src="s-18.png" />
+    </p>
+    <p>
+        The document should now contain 62 precursors (two per peptide, one for the light version and one for the heavy version).
+    </p>
+    <ul>
+        <li>On the <strong>Edit</strong> menu, choose <strong>Collapse All</strong> and click <strong>Peptides</strong>.</li>
+        <li>Check that all the signals from the peptides are integrated correctly. Focus only on the heavy signal of the peptide as in many cases the
+            light signal is very low or undetectable.</li>
+        <li>On the <strong>File</strong> menu, click <strong>Save As</strong>.</li>
+        <li>Save in the “PRM-Orbi” folder as “PRM_Scheduled.sky”.</li>
+    </ul>
+    <p>
+        Now that you have information about retention time, Skyline will assign retention times to all target peptides defined in your document.
+        Skyline provides a graphical view showing the number of concurrent precursors, which will be concurrently measured depending on the selected
+        retention time window size. To show this graph:
+    </p>
+    <ul>
+        <li>On the <strong>View </strong>menu, choose <strong>Retention Times</strong> and click <strong>Scheduling</strong>.</li>
+    </ul>
+    <p>
+        It will appear on top of the <strong>Retention Times – Replicate Comparison</strong> graph.
+    </p>
+    <ul>
+        <li>Click and drag the tab labelled <strong>Retention Times – Scheduling</strong> to float the graph above the Skyline main window.</li>
+        <li>Right-click on the graph, and click <strong>Properties</strong>.</li>
+        <li>In the <strong>Retention times</strong> field of the <strong>Scheduling Graph Properties</strong> form, enter “1, 2, 5, 10”
+            <strong>min</strong>.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>
+        <img src="s-19.png" />
+    </p>
+    <p>
+        <strong>Note:</strong> The size of the window that you finally will select in your instrument depends on different factors like the
+        reproducibility of your chromatography, the number of concurrent transitions and the resolution that you use to acquire your data (higher
+        resolutions require longer acquisition times). Your goal has to be to obtain a maximum cycle time that is compatible with a good quantitation
+        (at least 8-10 points per chromatographic peak).
+    </p>
+    <p>
+        To export a list of precursors you can import into a Thermo method file (.exp) do the following:
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Export</strong> and click <strong>Isolation List</strong>.</li>
+        <li>In the <strong>Instrument type</strong> field, select “Thermo Fusion”.</li>
+        <li>In the <strong>Method type</strong> field, select “Scheduled”.</li>
+    </ul>
+    <p>
+        <img src="s-20.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Save the isolation list in the “PRM-Orbi” folder with the name “PRM_precursor_list_scheduled.csv”.</li>
+    </ul>
+    <p>
+        <strong>Tip!</strong> You can use <strong>File</strong> 🡪 <strong>Open</strong> containing folder” to open a File Explorer window on the
+        folder containing the Skyline file.
+    </p>
+    <ul>
+        <li>Close the Retention <strong>Times – Scheduling</strong> window.</li>
+        <li>Save the Skyline session.</li>
+    </ul>
+    <p>
+        <strong>Tip!</strong> Sometimes is useful to be able to remove the light versions of each target peptide, you could do it by:
+    </p>
+    <ul>
+        <li>On the <strong>Refine</strong> menu, click <strong>Advanced</strong>.</li>
+        <li>In the <strong>Remove label-type</strong> dropdown list select “light”.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>
+        To recover the information from the light peptides, use <strong>Edit</strong> 🡪 <strong>Undo</strong> (Ctrl-Z), or:
+    </p>
+    <ul>
+        <li>On the <strong>Refine</strong> menu, click <strong>Advanced</strong>.</li>
+        <li>Check the <strong>Add</strong> checkbox.</li>
+        <li>In the <strong>Add label-type</strong> dropdown list select “light”.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <h1>Parallel reaction monitoring data analysis</h1>
+    <p>
+        After generating an isolation list and acquiring data using parallel reaction monitoring (PRM) you will perform analysis of the acquired
+        dataset. Skyline offers a useful graphical interface that supports straightforward peak intensity and retention time comparison over many
+        samples.
+    </p>
+    <p>
+        The cell cycle murine fibroblast samples were digested with trypsin and then, a mixture of 31 isotopically-labelled peptides with
+        <sup>13</sup>C6<sup>15</sup>N2-Lysine and <sup>13</sup>C6<sup>15</sup>N4-Arginine—one for each peptide of interest—was spiked into the tryptic
+        digest. You will use these heavy-labelled peptides as an internal standard to identify and quantify the 19 proteins of interest in three
+        replicates (see table in Appendix 1). Moreover, you will use these internal standards to determine the amount of endogenous proteins in our
+        sample.
+    </p>
+    <h2>Importing data results into Skyline</h2>
+    <p>
+        Remove the run with the heavy peptides.
+    </p>
+    <ul>
+        <li>On the <strong>Edit</strong> menu, click <strong>Manage Results</strong> (Ctrl-R).</li>
+        <li>Click the Remove All button.</li>
+        <li>Click the OK button.</li>
+    </ul>
+    <p>
+        Import the quantitative runs:
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Import</strong> and click <strong>Results</strong>.</li>
+        <li>Leave the default choice <strong>Add single-injection replicates in files</strong>.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Select all nine mzXML files in the “PRM data/Samples” folder.</li>
+        <li>Click the <strong>Open</strong> button.</li>
+    </ul>
+    <p>
+        Display Peak Areas and Retention Times graphs (if not already there):
+    </p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Peak Areas</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Retention Times</strong> and click <strong>Replicate Comparison</strong>.</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Arrange Graphs</strong> and click <strong>Tiled</strong>.</li>
+        <li>On the <strong>Settings</strong> menu, check <strong>Integrate All</strong>.</li>
+    </ul>
+    <p>
+        There are different options to arrange your graphs. You should choose whatever is most convenient for you on your screen. For now, arrange the
+        three different states in three windows and sort the three replicates in tabs by doing the following:
+    </p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Arrange Graphs </strong>and click <strong>Grouped</strong>.</li>
+        <li>In the <strong>Group panes</strong> field enter “3”.</li>
+        <li>Choose the <strong>Distribute graphs among groups</strong> option.</li>
+        <li>In the <strong>Display</strong> dropdown list select “Row”.</li>
+        <li>In the <strong>Sort order</strong> dropdown list select “Document”.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>
+        Your Skyline document should now look like this:
+    </p>
+    <p>
+        <img src="s-21.png" />
+    </p>
+    <p>
+        In this view you can visualize together the heavy and the light traces. This layout is good to check the peak integration.
+    </p>
+    <ul>
+        <li>Right-click a chromatogram graph and click <strong>Legend</strong> to remove the repeated legend.</li>
+        <li>Right-click the <strong>Peak Areas - Replicate Comparison</strong> graph and click <strong>Legend</strong>.</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Transitions</strong> and click <strong>Split Graph</strong> to view the heavy and the
+            light signals in different graph panes.</li>
+        <li>Right-click the <strong>Peak Areas</strong> graph, choose <strong>Show Dot Product</strong> and click <strong>Line</strong>.</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Auto-Zoom</strong> and click <strong>Best Peak</strong> (F11).</li>
+    </ul>
+    <p class="keep-next">
+        The Skyline main window should look something like this:
+    </p>
+    <p>
+        <img src="s-22.png" />
+    </p>
+    <p>
+        This layout is good to check interferences in individual transitions.
+    </p>
+    <p>
+        To further aid manual peak picking you can:
+    </p>
+    <ul>
+        <li>Right-click the <strong>Peak Areas</strong> graph, choose <strong>Normalize To</strong> and click <strong>Total</strong>.</li>
+        <li>On the <strong>Edit</strong> menu, choose <strong>Expand All</strong>, then <strong>Peptides</strong>, and click
+            <strong>Precursors</strong>.</li>
+        <li>Select the first precursor.</li>
+    </ul>
+    <p class="keep-next">
+        The Skyline main window should look something like this:
+    </p>
+    <p>
+        <img src="s-23.png" />
+    </p>
+    <h2>Manual exploration and refinement of the picked PRM chromatograms</h2>
+    <p>
+        Inspect the signals of the 31 target peptides over all 9 runs. Do this process in two steps: in a first round just refine the peak picking (A),
+        and in a second round refine the transitions for quantification (B).
+    </p>
+    <h3>Peak picking (identification)</h3>
+    <p>
+        For correct peak picking and therefore, peptide identification, one needs as many co-eluting sequence information ions as possible that
+        correlate in intensity with a reference peptide. The reference peptide can be either the heavy-labelled internal standard or the reference
+        library.
+    </p>
+    <p>
+        You have selected your transitions based in the information found in the libraries. One of the libraries ("heavy") was acquired in another
+        instrument using a different type of fragmentation (LTQ-OT-Velos, CID) than the ones used in the PRM acquisition (Lumos, HCD). For this
+        reason, the correlation between the intensities of the fragment ions in the library and in the acquired data (dotp) is not very high in some
+        cases and sometimes transitions selected from the library are not detected in the data.
+    </p>
+    <p>
+        To remove the non-observed transitions:
+    </p>
+    <ul>
+        <li>Select one sequence, right-click and click <strong>Pick Children</strong>.</li>
+        <li>Remove the unwanted transitions and check the box <strong>Synchronize isotope label types</strong>.</li>
+    </ul>
+    <p class="keep-next">
+        For example in the first peptide GVDCQEVSQEK remove y9, y8 and b6 ions.
+    </p>
+    <p>
+        <img src="s-24.png" />
+    </p>
+    <p>
+        You should do the same for all 31 peptides.
+    </p>
+    <p>
+        <strong>Tip!</strong> A quicker way to remove most of the things in your document marked with a red dot (<img
+            src="../../shared/red-dot-icon.png" />) 
+    </p>
+    <ul>
+        <li>On the <strong>Refine</strong> menu, click <strong>Advanced</strong> and select the <strong>Results</strong> tab. </li>
+        <li>In the <strong>Min peak found ratio</strong> field, enter "0.5". </li>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>
+        <strong>Note:</strong> This uses the signal across all replicates. So, transitions with red dots in less than half the data will not be
+        removed. You can use "0.3" if you want to make that less than one third.
+    </p>
+    <p>
+        Now in the interest of time use the above technique to reduce the chosen transitions to only the ones reliably detecting signal.
+    </p>
+    <p>
+        If you want to continue the exercise by yourself later:
+    </p>
+    <ul>
+        <li>Take note of criteria such as: Co-eluting fragments, Peak shapes, Library correlation (dotp, but keep in mind in this case the library was
+            generated by a different instrument), Correlation with the heavy peptide/fragments, Correlation with replicates (both in terms of fragment
+            relative intensity and retention times)</li>
+        <li>Check that all peptides are picked correctly by Skyline and the peak boundaries set appropriately. In the peptide retention time replicate
+            view all peptide bars should have approximately the same height. If certain precursors were not picked correctly, drag the area boundaries
+            to what you think is the right peak.</li>
+        <li>Sometimes peptides are not detectable in some biological states. In this case you have the reference of the heavy peptide to integrate the
+            peaks. Even if you do not detect any endogen signal, integrate the noise using as reference the heavy standard. This will give you a final
+            results matrix without missing values.</li>
+    </ul>
+    <p>
+        Now:
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, click <strong>Save</strong>.</li>
+        <li>Save in the “PRM-Orbi” folder as "PRM_Picked.sky" when you are sure that all peaks are picked correctly.</li>
+    </ul>
+    <h3>Transition refinement (quantification)</h3>
+    <p>
+        In contrast, for peptide quantitation one requires transitions with a good signal-to-noise ratio, which are free of interferences. In an
+        extreme case, one could use several transitions for peptide identification, and only the most intense for peptide quantitation.
+    </p>
+    <ul>
+        <li>Check if all transitions are of good quality and reproducible over the samples. The relative transition intensity has to be constant over
+            all runs. Right-click the <strong>Peak Areas</strong> window, choose <strong>Normalized To</strong> and click <strong>Total</strong>, as
+            instructed above.</li>
+        <li>If certain transitions/precursors/peptides are of low quality (low intense, not co-eluting with the other transitions, shouldered, etc.)
+            or irreproducible over runs, remove them from the document: Delete the low-quality transitions from the <strong>Targets</strong>
+            window.<br /><strong>Tip!</strong> You can bring back deleted transitions/precursors/peptides: Right-click the respective parent/item and
+            click <strong>Pick children</strong>.<br /><strong>Tip!</strong> You can select transitions as quantitative: Right-click a transition and
+            click <strong>Quantitative</strong>. </li>
+        <li>Check peptide EAGNINQSLLTLGR (using <strong>Edit</strong> &gt; <strong>Find</strong>): b4 has a big interference in the light precursor of
+            the peptide so delete this transition and Skyline will automatically remove it from the heavy precursor.</li>
+    </ul>
+    <p>
+        <strong>Tip!</strong> You can also use normalized views to spot interferences: Right-click the <strong>Peak Areas</strong> window, choose
+        <strong>Normalized To</strong> and click <strong>Total</strong>. Then either select the light precursors or focus only on the light pane of
+        the <strong>Peak Areas</strong> graph where the y-axis is "Peak Area Ratio To Heavy" which will make interferences stick out with low "rdotp"
+        (Ratio Dot-Product) values and inconsistent ratios for individual transitions.
+    </p>
+    <p>
+        <img src="s-25.png" />
+    </p>
+    <p>
+        You should do the same for all 31 peptides.
+    </p>
+    <p>
+        Now in the interest of time you should continue with this tutorial after deleting the most extreme example explained above.
+    </p>
+    <p>
+        If you want to continue the exercise by yourself later, review all the peptides and delete (or mark as non-quantitative) low quality
+        transitions.
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, click <strong>Save As</strong>.</li>
+        <li>Save in the “PRM-Orbi” folder as "PRM_Refined.sky".</li>
+    </ul>
+    <h3>Protein quantification using single-point internal-calibration</h3>
+    <p>
+        Once all the data has been reviewed and properly refined, you will use Skyline to quantify the proteins of interest in our samples.
+    </p>
+    <ul>
+        <li>On the <strong>View</strong> menu, click <strong>Document Grid</strong>.</li>
+        <li>In the <strong>Document Grid</strong> window: On the <strong>Reports</strong> menu, click <strong>Peptide Ratio Results</strong>.</li>
+    </ul>
+    <p>
+        <img src="s-26.png" />
+    </p>
+    <p>
+        You now have a table with the ratio light-to-heavy ("Ratio To Standard") for each peptide in each replicate. The Quantification shows the same
+        value in scientific notation preceded by "Normalized Area:".
+    </p>
+    <p>
+        <strong>Note:</strong> In case the columns that are shown in your "Peptide Ratio Results" view are the same as the shown in the screenshot.
+        They are the Skyline defaults for this custom report. You can modify the columns in this report using the <strong>Reports</strong> &gt;
+        <strong>Edit Report</strong> menu item. In the <strong>Customize Report</strong> window, you can add and remove columns to your report as
+        desired. You can click the upper right "X" to remove columns and the arrows to change the order of the columns.
+    </p>
+    <p>
+        Now you are going to introduce the known amount of your internal standard to help Skyline calculate a more interesting quantitative value. In
+        the <strong>Document Grid</strong> window:
+    </p>
+    <ul>
+        <li>On the <strong>Reports</strong> menu, click <strong>Peptide Quantification</strong>.</li>
+    </ul>
+    <p>
+        In the <strong><em>Internal Standard Concentration</em></strong> column, add the known amount of fmol for each heavy-labeled peptide.
+    </p>
+    <ul>
+        <li>Select the cell in the top row of this column and press Ctrl-V to paste from the concentration column in the <strong>Appendix 1</strong>
+            table at the end of this tutorial.</li>
+    </ul>
+    <p>
+        <img src="s-27.png" />
+    </p>
+    <p>
+        Now, again from the <strong>Document Grid</strong> window:
+    </p>
+    <ul>
+        <li>On the <strong>Reports</strong> menu, click <strong>Peptide Ratio Results</strong>.</li>
+    </ul>
+    <p class="keep-next">
+        Now, in the quantification column you have the amount of each endogenous peptide, in fmol units, calculated with the
+        single-point internal-calibration method.
+    </p>
+    <p>
+        <img src="s-28.png" />
+    </p>
+    <h2>Statistical comparison between conditions</h2>
+    <h3>Annotating samples with group information</h3>
+    <p>
+        To perform statistical analysis of the results you first need to annotate which samples are replicates. Skyline allows you to associate
+        additional information with the runs in the document by defining custom annotations.
+    </p>
+    <p>
+        To view the <strong>Annotation Settings</strong> form, perform the following steps:
+    </p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Document Settings</strong>.</li>
+        <li>In the <strong>Annotations</strong> tab click the <strong>Add</strong> button.</li>
+        <li>In the <strong>Name</strong> field, enter "Condition".</li>
+        <li>In the <strong>Type</strong> field, select "Value List".</li>
+        <li>In the <strong>Values</strong> field, enter "G1", "G2M", "S", each on a new line (without " ").</li>
+        <li>In the <strong>Applies To</strong> list, check <strong>Replicates</strong>.</li>
+    </ul>
+    <p>
+        <img src="s-29.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>
+        Next, generate another annotation named "BioReplicate":
+    </p>
+    <ul>
+        <li>In the <strong>Name</strong> field, enter "BioReplicate".</li>
+        <li>In the <strong>Type</strong> field, select "Number".</li>
+        <li>In the <strong>Applies To</strong> list, check <strong>Replicates</strong>.</li>
+    </ul>
+    <p>
+        <img src="s-30.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Select both annotations in the <strong>Annotations</strong> tab.</li>
+    </ul>
+    <p>
+        <img src="s-31.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>
+        Editing the annotation values in Skyline is done using the <strong>Document Grid</strong>.
+    </p>
+    <ul>
+        <li>In the <strong>Document Grid</strong>, on the <strong>Reports</strong> menu, click <strong>Replicates</strong>.</li>
+        <li>Annotate "Condition", "BioReplicate" as shown in the table below.</li>
+    </ul>
+    <p>
+        <img src="s-32.png" />
+    </p>
+    <p>
+        <strong>Tip!</strong> You can use your keyboard to type directly into the <strong>Document Grid</strong>, using Enter to move to the next line,
+        Tab to the next column, F2 to enter cell edit mode, up and down arrows to select from a Value List once in cell edit mode, and arrow keys to
+        navigate the grid when not in cell edit mode, all just like in Excel.
+    </p>
+    <ul>
+        <li>Close the <strong>Document Grid</strong>.</li>
+    </ul>
+    <p>
+        Now you can group the data based on "Condition" or "BioReplicate".
+    </p>
+    <ul>
+        <li>Right-click the <strong>Retention Time - Replicate Comparison</strong> or <strong>Peak Area - Replicate Comparison</strong> window, choose
+            <strong>Group by</strong> and click <strong>Condition</strong> (or <strong>BioReplicate</strong>).</li>
+        <li>On the <strong>View</strong> menu, choose <strong>Transitions</strong> and click <strong>Split Graph</strong> to uncheck this option.</li>
+    </ul>
+    <p class="keep-next">
+        The <strong>Peak Areas</strong> and <strong>Retention Times - Replicate Comparison</strong> graphs should like this for the
+        first peptide in the list (K.GVD<strong><u>C</u></strong>QEVSQE<strong><span class="blue">K</span></strong>.N [593, 603]):
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-33.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-34.png" />
+            </td>
+        </tr>
+    </table>
+    <ul>
+        <li>On the <strong>File</strong> menu, click <strong>Save As</strong>.</li>
+        <li>Save in the “PRM-Orbi” folder as "PRM_Annotated.sky".</li>
+    </ul>
+    <h3>Group Comparison in Skyline</h3>
+    <p>
+        Skyline can perform pairwise group comparisons of peptide and protein peak areas. The comparisons are performed by i) considering all the
+        available transition peak areas for a peptide or protein, ii) optionally dividing by a normalization standard, iii) taking the log, iv)
+        averaging any technical replicates and v) performing a t-test on the resulting values.
+    </p>
+    <p>
+        Skyline automatically discards replicates with missing values.
+    </p>
+    <p>
+        To perform the group comparisons follow the next steps:
+    </p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Document Settings</strong>.</li>
+        <li>Click the <strong>Group Comparisons</strong> tab and Click the <strong>Add</strong> button.</li>
+        <li>In the <strong>Name</strong> field of the <strong>Edit Group Comparison</strong> form, enter "G2M-vs-G1".</li>
+        <li>For the <strong>Control group annotations</strong> field, choose "Condition".</li>
+        <li>For the <strong>Control group value</strong> field, choose "G1".</li>
+        <li>For the <strong>Value to compare against</strong> field, choose "G2M".</li>
+        <li>For the <strong>Identity annotation</strong> field, choose "BioReplicate".</li>
+        <li>For the <strong>Normalization method</strong> field, choose "Ratio to Heavy".</li>
+        <li>In the <strong>Confidence level</strong> field, enter "95" %.</li>
+        <li>For the <strong>Scope</strong> field, choose "Protein".</li>
+    </ul>
+    <p class="keep-next">
+        The <strong>Edit Group Comparison</strong> form should look like this:
+    </p>
+    <p>
+        <img src="s-35.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>Click the <strong>Edit List</strong> button.</li>
+        <li>Click the <strong>Copy</strong> button.</li>
+        <li>In the <strong>Name</strong> field of the Edit Group Comparison form, enter "S-vs-G1".</li>
+        <li>For the <strong>Value to compare against</strong> field, choose "S".</li>
+    </ul>
+    <p class="keep-next">
+        The second group comparison should look like this:
+    </p>
+    <p>
+        <img src="s-36.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <ul class="keep-next">
+        <li>Make sure both of your new group comparisons are checked.</li>
+    </ul>
+    <p>
+        <img src="s-37.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>OK</strong> button.</li>
+    </ul>
+    <p>
+        To inspect the group comparison you just defined do the following:
+    </p>
+    <ul>
+        <li>On the <strong>View</strong> menu, choose <strong>Other Grids</strong>, then <strong>Group Comparisons</strong>, and click
+            <strong>G2M-vs-G1</strong> or <strong>S-vs-G1</strong>.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline will show a grid view that looks like this:
+    </p>
+    <table class="comp-fig">
+        <tr>
+            <td class="comp-fig">
+                <img src="s-38.png" />
+            </td>
+            <td class="comp-fig">
+                <img src="s-39.png" />
+            </td>
+        </tr>
+    </table>
+    <p>
+        Be aware that numbers can be different in your document depending on which peptides/transitions you have selected for the refined file.
+    </p>
+    <p>
+        In the "G2M-vs-G1" comparison:
+    </p>
+    <ul>
+        <li>Click the <strong>Bar Graph</strong> button in the menu above the toolbar in the grid view.</li>
+    </ul>
+    <p class="keep-next">
+        Skyline adds a graph pane to the view that looks like this:
+    </p>
+    <p>
+        <img src="s-40.png" />
+    </p>
+    <p>
+        To sort the data by fold change:
+    </p>
+    <ul>
+        <li>Click the "Fold Change Result" header, and click <strong>Sort Ascending</strong> in the menu that appears.</li>
+    </ul>
+    <p class="keep-next">
+        This will sort the grid, and the graph like this:
+    </p>
+    <p>
+        <img src="s-41.png" />
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, click <strong>Save As</strong>.</li>
+        <li>Save in the “PRM-Orbi” folder as "PRM_ttest.sky".</li>
+    </ul>
+    <h2>Export a custom-defined report</h2>
+    <p>
+        Skyline allows you to export from the Skyline document to a .csv file many values and statistics that can be used for further processing in
+        other tools like Excel or R. The Skyline Results and Document Grids provide access to many of these values and allow you to edit custom
+        annotations as you work with your data.
+    </p>
+    <p>
+        You saw an example of a custom report before and now you will generate a report with some quantitative data to further illustrate how to use
+        this Skyline feature.
+    </p>
+    <p>
+        <strong>Note:</strong> For detailed information about all options see the Skyline tutorial "Skyline Custom Reports" on the Skyline website.
+    </p>
+    <p>
+        <a href="https://skyline.ms/tutorial_custom_reports.url">https://skyline.ms/tutorial_custom_reports.url</a>
+    </p>
+    <p>
+        To generate the report for this tutorial do the following:
+    </p>
+    <ul>
+        <li>On the <strong>File</strong> menu, choose <strong>Export</strong> and click <strong>Report</strong>.</li>
+    </ul>
+    <p>
+        The <strong>Export Report</strong> form offers you a range of predefined report formats. To create a custom report:
+    </p>
+    <ul>
+        <li>Click the <strong>Edit list</strong> button.</li>
+        <li>Click the <strong>Add</strong> button.</li>
+    </ul>
+    <p>
+        An <strong>Edit Report</strong> window opens.
+    </p>
+    <ul>
+        <li>In the <strong>Name</strong> field, enter "PRM-Quant".</li>
+        <li>From the selection tree on the left, select the following items: <ul>
+                <li>"<strong>Protein Name</strong>" ("Proteins" → "Protein Name")</li>
+                <li>"<strong>Peptide Modified Sequence</strong>" ("Proteins" → "Peptides" → "Peptide Modified Sequence")</li>
+                <li>"<strong>Ratio To Standard</strong>" (Peptide area ratio of light to heavy; sum of all transition areas) ("Proteins" → "Peptides"
+                    → "Peptide Results" → "Ratio To Standard")</li>
+                <li>"<strong>Calculated Concentration</strong>" ("Proteins" → "Peptides" → "Peptide Results" → "Quantification" → "Calculated
+                    Concentration")</li>
+            </ul>
+        </li>
+        <li>Check the <strong>Pivot Replicate Name</strong> checkbox at the bottom of the form.</li>
+    </ul>
+    <p class="keep-next">
+        Your <strong>Edit Report</strong> form should now look like this:
+    </p>
+    <p>
+        <img src="s-42.png" />
+    </p>
+    <ul>
+        <li>Click the <strong>Preview</strong> button to check report appears with 31 rows, and the last 2 columns pivoted by replicate name.</li>
+        <li>Close the <strong>Preview</strong> window.</li>
+        <li>Click the <strong>OK</strong> button twice.</li>
+        <li>Select the new PRM-Quant report.</li>
+        <li>Click the <strong>Export</strong> button and save the report as a spreadsheet file in the PRM-Orbi folder with the name "PRM-Quant.csv".
+        </li>
+    </ul>
+    <p>
+        In case you want your new report to be saved to the document, so that it will be available in whatever installation of Skyline opens it next,
+        you can do the following:
+    </p>
+    <ul>
+        <li>On the <strong>Settings</strong> menu, click <strong>Document Settings</strong>.</li>
+        <li>Go to the <strong>Reports</strong> tab and check the "PRM-Quant" report in the list.</li>
+        <li>Click the <strong>OK</strong> button.</li>
+        <li>On the <strong>File</strong> menu, click <strong>Save</strong>.</li>
+    </ul>
+    <p>
+        The next time anyone opens the .sky file you saved, they will also get the "PRM-Quant" report.
+    </p>
     <h1>Conclusion</h1>
     <p>
-        In this tutorial, you have learned.
+        In this tutorial, you have learned how to do a thorough review of all peptide and transition settings in order to set up a Skyline document for
+        PRM. Then to add a set of peptide targets from a formatted list. You have exported an unscheduled instrument method, and imported data from a
+        prior run to export a scheduled instrument method. You imported 9 runs acquired from with a schedule method like this, measuring endogenous
+        peptides with stable isotope labeled reference standards, and assessed the quality of the chromatographic data, checking for interference and
+        removing transitions with evidence of it. You set up both single-point internal calibration and a group comparison for relative
+        quantification. And you created a custom report which you saved in the Skyline document for the future use of anyone with a copy of the
+        document.
     </p>
     <h1>References</h1>
     <p class="bibliography">
-        1. Stacy D. Sherrod <i>et al</i>. Label-Free Quantitation of Protein Modifications by Pseudo-Selected Reaction
-        Monitoring with Internal Reference Peptides. <i>J. Proteome Res. (submitted)</i> 
+        1. Stacy D. Sherrod <em>et al.</em> Label-Free Quantitation of Protein Modifications by Pseudo-Selected Reaction
+        Monitoring with Internal Reference Peptides. <em>J. Proteome Res. (submitted)</em> 
     </p>
     <p class="bibliography">
-        2. Schilling, B. <i>et al</i>. Platform Independent and Label-Free Quantitation of Proteomic Data Using MS1 Extracted
-        Ion Chromatograms in Skyline. Application to Protein Acetylation and Phosphorylation. <i>Mol Cell Proteomics</i>
+        2. Schilling, B. <em>et al.</em> Platform Independent and Label-Free Quantitation of Proteomic Data Using MS1 Extracted
+        Ion Chromatograms in Skyline. Application to Protein Acetylation and Phosphorylation. <em>Mol Cell Proteomics</em>
         (2012).doi:10.1074/mcp.M112.017707
     </p>
+    <h1>Appendix 1</h1>
+    <p>
+        <em>List of the spiked amounts of the 31 isotopically-labelled peptides used in this study</em>
+    </p>
+    <table>
+        <tr>
+            <td><strong>Accesion</strong></td>
+            <td><strong>Gene</strong></td>
+            <td><strong>Sequence</strong></td>
+            <td><strong>fmol/ul</strong></td>
+        </tr>
+        <tr>
+            <td>Q61687</td>
+            <td>ATRX</td>
+            <td>GVDCQEVSQEK</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>Q61687</td>
+            <td>ATRX</td>
+            <td>VVEATNSMTAVR</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>O70126</td>
+            <td>AURKB</td>
+            <td>TSQSGLNTLSQR</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>O70126</td>
+            <td>AURKB</td>
+            <td>IADFGWSVHAPSLR</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>Q9Z1S0</td>
+            <td>BUB1B</td>
+            <td>AMQAVQQEGAGGQQEEK</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>Q9Z1S0</td>
+            <td>BUB1B</td>
+            <td>SPATGGPQVLNAQR</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>P51943</td>
+            <td>CCNA2</td>
+            <td>DAGSALLSLHQEDQENVNPEK</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>P24860</td>
+            <td>CCNB1</td>
+            <td>QLEEEQSVRPK</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>Q9JJ66</td>
+            <td>CDC20</td>
+            <td>LSGKPQNAPEGYQNR</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>Q6RT24</td>
+            <td>CENPE</td>
+            <td>GSISENEAQGASTQDTAK</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>A2AGT5</td>
+            <td>CKAP5</td>
+            <td>FIQPNIGELPTALK</td>
+            <td>100</td>
+        </tr>
+        <tr>
+            <td>A2AGT5</td>
+            <td>CKAP5</td>
+            <td>LDDIFEPVLIPEPK</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>Q9WTX6</td>
+            <td>CUL1</td>
+            <td>FYTQQWEDYR</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>Q9WTX6</td>
+            <td>CUL1</td>
+            <td>ESFESQFLADTER</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>Q8BHK9</td>
+            <td>ERC6L</td>
+            <td>SPLAELGVLK</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>Q8BHK9</td>
+            <td>ERC6L</td>
+            <td>ASLGPNLDLQDSVVLYHR</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>P60330</td>
+            <td>ESPL1</td>
+            <td>AQGLDLLQAVLTR</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>Q8R080</td>
+            <td>GTSE1</td>
+            <td>EVAQAATPQNPVNQGK</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>Q8R080</td>
+            <td>GTSE1</td>
+            <td>GSQSDVLQDKPSTAPDAASR</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>P97329</td>
+            <td>KI20A</td>
+            <td>LAASASTQQFQEVK</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>P97329</td>
+            <td>KI20A</td>
+            <td>TPTCQSSTDSSPYAR</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>Q6P9P6</td>
+            <td>KIF11</td>
+            <td>LNLVDLAGSENIGR</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>Q6P9P6</td>
+            <td>KIF11</td>
+            <td>EAGNINQSLLTLGR</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>P47811</td>
+            <td>MK14</td>
+            <td>LTDDHVQFLIYQILR</td>
+            <td>100</td>
+        </tr>
+        <tr>
+            <td>P70268</td>
+            <td>PKN1</td>
+            <td>SLAPVELLLR</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>A2APB8</td>
+            <td>TPX2</td>
+            <td>KLEEEEEGSAPATSR</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>A2APB8</td>
+            <td>TPX2</td>
+            <td>NVTQAEPFSLETDK</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>Q921J4</td>
+            <td>UBE2S</td>
+            <td>EVTTLTADPPDGIK</td>
+            <td>20</td>
+        </tr>
+        <tr>
+            <td>Q921J4</td>
+            <td>UBE2S</td>
+            <td>LLTEIHGGACSTSSGR</td>
+            <td>10</td>
+        </tr>
+        <tr>
+            <td>Q80X41</td>
+            <td>VRK1</td>
+            <td>LAEQFAAGEVLTDMSR</td>
+            <td>100</td>
+        </tr>
+        <tr>
+            <td>Q80X41</td>
+            <td>VRK1</td>
+            <td>SVESQGAIHGSMSQPAAGCSSSDSSR</td>
+            <td>10</td>
+        </tr>
+    </table>
 </body>
 
 </html>
