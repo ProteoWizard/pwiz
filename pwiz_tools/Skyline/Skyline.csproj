@@ -569,7 +569,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
