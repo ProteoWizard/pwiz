@@ -39,7 +39,7 @@ class CalibratorLog
 {
     public:
 
-    static std::auto_ptr<CalibratorLog> create(const Calibrator* calibrator,
+    static std::unique_ptr<CalibratorLog> create(const Calibrator* calibrator,
                                                const std::string& outputDirectory,
                                                const std::vector<double>* trueMasses = 0,
                                                const CalibrationParameters* trueParameters = 0);
