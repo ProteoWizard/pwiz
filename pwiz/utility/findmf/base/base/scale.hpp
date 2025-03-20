@@ -39,7 +39,7 @@ namespace ralab
 
 
       template<int N, typename TReal>
-      struct NthPower : std::unary_function<TReal,TReal>
+      struct NthPower
       {
         TReal operator()(const TReal & x)
         {
@@ -88,7 +88,7 @@ namespace ralab
         if(center)
           {
             scaled.first = ralab::base::base::mean( begin , end);
-            std::transform(begin, end, begin, std::bind2nd( std::minus<TReal>(), scaled.first));
+            std::transform(begin, end, begin, std::bind( std::minus<TReal>(), std::placeholders::_1, scaled.first));
           }
         else
           {
@@ -97,7 +97,7 @@ namespace ralab
         if(scale)
           {
             scaled.second = rootMeanSquare( begin , end );
-            std::transform(begin, end, begin , std::bind2nd(std::divides<TReal>(), scaled.second) );
+            std::transform(begin, end, begin , std::bind(std::divides<TReal>(), std::placeholders::_1, scaled.second) );
           }
         else
           {
