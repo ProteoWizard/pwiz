@@ -2060,7 +2060,7 @@ namespace pwiz.ProteowizardWrapper
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
-        public bool IsDiagonalPASEF => _scanningQuadMzLows != null;
+        public bool IsDiagonalPASEF => _scanningQuadMzLows?.Length > 0 && _scanningQuadMzHighs?.Length > 0;
 
         public double[] ScanningQuadMzLows => _scanningQuadMzLows;
         public double[] ScanningQuadMzHighs => _scanningQuadMzHighs;
@@ -2128,7 +2128,7 @@ namespace pwiz.ProteowizardWrapper
             }
             // ReSharper restore AssignNullToNotNullAttribute
 
-            if (_scanningQuadMzLows != null)
+            if (IsDiagonalPASEF)
             {
                 // Diagonal PASEF
                 var isolationWidth = (_scanningQuadMzHighs[offset] - _scanningQuadMzLows[offset]) / 2;
@@ -2151,8 +2151,6 @@ namespace pwiz.ProteowizardWrapper
                 slice._scanningQuadMzLows = null; // Single value for this slice
                 slice._scanningQuadMzHighs = null;
             }
-
-
             return slice;
         }
 

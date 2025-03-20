@@ -384,7 +384,7 @@ namespace pwiz.Skyline.Model.Results
         {
             get
             {
-                return _ionMobilityFunctionsProvider.IsCombinedDiagonalPASEF;
+                return _ionMobilityFunctionsProvider is { IsCombinedDiagonalPASEF: true };
             }
         }
 
@@ -861,6 +861,10 @@ namespace pwiz.Skyline.Model.Results
             if (!EnabledMsMs || !retentionTime.HasValue || !allSpectra.Any())
                 yield break;
 
+            // Note that for Agilent ramped CE the list allSpectra will have varying RT and isolation window, but we will
+            // treat that as all having the same RT 
+            var rampedCE = allSpectra.Any(s => s.RetentionTime != allSpectra[0].RetentionTime);
+
             var handlingType = _fullScan.IsolationScheme == null || _fullScan.IsolationScheme.SpecialHandling == null
                 ? IsolationScheme.SpecialHandlingType.NONE
                 : _fullScan.IsolationScheme.SpecialHandling;
@@ -868,16 +872,17 @@ namespace pwiz.Skyline.Model.Results
                              handlingType == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED ||
                              handlingType == IsolationScheme.SpecialHandlingType.FAST_OVERLAP;
 
-            var groupedByIsoWin = IsCombinedDiagonalPASEF ?
-                allSpectra.Select(item => new [] { item }) : // Diagonal PASEF - each scan has unique isolation window and single ion mobility
-                new List<MsDataSpectrum[]>  { allSpectra }; // Scans are assumed to be all from same isolation window with varying ion mobility
+            var groupedByIsoWin = (allSpectra.Length <= 1) ? new[] { allSpectra }:
+                IsCombinedDiagonalPASEF ?
+                    allSpectra.Select(item => new [] { item }).ToArray() : // Diagonal PASEF - each scan has unique isolation window and single ion mobility
+                    allSpectra.GroupBy(item => item.Precursors).Select(group => group.ToArray()).ToArray();
 
-            var allFilters = IsCombinedDiagonalPASEF ? new List<DiaPasefAwareFilter>() : null;
+            var multiIso = groupedByIsoWin.Length > 1;
+            var allFilters = multiIso ? new List<DiaPasefAwareFilter>() : null;
 
             foreach (var spectra in groupedByIsoWin)
             {
-                Assume.IsTrue(spectra.All(s => Equals(s.Precursors, spectra.First().Precursors)));
-                var pasefAwareFilter = new DiaPasefAwareFilter(spectra, _acquisitionMethod);
+                var pasefAwareFilter = new DiaPasefAwareFilter(spectra, _acquisitionMethod, rampedCE);
                 var firstSpectrum = spectra.First();
                 foreach (var isoWin in GetIsolationWindows(firstSpectrum.GetPrecursorsByMsLevel(1)))
                 {
@@ -917,7 +922,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                if (IsCombinedDiagonalPASEF)
+                if (multiIso)
                 {
                     allFilters.Add(pasefAwareFilter);
                 }
@@ -946,7 +951,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>> _filteredSpectra;
             private double? _imWinCenter;   // IMS window center for the next group of spectra to process
 
-            public DiaPasefAwareFilter(MsDataSpectrum[] spectra, FullScanAcquisitionMethod acquisitionMethod)
+            public DiaPasefAwareFilter(MsDataSpectrum[] spectra, FullScanAcquisitionMethod acquisitionMethod, bool rampedCE)
             {
                 var firstSpectrum = spectra.First();
                 _windowGroup = firstSpectrum.WindowGroup;
@@ -963,6 +968,10 @@ namespace pwiz.Skyline.Model.Results
                         // For diaPASEF we will see the isolation window shift periodically as we cycle through ion mobilities - and we may see overlaps
                         _filteredSpectra = new Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>>();
                     }
+                }
+                else if (rampedCE)
+                {
+                    _filteredSpectra = new Dictionary<SpectrumFilterPair, List<ExtractedSpectrum>>();
                 }
             }
 
