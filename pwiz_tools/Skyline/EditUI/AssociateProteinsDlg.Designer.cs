@@ -113,12 +113,8 @@
             // 
             // comboSharedPeptides
             // 
-            this.comboSharedPeptides.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.flowLayoutPanel.SetFlowBreak(this.comboSharedPeptides, true);
-            this.comboSharedPeptides.FormattingEnabled = true;
             resources.ApplyResources(this.comboSharedPeptides, "comboSharedPeptides");
             this.comboSharedPeptides.Name = "comboSharedPeptides";
-            this.comboSharedPeptides.SelectedIndexChanged += new System.EventHandler(this.comboParsimony_SelectedIndexChanged);
             // 
             // gbParsimonyOptions
             // 
@@ -438,8 +434,8 @@
             // progressPanel
             // 
             resources.ApplyResources(this.progressPanel, "progressPanel");
-            this.progressPanel.Controls.Add(this.btnError);
             this.progressPanel.Controls.Add(this.progressBar1);
+            this.progressPanel.Controls.Add(this.btnError);
             this.progressPanel.Name = "progressPanel";
             // 
             // AssociateProteinsDlg
@@ -451,12 +447,12 @@
             this.Controls.Add(this.progressPanel);
             this.Controls.Add(this.proteinSourcePanel);
             this.Controls.Add(this.panelStatusBarResult);
-            this.Controls.Add(this.lblResults);
             this.Controls.Add(this.dgvAssociateResults);
             this.Controls.Add(this.gbParsimonyOptions);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.lblResults);
             this.HelpButton = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

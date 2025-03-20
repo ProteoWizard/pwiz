@@ -82,7 +82,7 @@ namespace pwiz.Skyline.EditUI
         private AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
         {
             InitializeComponent();
-            btnError.Image = SystemIcons.Error.ToBitmap();
+            btnError.Image = ScaleIcon(SystemIcons.Error, btnError.Width - 1, btnError.Height - 1);
             btnError.Text = string.Empty;
             _document = document;
             if (reuseLastFasta && !string.IsNullOrEmpty(Settings.Default.LastProteinAssociationFastaFilepath))
@@ -221,6 +221,9 @@ namespace pwiz.Skyline.EditUI
             {
                 _skylineWindow.DocumentUIChangedEvent += SkylineWindowOnDocumentUIChangedEvent;
             }
+
+            progressPanel.Bounds = new Rectangle(lblResults.Right, progressPanel.Top,
+                gbParsimonyOptions.Right - lblResults.Right, progressPanel.Height);
             if (_overrideFastaPath != null)
             {
                 tbxFastaTargets.Text = _overrideFastaPath;
@@ -875,6 +878,15 @@ namespace pwiz.Skyline.EditUI
                 throw new InvalidOperationException();
             }
             btnError.PerformClick();
+        }
+
+        private Bitmap ScaleIcon(Icon icon, int width, int height)
+        {
+            var bitmap = new Bitmap(width, height);
+            using var g = Graphics.FromImage(bitmap);
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            g.DrawIcon(icon, new Rectangle(0, 0, width, height));
+            return bitmap;
         }
     }
 }
