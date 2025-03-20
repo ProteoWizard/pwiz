@@ -1097,16 +1097,15 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
 
                     var cell = dataGridViewRow.Cells[dataGridViewColumn.Index];
+                    cell.Value = replicatePivotColumns.GetConstantColumnValue(column);
                     if (replicatePivotColumns.IsConstantColumnReadOnly(column))
                     {
                         cell.ReadOnly = true;
-                        cell.Value = null;
                         cell.Style.BackColor = _readOnlyColor;
                     }
                     else
                     {
                         cell.ReadOnly = boundColumn.ReadOnly;
-                        cell.Value = replicatePivotColumns.GetConstantColumnValue(column);
                         cell.Style.BackColor = boundColumn.DefaultCellStyle.BackColor;
                     }
                 }
