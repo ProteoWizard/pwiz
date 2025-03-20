@@ -342,20 +342,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        // CONSIDER: add a message dialog explaining this limitation, maybe with a "don't show this again" checkbox
-        protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
-        {
-            // Prevent selecting tree nodes with different types - e.g. selecting 5 replicates and 2 peptide libraries is 
-            // not supported. Selected nodes need to have models with the same type.
-            if (SelectedNode != null && 
-                ((FilesTreeNode)SelectedNode).Model.GetType() != ((FilesTreeNode)e.Node).Model.GetType())
-            {
-                e.Cancel = true;
-            }
-
-            base.OnBeforeSelect(e);
-        }
-
         // Initialize this model's local file path in the background
         // to avoid blocking the UI thread. Finding the file could be
         // slow if the file is on a network drive / etc.
