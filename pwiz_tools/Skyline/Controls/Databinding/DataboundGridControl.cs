@@ -1142,7 +1142,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 foreach (var column in group)
                 {
-                    if (!replicatePivotColumns.IsConstantColumn(column))
+                    if (!replicatePivotColumns.IsConstantColumn(column) || !boundColumns.TryGetValue(column.Name, out var mainGridColumn))
                     {
                         continue;
                     }
@@ -1155,13 +1155,11 @@ namespace pwiz.Skyline.Controls.Databinding
                         _replicateGridRows.Add(propertyPath, dataGridViewRow);
                     }
 
-                    var hiddenMainGridColumn = boundColumns[column.Name];
-
-                    var cell = (DataGridViewCell)hiddenMainGridColumn.CellTemplate.Clone();
+                    var cell = (DataGridViewCell)mainGridColumn.CellTemplate.Clone();
                     if (cell != null)
                     {
                         dataGridViewRow.Cells[dataGridViewColumn.Index] = cell;
-                        cell.Style = hiddenMainGridColumn.DefaultCellStyle.Clone();
+                        cell.Style = mainGridColumn.DefaultCellStyle.Clone();
                         cell.ReadOnly = column.IsReadOnly;
                         cell.ValueType = column.PropertyType;
                     }
