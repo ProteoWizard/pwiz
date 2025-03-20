@@ -58,10 +58,10 @@ class PeakFamilyDetectorFT::Impl
 
     Config config_;
 
-    auto_ptr<IsotopeEnvelopeEstimator> isotopeEnvelopeEstimator_;
-    auto_ptr<PeakDetectorMatchedFilter> pdmf_;
+    unique_ptr<IsotopeEnvelopeEstimator> isotopeEnvelopeEstimator_;
+    unique_ptr<PeakDetectorMatchedFilter> pdmf_;
 
-    auto_ptr<FrequencyData> createFrequencyData(const MZIntensityPair* begin,
+    unique_ptr<FrequencyData> createFrequencyData(const MZIntensityPair* begin,
                                                 const MZIntensityPair* end) const;
 };
 
@@ -127,7 +127,7 @@ PeakDetectorMatchedFilter::Config getPeakDetectorConfiguration()
     return config;
 }
 
-auto_ptr<IsotopeEnvelopeEstimator> createIsotopeEnvelopeEstimator()
+unique_ptr<IsotopeEnvelopeEstimator> createIsotopeEnvelopeEstimator()
 {
     const double abundanceCutoff = .01;
     const double massPrecision = .1; 
@@ -136,7 +136,7 @@ auto_ptr<IsotopeEnvelopeEstimator> createIsotopeEnvelopeEstimator()
     IsotopeEnvelopeEstimator::Config config;
     config.isotopeCalculator = &isotopeCalculator;
 
-    return auto_ptr<IsotopeEnvelopeEstimator>(new IsotopeEnvelopeEstimator(config));
+    return unique_ptr<IsotopeEnvelopeEstimator>(new IsotopeEnvelopeEstimator(config));
 }
 
 } // namespace
@@ -166,7 +166,7 @@ void PeakFamilyDetectorFT::Impl::detect(const MZIntensityPair* begin,
 
     // convert mass data to frequency data
 
-    auto_ptr<FrequencyData> fd = createFrequencyData(begin, end);
+    unique_ptr<FrequencyData> fd = createFrequencyData(begin, end);
     if (!fd.get() || fd->data().empty())
         throw NoDataException(); 
 
@@ -178,11 +178,11 @@ void PeakFamilyDetectorFT::Impl::detect(const MZIntensityPair* begin,
 }
 
 
-auto_ptr<FrequencyData> 
+unique_ptr<FrequencyData> 
 PeakFamilyDetectorFT::Impl::createFrequencyData(const MZIntensityPair* begin,
                                                 const MZIntensityPair* end) const
 {
-    auto_ptr<FrequencyData> fd(new FrequencyData);
+    unique_ptr<FrequencyData> fd(new FrequencyData);
 
     // convert mass/intensity pairs to frequency/intensity pairs
     
