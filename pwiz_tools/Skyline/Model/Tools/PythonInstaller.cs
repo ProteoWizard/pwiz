@@ -351,7 +351,6 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-
         public bool IsNvidiaEnvironmentReady(List<PythonTask> abortedTasks = null)
         {
             if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD)
@@ -359,20 +358,13 @@ namespace pwiz.Skyline.Model.Tools
 
             if (abortedTasks == null && SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)
                 return false;
-            
+
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
 
-            if (abortedTasks != null && abortedTasks.Count > 0) tasks = abortedTasks;
-
-            if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
-                return true;
-
-            return !tasks.Any(task =>
-                (task.Name == PythonTaskName.setup_nvidia_libraries
-                 || task.Name == PythonTaskName.download_cuda_library
-                 || task.Name == PythonTaskName.install_cuda_library
-                 || task.Name == PythonTaskName.download_cudnn_library
-                 || task.Name == PythonTaskName.install_cudnn_library));
+            if (abortedTasks != null && abortedTasks.Count > 0)
+                return !abortedTasks.Any(task =>
+                    (task.Name == PythonTaskName.setup_nvidia_libraries));
+            return true;
         }
 
         public bool IsPythonVirtualEnvironmentReady(List<PythonTask> abortedTasks = null)
