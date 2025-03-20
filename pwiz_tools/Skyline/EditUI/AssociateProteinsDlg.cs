@@ -723,8 +723,8 @@ namespace pwiz.Skyline.EditUI
                         {
                             return;
                         }
+                        Monitor.Wait(notifyObject);
                     }
-                    Monitor.Wait(notifyObject);
                 }
             }
             finally
