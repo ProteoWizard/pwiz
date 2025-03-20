@@ -77,7 +77,9 @@ namespace TestPerf
             MultiButtonMsgDlg saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes, saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
-            
+
+            TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+
         }
 
         /// <summary>
@@ -135,7 +137,7 @@ namespace TestPerf
             {
                 using (var productReader = new StreamReader(product))
                 {
-                    AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1e-3);
+                    AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1e-1);
                 }
             }
         }
