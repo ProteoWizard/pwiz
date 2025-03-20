@@ -399,12 +399,12 @@ namespace pwiz.BiblioSpec
             // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
 
-            argv.Add("-v");
             // Verbose for debugging
             if (DebugMode)
+            {
+                argv.Add("-v");
                 argv.Add("debug");
-            else
-                argv.Add("warn");
+            }
 
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");

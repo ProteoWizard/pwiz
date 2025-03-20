@@ -34,7 +34,7 @@
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <MascotParserPath>..\..\libraries\msparser_2_8_1_x86_win64</MascotParserPath>
+    <MascotParserPath>..\..\libraries\msparser_3_1_0_x86_win64</MascotParserPath>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
@@ -6448,6 +6448,14 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\libraries\arrow\parquet.dll">
+      <Link>parquet.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\libraries\arrow\arrow.dll">
+      <Link>arrow.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparser.dll">
