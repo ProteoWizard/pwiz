@@ -259,11 +259,38 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete this replicate?.
+        /// </summary>
+        public static string FilesTreeForm_ConfirmRemove_Replicate {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_ConfirmRemove_Replicate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete this library?.
+        /// </summary>
+        public static string FilesTreeForm_ConfirmRemove_Spectral_Library {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_ConfirmRemove_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete these replicates?.
         /// </summary>
-        public static string FilesTreeForm_ConfirmItemDeletion_Replicates {
+        public static string FilesTreeForm_ConfirmRemoveMany_Replicates {
             get {
-                return ResourceManager.GetString("FilesTreeForm_ConfirmItemDeletion_Replicates", resourceCulture);
+                return ResourceManager.GetString("FilesTreeForm_ConfirmRemoveMany_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Are you sure you want to delete these libraries?.
+        /// </summary>
+        public static string FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries", resourceCulture);
             }
         }
         
@@ -277,11 +304,29 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove all spectral libraries.
+        /// </summary>
+        public static string Remove_All_Spectral_Library_Nodes {
+            get {
+                return ResourceManager.GetString("Remove_All_Spectral_Library_Nodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove replicate node.
         /// </summary>
         public static string Remove_Replicate_Node {
             get {
                 return ResourceManager.GetString("Remove_Replicate_Node", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove spectral library.
+        /// </summary>
+        public static string Remove_Spectral_Library_Node {
+            get {
+                return ResourceManager.GetString("Remove_Spectral_Library_Node", resourceCulture);
             }
         }
     }

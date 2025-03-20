@@ -24,13 +24,14 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using Process = System.Diagnostics.Process;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
-//           But replicates do not have IdentityPath support becaxuse ChromatogramSet does not
+//           But replicates do not have IdentityPath support because ChromatogramSet does not
 //           inherit from DocNode. Will revisit later.
 // TODO: drag-and-drop for spectral libraries
 // ReSharper disable WrongIndentSize
@@ -153,64 +154,134 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ViewSpectralLibraries();
         }
 
-        private DialogResult ConfirmItemDeletion()
+        private DialogResult ConfirmItemDeletion(string confirmMsg)
         {
             return MultiButtonMsgDlg.Show(this, 
-                                          FilesTreeResources.FilesTreeForm_ConfirmItemDeletion_Replicates, 
+                                          confirmMsg,
                                           MultiButtonMsgDlg.BUTTON_YES, 
                                           MultiButtonMsgDlg.BUTTON_NO,
                                           false);
         }
 
-        public void RemoveAll()
+        public void RemoveAll(FilesTreeNode node)
         {
-            if (ConfirmItemDeletion() == DialogResult.No)
+            var type = node.Model.GetType();
+            Assume.IsTrue(type == typeof(ReplicatesFolder) || type == typeof(SpectralLibrariesFolder));
+
+            var confirmMsg = type == typeof(ReplicatesFolder)
+                ? FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates
+                : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries;
+
+            if (ConfirmItemDeletion(confirmMsg) == DialogResult.No)
                 return;
 
-            SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicate_Nodes,
-                document =>
-                {
-                    var newDoc = document.ChangeMeasuredResults(null);
-                    newDoc.ValidateResults();
-                    return newDoc;
-                },
-                docPair =>
-                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_nodes_remove_all, docPair.NewDocumentType)
-            );
+            if (type == typeof(ReplicatesFolder))
+            {
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicate_Nodes,
+                    document =>
+                    {
+                        var newDoc = document.ChangeMeasuredResults(null);
+                        newDoc.ValidateResults();
+                        return newDoc;
+                    },
+                    docPair =>
+                        AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_nodes_remove_all,
+                            docPair.NewDocumentType)
+                );
+            }
+            else if (type == typeof(SpectralLibrariesFolder))
+            {
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Spectral_Library_Nodes,
+                    document =>
+                    {
+                        var newPepLibraries =
+                            document.Settings.PeptideSettings.Libraries.ChangeLibraries(Array.Empty<LibrarySpec>(), Array.Empty<Library>());
+                        var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
+                        var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
+                        var newDoc = document.ChangeSettings(newSettings);
+                        return newDoc;
+                    },
+                    docPair =>
+                        AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_nodes_remove_all, docPair.NewDocumentType)
+                );
+            }
         }
 
-        public void RemoveSelected(IEnumerable<TreeNodeMS> nodes)
+        public void RemoveSelected(IList<FilesTreeNode> nodes)
         {
-            if (ConfirmItemDeletion() == DialogResult.No)
+            if (nodes == null || nodes.Count == 0)
                 return;
 
-            var selectedNodeIds = nodes?.Select(item => ((FilesTreeNode)item).Model.IdentityPath.Child).ToList();
+            var type = nodes.First().Model.GetType();
+            Assume.IsTrue(type == typeof(Replicate) || type == typeof(SpectralLibrary));
 
-            if (selectedNodeIds == null || selectedNodeIds.Count == 0)
+            string confirmMsg;
+            if (nodes.Count == 1)
+            {
+                confirmMsg = type == typeof(Replicate)
+                    ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Replicate
+                    : FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library;
+            }
+            else
+            {
+                confirmMsg = type == typeof(ReplicatesFolder)
+                    ? FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates
+                    : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries;
+            }
+
+            if (ConfirmItemDeletion(confirmMsg) == DialogResult.No)
                 return;
 
-            SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node,
-                document =>
-                {
-                    var oldMeasuredResults = SkylineWindow.Document.MeasuredResults;
-                    var oldChromatograms = oldMeasuredResults.Chromatograms.ToArray();
-
-                    var newChromatograms = new List<ChromatogramSet>(oldChromatograms.Length - selectedNodeIds.Count);
-                    for (var i = 0; i < oldChromatograms.Length; i++)
+            var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
+            if (type == typeof(Replicate))
+            {
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node,
+                    document =>
                     {
-                        // skip replicates selected for removal
-                        if (!ContainsCheckReferenceEquals(selectedNodeIds, oldChromatograms[i].Id))
-                        {
-                            newChromatograms.Add(oldChromatograms[i]);
-                        }
-                    }
+                        var oldMeasuredResults = SkylineWindow.Document.MeasuredResults;
+                        var oldChromatograms = oldMeasuredResults.Chromatograms.ToArray();
 
-                    var newMeasuredResults = oldMeasuredResults.ChangeChromatograms(newChromatograms);
-                    return document.ChangeMeasuredResults(newMeasuredResults);
-                },
-                docPair =>
-                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedNodeIds)
-            );
+                        var newChromatograms = new List<ChromatogramSet>(oldChromatograms.Length - nodes.Count);
+                        for (var i = 0; i < oldChromatograms.Length; i++)
+                        {
+                            // skip replicates selected for removal
+                            if (!ContainsCheckReferenceEquals(selectedIds, oldChromatograms[i].Id))
+                            {
+                                newChromatograms.Add(oldChromatograms[i]);
+                            }
+                        }
+
+                        var newMeasuredResults = oldMeasuredResults.ChangeChromatograms(newChromatograms);
+                        return document.ChangeMeasuredResults(newMeasuredResults);
+                    },
+                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedIds)
+                );
+            } 
+            else if (type == typeof(SpectralLibrary))
+            {
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library_Node,
+                    document =>
+                    {
+                        var oldLibrarySpecs = document.Settings.PeptideSettings.Libraries.LibrarySpecs;
+                        var newLibrarySpecs = new List<LibrarySpec>();
+
+                        foreach (var librarySpec in oldLibrarySpecs)
+                        {
+                            // skip replicates selected for removal
+                            if (!ContainsCheckReferenceEquals(selectedIds, librarySpec.Id))
+                            {
+                                newLibrarySpecs.Add(librarySpec);
+                            }
+                        }
+
+                        var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(newLibrarySpecs);
+                        var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
+                        var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
+                        var newDoc = document.ChangeSettings(newSettings);
+                        return newDoc; 
+                    },
+                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedIds));
+            }
         }
 
         public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
@@ -452,12 +523,14 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_RemoveAllMenuItem(object sender, EventArgs e)
         {
-            RemoveAll();
+            var selection = (FilesTreeNode)FilesTree.SelectedNode;
+            RemoveAll(selection);
         }
 
         private void FilesTree_RemoveMenuItem(object sender, EventArgs e)
         {
-            RemoveSelected(FilesTree.SelectedNodes);
+            var selection = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
+            RemoveSelected(selection);
         }
 
         // FilesTree => display ToolTip
@@ -609,6 +682,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
     }
 
-    // Type used as a key for data passed around during drag-and-drop
+    // Types used as keys for data passed around during drag-and-drop
     internal sealed class PrimarySelectedNode { }
 }

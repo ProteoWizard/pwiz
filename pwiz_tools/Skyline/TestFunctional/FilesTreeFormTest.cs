@@ -374,7 +374,7 @@ namespace pwiz.SkylineTestFunctional
             // Drag-and-drop
             //
             {
-                // Reopen a clean document
+                // Start with a clean document
                 documentPath = TestFilesDir.GetTestPath("Rat_plasma.sky");
                 RunUI(() => {
                     SkylineWindow.OpenFile(documentPath);

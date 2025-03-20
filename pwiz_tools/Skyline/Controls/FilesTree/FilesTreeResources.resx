@@ -189,7 +189,22 @@
   <data name="Remove_Replicate_Node" xml:space="preserve">
       <value>Remove replicate node</value>
   </data>
-  <data name="FilesTreeForm_ConfirmItemDeletion_Replicates" xml:space="preserve">
+  <data name="FilesTreeForm_ConfirmRemove_Replicate" xml:space="preserve">
+      <value>Are you sure you want to delete this replicate?</value>
+  </data>
+  <data name="FilesTreeForm_ConfirmRemoveMany_Replicates" xml:space="preserve">
       <value>Are you sure you want to delete these replicates?</value>
+  </data>
+  <data name="Remove_All_Spectral_Library_Nodes" xml:space="preserve">
+      <value>Remove all spectral libraries</value>
+  </data>
+  <data name="Remove_Spectral_Library_Node" xml:space="preserve">
+      <value>Remove spectral library</value>
+  </data>
+  <data name="FilesTreeForm_ConfirmRemove_Spectral_Library" xml:space="preserve">
+      <value>Are you sure you want to delete this library?</value>
+  </data>
+  <data name="FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries" xml:space="preserve">
+      <value>Are you sure you want to delete these libraries?</value>
   </data>
 </root>
