@@ -6,6 +6,7 @@ using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Collections;
 using pwiz.Skyline.Model.Databinding.Entities;
+using pwiz.Skyline.Model.Lists;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -44,18 +45,27 @@ namespace pwiz.Skyline.Controls.Databinding
             return ItemProperties.OfType<ColumnPropertyDescriptor>().GroupBy(GetResultKey).Where(g => g.Key != null);
         }
 
-        protected abstract ResultKey GetResultKey(ColumnPropertyDescriptor columnPropertyDescriptor);
+        protected abstract ResultKey GetResultKey(PivotKey pivotKey);
+
+        protected ResultKey GetResultKey(ColumnPropertyDescriptor columnPropertyDescriptor)
+        {
+            return GetResultKey(columnPropertyDescriptor.PivotKey);
+        }
 
         public Replicate GetReplicate(ColumnPropertyDescriptor columnPropertyDescriptor)
         {
-            var resultKey = GetResultKey(columnPropertyDescriptor);
+            return GetReplicate(columnPropertyDescriptor.DisplayColumn.DataSchema as SkylineDataSchema,
+                columnPropertyDescriptor.PivotKey);
+        }
+
+        private Replicate GetReplicate(SkylineDataSchema skylineDataSchema, PivotKey pivotKey)
+        {
+            var resultKey = GetResultKey(pivotKey);
             if (resultKey == null)
             {
                 return null;
             }
 
-            var skylineDataSchema =
-                columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.DataSchema as SkylineDataSchema;
             Replicate replicate = null;
             skylineDataSchema?.ReplicateList.TryGetValue(resultKey, out replicate);
             return replicate;
@@ -111,6 +121,99 @@ namespace pwiz.Skyline.Controls.Databinding
         }
 
         /// <summary>
+        /// For one of the columns for which <see cref="IsConstantColumn"/> is true, returns
+        /// the value of that column.
+        /// </summary>
+        public object GetConstantColumnValue(ColumnPropertyDescriptor columnPropertyDescriptor)
+        {
+            return GetConstantColumnValue(columnPropertyDescriptor.DisplayColumn.ColumnDescriptor,
+                columnPropertyDescriptor.PivotKey);
+        }
+        /// <summary>
+        /// Returns whether a replicate column should be read-only or not.
+        /// It will be read only if either the underlying column is read-only, or if the
+        /// value of the parent is null so that there is no object on which to set the property value.
+        /// </summary>
+        public bool IsConstantColumnReadOnly(ColumnPropertyDescriptor columnPropertyDescriptor)
+        {
+            if (columnPropertyDescriptor.IsReadOnly)
+            {
+                return true;
+            }
+            var columnDescriptor = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor;
+            if (false != columnDescriptor.ReflectedPropertyDescriptor?.IsReadOnly)
+            {
+                return true;
+            }
+
+            var parentValue = GetConstantColumnParentValue(columnPropertyDescriptor);
+            if (parentValue == null)
+            {
+                return true;
+            }
+
+            if (parentValue is ListItem listItem)
+            {
+                return listItem.GetRecord() is ListItem.OrphanRecordData;
+            }
+            return false;
+        }
+
+        public void SetConstantColumnValue(ColumnPropertyDescriptor columnPropertyDescriptor, object value)
+        {
+            var parentValue = GetConstantColumnParentValue(columnPropertyDescriptor);
+
+            var reflectedPropertyDescriptor =
+                columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.ReflectedPropertyDescriptor;
+            reflectedPropertyDescriptor.SetValue(parentValue, value);
+        }
+
+        private object GetConstantColumnParentValue(ColumnPropertyDescriptor columnPropertyDescriptor)
+        {
+            return GetConstantColumnValue(columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.Parent,
+                columnPropertyDescriptor.PivotKey);
+        }
+
+        private object GetConstantColumnValue(ColumnDescriptor columnDescriptor, PivotKey pivotKey)
+        {
+            if (columnDescriptor == null)
+            {
+                return null;
+            }
+            if (Equals(ReplicatePropertyPath, columnDescriptor.PropertyPath))
+            {
+                return GetReplicate(columnDescriptor.DataSchema as SkylineDataSchema, pivotKey);
+            }
+
+            if (Equals(ResultFilePropertyPath, columnDescriptor.PropertyPath))
+            {
+                var replicate = GetReplicate(columnDescriptor.DataSchema as SkylineDataSchema, pivotKey);
+                if (replicate?.Files.Count == 1)
+                {
+                    return replicate.Files.First();
+                }
+
+                return null;
+            }
+
+            var parentColumnDescriptor = columnDescriptor.Parent;
+            if (parentColumnDescriptor != null)
+            {
+                var reflected = columnDescriptor.ReflectedPropertyDescriptor;
+                if (reflected != null)
+                {
+                    var parentValue = GetConstantColumnValue(parentColumnDescriptor, pivotKey);
+                    if (parentValue != null)
+                    {
+                        return reflected.GetValue(parentValue);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// For rows from the DocumentGrid:
         /// <see cref="Protein"/>, <see cref="Peptide"/> <see cref="Precursor"/> <see cref="Transition"/>.
         /// </summary>
@@ -123,9 +226,9 @@ namespace pwiz.Skyline.Controls.Databinding
                 ResultFilePropertyPath = DocumentViewTransformer.GetResultFilePropertyPath(RowType);
             }
 
-            protected override ResultKey GetResultKey(ColumnPropertyDescriptor columnPropertyDescriptor)
+            protected override ResultKey GetResultKey(PivotKey pivotKey)
             {
-                return columnPropertyDescriptor.PivotKey?.FindValue(PROPERTY_PATH_RESULT_KEY) as ResultKey;
+                return pivotKey?.FindValue(PROPERTY_PATH_RESULT_KEY) as ResultKey;
             }
         }
 
@@ -157,9 +260,9 @@ namespace pwiz.Skyline.Controls.Databinding
                 ReplicatePropertyPath = PROPERTY_PATH_REPLICATE;
             }
 
-            protected override ResultKey GetResultKey(ColumnPropertyDescriptor columnPropertyDescriptor)
+            protected override ResultKey GetResultKey(PivotKey pivotKey)
             {
-                var replicate = columnPropertyDescriptor.PivotKey?.FindValue(PROPERTY_PATH_REPLICATE_ABUNDANCES) as Replicate;
+                var replicate = pivotKey?.FindValue(PROPERTY_PATH_REPLICATE_ABUNDANCES) as Replicate;
                 if (replicate == null)
                 {
                     return null;
