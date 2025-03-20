@@ -41,7 +41,7 @@ using pwiz.Skyline.Model.Results.Spectra;
 namespace pwiz.Skyline.Model.DocSettings
 {
     [XmlRoot("transition_settings")]
-    public class TransitionSettings : Immutable, IValidating, IXmlSerializable
+    public class TransitionSettings : Immutable, IValidating, IXmlSerializable, IFileProvider
     {
         public TransitionSettings(TransitionPrediction prediction,
                                   TransitionFilter filter,
@@ -101,6 +101,73 @@ namespace pwiz.Skyline.Model.DocSettings
             return Filter.Accept(sequence, precursorMz, type, cleavageOffset, ionMz, start, end, startMz);
         }
 
+        public bool HasOptimizationLibrary
+        {
+            get
+            {
+                return Prediction != null && Prediction.OptimizedLibrary != null && !Prediction.OptimizedLibrary.IsNone;
+            }
+        }
+
+        public bool HasOptimizationLibraryPersisted
+        {
+            get
+            {
+                return HasOptimizationLibrary && Prediction.OptimizedLibrary.PersistencePath != null;
+            }
+        }
+
+        public bool HasDriftTimePrediction { get { return IonMobilityFiltering != null && IonMobilityFiltering.IonMobilityLibrary != null; } }
+
+        public bool HasIonMobilityLibraryPersisted
+        {
+            get
+            {
+                return HasDriftTimePrediction &&
+                       IonMobilityFiltering.IonMobilityLibrary != null &&
+                       !IonMobilityFiltering.IonMobilityLibrary.IsNone &&
+                       IonMobilityFiltering.IonMobilityLibrary.FilePath != null;
+            }
+        }
+
+        private IDictionary<FileType, IFileModel> _files = new SortedDictionary<FileType, IFileModel>();
+
+        public IList<IFileModel> Files => ImmutableList.ValueOf(_files.Values.ToList());
+
+        private static Identity _ionMobilityFolderId = new StaticFolderId();
+        private static Identity _optimizationLibFolderId = new StaticFolderId();
+
+        private void UpdateFiles()
+        {
+            // *.imsdb
+            _files.TryGetValue(FileType.ion_mobility_library, out var oldImsdb);
+            if (HasIonMobilityLibraryPersisted)
+            {
+                IFileModel newImsdb = IonMobilityFiltering.IonMobilityLibrary;
+                if (!ReferenceEquals(newImsdb, oldImsdb?.Files.FirstOrDefault()))
+                {
+                    var folder = new FolderModel(_ionMobilityFolderId, FileType.folder_ion_mobility_library, newImsdb);
+                    _files[FileType.folder_ion_mobility_library] = folder;
+                }
+            } 
+            else if (oldImsdb != null)
+            {
+                _files.Remove(FileType.folder_ion_mobility_library);
+            }
+
+            // *.optdb
+            _files.TryGetValue(FileType.folder_optimization_library, out var oldOptdb);
+            if (HasOptimizationLibraryPersisted)
+            {
+                var newOptdb = Prediction.OptimizedLibrary;
+                if (!ReferenceEquals(newOptdb, oldOptdb?.Files.FirstOrDefault()))
+                {
+                    var folder = new FolderModel(_optimizationLibFolderId, FileType.folder_optimization_library, newOptdb);
+                    _files[FileType.folder_optimization_library] = folder;
+                }
+            }
+        }
+
         #region Property change methods
 
         public TransitionSettings ChangePrediction(TransitionPrediction prop)
@@ -150,6 +217,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         private TransitionSettings()
         {
+            UpdateFiles();
         }
 
         void IValidating.Validate()
@@ -174,6 +242,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(
                     DocSettingsResources.TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan);
             }
+
+            UpdateFiles();
         }
 
         public static TransitionSettings Deserialize(XmlReader reader)
