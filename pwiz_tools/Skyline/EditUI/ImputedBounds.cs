@@ -71,6 +71,10 @@ namespace pwiz.Skyline.EditUI
             var dictionary = new Dictionary<Tuple<ReplicateFileId, IdentityPath>, PeakBounds>();
             foreach (var moleculePeaks in moleculePeaksList)
             {
+                if (moleculePeaks.BestPeak == null)
+                {
+                    continue;
+                }
                 foreach (var chromatogramSet in document.MeasuredResults.Chromatograms)
                 {
                     foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
