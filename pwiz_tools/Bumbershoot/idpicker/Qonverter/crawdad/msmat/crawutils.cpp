@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <random>
 #include "crawutils.h"
 
 //note that I do not yet have the cephes library for MSVC++
@@ -1202,7 +1203,8 @@ return drand48();
           if ( N < (int)v.size() ) {
               throw("invalid");
           }
-          std::random_shuffle( v.begin(), v.end() );
+          std::mt19937 rng(0);
+          std::shuffle(v.begin(), v.end(), rng);
           v.resize(N);
           return v;
   }

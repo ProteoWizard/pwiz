@@ -6,6 +6,7 @@ pushd $pwiz_root > /dev/null
 echo "Cleaning project..."
 if (ls build-*-* > /dev/null 2>&1); then rm -fr build-*-*; fi;
 if (ls libraries/boost_*_*_? > /dev/null 2>&1); then rm -fr libraries/boost_*_*_?; fi;
+if (ls libraries/msparser_*_linux64 > /dev/null 2>&1); then rm -fr libraries/msparser_*_linux64; fi;
 if [ -d libraries/boost-build/src/engine/bin ]; then rm -fr libraries/boost-build/src/engine/bin; fi;
 if [ -d libraries/boost-build/src/engine/bootstrap ]; then rm -fr libraries/boost-build/src/engine/bootstrap; fi;
 if [ -d libraries/gd-2.0.33 ]; then rm -fr libraries/gd-2.0.33; fi;

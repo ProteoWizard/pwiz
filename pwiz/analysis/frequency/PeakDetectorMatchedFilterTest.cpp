@@ -69,7 +69,7 @@ void testCreation(const IsotopeEnvelopeEstimator& isotopeEnvelopeEstimator)
     config.isotopeThresholdFactor = isotopeThresholdFactor;
     config.monoisotopicPeakThresholdFactor = monoisotopicPeakThresholdFactor;
 
-    auto_ptr<PeakDetectorMatchedFilter> pd = PeakDetectorMatchedFilter::create(config);
+    unique_ptr<PeakDetectorMatchedFilter> pd = PeakDetectorMatchedFilter::create(config);
 
     unit_assert(pd->config().filterMatchRate == filterMatchRate); 
     unit_assert(pd->config().filterSampleRadius == filterSampleRadius); 
@@ -101,7 +101,7 @@ void testFind(FrequencyData& fd, const IsotopeEnvelopeEstimator& isotopeEnvelope
     config.log = os_;
 
     // instantiate
-    auto_ptr<PeakDetectorMatchedFilter> pd = PeakDetectorMatchedFilter::create(config);
+    unique_ptr<PeakDetectorMatchedFilter> pd = PeakDetectorMatchedFilter::create(config);
 
     // find peaks
     PeakData data;
@@ -139,7 +139,7 @@ void testFind(FrequencyData& fd, const IsotopeEnvelopeEstimator& isotopeEnvelope
 }
 
 
-auto_ptr<IsotopeEnvelopeEstimator> createIsotopeEnvelopeEstimator()
+unique_ptr<IsotopeEnvelopeEstimator> createIsotopeEnvelopeEstimator()
 {
     const double abundanceCutoff = .01;
     const double massPrecision = .1; 
@@ -148,7 +148,7 @@ auto_ptr<IsotopeEnvelopeEstimator> createIsotopeEnvelopeEstimator()
     IsotopeEnvelopeEstimator::Config config;
     config.isotopeCalculator = &isotopeCalculator;
 
-    return auto_ptr<IsotopeEnvelopeEstimator>(new IsotopeEnvelopeEstimator(config));
+    return std::make_unique<IsotopeEnvelopeEstimator>(config);
 }
 
 
@@ -156,7 +156,7 @@ void test()
 {
     if (os_) *os_ << setprecision(12);
 
-    auto_ptr<IsotopeEnvelopeEstimator> isotopeEnvelopeEstimator = createIsotopeEnvelopeEstimator();
+    unique_ptr<IsotopeEnvelopeEstimator> isotopeEnvelopeEstimator = createIsotopeEnvelopeEstimator();
 
     testCreation(*isotopeEnvelopeEstimator);
 

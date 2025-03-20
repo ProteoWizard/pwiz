@@ -71,12 +71,12 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 368, 717, 717, 5050 },
+                FinalTargetCounts = new[] { 369, 719, 719, 5058 },
                 MassErrorStats = new[]
                 {
                     new[] {-0.2, 2.5},
                     new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
+                    new[] {-0.2, 2.4},
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
@@ -332,7 +332,6 @@ namespace TestPerf
 
             // Finish wizard and the associate proteins dialog is shown.
             var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
 
             RunUI(() =>

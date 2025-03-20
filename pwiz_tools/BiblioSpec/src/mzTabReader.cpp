@@ -85,10 +85,10 @@ bool mzTabReader::parseFile() {
     initSpecFileProgress(fileMap_.size());
     for (map< string, vector<PSM*> >::iterator i = fileMap_.begin(); i != fileMap_.end(); i++) {
         psms_.assign(i->second.begin(), i->second.end());
-        if (filesystem::exists(i->first)) {
+        if (bfs::exists(i->first)) {
             setSpecFileName(i->first.c_str(), false);
         } else {
-            filesystem::path p(i->first);
+            bfs::path p(i->first);
             setSpecFileName(p.filename().string().c_str(), true);
         }
         buildTables(scoreTypes_[scoreIdxVector_].get<2>(), i->first, false);
