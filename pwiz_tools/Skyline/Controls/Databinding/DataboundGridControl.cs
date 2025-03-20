@@ -878,7 +878,7 @@ namespace pwiz.Skyline.Controls.Databinding
             colReplicateProperty.Width = nonReplicateWidth;
             foreach (DataGridViewColumn column in replicatePivotDataGridView.Columns)
             {
-                if (replicateTotalWidthMap.TryGetValue(column.Name, out var replicateTotalWidth))
+                if (replicateTotalWidthMap.TryGetValue(column.HeaderText, out var replicateTotalWidth))
                 {
                     column.Width = replicateTotalWidth;
                 }
@@ -1223,7 +1223,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
             var cellPropertyDescriptor = _replicatePivotColumns.GetReplicateColumnGroups()
                 .FirstOrDefault(group => resultKey.Equals(group.Key))?.FirstOrDefault(pd =>
-                    rowPropertyPath.Equals(pd.DisplayColumn.ColumnDescriptor.PropertyPath));
+                    rowPropertyPath.Equals(pd.DisplayColumn.ColumnDescriptor?.PropertyPath));
             if (cellPropertyDescriptor == null)
             {
                 return;
