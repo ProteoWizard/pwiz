@@ -228,7 +228,8 @@ namespace freicore
         {
             vector<SpectrumType*> v( this->begin(), this->end() );
             this->clear(false);
-            std::random_shuffle( v.begin(), v.end() );
+            std::mt19937 rng(0);
+            std::shuffle(v.begin(), v.end(), rng);
             for( typename vector<SpectrumType*>::const_iterator itr = v.begin(); itr != v.end(); ++itr )
                 this->push_back( *itr );
         }

@@ -25,8 +25,6 @@
 project
     : requirements 
         #<toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-        <toolset>gcc:<runtime-link>shared # cannot link shared objects (IdpSqlExtensions) with static runtime
-        <toolset>clang:<runtime-link>shared # cannot link shared objects (IdpSqlExtensions) with static runtime
         #<define>QONVERTER_HAS_NATIVEID
     ;
 
@@ -55,7 +53,7 @@ lib IdpSqlExtensions
         <library>$(PWIZ_LIBRARIES_PATH)/SQLite//sqlite3pp/<link>static
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>static
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/<link>static
-        <link>shared
+        <link>static:<define>SQLITE_CORE
         <toolset>msvc:<define>PWIZ_DYN_LINK
         #<debug-symbols>on
     : # default-build
@@ -65,7 +63,7 @@ lib IdpSqlExtensions
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry/<link>static
     ;
 
-doctest IdpSqlExtensionsDoctest : SchemaUpdater.cpp : <library>IdpSqlExtensions/<location-prefix>doctest <conditional>@gcc-install-dll-path $(TEAMCITY_TEST_DECORATION) ;
+doctest IdpSqlExtensionsDoctest : SchemaUpdater.cpp : <library>IdpSqlExtensions/<location-prefix>doctest/<link>static <conditional>@gcc-install-dll-path $(TEAMCITY_TEST_DECORATION) ;
 
 lib Qonverter
     : # sources
@@ -92,7 +90,7 @@ lib Qonverter
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
         <include>$(PWIZ_LIBRARIES_PATH)/Eigen
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
-        <library>IdpSqlExtensions
+        <library>IdpSqlExtensions/<link>static
         <toolset>msvc:<cxxflags>/bigobj
         <use>$(IDPICKER_PATH)/../freicore//freicore
     : # default-build
@@ -107,7 +105,7 @@ lib Qonverter
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
-        <library>IdpSqlExtensions
+        <library>IdpSqlExtensions/<link>static
         <use>$(IDPICKER_PATH)/../freicore//freicore
     ;
 
