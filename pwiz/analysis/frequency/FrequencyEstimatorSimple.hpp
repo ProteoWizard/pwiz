@@ -42,7 +42,7 @@ class PWIZ_API_DECL FrequencyEstimatorSimple : public FrequencyEstimator
     enum PWIZ_API_DECL Type {LocalMax, Parabola, Lorentzian};
 
     /// create an instance
-    static std::auto_ptr<FrequencyEstimatorSimple> create(Type type = Parabola,
+    static std::unique_ptr<FrequencyEstimatorSimple> create(Type type = Parabola,
                                                           unsigned int windowRadius = 1);
                                                          
     /// \name FrequencyEstimator interface
