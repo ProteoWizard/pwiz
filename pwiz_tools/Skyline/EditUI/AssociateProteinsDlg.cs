@@ -220,8 +220,6 @@ namespace pwiz.Skyline.EditUI
                 _skylineWindow.DocumentUIChangedEvent += SkylineWindowOnDocumentUIChangedEvent;
             }
 
-            progressPanel.Bounds = new Rectangle(lblResults.Right, progressPanel.Top,
-                gbParsimonyOptions.Right - lblResults.Right, progressPanel.Height);
             if (_overrideFastaPath != null)
             {
                 tbxFastaTargets.Text = _overrideFastaPath;
