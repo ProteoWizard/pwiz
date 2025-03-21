@@ -767,8 +767,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     float? rtOrig = null;
 
                     if (originalIndex != -1)
+                    {
                         rtOrig = nodePeptide.GetSchedulingTime(originalIndex);
-                    
+                        if (!refine && !rtOrig.HasValue)
+                        {
+                            continue;
+                        }
+                    }
+
                     if (!_bestResult)
                         rtTarget = nodePeptide.GetSchedulingTime(targetIndex);
                     else
@@ -780,7 +786,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var modSeq = _document.Settings.GetSourceTarget(nodePeptide);
                     if (!rtTarget.HasValue)
+                    {
+                        if (!refine)
+                        {
+                            // If we are not going to do refinement later, it is important to remove invalid values
+                            // from the dataset.
+                            continue;
+                        }
                         rtTarget = 0;
+                    }
                     if (!rtOrig.HasValue)
                         rtOrig = 0;
                     _peptidesIndexes.Add(new PeptideDocumentIndex(nodePeptide, index));
