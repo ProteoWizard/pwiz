@@ -4222,6 +4222,7 @@
     <None Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
     <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
+    <None Include="Resources\Error.png" />
     <Content Include="Resources\StartPage\DDASearch_start-ja.png" />
     <Content Include="Resources\StartPage\DDASearch_start-zh-CHS.png" />
     <Content Include="Resources\StartPage\DDASearch_start.png" />

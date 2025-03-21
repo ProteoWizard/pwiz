@@ -82,8 +82,6 @@ namespace pwiz.Skyline.EditUI
         private AssociateProteinsDlg(SrmDocument document, bool reuseLastFasta = true)
         {
             InitializeComponent();
-            btnError.Image = ScaleIcon(SystemIcons.Error, btnError.Width - 1, btnError.Height - 1);
-            btnError.Text = string.Empty;
             _document = document;
             if (reuseLastFasta && !string.IsNullOrEmpty(Settings.Default.LastProteinAssociationFastaFilepath))
             {

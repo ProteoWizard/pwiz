@@ -270,6 +270,237 @@
   <data name="gbParsimonyOptions.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
+  <data name="&gt;&gt;flowLayoutPanel.Name" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Parent" xml:space="preserve">
+    <value>gbParsimonyOptions</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="gbParsimonyOptions.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 177</value>
+  </data>
+  <data name="gbParsimonyOptions.Size" type="System.Drawing.Size, System.Drawing">
+    <value>483, 201</value>
+  </data>
+  <data name="gbParsimonyOptions.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="gbParsimonyOptions.Text" xml:space="preserve">
+    <value>Protein parsimony options</value>
+  </data>
+  <data name="&gt;&gt;gbParsimonyOptions.Name" xml:space="preserve">
+    <value>gbParsimonyOptions</value>
+  </data>
+  <data name="&gt;&gt;gbParsimonyOptions.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;gbParsimonyOptions.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;gbParsimonyOptions.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;lblGroupProteins.Name" xml:space="preserve">
+    <value>lblGroupProteins</value>
+  </data>
+  <data name="&gt;&gt;lblGroupProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblGroupProteins.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblGroupProteins.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpProteinGroups.Name" xml:space="preserve">
+    <value>lnkHelpProteinGroups</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpProteinGroups.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpProteinGroups.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpProteinGroups.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Name" xml:space="preserve">
+    <value>cbGeneLevel</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;cbGeneLevel.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Name" xml:space="preserve">
+    <value>lblGroupAtGeneLevel</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblGroupAtGeneLevel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="&gt;&gt;lblSharedPeptides.Name" xml:space="preserve">
+    <value>lblSharedPeptides</value>
+  </data>
+  <data name="&gt;&gt;lblSharedPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSharedPeptides.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblSharedPeptides.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpSharedPeptides.Name" xml:space="preserve">
+    <value>lnkHelpSharedPeptides</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpSharedPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpSharedPeptides.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpSharedPeptides.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="&gt;&gt;cbMinimalProteinList.Name" xml:space="preserve">
+    <value>cbMinimalProteinList</value>
+  </data>
+  <data name="&gt;&gt;cbMinimalProteinList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbMinimalProteinList.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;cbMinimalProteinList.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;lblMinimalProteinList.Name" xml:space="preserve">
+    <value>lblMinimalProteinList</value>
+  </data>
+  <data name="&gt;&gt;lblMinimalProteinList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMinimalProteinList.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblMinimalProteinList.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpFindMinimalProteinList.Name" xml:space="preserve">
+    <value>lnkHelpFindMinimalProteinList</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpFindMinimalProteinList.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpFindMinimalProteinList.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpFindMinimalProteinList.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;cbRemoveSubsetProteins.Name" xml:space="preserve">
+    <value>cbRemoveSubsetProteins</value>
+  </data>
+  <data name="&gt;&gt;cbRemoveSubsetProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbRemoveSubsetProteins.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;cbRemoveSubsetProteins.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="&gt;&gt;lblRemoveSubsetProteins.Name" xml:space="preserve">
+    <value>lblRemoveSubsetProteins</value>
+  </data>
+  <data name="&gt;&gt;lblRemoveSubsetProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRemoveSubsetProteins.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblRemoveSubsetProteins.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.Name" xml:space="preserve">
+    <value>lnkHelpRemoveSubsetProteins</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lnkHelpRemoveSubsetProteins.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="&gt;&gt;lblMinPeptides.Name" xml:space="preserve">
+    <value>lblMinPeptides</value>
+  </data>
+  <data name="&gt;&gt;lblMinPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMinPeptides.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;lblMinPeptides.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="&gt;&gt;numMinPeptides.Name" xml:space="preserve">
+    <value>numMinPeptides</value>
+  </data>
+  <data name="&gt;&gt;numMinPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.NumericUpDown, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;numMinPeptides.Parent" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;numMinPeptides.ZOrder" xml:space="preserve">
+    <value>15</value>
+  </data>
+  <data name="flowLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="flowLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 16</value>
+  </data>
+  <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>477, 182</value>
+  </data>
+  <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Name" xml:space="preserve">
+    <value>flowLayoutPanel</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.Parent" xml:space="preserve">
+    <value>gbParsimonyOptions</value>
+  </data>
+  <data name="&gt;&gt;flowLayoutPanel.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="lblGroupProteins.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -288,9 +519,6 @@
   <data name="lblGroupProteins.Text" xml:space="preserve">
     <value>Create protein &amp;groups</value>
   </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>155, 17</value>
-  </metadata>
   <data name="lblGroupProteins.ToolTip" xml:space="preserve">
     <value>Proteins that match the same set of peptides will be combined into a single target in the document.</value>
   </data>
@@ -753,54 +981,6 @@
   <data name="&gt;&gt;numMinPeptides.ZOrder" xml:space="preserve">
     <value>15</value>
   </data>
-  <data name="flowLayoutPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Fill</value>
-  </data>
-  <data name="flowLayoutPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 16</value>
-  </data>
-  <data name="flowLayoutPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>477, 182</value>
-  </data>
-  <data name="flowLayoutPanel.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel.Name" xml:space="preserve">
-    <value>flowLayoutPanel</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel.Type" xml:space="preserve">
-    <value>System.Windows.Forms.FlowLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel.Parent" xml:space="preserve">
-    <value>gbParsimonyOptions</value>
-  </data>
-  <data name="&gt;&gt;flowLayoutPanel.ZOrder" xml:space="preserve">
-    <value>0</value>
-  </data>
-  <data name="gbParsimonyOptions.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 177</value>
-  </data>
-  <data name="gbParsimonyOptions.Size" type="System.Drawing.Size, System.Drawing">
-    <value>483, 201</value>
-  </data>
-  <data name="gbParsimonyOptions.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="gbParsimonyOptions.Text" xml:space="preserve">
-    <value>Protein parsimony options</value>
-  </data>
-  <data name="&gt;&gt;gbParsimonyOptions.Name" xml:space="preserve">
-    <value>gbParsimonyOptions</value>
-  </data>
-  <data name="&gt;&gt;gbParsimonyOptions.Type" xml:space="preserve">
-    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;gbParsimonyOptions.Parent" xml:space="preserve">
-    <value>$this</value>
-  </data>
-  <data name="&gt;&gt;gbParsimonyOptions.ZOrder" xml:space="preserve">
-    <value>4</value>
-  </data>
   <data name="rbFASTA.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -1119,6 +1299,9 @@
   <data name="&gt;&gt;panelStatusBarResult.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>155, 17</value>
+  </metadata>
   <data name="proteinSourcePanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
   </data>
@@ -1144,13 +1327,13 @@
     <value>1</value>
   </data>
   <data name="progressBar1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
-    <value>Bottom</value>
+    <value>Fill</value>
   </data>
   <data name="progressBar1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>0, 1</value>
+    <value>0, 0</value>
   </data>
   <data name="progressBar1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>301, 24</value>
+    <value>310, 16</value>
   </data>
   <data name="progressBar1.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1174,19 +1357,16 @@
     <value>Flat</value>
   </data>
   <data name="btnError.Location" type="System.Drawing.Point, System.Drawing">
-    <value>301, 0</value>
+    <value>310, 0</value>
   </data>
   <data name="btnError.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="btnError.Size" type="System.Drawing.Size, System.Drawing">
-    <value>25, 25</value>
+    <value>16, 16</value>
   </data>
   <data name="btnError.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
-  </data>
-  <data name="btnError.Text" xml:space="preserve">
-    <value>!!!</value>
   </data>
   <data name="&gt;&gt;btnError.Name" xml:space="preserve">
     <value>btnError</value>
@@ -1204,13 +1384,13 @@
     <value>Bottom, Left, Right</value>
   </data>
   <data name="progressPanel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>168, 377</value>
+    <value>169, 382</value>
   </data>
   <data name="progressPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>0, 0, 0, 0</value>
   </data>
   <data name="progressPanel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>326, 25</value>
+    <value>326, 16</value>
   </data>
   <data name="progressPanel.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1235,6 +1415,9 @@
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
     <value>507, 558</value>
+  </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
   </data>
   <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
     <value>468, 554</value>
