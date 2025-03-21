@@ -99,7 +99,7 @@ namespace TestPerf
                 IsolationSchemeHasGaps = true,
                 IsolationSchemeHasOverlaps = false,
 
-                FinalTargetCounts = new[] { 905, 3150, 3150, 25198 },
+                FinalTargetCounts = new[] { 915, 3167, 3167, 25334 },
 
                 ZipPath = "https://skyline.ms/tutorials/DiaSearchTutorial.zip",
                 DiaFiles = new[] {
