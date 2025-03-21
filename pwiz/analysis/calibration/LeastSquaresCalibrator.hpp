@@ -38,7 +38,7 @@ class LeastSquaresCalibrator
 {
     public:
 
-    static std::auto_ptr<LeastSquaresCalibrator> create(const std::vector<double>& trueMasses,
+    static std::unique_ptr<LeastSquaresCalibrator> create(const std::vector<double>& trueMasses,
                                                         const std::vector<double>& observedFrequencies);
     virtual void calibrate() = 0;
     virtual const data::CalibrationParameters& parameters() const = 0;
