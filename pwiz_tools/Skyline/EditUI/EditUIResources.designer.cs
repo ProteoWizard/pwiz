@@ -134,6 +134,15 @@ namespace pwiz.Skyline.EditUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (Click for more information).
+        /// </summary>
+        public static string AssociateProteinsDlg_DisplayResults__Click_for_more_information_ {
+            get {
+                return ResourceManager.GetString("AssociateProteinsDlg_DisplayResults__Click_for_more_information_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find &amp;minimal gene group list that explains all peptides.
         /// </summary>
         public static string AssociateProteinsDlg_Find_minimal_gene_group_list_that_explains_all_peptides {

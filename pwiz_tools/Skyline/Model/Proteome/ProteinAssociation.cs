@@ -81,11 +81,20 @@ namespace pwiz.Skyline.Model.Proteome
             Removed, // (peptides must be unique to a single protein)
         }
 
-        public ProteinAssociation(SrmDocument document, ILongWaitBroker broker)
+        public ProteinAssociation(SrmDocument document, CancellationToken cancellationToken)
         {
             _document = document;
 
-            ListPeptidesForMatching(broker);
+            ListPeptidesForMatching(cancellationToken);
+        }
+
+        public ProteinAssociation(SrmDocument document, StringSearch peptideTrie)
+        {
+            _document = document;
+            _peptideTrie = peptideTrie;
+            _peptideToPath = document.PeptideGroups.SelectMany(peptideGroup => peptideGroup.Peptides)
+                .Distinct(new PeptideComparer()).GroupBy(peptideDocNode => GetPeptideSequence(peptideDocNode.Peptide))
+                .ToDictionary(group => group.Key, group => group.ToList());
         }
 
         private void ResetMapping()
@@ -916,12 +925,11 @@ namespace pwiz.Skyline.Model.Proteome
             return peptide.Target.Sequence;
         }
 
-        private void ListPeptidesForMatching(ILongWaitBroker broker)
+        private void ListPeptidesForMatching(CancellationToken cancellationToken)
         {
             if (_peptideTrie != null)
                 return;
 
-            broker.Message = ProteomeResources.ProteinAssociation_ListPeptidesForMatching_Building_peptide_prefix_tree;
 
             if (_peptideToPath == null)
             {
@@ -950,8 +958,8 @@ namespace pwiz.Skyline.Model.Proteome
                     .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
             }
 
-            _peptideTrie = new StringSearch(_peptideToPath.Keys, broker.CancellationToken);
-            if (broker.IsCanceled)
+            _peptideTrie = new StringSearch(_peptideToPath.Keys, cancellationToken);
+            if (cancellationToken.IsCancellationRequested)
                 _peptideTrie = null;
         }
 
