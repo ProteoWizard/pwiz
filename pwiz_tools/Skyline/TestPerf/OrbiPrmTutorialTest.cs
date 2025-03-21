@@ -187,6 +187,8 @@ namespace TestPerf
             ExportScheduledMethodReport();
 
             ImportReplicates();
+            if (IsCoverShotMode)
+                return; // Done
             RefineTransitions();
             InternalSinglePointCalibration();
             AnnotateReplicates();
@@ -727,6 +729,11 @@ namespace TestPerf
             });
 
             PauseForScreenShot<SkylineWindow>("Skyline main window - split graph");
+            if (IsCoverShotMode)
+            {
+                TakeCoverShot();
+                return;
+            }
 
             RunUI(() =>
             {
