@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using NHibernate.Mapping;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.ProteowizardWrapper;
