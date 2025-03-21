@@ -472,6 +472,6 @@ Example: Looplink: T [4]
     <value>&amp;Remove subset genes</value>
   </data>
   <data name="AssociateProteinsDlg_DisplayResults__Click_for_more_information_" xml:space="preserve">
-	  <value>(Click for more information)</value>
+    <value>(Click for more information)</value>
   </data>
 </root>
