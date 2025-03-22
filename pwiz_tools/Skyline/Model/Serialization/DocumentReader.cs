@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Model.Serialization
     public class DocumentReader : DocumentSerializer
     {
         private readonly StringPool _stringPool = new StringPool();
+        private readonly ValueCache _valueCache = new ValueCache();
         private AnnotationScrubber _annotationScrubber;
         public DocumentFormat FormatVersion
         {
@@ -93,7 +94,8 @@ namespace pwiz.Skyline.Model.Serialization
             if (helper != null)
             {
                 var libInfo = helper.Deserialize(reader);
-                return libInfo.ChangeLibraryName(_stringPool.GetString(libInfo.LibraryName));
+                return libInfo.ChangeLibraryName(_stringPool.GetString(libInfo.LibraryName))
+                    .ChangeScoreType(_stringPool.GetString(libInfo.ScoreType));
             }
 
             return null;
@@ -320,7 +322,7 @@ namespace pwiz.Skyline.Model.Serialization
                         else if (reader.IsStartElement(EL.transition_lib_info))
                             LibInfo = ReadTransitionLibInfo(reader);
                         else if (reader.IsStartElement(EL.transition_results) || reader.IsStartElement(EL.results_data))
-                            Results = ReadTransitionResults(reader);
+                            Results = ReadTransitionResults(reader)?.ValueFromCache(_documentReader._valueCache);
                         // Discard informational elements.  These values are always
                         // calculated from the settings to ensure consistency.
                         // Note that we do use product_mz for sanity checks and to disambiguate some older mass-only small molecule documents.
@@ -1050,7 +1052,7 @@ namespace pwiz.Skyline.Model.Serialization
                         mods = mods.ChangeCrosslinkStructure(crosslinkStructure);
                     }
                 }
-                results = ReadPeptideResults(reader);
+                results = ReadPeptideResults(reader)?.ValueFromCache(_valueCache);
 
                 if (reader.IsStartElement(EL.precursor))
                 {
@@ -1394,7 +1396,7 @@ namespace pwiz.Skyline.Model.Serialization
                 var annotations = ReadTargetAnnotations(reader, AnnotationDef.AnnotationTarget.precursor);
                 var spectrumClassFilter = SpectrumClassFilter.ReadXml(reader);
                 var libInfo = ReadTransitionGroupLibInfo(reader);
-                var results = ReadTransitionGroupResults(reader);
+                var results = ReadTransitionGroupResults(reader)?.ValueFromCache(_valueCache);
 
                 nodeGroup = new TransitionGroupDocNode(group,
                                                   annotations,
@@ -1534,7 +1536,14 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto));
+                    var transitionDocNode = TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group,
+                        mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto);
+                    if (transitionDocNode.Results != null)
+                    {
+                        transitionDocNode =
+                            transitionDocNode.ChangeResults(transitionDocNode.Results.ValueFromCache(_valueCache));
+                    }
+                    list.Add(transitionDocNode);
                 }
             }
             else

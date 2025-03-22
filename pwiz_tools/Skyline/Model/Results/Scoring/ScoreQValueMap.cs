@@ -101,25 +101,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var entries = new List<KeyValuePair<double, double>>();
             foreach (var transitionGroupDocNode in transitionGroups)
             {
-                if (transitionGroupDocNode.Results == null)
+                var transitionGroupResults = (TransitionGroupResults)transitionGroupDocNode.Results;
+                if (transitionGroupResults == null)
                 {
                     continue;
                 }
-
-                foreach (var chromInfoList in transitionGroupDocNode.Results)
+                foreach (var keyValuePair in transitionGroupResults.GetScoresAndQValues())
                 {
-                    foreach (var chromInfo in chromInfoList)
+                    if (uniqueScores.Add(keyValuePair.Key))
                     {
-                        if (chromInfo.UserSet == UserSet.TRUE || !chromInfo.QValue.HasValue || !chromInfo.ZScore.HasValue)
-                        {
-                            continue;
-                        }
-
-                        if (!uniqueScores.Add(chromInfo.ZScore.Value))
-                        {
-                            continue;
-                        }
-                        entries.Add(new KeyValuePair<double, double>(chromInfo.ZScore.Value, chromInfo.QValue.Value));
+                        entries.Add(keyValuePair);
                     }
                 }
             }

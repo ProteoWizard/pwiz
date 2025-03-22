@@ -548,13 +548,14 @@ namespace pwiz.Skyline.Model
             double bestArea = double.MinValue;
             for (int i = 0; i < Results.Count; i++)
             {
-                var i1 = i;
-                var zScores = Children.Cast<TransitionGroupDocNode>()
-                    .Where(nodeTranGroup => nodeTranGroup.HasResults)
-                    .SelectMany(nodeTranGroup => nodeTranGroup.Results[i1])
-                    .Where(ci => ci.ZScore.HasValue)
-                    .Select(ci => ci.ZScore.Value).ToArray();
-                var zScore = zScores.Length > 0 ? (float?) zScores.Max() : null;
+                float? zScore = null;
+                foreach (var candidateZScore in TransitionGroups.Select(tg => tg.Results).OfType<TransitionGroupResults>().SelectMany(tg => tg.GetZScores(i)))
+                {
+                    if (zScore == null || candidateZScore > zScore)
+                    {
+                        zScore = candidateZScore;
+                    }
+                }
 
                 if (zScore.HasValue)
                 {
@@ -1428,7 +1429,8 @@ namespace pwiz.Skyline.Model
                     var listGroupInfoList = _listResultCalcs.ConvertAll(calc =>
                         calc.UpdateTransitionGroupUserSetMatched(nodeGroupConvert.GetSafeChromInfo(calc.ResultsIndex),
                             isMatching));
-                    var resultsGroup = TransitionGroupResults.Empty.ChangeResults(listGroupInfoList);
+                    var resultsGroup = (nodeGroup.Results ?? TransitionGroupResults.Empty)
+                        ?.ChangeResults(listGroupInfoList).ValueFromCache(valueCache);
                     var nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
                     if (isMatching)
                     {
@@ -1469,11 +1471,15 @@ namespace pwiz.Skyline.Model
 
                 foreach (var calc in _listResultCalcs)
                 {
-                    foreach (var (fileId, userSet) in ((TransitionResults) transitionDocNode.Results).GetUserSetValues())
+                    if (!calc.AnyUserSetMatching())
                     {
-
-                        var userSetNew = calc.GetUserSetNew(fileId);
-                        if (userSetNew.HasValue && !Equals(userSetNew, userSet))
+                        continue;
+                    }
+                    
+                    foreach (var transitionChromInfo in transitionDocNode.GetSafeChromInfo(calc.ResultsIndex))
+                    {
+                        var userSetNew = calc.GetUserSetNew(transitionChromInfo.FileId);
+                        if (userSetNew.HasValue && !Equals(userSetNew, transitionChromInfo.UserSet))
                         {
                             return true;
                         }
@@ -1728,6 +1734,10 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
+            public bool AnyUserSetMatching()
+            {
+                return true == CalculatorFirst?.IsSetMatching || true == Calculators?.Values.Any(calc => calc.IsSetMatching);
+            }
         }
 
         private sealed class PeptideChromInfoCalculator
