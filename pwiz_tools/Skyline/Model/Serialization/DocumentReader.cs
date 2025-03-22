@@ -94,7 +94,8 @@ namespace pwiz.Skyline.Model.Serialization
             if (helper != null)
             {
                 var libInfo = helper.Deserialize(reader);
-                return libInfo.ChangeLibraryName(_stringPool.GetString(libInfo.LibraryName));
+                return libInfo.ChangeLibraryName(_stringPool.GetString(libInfo.LibraryName))
+                    .ChangeScoreType(_stringPool.GetString(libInfo.ScoreType));
             }
 
             return null;

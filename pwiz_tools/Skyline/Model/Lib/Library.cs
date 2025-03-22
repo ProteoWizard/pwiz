@@ -1764,6 +1764,15 @@ namespace pwiz.Skyline.Model.Lib
             return ChangeProp(ImClone(this), im => im.LibraryName = prop);
         }
 
+        public SpectrumHeaderInfo ChangeScoreType(string scoreType)
+        {
+            if (ReferenceEquals(scoreType, ScoreType))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.ScoreType = scoreType);
+        }
+
         /// <summary>
         /// Value used in ranking peptides.
         /// </summary>

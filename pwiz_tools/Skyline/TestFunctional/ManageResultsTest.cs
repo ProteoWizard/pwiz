@@ -419,8 +419,7 @@ namespace pwiz.SkylineTestFunctional
                             // But, also allow it to be reference equal with its previous value, as long
                             // as that value is content equal with the desired value.  Code in TransitionGroupDocNode
                             // may cause this, because it tries to keep new copies of chromInfo to a minimum.
-                            if (!ArrayUtil.ReferencesEqual(nodeTran.Results[i], nodeTranOrig.Results[i]) ||
-                                !ArrayUtil.EqualsDeep(nodeTran.Results[i], nodeTranOrig.Results[arrayIndexOld[i]]))
+                            if (!ArrayUtil.EqualsDeep(nodeTran.Results[i], nodeTranOrig.Results[arrayIndexOld[i]]))
                             {
                                 Assert.Fail("Transition chromatogram information changed.");
                             }
