@@ -172,6 +172,7 @@
     <Compile Include="BlibMoleculeListsTest.cs" />
     <Compile Include="CandidatePeakTest.cs" />
     <Compile Include="CantReadSkydTest.cs" />
+    <Compile Include="CarafeBuildLibraryTest.cs" />
     <Compile Include="ChargedLossesLibraryTest.cs" />
     <Compile Include="CleavableCrosslinkTest.cs" />
     <Compile Include="ConstrainNormalizationMethodTest.cs" />
@@ -218,6 +219,7 @@
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
     <Compile Include="PeakMetricsTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
+    <Compile Include="PythonInstallerTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
     <Compile Include="QcTraceNameTest.cs" />
     <Compile Include="RedundantComboBoxTest.cs" />
@@ -404,7 +406,7 @@
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
-    <Compile Include="PythonInstallerTest.cs" />
+    <Compile Include="PythonInstallerLegacyDlgTest.cs" />
     <Compile Include="QuantitativeTest.cs" />
     <Compile Include="RefineProteinListDlgTest.cs" />
     <Compile Include="RefineListDlgTest.cs" />
@@ -651,6 +653,7 @@
     <None Include="ProteinMetadataBackgroundLoaderTest.zip" />
     <None Include="ProteinMetadataFunctionalTest.zip" />
     <None Include="ProxlTest.zip" />
+    <None Include="PythonInstallerTest.zip" />
     <None Include="QcTraceNameTest.zip" />
     <None Include="QualitativeIonRatioTest.zip" />
     <None Include="QuantitativePeakAreaTest.zip" />

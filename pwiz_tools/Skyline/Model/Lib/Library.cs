@@ -31,6 +31,7 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
@@ -598,11 +599,18 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
         bool BuildLibrary(IProgressMonitor progress);
+         
+        LibraryHelper LibraryHelper { get; }
 
+        SrmDocument Document { get; }
+
+        string ToolName { get; }
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>
         LibrarySpec LibrarySpec { get; }
+
+        string BuilderLibraryPath { get; }
     }
 
     public enum LibraryRedundancy { best, all, all_redundant }

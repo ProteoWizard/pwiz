@@ -213,6 +213,36 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder completed ok.
+        /// </summary>
+        public static string Alphapeptdeep_Blib_completed_ok {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Blib_completed_ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder failed to complete.
+        /// </summary>
+        public static string Alphapeptdeep_Blib_failed_to_complete {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Blib_failed_to_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+        ///{0}
+        ///	
+        ///Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Alphapeptdeep_Warn_unknown_modification {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Warn_unknown_modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
         public static string AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__ {
@@ -1195,6 +1225,41 @@ namespace pwiz.Skyline.Model {
         public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
             get {
                 return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///@echo off
+        ///setlocal enabledelayedexpansion
+        ///
+        ///:: Set paths and URIs (you need to define these)
+        ///set &quot;CudaVersion={{0}}&quot;
+        ///set &quot;CudaInstaller=cuda_%CudaVersion%_windows_network.exe&quot;
+        ///set &quot;CudaDownloadUri=https://developer.download.nvidia.com/compute/cuda/%CudaVersion%/network_installers/%CudaInstaller%&quot;
+        ///set &quot;CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%&quot;
+        ///
+        ///set &quot;CuDNNVersion={{1}}&quot;
+        ///set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
+        ///set &quot;CuDNNDownloadUri=https://developer.download.n [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string NvidiaInstaller_Batch_script {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Batch_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+        ///    {0}
+        ///	
+        ///        Would you like to continue?
+        ///	
+        ///	Hint: Clicking &apos;OK&apos; activates installation of Nvidia libraries....
+        /// </summary>
+        public static string NvidiaInstaller_Requesting_Administrator_elevation {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Requesting_Administrator_elevation", resourceCulture);
             }
         }
         
