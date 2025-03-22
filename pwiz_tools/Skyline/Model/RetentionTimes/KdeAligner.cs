@@ -390,7 +390,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return _maxY;
             }
 
-            var scaledX = _consolidatedXY.Length * (x - _minX) / (_maxX - _minX);
+            var scaledX = (_consolidatedXY.Length - 1) * (x - _minX) / (_maxX - _minX);
             int prevBucket = (int)Math.Floor(scaledX);
             int nextBucket = (int)Math.Ceiling(scaledX);
             double scaledY;
@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return _maxX;
             }
 
-            var scaledY = _consolidatedYX.Length * (y - _minY) / (_maxY - _minY);
+            var scaledY = (_consolidatedYX.Length - 1) * (y - _minY) / (_maxY - _minY);
             var prevBucket = (int)Math.Floor(scaledY);
             var nextBucket = (int)Math.Ceiling(scaledY);
             double scaledX;

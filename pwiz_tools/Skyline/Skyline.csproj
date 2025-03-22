@@ -588,6 +588,7 @@
     <Compile Include="Model\Results\Imputation\AlignmentParameters.cs" />
     <Compile Include="Model\Results\Imputation\AlignmentResults.cs" />
     <Compile Include="Model\Results\Imputation\AlignmentType.cs" />
+    <Compile Include="Model\Results\Imputation\CommandLinePeakBoundaryImputer.cs" />
     <Compile Include="Model\Results\Imputation\FormattablePeakBounds.cs" />
     <Compile Include="Model\Results\Imputation\ImputationResources.Designer.cs">
       <AutoGen>True</AutoGen>

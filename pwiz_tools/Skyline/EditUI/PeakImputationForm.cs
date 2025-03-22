@@ -28,7 +28,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -252,8 +251,10 @@ namespace pwiz.Skyline.EditUI
 
         public class Row
         {
+            private MoleculePeaks _moleculePeaks;
             public Row(SkylineDataSchema dataSchema, MoleculePeaks moleculePeaks)
             {
+                _moleculePeaks = moleculePeaks;
                 Peptide = new Model.Databinding.Entities.Peptide(dataSchema, moleculePeaks.PeptideIdentityPath);
                 Peaks = new Dictionary<ResultKey, Peak>();
                 foreach (var scoredPeak in moleculePeaks.Peaks)
@@ -289,6 +290,11 @@ namespace pwiz.Skyline.EditUI
             public int ExemplaryCount { get; }
             public int AcceptedCount { get; }
             public int NeedAdjustmentCount { get; }
+
+            public MoleculePeaks GetMoleculePeaks()
+            {
+                return _moleculePeaks;
+            }
         }
 
         [InvariantDisplayName("Peak")]
@@ -574,87 +580,17 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument ImputeBoundariesOnDocument(ILongWaitBroker broker, SrmDocument document, AlignmentData alignmentData, IList<Row> rows, ICollection<ReplicateFileId> replicateFileIds)
         {
-            Dictionary<IdentityPath, PeptideDocNode> results = new Dictionary<IdentityPath, PeptideDocNode>();
-            int progress = 0;
-            ParallelEx.ForEach(rows, row =>
-            {
-                if (broker.IsCanceled)
-                {
-                    return;
-                }
-
-                var newNode = ImputeBoundariesForRow(document, alignmentData, row, replicateFileIds);
-                lock (results)
-                {
-                    progress++;
-                    broker.ProgressValue = 100 * progress / rows.Count;
-                    if (newNode != null)
-                    {
-                        results[row.Peptide.IdentityPath] = newNode;
-                    }
-                }
-            });
-            if (results.Count == 0)
-            {
-                return null;
-            }
-
-            var newPeptideGroupDocNodes = document.Children.ToList();
-            foreach (var grouping in results.GroupBy(kvp => kvp.Key.GetPathTo((int) SrmDocument.Level.MoleculeGroups)))
-            {
-                int iPeptideGroup = document.FindNodeIndex(grouping.Key.Child);
-                var peptideGroupDocNode = (PeptideGroupDocNode) newPeptideGroupDocNodes[iPeptideGroup];
-                var newPeptideDocNodes = peptideGroupDocNode.Children.ToList();
-                foreach (var kvp in grouping)
-                {
-                    newPeptideDocNodes[peptideGroupDocNode.FindNodeIndex(kvp.Key.Child)] = kvp.Value;
-                }
-
-                newPeptideGroupDocNodes[iPeptideGroup] = peptideGroupDocNode.ChangeChildren(newPeptideDocNodes);
-            }
-
-            return (SrmDocument) document.ChangeChildren(newPeptideGroupDocNodes);
+            var peakImputationRows =
+                new PeakImputationRows(alignmentData, rows.Select(row => row.GetMoleculePeaks()).ToList());
+            return peakImputationRows.ImputeBoundaries(ToProductionMonitor(broker), document, replicateFileIds);
         }
 
-        private PeptideDocNode ImputeBoundariesForRow(SrmDocument document, AlignmentData alignmentData, Row row,
-            ICollection<ReplicateFileId> replicateFileIds)
+        public static ProductionMonitor ToProductionMonitor(ILongWaitBroker longWaitBroker)
         {
-            var exemplaryBounds = row.ExemplaryPeakBounds;
-            if (exemplaryBounds == null)
-            {
-                return null;
-            }
-            var scoringModel = GetScoringModelToUse(document);
-            var rejectedPeaks = row.Peaks.Values
-                .Where(peak => peak.Verdict == RatedPeak.Verdict.NeedsAdjustment || peak.Verdict == RatedPeak.Verdict.NeedsRemoval)
-                .Select(peak => peak.GetRatedPeak()).ToList();
-            int changeCount = 0;
-            foreach (var rejectedPeak in rejectedPeaks)
-            {
-                if (false == replicateFileIds?.Contains(rejectedPeak.ReplicateFileInfo.ReplicateFileId))
-                {
-                    continue;
-                }
-                var peakImputer = new PeakImputer(document, alignmentData.ChromatogramTimeRanges, row.Peptide.IdentityPath, scoringModel,
-                    rejectedPeak.ReplicateFileInfo);
-                var bestPeakBounds =
-                    exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
-                if (bestPeakBounds == null)
-                {
-                    continue;
-                }
-
-                document = peakImputer.ImputeBoundaries(document, bestPeakBounds);
-                changeCount++;
-            }
-
-            if (changeCount == 0)
-            {
-                return null;
-            }
-
-            return (PeptideDocNode) document.FindNode(row.Peptide.IdentityPath);
+            return new ProductionMonitor(longWaitBroker.CancellationToken,
+                progressValue => longWaitBroker.ProgressValue = progressValue);
         }
+
 
         public bool DocumentWide
         {

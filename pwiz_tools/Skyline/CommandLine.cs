@@ -48,6 +48,7 @@ using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.Tools;
@@ -438,6 +439,12 @@ namespace pwiz.Skyline
 
             WaitForDocumentLoaded();
 
+            if (commandArgs.ImputePeakBoundaries != CommandArgs.ImputeBoundariesType.False)
+            {
+                if (!ImputePeakBoundaries(commandArgs))
+                    return false;
+            }
+
             if (commandArgs.Minimizing)
             {
                 if (!MinimizeResults(commandArgs))
@@ -602,6 +609,15 @@ namespace pwiz.Skyline
                     return false;
             }
 
+            return true;
+        }
+
+        private bool ImputePeakBoundaries(CommandArgs commandArgs)
+        {
+            var progressStatus = new ProgressStatus();
+            var progressMonitor = new CommandProgressMonitor(_out, progressStatus);
+            var overwriteManual = commandArgs.ImputePeakBoundaries == CommandArgs.ImputeBoundariesType.OverwriteManual;
+            SetDocument(CommandLinePeakBoundaryImputer.ImputeBoundaries(_doc, progressMonitor, progressStatus, overwriteManual));
             return true;
         }
 
@@ -924,7 +940,12 @@ namespace pwiz.Skyline
                     sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
-                if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out, commandArgs))
+                var shareType = commandArgs.SharedFileType;
+                if (commandArgs.SharedSkylineVersion != null)
+                {
+                    shareType = shareType.ChangeSkylineVersion(commandArgs.SharedSkylineVersion);
+                }
+                if (!ShareDocument(_doc, _skylineFile, sharedFilePath, shareType, _out, commandArgs))
                 {
                     return false;
                 }

@@ -20,11 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using EnvDTE;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Imputation
 {
@@ -94,9 +96,7 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             public override PeakImputationRows ProduceResult(ProductionMonitor productionMonitor, Parameters parameter, IDictionary<WorkOrder, object> inputs)
             {
-                var peakImputationData = (AlignmentData) inputs.Values.First();
-                var rowProducer = new RowProducer(productionMonitor, parameter, peakImputationData);
-                return new PeakImputationRows(peakImputationData, rowProducer.GetRows());
+                return ProduceRows(productionMonitor, parameter, (AlignmentData)inputs.Values.First());
             }
 
             public override IEnumerable<WorkOrder> GetInputs(Parameters parameter)
@@ -416,6 +416,106 @@ namespace pwiz.Skyline.Model.Results.Imputation
         {
             return peptideDocNode.TransitionGroups.SelectMany(tg => tg.GetSafeChromInfo(replicateIndex))
                 .Where(tgci => ReferenceEquals(tgci.FileId, fileId));
+        }
+
+        public static PeakImputationRows ProduceRows(ProductionMonitor productionMonitor, Parameters parameter, AlignmentData alignmentData)
+        {
+            var rowProducer = new RowProducer(productionMonitor, parameter, alignmentData);
+            return new PeakImputationRows(alignmentData, rowProducer.GetRows());
+        }
+
+        public SrmDocument ImputeBoundaries(ProductionMonitor productionMonitor, SrmDocument document, ICollection<ReplicateFileId> replicateFileIds)
+        {
+            Dictionary<IdentityPath, PeptideDocNode> results = new Dictionary<IdentityPath, PeptideDocNode>();
+            int progress = 0;
+            ParallelEx.ForEach(MoleculePeaks, row =>
+            {
+                if (productionMonitor.CancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                var newNode = ImputeBoundariesForMolecule(document, row, replicateFileIds);
+                lock (results)
+                {
+                    progress++;
+                    productionMonitor.SetProgress(100 * progress / MoleculePeaks.Count);
+                    if (newNode != null)
+                    {
+                        results[row.PeptideIdentityPath] = newNode;
+                    }
+                }
+            });
+            if (results.Count == 0)
+            {
+                return null;
+            }
+
+            var newPeptideGroupDocNodes = document.Children.ToList();
+            foreach (var grouping in results.GroupBy(kvp => kvp.Key.GetPathTo((int)SrmDocument.Level.MoleculeGroups)))
+            {
+                int iPeptideGroup = document.FindNodeIndex(grouping.Key.Child);
+                var peptideGroupDocNode = (PeptideGroupDocNode)newPeptideGroupDocNodes[iPeptideGroup];
+                var newPeptideDocNodes = peptideGroupDocNode.Children.ToList();
+                foreach (var kvp in grouping)
+                {
+                    newPeptideDocNodes[peptideGroupDocNode.FindNodeIndex(kvp.Key.Child)] = kvp.Value;
+                }
+
+                newPeptideGroupDocNodes[iPeptideGroup] = peptideGroupDocNode.ChangeChildren(newPeptideDocNodes);
+            }
+
+            return (SrmDocument)document.ChangeChildren(newPeptideGroupDocNodes);
+        }
+
+        public PeptideDocNode ImputeBoundariesForMolecule(SrmDocument document, MoleculePeaks moleculePeaks,
+            ICollection<ReplicateFileId> replicateFileIds)
+        {
+            var exemplaryBounds = moleculePeaks.ExemplaryPeakBounds;
+            if (exemplaryBounds == null)
+            {
+                return null;
+            }
+            var scoringModel = GetScoringModelToUse(document);
+            var rejectedPeaks = moleculePeaks.Peaks
+                .Where(peak => peak.PeakVerdict == RatedPeak.Verdict.NeedsAdjustment || peak.PeakVerdict == RatedPeak.Verdict.NeedsRemoval)
+                .ToList();
+            int changeCount = 0;
+            foreach (var rejectedPeak in rejectedPeaks)
+            {
+                if (false == replicateFileIds?.Contains(rejectedPeak.ReplicateFileInfo.ReplicateFileId))
+                {
+                    continue;
+                }
+                var peakImputer = new PeakImputer(document, AlignmentData.ChromatogramTimeRanges, moleculePeaks.PeptideIdentityPath, scoringModel,
+                    rejectedPeak.ReplicateFileInfo);
+                var bestPeakBounds =
+                    exemplaryBounds.ReverseAlignPreservingWidth(rejectedPeak.AlignmentFunction);
+                if (bestPeakBounds == null)
+                {
+                    continue;
+                }
+
+                document = peakImputer.ImputeBoundaries(document, bestPeakBounds);
+                changeCount++;
+            }
+
+            if (changeCount == 0)
+            {
+                return null;
+            }
+
+            return (PeptideDocNode)document.FindNode(moleculePeaks.PeptideIdentityPath);
+        }
+
+        private static PeakScoringModelSpec GetScoringModelToUse(SrmDocument document)
+        {
+            var scoringModel = document.Settings.PeptideSettings.Integration.PeakScoringModel;
+            if (true == scoringModel?.IsTrained)
+            {
+                return scoringModel;
+            }
+            return LegacyScoringModel.DEFAULT_MODEL;
         }
     }
 }
