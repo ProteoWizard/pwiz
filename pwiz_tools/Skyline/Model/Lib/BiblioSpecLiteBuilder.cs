@@ -210,20 +210,27 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
 
-            var blibFilter = new BlibFilter();
             status = new ProgressStatus(message);
             progress.UpdateProgress(status);
-            // Write the non-redundant library to a temporary file first
             try
             {
-                using (var saver = new FileSaver(OutputPath))
+                if (BiblioSpecLiteLibrary.IsRedundantLibrary(redundantLibrary))
                 {
-                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progress, ref status))
+                    var blibFilter = new BlibFilter();
+                    // Write the non-redundant library to a temporary file first
+                    using (var saver = new FileSaver(OutputPath))
                     {
-                        return false;
-                    }
+                        if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progress, ref status))
+                        {
+                            return false;
+                        }
 
-                    saver.Commit();
+                        saver.Commit();
+                    }
+                }
+                else // rename as non-redundant
+                {
+                    File.Move(redundantLibrary, OutputPath!);
                 }
             }
             catch (IOException x)
@@ -231,11 +238,11 @@ namespace pwiz.Skyline.Model.Lib
                 progress.UpdateProgress(status.ChangeErrorException(x));
                 return false;
             }
-            catch
+            catch (Exception x)
             {
                 progress.UpdateProgress(status.ChangeErrorException(
                     new Exception(string.Format(LibResources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__,
-                                                OutputPath))));
+                                                OutputPath), x)));
                 return false;
             }
             finally

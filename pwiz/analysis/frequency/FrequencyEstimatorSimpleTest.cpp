@@ -58,7 +58,7 @@ void test()
 
     // run Parabola estimator
 
-    auto_ptr<FrequencyEstimatorSimple> 
+    unique_ptr<FrequencyEstimatorSimple>
         fe(FrequencyEstimatorSimple::create(FrequencyEstimatorSimple::Parabola));
 
     for (vector<Peak>::const_iterator it=peaks.begin(); it!=peaks.end(); ++it)
@@ -142,7 +142,7 @@ void testData()
 
     vector<Peak> estimatedPeaks;
 
-    auto_ptr<FrequencyEstimatorSimple> 
+    unique_ptr<FrequencyEstimatorSimple>
         fe(FrequencyEstimatorSimple::create(FrequencyEstimatorSimple::Parabola));
 
     for (vector<Peak>::const_iterator it=peaks.begin(); it!=peaks.end(); ++it)
@@ -218,7 +218,7 @@ void testData2_LocalMax()
 
     vector<Peak> estimatedPeaks;
 
-    auto_ptr<FrequencyEstimatorSimple> 
+    unique_ptr<FrequencyEstimatorSimple>
         fe(FrequencyEstimatorSimple::create(FrequencyEstimatorSimple::LocalMax));
 
     for (vector<Peak>::const_iterator it=peaks.begin(); it!=peaks.end(); ++it)
@@ -259,7 +259,7 @@ void testData2_Parabola()
 
     vector<Peak> estimatedPeaks;
 
-    auto_ptr<FrequencyEstimatorSimple> 
+    unique_ptr<FrequencyEstimatorSimple>
         fe(FrequencyEstimatorSimple::create(FrequencyEstimatorSimple::Parabola));
 
     for (vector<Peak>::const_iterator it=peaks.begin(); it!=peaks.end(); ++it)
