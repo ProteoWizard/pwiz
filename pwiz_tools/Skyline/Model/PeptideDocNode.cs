@@ -1469,11 +1469,15 @@ namespace pwiz.Skyline.Model
 
                 foreach (var calc in _listResultCalcs)
                 {
-                    foreach (var (fileId, userSet) in ((TransitionResults) transitionDocNode.Results).GetUserSetValues())
+                    if (!calc.AnyUserSetMatching())
                     {
-
-                        var userSetNew = calc.GetUserSetNew(fileId);
-                        if (userSetNew.HasValue && !Equals(userSetNew, userSet))
+                        continue;
+                    }
+                    
+                    foreach (var transitionChromInfo in transitionDocNode.GetSafeChromInfo(calc.ResultsIndex))
+                    {
+                        var userSetNew = calc.GetUserSetNew(transitionChromInfo.FileId);
+                        if (userSetNew.HasValue && !Equals(userSetNew, transitionChromInfo.UserSet))
                         {
                             return true;
                         }
@@ -1716,7 +1720,7 @@ namespace pwiz.Skyline.Model
                 return listInfoNew;
             }
 
-                        public UserSet? GetUserSetNew(ChromFileInfoId fileId)
+            public UserSet? GetUserSetNew(ChromFileInfoId fileId)
             {
                 PeptideChromInfoCalculator calc;
                 if (TryGetCalculator(fileId, out calc))
@@ -1728,6 +1732,10 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
+            public bool AnyUserSetMatching()
+            {
+                return true == CalculatorFirst?.IsSetMatching || true == Calculators?.Values.Any(calc => calc.IsSetMatching);
+            }
         }
 
         private sealed class PeptideChromInfoCalculator
