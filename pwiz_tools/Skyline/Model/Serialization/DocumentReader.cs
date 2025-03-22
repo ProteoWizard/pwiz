@@ -614,7 +614,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             reader.ReadStartElement();  // Start document element
             var srmSettings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
-            _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, _valueCache, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
+            _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
             srmSettings = _annotationScrubber.ScrubSrmSettings(srmSettings);
             Settings = srmSettings;
             using var peptideProcessor = new PeptideProcessor(this);
