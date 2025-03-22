@@ -1036,9 +1036,7 @@ namespace pwiz.Skyline.Model
                     chromInfoList = new ChromInfoList<TransitionChromInfo>(listChromInfo);
                 listResults.Add(chromInfoList);
             }
-            if (ArrayUtil.InnerReferencesEqual<TransitionChromInfo, ChromInfoList<TransitionChromInfo>>(listResults, Results))
-                return Results;
-            return TransitionResults.Empty.ChangeResults(listResults);
+            return Results.ChangeResults(listResults);
         }
 
         #endregion

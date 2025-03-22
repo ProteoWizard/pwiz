@@ -1428,7 +1428,8 @@ namespace pwiz.Skyline.Model
                     var listGroupInfoList = _listResultCalcs.ConvertAll(calc =>
                         calc.UpdateTransitionGroupUserSetMatched(nodeGroupConvert.GetSafeChromInfo(calc.ResultsIndex),
                             isMatching));
-                    var resultsGroup = TransitionGroupResults.Empty.ChangeResults(listGroupInfoList);
+                    var resultsGroup = (nodeGroup.Results ?? TransitionGroupResults.Empty)
+                        ?.ChangeResults(listGroupInfoList).ValueFromCache(valueCache);
                     var nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
                     if (isMatching)
                     {
