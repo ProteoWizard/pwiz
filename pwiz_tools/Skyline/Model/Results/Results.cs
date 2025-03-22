@@ -768,6 +768,17 @@ namespace pwiz.Skyline.Model.Results
                 .Where(tuple => tuple.Item1.HasValue && tuple.Item2.HasValue)
                 .Select(tuple => new KeyValuePair<double, double>(tuple.Item1.Value, tuple.Item2.Value));
         }
+
+        public IEnumerable<float> GetZScores(int iReplicate)
+        {
+            if (_zScores == null)
+            {
+                return Array.Empty<float>();
+            }
+
+            return Enumerable.Range(ReplicatePositions.GetStart(iReplicate), ReplicatePositions.GetCount(iReplicate))
+                .Select(i => _zScores[i]).OfType<float>();
+        }
     }
 
     public class PeptideResults : Results<PeptideChromInfo>

@@ -548,13 +548,14 @@ namespace pwiz.Skyline.Model
             double bestArea = double.MinValue;
             for (int i = 0; i < Results.Count; i++)
             {
-                var i1 = i;
-                var zScores = Children.Cast<TransitionGroupDocNode>()
-                    .Where(nodeTranGroup => nodeTranGroup.HasResults)
-                    .SelectMany(nodeTranGroup => nodeTranGroup.Results[i1])
-                    .Where(ci => ci.ZScore.HasValue)
-                    .Select(ci => ci.ZScore.Value).ToArray();
-                var zScore = zScores.Length > 0 ? (float?) zScores.Max() : null;
+                float? zScore = null;
+                foreach (var candidateZScore in TransitionGroups.Select(tg => tg.Results).OfType<TransitionGroupResults>().SelectMany(tg => tg.GetZScores(i)))
+                {
+                    if (zScore == null || candidateZScore > zScore)
+                    {
+                        zScore = candidateZScore;
+                    }
+                }
 
                 if (zScore.HasValue)
                 {
