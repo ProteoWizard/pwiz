@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
@@ -73,7 +74,11 @@ namespace pwiz.Skyline.Model.Results
 
         private void SetFlatList(IList<TItem> items)
         {
-            _fileIds = items.Select(item => ReferenceValue.Of(item.FileId)).ToImmutable();
+            var newFileIds = items.Select(item => ReferenceValue.Of(item.FileId)).ToImmutable();
+            if (!Equals(newFileIds, FileIds))
+            {
+                _fileIds = newFileIds;
+            }
             SetItems(items);
         }
 
@@ -103,42 +108,6 @@ namespace pwiz.Skyline.Model.Results
             }).UseValuesFrom(this);
         }
 
-        public Results<TItem> UseValuesFrom(Results<TItem> oldResults)
-        {
-            var oldValues = oldResults.GetCacheableFields();
-            var newValues = GetCacheableFields();
-            Assume.AreEqual(newValues.Length, oldValues.Length);
-            bool allValuesEqual = true;
-            bool anyValuesEqual = false;
-            for (int iField = 0; iField < newValues.Length; iField++)
-            {
-                if (!ReferenceEquals(oldValues[iField], newValues[iField]))
-                {
-                    if (Equals(oldValues[iField], newValues[iField]))
-                    {
-                        anyValuesEqual = true;
-                        newValues[iField] = oldValues[iField];
-                    }
-                    else
-                    {
-                        allValuesEqual = false;
-                    }
-                }
-            }
-
-            if (allValuesEqual)
-            {
-                return oldResults;
-            }
-
-            if (anyValuesEqual)
-            {
-                return ChangeProp(ImClone(this), im => im.SetCacheableFields(newValues));
-            }
-
-            return this;
-        }
-
         public Results<TItem> ChangeResults<TList>(IList<TList> newItems) where TList:IList<TItem>
         {
             return ChangeProp(ImClone(this), im => im.SetChromInfoLists(newItems));
@@ -160,43 +129,44 @@ namespace pwiz.Skyline.Model.Results
 
         protected bool Equals(Results<TItem> other)
         {
-            return Equals(ReplicatePositions, other.ReplicatePositions);
+            if (!Equals(ReplicatePositions, other.ReplicatePositions))
+            {
+                return false;
+            }
+
+            return GetLists().SequenceEqual(other.GetLists());
         }
 
-        public override bool Equals(object obj)
+        public sealed override bool Equals(object obj)
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((Results<TItem>)obj);
+            var other = (Results<TItem>)obj;
+            if (!Equals(ReplicatePositions, other.ReplicatePositions))
+            {
+                return false;
+            }
+            return GetLists().SequenceEqual(other.GetLists());
         }
 
-        public override int GetHashCode()
+        public sealed override int GetHashCode()
         {
-            return ReplicatePositions.GetHashCode();
+            unchecked
+            {
+                int hashCode = ReplicatePositions.GetHashCode();
+                foreach (var list in GetLists())
+                {
+                    hashCode = (hashCode * 397) ^ (list?.GetHashCode() ?? 0);
+                }
+
+                return hashCode;
+            }
         }
 
         public bool EqualsIncludingFileIds(Results<TItem> results)
         {
             return Equals(this, results) && Equals(_fileIds, results._fileIds);
-        }
-
-        private bool ContentEquals<TList>(IList<TList> lists) where TList:IEnumerable<TItem>
-        {
-            if (lists.Count != Count)
-            {
-                return false;
-            }
-
-            for (int replicateIndex = 0; replicateIndex < Count; replicateIndex++)
-            {
-                if (!lists[replicateIndex].SequenceEqual(GetItemsForReplicate(replicateIndex)))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         public Results<TItem> ChangeChromInfo(ChromFileInfoId id, TItem newChromInfo)
@@ -315,6 +285,8 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+
+
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -383,38 +355,94 @@ namespace pwiz.Skyline.Model.Results
             throw new InvalidOperationException();
         }
 
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
         public Results<TItem> ValueFromCache(ValueCache valueCache)
         {
-            var oldValues = GetCacheableFields();
-            var newValues = oldValues.Select(valueCache.CacheValue).ToArray();
-            if (ArrayUtil.ReferencesEqual(oldValues, newValues))
+            var newReplicatePositions = valueCache.CacheValue(ReplicatePositions);
+            var newFileIds = valueCache.CacheValue(_fileIds);
+            bool changes = !ReferenceEquals(ReplicatePositions, newReplicatePositions) ||
+                           !ReferenceEquals(FileIds, newFileIds);
+
+            var lists = GetLists();
+            for (int i = 0; i < lists.Length; i++)
+            {
+                var list = lists[i];
+                var cachedList = valueCache.CacheValue(list);
+                if (!ReferenceEquals(list, cachedList))
+                {
+                    lists[i] = cachedList;
+                    changes = true;
+                }
+            }
+
+            if (!changes)
             {
                 return this;
             }
 
-            return ChangeProp(ImClone(this), im => im.SetCacheableFields(newValues));
-        }
-
-        protected void SetCacheableFields(object[] values)
-        {
-            int i = 0;
-            SetCacheableFields(values, ref i);
-            Assume.AreEqual(i, values.Length);
-        }
-
-        protected virtual object[] GetCacheableFields()
-        {
-            return new object[]
+            return ChangeProp(ImClone(this), im =>
             {
-                _replicatePositions,
-                _fileIds
-            };
+                im._replicatePositions = newReplicatePositions;
+                im._fileIds = newFileIds;
+                im.SetLists(lists);
+            });
         }
 
-        protected virtual void SetCacheableFields(object[] values, ref int index)
+        protected abstract IEnumerable[] GetLists();
+        protected abstract void SetLists(IList<IEnumerable> lists);
+
+        [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
+        protected Results<TItem> UseValuesFrom(Results<TItem> original)
         {
-            _replicatePositions = (ReplicatePositions)values[index++];
-            _fileIds = (ImmutableList<ReferenceValue<ChromFileInfoId>>)values[index++];
+            if (ReplicatePositions.TotalCount != original.ReplicatePositions.TotalCount)
+            {
+                return this;
+            }
+            bool anyChanges = false;
+            var newReplicatePositions = ReplicatePositions;
+            var newFileIds = _fileIds;
+            anyChanges = UseValueIfEqual(original._replicatePositions, ref newReplicatePositions)
+                         | UseValueIfEqual(original._fileIds, ref newFileIds);
+            var originalLists = original.GetLists();
+            var lists = GetLists();
+            Assume.AreEqual(lists.Length, originalLists.Length);
+            for (int i = 0; i < lists.Length; i++)
+            {
+                var list = lists[i];
+                var originalList = originalLists[i];
+                if (list == null || originalList == null || ReferenceEquals(list, originalList))
+                {
+                    continue;
+                }
+
+                if (Equals(list, originalList))
+                {
+                    lists[i] = originalList;
+                    anyChanges = true;
+                }
+            }
+
+            if (!anyChanges)
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im =>
+            {
+                im._replicatePositions = newReplicatePositions;
+                im._fileIds = newFileIds;
+                im.SetLists(lists);
+            });
+        }
+
+        protected static bool UseValueIfEqual<T>(T valueToUse, ref T field)
+        {
+            if (!ReferenceEquals(valueToUse, field) && Equals(valueToUse, field))
+            {
+                field = valueToUse;
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -484,7 +512,6 @@ namespace pwiz.Skyline.Model.Results
         protected override void SetItems(IList<TransitionChromInfo> items)
         {
             _optimizationSteps = items.Select(item => (int)item.OptimizationStep).ToImmutable().UnlessAllEqual(0);
-
             _massErrorInts = items.Select(item => To10x(item.MassError)).Nullables().UnlessAllEqual(null);
             _retentionTimes = items.Select(item => item.RetentionTime).ToImmutable();
             _startRetentionTimes = items.Select(item => item.StartRetentionTime).ToImmutable();
@@ -534,82 +561,54 @@ namespace pwiz.Skyline.Model.Results
             return flags;
         }
 
-        protected bool Equals(TransitionResults other)
+        protected override IEnumerable[] GetLists()
         {
-            return base.Equals(other) && Equals(_optimizationSteps, other._optimizationSteps) &&
-                   Equals(_massErrorInts, other._massErrorInts) && Equals(_retentionTimes, other._retentionTimes) &&
-                   Equals(_startRetentionTimes, other._startRetentionTimes) &&
-                   Equals(_endRetentionTimes, other._endRetentionTimes) &&
-                   Equals(_ionMobilities, other._ionMobilities) && Equals(_areas, other._areas) &&
-                   Equals(_backgroundAreas, other._backgroundAreas) && Equals(_heights, other._heights) &&
-                   Equals(_fwhms, other._fwhms) && Equals(_ranks, other._ranks) &&
-                   Equals(_ranksByLevel, other._ranksByLevel) && Equals(_annotations, other._annotations) &&
-                   Equals(_userSets, other._userSets) && Equals(_peakShapeValues, other._peakShapeValues) &&
-                   Equals(_flags, other._flags) && Equals(_pointsAcrossPeaks, other._pointsAcrossPeaks) &&
-                   Equals(_peakIdentifications, other._peakIdentifications);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((TransitionResults)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (_optimizationSteps?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_massErrorInts?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_retentionTimes?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_startRetentionTimes?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_endRetentionTimes?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_ionMobilities?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_areas?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreas?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_heights?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_fwhms?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_ranks?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_ranksByLevel?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_annotations?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_userSets?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_peakShapeValues?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_flags?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_pointsAcrossPeaks?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_peakIdentifications?.GetHashCode() ?? 0);
-                return hashCode;
-            }
-        }
-
-        protected override object[] GetCacheableFields()
-        {
-            return base.GetCacheableFields().Concat(new object[]
+            return new IEnumerable[]
             {
                 _optimizationSteps,
+                _massErrorInts,
                 _retentionTimes,
                 _startRetentionTimes,
                 _endRetentionTimes,
                 _ionMobilities,
+                _areas,
+                _backgroundAreas,
+                _heights,
+                _fwhms,
                 _ranks,
                 _ranksByLevel,
+                _annotations,
+                _userSets,
+                _peakShapeValues,
+                _flags,
+                _pointsAcrossPeaks,
                 _peakIdentifications
-            }).ToArray();
+            };
         }
 
-        protected override void SetCacheableFields(object[] values, ref int index)
+
+
+        protected override void SetLists(IList<IEnumerable> lists)
         {
-            base.SetCacheableFields(values, ref index);
-            _optimizationSteps = (ImmutableList<int>)values[index++];
-            _retentionTimes = (ImmutableList<float>)values[index++];
-            _startRetentionTimes = (ImmutableList<float>)values[index++];
-            _endRetentionTimes = (ImmutableList<float>)values[index++];
-            _ionMobilities = (ImmutableList<IonMobilityFilter>)values[index++];
-            _ranks = (ImmutableList<int>)values[index++];
-            _ranksByLevel = (ImmutableList<int>)values[index++];
-            _peakIdentifications = (ImmutableList<PeakIdentification>)values[index++];
+            int i = 0;
+            _optimizationSteps = (ImmutableList<int>) lists[i++];
+            _massErrorInts = (ImmutableList<int?>)lists[i++];
+            _retentionTimes = (ImmutableList<float>)lists[i++];
+            _startRetentionTimes = (ImmutableList<float>)lists[i++];
+            _endRetentionTimes = (ImmutableList<float>)lists[i++];
+            _ionMobilities = (ImmutableList<IonMobilityFilter>)lists[i++];
+            _areas = (ImmutableList<float>)lists[i++];
+            _backgroundAreas = (ImmutableList<float>)lists[i++];
+            _heights = (ImmutableList<float>)lists[i++];
+            _fwhms = (ImmutableList<float>)lists[i++];
+            _ranks = (ImmutableList<int>)lists[i++];
+            _ranksByLevel = (ImmutableList<int>)lists[i++];
+            _annotations = (ImmutableList<Annotations>)lists[i++];
+            _userSets = (ImmutableList<UserSet>)lists[i++];
+            _peakShapeValues = (ImmutableList<PeakShapeValues?>)lists[i++];
+            _flags = (ImmutableList<Flags>)lists[i++];
+            _pointsAcrossPeaks = (ImmutableList<int?>)lists[i++];
+            _peakIdentifications = (ImmutableList<PeakIdentification>)lists[i++];
         }
     }
 
@@ -699,67 +698,9 @@ namespace pwiz.Skyline.Model.Results
             _userSets = items.Select(item => item.UserSet).ToImmutable().UnlessAllEqual(UserSet.FALSE);
         }
 
-        protected bool Equals(TransitionGroupResults other)
+        protected override IEnumerable[] GetLists()
         {
-            return base.Equals(other) && Equals(_optimizationSteps, other._optimizationSteps) &&
-                   Equals(_peakCountRatios, other._peakCountRatios) && Equals(_retentionTimes, other._retentionTimes) &&
-                   Equals(_startTimes, other._startTimes) && Equals(_endTimes, other._endTimes) &&
-                   Equals(_ionMobilityInfos, other._ionMobilityInfos) && Equals(_fwhms, other._fwhms) &&
-                   Equals(_areas, other._areas) && Equals(_areasMs1, other._areasMs1) &&
-                   Equals(_areasFragment, other._areasFragment) && Equals(_backgroundAreas, other._backgroundAreas) &&
-                   Equals(_backgroundAreasMs1, other._backgroundAreasMs1) &&
-                   Equals(_backgroundAreasFragment, other._backgroundAreasFragment) &&
-                   Equals(_heights, other._heights) && Equals(_massErrors, other._massErrors) &&
-                   Equals(_truncateds, other._truncateds) && Equals(_peakIdentifications, other._peakIdentifications) &&
-                   Equals(_libraryDotProducts, other._libraryDotProducts) &&
-                   Equals(_isotopeDotProducts, other._isotopeDotProducts) && Equals(_qValues, other._qValues) &&
-                   Equals(_zScores, other._zScores) && Equals(_annotations, other._annotations) &&
-                   Equals(_userSets, other._userSets);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((TransitionGroupResults)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (_optimizationSteps?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_peakCountRatios?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_retentionTimes?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_startTimes?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_endTimes?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_ionMobilityInfos?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_fwhms?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_areas?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_areasMs1?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_areasFragment?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreas?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreasMs1?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_backgroundAreasFragment?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_heights?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_massErrors?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_truncateds?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_peakIdentifications?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_libraryDotProducts?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_isotopeDotProducts?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_qValues?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_zScores?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_annotations?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_userSets?.GetHashCode() ?? 0);
-                return hashCode;
-            }
-        }
-
-        protected override object[] GetCacheableFields()
-        {
-            return base.GetCacheableFields().Concat(new object []
+            return new IEnumerable[]
             {
                 _optimizationSteps,
                 _peakCountRatios,
@@ -767,46 +708,65 @@ namespace pwiz.Skyline.Model.Results
                 _startTimes,
                 _endTimes,
                 _ionMobilityInfos,
-                _peakIdentifications
-            }).ToArray();
+                _fwhms,
+                _areas,
+                _areasMs1,
+                _areasFragment,
+                _backgroundAreas,
+                _backgroundAreasMs1,
+                _backgroundAreasFragment,
+                _heights,
+                _massErrors,
+                _truncateds,
+                _peakIdentifications,
+                _libraryDotProducts,
+                _isotopeDotProducts,
+                _qValues,
+                _zScores,
+                _annotations,
+                _userSets
+            };
         }
 
-        protected override void SetCacheableFields(object[] values, ref int index)
+        protected override void SetLists(IList<IEnumerable> lists)
         {
-            base.SetCacheableFields(values, ref index);
-            _optimizationSteps = (ImmutableList<int>)values[index++];
-            _peakCountRatios = (ImmutableList<float>)values[index++];
-            _retentionTimes = (ImmutableList<float?>)values[index++];
-            _startTimes = (ImmutableList<float?>)values[index++];
-            _endTimes = (ImmutableList<float?>)values[index++];
-            _ionMobilityInfos = (ImmutableList<TransitionGroupIonMobilityInfo>) values[index++];
-            _peakIdentifications = (ImmutableList<PeakIdentification>) values[index++];
+            int i = 0;
+            _optimizationSteps = (ImmutableList<int>)lists[i++];
+            _peakCountRatios = (ImmutableList<float>)lists[i++];
+            _retentionTimes = (ImmutableList<float?>)lists[i++];
+            _startTimes = (ImmutableList<float?>)lists[i++];
+            _endTimes = (ImmutableList<float?>)lists[i++];
+            _ionMobilityInfos = (ImmutableList<TransitionGroupIonMobilityInfo>)lists[i++];
+            _fwhms = (ImmutableList<float?>)lists[i++];
+            _areas = (ImmutableList<float?>)lists[i++];
+            _areasMs1 = (ImmutableList<float?>)lists[i++];
+            _areasFragment = (ImmutableList<float?>)lists[i++];
+            _backgroundAreas = (ImmutableList<float?>)lists[i++];
+            _backgroundAreasMs1 = (ImmutableList<float?>)lists[i++];
+            _backgroundAreasFragment = (ImmutableList<float?>)lists[i++];
+            _heights = (ImmutableList<float?>)lists[i++];
+            _massErrors = (ImmutableList<float?>)lists[i++];
+            _truncateds = (ImmutableList<int?>)lists[i++];
+            _peakIdentifications = (ImmutableList<PeakIdentification>)lists[i++];
+            _libraryDotProducts = (ImmutableList<float?>)lists[i++];
+            _isotopeDotProducts = (ImmutableList<float?>)lists[i++];
+            _qValues = (ImmutableList<float?>)lists[i++];
+            _zScores = (ImmutableList<float?>)lists[i++];
+            _annotations = (ImmutableList<Annotations>)lists[i++];
+            _userSets = (ImmutableList<UserSet>)lists[i++];
+            Assume.AreEqual(i, lists.Count);
         }
 
         public IEnumerable<KeyValuePair<double, double>> GetScoresAndQValues()
         {
             if (_zScores == null || _qValues == null)
             {
-                yield break;
+                return Array.Empty<KeyValuePair<double, double>>();
             }
 
-            for (int i = 0; i < _zScores.Count; i++)
-            {
-                if (UserSet.TRUE == _userSets?[i])
-                {
-                    continue;
-                }
-
-                var score = _zScores[i];
-                if (score.HasValue)
-                {
-                    var qValue = _qValues[i];
-                    if (qValue.HasValue)
-                    {
-                        yield return new KeyValuePair<double, double>(score.Value, qValue.Value);
-                    }
-                }
-            }
+            return _zScores.Zip(_qValues, Tuple.Create)
+                .Where(tuple => tuple.Item1.HasValue && tuple.Item2.HasValue)
+                .Select(tuple => new KeyValuePair<double, double>(tuple.Item1.Value, tuple.Item2.Value));
         }
     }
 
@@ -837,34 +797,27 @@ namespace pwiz.Skyline.Model.Results
             _analyteConcentrations = items.Select(item => item.AnalyteConcentration).Nullables().UnlessAllNull();
         }
 
-        protected bool Equals(PeptideResults other)
+        protected override IEnumerable[] GetLists()
         {
-            return base.Equals(other) && Equals(_labelRatios, other._labelRatios) &&
-                   Equals(_peakCountRatios, other._peakCountRatios) && Equals(_retentionTimes, other._retentionTimes) &&
-                   Equals(_excludeFromCalibration, other._excludeFromCalibration) &&
-                   Equals(_analyteConcentrations, other._analyteConcentrations);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((PeptideResults)obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
+            return new IEnumerable[]
             {
-                int hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (_labelRatios?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_peakCountRatios?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_retentionTimes?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_excludeFromCalibration?.GetHashCode() ?? 0);
-                hashCode = (hashCode * 397) ^ (_analyteConcentrations?.GetHashCode() ?? 0);
-                return hashCode;
-            }
+                _labelRatios,
+                _peakCountRatios,
+                _retentionTimes,
+                _excludeFromCalibration,
+                _analyteConcentrations,
+            };
+        }
+
+        protected override void SetLists(IList<IEnumerable> lists)
+        {
+            int i = 0;
+            _labelRatios = (ImmutableList<ImmutableList<PeptideLabelRatio>>)lists[i++];
+            _peakCountRatios = (ImmutableList<float>)lists[i++];
+            _retentionTimes = (ImmutableList<float?>)lists[i++];
+            _excludeFromCalibration = (ImmutableList<bool>)lists[i++];
+            _analyteConcentrations = (ImmutableList<double?>)lists[i++];
+            Assume.AreEqual(lists.Count, i);
         }
     }
 }
