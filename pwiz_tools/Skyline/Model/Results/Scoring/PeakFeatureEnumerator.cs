@@ -35,7 +35,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
         public static PeakTransitionGroupFeatureSet GetPeakFeatures(this SrmDocument document,
                                                                                FeatureCalculators calcs,
                                                                                IProgressMonitor progressMonitor = null,
-                                                                               bool verbose = false)
+                                                                               bool verbose = false,
+                                                                               HashSet<IdentityPath> includedPeptidePaths = null)
         {
             // Get features for each peptide
             int totalPeptides = document.MoleculeCount;
@@ -62,9 +63,20 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 if (nodePep.TransitionGroupCount == 0)
                     return;
 
-                // Exclude standard peptides
-                if (nodePep.GlobalStandardType != null)
-                    return;
+                if (includedPeptidePaths != null)
+                {
+                    if (!includedPeptidePaths.Contains(new IdentityPath(pair.NodeMoleculeGroup.PeptideGroup,
+                            pair.NodeMolecule.Peptide)))
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    // Exclude standard peptides
+                    if (nodePep.GlobalStandardType != null)
+                        return;
+                }
 
                 if (progressMonitor != null)
                 {

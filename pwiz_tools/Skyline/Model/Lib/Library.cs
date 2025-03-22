@@ -622,7 +622,12 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public string FileNameHint { get; private set; }
 
-        public bool UseExplicitPeakBounds { get; private set; }
+        public ExplicitPeakBoundsOption UseExplicitPeakBounds { get; private set; }
+
+        public Library ChangeUseExplicitPeakBounds(ExplicitPeakBoundsOption option)
+        {
+            return ChangeProp(ImClone(this), im => im.UseExplicitPeakBounds = option);
+        }
 
         /// <summary>
         /// Creates the appropriate library spec for this library, given a path
@@ -791,6 +796,11 @@ namespace pwiz.Skyline.Model.Lib
         public virtual ExplicitPeakBounds GetExplicitPeakBounds(MsDataFileUri filePath, IEnumerable<Target> peptideSequences)
         {
             return null;
+        }
+
+        public virtual IEnumerable<KeyValuePair<string, ExplicitPeakBounds>> GetAllExplicitPeakBounds(IEnumerable<Target> peptideSequences)
+        {
+            return Array.Empty<KeyValuePair<string, ExplicitPeakBounds>>();
         }
 
         /// <summary>
@@ -977,6 +987,14 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        /// <summary>
+        /// Returns true if the library has explicit bounds and also if the q-values
+        /// are different for different files (i.e. not peptide-level q-values).
+        /// </summary>
+        public virtual bool HasExplicitBoundsQValues
+        {
+            get { return false; }
+        }
         public virtual bool HasExplicitBounds
         {
             get { return false; }
@@ -1002,7 +1020,7 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             FileNameHint = reader.GetAttribute(ATTR.file_name_hint);
-            UseExplicitPeakBounds = reader.GetBoolAttribute(ATTR.use_explicit_peak_bounds, true);
+            UseExplicitPeakBounds = reader.GetEnumAttribute(ATTR.use_explicit_peak_bounds, ExplicitPeakBoundsOption.@true);
         }
 
         public override void WriteXml(XmlWriter writer)
@@ -1010,7 +1028,7 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeIfString(ATTR.file_name_hint, FileNameHint);
-            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, true);
+            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, ExplicitPeakBoundsOption.@true);
         }
 
         #endregion
@@ -1535,7 +1553,7 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        protected LibrarySpec(string name, string path, bool useExplicitPeakBounds = true)
+        protected LibrarySpec(string name, string path, ExplicitPeakBoundsOption useExplicitPeakBounds = ExplicitPeakBoundsOption.@true)
             : base(name)
         {
             FilePath = path;
@@ -1572,7 +1590,7 @@ namespace pwiz.Skyline.Model.Lib
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
 
         [Track(defaultValues:typeof(DefaultValuesTrue))]
-        public bool UseExplicitPeakBounds { get; private set; }
+        public ExplicitPeakBoundsOption UseExplicitPeakBounds { get; private set; }
 
         public virtual ItemDescription ItemDescription
         {
@@ -1581,14 +1599,24 @@ namespace pwiz.Skyline.Model.Lib
                 var lines = new List<string>();
                 lines.Add(GetLibraryTypeName());
                 lines.Add(TextUtil.ColonSeparate(PropertyNames.LibrarySpec_FilePathAuditLog, FilePath));
-                if (!UseExplicitPeakBounds)
+                if (UseExplicitPeakBounds != ExplicitPeakBoundsOption.@true) 
                 {
+                    // TODO: "Sometimes"
                     lines.Add(LibResources.LibrarySpec_ItemDescription_Ignore_explicit_peak_boundaries);
                 }
 
                 return new ItemDescription(FilePath).ChangeTitle(Name).ChangeDetailLines(lines);
             }
         }
+
+        private class ExplicitPeakBoundsDefault : DefaultValues
+        {
+            protected override IEnumerable<object> _values
+            {
+                get { yield return ExplicitPeakBoundsOption.@true; }
+            }
+        }
+
 
         public abstract string GetLibraryTypeName();
 
@@ -1609,7 +1637,7 @@ namespace pwiz.Skyline.Model.Lib
             return ChangeProp(ImClone(this), im => im.IsDocumentLibrary = prop).ChangeDocumentLocal(prop);
         }
 
-        public LibrarySpec ChangeUseExplicitPeakBounds(bool prop)
+        public LibrarySpec ChangeUseExplicitPeakBounds(ExplicitPeakBoundsOption prop)
         {
             return ChangeProp(ImClone(this), im => im.UseExplicitPeakBounds = prop);
         }
@@ -1635,7 +1663,7 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             FilePath = reader.GetAttribute(ATTR.file_path);
-            UseExplicitPeakBounds = reader.GetBoolAttribute(ATTR.use_explicit_peak_bounds, true);
+            UseExplicitPeakBounds = reader.GetEnumAttribute(ATTR.use_explicit_peak_bounds, ExplicitPeakBoundsOption.@true);
             // Consume tag
             reader.Read();
         }
@@ -1651,7 +1679,7 @@ namespace pwiz.Skyline.Model.Lib
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.file_path, FilePath);
-            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, true);
+            writer.WriteAttribute(ATTR.use_explicit_peak_bounds, UseExplicitPeakBounds, ExplicitPeakBoundsOption.@true);
         }
 
         #endregion
@@ -1689,6 +1717,14 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
+    }
+
+    public enum ExplicitPeakBoundsOption
+    {
+        @true,
+        @false,
+        when_missing_detect,
+        when_missing_impute
     }
 
     /// <summary>
@@ -1762,6 +1798,15 @@ namespace pwiz.Skyline.Model.Lib
         public SpectrumHeaderInfo ChangeLibraryName(string prop)
         {
             return ChangeProp(ImClone(this), im => im.LibraryName = prop);
+        }
+
+        public SpectrumHeaderInfo ChangeScoreType(string scoreType)
+        {
+            if (ReferenceEquals(scoreType, ScoreType))
+            {
+                return this;
+            }
+            return ChangeProp(ImClone(this), im => im.ScoreType = scoreType);
         }
 
         /// <summary>

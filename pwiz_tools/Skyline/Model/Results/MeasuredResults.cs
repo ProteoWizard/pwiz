@@ -20,11 +20,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -104,9 +106,9 @@ namespace pwiz.Skyline.Model.Results
                     chromFileInfo.ExplicitGlobalStandardArea.HasValue);
 
                 // Pre-allocate empty arrays in case they are needed
-                EmptyPeptideResults = new Results<PeptideChromInfo>(new ChromInfoList<PeptideChromInfo>[count]);
-                EmptyTransitionGroupResults = new Results<TransitionGroupChromInfo>(new ChromInfoList<TransitionGroupChromInfo>[count]);
-                EmptyTransitionResults = new Results<TransitionChromInfo>(new ChromInfoList<TransitionChromInfo>[count]);
+                EmptyPeptideResults = PeptideResults.Empty.ChangeResults(new ChromInfoList<PeptideChromInfo>[count]);
+                EmptyTransitionGroupResults = TransitionGroupResults.Empty.ChangeResults(new ChromInfoList<TransitionGroupChromInfo>[count]);
+                EmptyTransitionResults = TransitionResults.Empty.ChangeResults(new ChromInfoList<TransitionChromInfo>[count]);
                 CheckForNewChromatogramData();
                 _medianTicArea = CalculateMedianTicArea();
             }
@@ -651,6 +653,7 @@ namespace pwiz.Skyline.Model.Results
             return ChromatogramSetForIndex(index, out chromatogramSet);
         }
 
+
         private bool ChromatogramSetForIndex(int index, out ChromatogramSet chromatogramSet)
         {
             chromatogramSet = (index != -1 ? _chromatograms[index] : null);
@@ -788,6 +791,16 @@ namespace pwiz.Skyline.Model.Results
                 qcTraceNames.Sort();
                 return qcTraceNames;
             }
+        }
+
+        /// <summary>
+        /// Returns the number of chromatogram groups that have more than one peak.
+        /// This is used to decide whether Skyline did the peak picking or the peak boundaries
+        /// came from a library.
+        /// </summary>
+        public int CountChromatogramsWithMultipleCandidatePeaks()
+        {
+            return Caches.Sum(cache => cache.ChromGroupHeaderInfos.Count(header => header.NumPeaks > 1));
         }
 
         public bool TryLoadAllIonsChromatogram(int index,
@@ -1937,6 +1950,11 @@ namespace pwiz.Skyline.Model.Results
         public double? GetMedianTicArea()
         {
             return _medianTicArea;
+        }
+
+        public ChromatogramTimeRanges GetChromatogramTimeRanges(CancellationToken cancellationToken)
+        {
+            return ChromatogramTimeRanges.ReadChromatogramTimeRanges(cancellationToken, Caches);
         }
     }
 

@@ -26,6 +26,7 @@ using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -101,6 +102,15 @@ namespace pwiz.Skyline.Util
         void SetProgressCheckCancel(int step, int totalSteps);
 
         CancellationToken CancellationToken { get; }
+    }
+
+    public static class ProductionMonitors
+    {
+        public static ProductionMonitor ToProductionMonitor(this ILongWaitBroker longWaitBroker)
+        {
+            return new ProductionMonitor(longWaitBroker.CancellationToken,
+                progressValue => longWaitBroker.ProgressValue = progressValue);
+        }
     }
 
     /// <summary>

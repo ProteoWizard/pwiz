@@ -132,7 +132,7 @@ namespace pwiz.SkylineTestFunctional
                                                     chromInfo.Annotations,
                                                     AnnotationDef.AnnotationTarget.transition_result))));
                                     }
-                                    transition = transition.ChangeResults(new Results<TransitionChromInfo>(results));
+                                    transition = transition.ChangeResults(TransitionResults.Empty.ChangeResults(results));
                                 }
                                 transitions[iTransition] = transition;
                             }
@@ -147,7 +147,7 @@ namespace pwiz.SkylineTestFunctional
                                             chromInfo.ChangeAnnotations(AddAnnotations(chromInfo.Annotations,
                                                 AnnotationDef.AnnotationTarget.precursor_result))));
                                 }
-                                precursor = precursor.ChangeResults(new Results<TransitionGroupChromInfo>(results));
+                                precursor = precursor.ChangeResults(TransitionGroupResults.Empty.ChangeResults(results));
                             }
                             precursor = (TransitionGroupDocNode) precursor.ChangeChildren(transitions);
                             precursors[iPrecursor] = precursor;

@@ -1,0 +1,905 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="databoundGridControl.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 182</value>
+  </data>
+  <data name="databoundGridControl.Size" type="System.Drawing.Size, System.Drawing">
+    <value>624, 219</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.Name" xml:space="preserve">
+    <value>databoundGridControl</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridControl, Skyline-daily, Version=24.1.1.394, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;databoundGridControl.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="linkLabelViewRegression.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkLabelViewRegression.Location" type="System.Drawing.Point, System.Drawing">
+    <value>168, 55</value>
+  </data>
+  <data name="linkLabelViewRegression.Size" type="System.Drawing.Size, System.Drawing">
+    <value>86, 13</value>
+  </data>
+  <data name="linkLabelViewRegression.TabIndex" type="System.Int32, mscorlib">
+    <value>32</value>
+  </data>
+  <data name="linkLabelViewRegression.Text" xml:space="preserve">
+    <value>View Regression</value>
+  </data>
+  <data name="&gt;&gt;linkLabelViewRegression.Name" xml:space="preserve">
+    <value>linkLabelViewRegression</value>
+  </data>
+  <data name="&gt;&gt;linkLabelViewRegression.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabelViewRegression.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;linkLabelViewRegression.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="btnImputeBoundaries.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="btnImputeBoundaries.Location" type="System.Drawing.Point, System.Drawing">
+    <value>480, 12</value>
+  </data>
+  <data name="btnImputeBoundaries.Size" type="System.Drawing.Size, System.Drawing">
+    <value>132, 23</value>
+  </data>
+  <data name="btnImputeBoundaries.TabIndex" type="System.Int32, mscorlib">
+    <value>17</value>
+  </data>
+  <data name="btnImputeBoundaries.Text" xml:space="preserve">
+    <value>Impute Boundaries</value>
+  </data>
+  <metadata name="toolTip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>158, 17</value>
+  </metadata>
+  <data name="btnImputeBoundaries.ToolTip" xml:space="preserve">
+    <value>Choose new peak boundaries for the rejected peaks in the displayed rows</value>
+  </data>
+  <data name="&gt;&gt;btnImputeBoundaries.Name" xml:space="preserve">
+    <value>btnImputeBoundaries</value>
+  </data>
+  <data name="&gt;&gt;btnImputeBoundaries.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnImputeBoundaries.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;btnImputeBoundaries.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lblPercentPeakWidth.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblPercentPeakWidth.Location" type="System.Drawing.Point, System.Drawing">
+    <value>88, 67</value>
+  </data>
+  <data name="lblPercentPeakWidth.Size" type="System.Drawing.Size, System.Drawing">
+    <value>15, 13</value>
+  </data>
+  <data name="lblPercentPeakWidth.TabIndex" type="System.Int32, mscorlib">
+    <value>29</value>
+  </data>
+  <data name="lblPercentPeakWidth.Text" xml:space="preserve">
+    <value>%</value>
+  </data>
+  <data name="&gt;&gt;lblPercentPeakWidth.Name" xml:space="preserve">
+    <value>lblPercentPeakWidth</value>
+  </data>
+  <data name="&gt;&gt;lblPercentPeakWidth.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblPercentPeakWidth.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;lblPercentPeakWidth.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lblMinutes.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblMinutes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>88, 28</value>
+  </data>
+  <data name="lblMinutes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>43, 13</value>
+  </data>
+  <data name="lblMinutes.TabIndex" type="System.Int32, mscorlib">
+    <value>28</value>
+  </data>
+  <data name="lblMinutes.Text" xml:space="preserve">
+    <value>minutes</value>
+  </data>
+  <data name="&gt;&gt;lblMinutes.Name" xml:space="preserve">
+    <value>lblMinutes</value>
+  </data>
+  <data name="&gt;&gt;lblMinutes.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblMinutes.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;lblMinutes.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="tbxMaxPeakWidthVariation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 64</value>
+  </data>
+  <data name="tbxMaxPeakWidthVariation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 20</value>
+  </data>
+  <data name="tbxMaxPeakWidthVariation.TabIndex" type="System.Int32, mscorlib">
+    <value>27</value>
+  </data>
+  <data name="tbxMaxPeakWidthVariation.Text" xml:space="preserve">
+    <value>20</value>
+  </data>
+  <data name="tbxMaxPeakWidthVariation.ToolTip" xml:space="preserve">
+    <value>Peaks whose retention time is less than this distance from the accepted peaks will also be assumed to be correct.</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxPeakWidthVariation.Name" xml:space="preserve">
+    <value>tbxMaxPeakWidthVariation</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxPeakWidthVariation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxPeakWidthVariation.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;tbxMaxPeakWidthVariation.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 48</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>125, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>26</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>Max peak width variation</value>
+  </data>
+  <data name="&gt;&gt;label2.Name" xml:space="preserve">
+    <value>label2</value>
+  </data>
+  <data name="&gt;&gt;label2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label2.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="cbxAlignAllGraphs.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxAlignAllGraphs.Location" type="System.Drawing.Point, System.Drawing">
+    <value>171, 76</value>
+  </data>
+  <data name="cbxAlignAllGraphs.Size" type="System.Drawing.Size, System.Drawing">
+    <value>97, 17</value>
+  </data>
+  <data name="cbxAlignAllGraphs.TabIndex" type="System.Int32, mscorlib">
+    <value>25</value>
+  </data>
+  <data name="cbxAlignAllGraphs.Text" xml:space="preserve">
+    <value>Align all graphs</value>
+  </data>
+  <data name="cbxAlignAllGraphs.ToolTip" xml:space="preserve">
+    <value>Align the chromatogram and retention time graphs according to the chosen retention time calculator.</value>
+  </data>
+  <data name="&gt;&gt;cbxAlignAllGraphs.Name" xml:space="preserve">
+    <value>cbxAlignAllGraphs</value>
+  </data>
+  <data name="&gt;&gt;cbxAlignAllGraphs.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxAlignAllGraphs.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;cbxAlignAllGraphs.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="radioScopeDocument.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioScopeDocument.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 39</value>
+  </data>
+  <data name="radioScopeDocument.Size" type="System.Drawing.Size, System.Drawing">
+    <value>74, 17</value>
+  </data>
+  <data name="radioScopeDocument.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="radioScopeDocument.Text" xml:space="preserve">
+    <value>Document</value>
+  </data>
+  <data name="&gt;&gt;radioScopeDocument.Name" xml:space="preserve">
+    <value>radioScopeDocument</value>
+  </data>
+  <data name="&gt;&gt;radioScopeDocument.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioScopeDocument.Parent" xml:space="preserve">
+    <value>groupBoxScope</value>
+  </data>
+  <data name="&gt;&gt;radioScopeDocument.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioScopeSelection.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="radioScopeSelection.Location" type="System.Drawing.Point, System.Drawing">
+    <value>10, 16</value>
+  </data>
+  <data name="radioScopeSelection.Size" type="System.Drawing.Size, System.Drawing">
+    <value>69, 17</value>
+  </data>
+  <data name="radioScopeSelection.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="radioScopeSelection.Text" xml:space="preserve">
+    <value>Selection</value>
+  </data>
+  <data name="&gt;&gt;radioScopeSelection.Name" xml:space="preserve">
+    <value>radioScopeSelection</value>
+  </data>
+  <data name="&gt;&gt;radioScopeSelection.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioScopeSelection.Parent" xml:space="preserve">
+    <value>groupBoxScope</value>
+  </data>
+  <data name="&gt;&gt;radioScopeSelection.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="groupBoxScope.Location" type="System.Drawing.Point, System.Drawing">
+    <value>11, 108</value>
+  </data>
+  <data name="groupBoxScope.Size" type="System.Drawing.Size, System.Drawing">
+    <value>141, 68</value>
+  </data>
+  <data name="groupBoxScope.TabIndex" type="System.Int32, mscorlib">
+    <value>23</value>
+  </data>
+  <data name="groupBoxScope.Text" xml:space="preserve">
+    <value>Scope</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.Name" xml:space="preserve">
+    <value>groupBoxScope</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;groupBoxScope.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="progressBar1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="progressBar1.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="progressBar1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>170, 151</value>
+  </data>
+  <data name="progressBar1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>442, 23</value>
+  </data>
+  <data name="progressBar1.TabIndex" type="System.Int32, mscorlib">
+    <value>19</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.Name" xml:space="preserve">
+    <value>progressBar1</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ProgressBar, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;progressBar1.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="cbxOverwriteManual.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbxOverwriteManual.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 90</value>
+  </data>
+  <data name="cbxOverwriteManual.Size" type="System.Drawing.Size, System.Drawing">
+    <value>140, 17</value>
+  </data>
+  <data name="cbxOverwriteManual.TabIndex" type="System.Int32, mscorlib">
+    <value>16</value>
+  </data>
+  <data name="cbxOverwriteManual.Text" xml:space="preserve">
+    <value>Overwrite manual peaks</value>
+  </data>
+  <data name="&gt;&gt;cbxOverwriteManual.Name" xml:space="preserve">
+    <value>cbxOverwriteManual</value>
+  </data>
+  <data name="&gt;&gt;cbxOverwriteManual.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbxOverwriteManual.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;cbxOverwriteManual.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="tbxRtDeviationCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 25</value>
+  </data>
+  <data name="tbxRtDeviationCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>70, 20</value>
+  </data>
+  <data name="tbxRtDeviationCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="tbxRtDeviationCutoff.Text" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tbxRtDeviationCutoff.ToolTip" xml:space="preserve">
+    <value>Peaks whose retention time is less than this distance from the accepted peaks will also be assumed to be correct.
+If blank then peak boundaries will only be imputed for missing peaks.</value>
+  </data>
+  <data name="&gt;&gt;tbxRtDeviationCutoff.Name" xml:space="preserve">
+    <value>tbxRtDeviationCutoff</value>
+  </data>
+  <data name="&gt;&gt;tbxRtDeviationCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxRtDeviationCutoff.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;tbxRtDeviationCutoff.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="lblSdCutoff.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblSdCutoff.Location" type="System.Drawing.Point, System.Drawing">
+    <value>9, 9</value>
+  </data>
+  <data name="lblSdCutoff.Size" type="System.Drawing.Size, System.Drawing">
+    <value>67, 13</value>
+  </data>
+  <data name="lblSdCutoff.TabIndex" type="System.Int32, mscorlib">
+    <value>14</value>
+  </data>
+  <data name="lblSdCutoff.Text" xml:space="preserve">
+    <value>Max RT shift</value>
+  </data>
+  <data name="&gt;&gt;lblSdCutoff.Name" xml:space="preserve">
+    <value>lblSdCutoff</value>
+  </data>
+  <data name="&gt;&gt;lblSdCutoff.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblSdCutoff.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;lblSdCutoff.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="comboRtCalculator.Location" type="System.Drawing.Point, System.Drawing">
+    <value>170, 29</value>
+  </data>
+  <data name="comboRtCalculator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>127, 21</value>
+  </data>
+  <data name="comboRtCalculator.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="comboRtCalculator.ToolTip" xml:space="preserve">
+    <value>The retention time alignment setting controls how the times from the accepted peaks are mapped onto the runs where a new peak needs to be chosen.</value>
+  </data>
+  <data name="&gt;&gt;comboRtCalculator.Name" xml:space="preserve">
+    <value>comboRtCalculator</value>
+  </data>
+  <data name="&gt;&gt;comboRtCalculator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboRtCalculator.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;comboRtCalculator.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="lblRetentionTimeAlignment.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblRetentionTimeAlignment.Location" type="System.Drawing.Point, System.Drawing">
+    <value>167, 13</value>
+  </data>
+  <data name="lblRetentionTimeAlignment.Size" type="System.Drawing.Size, System.Drawing">
+    <value>127, 13</value>
+  </data>
+  <data name="lblRetentionTimeAlignment.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblRetentionTimeAlignment.Text" xml:space="preserve">
+    <value>Retention time calculator:</value>
+  </data>
+  <data name="&gt;&gt;lblRetentionTimeAlignment.Name" xml:space="preserve">
+    <value>lblRetentionTimeAlignment</value>
+  </data>
+  <data name="&gt;&gt;lblRetentionTimeAlignment.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRetentionTimeAlignment.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;lblRetentionTimeAlignment.ZOrder" xml:space="preserve">
+    <value>13</value>
+  </data>
+  <data name="groupBoxResults.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Right</value>
+  </data>
+  <data name="tbxExemplary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 32</value>
+  </data>
+  <data name="tbxExemplary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 20</value>
+  </data>
+  <data name="tbxExemplary.TabIndex" type="System.Int32, mscorlib">
+    <value>13</value>
+  </data>
+  <data name="tbxExemplary.ToolTip" xml:space="preserve">
+    <value>Exemplary peak boundaries are the peak boundaries from the highest scoring replicate.</value>
+  </data>
+  <data name="&gt;&gt;tbxExemplary.Name" xml:space="preserve">
+    <value>tbxExemplary</value>
+  </data>
+  <data name="&gt;&gt;tbxExemplary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxExemplary.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;tbxExemplary.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lblExemplary.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblExemplary.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lblExemplary.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 16</value>
+  </data>
+  <data name="lblExemplary.Size" type="System.Drawing.Size, System.Drawing">
+    <value>58, 13</value>
+  </data>
+  <data name="lblExemplary.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="lblExemplary.Text" xml:space="preserve">
+    <value>Exemplary:</value>
+  </data>
+  <data name="&gt;&gt;lblExemplary.Name" xml:space="preserve">
+    <value>lblExemplary</value>
+  </data>
+  <data name="&gt;&gt;lblExemplary.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblExemplary.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;lblExemplary.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="tbxNeedsRemoval.Location" type="System.Drawing.Point, System.Drawing">
+    <value>96, 73</value>
+  </data>
+  <data name="tbxNeedsRemoval.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 20</value>
+  </data>
+  <data name="tbxNeedsRemoval.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="tbxNeedsRemoval.ToolTip" xml:space="preserve">
+    <value>If the peak boundaries need adjustment but the exemplary peak boundaries are outside of the retention time range of the chromatogram, the peak will be removed.
+</value>
+  </data>
+  <data name="&gt;&gt;tbxNeedsRemoval.Name" xml:space="preserve">
+    <value>tbxNeedsRemoval</value>
+  </data>
+  <data name="&gt;&gt;tbxNeedsRemoval.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxNeedsRemoval.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;tbxNeedsRemoval.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="lblNeedRemoval.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblNeedRemoval.Location" type="System.Drawing.Point, System.Drawing">
+    <value>96, 57</value>
+  </data>
+  <data name="lblNeedRemoval.Size" type="System.Drawing.Size, System.Drawing">
+    <value>76, 13</value>
+  </data>
+  <data name="lblNeedRemoval.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="lblNeedRemoval.Text" xml:space="preserve">
+    <value>Need removal:</value>
+  </data>
+  <data name="&gt;&gt;lblNeedRemoval.Name" xml:space="preserve">
+    <value>lblNeedRemoval</value>
+  </data>
+  <data name="&gt;&gt;lblNeedRemoval.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblNeedRemoval.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;lblNeedRemoval.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="tbxRejected.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 73</value>
+  </data>
+  <data name="tbxRejected.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 20</value>
+  </data>
+  <data name="tbxRejected.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="tbxRejected.ToolTip" xml:space="preserve">
+    <value>Peak boundaries which are missing, or further from the Exemplary peak boundaries than the "Max RT shift" or "Max peak width variation" will have their boundaries adjusted to be more like the exemplary peak boundaries.</value>
+  </data>
+  <data name="&gt;&gt;tbxRejected.Name" xml:space="preserve">
+    <value>tbxRejected</value>
+  </data>
+  <data name="&gt;&gt;tbxRejected.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxRejected.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;tbxRejected.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="lblRejected.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblRejected.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 57</value>
+  </data>
+  <data name="lblRejected.Size" type="System.Drawing.Size, System.Drawing">
+    <value>90, 13</value>
+  </data>
+  <data name="lblRejected.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="lblRejected.Text" xml:space="preserve">
+    <value>Need adjustment:</value>
+  </data>
+  <data name="&gt;&gt;lblRejected.Name" xml:space="preserve">
+    <value>lblRejected</value>
+  </data>
+  <data name="&gt;&gt;lblRejected.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblRejected.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;lblRejected.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="tbxAccepted.Location" type="System.Drawing.Point, System.Drawing">
+    <value>96, 32</value>
+  </data>
+  <data name="tbxAccepted.Size" type="System.Drawing.Size, System.Drawing">
+    <value>84, 20</value>
+  </data>
+  <data name="tbxAccepted.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="tbxAccepted.ToolTip" xml:space="preserve">
+    <value>Accepted peak boundaries will not be changed.</value>
+  </data>
+  <data name="&gt;&gt;tbxAccepted.Name" xml:space="preserve">
+    <value>tbxAccepted</value>
+  </data>
+  <data name="&gt;&gt;tbxAccepted.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tbxAccepted.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;tbxAccepted.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="lblAccepted.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblAccepted.Location" type="System.Drawing.Point, System.Drawing">
+    <value>96, 16</value>
+  </data>
+  <data name="lblAccepted.Size" type="System.Drawing.Size, System.Drawing">
+    <value>56, 13</value>
+  </data>
+  <data name="lblAccepted.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="lblAccepted.Text" xml:space="preserve">
+    <value>Accepted:</value>
+  </data>
+  <data name="&gt;&gt;lblAccepted.Name" xml:space="preserve">
+    <value>lblAccepted</value>
+  </data>
+  <data name="&gt;&gt;lblAccepted.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblAccepted.Parent" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;lblAccepted.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="groupBoxResults.Location" type="System.Drawing.Point, System.Drawing">
+    <value>419, 41</value>
+  </data>
+  <data name="groupBoxResults.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>50, 0</value>
+  </data>
+  <data name="groupBoxResults.Size" type="System.Drawing.Size, System.Drawing">
+    <value>193, 104</value>
+  </data>
+  <data name="groupBoxResults.TabIndex" type="System.Int32, mscorlib">
+    <value>18</value>
+  </data>
+  <data name="groupBoxResults.Text" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="groupBoxResults.ToolTip" xml:space="preserve">
+    <value>Summary of changes that will be made to peak boundaries when the Impute Boundaries button is pressed.</value>
+  </data>
+  <data name="&gt;&gt;groupBoxResults.Name" xml:space="preserve">
+    <value>groupBoxResults</value>
+  </data>
+  <data name="&gt;&gt;groupBoxResults.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxResults.Parent" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;groupBoxResults.ZOrder" xml:space="preserve">
+    <value>14</value>
+  </data>
+  <data name="panel1.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="panel1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="panel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>624, 182</value>
+  </data>
+  <data name="panel1.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Name" xml:space="preserve">
+    <value>panel1</value>
+  </data>
+  <data name="&gt;&gt;panel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;panel1.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="saveFileDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>256, 17</value>
+  </metadata>
+  <metadata name="imageList1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>391, 17</value>
+  </metadata>
+  <data name="imageList1.ImageSize" type="System.Drawing.Size, System.Drawing">
+    <value>16, 16</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>624, 401</value>
+  </data>
+  <data name="$this.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="$this.MinimumSize" type="System.Drawing.Size, System.Drawing">
+    <value>550, 300</value>
+  </data>
+  <data name="$this.TabText" xml:space="preserve">
+    <value>Peak Imputation</value>
+  </data>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Peak Imputation</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.394, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
+    <value>toolTip1</value>
+  </data>
+  <data name="&gt;&gt;toolTip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolTip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;saveFileDialog1.Name" xml:space="preserve">
+    <value>saveFileDialog1</value>
+  </data>
+  <data name="&gt;&gt;saveFileDialog1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.SaveFileDialog, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;imageList1.Name" xml:space="preserve">
+    <value>imageList1</value>
+  </data>
+  <data name="&gt;&gt;imageList1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ImageList, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>PeakImputationForm</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Controls.Databinding.DataboundGridForm, Skyline-daily, Version=24.1.1.394, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>

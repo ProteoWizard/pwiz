@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="textName.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
@@ -378,31 +381,163 @@
   <data name="&gt;&gt;linkNIST.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="cbxUseExplicitPeakBounds.AutoSize" type="System.Boolean, mscorlib">
+  <data name="radioIfPresentElseImpute.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="radioIfPresentElseImpute.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 162</value>
+  </data>
+  <data name="radioIfPresentElseImpute.Size" type="System.Drawing.Size, System.Drawing">
+    <value>339, 36</value>
+  </data>
+  <data name="radioIfPresentElseImpute.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="radioIfPresentElseImpute.Text" xml:space="preserve">
+    <value>Use the peak boundaries if present, otherwise impute the peak boundaries from the best scoring replicate</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseImpute.Name" xml:space="preserve">
+    <value>radioIfPresentElseImpute</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseImpute.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseImpute.Parent" xml:space="preserve">
+    <value>groupBoxExplicitPeakBounds</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseImpute.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="radioIfPresentElseDetect.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="radioIfPresentElseDetect.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 122</value>
+  </data>
+  <data name="radioIfPresentElseDetect.Size" type="System.Drawing.Size, System.Drawing">
+    <value>339, 34</value>
+  </data>
+  <data name="radioIfPresentElseDetect.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="radioIfPresentElseDetect.Text" xml:space="preserve">
+    <value>Use the explicit peak boundaries if present, otherwise use Skyline's peak detection algorithms</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseDetect.Name" xml:space="preserve">
+    <value>radioIfPresentElseDetect</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseDetect.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseDetect.Parent" xml:space="preserve">
+    <value>groupBoxExplicitPeakBounds</value>
+  </data>
+  <data name="&gt;&gt;radioIfPresentElseDetect.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="radioExplicitBoundsUseAlways.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="radioExplicitBoundsUseAlways.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 77</value>
+  </data>
+  <data name="radioExplicitBoundsUseAlways.Size" type="System.Drawing.Size, System.Drawing">
+    <value>339, 49</value>
+  </data>
+  <data name="radioExplicitBoundsUseAlways.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="radioExplicitBoundsUseAlways.Text" xml:space="preserve">
+    <value>Always use peak boundaries from the library. If the peak boundaries are missing for a particular replicate, then the area for that replicate will be missing.</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsUseAlways.Name" xml:space="preserve">
+    <value>radioExplicitBoundsUseAlways</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsUseAlways.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsUseAlways.Parent" xml:space="preserve">
+    <value>groupBoxExplicitPeakBounds</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsUseAlways.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="radioExplicitBoundsIgnore.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
+  </data>
+  <data name="radioExplicitBoundsIgnore.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 37</value>
+  </data>
+  <data name="radioExplicitBoundsIgnore.Size" type="System.Drawing.Size, System.Drawing">
+    <value>339, 42</value>
+  </data>
+  <data name="radioExplicitBoundsIgnore.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="radioExplicitBoundsIgnore.Text" xml:space="preserve">
+    <value>Ignore peak boundaries from the library. Skyline will always use its own peak detection algorithms.</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsIgnore.Name" xml:space="preserve">
+    <value>radioExplicitBoundsIgnore</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsIgnore.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsIgnore.Parent" xml:space="preserve">
+    <value>groupBoxExplicitPeakBounds</value>
+  </data>
+  <data name="&gt;&gt;radioExplicitBoundsIgnore.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="lblExplicitPeakBounds.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="cbxUseExplicitPeakBounds.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 177</value>
+  <data name="lblExplicitPeakBounds.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 21</value>
   </data>
-  <data name="cbxUseExplicitPeakBounds.Size" type="System.Drawing.Size, System.Drawing">
-    <value>145, 17</value>
+  <data name="lblExplicitPeakBounds.Size" type="System.Drawing.Size, System.Drawing">
+    <value>263, 13</value>
   </data>
-  <data name="cbxUseExplicitPeakBounds.TabIndex" type="System.Int32, mscorlib">
-    <value>13</value>
+  <data name="lblExplicitPeakBounds.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
   </data>
-  <data name="cbxUseExplicitPeakBounds.Text" xml:space="preserve">
-    <value>Use explicit peak bounds</value>
+  <data name="lblExplicitPeakBounds.Text" xml:space="preserve">
+    <value>How should peak boundaries from the library be used?</value>
   </data>
-  <data name="&gt;&gt;cbxUseExplicitPeakBounds.Name" xml:space="preserve">
-    <value>cbxUseExplicitPeakBounds</value>
+  <data name="&gt;&gt;lblExplicitPeakBounds.Name" xml:space="preserve">
+    <value>lblExplicitPeakBounds</value>
   </data>
-  <data name="&gt;&gt;cbxUseExplicitPeakBounds.Type" xml:space="preserve">
-    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;lblExplicitPeakBounds.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;cbxUseExplicitPeakBounds.Parent" xml:space="preserve">
+  <data name="&gt;&gt;lblExplicitPeakBounds.Parent" xml:space="preserve">
+    <value>groupBoxExplicitPeakBounds</value>
+  </data>
+  <data name="&gt;&gt;lblExplicitPeakBounds.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="groupBoxExplicitPeakBounds.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 176</value>
+  </data>
+  <data name="groupBoxExplicitPeakBounds.Size" type="System.Drawing.Size, System.Drawing">
+    <value>351, 204</value>
+  </data>
+  <data name="groupBoxExplicitPeakBounds.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="groupBoxExplicitPeakBounds.Text" xml:space="preserve">
+    <value>Pe&amp;ak boundaries</value>
+  </data>
+  <data name="&gt;&gt;groupBoxExplicitPeakBounds.Name" xml:space="preserve">
+    <value>groupBoxExplicitPeakBounds</value>
+  </data>
+  <data name="&gt;&gt;groupBoxExplicitPeakBounds.Type" xml:space="preserve">
+    <value>System.Windows.Forms.GroupBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;groupBoxExplicitPeakBounds.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;cbxUseExplicitPeakBounds.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;groupBoxExplicitPeakBounds.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
@@ -412,7 +547,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>377, 206</value>
+    <value>377, 392</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -420,10 +555,16 @@
   <data name="$this.Text" xml:space="preserve">
     <value>Edit Library</value>
   </data>
+  <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
+    <value>modeUIHandler</value>
+  </data>
+  <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.429, Culture=neutral, PublicKeyToken=null</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>EditLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.429, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

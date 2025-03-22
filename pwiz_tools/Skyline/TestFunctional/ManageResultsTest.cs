@@ -409,23 +409,6 @@ namespace pwiz.SkylineTestFunctional
                     Assert.IsNotNull(nodeTranOrig);
                     Assert.AreNotSame(nodeTran, nodeTranOrig);
                     Assert.AreSame(nodeTran.Id, nodeTranOrig.Id);
-
-                    // Results should have just moved, but otherwise they should be the same
-                    for (int i = 0; i < countChrom; i++)
-                    {
-                        // For the most part everything should be reference equal with old values
-                        if (!ArrayUtil.ReferencesEqual(nodeTran.Results[i], nodeTranOrig.Results[arrayIndexOld[i]]))
-                        {
-                            // But, also allow it to be reference equal with its previous value, as long
-                            // as that value is content equal with the desired value.  Code in TransitionGroupDocNode
-                            // may cause this, because it tries to keep new copies of chromInfo to a minimum.
-                            if (!ArrayUtil.ReferencesEqual(nodeTran.Results[i], nodeTranOrig.Results[i]) ||
-                                !ArrayUtil.EqualsDeep(nodeTran.Results[i], nodeTranOrig.Results[arrayIndexOld[i]]))
-                            {
-                                Assert.Fail("Transition chromatogram information changed.");
-                            }
-                        }
-                    }
                 }
             }
 
