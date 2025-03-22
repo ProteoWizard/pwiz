@@ -8,6 +8,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -72,11 +73,7 @@ namespace pwiz.Skyline.Model.Results
 
         private void SetFlatList(IList<TItem> items)
         {
-            var newFileIds = items.Select(item => ReferenceValue.Of(item.FileId)).ToImmutable();
-            if (!Equals(newFileIds, FileIds))
-            {
-                _fileIds = newFileIds;
-            }
+            _fileIds = items.Select(item => ReferenceValue.Of(item.FileId)).ToImmutable();
             SetItems(items);
         }
 
@@ -103,7 +100,43 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), im =>
             {
                 im.SetChromInfoLists(newList);
-            });
+            }).UseValuesFrom(this);
+        }
+
+        public Results<TItem> UseValuesFrom(Results<TItem> oldResults)
+        {
+            var oldValues = oldResults.GetCacheableFields();
+            var newValues = GetCacheableFields();
+            Assume.AreEqual(newValues.Length, oldValues.Length);
+            bool allValuesEqual = true;
+            bool anyValuesEqual = false;
+            for (int iField = 0; iField < newValues.Length; iField++)
+            {
+                if (!ReferenceEquals(oldValues[iField], newValues[iField]))
+                {
+                    if (Equals(oldValues[iField], newValues[iField]))
+                    {
+                        anyValuesEqual = true;
+                        newValues[iField] = oldValues[iField];
+                    }
+                    else
+                    {
+                        allValuesEqual = false;
+                    }
+                }
+            }
+
+            if (allValuesEqual)
+            {
+                return oldResults;
+            }
+
+            if (anyValuesEqual)
+            {
+                return ChangeProp(ImClone(this), im => im.SetCacheableFields(newValues));
+            }
+
+            return this;
         }
 
         public Results<TItem> ChangeResults<TList>(IList<TList> newItems) where TList:IList<TItem>
@@ -282,8 +315,6 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-
-
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -354,34 +385,36 @@ namespace pwiz.Skyline.Model.Results
 
         public Results<TItem> ValueFromCache(ValueCache valueCache)
         {
-            bool anyChanges = false;
-            var result = ChangeProp(ImClone(this), im =>
+            var oldValues = GetCacheableFields();
+            var newValues = oldValues.Select(valueCache.CacheValue).ToArray();
+            if (ArrayUtil.ReferencesEqual(oldValues, newValues))
             {
-                anyChanges = im.CacheMembers(valueCache);
-            });
-            if (anyChanges)
-            {
-                return result;
+                return this;
             }
 
-            return this;
+            return ChangeProp(ImClone(this), im => im.SetCacheableFields(newValues));
         }
 
-        /// <summary>
-        /// Replace any field values that are duplicates of values that are in the <see cref="ValueCache"/>.
-        /// Returns true if any field value was changed by using an identical value from the ValueCache.
-        /// </summary>
-        protected virtual bool CacheMembers(ValueCache valueCache)
+        protected void SetCacheableFields(object[] values)
         {
-            return CacheValue(valueCache, ref _replicatePositions) | CacheValue(valueCache, ref _fileIds);
+            int i = 0;
+            SetCacheableFields(values, ref i);
+            Assume.AreEqual(i, values.Length);
         }
 
-        protected static bool CacheValue<T>(ValueCache valueCache, ref T value)
+        protected virtual object[] GetCacheableFields()
         {
-            var newValue = valueCache.CacheValue(value);
-            bool changed = !ReferenceEquals(newValue, value);
-            value = newValue;
-            return changed;
+            return new object[]
+            {
+                _replicatePositions,
+                _fileIds
+            };
+        }
+
+        protected virtual void SetCacheableFields(object[] values, ref int index)
+        {
+            _replicatePositions = (ReplicatePositions)values[index++];
+            _fileIds = (ImmutableList<ReferenceValue<ChromFileInfoId>>)values[index++];
         }
     }
 
@@ -551,17 +584,32 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        protected override bool CacheMembers(ValueCache valueCache)
+        protected override object[] GetCacheableFields()
         {
-            return base.CacheMembers(valueCache)
-                   | CacheValue(valueCache, ref _optimizationSteps)
-                   | CacheValue(valueCache, ref _retentionTimes)
-                   | CacheValue(valueCache, ref _startRetentionTimes)
-                   | CacheValue(valueCache, ref _endRetentionTimes)
-                   | CacheValue(valueCache, ref _ionMobilities)
-                   | CacheValue(valueCache, ref _ranks)
-                   | CacheValue(valueCache, ref _ranksByLevel)
-                   | CacheValue(valueCache, ref _peakIdentifications);
+            return base.GetCacheableFields().Concat(new object[]
+            {
+                _optimizationSteps,
+                _retentionTimes,
+                _startRetentionTimes,
+                _endRetentionTimes,
+                _ionMobilities,
+                _ranks,
+                _ranksByLevel,
+                _peakIdentifications
+            }).ToArray();
+        }
+
+        protected override void SetCacheableFields(object[] values, ref int index)
+        {
+            base.SetCacheableFields(values, ref index);
+            _optimizationSteps = (ImmutableList<int>)values[index++];
+            _retentionTimes = (ImmutableList<float>)values[index++];
+            _startRetentionTimes = (ImmutableList<float>)values[index++];
+            _endRetentionTimes = (ImmutableList<float>)values[index++];
+            _ionMobilities = (ImmutableList<IonMobilityFilter>)values[index++];
+            _ranks = (ImmutableList<int>)values[index++];
+            _ranksByLevel = (ImmutableList<int>)values[index++];
+            _peakIdentifications = (ImmutableList<PeakIdentification>)values[index++];
         }
     }
 
@@ -709,16 +757,30 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        protected override bool CacheMembers(ValueCache valueCache)
+        protected override object[] GetCacheableFields()
         {
-            return base.CacheMembers(valueCache)
-                   | CacheValue(valueCache, ref _optimizationSteps)
-                   | CacheValue(valueCache, ref _peakCountRatios)
-                   | CacheValue(valueCache, ref _retentionTimes)
-                   | CacheValue(valueCache, ref _startTimes)
-                   | CacheValue(valueCache, ref _endTimes)
-                   | CacheValue(valueCache, ref _ionMobilityInfos)
-                   | CacheValue(valueCache, ref _peakIdentifications);
+            return base.GetCacheableFields().Concat(new object []
+            {
+                _optimizationSteps,
+                _peakCountRatios,
+                _retentionTimes,
+                _startTimes,
+                _endTimes,
+                _ionMobilityInfos,
+                _peakIdentifications
+            }).ToArray();
+        }
+
+        protected override void SetCacheableFields(object[] values, ref int index)
+        {
+            base.SetCacheableFields(values, ref index);
+            _optimizationSteps = (ImmutableList<int>)values[index++];
+            _peakCountRatios = (ImmutableList<float>)values[index++];
+            _retentionTimes = (ImmutableList<float?>)values[index++];
+            _startTimes = (ImmutableList<float?>)values[index++];
+            _endTimes = (ImmutableList<float?>)values[index++];
+            _ionMobilityInfos = (ImmutableList<TransitionGroupIonMobilityInfo>) values[index++];
+            _peakIdentifications = (ImmutableList<PeakIdentification>) values[index++];
         }
     }
 
