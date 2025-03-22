@@ -110,7 +110,7 @@ namespace pwiz.Skyline.Model.Results
 
         public Results<TItem> ChangeResults<TList>(IList<TList> newItems) where TList:IList<TItem>
         {
-            return ChangeProp(ImClone(this), im => im.SetChromInfoLists(newItems));
+            return ChangeProp(ImClone(this), im => im.SetChromInfoLists(newItems)).UseValuesFrom(this);
         }
 
         public Results<TItem> Merge(List<IList<TItem>> chromInfoSet)
@@ -119,11 +119,6 @@ namespace pwiz.Skyline.Model.Results
             {
                 chromInfoSet = chromInfoSet.Select(list => list ?? Array.Empty<TItem>()).ToList();
             }
-            // if (ContentEquals(chromInfoSet))
-            // {
-            //     return this;
-            // }
-
             return ChangeResults(chromInfoSet);
         }
 

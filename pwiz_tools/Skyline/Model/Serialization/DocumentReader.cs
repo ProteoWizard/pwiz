@@ -614,7 +614,7 @@ namespace pwiz.Skyline.Model.Serialization
 
             reader.ReadStartElement();  // Start document element
             var srmSettings = reader.DeserializeElement<SrmSettings>() ?? SrmSettingsList.GetDefault();
-            _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
+            _annotationScrubber = AnnotationScrubber.MakeAnnotationScrubber(_stringPool, _valueCache, srmSettings.DataSettings, RemoveCalculatedAnnotationValues);
             srmSettings = _annotationScrubber.ScrubSrmSettings(srmSettings);
             Settings = srmSettings;
             using var peptideProcessor = new PeptideProcessor(this);
@@ -1536,7 +1536,14 @@ namespace pwiz.Skyline.Model.Serialization
                 transitionData.MergeFrom(data);
                 foreach (var transitionProto in transitionData.Transitions)
                 {
-                    list.Add(TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group, mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto));
+                    var transitionDocNode = TransitionDocNode.FromTransitionProto(_annotationScrubber, Settings, group,
+                        mods, isotopeDist, pre422ExplicitTransitionValues, crosslinkBuilder, transitionProto);
+                    if (transitionDocNode.Results != null)
+                    {
+                        transitionDocNode =
+                            transitionDocNode.ChangeResults(transitionDocNode.Results.ValueFromCache(_valueCache));
+                    }
+                    list.Add(transitionDocNode);
                 }
             }
             else
