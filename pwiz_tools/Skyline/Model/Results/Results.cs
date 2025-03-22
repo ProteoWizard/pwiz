@@ -782,6 +782,32 @@ namespace pwiz.Skyline.Model.Results
             _ionMobilityInfos = (ImmutableList<TransitionGroupIonMobilityInfo>) values[index++];
             _peakIdentifications = (ImmutableList<PeakIdentification>) values[index++];
         }
+
+        public IEnumerable<KeyValuePair<double, double>> GetScoresAndQValues()
+        {
+            if (_zScores == null || _qValues == null)
+            {
+                yield break;
+            }
+
+            for (int i = 0; i < _zScores.Count; i++)
+            {
+                if (UserSet.TRUE == _userSets?[i])
+                {
+                    continue;
+                }
+
+                var score = _zScores[i];
+                if (score.HasValue)
+                {
+                    var qValue = _qValues[i];
+                    if (qValue.HasValue)
+                    {
+                        yield return new KeyValuePair<double, double>(score.Value, qValue.Value);
+                    }
+                }
+            }
+        }
     }
 
     public class PeptideResults : Results<PeptideChromInfo>
