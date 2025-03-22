@@ -1025,7 +1025,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ? AbstractDdaConverter.MsdataFileFormat.mzML // Hardklor reads only mzML
                     : AbstractDdaConverter.MsdataFileFormat.mz5;
             if (ImportPeptideSearch.DdaConverter == null &&
-                BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
+                (BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))/* ||
+                !FullScan.SpectrumClassFilter.IsEmpty*/) // CONSIDER(MCC): consider spectrum filters in GetSearchFileNeedsConversion and apply them in Converter
             {
                 if (IsFeatureDetectionWorkflow)
                     ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetHardklorConverter();
@@ -1291,6 +1292,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return false;
+
+            fullScan = fullScan.ChangeSpectrumFilter(TransitionSettingsControl.SpectrumFilter);
 
             Helpers.AssignIfEquals(ref fullScan, TransitionSettings.FullScan);
 
