@@ -39,7 +39,13 @@
             this.labelSpecLibLinks = new System.Windows.Forms.Label();
             this.linkPeptideAtlas = new System.Windows.Forms.LinkLabel();
             this.linkNIST = new System.Windows.Forms.LinkLabel();
-            this.cbxUseExplicitPeakBounds = new System.Windows.Forms.CheckBox();
+            this.groupBoxExplicitPeakBounds = new System.Windows.Forms.GroupBox();
+            this.radioIfPresentElseImpute = new System.Windows.Forms.RadioButton();
+            this.radioIfPresentElseDetect = new System.Windows.Forms.RadioButton();
+            this.radioExplicitBoundsUseAlways = new System.Windows.Forms.RadioButton();
+            this.radioExplicitBoundsIgnore = new System.Windows.Forms.RadioButton();
+            this.lblExplicitPeakBounds = new System.Windows.Forms.Label();
+            this.groupBoxExplicitPeakBounds.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -103,13 +109,49 @@
             this.linkNIST.TabStop = true;
             this.linkNIST.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkNIST_LinkClicked);
             // 
-            // cbxUseExplicitPeakBounds
+            // groupBoxExplicitPeakBounds
             // 
-            resources.ApplyResources(this.cbxUseExplicitPeakBounds, "cbxUseExplicitPeakBounds");
-            this.cbxUseExplicitPeakBounds.Checked = true;
-            this.cbxUseExplicitPeakBounds.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxUseExplicitPeakBounds.Name = "cbxUseExplicitPeakBounds";
-            this.cbxUseExplicitPeakBounds.UseVisualStyleBackColor = true;
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioIfPresentElseImpute);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioIfPresentElseDetect);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioExplicitBoundsUseAlways);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.radioExplicitBoundsIgnore);
+            this.groupBoxExplicitPeakBounds.Controls.Add(this.lblExplicitPeakBounds);
+            resources.ApplyResources(this.groupBoxExplicitPeakBounds, "groupBoxExplicitPeakBounds");
+            this.groupBoxExplicitPeakBounds.Name = "groupBoxExplicitPeakBounds";
+            this.groupBoxExplicitPeakBounds.TabStop = false;
+            // 
+            // radioIfPresentElseImpute
+            // 
+            resources.ApplyResources(this.radioIfPresentElseImpute, "radioIfPresentElseImpute");
+            this.radioIfPresentElseImpute.Name = "radioIfPresentElseImpute";
+            this.radioIfPresentElseImpute.TabStop = true;
+            this.radioIfPresentElseImpute.UseVisualStyleBackColor = true;
+            // 
+            // radioIfPresentElseDetect
+            // 
+            resources.ApplyResources(this.radioIfPresentElseDetect, "radioIfPresentElseDetect");
+            this.radioIfPresentElseDetect.Name = "radioIfPresentElseDetect";
+            this.radioIfPresentElseDetect.TabStop = true;
+            this.radioIfPresentElseDetect.UseVisualStyleBackColor = true;
+            // 
+            // radioExplicitBoundsUseAlways
+            // 
+            resources.ApplyResources(this.radioExplicitBoundsUseAlways, "radioExplicitBoundsUseAlways");
+            this.radioExplicitBoundsUseAlways.Name = "radioExplicitBoundsUseAlways";
+            this.radioExplicitBoundsUseAlways.TabStop = true;
+            this.radioExplicitBoundsUseAlways.UseVisualStyleBackColor = true;
+            // 
+            // radioExplicitBoundsIgnore
+            // 
+            resources.ApplyResources(this.radioExplicitBoundsIgnore, "radioExplicitBoundsIgnore");
+            this.radioExplicitBoundsIgnore.Name = "radioExplicitBoundsIgnore";
+            this.radioExplicitBoundsIgnore.TabStop = true;
+            this.radioExplicitBoundsIgnore.UseVisualStyleBackColor = true;
+            // 
+            // lblExplicitPeakBounds
+            // 
+            resources.ApplyResources(this.lblExplicitPeakBounds, "lblExplicitPeakBounds");
+            this.lblExplicitPeakBounds.Name = "lblExplicitPeakBounds";
             // 
             // EditLibraryDlg
             // 
@@ -117,7 +159,7 @@
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.Controls.Add(this.cbxUseExplicitPeakBounds);
+            this.Controls.Add(this.groupBoxExplicitPeakBounds);
             this.Controls.Add(this.linkNIST);
             this.Controls.Add(this.linkPeptideAtlas);
             this.Controls.Add(this.labelSpecLibLinks);
@@ -133,6 +175,8 @@
             this.MinimizeBox = false;
             this.Name = "EditLibraryDlg";
             this.ShowInTaskbar = false;
+            this.groupBoxExplicitPeakBounds.ResumeLayout(false);
+            this.groupBoxExplicitPeakBounds.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -150,6 +194,11 @@
         private System.Windows.Forms.Label labelSpecLibLinks;
         private System.Windows.Forms.LinkLabel linkPeptideAtlas;
         private System.Windows.Forms.LinkLabel linkNIST;
-        private System.Windows.Forms.CheckBox cbxUseExplicitPeakBounds;
+        private System.Windows.Forms.GroupBox groupBoxExplicitPeakBounds;
+        private System.Windows.Forms.RadioButton radioExplicitBoundsUseAlways;
+        private System.Windows.Forms.RadioButton radioExplicitBoundsIgnore;
+        private System.Windows.Forms.Label lblExplicitPeakBounds;
+        private System.Windows.Forms.RadioButton radioIfPresentElseImpute;
+        private System.Windows.Forms.RadioButton radioIfPresentElseDetect;
     }
 }

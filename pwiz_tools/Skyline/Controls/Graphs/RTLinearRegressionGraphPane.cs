@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Imputation;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -682,7 +683,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private double[] _scoresRefined;
             private double[] _timesOutliers;
             private double[] _scoresOutliers;
-            private readonly string _calculatorName;
 
             private readonly RetentionScoreCalculatorSpec _calculator;
 
@@ -730,7 +730,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 var origTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
                 var targetTimesDict = IsRunToRun ? new Dictionary<Target, double>() : null;
 
-                var reportingStep = document.PeptideCount / (90 / REPORTING_STEP);
                 foreach (var nodePeptide in document.Molecules)
                 {
                     ProgressMonitor.CheckCanceled(token);
@@ -768,8 +767,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     float? rtOrig = null;
 
                     if (originalIndex != -1)
+                    {
                         rtOrig = nodePeptide.GetSchedulingTime(originalIndex);
-                    
+                        if (!refine && !rtOrig.HasValue)
+                        {
+                            continue;
+                        }
+                    }
+
                     if (!_bestResult)
                         rtTarget = nodePeptide.GetSchedulingTime(targetIndex);
                     else
@@ -781,7 +786,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     var modSeq = _document.Settings.GetSourceTarget(nodePeptide);
                     if (!rtTarget.HasValue)
+                    {
+                        if (!refine)
+                        {
+                            // If we are not going to do refinement later, it is important to remove invalid values
+                            // from the dataset.
+                            continue;
+                        }
                         rtTarget = 0;
+                    }
                     if (!rtOrig.HasValue)
                         rtOrig = 0;
                     _peptidesIndexes.Add(new PeptideDocumentIndex(nodePeptide, index));
@@ -808,7 +821,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 _originalTimes = originalTimes != null ? originalTimes.ToArray() : null;
 
-                _calculatorName = Settings.Default.RTCalculatorName;
+                var calculatorName = Settings.Default.RTCalculatorName;
 
                 if (IsRunToRun)
                 {
@@ -824,9 +837,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    var calc = !string.IsNullOrEmpty(_calculatorName)
-                        ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
-                        : null;
+                    var calc = GetCalculator(token, calculatorName, document);
                     if (calc == null)
                     {
                         // Initialize all calculators
@@ -869,7 +880,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             {
                                 MessageDlg.Show(Program.MainWindow, string.Format(
                                     GraphsResources.GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_,
-                                    tryIrtCalc.Name, tryIrtCalc.DatabasePath));
+                                    tryIrtCalc, tryIrtCalc.DatabasePath));
                                 return;
                             }
                         }
@@ -941,17 +952,40 @@ namespace pwiz.Skyline.Controls.Graphs
                 string calculatorName = Settings.Default.RTCalculatorName;
                 if (string.IsNullOrEmpty(calculatorName) && !IsRunToRun)
                     calculatorName = _calculator.Name;
-                return IsValidFor(document) &&
-                        _targetIndex == targetIndex &&
-                        _originalIndex == originalIndex &&
-                        _bestResult == bestResult &&
-                        _threshold == threshold &&
-                        _pointsType == pointsType &&
-                        _regressionMethod == regressionMethod && 
-                        (IsRunToRun || (_calculatorName == Settings.Default.RTCalculatorName &&
-                        ReferenceEquals(_calculator, Settings.Default.GetCalculatorByName(calculatorName)))) &&
-                        // Valid if refine is true, and this data requires no further refining
-                        (_refine == refine || (refine && IsRefined()));
+                if (calculatorName != _calculator.Name)
+                {
+                    return false;
+                }
+                bool valid = IsValidFor(document) &&
+                             _targetIndex == targetIndex &&
+                             _originalIndex == originalIndex &&
+                             _bestResult == bestResult &&
+                             _threshold == threshold &&
+                             _pointsType == pointsType &&
+                             _regressionMethod == regressionMethod;
+                if (!valid)
+                {
+                    return false;
+                }
+
+                if (_refine != refine)
+                {
+                    if (!refine || !IsRefined())
+                    {
+                        return false;
+                    }
+                }
+
+                var calculator = Settings.Default.GetCalculatorByName(calculatorName);
+                if (calculator != null)
+                {
+                    if (!ReferenceEquals(_calculator, calculator))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
 
             public int TargetIndex { get { return _targetIndex; } }
@@ -977,6 +1011,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     return true;
                 if (_statisticsAll == null)
                     return false;
+                if (_calculator is ConsensusScoreCalculator)
+                {
+                    return true;
+                }
                 return RetentionTimeRegression.IsAboveThreshold(_statisticsAll.R, _threshold);
             }
 
@@ -1439,7 +1477,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                         return string.Empty;
                     }
-                    return Calculator.Name;
+                    return Calculator.ToString();
                 }
             }
 
@@ -1466,6 +1504,16 @@ namespace pwiz.Skyline.Controls.Graphs
         public Rectangle RectToScreen(Rectangle r)
         {
             return GraphSummary.RectangleToScreen(r);
+        }
+
+        private static RetentionScoreCalculatorSpec GetCalculator(CancellationToken cancellationToken, string name, SrmDocument document)
+        {
+            if (name == null)
+            {
+                return null;
+            }
+
+            return RtValueType.GetRetentionScoreCalculatorSpec(document, name);
         }
     }
 

@@ -88,6 +88,9 @@ namespace pwiz.Skyline.Menus
             originalPeakMenuItem.Checked = set.ShowOriginalPeak;
             menuStrip.Items.Insert(iInsert++, originalPeakMenuItem);
 
+            imputedPeakBoundariesMenuItem.Checked = set.ShowImputedPeakBounds;
+            menuStrip.Items.Insert(iInsert++, imputedPeakBoundariesMenuItem);
+
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
             if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
             {
@@ -486,6 +489,11 @@ namespace pwiz.Skyline.Menus
         private void originalPeakContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowOriginalPeak(originalPeakMenuItem.Checked);
+        }
+
+        private void imputedPeakBoundariesMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowImputedPeakBounds(!Settings.Default.ShowImputedPeakBounds);
         }
 
         private void massErrorContextMenuItem_Click(object sender, EventArgs e)

@@ -26,10 +26,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -51,6 +54,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
+        private Receiver<ImputedBounds.Parameter, ImputedBounds> _imputedBoundsReceiver;
+        private ImputedBounds _imputedBounds;
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
 
         public static ShowRTChrom ShowRT
@@ -216,6 +221,19 @@ namespace pwiz.Skyline.Controls.Graphs
             // Note that this only affects applying ZoomState to a graph pane.  Explicit changes 
             // to Scale Min/Max properties need to be manually applied to each axis.
             graphControl.IsSynchronizeXAxes = true;
+            _imputedBoundsReceiver = ImputedBounds.PRODUCER.RegisterCustomer(this, ImputedBoundsAvailable);
+        }
+
+        private void ImputedBoundsAvailable()
+        {
+            if (_imputedBoundsReceiver.TryGetCurrentProduct(out var newBounds))
+            {
+                if (!Equals(newBounds, _imputedBounds))
+                {
+                    _imputedBounds = newBounds;
+                    UpdateUI(false);
+                }
+            }
         }
 
         public string NameSet
@@ -2286,6 +2304,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodeGroups, lookupSequence, lookupMods);
+            if (Settings.Default.ShowImputedPeakBounds)
+            {
+                var peptide = (Peptide) nodePeps.Select(pep => pep.Peptide).Distinct(ReferenceValue.EQUALITY_COMPARER).SingleOrDefault();
+                if (peptide != null)
+                {
+                    var doc = _documentContainer.DocumentUI;
+                    var peptideGroupDocNode =
+                        doc.MoleculeGroups.FirstOrDefault(node => node.FindNodeIndex(peptide) >= 0);
+                    if (peptideGroupDocNode != null)
+                    {
+                        var peptideIdentityPath = new IdentityPath(peptideGroupDocNode.PeptideGroup, peptide);
+                        var parameter = new ImputedBounds.Parameter(doc, new[] { peptideIdentityPath });
+                        if (_imputedBoundsReceiver.TryGetProduct(parameter, out var imputedBounds))
+                        {
+                            var replicateFileId = new ReplicateFileId(chromatograms.Id, GetChromFileInfoId());
+                            chromGraphPrimary.ImputedBounds = imputedBounds.GetImputedBounds(replicateFileId, peptideIdentityPath);
+                        }
+                    }
+                }
+            }
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,

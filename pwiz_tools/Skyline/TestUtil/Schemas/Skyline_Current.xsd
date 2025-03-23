@@ -306,7 +306,15 @@
           <xs:attribute name="shared_peptides" type="xs:string" />
         </xs:complexType>
       </xs:element>
-    </xs:sequence>
+      <xs:element name="imputation" minOccurs="0" maxOccurs="1">
+	    <xs:complexType>
+		  <xs:attribute name="max_rt_shift" type="xs:double" />
+		  <xs:attribute name="max_peak_width_var" type="xs:double" />
+		  <xs:attribute name="rt_calc" type="xs:string" />
+		  <xs:attribute name="regression_method" type="xs:string" />
+	    </xs:complexType>
+	  </xs:element>
+  </xs:sequence>
   </xs:complexType>
   <!-- Transition Settings -->
   <xs:simpleType name="ion_mobility_filter_window_width_calc_type">
@@ -1520,6 +1528,7 @@
       <xs:enumeration value="IMPORTED"/>
       <xs:enumeration value="REINTEGRATED"/>
       <xs:enumeration value="MATCHED"/>
+      <xs:enumeration value="IMPUTED" />
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="mass_type_type">
@@ -1668,12 +1677,12 @@
   <xs:complexType name="lib_spec_type">
     <xs:attribute name="name" use="required"/>
     <xs:attribute name="file_path" use="required"/>
-    <xs:attribute name="use_explicit_peak_bounds" type="xs:boolean"/>
+    <xs:attribute name="use_explicit_peak_bounds" type="xs:string"/>
   </xs:complexType>
   <xs:complexType name="lib_type">
     <xs:attribute name="name" type="xs:string"/>
     <xs:attribute name="file_name_hint" type="xs:string"/>
-    <xs:attribute name="use_explicit_peak_bounds" type="xs:boolean"/>
+    <xs:attribute name="use_explicit_peak_bounds" type="xs:string"/>
   </xs:complexType>
   <xs:complexType name="spectrum_header_info_type">
     <xs:attribute name="library_name"/>

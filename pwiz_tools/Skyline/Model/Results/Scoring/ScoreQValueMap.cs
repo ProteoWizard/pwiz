@@ -68,6 +68,22 @@ namespace pwiz.Skyline.Model.Results.Scoring
                    totalDifference;
         }
 
+        public double? GetZScore(double? qValue)
+        {
+            if (_sortedList.Count == 0 || !qValue.HasValue)
+            {
+                return null;
+            }
+
+            var range = CollectionUtil.BinarySearch(_sortedList.Values, item => qValue.Value.CompareTo(item));
+            if (range.Start < 0 || range.Start >= _sortedList.Count)
+            {
+                return null;
+            }
+            return _sortedList.Keys[range.Start];
+        }
+
+
         public static ScoreQValueMap FromMoleculeGroups(IEnumerable<PeptideGroupDocNode> moleculeGroups)
         {
             return FromTransitionGroups(moleculeGroups.SelectMany(moleculeGroup => moleculeGroup.Molecules)
@@ -85,25 +101,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
             var entries = new List<KeyValuePair<double, double>>();
             foreach (var transitionGroupDocNode in transitionGroups)
             {
-                if (transitionGroupDocNode.Results == null)
+                var transitionGroupResults = (TransitionGroupResults)transitionGroupDocNode.Results;
+                if (transitionGroupResults == null)
                 {
                     continue;
                 }
-
-                foreach (var chromInfoList in transitionGroupDocNode.Results)
+                foreach (var keyValuePair in transitionGroupResults.GetScoresAndQValues())
                 {
-                    foreach (var chromInfo in chromInfoList)
+                    if (uniqueScores.Add(keyValuePair.Key))
                     {
-                        if (chromInfo.UserSet == UserSet.TRUE || !chromInfo.QValue.HasValue || !chromInfo.ZScore.HasValue)
-                        {
-                            continue;
-                        }
-
-                        if (!uniqueScores.Add(chromInfo.ZScore.Value))
-                        {
-                            continue;
-                        }
-                        entries.Add(new KeyValuePair<double, double>(chromInfo.ZScore.Value, chromInfo.QValue.Value));
+                        entries.Add(keyValuePair);
                     }
                 }
             }

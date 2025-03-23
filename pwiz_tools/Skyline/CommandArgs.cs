@@ -199,6 +199,22 @@ namespace pwiz.Skyline
             (c, p) => c.SharedFileType = p.IsValue(ARG_VALUE_SHARE_TYPE_MINIMAL) ? ShareType.MINIMAL : ShareType.COMPLETE);
         public const string ARG_VALUE_SHARE_TYPE_MINIMAL = "minimal";
         public const string ARG_VALUE_SHARE_TYPE_COMPLETE = "complete";
+
+        public static readonly Argument ARG_SHARE_SKYLINE_VERSION = new Argument(@"share-skyline-version",
+            () => SkylineVersion.SupportedForSharing().Select(v => v.MajorVersion + @"." + v.MinorVersion).ToArray(),
+            (c, p) =>
+            {
+                var skylineVersion = SkylineVersion.SupportedForSharing()
+                    .FirstOrDefault(v => v.MajorVersion + @"." + v.MinorVersion == p.Value);
+                if (skylineVersion == null)
+                {
+                    c.WriteLine("Unsupported Skyline version {0}", p.Value);
+                    return false;
+                }
+
+                c.SharedSkylineVersion = skylineVersion;
+                return true;
+            });
         public static readonly Argument ARG_BATCH = new Argument(@"batch-commands", PATH_TO_FILE, // Run each line of a text file like a command
             (c, p) =>
             {
@@ -282,6 +298,8 @@ namespace pwiz.Skyline
         public bool SharingZipFile { get; private set; }
         public string SharedFile { get; private set; }
         public ShareType SharedFileType { get; private set; }
+        public SkylineVersion SharedSkylineVersion { get; private set; }
+        public ImputeBoundariesType ImputePeakBoundaries { get; private set; }
 
         // For creating a .imsdb ion mobility library
         public static readonly Argument ARG_IMSDB_CREATE = new DocArgument(@"ionmobility-library-create", PATH_TO_IMSDB,
@@ -354,12 +372,19 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_IMPORT_PEAK_BOUNDARIES = new DocArgument(@"import-peak-boundaries", PATH_TO_FILE,
             (c, p) => c.ImportPeakBoundariesPath = p.ValueFullPath);
 
+        public static readonly Argument ARG_IMPUTE_PEAK_BOUNDARIES =
+            new Argument(@"impute-peak-boundaries", (c, p) => c.ImputePeakBoundaries =
+                (ImputeBoundariesType) Enum.Parse(typeof(ImputeBoundariesType), p.Value ?? ImputeBoundariesType.True.ToString(), true))
+            {
+                OptionalValue = true
+            };
+
         private static readonly ArgumentGroup GROUP_IMPORT = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_IMPORT_Importing_results_replicates, false,
             ARG_IMPORT_FILE, ARG_IMPORT_REPLICATE_NAME, ARG_IMPORT_OPTIMIZING, ARG_IMPORT_APPEND, ARG_IMPORT_ALL,
             ARG_IMPORT_ALL_FILES, ARG_IMPORT_NAMING_PATTERN, ARG_IMPORT_FILENAME_PATTERN, ARG_IMPORT_SAMPLENAME_PATTERN,
             ARG_IMPORT_BEFORE, ARG_IMPORT_ON_OR_AFTER, ARG_IMPORT_NO_JOIN, ARG_IMPORT_PROCESS_COUNT, ARG_IMPORT_THREADS,
             ARG_IMPORT_WARN_ON_FAILURE, ARG_IMPORT_LOCKMASS_POSITIVE, ARG_IMPORT_LOCKMASS_NEGATIVE, ARG_IMPORT_LOCKMASS_TOLERANCE, 
-            ARG_IMPORT_PEAK_BOUNDARIES);
+            ARG_IMPORT_PEAK_BOUNDARIES, ARG_IMPUTE_PEAK_BOUNDARIES);
 
         public static readonly Argument ARG_REMOVE_BEFORE = new DocArgument(@"remove-before", DATE_VALUE,
             (c, p) => c.SetRemoveBefore(p.ValueDate));
@@ -801,6 +826,13 @@ namespace pwiz.Skyline
             mProphet, // Full mProphet model (default)
             Skyline,  // Skyline default model with coefficients scaled to estimate unit normal distribution from decoys
             SkylineML // Skyline Machine Learning - essentially mProphet model with default set of features
+        }
+
+        public enum ImputeBoundariesType
+        {
+            False,
+            True,
+            OverwriteManual
         }
 
         public string ReintegrateModelName { get; private set; }
