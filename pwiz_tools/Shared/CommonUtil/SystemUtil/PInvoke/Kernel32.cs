@@ -47,7 +47,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
                 {
                     int progressValue = (int)Math.Max(0, Math.Min(100, totalBytesTransferred * 100 / totalFileSize));
                     onProgress(progressValue);
-                    return cancellationToken.IsCancellationRequested ? 1u : 0;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return CopyProgressResult.PROGRESS_CANCEL;
+                    }
+                    return CopyProgressResult.PROGRESS_CONTINUE;
                 });
             var dwCopyFlags = overwrite ? 0 : CopyFileFlags.COPY_FILE_FAIL_IF_EXISTS;
             bool cancelled = false;
@@ -83,7 +87,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             CopyProgressRoutine lpProgressRoutine, IntPtr lpData,
             ref bool pbCancel, CopyFileFlags dwCopyFlags);
 
-        private delegate uint CopyProgressRoutine(
+        private delegate CopyProgressResult CopyProgressRoutine(
             long totalFileSize, long totalBytesTransferred,
             long streamSize, long streamBytesTransferred,
             uint dwStreamNumber, CopyProgressCallbackReason dwCallbackReason,
@@ -104,6 +108,14 @@ namespace pwiz.Common.SystemUtil.PInvoke
             COPY_FILE_COPY_SYMLINK = 0x00000800, //NT 6.0+
             COPY_FILE_NO_BUFFERING = 0x00001000 //NT 6.0+
         }
+        private enum CopyProgressResult : uint
+        {
+            PROGRESS_CONTINUE = 0,
+            PROGRESS_CANCEL = 1,
+            PROGRESS_STOP = 2,
+            PROGRESS_QUIET = 3
+        }
+
         #endregion
 
     }
