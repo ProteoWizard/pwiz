@@ -130,4 +130,7 @@
   <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
     <value>Run command:</value>
   </data>
+  <data name="Kernel32_CopyFileWithProgress_Failed_to_copy___0___to___1__" xml:space="preserve">
+	  <value>Failed to copy '{0}' to '{1}'</value>
+  </data>
 </root>

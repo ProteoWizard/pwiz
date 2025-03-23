@@ -26,6 +26,7 @@ using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Legacy;
@@ -1512,8 +1513,8 @@ namespace pwiz.Skyline.Model.Results
                 // Copy the cache, if moving to a new location
                 using (FileSaver fs = new FileSaver(cachePathOpt))
                 {
-                    // ReSharper disable once AssignNullToNotNullAttribute
-                    File.Copy(CachePath, fs.SafeName, true);
+                    Kernel32.CopyFileWithProgress(CachePath, fs.SafeName, true, 
+                        progress.CancellationToken, value => progress.ProgressValue = value);
                     fs.Commit(ReadStream);
                 }
                 return ChangeCachePath(cachePathOpt, streamManager);
