@@ -45,7 +45,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
                 (totalFileSize, totalBytesTransferred, streamSize, streamBytesTransferred, dwStreamNumber,
                     dwCallbackReason, hSourceFile, hDestinationFile, lpData) =>
                 {
-                    int progressValue = (int)Math.Max(0, Math.Min(100, totalBytesTransferred * 100 / totalFileSize));
+                    int progressValue = (int) (totalBytesTransferred * 100 / totalFileSize);
                     onProgress(progressValue);
                     if (cancellationToken.IsCancellationRequested)
                     {
@@ -86,13 +86,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
         private static extern bool CopyFileEx(string lpExistingFileName, string lpNewFileName,
             CopyProgressRoutine lpProgressRoutine, IntPtr lpData,
             ref bool pbCancel, CopyFileFlags dwCopyFlags);
-
         private delegate CopyProgressResult CopyProgressRoutine(
             long totalFileSize, long totalBytesTransferred,
             long streamSize, long streamBytesTransferred,
             uint dwStreamNumber, CopyProgressCallbackReason dwCallbackReason,
             IntPtr hSourceFile, IntPtr hDestinationFile, IntPtr lpData);
-
         private enum CopyProgressCallbackReason : uint
         {
             CALLBACK_CHUNK_FINISHED = 0x00000000,
@@ -115,8 +113,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             PROGRESS_STOP = 2,
             PROGRESS_QUIET = 3
         }
-
         #endregion
-
     }
 }

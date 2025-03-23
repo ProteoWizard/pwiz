@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,21 +29,27 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
+    /// <summary>
+    /// Tests for <see cref="Kernel32.CopyFileWithProgress"/>
+    /// </summary>
     [TestClass]
     public class CopyFileWithProgressTest : AbstractUnitTest
     {
+        private const string TEST_ZIP_PATH = @"Test\CopyFileWithProgressTest.zip";
+
         [TestMethod]
-        public void TestFileCopyWithProgressSimple()
+        public void TestCopyFileWithProgressSimple()
         {
             int? progressValue = null;
             Action<int> progressAction = value => progressValue = value;
-            TestFilesDir = new TestFilesDir(TestContext, @"Test\FileCopyWithProgressTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             var noExistPath = TestFilesDir.GetTestPath("NoExist.txt");
             var destination = TestFilesDir.GetTestPath("Destination.txt");
             Assert.IsFalse(File.Exists(noExistPath));
             Assert.IsFalse(File.Exists(destination));
             // Should fail because source file does not exist
-            AssertEx.ThrowsException<IOException>(()=> Kernel32.CopyFileWithProgress(noExistPath, destination, false, CancellationToken.None, progressAction));
+            AssertEx.ThrowsException<IOException>(() =>
+                Kernel32.CopyFileWithProgress(noExistPath, destination, false, CancellationToken.None, progressAction));
 
             var source = TestFilesDir.GetTestPath("Source.txt");
             var sourceFileBytes = new UTF8Encoding(true).GetBytes("sourceFileBytes");
@@ -51,8 +58,10 @@ namespace pwiz.SkylineTest
                 stream.Write(sourceFileBytes, 0, sourceFileBytes.Length);
 
                 // Should fail because source is locked
-                AssertEx.ThrowsException<IOException>(()=> Kernel32.CopyFileWithProgress(source, destination, true, CancellationToken.None, progressAction));
+                AssertEx.ThrowsException<IOException>(() =>
+                    Kernel32.CopyFileWithProgress(source, destination, true, CancellationToken.None, progressAction));
             }
+
             AssertEx.IsFalse(File.Exists(destination));
             Kernel32.CopyFileWithProgress(source, destination, false, CancellationToken.None, progressAction);
             AssertEx.IsTrue(File.Exists(destination));
@@ -62,16 +71,20 @@ namespace pwiz.SkylineTest
             using (var stream = File.OpenWrite(source2))
             {
                 // Should fail because destination (source2) is locked
-                AssertEx.ThrowsException<IOException>(()=>Kernel32.CopyFileWithProgress(source, source2, true, CancellationToken.None, progressAction));
-                
+                AssertEx.ThrowsException<IOException>(() =>
+                    Kernel32.CopyFileWithProgress(source, source2, true, CancellationToken.None, progressAction));
+
                 // Should fail because source is locked
-                AssertEx.ThrowsException<IOException>(() => Kernel32.CopyFileWithProgress(source2, destination, true, CancellationToken.None, progressAction));
+                AssertEx.ThrowsException<IOException>(() =>
+                    Kernel32.CopyFileWithProgress(source2, destination, true, CancellationToken.None, progressAction));
 
                 stream.Write(source2FileBytes, 0, source2FileBytes.Length);
             }
+
             AssertFileContent(source2FileBytes, source2);
             // Should fail because destination file exists and overwrite false
-            AssertEx.ThrowsException<IOException>(()=>Kernel32.CopyFileWithProgress(source2, destination, false, CancellationToken.None, progressAction));
+            AssertEx.ThrowsException<IOException>(() =>
+                Kernel32.CopyFileWithProgress(source2, destination, false, CancellationToken.None, progressAction));
             AssertFileContent(sourceFileBytes, destination);
 
             Kernel32.CopyFileWithProgress(source2, destination, true, CancellationToken.None, progressAction);
@@ -80,21 +93,23 @@ namespace pwiz.SkylineTest
             using (File.OpenRead(destination))
             {
                 // Should fail because destination is locked
-                AssertEx.ThrowsException<IOException>(() => Kernel32.CopyFileWithProgress(source, destination, true, CancellationToken.None, progressAction));
+                AssertEx.ThrowsException<IOException>(() =>
+                    Kernel32.CopyFileWithProgress(source, destination, true, CancellationToken.None, progressAction));
                 AssertFileContent(source2FileBytes, destination);
             }
+
             Kernel32.CopyFileWithProgress(source, destination, true, CancellationToken.None, progressAction);
             AssertFileContent(sourceFileBytes, destination);
         }
 
         [TestMethod]
-        public void TestFileCopyWithProgressProgress()
+        public void TestCopyFileWithProgressProgress()
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"Test\FileCopyWithProgressTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             var source = TestFilesDir.GetTestPath("source.txt");
             var destination = TestFilesDir.GetTestPath("destination.txt");
 
-            const int requiredProgressCounts = 3;
+            const int minProgressNotificationCount = 3;
             // Increase the size of the test file until we get notified about progress updates at least 3 times
             for (var fileSize = 1_000_000;; fileSize *= 2)
             {
@@ -106,20 +121,22 @@ namespace pwiz.SkylineTest
                 File.WriteAllBytes(source, fileBytes);
                 Kernel32.CopyFileWithProgress(source, destination, true, CancellationToken.None, progressValues.Add);
                 VerifyProgressValues(progressValues);
-                if (progressValues.Count > requiredProgressCounts)
+                if (progressValues.Count > minProgressNotificationCount)
                 {
                     return;
                 }
+
                 AssertFileContent(fileBytes, destination);
             }
         }
+
         [TestMethod]
-        public void TestFileCopyWithProgressCancel()
+        public void TestCopyFileWithProgressCancel()
         {
-            TestFilesDir = new TestFilesDir(TestContext, @"Test\FileCopyWithProgressTest.zip");
+            TestFilesDir = new TestFilesDir(TestContext, TEST_ZIP_PATH);
             var source = TestFilesDir.GetTestPath("source.txt");
             var destination = TestFilesDir.GetTestPath("destination.txt");
-            
+
             // Increase the size of the test file until we are able to cancel it before the copy is completed
             for (var fileSize = 1_000_000;; fileSize *= 2)
             {
@@ -133,16 +150,17 @@ namespace pwiz.SkylineTest
                 using var cancellationTokenSource = new CancellationTokenSource();
                 try
                 {
-                    const int requiredProgressCounts = 3;
-                    // Copy the file, but cancel after receiving 3 progress updates
-                    Kernel32.CopyFileWithProgress(source, destination, true, cancellationTokenSource.Token, progressValue =>
-                    {
-                        progressValues.Add(progressValue);
-                        if (progressValues.Count >= requiredProgressCounts)
+                    const int minProgressNotificationCount = 3;
+                    // Copy the file, but cancel after receiving 3 progress notifications
+                    Kernel32.CopyFileWithProgress(source, destination, true, cancellationTokenSource.Token,
+                        progressValue =>
                         {
-                            cancellationTokenSource.Cancel();
-                        }
-                    });
+                            progressValues.Add(progressValue);
+                            if (progressValues.Count >= minProgressNotificationCount)
+                            {
+                                cancellationTokenSource.Cancel();
+                            }
+                        });
                 }
                 catch (IOException exception)
                 {
@@ -150,13 +168,16 @@ namespace pwiz.SkylineTest
                     {
                         throw;
                     }
+
                     caughtException = exception;
                 }
+
                 VerifyProgressValues(progressValues);
                 if (caughtException != null)
                 {
                     return;
                 }
+
                 AssertFileContent(fileBytes, destination);
             }
         }
@@ -170,8 +191,10 @@ namespace pwiz.SkylineTest
             for (int index = 0; index < progressValues.Count; index++)
             {
                 var progressValue = progressValues[index];
-                Assert.IsFalse(progressValue < previous, "Progress value {0} at position {1} should not be less than {2}", progressValue, index, previous);
-                Assert.IsFalse(progressValue > 100, "Progress value {0} at position {1} should not be greater than 100", progressValue, index);
+                Assert.IsFalse(progressValue < previous,
+                    "Progress value {0} at position {1} should not be less than {2}", progressValue, index, previous);
+                Assert.IsFalse(progressValue > 100, "Progress value {0} at position {1} should not be greater than 100",
+                    progressValue, index);
             }
         }
 
@@ -185,7 +208,6 @@ namespace pwiz.SkylineTest
         private static void AssertFileContent(byte[] expectedBytes, string file)
         {
             var actualBytes = File.ReadAllBytes(file);
-
             CollectionAssert.AreEqual(expectedBytes, actualBytes, "Incorrect bytes in file {0}", file);
         }
     }
