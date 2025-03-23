@@ -76,10 +76,9 @@
     <p>
         Skylineでは、最低でも各プリカーサーとプロダクトイオンの電荷状態と、イオン組成式または<i>m/z</i>が既知である必要があります。トランジションリストにプロダクトイオンの情報がない場合は、プリカーサーターゲットのリストであると推定されます。プロダクト情報が異なるプリカーサー情報が繰り返される場合は、ペプチドの場合と同様、単一プリカーサーからの複数トランジションを示すものと認識されます。
     </p>
-    <h3>イオン式および付加物の記述に関するノート</h3>
+    <h3>A note on ion formulas and adduct descriptions</h3>
     <p>
-        プロテオミクス用途では、Skylineはプロトン付加によるイオン化を問題なく推定できます。そのため、電荷ペプチドの記述に必要とされるものは、その配列および電荷状態だけです。しかし、一般の低分子の場合はナトリウム獲得、水素損失など、さまざまな方法でイオン化が起こり得ます。Skylineでは、<a target="_blank"
-            href="http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/">http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/</a>に記載されたスタイルで付加物を記述し、イオン化モードを例えば「[M+Na]」、「[M-2H]」、「[2M+ACN+H]」のように指定できます。
+        プロテオミクス用途では、Skylineはプロトン付加によるイオン化を問題なく推定できます。そのため、電荷ペプチドの記述に必要とされるものは、その配列および電荷状態だけです。しかし、一般の低分子の場合はナトリウム獲得、水素損失など、さまざまな方法でイオン化が起こり得ます。Skylineでは、<a target="_blank" href="http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/">http://fiehnlab.ucdavis.edu/staff/kind/Metabolomics/MS-Adduct-Calculator/</a>に記載されたスタイルで付加物を記述し、イオン化モードを例えば「[M+Na]」、「[M-2H]」、「[2M+ACN+H]」のように指定できます。
     </p>
     <p>
         付加物の記述法を用いて、分子が同位体で標識されていることを示すことができます。たとえば、付加物「[M3Cl374H2-Na]」は、分子の3個のCl原子が37Clで置換され、4個のH原子が重水素で置換され、分子がナトリウム損失によってイオン化されていることを示します。
@@ -369,7 +368,10 @@
         </table>
     </div>
     <ul>
-        <li>Excelで、ヘッダー行を含むトランジションリストの行と列を選択し、<b>コピー</b>（Ctrl+C）します。</li>
+        <li>
+            Excelでヘッダー行を含むトランジションリストの行と列を選択し、[ <b>コピー</b> ] を選択します。（Ctrl-C）<br />
+            上の表を選択し、クリップボードにコピーすることもできます。（Ctrl-C）
+        </li>
         <li>Skyline [ <b>編集</b> ] メニューで [ <b>挿入</b>] を選択して、[ <b>トランジションリスト</b> ] をクリックします。</li>
     </ul>
     <p class="keep-next">
@@ -414,10 +416,8 @@
         <img src="s-03.png" />
     </p>
     <p>
-        この時点で、装置メソッド、プリカーサー単離リスト（PRM用）、またはトランジションリスト（SRM用）のいずれかをエクスポート可能です。この手順の実行方法の詳細については、<a
-            href="https://skyline.ms/tutorial_method_edit_ja.url">ターゲットメソッドの編集</a>、<a
-            href="https://skyline.ms/tutorial_existing_quant_ja.url">既存の定量実験</a>、または<a
-            href="https://skyline.ms/tutorial_prm_ja.url">ターゲットMS/MS（PRM）</a>チュートリアルをご覧ください。
+        この時点で、装置メソッド、プリカーサー単離リスト（PRM用）、またはトランジションリスト（SRM用）のいずれかをエクスポート可能です。こ
+        の手順の実行方法の詳細については、<a href="https://skyline.ms/tutorial_method_edit.url">ターゲットメソッドの編集</a>、<a href="https://skyline.ms/tutorial_existing_quant.url">既存の定量実験</a>、または<a href="https://skyline.ms/tutorial_prm.url">並列反応モニタリング（PRM）</a>チュートリアルをご覧ください。
     </p>
     <h1>rawデータファイルのインポート</h1>
     <p>

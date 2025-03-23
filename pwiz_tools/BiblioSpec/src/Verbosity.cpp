@@ -21,17 +21,26 @@
 
 #include "Verbosity.h"
 #include "pwiz/utility/misc/Std.hpp"
+#include <chrono>
 
 namespace BiblioSpec {
 
-V_LEVEL Verbosity::Global_Verbosity = V_STATUS;
+V_LEVEL Verbosity::Global_Verbosity = V_WARN;
+bool add_timestamp_prefix = false;
 FILE* Verbosity::log_file = NULL;
 char Verbosity::msg_buffer[1024];
+auto clockStart = std::chrono::high_resolution_clock::now();
 
 void Verbosity::set_verbosity(V_LEVEL level) {
     Verbosity::Global_Verbosity = level;
     Verbosity::msg_buffer[0] = '\0';
 }
+
+void Verbosity::set_timestamp(bool enabled)
+{
+    add_timestamp_prefix = enabled;
+}
+
 
 void Verbosity::open_logfile(){
     Verbosity::log_file = fopen("blib-build.log", "w");
@@ -105,6 +114,8 @@ void Verbosity::debug(const char* format, ...){
 
 void Verbosity::log(V_LEVEL print_level, const char* format, va_list args)
 {
+    using namespace std::chrono;
+
     if (Verbosity::Global_Verbosity < print_level) {
         return;
     }
@@ -112,6 +123,18 @@ void Verbosity::log(V_LEVEL print_level, const char* format, va_list args)
     // for appending to the message buffer
     char* cur_buffer_position = Verbosity::msg_buffer;
     int added = 0;
+
+    if (add_timestamp_prefix)
+    {
+        auto elapsed = high_resolution_clock::now() - clockStart;
+        auto hh = duration_cast<hours>(elapsed);
+        auto mm = duration_cast<minutes>(elapsed - hh);
+        auto ss = duration_cast<seconds>(elapsed - hh - mm);
+        auto ms = duration_cast<milliseconds>(elapsed - hh - mm - ss);
+
+        added = sprintf(cur_buffer_position, "[%02d:%02d:%02lld.%03lld] ", hh.count(), mm.count(), ss.count(), ms.count());
+        cur_buffer_position += added;
+    }
 
     switch (print_level) {
         case V_ERROR:
@@ -154,6 +177,9 @@ void Verbosity::log(V_LEVEL print_level, const char* format, va_list args)
         if (Verbosity::log_file != NULL) {
             fclose(log_file);
         }
+#ifdef _WIN32
+        __debugbreak();
+#endif
         exit(1);
     }
 

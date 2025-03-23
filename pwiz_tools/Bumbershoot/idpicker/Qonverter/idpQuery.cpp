@@ -638,7 +638,7 @@ int doQuery(GroupBy groupBy,
 
     SchemaUpdater::update(filepath.string());
     sqlite::database idpDB(filepath.string());
-    idpDB.load_extension("IdpSqlExtensions");
+    idpDB.load_extension(&sqlite3_idpsqlextensions_init);
     //idpDB.execute("PRAGMA mmap_size=70368744177664; -- 2^46");
 
     try {sqlite::query q(idpDB, "SELECT Id FROM Protein LIMIT 1"); q.begin();}

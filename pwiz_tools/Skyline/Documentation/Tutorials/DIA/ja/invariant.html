@@ -9,12 +9,12 @@
 <body onload="skylineOnload();">
     <h1 class="document-title">Skyline Data Independent Acquisition</h1>
     <p>
-        Data-independent acquisition (DIA)<sup>1,2</sup> is an advanced technique for performing large scale targeted proteomics experiments. Targeted
-        acquisition approaches such as selected reaction monitoring (SRM) and parallel reaction monitoring (PRM) are limited to only a handful of
-        peptides without acquisition scheduling or tens to hundreds of peptides per mass spec run with scheduling. DIA allows the measurement of much
-        larger numbers of peptides (thousands or even whole proteomes) with only modest sacrifices in sensitivity, selectivity and reproducibility
-        relative to SRM. DIA also has the advantage that the peptides to be measured do not need to be specified in advance or scheduled, but rather,
-        product ion chromatograms for any desired peptide within a broad range of precursor m/z can be extracted after acquisition from a DIA run.
+        Data-independent acquisition (DIA)<sup>1,2</sup> is an advanced technique for performing large scale targeted proteomics experiments. Targeted acquisition
+        approaches such as selected reaction monitoring (SRM) and parallel reaction monitoring (PRM) are limited to only a handful of peptides without
+        acquisition scheduling or tens to hundreds of peptides per mass spec run with scheduling. DIA allows the measurement of much larger numbers of
+        peptides (thousands or even whole proteomes) with only modest sacrifices in sensitivity, selectivity and reproducibility relative to SRM. DIA
+        also has the advantage that the peptides to be measured do not need to be specified in advance or scheduled, but rather, product ion
+        chromatograms for any desired peptide within a broad range of precursor m/z can be extracted after acquisition from a DIA run.
     </p>
     <p>
         Since support for chromatogram extraction from DIA data was first implemented in Skyline, in October 2010, this support has been improved
@@ -340,13 +340,6 @@
     <p>
         <img src="s-07.png" />
     </p>
-    <p>
-        For this data set a <b>Cut-off score</b> field set to “0.95” means peptide spectrum matches with a PeptideProphet score of 0.95 or
-        better will be included, because the DDA data was processed with the TPP (after peptide spectrum matching with SEQUEST). For other spectrum
-        matching pipelines that use q values or expectation scores, where zero is best and 1 worst, the cut-off score uses 1 – score. So that, 0.95
-        would mean ≤0.05. For a reusable library, you would probably want to use a more stringent cut-off like 0.99 (i.e. ≤0.01 or 1% false discovery
-        rate for q values).
-    </p>
     <ul>
         <li>Click the <b>Add Files</b> button.</li>
         <li>In the <b>Add Input Files</b> form that appears, select the following file from the directory where you put the tutorial:<ul>
@@ -354,6 +347,11 @@
             </ul>
         </li>
     </ul>
+    <p>
+        For this data set a <b>Score Threshold</b> of “0.95” means peptide spectrum matches with a PeptideProphet score of 0.95 or better
+        will be included, because the DDA data was processed with the TPP (after peptide spectrum matching with SEQUEST). For a reusable library, you
+        would probably want to use a more stringent threshold like 0.99 (i.e. ≤0.01 or 1% false discovery rate for q values).
+    </p>
     <p>
         This file contains peptide spectrum matching results from a single DDA run. For a real experiment, you would actually perform the DDA
         acquisitions on a mass spectrometer, then run the output files through a search engine to produce one or more of these files (usually one for
@@ -551,6 +549,7 @@
         <li>Right-click one of the chromatogram graphs, and click <b>Legend</b> to uncheck it.</li>
         <li>Dock the <b>Peak Areas – Replicate Comparison</b> graph to the right edge of the main window on top of the <b>Library
                 Match</b> view.</li>
+        <li>Right-click the <b>Peak Areas – Replicate Comparison</b> graph, choose <b>Show Dot Product</b>, and click <b>Labels</b>.</li>
         <li>Select the first peptide K.YALSQDV<b><u>C</u></b>TYR.D [64, 74] in the <b>Targets</b> view.</li>
     </ul>
     <p class="keep-next">

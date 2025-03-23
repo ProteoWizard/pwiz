@@ -39,7 +39,7 @@ namespace ralab{
       \ingroup FILTER
       */
         template<typename TReal>
-        struct Gauss : std::unary_function <TReal, TReal> {
+        struct Gauss {
 
           Gauss(TReal mu, TReal sigma)
             :mu_(mu),
@@ -68,7 +68,7 @@ namespace ralab{
                   \ingroup FILTER
       */
         template<typename TReal>
-        struct Gauss_1deriv : std::unary_function< TReal ,TReal > {
+        struct Gauss_1deriv {
 
           Gauss_1deriv(
               TReal mu//!< mean
@@ -102,7 +102,7 @@ namespace ralab{
 
           //ensure that are of gaussian is one...
           TReal sum = std::accumulate(gauss.begin() , gauss.end() , 0.);
-          std::transform(gauss.begin(),gauss.end(),gauss.begin(),std::bind2nd(std::divides<TReal>(),sum )) ;
+          std::transform(gauss.begin(),gauss.end(),gauss.begin(),std::bind(std::divides<TReal>(), std::placeholders::_1, sum )) ;
           TReal sumfilter = std::accumulate(gauss.begin(),gauss.end(),0.);
           return sumfilter;
         }
@@ -116,14 +116,14 @@ namespace ralab{
           //do this so that the sum of wavelet equals zero
           TReal sum = std::accumulate(mh.begin() , mh.end() , 0.);
           sum /= mh.size();
-          std::transform(mh.begin(),mh.end(),mh.begin(),std::bind2nd(std::minus<TReal>(), sum )) ;
+          std::transform(mh.begin(),mh.end(),mh.begin(),std::bind(std::minus<TReal>(), std::placeholders::_1, sum )) ;
           //compute sum of square...
           TReal sumAbs = 0;
           for(typename std::vector<TReal>::iterator it = mh.begin() ;it != mh.end(); ++it)
             {
               sumAbs += fabs(*it);
             }
-          std::transform(mh.begin(),mh.end(),mh.begin(),std::bind2nd(std::divides<TReal>(), sumAbs )) ;
+          std::transform(mh.begin(),mh.end(),mh.begin(),std::bind(std::divides<TReal>(), std::placeholders::_1, sumAbs )) ;
         }
 
         template<typename TReal>

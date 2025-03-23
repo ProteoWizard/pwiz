@@ -184,8 +184,8 @@ void FilterSpectrum::DeIsotopeLowRes()
     }
 
     transform(intensities_.begin(), intensities_.end(), massList_.begin(), massList_.begin(), PropogateNulls);
-    intensities_.erase(remove_if(intensities_.begin(), intensities_.end(), bind2nd(less<double>(), 0)), intensities_.end());
-    massList_.erase(remove_if(massList_.begin(), massList_.end(), bind2nd(less<double>(), 0)), massList_.end());
+    intensities_.erase(remove_if(intensities_.begin(), intensities_.end(), bind(less<double>(), std::placeholders::_1, 0)), intensities_.end());
+    massList_.erase(remove_if(massList_.begin(), massList_.end(), bind(less<double>(), std::placeholders::_1, 0)), massList_.end());
 
     spectrum->defaultArrayLength = massList_.size();
 }

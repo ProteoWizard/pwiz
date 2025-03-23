@@ -30,9 +30,9 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AssociateProteinsDlg));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.btnCancel = new System.Windows.Forms.Button();
             this.lblDescription = new System.Windows.Forms.Label();
             this.btnOk = new System.Windows.Forms.Button();
@@ -73,12 +73,16 @@
             this.panelStatusBarResult = new System.Windows.Forms.FlowLayoutPanel();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.proteinSourcePanel = new System.Windows.Forms.Panel();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.btnError = new System.Windows.Forms.Button();
+            this.progressPanel = new System.Windows.Forms.Panel();
             this.gbParsimonyOptions.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAssociateResults)).BeginInit();
             this.panelStatusBarResult.SuspendLayout();
             this.proteinSourcePanel.SuspendLayout();
+            this.progressPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -109,12 +113,8 @@
             // 
             // comboSharedPeptides
             // 
-            this.comboSharedPeptides.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.flowLayoutPanel.SetFlowBreak(this.comboSharedPeptides, true);
-            this.comboSharedPeptides.FormattingEnabled = true;
             resources.ApplyResources(this.comboSharedPeptides, "comboSharedPeptides");
             this.comboSharedPeptides.Name = "comboSharedPeptides";
-            this.comboSharedPeptides.SelectedIndexChanged += new System.EventHandler(this.comboParsimony_SelectedIndexChanged);
             // 
             // gbParsimonyOptions
             // 
@@ -310,44 +310,42 @@
             this.dgvAssociateResults.AllowUserToResizeRows = false;
             resources.ApplyResources(this.dgvAssociateResults, "dgvAssociateResults");
             this.dgvAssociateResults.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvAssociateResults.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvAssociateResults.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dgvAssociateResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvAssociateResults.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.headerColumn,
             this.mappedColumn,
             this.unmappedColumn,
             this.targetsColumn});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvAssociateResults.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvAssociateResults.DefaultCellStyle = dataGridViewCellStyle5;
             this.dgvAssociateResults.Name = "dgvAssociateResults";
             this.dgvAssociateResults.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dgvAssociateResults.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dgvAssociateResults.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.dgvAssociateResults.RowHeadersVisible = false;
             this.dgvAssociateResults.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
             this.dgvAssociateResults.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.dgvAssociateResults.ShowEditingIcon = false;
-            this.dgvAssociateResults.VirtualMode = true;
-            this.dgvAssociateResults.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.dgvAssociateResults_CellValueNeeded);
             // 
             // headerColumn
             // 
@@ -419,20 +417,43 @@
             this.proteinSourcePanel.Controls.Add(this.tbxFastaTargets);
             this.proteinSourcePanel.Name = "proteinSourcePanel";
             // 
+            // progressBar1
+            // 
+            resources.ApplyResources(this.progressBar1, "progressBar1");
+            this.progressBar1.Name = "progressBar1";
+            // 
+            // btnError
+            // 
+            this.btnError.Cursor = System.Windows.Forms.Cursors.Hand;
+            resources.ApplyResources(this.btnError, "btnError");
+            this.btnError.FlatAppearance.BorderSize = 0;
+            this.btnError.Image = global::pwiz.Skyline.Properties.Resources.Error;
+            this.btnError.Name = "btnError";
+            this.btnError.UseVisualStyleBackColor = true;
+            this.btnError.Click += new System.EventHandler(this.btnError_Click);
+            // 
+            // progressPanel
+            // 
+            resources.ApplyResources(this.progressPanel, "progressPanel");
+            this.progressPanel.Controls.Add(this.progressBar1);
+            this.progressPanel.Controls.Add(this.btnError);
+            this.progressPanel.Name = "progressPanel";
+            // 
             // AssociateProteinsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.progressPanel);
             this.Controls.Add(this.proteinSourcePanel);
             this.Controls.Add(this.panelStatusBarResult);
-            this.Controls.Add(this.lblResults);
             this.Controls.Add(this.dgvAssociateResults);
             this.Controls.Add(this.gbParsimonyOptions);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.lblResults);
             this.HelpButton = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -449,6 +470,7 @@
             this.panelStatusBarResult.PerformLayout();
             this.proteinSourcePanel.ResumeLayout(false);
             this.proteinSourcePanel.PerformLayout();
+            this.progressPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -495,5 +517,8 @@
         private System.Windows.Forms.Panel proteinSourcePanel;
         private System.Windows.Forms.CheckBox cbGeneLevel;
         private System.Windows.Forms.Label lblGroupAtGeneLevel;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Button btnError;
+        private System.Windows.Forms.Panel progressPanel;
     }
 }

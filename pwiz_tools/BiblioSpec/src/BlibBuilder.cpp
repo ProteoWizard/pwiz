@@ -106,7 +106,8 @@ void BlibBuilder::usage()
         "   -H                Use more than one decimal place when describing mass modifications.\n"
         "   -C  <file size>   Minimum file size required to use caching for .dat files.  Specifiy units as B,K,G or M.  Default 800M.\n"
         "   -c <cutoff>       Score threshold (0-1) for PSMs to be included in library. Higher threshold is more exclusive.\n"
-        "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default status.\n"
+        "   -v  <level>       Level of output to stderr (silent, error, status, warn).  Default warn.\n"
+        "   -T                Add prefixes to log output showing time elapsed.\n"
         "   -L                Write status and warning messages to log file.\n"
         "   -m <size>         SQLite memory cache size in Megs. Default 250M.\n"
         "   -l <level>        ZLib compression level (0-?). Default 3.\n"
@@ -537,6 +538,8 @@ int BlibBuilder::parseNextSwitch(int i, int argc, char* argv[])
     } else if (switchName == 'v' && ++i < argc) {
         V_LEVEL v_level = Verbosity::string_to_level(argv[i]);
         Verbosity::set_verbosity(v_level);
+    } else if (switchName == 'T') {
+        Verbosity::set_timestamp(true);
     } else if (switchName == 'x' && ++i < argc) {
         maxQuantModsPath = string(argv[i]);
     } else if (switchName == 'p' && ++i < argc) {

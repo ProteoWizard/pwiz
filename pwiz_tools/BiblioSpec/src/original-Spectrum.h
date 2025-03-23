@@ -38,8 +38,6 @@
 #include <ctime>
 #include <vector>
 
-using std::binary_function;
-
 
 struct PEAK_T 
 { 
@@ -47,12 +45,12 @@ struct PEAK_T
   float intensity; 
 };
 
-struct compPeakInt : public binary_function<PEAK_T, PEAK_T, bool>
+struct compPeakInt
 {
   bool operator()(PEAK_T p1, PEAK_T p2) {return p1.intensity > p2.intensity;}
 };
 
-struct compPeakMz : public binary_function<PEAK_T, PEAK_T, bool>
+struct compPeakMz
 {
   bool operator()(PEAK_T p1, PEAK_T p2) {return p1.mass <  p2.mass;}
 };
@@ -126,21 +124,22 @@ class Spectrum
   void tryMe(const Spectrum& otherSpec);
 };
 
-struct compSpecMz : public binary_function<Spectrum, Spectrum, bool>
+struct compSpecMz
 {
   bool operator()(Spectrum s1, Spectrum s2) {return s1.getMz() <  s2.getMz();}
 };
 
-struct compSpecPtrMz : public binary_function<Spectrum*, Spectrum*, bool>{
+struct compSpecPtrMz
+{
   bool operator()(Spectrum* s1, Spectrum* s2) { return s1->getMz() <  s2->getMz();}
 };
 
-struct compSpecScanNum : public binary_function<Spectrum, Spectrum, bool>
+struct compSpecScanNum
 {
   bool operator()(Spectrum s1, Spectrum s2) {return s1.getScanNum() <  s2.getScanNum();}
 };
 
-struct compSpecPtrScanNum : public binary_function<Spectrum*, Spectrum*, bool>
+struct compSpecPtrScanNum
 {
   bool operator()(Spectrum* s1, Spectrum* s2) {return s1->getScanNum() <  s2->getScanNum();}
 };

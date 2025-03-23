@@ -106,7 +106,7 @@ class PWIZ_API_DECL PeakDetectorMatchedFilter : public PeakDetector
     //@{
 
     /// create an instance.
-    static std::auto_ptr<PeakDetectorMatchedFilter> create(const Config& config);
+    static std::unique_ptr<PeakDetectorMatchedFilter> create(const Config& config);
 
     virtual ~PeakDetectorMatchedFilter(){}
     //@}
