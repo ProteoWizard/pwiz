@@ -507,11 +507,11 @@ namespace TestRunnerLib
                         Directory.Delete(tmpTestDir, true);
                     }
                 }
-                catch (Exception)
+                catch (Exception deleteException)
                 {
                     FileChecker.CheckLockedFiles(tmpTestDir.ToString(CultureInfo.InvariantCulture));
 
-                    throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"");
+                    throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"", deleteException);
                 }
                 // Get rid of the parent directory we created as testdir/"~&TMP ^"
                 try
