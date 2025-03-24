@@ -89,13 +89,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public void InitializeControls()
         {
-            LoadMassUnitEntries();
-
-            if (ImportPeptideSearch.IsFeatureDetection)
-                return;
-
             if (_searchEngine == null || ImportPeptideSearch.IsDIASearch && _searchEngine != SearchEngine.MSFragger)
                 searchEngineComboBox.SelectedIndex = ImportPeptideSearch.IsDIASearch ? 2 : 0; // currently only supported by MSFragger
+
+            LoadMassUnitEntries();
         }
 
         private void SearchEngineComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -145,6 +142,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             MSAmanda,
             MSGFPlus,
             MSFragger,
+            Comet,
             Hardklor
         }
 
@@ -212,6 +210,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return EnsureRequiredFilesDownloaded(MsgfPlusSearchEngine.FilesToDownload);
                 case SearchEngine.MSFragger:
                     return EnsureRequiredFilesDownloaded(MsFraggerSearchEngine.FilesToDownload, ShowDownloadMsFraggerDialog);
+                case SearchEngine.Comet:
+                    return EnsureRequiredFilesDownloaded(CometSearchEngine.FilesToDownload);
                 case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
                     return true;
@@ -233,6 +233,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     break;
                 case SearchEngine.MSFragger:
                     fileDownloadInfo = MsFraggerSearchEngine.FilesToDownload;
+                    break;
+                case SearchEngine.Comet:
+                    fileDownloadInfo = CometSearchEngine.FilesToDownload;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -257,6 +260,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     else
                         dataType = ImportPeptideSearch.IsGpfData ? MsFraggerSearchEngine.DataType.dia_gpf : MsFraggerSearchEngine.DataType.dia;
                     return new MsFraggerSearchEngine(dataType);
+                case SearchEngine.Comet:
+                    return new CometSearchEngine(CutoffScore);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
@@ -389,14 +394,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private void LoadMassUnitEntries()
         {
             string[] entries = { @"Da", @"ppm" };
-            foreach (var cb in new [] { cbMS1TolUnit, cbMS2TolUnit })
+
+            void ClearAndRestoreComboBoxItems(ComboBox cb, string[] newEntries)
             {
-                int oldSelectedIndex = cb.SelectedIndex;
+                string oldSelection = cb.SelectedItem as string;
                 cb.Items.Clear();
-                cb.Items.AddRange(entries);
-                if (oldSelectedIndex > -1)
-                    cb.SelectedIndex = oldSelectedIndex;
+                cb.Items.AddRange(newEntries);
+                if (oldSelection != null && newEntries.Contains(oldSelection))
+                    cb.SelectedIndex = newEntries.ToList().IndexOf(oldSelection);
             }
+
+            var ms1Entries = ImportPeptideSearch.SearchEngine.PrecursorIonToleranceUnitTypes.Select(t => entries[(int) t]).ToArray();
+            ClearAndRestoreComboBoxItems(cbMS1TolUnit, ms1Entries);
+
+            var ms2Entries = ImportPeptideSearch.SearchEngine.FragmentIonToleranceUnitTypes.Select(t => entries[(int) t]).ToArray();
+            ClearAndRestoreComboBoxItems(cbMS2TolUnit, ms2Entries);
         }
 
         private void LoadFragmentIonEntries()

@@ -60,11 +60,10 @@ class PWIZ_API_DECL FrequencyEstimatorSimpleImpl : public FrequencyEstimatorSimp
 };
 
 
-PWIZ_API_DECL auto_ptr<FrequencyEstimatorSimple> FrequencyEstimatorSimple::create(Type type,
+PWIZ_API_DECL unique_ptr<FrequencyEstimatorSimple> FrequencyEstimatorSimple::create(Type type,
                                                                     unsigned int windowRadius)
 {
-    return auto_ptr<FrequencyEstimatorSimple>(
-        new FrequencyEstimatorSimpleImpl(type, windowRadius));
+    return std::make_unique<FrequencyEstimatorSimpleImpl>(type, windowRadius);
 }
 
 
