@@ -86,7 +86,7 @@ class Modification::Impl
     }
 
     private:
-    auto_ptr<Formula> formula_;
+    unique_ptr<Formula> formula_;
     double monoDeltaMass;
     double avgDeltaMass;
 };
