@@ -1651,6 +1651,8 @@ namespace pwiz.Skyline.Controls
             node.Nodes.OfType<TreeNodeMS>().ForEach(childNode => SelectNode(childNode, select));
             if (GetNodeLevel(node) < level)
                 node.Nodes.OfType<TreeNodeMS>().ForEach(childNode => ExpandRecursive(childNode, level, select));
+            else
+                node.Nodes.OfType<TreeNodeMS>().ForEach(childNode => childNode.Collapse());     // collapse all children below the level
         }
     }
 
