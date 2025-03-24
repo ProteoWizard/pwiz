@@ -27,6 +27,7 @@
 #define _IDPSQLEXTENSIONS_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
+#include <sqlite3ext.h>
 #include <string>
 
 namespace IDPicker {
@@ -39,5 +40,12 @@ PWIZ_API_DECL void setGroupConcatSeparator(const std::string& separator);
 PWIZ_API_DECL const std::string& getGroupConcatSeparator();
 
 } // IDPicker
+
+
+extern "C" {
+
+PWIZ_API_DECL int sqlite3_idpsqlextensions_init(sqlite3* idpDbConnection, char** pzErrMsg, const sqlite3_api_routines* pApi);
+
+}
 
 #endif // _IDPSQLEXTENSIONS_HPP_

@@ -264,9 +264,9 @@ class ImageImpl : public Image
 };
 
 
-PWIZ_API_DECL auto_ptr<Image> Image::create(int logical_width, int logical_height, int output_width, int output_height)
+PWIZ_API_DECL unique_ptr<Image> Image::create(int logical_width, int logical_height, int output_width, int output_height)
 {
-    return auto_ptr<Image>(new ImageImpl(logical_width, logical_height, output_width, output_height));
+    return std::make_unique<ImageImpl>(logical_width, logical_height, output_width, output_height);
 }
 
 

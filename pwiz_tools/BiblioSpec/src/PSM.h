@@ -146,6 +146,12 @@ struct PSM{
     };
 };
 
+struct NonRedundantPSM : PSM
+{
+    int fileId;      ///< overrides the fileId field set by buildTables()
+    int copies;      ///< overrides the copies field set by buildTables()
+};
+
 struct PSMSpecKeySorter {
   bool operator() (const PSM* x, const PSM* y) { return x->specKey < y->specKey; }
 };

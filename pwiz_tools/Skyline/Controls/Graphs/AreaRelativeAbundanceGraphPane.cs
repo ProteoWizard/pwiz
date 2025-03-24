@@ -17,6 +17,9 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Threading;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
@@ -28,10 +31,8 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
         }
-        protected override GraphData CreateGraphData(SrmDocument document, GraphSettings graphSettings)
-        {
-            return new AreaGraphData(document, graphSettings);
-        }
+
+        protected override Producer<GraphDataParameters, GraphData> GraphDataProducer => _graphDataProducer;
 
         protected override void UpdateAxes()
         {
@@ -43,13 +44,22 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal class AreaGraphData : GraphData
         {
-            public AreaGraphData(SrmDocument document, GraphSettings graphSettings)
-                : base(document, graphSettings)
+            public AreaGraphData(SrmDocument document, GraphSettings graphSettings, CancellationToken cancellationToken)
+                : base(document, graphSettings, cancellationToken)
             {
             }
 
             public override double MaxValueSetting { get { return Settings.Default.PeakAreaMaxArea; } }
             public override double MaxCvSetting { get { return Settings.Default.PeakAreaMaxCv; } }
+        }
+
+        private static readonly GraphDataProducerImpl _graphDataProducer = new GraphDataProducerImpl();
+        private class GraphDataProducerImpl : Producer<GraphDataParameters, GraphData>
+        {
+            public override GraphData ProduceResult(ProductionMonitor productionMonitor, GraphDataParameters parameter, IDictionary<WorkOrder, object> inputs)
+            {
+                return new AreaGraphData(parameter.Document, parameter.GraphSettings, productionMonitor.CancellationToken);
+            }
         }
     }
 

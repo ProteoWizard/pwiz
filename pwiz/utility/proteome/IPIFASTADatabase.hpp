@@ -69,7 +69,7 @@ class PWIZ_API_DECL IPIFASTADatabase
 
     private:
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    std::unique_ptr<Impl> impl_;
 };
 
 
