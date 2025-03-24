@@ -54,7 +54,7 @@ class PWIZ_API_DECL Stats
 
     private:
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    std::unique_ptr<Impl> impl_;
 
     // no copying
     Stats(const Stats& stats);

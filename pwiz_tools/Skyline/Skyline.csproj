@@ -34,7 +34,7 @@
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' != '' ">$(MSBuildAssemblyName)</AssemblyName>
-    <MascotParserPath>..\..\libraries\msparser_2_8_1_x86_win64</MascotParserPath>
+    <MascotParserPath>..\..\libraries\msparser_3_1_0_x86_win64</MascotParserPath>
     <RuntimeIdentifiers>win</RuntimeIdentifiers>
     <PublishUrl>T:\www\site\skyline.ms\html\software\Skyline-daily13-64\</PublishUrl>
     <Install>true</Install>
@@ -611,6 +611,7 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />
@@ -4264,6 +4265,7 @@
     <None Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
     <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
+    <None Include="Resources\Error.png" />
     <Content Include="Resources\StartPage\DDASearch_start-ja.png" />
     <Content Include="Resources\StartPage\DDASearch_start-zh-CHS.png" />
     <Content Include="Resources\StartPage\DDASearch_start.png" />
@@ -6452,6 +6454,14 @@
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\libraries\arrow\parquet.dll">
+      <Link>parquet.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\libraries\arrow\arrow.dll">
+      <Link>arrow.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\msparser.dll">

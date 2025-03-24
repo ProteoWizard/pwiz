@@ -31,6 +31,7 @@
 #include "Qonverter.hpp"
 #include "Embedder.hpp"
 #include "TotalCounts.hpp"
+#include "IdpSqlExtensions.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/assert.hpp"
 #include "boost/atomic.hpp"
@@ -217,7 +218,7 @@ const string assembleProteinGroupsSql(
     "    SELECT ProteinId, Accession, IsDecoy, Cluster, pg2.rowid, Length, GeneId, GeneGroup\n"
     "    FROM ProteinGroups pg\n"
     "    JOIN(\n"
-    "       SELECT pg.ProteinGroup\n"
+    "       SELECT rowid, pg.ProteinGroup\n"
     "       FROM ProteinGroups pg\n"
     "       GROUP BY pg.ProteinGroup\n"
     "    ) pg2 ON pg.ProteinGroup = pg2.ProteinGroup\n"
@@ -242,7 +243,7 @@ const string assembleGeneGroupsSql(
     "    SELECT pro.Id, Accession, IsDecoy, Cluster, ProteinGroup, Length, pro.GeneId, gg2.rowid AS GeneGroup\n"
     "    FROM GeneGroups gg\n"
     "    JOIN(\n"
-    "       SELECT gg.GeneGroup\n"
+    "       SELECT rowid, gg.GeneGroup\n"
     "       FROM GeneGroups gg\n"
     "       GROUP BY gg.GeneGroup\n"
     "       ORDER BY gg.GeneId\n"
@@ -269,7 +270,7 @@ const string assemblePeptideGroupsSql(
     "         SELECT PeptideId, MonoisotopicMass, MolecularWeight, pg2.rowid, DecoySequence\n"
     "         FROM PeptideGroups pg\n"
     "         JOIN (\n"
-    "               SELECT pg.PeptideGroup\n"
+    "               SELECT rowid, pg.PeptideGroup\n"
     "               FROM PeptideGroups pg\n"
     "               GROUP BY pg.PeptideGroup\n"
     "              ) pg2 ON pg.PeptideGroup = pg2.PeptideGroup\n"
@@ -514,7 +515,7 @@ struct Filter::Impl
         else
             idpDb.reset(new sqlite3pp::database(idpDbConnection, false));
 
-        idpDb->load_extension("IdpSqlExtensions");
+        idpDb->load_extension(&sqlite3_idpsqlextensions_init);
 
         hasGeneMetadata = Embedder::hasGeneMetadata(idpDb->connected());
     }

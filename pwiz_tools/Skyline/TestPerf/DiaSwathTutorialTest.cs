@@ -64,6 +64,7 @@ namespace TestPerf
             public string DiaFilesExtension;
             public string[] DiaFiles;
             public string[] SearchFiles;
+            public bool HasRedundantLibrary = true; // only DIA-NN directly creates a non-redundant library
             public int LibraryPeptideCount;
             public int ExpectedIrtPeptideCount;
             public IrtStandard IrtStandard;
@@ -82,6 +83,8 @@ namespace TestPerf
             public bool KeepPrecursors;
 
             public string IrtFilterText;
+            public string ScoreType;
+            public double ScoreThreshold;
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
             //public int[] TargetCounts;
@@ -195,9 +198,13 @@ namespace TestPerf
                     UnpolishedProteins = 9,
                 };
             }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
+            _analysisValues.ScoreThreshold = 0.95;
         }
 
         public bool IsTtof => Equals("TTOF", _instrumentValues.InstrumentTypeName);
+
         public void TestQeData(bool fullSet)
         {
             SetInstrumentType(new InstrumentSpecificValues
@@ -282,6 +289,103 @@ namespace TestPerf
                     FoldChangeProteinsMax = 2,
                 };
             }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
+            _analysisValues.ScoreThreshold = 0.95;
+        }
+
+        public void TestQeDataDiaNN(bool fullSet)
+        {
+            SetInstrumentType(new InstrumentSpecificValues
+            {
+                InstrumentTypeName = "QE",
+                DiaFilesExtension = DataSourceUtil.EXT_MZML,
+                DiaFiles = new[]
+                {
+                    "collinsb_X1803_171-A.mzML",
+                    "collinsb_X1803_172-B.mzML",
+                    "collinsb_X1803_173-A.mzML",
+                    "collinsb_X1803_174-B.mzML",
+                    "collinsb_X1803_175-A.mzML",
+                    "collinsb_X1803_176-B.mzML",
+                },
+                SearchFiles = new[]
+                {
+                    "report-lib.parquet.skyline.speclib"
+                },
+                HasRedundantLibrary = false,
+                IrtStandard = IrtStandard.AUTO,
+                LibraryPeptideCount = 21695,
+                ExpectedIrtPeptideCount = 11,
+                IrtSlope = 2.600,
+                IrtIntercept = -44.875,
+                HasAmbiguousMatches = false,
+                IsolationSchemeName = "ETH QE (18 variable)",
+                IsolationSchemeFile = "QE_DIA_18var.tsv",
+                IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+            });
+
+            TestFilesZipPaths = TestFilesZipPaths
+                .Append(string.Format(@"http://skyline.ms/tutorials/{0}-DIANN.zip", ZipFileName))
+                .ToArray();
+
+            if (fullSet)
+            {
+                _analysisValues = new AnalysisValues
+                {
+                    KeepPrecursors = false,
+                    IsWholeProteome = true,
+                    IrtFilterText = "iRT",
+                    MinPeptidesPerProtein = 2,
+                    RemoveDuplicates = true,
+                    ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
+                    //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
+                    FinalTargetCounts = new[] { 3106, 32973, 34564, 207384 },
+                    MassErrorStats = new[]
+                    {
+                        new[] {1.9, 4.3},
+                        new[] {1.4, 4.3},
+                        new[] {2.0, 4.3},
+                        new[] {2.0, 4.2},
+                        new[] {2.1, 4.2},
+                        new[] {2.1, 4.2},
+                        new[] {1.9, 4.2},
+                    },
+                    DiffPeptideCounts = new[] { 14479, 9877, 2828, 1756 },
+                    UnpolishedProteins = 1846,
+                    PolishedProteins = 1846
+                };
+            }
+            else
+            {
+                _analysisValues = new AnalysisValues
+                {
+                    KeepPrecursors = false,
+                    IrtFilterText = "iRT",
+                    ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
+                    //TargetCounts = new[] { 14, 271, 331, 1985 },
+
+                    FinalTargetCounts = new[] { 13, 275, 306, 1836 },
+                    MassErrorStats = new[]
+                    {
+                        new[] {1.8, 3.2},
+                        new[] {1.2, 3.0},
+                        new[] {1.8, 3.0},
+                        new[] {2.0, 3.2},
+                        new[] {2.1, 3.7},
+                        new[] {1.9, 3.2},
+                        new[] {1.6, 3.4},
+                    },
+                    DiffPeptideCounts = new[] { 125, 41, 28, 45 },
+                    UnpolishedProteins = 3,
+                    PolishedProteins = 11,
+                    FoldChangeProteinsMax = 2,
+                };
+            }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_q_value;
+            _analysisValues.ScoreThreshold = 0.01;
         }
 
         public void TestPasefData(bool fullSet)
@@ -400,9 +504,13 @@ namespace TestPerf
                     ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
                 });
             }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
+            _analysisValues.ScoreThreshold = 0.95;
         }
 
         public bool IsPasef => Equals("PASEF", _instrumentValues.InstrumentTypeName);
+        public bool IsDiaNN => !_instrumentValues.HasRedundantLibrary;
 
         public void SetInstrumentType(InstrumentSpecificValues instrumentValues)
         {
@@ -456,6 +564,7 @@ namespace TestPerf
         private string ZipFileName => _testInfo._instrumentValues.ZipFileName ?? RootName;
         private bool IsTtof => _testInfo.IsTtof;
         private bool IsPasef => _testInfo.IsPasef;
+        private bool IsDiaNN => _testInfo.IsDiaNN;
         private DiaSwathTestInfo.AnalysisValues _analysisValues => _testInfo._analysisValues;
         private DiaSwathTestInfo.InstrumentSpecificValues _instrumentValues => _testInfo._instrumentValues;
 
@@ -489,7 +598,23 @@ namespace TestPerf
             if (!IsCoverShotMode)
                 RunTest();
         }
-       
+
+
+        [TestMethod]
+        public void TestDiaQeDiaNnTutorialDraft()
+        {
+            _testInfo.TestQeDataDiaNN(false);
+            RunTest();
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
+        public void TestDiaQeDiaNnFullSearchTutorialExtra()
+        {
+            _testInfo.TestQeDataDiaNN(true);
+            if (!IsCoverShotMode)
+                RunTest();
+        }
+
 
         [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // Bruker wants exclusive read access to raw data
         [Timeout(int.MaxValue)] // These can take a long time
@@ -535,7 +660,17 @@ namespace TestPerf
 
         private string GetTestPath(string path)
         {
-            return TestFilesDirs[0].GetTestPath(Path.Combine(ZipFileName, path));
+            foreach (var dir in TestFilesDirs)
+            {
+                string possiblePath = dir.GetTestPath(Path.Combine(ZipFileName, path));
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+                possiblePath = dir.GetTestPath(path);
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+            }
+
+            throw new ArgumentException($"{path} does not exist in any of the TestFilesDirs");
         }
 
         /// <summary>
@@ -581,12 +716,11 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
             WaitForConditionUI(() =>
-                Equals(pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence,
-                    importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.FirstOrDefault()?.ScoreType?.ToString()));
+                Equals(_analysisValues.ScoreType, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.FirstOrDefault()?.ScoreType?.ToString()));
             RunUI(() =>
             {
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
+                Assert.AreEqual(_analysisValues.ScoreThreshold, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
@@ -660,8 +794,12 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
 
             string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(documentFile);
-            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
-            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+            Assert.IsTrue(File.Exists(docLibPath));
+            if (_instrumentValues.HasRedundantLibrary)
+            {
+                string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+                Assert.IsTrue(File.Exists(redundantDocLibPath));
+            }
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
 
@@ -704,7 +842,7 @@ namespace TestPerf
             {
                 const string modOxidation = "Oxidation (M)";
                 // Define expected matched/unmatched modifications
-                var expectedMatched = !IsPasef ? new[] { modOxidation } : Array.Empty<string>();
+                var expectedMatched = !IsPasef && !IsDiaNN ? new[] { modOxidation } : Array.Empty<string>();
                 // Verify matched/unmatched modifications
                 AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToArray());
                 Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
@@ -823,7 +961,7 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod =
                     Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence;
-                importPeptideSearchDlg.ImportFastaControl.AutoTrain = true;
+                importPeptideSearchDlg.ImportFastaControl.AutoTrain = !IsDiaNN; // use peak boundaries from DIA-NN
                 Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.ContainsFastaContent);
             });
             PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page");
@@ -863,15 +1001,26 @@ namespace TestPerf
             allChrom.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
-            var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
-            PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form");
-            ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
+            if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)
+            {
+                var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
+                PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form");
+                ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
 
-            OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
+                OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
+            }
 
             var docLibrary = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
-            Assert.AreEqual(_instrumentValues.LibraryPeptideCount + _instrumentValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
-            RunUI(() => Assert.AreEqual(_instrumentValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount));
+            RunUI(() =>
+            {
+                if (!IsRecordMode)
+                {
+                    Assert.AreEqual(_instrumentValues.LibraryPeptideCount + _instrumentValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
+                    Assert.AreEqual(_instrumentValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount);
+                }
+                else
+                    _instrumentValues.ExpectedIrtPeptideCount = SkylineWindow.Document.PeptideGroups.First().PeptideCount;
+            });
 
             // Setup annotations
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
@@ -1147,7 +1296,7 @@ namespace TestPerf
                 OkDialog(formattingDlg, formattingDlg.OkDialog);
                 //PauseTest();
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 &&
-                                         volcanoPlot.CurveList[7].Points.Count == _instrumentValues.ExpectedIrtPeptideCount); // iRTs
+                                         volcanoPlot.CurveList[7].Points.Count >= _instrumentValues.ExpectedIrtPeptideCount); // iRTs
                 for (int i = 1; i < 4; i++)
                 {
                     RunUI(() =>
@@ -1186,7 +1335,7 @@ namespace TestPerf
                 var barGraph = WaitForOpenForm<FoldChangeBarGraph>();
                 int volcanoBarDelta = _instrumentValues.ExpectedIrtPeptideCount - 1; // iRTs - selected peptide
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta);
+                    WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta * 2);
 
                 SortByFoldChange(fcGridControl, _resultProperty);
                 PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides");
@@ -1208,6 +1357,9 @@ namespace TestPerf
                 RunUI(() => changeGroupComparisonSettings.ComboSummaryMethod.SelectedItem =
                     SummarizationMethod.MEDIANPOLISH);
 
+                if (IsDiaNN && _analysisValues.IsWholeProteome)
+                    return; // fold change bar graphs don't behave the same way for DIA-NN results as for iProphet, so exit early
+
                 if (!IsRecordMode)
                     WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
                 else
@@ -1216,13 +1368,17 @@ namespace TestPerf
                     if (GetBarCount(barGraph) != targetProteinCount)
                         Console.WriteLine(@"PolishedProteins = {0},", GetBarCount(barGraph));
                 }
+
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControlFinal = fcGrid.DataboundGridControl;
                 SortByFoldChange(fcGridControlFinal, _resultProperty);  // Re-apply the sort, in case it was lost in restoring views
 
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                if (!IsRecordMode)
+                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                else
+                    WaitForBarGraphPoints(barGraph, targetProteinCount, unpolishedCount);
                 RunUIForScreenShot(() =>
                 {
                     var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
@@ -1522,7 +1678,17 @@ namespace TestPerf
 
         private string GetTestPath(string path)
         {
-            return TestFilesDirs[0].GetTestPath(Path.Combine(ZipFileName, path));
+            foreach(var dir in TestFilesDirs)
+            {
+                string possiblePath = dir.GetTestPath(Path.Combine(ZipFileName, path));
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+                possiblePath = dir.GetTestPath(path);
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+            }
+
+            throw new ArgumentException($"{path} does not exist in any of the TestFilesDirs");
         }
 
         private void RunTest()

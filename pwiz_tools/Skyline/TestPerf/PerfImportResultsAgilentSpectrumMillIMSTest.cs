@@ -140,6 +140,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 importPeptideSearchDlg.ImportFastaControl.SetFastaContent(GetTestPath("SwissProt.bsa-mature"));
             });
             var peptidesPerProteinDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
+            WaitForConditionUI(() => peptidesPerProteinDlg.IsOkEnabled);
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
             WaitForClosedForm(importPeptideSearchDlg);
             WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes

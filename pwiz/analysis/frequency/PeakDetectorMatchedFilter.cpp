@@ -113,10 +113,10 @@ class PeakDetectorMatchedFilterImpl : public PeakDetectorMatchedFilter
 };
 
 
-auto_ptr<PeakDetectorMatchedFilter> 
+unique_ptr<PeakDetectorMatchedFilter>
 PWIZ_API_DECL PeakDetectorMatchedFilter::create(const Config& config)
 {
-    return auto_ptr<PeakDetectorMatchedFilter>(new PeakDetectorMatchedFilterImpl(config));
+    return std::make_unique<PeakDetectorMatchedFilterImpl>(config);
 }
 
 
