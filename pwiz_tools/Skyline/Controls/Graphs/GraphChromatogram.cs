@@ -1150,6 +1150,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         case DisplayTypeChrom.qc:
                             message = GraphsResources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
                             break;
+                        default:
+                            if (Settings.Default.ShowQuantitativeOnly)
+                            {
+                                message = GraphsResources.GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found;
+                            }
+                            break;
                     }
                     SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
                 }
