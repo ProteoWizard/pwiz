@@ -577,6 +577,7 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />
@@ -4221,6 +4222,7 @@
     <None Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
     <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
+    <None Include="Resources\Error.png" />
     <Content Include="Resources\StartPage\DDASearch_start-ja.png" />
     <Content Include="Resources\StartPage\DDASearch_start-zh-CHS.png" />
     <Content Include="Resources\StartPage\DDASearch_start.png" />
