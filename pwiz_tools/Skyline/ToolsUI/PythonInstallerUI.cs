@@ -142,7 +142,7 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         throw new PythonInstallerUnsupportedTaskException(task);
                     }
-                    if (abortTask)
+                    if (!abortTask)
                     {
                         pythonInstaller.NumCompletedTasks++;
                     }

@@ -220,10 +220,16 @@
   <data name="BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path" xml:space="preserve">
     <value>The output path {0} is a directory. You must specify a file path.</value>
   </data>
+  <data name="BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded" xml:space="preserve">
+    <value>Cannot predict library for a FASTA file when a Skyline document is already loaded.</value>
+  </data>
   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
     <value>You must specify an output file path.</value>
   </data>
-   <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu" xml:space="preserve">
+	<data name="BuildLibraryDlg_No_Skyline_document_is_currently_loaded" xml:space="preserve">
+    <value>No Skyline document is currently loaded. Please load a Skyline document for training.</value>
+  </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu" xml:space="preserve">
     <value>You must specify an output file path.</value>
   </data>
   <data name="BuildLibraryDlg_Skyline_tuning_document" xml:space="preserve">

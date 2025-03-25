@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Diagnostics;
 
 namespace pwiz.Common.SystemUtil
@@ -39,7 +40,20 @@ namespace pwiz.Common.SystemUtil
         {
             // For Skyline UI, the TraceWarningListener class causes these messages to appear in the
             // Immediate Window, for commandline they appear in the console.
-            Trace.TraceWarning(message, args);  
+            try
+            {
+                Trace.TraceWarning(message, args);
+            }
+            catch (Exception ex) // CONSIDER: Should we handle more types like WrapAndThrowException does?
+            {
+                if (ex.Message == "Input string was not in a correct format.")
+                {
+                    string reformatMsg = message.Replace("{", "[").Replace("}", "]");
+                    WriteAsyncUserMessage(reformatMsg, args);
+                    return;
+                }
+                throw;
+            }
         }
     }
 }

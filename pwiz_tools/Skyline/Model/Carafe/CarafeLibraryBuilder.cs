@@ -309,18 +309,6 @@ namespace pwiz.Skyline.Model.Carafe
             bool diann_training)
         {
             Document = document;
-            ToolName = @"carafe";
-            Directory.CreateDirectory(RootDir);
-            Directory.CreateDirectory(JavaDir);
-            Directory.CreateDirectory(CarafeDir);
-            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            
-            //if (LibraryHelper == null)
-            //{
-            //    LibraryHelper = new LibraryHelper();
-            //    LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, experimentDataFilePath);
-            //}
-
             Writer = textWriter;
             TrainingDocument = trainingDocument;
             DbInputFilePath = dbInputFilePath;
@@ -329,6 +317,20 @@ namespace pwiz.Skyline.Model.Carafe
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
+            ToolName = @"carafe";
+            LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+
+            if (Document.DocumentHash != null || DbInputFilePath != null) InitializeLibraryHelper();
+
+            //if (LibraryHelper == null)
+            //{
+            //    LibraryHelper = new LibraryHelper();
+            //    LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, experimentDataFilePath);
+            //}
+            Directory.CreateDirectory(RootDir);
+            Directory.CreateDirectory(JavaDir);
+            Directory.CreateDirectory(CarafeDir);
+
 
             _diann_training = diann_training;
             //_builderLibraryPath = builderLibraryPath;
@@ -431,10 +433,20 @@ namespace pwiz.Skyline.Model.Carafe
             }
             else if (_diann_training)
             {
-                readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
-                readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
-                readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
-                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
+                if (DbInputFilePath != null)
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
+                }
+                else
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
+                    readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
+                }
             }
             else
             {
@@ -588,19 +600,18 @@ namespace pwiz.Skyline.Model.Carafe
             }
 
             cmdBuilder.Append(args).Append(SPACE);
-
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO,
-                cmdBuilder, TextUtil.AMPERSAND);
-           
-            cmd += string.Format(
-                ToolsResources
-                    .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
-                ECHO, TextUtil.AMPERSAND);
             
-            cmd += cmdBuilder;
+        //     var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, "");
+           
+           
+        //    cmd += string.Format(
+        //        ToolsResources
+        //            .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
+        //        ECHO, TextUtil.AMPERSAND);
+        //    cmd += cmdBuilder;
 
             string batPath = Path.Combine(RootDir, "runCarafe.bat");
-            File.WriteAllText(batPath, cmd);
+            File.WriteAllText(batPath, cmdBuilder.ToString());
 
             // execute command
             var pr = new ProcessRunner();

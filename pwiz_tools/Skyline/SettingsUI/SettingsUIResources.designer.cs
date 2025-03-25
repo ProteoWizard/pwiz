@@ -323,6 +323,16 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot predict library for a FASTA file when a Skyline document is already loaded..
+        /// </summary>
+        public static string BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_lo" +
+                        "aded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;DIA-NN report document:.
         /// </summary>
         public static string BuildLibraryDlg_DIANN_report_document {
@@ -337,6 +347,15 @@ namespace pwiz.Skyline.SettingsUI {
         public static string BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No Skyline document is currently loaded. Please load a Skyline document for training..
+        /// </summary>
+        public static string BuildLibraryDlg_No_Skyline_document_is_currently_loaded {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_No_Skyline_document_is_currently_loaded", resourceCulture);
             }
         }
         

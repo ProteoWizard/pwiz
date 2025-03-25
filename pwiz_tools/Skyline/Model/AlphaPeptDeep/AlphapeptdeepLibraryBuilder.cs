@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             };
 
-        internal static readonly IList<ModificationType> CarafeSupportedModificationNames = populateUniModList(carafeSupportedModificationIndices);
+        internal static readonly IList<ModificationType> CarafeSupportedModificationNames = populateUniModList(null);
 
         /// <summary>
         /// List of UniMod Modifications available
@@ -526,7 +526,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         string ILibraryBuilder.BuilderLibraryPath
         {
             get => BuilderLibraryPath;
-            set => BuilderLibraryPath = value;
+            set => throw new NotImplementedException();
         }
 
         private string _testLibraryPath;

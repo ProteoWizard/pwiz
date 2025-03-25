@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -172,17 +173,22 @@ namespace pwiz.Common.SystemUtil
                     {
                         string adjustedLine = line;
                         bool skip_line = false;
-                        
-                        if (line.Contains(@"DiaNN/Spectronaut"))
+
+                        if (double.TryParse(line.TrimEnd('\n','\r'), NumberStyles.Any, null, out _) ||
+                            line.StartsWith("x: ") || line.StartsWith("index_start: ") || line.StartsWith("index_end: ") || 
+                            line.StartsWith("index_apex: ") || line.StartsWith("No ions matched!"))
+                            skip_line = true;
+                        else if (line.Contains(@"DiaNN/Spectronaut"))
                             adjustedLine = line.Replace(@"DiaNN/Spectronaut", @"Skyline");
                         else
                             skip_line = FilterOutputLine(line, FilterStrings);
-                          
-                        if (!skip_line)
-                            Messages.WriteAsyncUserMessage(adjustedLine);
-                    }
 
-                    if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
+                        if (!skip_line)
+                        {
+                            Messages.WriteAsyncUserMessage(adjustedLine);
+                        }
+                    }
+                    else if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                         writer.WriteLine(line);
 
                     string lineLower = line.ToLowerInvariant();
@@ -387,6 +393,9 @@ namespace pwiz.Common.SystemUtil
         /// <returns>true when filter matches, false otherwise</returns>
         private bool FilterOutputLine(string line, string[] filters)
         {
+            if (filters == null || line == null || filters.Length == 0 ) 
+                return false;
+            
             foreach (string filter in filters)
             {
                 if (line.Contains(filter))

@@ -37,6 +37,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Process = System.Diagnostics.Process;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 [assembly: InternalsVisibleTo("TestUtil")]
@@ -364,17 +365,17 @@ namespace pwiz.Skyline.Model.Tools
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
             //NumTotalTasks = tasks.Count;
 
-            if (abortedTasks != null && abortedTasks.Count > 0) tasks = abortedTasks;
+            
 
-            if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
-                return true;
+            if (abortedTasks != null && abortedTasks.Count > 0)
+                return !abortedTasks.Any(task =>
+                    (task.Name == PythonTaskName.setup_nvidia_libraries));
+            //|| task.Name == PythonTaskName.download_cuda_library
+            //|| task.Name == PythonTaskName.install_cuda_library
+            //|| task.Name == PythonTaskName.download_cudnn_library
+            //|| task.Name == PythonTaskName.install_cudnn_library));
 
-            return !tasks.Any(task =>
-                (task.Name == PythonTaskName.setup_nvidia_libraries
-                 || task.Name == PythonTaskName.download_cuda_library
-                 || task.Name == PythonTaskName.install_cuda_library
-                 || task.Name == PythonTaskName.download_cudnn_library
-                 || task.Name == PythonTaskName.install_cudnn_library));
+            return true;
         }
 
         public bool IsPythonVirtualEnvironmentReady(List<PythonTask> abortedTasks = null)

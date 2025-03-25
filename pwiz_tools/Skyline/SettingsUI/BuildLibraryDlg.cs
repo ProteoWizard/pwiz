@@ -139,6 +139,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private SettingsListBoxDriver<LibrarySpec> _driverLibrary;
 
+        private LearningOptions _currentLearningOption;
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
         public PythonInstaller pythonInstaller { get; private set; }
@@ -149,6 +150,7 @@ namespace pwiz.Skyline.SettingsUI
             Icon = Resources.Skyline;
 
             _skylineWindow = skylineWindow;
+            _currentLearningOption = LearningOptions.another_doc;
             _documentUiContainer = skylineWindow;
 
             tabPage1.BackColor = tabPage1.Parent.BackColor;
@@ -1283,14 +1285,24 @@ namespace pwiz.Skyline.SettingsUI
                     labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
                     //PopulateLibraries();
                     break;
+
                 case LearningOptions.this_doc:
-                    labelDoc.Enabled = false;
-                    buttonDoc.Enabled = false;
-                    textBoxDoc.Enabled = false;
-                    labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
-                    comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
-                    tabPage1.BackColor = tabPage1.Parent.BackColor;
+                    if (_documentUiContainer.DocumentFilePath != null)
+                    {
+                        labelDoc.Enabled = false;
+                        buttonDoc.Enabled = false;
+                        textBoxDoc.Enabled = false;
+                        labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
+                        comboBuildLibraryTarget.SelectedIndex = (int) BuildLibraryTargetOptions.fastaFile;
+                        tabPage1.BackColor = tabPage1.Parent.BackColor;
+                    }
+                    else
+                    {
+                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_No_Skyline_document_is_currently_loaded);
+                        comboLearnFrom.SelectedIndex =  (int) _currentLearningOption;
+                    }
                     break;
+
                 case LearningOptions.diann_report:
                     labelDoc.Enabled = true;
                     buttonDoc.Enabled = true;
@@ -1298,6 +1310,8 @@ namespace pwiz.Skyline.SettingsUI
                     labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document);
                     break;
             }
+
+            _currentLearningOption = (LearningOptions) comboLearnFrom.SelectedIndex;
         }
         private void comboBuildLibraryTarget_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -1318,6 +1332,15 @@ namespace pwiz.Skyline.SettingsUI
                         textBoxDoc.Enabled = true;
                         labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
                         tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
+                    }
+                    break;
+
+                case BuildLibraryTargetOptions.fastaFile:
+                    if (_documentUiContainer.DocumentFilePath != null)
+                    {
+                        tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
+                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded);
+                        comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
                     }
                     break;
             }
