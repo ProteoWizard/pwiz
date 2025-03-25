@@ -4010,6 +4010,7 @@ Go to the Peptide Settings Prediction tab to fix.</value>
   </data>
   <data name="CacheFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\CacheFile.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
