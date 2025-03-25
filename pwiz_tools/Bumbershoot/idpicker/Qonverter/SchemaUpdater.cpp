@@ -57,7 +57,7 @@ namespace {
 
     TEST_CASE("DistinctDoubleArray* tests") {
         sqlite::database db(":memory:");
-        db.load_extension("IdpSqlExtensions");
+        db.load_extension(&sqlite3_idpsqlextensions_init);
 
         db.execute("CREATE TABLE test (Group_ INT, Values_ BLOB)");
 
@@ -149,7 +149,7 @@ namespace {
 
     TEST_CASE("GroupConcatEx tests") {
         sqlite::database db(":memory:");
-        db.load_extension("IdpSqlExtensions");
+        db.load_extension(&sqlite3_idpsqlextensions_init);
 
         db.execute("CREATE TABLE test (Group_ INT, Values_ TEXT)");
 
@@ -234,7 +234,7 @@ namespace {
     TEST_CASE("SortUnmappedLast tests") {
 
         sqlite::database db(":memory:");
-        db.load_extension("IdpSqlExtensions");
+        db.load_extension(&sqlite3_idpsqlextensions_init);
 
         IDPicker::setGroupConcatSeparator(",");
 
@@ -284,7 +284,7 @@ void update_17_to_18(sqlite::database& db, const IterationListenerRegistry* ilr,
 
 TEST_CASE("update_17_to_18") {
     sqlite::database db(":memory:");
-    db.load_extension("IdpSqlExtensions");
+    db.load_extension(&sqlite3_idpsqlextensions_init);
 
     db.execute("CREATE TABLE SpectrumQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC)");
 
@@ -962,7 +962,7 @@ string getSQLiteUncCompatiblePath(const string& path)
 void createUserSQLiteFunctions(sqlite3* idpDbConnection)
 {
     sqlite::database db(idpDbConnection, false);
-    db.load_extension("IdpSqlExtensions");
+    db.load_extension(&sqlite3_idpsqlextensions_init);
 }
 
 

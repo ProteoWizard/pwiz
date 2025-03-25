@@ -145,6 +145,9 @@
       <Component Id="Antlr3.Runtime.dll">
         <File Source="$(var.Skyline.TargetDir)/Antlr3.Runtime.dll" KeyPath="yes"/>
       </Component>
+      <Component Id="arrow.dll">
+        <File Source="$(var.Skyline.TargetDir)/arrow.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="BiblioSpec.dll">
         <File Source="$(var.Skyline.TargetDir)/BiblioSpec.dll" KeyPath="yes"/>
       </Component>
@@ -239,6 +242,9 @@
       </Component>
       <Component Id="OneOf.dll">
         <File Source="$(var.Skyline.TargetDir)/OneOf.dll" KeyPath="yes"/>
+       </Component>
+      <Component Id="parquet.dll">
+        <File Source="$(var.Skyline.TargetDir)/parquet.dll" KeyPath="yes"/>
       </Component>
       <Component Id="PrmPasefScheduler.dll">
         <File Source="$(var.Skyline.TargetDir)/PrmPasefScheduler.dll" KeyPath="yes"/>

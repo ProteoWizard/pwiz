@@ -777,7 +777,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
                     else if (colName == NORMALIZED_RT)
                     {
-                        double transformedCell = double.Parse(cell) * 100;
+                        double transformedCell = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) * 100;
                         line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
                     }
                     else
