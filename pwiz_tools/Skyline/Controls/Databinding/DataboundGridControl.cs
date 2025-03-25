@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.Databinding
         private Dictionary<PropertyPath, DataGridViewRow> _replicateGridRows;
         private Dictionary<ResultKey, DataGridViewColumn> _replicateGridColumns;
         private static readonly Color _readOnlyColor = Color.FromArgb(245, 245, 245);
-
+        private static readonly double _defaultDataGridSplitterRatio = .75;
         public DataboundGridControl()
         {
             InitializeComponent();
@@ -905,9 +905,9 @@ namespace pwiz.Skyline.Controls.Databinding
                 DataGridViewColumn lastColumn = null;
                 foreach (var column in grouping)
                 {
-                    if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth))
+                    if (replicateTotalWidthMap.TryGetValue(grouping.Key.ReplicateName, out var replicateTotalWidth)
+                        && boundColumns.TryGetValue(column.Name, out var dataGridViewColumn))
                     {
-                        var dataGridViewColumn = boundColumns[column.Name];
                         var columnRatio = (double)dataGridViewColumn.Width / replicateTotalWidth;
                         var widthToAdd = (int)replicateColumnsRounder.Round(_replicateGridColumns[grouping.Key].Width * columnRatio);
                         dataGridViewColumn.Width = widthToAdd;
@@ -963,6 +963,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
             if (scrollOffset != 0)
             {
+                scrollOffset = Math.Min(scrollOffset, boundDataGridView.HorizontalScrollingOffset);
                 boundDataGridView.HorizontalScrollingOffset -= scrollOffset;
                 UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
                 propertyWidthToAdd -= scrollOffset;
@@ -1185,21 +1186,34 @@ namespace pwiz.Skyline.Controls.Databinding
             
         }
 
-        private void ResizePivotByReplicateGridToFit()
+        private void InitializeDataGridSplitterDistance()
         {
-            int rowLimit = 10;
-            // We also add pixels here to account for border
-            int totalHeight = replicatePivotDataGridView.ColumnHeadersHeight + 2;
-
-            int rowCount = Math.Min(replicatePivotDataGridView.Rows.Count, rowLimit);
-            for (int i = 0; i < rowCount; i++)
+            // Size splitter distance to the default ratio or up to a row which could fill the space.
+            var replicateGridMaxHeight = dataGridSplitContainer.Height * _defaultDataGridSplitterRatio;
+            var replicateGridHeight = replicatePivotDataGridView.ColumnHeadersHeight;
+            for (var i = 0; i < replicatePivotDataGridView.Rows.Count && replicateGridHeight + replicatePivotDataGridView.Rows[i].Height < replicateGridMaxHeight; i++)
             {
-                totalHeight += replicatePivotDataGridView.Rows[i].Height;
+                replicateGridHeight += replicatePivotDataGridView.Rows[i].Height;
             }
+            dataGridSplitContainer.SplitterDistance = replicateGridHeight;
 
-            replicatePivotDataGridView.Height = totalHeight;
-            boundDataGridView.Height = dataGridSplitContainer.Height - totalHeight - dataGridSplitContainer.SplitterWidth;
-            dataGridSplitContainer.SplitterDistance = totalHeight;
+            AdjustDataGridSplitterSizing();
+        }
+
+        private void AdjustDataGridSplitterSizing()
+        {
+            // Adjust splitter to not allow it to extend past the replicate grid height.
+            var replicateGridTableHeight = replicatePivotDataGridView.ColumnHeadersHeight + replicatePivotDataGridView.Rows.Cast<DataGridViewRow>().Sum(row => row.Height);
+            var splitterDistance = Math.Min(replicateGridTableHeight, dataGridSplitContainer.SplitterDistance);
+            dataGridSplitContainer.SplitterDistance = splitterDistance;
+
+            // Resize elements as we have potentially adjusted the splitter manually.
+            dataGridSplitContainer.SplitterWidth = 2;
+            boundDataGridView.Height = dataGridSplitContainer.Height - dataGridSplitContainer.SplitterDistance - dataGridSplitContainer.SplitterWidth;
+            replicatePivotDataGridView.Height = replicateGridTableHeight;
+            
+            // Only enable the replicate grid scrollbar if necessary. 
+            replicatePivotDataGridView.ScrollBars = replicateGridTableHeight > replicatePivotDataGridView.Height ? ScrollBars.Vertical : ScrollBars.None;
         }
 
         private void replicatePivotDataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
@@ -1310,7 +1324,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     dataGridSplitContainer.Panel1Collapsed = false;
                     PopulateReplicateDataGridView(replicatePivotColumns);
                     UpdateMainGridDefaultFrozenState();
-                    ResizePivotByReplicateGridToFit();
+                    InitializeDataGridSplitterDistance();
                     AlignPivotByReplicateGridColumns(replicatePivotColumns);
                 }
                 else
@@ -1344,7 +1358,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 if (replicatePivotDataGridView.RowCount > 0 && replicatePivotColumns != null && replicatePivotColumns.HasConstantAndVariableColumns())
                 {
                     UpdateReplicateDataGridFrozenState();
-                    ResizePivotByReplicateGridToFit();
+                    AdjustDataGridSplitterSizing();
                     AlignPivotByReplicateGridColumns(replicatePivotColumns);
                     UpdateReplicateDataGridScrollPosition(boundDataGridView.HorizontalScrollingOffset);
                 }
