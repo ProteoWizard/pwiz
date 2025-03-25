@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Diagnostics;
+using pwiz.Common.Collections;
 
 [assembly: InternalsVisibleTo("TestPerf")]
 
@@ -225,6 +226,11 @@ namespace pwiz.Skyline.Model.Carafe
             set { _trainingFilePath = value; }
         }
 
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> DataParameters { get; private set; }
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> ModelParameters { get; private set; } 
+        public static IDictionary<string, AbstractDdaSearchEngine.Setting> LibraryParameters { get; private set; }
+
+
         private IList<ArgumentAndValue> CommandArguments =>
             new List<ArgumentAndValue>
             {
@@ -264,6 +270,88 @@ namespace pwiz.Skyline.Model.Carafe
                 new ArgumentAndValue(@"varMod", @"0", TextUtil.HYPHEN)
             };
 
+        public enum ToleranceUnits
+        {
+            ppm,
+            da
+        };
+        public enum ModelTypes
+        {
+            general,
+            phosphorylation
+        };
+
+        public enum DeviceTypes
+        {
+            gpu,
+            cpu
+        };
+         
+        //Carafe enzymes
+        // 0:Non enzyme, 1:Trypsin (default), 2:Trypsin (no P rule), 3:Arg-C, 4:Arg-C (no P rule), 5:Arg-N, 6:Glu-C, 7:Lys-C.
+
+        public enum LibraryFileTypes
+        {
+            tsv,
+            parquet
+        }
+
+        // ReSharper disable LocalizableElement
+        public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultDataParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    { "fdr", new AbstractDdaSearchEngine.Setting("False Discovery Rate", 0.01, 0, 1) },
+                    { "ptm_site_prob", new AbstractDdaSearchEngine.Setting("PTM Site Probability", 0.75, 0, 1) },
+                    { "ptm_site_qvalue", new AbstractDdaSearchEngine.Setting("PTM Site Q-Value", 0.01, 0, 1) },
+                    { "itol", new AbstractDdaSearchEngine.Setting("Fragment Ion Mass Tolerance", 20, 0) },
+                    {
+                        "itolu",
+                        new AbstractDdaSearchEngine.Setting("Fragment Ion Mass Tolerance Units", "ppm", Enum.GetNames(typeof(ToleranceUnits)))
+                    },
+                    { "rf", new AbstractDdaSearchEngine.Setting("Refine Peak Detection", false) },
+                    { "rf_rt_win", new AbstractDdaSearchEngine.Setting("Refining Peak Boundary Retention Time Window", 3, 0) },
+                    { "cor", new AbstractDdaSearchEngine.Setting("XIC Correlation", 0.75, 0, 1) }
+                });
+
+        public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultModelParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    { "mode", new AbstractDdaSearchEngine.Setting("Model Type", "general", Enum.GetNames(typeof(ModelTypes))) },
+                    { "nce",  new AbstractDdaSearchEngine.Setting("Normalized Collision Energy") },
+                    { "ms_instrument",  new AbstractDdaSearchEngine.Setting("MS Instrument Type") },
+                    { "device",  new AbstractDdaSearchEngine.Setting("Computational Device", "gpu", Enum.GetNames(typeof(DeviceTypes))) }
+                });
+
+        public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultLibraryParameters =
+            new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
+                new Dictionary<string, AbstractDdaSearchEngine.Setting>
+                {
+                    { "enzyme", new AbstractDdaSearchEngine.Setting("Digestion Enzyme", 1, 0, 7) },
+                    { "miss_c", new AbstractDdaSearchEngine.Setting("Allowed Missed Cleavages", 1, 0) },
+                    { "fixMod", new AbstractDdaSearchEngine.Setting("Fixed Modifications") },
+                    { "varMod", new AbstractDdaSearchEngine.Setting("Variable Modifications") },
+                    { "maxVar", new AbstractDdaSearchEngine.Setting("Maximum Allowed Variable Modifications", 1, 0) },
+                    { "min_mz", new AbstractDdaSearchEngine.Setting("Minimum Fragment Ion M/Z", 200.0, 0.0) },
+                    { "clip_n_m", new AbstractDdaSearchEngine.Setting("Clip N-terminal Methionine", false ) },
+                    { "minLength", new AbstractDdaSearchEngine.Setting("Minimum Peptide Length", 7, 0 ) },
+                    { "maxLength", new AbstractDdaSearchEngine.Setting("Maximum Peptide Length", 35, 0 ) },
+                    { "min_pep_mz", new AbstractDdaSearchEngine.Setting("Minimum Peptide M/Z", 400.0, 0.0 ) },
+                    { "max_pep_mz", new AbstractDdaSearchEngine.Setting("Maximum Peptide M/Z", 1000.0, 0.0 ) },
+                    { "min_pep_charge", new AbstractDdaSearchEngine.Setting("Minimum Peptide Charge", 2, 1 ) },
+                    { "max_pep_charge", new AbstractDdaSearchEngine.Setting("Maximum Peptide Charge", 4, 1 ) },
+                    { "lf_frag_mz_min", new AbstractDdaSearchEngine.Setting("Spectral Library Minimum Fragment Ion M/Z", 200.0, 0.0 ) },
+                    { "lf_frag_mz_max", new AbstractDdaSearchEngine.Setting("Spectral Library Maximum Fragment Ion M/Z", 1800.0, 0.0 ) },
+                    { "lf_top_n_frag", new AbstractDdaSearchEngine.Setting("Spectral Library Top-N Fragments", 20, 1 ) },
+                    { "lf_format", new AbstractDdaSearchEngine.Setting("Spectral Library File Format", "tsv", Enum.GetNames(typeof(LibraryFileTypes)) ) }
+
+                });
+
+
+
+        // ReSharper restore LocalizableElement
+
 
         /// <summary>
         /// List of UniMod Modifications available
@@ -294,6 +382,22 @@ namespace pwiz.Skyline.Model.Carafe
             get => _toolName;
             private set => _toolName = value;
         }
+
+        public static void CarafeDefaultSettings()
+        {
+            DataParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultDataParameters)
+                DataParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+
+            ModelParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultModelParameters)
+                ModelParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+
+            LibraryParameters = new Dictionary<string, AbstractDdaSearchEngine.Setting>();
+            foreach (var kvp in DefaultLibraryParameters)
+                LibraryParameters[kvp.Key] = new AbstractDdaSearchEngine.Setting(kvp.Value);
+        } 
+
         public CarafeLibraryBuilder(
             string libName,
             string libOutPath,
@@ -353,7 +457,7 @@ namespace pwiz.Skyline.Model.Carafe
             string experimentDataFilePath,
             string experimentDataTuningFilePath,
             SrmDocument document, 
-            SrmDocument trainingDocument)
+            SrmDocument trainingDocument, IDictionary<string, AbstractDdaSearchEngine.Setting> libraryParameters)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
             PythonVersion = pythonVersion;
@@ -364,6 +468,7 @@ namespace pwiz.Skyline.Model.Carafe
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
             Document = document;
             TrainingDocument = trainingDocument;
+            LibraryParameters = libraryParameters;
             //_builderLibraryPath = builderLibraryPath;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);

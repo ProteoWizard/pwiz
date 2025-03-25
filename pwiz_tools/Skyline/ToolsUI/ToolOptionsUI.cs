@@ -28,6 +28,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Carafe;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -350,11 +351,13 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // ReSharper disable InconsistentNaming
-        public enum TABS { Panorama, Remote, Koina, Language, Miscellaneous, Display }
+        public enum TABS { Panorama, Remote, Carafe, Koina, Language, Miscellaneous, Display }
         // ReSharper restore InconsistentNaming
 
         public class PanoramaTab : IFormView { }
         public class RemoteTab : IFormView { }
+
+        public class CarafeTab : IFormView { }
         public class LanguageTab : IFormView { }
         public class MiscellaneousTab : IFormView { }
         public class DisplayTab : IFormView { }
@@ -362,7 +365,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private static readonly IFormView[] TAB_PAGES = // N.B. order must agree with TABS enum above
         {
-            new PanoramaTab(), new RemoteTab(), new KoinaTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
+            new PanoramaTab(), new RemoteTab(), new CarafeTab(), new KoinaTab(), new LanguageTab(), new MiscellaneousTab(), new DisplayTab()
         };
 
         public void NavigateToTab(TABS tab)
@@ -505,6 +508,43 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (tabControl.SelectedIndex == (int)TABS.Koina)
                 UpdateServerStatus();
+        }
+
+        private void btnCarafeTrainingDataGenerationSettings_Click(object sender, EventArgs e)
+        {
+            if (CarafeLibraryBuilder.DataParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultSettings();
+            KeyValueGridDlg.Show(btnCarafeTrainingDataGenerationSettings.Text,
+                CarafeLibraryBuilder.DataParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues, 
+                setting => setting.Name);
+        }
+        private void btnCarafeModelTrainingSettings_Click(object sender, EventArgs e)
+        {
+            if (CarafeLibraryBuilder.ModelParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultSettings();
+            KeyValueGridDlg.Show(btnCarafeTrainingDataGenerationSettings.Text,
+                CarafeLibraryBuilder.ModelParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Name);
+        }
+        private void btnCarafeLibrarySettings_Click(object sender, EventArgs e)
+        {
+            if (CarafeLibraryBuilder.LibraryParameters == null)
+                CarafeLibraryBuilder.CarafeDefaultSettings();
+            KeyValueGridDlg.Show(btnCarafeLibraryGenerationSettings.Text,
+                CarafeLibraryBuilder.LibraryParameters,
+                setting => setting.Value.ToString(),
+                (value, setting) => setting.Value = value,
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues,
+                setting => setting.Name);
         }
     }
 }

@@ -36,9 +36,10 @@ namespace pwiz.Skyline.Alerts
         /// the exception message and the invalid textbox value will be returned to its previous value.
         /// </summary>
         public static void Show<TValue>(string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
-            Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null)
+            Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null, 
+            Func<TValue, string> keyToName = null)
         {
-            Show(null, title, gridValues, valueToString, stringToValue, validateValue, validValuesForValue);
+            Show(null, title, gridValues, valueToString, stringToValue, validateValue, validValuesForValue, keyToName);
         }
 
         /// <summary>
@@ -48,7 +49,8 @@ namespace pwiz.Skyline.Alerts
         /// the exception message and the invalid textbox value will be returned to its previous value.
         /// </summary>
         public static void Show<TValue>(IWin32Window parent, string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
-            Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null)
+            Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null, 
+            Func<TValue, string> keyToName = null)
         {
             var layout = new TableLayoutPanel
             {
@@ -82,8 +84,9 @@ namespace pwiz.Skyline.Alerts
                     Text = kvp.Key,
                     Dock = DockStyle.Fill,
                     AutoSize = true,
-                    TextAlign = ContentAlignment.MiddleCenter
+                    TextAlign = ContentAlignment.MiddleCenter,
                 };
+                
 
                 Control valueControl = null;
                 if (bool.TryParse(valueToString(kvp.Value), out bool b))
@@ -142,6 +145,9 @@ namespace pwiz.Skyline.Alerts
                 layout.Controls.Add(valueControl, 1, row);
                 keyToControl[kvp.Key] = valueControl;
                 controlToSetting[valueControl] = kvp.Value;
+                //TODO: keyToToolTip is necessary here
+                ToolTip toolTip = new ToolTip();
+                if (keyToName != null) toolTip.SetToolTip(lbl, keyToName(controlToSetting[keyToControl[kvp.Key]]));
                 ctlTextRepresentation.AppendLine($@"{kvp.Key} = {valueToString(kvp.Value)}");
                 row++;
             }

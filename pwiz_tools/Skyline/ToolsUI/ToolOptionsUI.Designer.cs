@@ -38,6 +38,10 @@ namespace pwiz.Skyline.ToolsUI
             this.listBoxRemoteAccounts = new System.Windows.Forms.ListBox();
             this.lblRemoteAccounts = new System.Windows.Forms.Label();
             this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
+            this.tabCarafe = new System.Windows.Forms.TabPage();
+            this.btnCarafeLibraryGenerationSettings = new System.Windows.Forms.Button();
+            this.btnCarafeModelTrainingSettings = new System.Windows.Forms.Button();
+            this.btnCarafeTrainingDataGenerationSettings = new System.Windows.Forms.Button();
             this.tabKoina = new System.Windows.Forms.TabPage();
             this.tbxKoinaServer = new System.Windows.Forms.TextBox();
             this.ceLabel = new System.Windows.Forms.Label();
@@ -69,6 +73,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabControl.SuspendLayout();
             this.tabPanorama.SuspendLayout();
             this.tabRemote.SuspendLayout();
+            this.tabCarafe.SuspendLayout();
             this.tabKoina.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.tabLanguage.SuspendLayout();
@@ -81,6 +86,7 @@ namespace pwiz.Skyline.ToolsUI
             resources.ApplyResources(this.tabControl, "tabControl");
             this.tabControl.Controls.Add(this.tabPanorama);
             this.tabControl.Controls.Add(this.tabRemote);
+            this.tabControl.Controls.Add(this.tabCarafe);
             this.tabControl.Controls.Add(this.tabKoina);
             this.tabControl.Controls.Add(this.tabLanguage);
             this.tabControl.Controls.Add(this.tabMisc);
@@ -143,6 +149,38 @@ namespace pwiz.Skyline.ToolsUI
             this.btnEditRemoteAccountList.Name = "btnEditRemoteAccountList";
             this.btnEditRemoteAccountList.UseVisualStyleBackColor = true;
             this.btnEditRemoteAccountList.Click += new System.EventHandler(this.btnEditRemoteAccountList_Click);
+            // 
+            // tabCarafe
+            // 
+            this.tabCarafe.Controls.Add(this.btnCarafeLibraryGenerationSettings);
+            this.tabCarafe.Controls.Add(this.btnCarafeModelTrainingSettings);
+            this.tabCarafe.Controls.Add(this.btnCarafeTrainingDataGenerationSettings);
+            resources.ApplyResources(this.tabCarafe, "tabCarafe");
+            this.tabCarafe.Name = "tabCarafe";
+            this.tabCarafe.UseVisualStyleBackColor = true;
+            // 
+            // btnCarafeLibraryGenerationSettings
+            // 
+            resources.ApplyResources(this.btnCarafeLibraryGenerationSettings, "btnCarafeLibraryGenerationSettings");
+            this.btnCarafeLibraryGenerationSettings.Name = "btnCarafeLibraryGenerationSettings";
+            this.btnCarafeLibraryGenerationSettings.UseVisualStyleBackColor = true;
+            this.btnCarafeLibraryGenerationSettings.Click += new System.EventHandler(this.btnCarafeLibrarySettings_Click);
+
+            // 
+            // btnCarafeModelTrainingSettings
+            // 
+            resources.ApplyResources(this.btnCarafeModelTrainingSettings, "btnCarafeModelTrainingSettings");
+            this.btnCarafeModelTrainingSettings.Name = "btnCarafeModelTrainingSettings";
+            this.btnCarafeModelTrainingSettings.UseVisualStyleBackColor = true;
+            this.btnCarafeModelTrainingSettings.Click += new System.EventHandler(this.btnCarafeModelTrainingSettings_Click);
+
+            // 
+            // btnCarafeTrainingDataGenerationSettings
+            // 
+            resources.ApplyResources(this.btnCarafeTrainingDataGenerationSettings, "btnCarafeTrainingDataGenerationSettings");
+            this.btnCarafeTrainingDataGenerationSettings.Name = "btnCarafeTrainingDataGenerationSettings";
+            this.btnCarafeTrainingDataGenerationSettings.UseVisualStyleBackColor = true;
+            this.btnCarafeTrainingDataGenerationSettings.Click += new System.EventHandler(this.btnCarafeTrainingDataGenerationSettings_Click);
             // 
             // tabKoina
             // 
@@ -358,6 +396,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabPanorama.PerformLayout();
             this.tabRemote.ResumeLayout(false);
             this.tabRemote.PerformLayout();
+            this.tabCarafe.ResumeLayout(false);
             this.tabKoina.ResumeLayout(false);
             this.tabKoina.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -409,5 +448,9 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.TextBox tbxKoinaServer;
         private System.Windows.Forms.TextBox tbxSettingsFilePath;
         private System.Windows.Forms.Label lblSettingsPath;
+        private System.Windows.Forms.TabPage tabCarafe;
+        private System.Windows.Forms.Button btnCarafeTrainingDataGenerationSettings;
+        private System.Windows.Forms.Button btnCarafeLibraryGenerationSettings;
+        private System.Windows.Forms.Button btnCarafeModelTrainingSettings;
     }
 }

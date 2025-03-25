@@ -1479,5 +1479,10 @@ namespace pwiz.Skyline.SettingsUI
                 _trainingDocument = (SrmDocument)ser.Deserialize(reader);
             }
         }
+
+        private void carafeSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Carafe);
+        }
     }
 }

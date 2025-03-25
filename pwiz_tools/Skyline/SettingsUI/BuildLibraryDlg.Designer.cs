@@ -99,6 +99,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolTipProteinDatabase = new System.Windows.Forms.ToolTip(this.components);
             this.toolTipTrainingData = new System.Windows.Forms.ToolTip(this.components);
             this.toolTipMsMsData = new System.Windows.Forms.ToolTip(this.components);
+            this.carafeSettings = new System.Windows.Forms.LinkLabel();
             this.dataSourceGroupBox.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridInputFiles)).BeginInit();
             this.tabControlMain.SuspendLayout();
@@ -220,6 +221,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // dataSourceGroupBox
             // 
+            this.dataSourceGroupBox.Controls.Add(this.carafeSettings);
             this.dataSourceGroupBox.Controls.Add(this.radioCarafeSource);
             this.dataSourceGroupBox.Controls.Add(this.radioAlphaSource);
             this.dataSourceGroupBox.Controls.Add(this.koinaInfoSettingsBtn);
@@ -595,6 +597,13 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPage1.Name = "tabPage1";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // carafeSettings
+            // 
+            resources.ApplyResources(this.carafeSettings, "carafeSettings");
+            this.carafeSettings.Name = "carafeSettings";
+            this.carafeSettings.TabStop = true;
+            this.carafeSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.carafeSettings_LinkClicked);
+            // 
             // BuildLibraryDlg
             // 
             this.AcceptButton = this.btnNext;
@@ -708,6 +717,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button buttonDoc;
         private System.Windows.Forms.TextBox textBoxDoc;
         private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.LinkLabel carafeSettings;
+
         internal string TextBoxProteinDatabase
         {
             get => textBoxProteinDatabase.Text;
