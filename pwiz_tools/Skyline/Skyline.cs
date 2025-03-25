@@ -1796,7 +1796,6 @@ namespace pwiz.Skyline
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
             deleteContextMenuItem.Enabled = enabled;
-
             if (SequenceTree.SelectedNodes.Count > 0)
             {
                 expandSelectionContextMenuItem.Enabled = true;
@@ -1806,6 +1805,16 @@ namespace pwiz.Skyline
             {
                 expandSelectionContextMenuItem.Enabled = false;
                 expandSelectionContextMenuItem.Visible = false;
+            }
+            if (Settings.Default.UIMode == UiModes.PROTEOMIC)
+            {
+                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Protein;
+                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title;
+            }
+            else
+            {
+                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Molecule_List;
+                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title_Molecule;
             }
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
