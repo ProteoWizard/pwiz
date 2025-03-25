@@ -20,8 +20,10 @@ IF ERRORLEVEL 1 (pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I pass
 IF ERRORLEVEL 1 set /a FailedTests += 1
 echo Cleaning TestResults
 IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResults
-echo Cleaning downloads
-IF "%USERNAME%" neq "maccoss-teamcity" IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+IF "%USERNAME%" neq "maccoss-teamcity" DO (
+  echo Cleaning downloads
+  IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+)
 echo Cleaning temp
 IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul 2>&1
 )
@@ -34,8 +36,10 @@ IF ERRORLEVEL 1 (pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe test=%%I team
 IF ERRORLEVEL 1 set /a FailedTests += 1
 echo Cleaning TestResults
 IF EXIST pwiz_tools\Skyline\TestResults rmdir /s /q pwiz_tools\Skyline\TestResults
-echo Cleaning downloads
-IF "%USERNAME%" neq "maccoss-teamcity" IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+IF "%USERNAME%" neq "maccoss-teamcity" DO (
+  echo Cleaning downloads
+  IF EXIST %SKYLINE_DOWNLOAD_PATH% rmdir /s /q %SKYLINE_DOWNLOAD_PATH%
+)
 echo Cleaning temp
 IF EXIST z:\Temp del /f /s /q z:\Temp\*.* >nul 2>&1
 )
