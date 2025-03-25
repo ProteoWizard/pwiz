@@ -398,6 +398,18 @@ namespace pwiz.SkylineTestFunctional
                 DragDropAndVerify(new[] { lastItemIndex - 2, lastItemIndex - 1, lastItemIndex }, 0, DragDirection.up);
             }
 
+            {
+                var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var replicateNode = (FilesTreeNode)replicateFolder.Nodes[0];
+
+                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode((FilesTreeNode)replicateFolder.Nodes[1], replicateNode));
+                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(replicateFolder, replicateNode));
+
+                var libraryFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
+                Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode((FilesTreeNode)libraryFolder.Nodes[0], replicateNode));
+                Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(libraryFolder, replicateNode));
+            }
+
             //
             // Remove
             // 

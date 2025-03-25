@@ -624,13 +624,21 @@ namespace pwiz.Skyline.Controls.FilesTree
         private void FilesTree_DragOver(object sender, DragEventArgs e)
         {
             var point = filesTree.PointToClient(new Point(e.X, e.Y));
-            var node = filesTree.GetNodeAt(point);
+            var node = (FilesTreeNode)filesTree.GetNodeAt(point);
+            var primaryDraggedNode = (FilesTreeNode)e.Data.GetData(typeof(PrimarySelectedNode));
+
+            if (node == null)
+                return;
 
             // Select node at the drop target
-            if (node != null)
+            if (PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(node, primaryDraggedNode))
             {
                 e.Effect = DragDropEffects.Move;
                 filesTree.SelectedNode = node;
+            }
+            else
+            {
+                e.Effect = DragDropEffects.None;
             }
 
             // CONSIDER: does setting AutoScroll on the form negate the need for this code?
@@ -660,25 +668,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
         {
-            if(!_dropTargetRemove.Visible)
-            {
-                _dropTargetRemove.Visible = true;
-                // TODO: manually adjust drop target location for scrollbars?
-                // TODO: is this the correct location? Should the layout be in the designer?
-                _dropTargetRemove.Location = new Point
-                {
-                    X = filesTree.Right - 110,
-                    Y = filesTree.Bottom - 110
-                };
-            }
-
             var selectedNode = FilesTree.SelectedNode;
             var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
 
-            ShowDropTarget(_dropTargetRemove);
-
-            _nodeTip.HideTip();
-
+            // Order matters! Do this first to either short-circuit if attempting to select an un-draggable
+            // node or collect nodes to drag
             var draggedNodes = new List<FilesTreeNode>();
             foreach (var node in selectedNodes)
             {
@@ -692,6 +686,22 @@ namespace pwiz.Skyline.Controls.FilesTree
                 }
                 else return;
             }
+
+            _nodeTip.HideTip();
+
+            if (!_dropTargetRemove.Visible)
+            {
+                // TODO: manually adjust drop target location for scrollbars?
+                // TODO: is this the correct location? Should the layout be configured in the designer?
+                // TODO: does this work when Skyline is resized?
+                _dropTargetRemove.Location = new Point
+                {
+                    X = filesTree.Right - 110,
+                    Y = filesTree.Bottom - 110
+                };
+
+            }
+            ShowDropTarget(_dropTargetRemove);
 
             var dataObj = new DataObject();
             dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
@@ -825,6 +835,13 @@ namespace pwiz.Skyline.Controls.FilesTree
         }
     }
 
-    // Types used as keys for passing drag-and-drop data between event handlers
-    internal sealed class PrimarySelectedNode { }
+    // Used as a key for passing drag-and-drop data between event handlers
+    public sealed class PrimarySelectedNode
+    {
+        public static bool DoesDropTargetAcceptDraggedNode(FilesTreeNode possibleDropTarget, FilesTreeNode primaryDraggedNode)
+        {
+            return possibleDropTarget.Model.GetType() == primaryDraggedNode.Model.GetType() || 
+                   possibleDropTarget.Model.GetType() == ((FilesTreeNode)primaryDraggedNode.Parent).Model.GetType();
+        }
+    }
 }
