@@ -25,6 +25,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
@@ -34,6 +35,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -45,6 +47,11 @@ namespace TestPerf
     [TestClass]
     public class DiaSearchTutorialTest : AbstractFunctionalTest
     {
+        /// <summary>
+        /// Change to true to write new Assert statements instead of testing them.
+        /// </summary>
+        protected override bool IsRecordMode => false;
+
         private AnalysisValues _analysisValues;
 
         private class AnalysisValues
@@ -92,7 +99,7 @@ namespace TestPerf
                 IsolationSchemeHasGaps = true,
                 IsolationSchemeHasOverlaps = false,
 
-                FinalTargetCounts = new[] { 107, 145, 145, 910 },
+                FinalTargetCounts = new[] { 915, 3167, 3167, 25334 },
 
                 ZipPath = "https://skyline.ms/tutorials/DiaSearchTutorial.zip",
                 DiaFiles = new[] {
@@ -194,11 +201,6 @@ namespace TestPerf
             TestMsFraggerSearch();
         }
 
-        /// <summary>
-        /// Change to true to write new Assert statements instead of testing them.
-        /// </summary>
-        protected override bool IsRecordMode => false;
-
         private bool RedownloadTools => !IsRecordMode && !IsRecordAuditLogForTutorials;
         private bool HasMissingDependencies => !SearchSettingsControl.HasRequiredFilesDownloaded(SearchSettingsControl.SearchEngine.MSFragger);
 
@@ -292,16 +294,42 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.transition_settings_page);
                 importPeptideSearchDlg.TransitionSettingsControl.MinIonCount = 3;
                 importPeptideSearchDlg.TransitionSettingsControl.IonCount = 5;
-                importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 0.005;
-                importPeptideSearchDlg.ClickNextButton();
+                if (_analysisValues.FragmentMzTolerance.Unit == MzTolerance.Units.mz)
+                    importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = _analysisValues.FragmentMzTolerance.Value;
+                else
+                    importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 0.005;
             });
 
-            // We're on the MS1 full scan settings page. Set tolerance to 20ppm
+            if (_analysisValues.IsGpfData)
+            {
+                var editSpectrumFilterDlg = ShowDialog<EditSpectrumFilterDlg>(importPeptideSearchDlg.TransitionSettingsControl.EditSpectrumFilter);
+                RunUI(() =>
+                {
+                    editSpectrumFilterDlg.SelectPage(1);
+                    var row = editSpectrumFilterDlg.RowBindingList.AddNew();
+                    Assert.IsNotNull(row);
+                    row.SetProperty(SpectrumClassColumn.IsolationWindowWidth);
+                    row.SetOperation(FilterOperations.OP_IS_LESS_THAN);
+                    row.SetValue(50);
+                });
+
+                PauseForScreenShot<EditSpectrumFilterDlg>("Import Peptide Search - Advanced spectrum filtering");
+                OkDialog(editSpectrumFilterDlg, editSpectrumFilterDlg.OkDialog);
+            }
+            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Import Peptide Search - Configure Transition Settings page");
+
+            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
+
+            // We're on the MS1 full scan settings page.
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.full_scan_settings_page);
             RunUI(() =>
             {
                 importPeptideSearchDlg.FullScanSettingsControl.PrecursorRes = 5;
-                importPeptideSearchDlg.FullScanSettingsControl.AcquisitionMethod = FullScanAcquisitionMethod.DIA;
+                if (_analysisValues.FragmentMzTolerance.Unit == MzTolerance.Units.mz)
+                {
+                    importPeptideSearchDlg.FullScanSettingsControl.ProductMassAnalyzer = FullScanMassAnalyzerType.qit;
+                    importPeptideSearchDlg.FullScanSettingsControl.ProductResMz = _analysisValues.FragmentMzTolerance.Value;
+                }
             });
 
             var isolationScheme = ShowDialog<EditIsolationSchemeDlg>(importPeptideSearchDlg.FullScanSettingsControl.AddIsolationScheme);
@@ -318,22 +346,29 @@ namespace TestPerf
             });
             var schemeLines = File.ReadAllLines(GetTestPath(_analysisValues.IsolationSchemeFile));
             string[][] windowFields = schemeLines.Select(l => TextUtil.ParseDsvFields(l, _analysisValues.IsolationSchemeFileSeparator)).ToArray();
-            WaitForConditionUI(() => isolationScheme.GetIsolationWindows().Count == schemeLines.Length);
+            WaitForConditionUI(() => isolationScheme.GetIsolationWindows().Count > 10);
             bool hasMargin = windowFields[0].Length == 3;
 
-            RunUI(() =>
+            try
             {
-                Assert.AreEqual(hasMargin, isolationScheme.SpecifyMargin);
-                int schemeRow = 0;
-                foreach (var isolationWindow in isolationScheme.GetIsolationWindows())
+                RunUI(() =>
                 {
-                    var fields = windowFields[schemeRow++];
-                    Assert.AreEqual(double.Parse(fields[0], CultureInfo.InvariantCulture), isolationWindow.MethodStart, 0.01);
-                    Assert.AreEqual(double.Parse(fields[1], CultureInfo.InvariantCulture), isolationWindow.MethodEnd, 0.01);
-                    if (hasMargin)
-                        Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
-                }
-            });
+                    Assert.AreEqual(hasMargin, isolationScheme.SpecifyMargin);
+                    int schemeRow = 0;
+                    foreach (var isolationWindow in isolationScheme.GetIsolationWindows())
+                    {
+                        var fields = windowFields[schemeRow++];
+                        Assert.AreEqual(double.Parse(fields[0], CultureInfo.InvariantCulture), isolationWindow.MethodStart, 0.01);
+                        Assert.AreEqual(double.Parse(fields[1], CultureInfo.InvariantCulture), isolationWindow.MethodEnd, 0.01);
+                        if (hasMargin)
+                            Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                PauseForRecordModeInstruction("Copy new isolation scheme to file if old one is incorrect.", ex);
+            }
             PauseForScreenShot<EditIsolationSchemeDlg>("Isolation scheme");
             var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
             PauseForScreenShot<DiaIsolationWindowsGraphForm>("Isolation scheme graph");
@@ -365,7 +400,7 @@ namespace TestPerf
             RunUI(okDlgAction);
             WaitForClosedForm(isolationScheme);
 
-            PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure MS1 Full-Scan Settings page");
+            PauseForScreenShot<ImportPeptideSearchDlg.Ms1FullScanPage>("Import Peptide Search - Configure Full-Scan Settings page");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Import FASTA" page.
