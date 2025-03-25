@@ -295,6 +295,15 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove.
+        /// </summary>
+        public static string FilesTreeForm_DropTargetLabel_Remove {
+            get {
+                return ResourceManager.GetString("FilesTreeForm_DropTargetLabel_Remove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove all replicate nodes.
         /// </summary>
         public static string Remove_All_Replicate_Nodes {
@@ -327,6 +336,16 @@ namespace pwiz.Skyline.Controls.FilesTree {
         public static string Remove_Spectral_Library_Node {
             get {
                 return ResourceManager.GetString("Remove_Spectral_Library_Node", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Trash {
+            get {
+                object obj = ResourceManager.GetObject("Trash", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

@@ -41,6 +41,7 @@ namespace pwiz.Skyline.Controls.FilesTree
     {
         private NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
+        private Panel _dropTargetRemove;
 
         public FilesTreeForm()
         {
@@ -61,8 +62,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
             filesTree.ItemDrag += FilesTree_ItemDrag;
             filesTree.DragEnter += FilesTree_DragEnter;
+            filesTree.DragLeave += FilesTree_DragLeave;
             filesTree.DragOver += FilesTree_DragOver;
             filesTree.DragDrop += FilesTree_DragDrop;
+            filesTree.QueryContinueDrag += FilesTree_QueryContinueDrag;
             filesTree.KeyDown += FilesTree_KeyDown;
 
             // FilesTree => context menu
@@ -71,6 +74,18 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             // FilesTree => tooltips
             _nodeTip = new NodeTip(this) { Parent = TopLevelControl };
+
+            // FilesTree => floating drop target
+            _dropTargetRemove = CreateDropTarget(FilesTreeResources.FilesTreeForm_DropTargetLabel_Remove, FilesTreeResources.Trash, DockStyle.None);
+            _dropTargetRemove.Visible = false;
+            _dropTargetRemove.AllowDrop = true;
+            _dropTargetRemove.DragEnter += DropTargetRemove_DragEnter;
+            _dropTargetRemove.DragLeave += DropTargetRemove_DragLeave;
+            _dropTargetRemove.DragDrop += DropTargetRemove_DragDrop;
+            _dropTargetRemove.BorderStyle = BorderStyle.FixedSingle;
+            _dropTargetRemove.QueryContinueDrag += FilesTree_QueryContinueDrag;
+
+            filesTree.Controls.Add(_dropTargetRemove);
 
             filesTree.InitializeTree(SkylineWindow);
         }
@@ -216,18 +231,19 @@ namespace pwiz.Skyline.Controls.FilesTree
             Assume.IsTrue(type == typeof(Replicate) || type == typeof(SpectralLibrary));
 
             string confirmMsg;
-            if (nodes.Count == 1)
+            if (type == typeof(Replicate))
             {
-                confirmMsg = type == typeof(Replicate)
+                confirmMsg = nodes.Count == 1
                     ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Replicate
-                    : FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library;
+                    : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates;
             }
-            else
+            else if (type == typeof(SpectralLibrary))
             {
-                confirmMsg = type == typeof(ReplicatesFolder)
-                    ? FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates
+                confirmMsg = nodes.Count == 1
+                    ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library
                     : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries;
             }
+            else return;
 
             if (ConfirmItemDeletion(confirmMsg) == DialogResult.No)
                 return;
@@ -241,10 +257,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                         var oldMeasuredResults = SkylineWindow.Document.MeasuredResults;
                         var oldChromatograms = oldMeasuredResults.Chromatograms.ToArray();
 
-                        var newChromatograms = new List<ChromatogramSet>(oldChromatograms.Length - nodes.Count);
+                        var newChromatograms = new List<ChromatogramSet>(oldChromatograms.Length - selectedIds.Count);
                         for (var i = 0; i < oldChromatograms.Length; i++)
                         {
-                            // skip replicates selected for removal
+                            // skip items selected for removal
                             if (!ContainsCheckReferenceEquals(selectedIds, oldChromatograms[i].Id))
                             {
                                 newChromatograms.Add(oldChromatograms[i]);
@@ -256,7 +272,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     },
                     docPair => AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedIds)
                 );
-            } 
+            }
             else if (type == typeof(SpectralLibrary))
             {
                 SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library_Node,
@@ -267,7 +283,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                         foreach (var librarySpec in oldLibrarySpecs)
                         {
-                            // skip replicates selected for removal
+                            // skip items selected for removal
                             if (!ContainsCheckReferenceEquals(selectedIds, librarySpec.Id))
                             {
                                 newLibrarySpecs.Add(librarySpec);
@@ -327,84 +343,92 @@ namespace pwiz.Skyline.Controls.FilesTree
         //           types must subclass DocNode, which is not true of replicates.
         public void DropNodes(FilesTreeNode dropNode, FilesTreeNode primaryDraggedNode, IList<FilesTreeNode> draggedNodes, DragDropEffects effect)
         {
-            if (dropNode == null || !dropNode.IsDroppable() || draggedNodes.Count == 0 || draggedNodes.Contains(dropNode))
-                return;
-
-            if (effect == DragDropEffects.Move)
+            try
             {
-                SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
-                    doc =>
-                    {
-                        var draggedImmutables = draggedNodes.Select(item => (ChromatogramSet)item.Model.Immutable).ToList();
-                        var newChromatogramSets = new List<ChromatogramSet>(doc.MeasuredResults.Chromatograms);
+                if (dropNode == null || !dropNode.IsDroppable() || draggedNodes.Count == 0 || draggedNodes.Contains(dropNode))
+                    return;
 
-                        var primaryDraggedNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)primaryDraggedNode.Model.Immutable);
-
-                        foreach (var item in draggedImmutables)
-                        {
-                            newChromatogramSets.Remove(item);
-                        }
-
-                        // CONSIDER: make it possible to drag to the bottom of the list without precisely dropping on the last
-                        //           node. Maybe highlight a blue "bar" drop target when dragging below the last item?
-                        if (dropNode.Model.GetType() == typeof(ReplicatesFolder))
-                        {
-                            newChromatogramSets.InsertRange(0, draggedImmutables);
-                        }
-                        else {
-                            var dropNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
-
-                            if (primaryDraggedNodeIndex < dropNodeIndex)
-                            {
-                                newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                            }
-                            else if (primaryDraggedNodeIndex > dropNodeIndex)
-                            {
-                                newChromatogramSets.InsertRange(dropNodeIndex, draggedImmutables);
-                            }
-                            else if (primaryDraggedNodeIndex == dropNodeIndex)
-                            {
-                                newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                            }
-                        }
-
-                        var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatogramSets);
-                        var newDoc = doc.ChangeMeasuredResults(newMeasuredResults);
-
-                        return newDoc;
-                    },
-                    docPair => {
-                        var entry = AuditLogEntry.CreateCountChangeEntry(
-                            MessageType.files_tree_node_drag_and_drop,
-                            MessageType.files_tree_nodes_drag_and_drop,
-                            docPair.NewDocumentType,
-                            draggedNodes.Select(node => node.Text),
-                            draggedNodes.Count,
-                            str => MessageArgs.Create(str, dropNode.Text),
-                            MessageArgs.Create(draggedNodes.Count, dropNode.Text)
-                        );
-
-                        if (draggedNodes.Count > 1)
-                        {
-                            entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, docPair.NewDocumentType, node.Text, dropNode.Text)).ToList());
-                        }
-
-                        return entry;
-                    }
-                );
-
-                // After the drop, reset selection so dragged nodes are blue
-                filesTree.SelectedNodes.Clear();
-
-                filesTree.SelectedNode = primaryDraggedNode;
-
-                foreach (var node in draggedNodes)
+                if (effect == DragDropEffects.Move)
                 {
-                    filesTree.SelectNode(node, true);
-                }
+                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
+                        doc =>
+                        {
+                            var draggedImmutables = draggedNodes.Select(item => (ChromatogramSet)item.Model.Immutable).ToList();
+                            var newChromatogramSets = new List<ChromatogramSet>(doc.MeasuredResults.Chromatograms);
 
-                filesTree.Invalidate();
-                filesTree.Focus();
+                            var primaryDraggedNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)primaryDraggedNode.Model.Immutable);
+
+                            foreach (var item in draggedImmutables)
+                            {
+                                newChromatogramSets.Remove(item);
+                            }
+
+                            // CONSIDER: make it possible to drag to the bottom of the list without precisely dropping on the last
+                            //           node. Maybe highlight a blue "bar" drop target when dragging below the last item?
+                            if (dropNode.Model.GetType() == typeof(ReplicatesFolder))
+                            {
+                                newChromatogramSets.InsertRange(0, draggedImmutables);
+                            }
+                            else
+                            {
+                                var dropNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
+
+                                if (primaryDraggedNodeIndex < dropNodeIndex)
+                                {
+                                    newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
+                                }
+                                else if (primaryDraggedNodeIndex > dropNodeIndex)
+                                {
+                                    newChromatogramSets.InsertRange(dropNodeIndex, draggedImmutables);
+                                }
+                                else if (primaryDraggedNodeIndex == dropNodeIndex)
+                                {
+                                    newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
+                                }
+                            }
+
+                            var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatogramSets);
+                            var newDoc = doc.ChangeMeasuredResults(newMeasuredResults);
+
+                            return newDoc;
+                        },
+                        docPair => {
+                            var entry = AuditLogEntry.CreateCountChangeEntry(
+                                MessageType.files_tree_node_drag_and_drop,
+                                MessageType.files_tree_nodes_drag_and_drop,
+                                docPair.NewDocumentType,
+                                draggedNodes.Select(node => node.Text),
+                                draggedNodes.Count,
+                                str => MessageArgs.Create(str, dropNode.Text),
+                                MessageArgs.Create(draggedNodes.Count, dropNode.Text)
+                            );
+
+                            if (draggedNodes.Count > 1)
+                            {
+                                entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, docPair.NewDocumentType, node.Text, dropNode.Text)).ToList());
+                            }
+
+                            return entry;
+                        }
+                    );
+
+                    // After the drop, reset selection so dragged nodes are blue
+                    filesTree.SelectedNodes.Clear();
+
+                    filesTree.SelectedNode = primaryDraggedNode;
+
+                    foreach (var node in draggedNodes)
+                    {
+                        filesTree.SelectNode(node, true);
+                    }
+
+                    filesTree.Invalidate();
+                    filesTree.Focus();
+                }
+            }
+            finally
+            {
+                HideDropTargets(_dropTargetRemove);
             }
         }
 
@@ -630,12 +654,28 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             if (e.Data.GetDataPresent(typeof(FilesTreeNode)))
                 e.Effect = DragDropEffects.Move;
+
+            ShowDropTarget(_dropTargetRemove);
         }
 
         private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
         {
+            if(!_dropTargetRemove.Visible)
+            {
+                _dropTargetRemove.Visible = true;
+                // TODO: manually adjust drop target location for scrollbars?
+                // TODO: is this the correct location? Should the layout be in the designer?
+                _dropTargetRemove.Location = new Point
+                {
+                    X = filesTree.Right - 110,
+                    Y = filesTree.Bottom - 110
+                };
+            }
+
             var selectedNode = FilesTree.SelectedNode;
             var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
+
+            ShowDropTarget(_dropTargetRemove);
 
             _nodeTip.HideTip();
 
@@ -671,6 +711,58 @@ namespace pwiz.Skyline.Controls.FilesTree
             DropNodes(dropNode, primaryDraggedNode, dragNodeList, e.Effect);
         }
 
+        private void FilesTree_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
+        {
+            if (e.EscapePressed)
+            {
+                e.Action = DragAction.Cancel;
+                HideDropTargets(_dropTargetRemove);
+            }
+        }
+
+        // TODO: de-select all items in tree when mouse enters a drop target. Possible
+        //       there's a bug in TreeNodeMS (?) keeping an item highlighted (light blue) 
+        //       despite clearing SelectedNode/Nodes, even when invalidating tree
+        private void DropTargetRemove_DragEnter(object sender, DragEventArgs e)
+        {
+            e.Effect = e.AllowedEffect;
+
+            filesTree.SelectedNode = null;
+            filesTree.SelectedNodes.Clear();
+
+            ShowDropTarget(_dropTargetRemove, true);
+        }
+
+        private void DropTargetRemove_DragLeave(object sender, EventArgs e)
+        {
+            ShowDropTarget(_dropTargetRemove);
+        }
+
+        private void DropTargetRemove_DragDrop(object sender, DragEventArgs e)
+        {
+            var nodes = (IList<FilesTreeNode>)e.Data.GetData(typeof(FilesTreeNode));
+
+            try
+            {
+                RemoveSelected(nodes);
+            }
+            finally
+            {
+                HideDropTargets(_dropTargetRemove);
+            }
+        }
+
+        private void FilesTree_DragLeave(object sender, EventArgs e)
+        {
+            var mouseLocation = MousePosition;
+            var inside = IsPointInRectangle(mouseLocation, Bounds);
+
+            if (!inside)
+            {
+                HideDropTargets(_dropTargetRemove);
+            }
+        }
+
         private static bool ContainsCheckReferenceEquals(IList<Identity> list, Identity item)
         {
             for (var i = 0; i < list.Count; i++)
@@ -680,8 +772,59 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             return false;
         }
+
+        private static void ShowDropTarget(Panel panel, bool highlight = false)
+        {
+            panel.Visible = true;
+            panel.BackColor = highlight ? SystemColors.Highlight : Color.White;
+        }
+
+        private static void HideDropTargets(Panel panel)
+        {
+            panel.Visible = false;
+            panel.BackColor = Color.White;
+        }
+
+        private static Panel CreateDropTarget(string label, Image icon, DockStyle dockStyle)
+        {
+            var dropTarget = new Panel
+            {
+                Width = 100,
+                Dock = dockStyle,
+                Padding = new Padding(2),
+                Size = new Size { Height = 55, Width = 55 }
+            };
+
+            var pictureBox = new PictureBox
+            {
+                Image = icon,
+                SizeMode = PictureBoxSizeMode.CenterImage,
+                Dock = DockStyle.Fill,
+            };
+
+            var targetLabel = new Label
+            {
+                Text = label,
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock = DockStyle.Bottom,
+                ForeColor = Color.Black
+            };
+
+            dropTarget.Controls.Add(pictureBox);
+            dropTarget.Controls.Add(targetLabel);
+
+            return dropTarget;
+        }
+
+        private static bool IsPointInRectangle(Point point, Rectangle rectangle)
+        {
+            return point.X >= rectangle.X && 
+                   point.X <= rectangle.X + rectangle.Width && 
+                   point.Y >= rectangle.Y && 
+                   point.Y <= rectangle.Y + rectangle.Height;
+        }
     }
 
-    // Types used as keys for data passed around during drag-and-drop
+    // Types used as keys for passing drag-and-drop data between event handlers
     internal sealed class PrimarySelectedNode { }
 }
