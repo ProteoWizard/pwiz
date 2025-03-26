@@ -162,8 +162,8 @@ Undo Redo : 已更改 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 的峰�
 Summary   : 已更改 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 的峰界限
 All Info  :
 已更改 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 的峰界限
-已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 所有峰的开始时间从 27.79 更改到 26.86
-已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 所有峰的结束时间从 28.72 更改到 27.40
+已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 所有峰的开始时间从 27.13 更改到 26.86
+已将“D_108_REP2”中的 NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614.3164++ 所有峰的结束时间从 27.86 更改到 27.40
 
 Undo Redo : 已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
 Summary   : 已删除目标 NP_036870 > K.FGLYSDQMR.E [182, 190]
@@ -338,10 +338,10 @@ Summary   : 将 DFATVYVDAVK 的 MissingData 设定为 真
 All Info  :
 将 DFATVYVDAVK 的 MissingData 设定为 真
 
-Undo Redo : 已将 89 值粘贴到文档网格
-Summary   : 已将 89 值粘贴到文档网格
+Undo Redo : 已将 91 值粘贴到文档网格
+Summary   : 已将 91 值粘贴到文档网格
 All Info  :
-已将 89 值粘贴到文档网格
+已将 91 值粘贴到文档网格
 文档网格 > 报告名称 是 "Truncated Precursors"
 文档网格 > 列设置 > 列分类 : 包含 { 列 = "截尾计数", 方位 = "降序" }
 将 DFATVYVDAVK 的 MissingData 设定为 真
@@ -349,12 +349,14 @@ All Info  :
 将 DFATVYVDAVK 的 MissingData 设定为 真
 将 DFATVYVDAVK 的 MissingData 设定为 真
 将 DFATVYVDAVK 的 MissingData 设定为 真
+将 DFATVYVDAVK 的 MissingData 设定为 真
 将 DYVSQFESSTLGK 的 MissingData 设定为 真
 将 DYVSQFESSTLGK 的 MissingData 设定为 真
 将 DYVSQFESSTLGK 的 MissingData 设定为 真
 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
 将 C[+57.021464]SLPRPWALTFSYGR 的 MissingData 设定为 真
+将 TGTNLMDFLSR 的 MissingData 设定为 真
 将 TGTNLMDFLSR 的 MissingData 设定为 真
 将 TGTNLMDFLSR 的 MissingData 设定为 真
 将 TGTNLMDFLSR 的 MissingData 设定为 真
@@ -434,6 +436,8 @@ All Info  :
 将 WTNPDGTTSK 的 MissingData 设定为 真
 将 TYIWQIPER 的 MissingData 设定为 真
 Extra Info: TRUE
+TRUE
+TRUE
 TRUE
 TRUE
 TRUE

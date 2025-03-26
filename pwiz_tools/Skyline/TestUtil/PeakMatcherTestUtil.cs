@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -70,8 +71,8 @@ namespace pwiz.SkylineTestUtil
             var skylineWindow = Program.MainWindow;
             bool fail = false;
 
-            var expectedBuilder = new StringBuilder();
-            var observedBuilder = new StringBuilder();
+            var expectedList = new List<double>();
+            var observedList = new List<double>();
 
             var selectedTreeNode = skylineWindow.SelectedNode as PeptideTreeNode;
             TransitionGroupDocNode nodeTranGroup = selectedTreeNode != null
@@ -92,16 +93,21 @@ namespace pwiz.SkylineTestUtil
                 var chromName = chromSet.Name;
                 Assert.IsTrue(expected.ContainsKey(chromName));
                 var expectedRt = expected[chromName];
-                expectedBuilder.AppendLine(string.Format("{0}", expectedRt));
-                observedBuilder.AppendLine(string.Format("{0}", rt.Value));
+                expectedList.Add(expectedRt);
+                observedList.Add(rt.Value);
                 if (Math.Abs(expectedRt - rt.Value) > 0.01)
                     fail = true;
             }
-            Assert.IsFalse(fail, TextUtil.LineSeparate(
-                string.Format("{0}", nodeTranGroup),
-                "Expected RTs:", expectedBuilder.ToString(),
-                "but found RTs:", observedBuilder.ToString())
-            );
+
+            if (fail)
+            {
+                var message = TextUtil.LineSeparate(string.Format("{0}", nodeTranGroup),
+                    "Expected RTs:",
+                    string.Join(",", expectedList.Select(v => v.ToString(CultureInfo.InvariantCulture))),
+                    "but found RTs:",
+                    string.Join(",", observedList.Select(v => v.ToString("0.#####", CultureInfo.InvariantCulture))));
+                Assert.Fail(message);
+            }
         }
     }
 }

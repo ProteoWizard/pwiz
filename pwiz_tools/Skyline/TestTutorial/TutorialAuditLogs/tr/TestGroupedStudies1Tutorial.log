@@ -162,8 +162,8 @@ Undo Redo : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614,31
 Summary   : Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614,3164++
 All Info  :
 Changed peak bounds of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614,3164++
-Changed start time of all peaks of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614,3164++ in "D_108_REP2" from 27,79 to 26,86
-Changed end time of all peaks of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614,3164++ in "D_108_REP2" from 28,72 to 27,40
+Changed start time of all peaks of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614,3164++ in "D_108_REP2" from 27,13 to 26,86
+Changed end time of all peaks of NP_036870 > K.DFATVYVDAVK.D [36, 46] > 614,3164++ in "D_108_REP2" from 27,86 to 27,40
 
 Undo Redo : Deleted target NP_036870 > K.FGLYSDQMR.E [182, 190]
 Summary   : Deleted target NP_036870 > K.FGLYSDQMR.E [182, 190]
@@ -338,10 +338,10 @@ Summary   : Set MissingData of DFATVYVDAVK to True
 All Info  :
 Set MissingData of DFATVYVDAVK to True
 
-Undo Redo : Pasted 89 values into the document grid
-Summary   : Pasted 89 values into the document grid
+Undo Redo : Pasted 91 values into the document grid
+Summary   : Pasted 91 values into the document grid
 All Info  :
-Pasted 89 values into the document grid
+Pasted 91 values into the document grid
 Document grid > Report name is "Truncated Precursors"
 Document grid > Column settings > Column Sorts : contains { Column = "Count Truncated", Direction = "Descending" }
 Set MissingData of DFATVYVDAVK to True
@@ -349,12 +349,14 @@ Set MissingData of DFATVYVDAVK to True
 Set MissingData of DFATVYVDAVK to True
 Set MissingData of DFATVYVDAVK to True
 Set MissingData of DFATVYVDAVK to True
+Set MissingData of DFATVYVDAVK to True
 Set MissingData of DYVSQFESSTLGK to True
 Set MissingData of DYVSQFESSTLGK to True
 Set MissingData of DYVSQFESSTLGK to True
 Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
 Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
 Set MissingData of C[+57.021464]SLPRPWALTFSYGR to True
+Set MissingData of TGTNLMDFLSR to True
 Set MissingData of TGTNLMDFLSR to True
 Set MissingData of TGTNLMDFLSR to True
 Set MissingData of TGTNLMDFLSR to True
@@ -434,6 +436,8 @@ Set MissingData of HGLLESAVLAR to True
 Set MissingData of WTNPDGTTSK to True
 Set MissingData of TYIWQIPER to True
 Extra Info: TRUE
+TRUE
+TRUE
 TRUE
 TRUE
 TRUE
