@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
                 foreach (var column in group)
                 {
-                    if (!replicatePivotColumns.IsConstantColumn(column))
+                    if (!replicatePivotColumns.IsConstantColumn(column) || column.DisplayColumn.ColumnDescriptor == null)
                     {
                         continue;
                     }

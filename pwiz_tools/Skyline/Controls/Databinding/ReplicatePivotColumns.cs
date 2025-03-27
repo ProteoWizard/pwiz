@@ -91,6 +91,7 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public bool HasConstantAndVariableColumns()
         {
+            bool hasNonReplicateColumns = ItemProperties.OfType<ColumnPropertyDescriptor>().Any(p => GetResultKey(p) == null);
             bool hasConstant = false;
             bool hasVariable = false;
             foreach (var descriptor in GetReplicateColumnGroups().SelectMany(grouping => grouping))
@@ -98,7 +99,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 hasConstant |= IsConstantColumn(descriptor);
                 hasVariable |= !IsConstantColumn(descriptor);
 
-                if (hasConstant && hasVariable)
+                if (hasConstant && hasVariable && hasNonReplicateColumns)
                     return true;
             }
             return false;
