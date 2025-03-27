@@ -661,7 +661,7 @@ namespace pwiz.SkylineTestTutorial
                 throw new PanoramaServerException(string.Format("Folder already exists: {0}", folderToCreate));
             }
 
-            panoramaClient.ValidateFolder(parentFolderPath, FolderPermission.admin, false); // Parent folder should exist and have admin permissions.
+            panoramaClient.ValidateFolder(parentFolderPath, PermissionSet.FOLDER_ADMIN, false); // Parent folder should exist and have admin permissions.
 
 
             //Create JSON body for the request
