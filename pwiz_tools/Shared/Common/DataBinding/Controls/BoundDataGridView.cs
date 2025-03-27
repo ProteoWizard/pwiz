@@ -149,6 +149,7 @@ namespace pwiz.Common.DataBinding.Controls
 
                 UpdateColumnFormats(false);
                 UpdateColorScheme();
+                UpdateColumnsFrozen();
 
             }
             finally
@@ -286,7 +287,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void UpdateColumnsFrozen()
         {
-            var lastFrozenColumn = FindLastFrozenColumn();
+            var lastFrozenColumn = GetSelectedFrozenColumn();
             var shouldFreeze = lastFrozenColumn != null;
             foreach (DataGridViewColumn column in Columns)
             {
@@ -297,6 +298,7 @@ namespace pwiz.Common.DataBinding.Controls
                     column.Frozen = false;
                     continue;
                 }
+
                 var currentColumnId = ColumnId.GetColumnId(currentPropertyDescriptor);
                 column.Frozen = shouldFreeze;
 
@@ -308,11 +310,35 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private ColumnId FindLastFrozenColumn()
+        private ColumnId GetSelectedFrozenColumn()
+        {
+            if (_bindingListSource.ColumnFormats.DefaultFrozenEnabled)
+            {
+                return GetDefaultFrozenColumn();
+            }
+            else
+            {
+                return GetColumnFormatSelectedColumn();
+            }
+        }
+
+        private ColumnId GetColumnFormatSelectedColumn()
         {
             return _bindingListSource.ItemProperties
                 .Select(ColumnId.GetColumnId)
                 .LastOrDefault(columnId => _bindingListSource.ColumnFormats.GetFormat(columnId).Frozen ?? false);
+        }
+
+        private ColumnId GetDefaultFrozenColumn()
+        {
+            ColumnId defaultFrozenColumn = null;
+            var defaultFrozenColumnIndex = _bindingListSource.ColumnFormats.DefaultFrozenColumnCount - 1;
+            if (defaultFrozenColumnIndex >= 0 && defaultFrozenColumnIndex < _bindingListSource.ItemProperties.Count)
+            {
+                var defaultFrozenColumnPropertyDescriptor = _bindingListSource.ItemProperties[defaultFrozenColumnIndex];
+                defaultFrozenColumn = ColumnId.GetColumnId(defaultFrozenColumnPropertyDescriptor);
+            }
+            return defaultFrozenColumn;
         }
 
         protected void OnFormatsChanged()

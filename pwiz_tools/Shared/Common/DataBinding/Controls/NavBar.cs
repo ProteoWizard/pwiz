@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -470,11 +470,33 @@ namespace pwiz.Common.DataBinding.Controls
                 freezeColumnsUpToToolStripMenuItem.DropDownItems.Clear();
                 btnGroupTotal.DropDownItems.Add(freezeColumnsUpToToolStripMenuItem);
 
+
+                // Add default frozen menu item.
+                var defaultFrozenEnabled = BindingListSource.ColumnFormats.DefaultFrozenEnabled;
+                var defaultFrozenColumnIndex = _bindingListSource.ColumnFormats.DefaultFrozenColumnCount - 1;
+                // Only add default menu item if the default count has been configured and is valid.
+                if (defaultFrozenColumnIndex >= 0 && defaultFrozenColumnIndex < _bindingListSource.ItemProperties.Count)
+                {
+                    var defaultColumnPropertyDescriptor = _bindingListSource.ItemProperties[defaultFrozenColumnIndex] as ColumnPropertyDescriptor;
+                    if (defaultColumnPropertyDescriptor != null)
+                    {
+                        var defaultMenuItemTest = $"Default({defaultColumnPropertyDescriptor.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized)})";
+                        var defaultMenuItem = new ToolStripMenuItem(defaultMenuItemTest);
+                        defaultMenuItem.Click += (s, args) => DefaultFreezeColumnMenuItem_Click();
+                        if (defaultFrozenEnabled)
+                        {
+                            defaultMenuItem.Font = new Font(defaultMenuItem.Font, FontStyle.Bold);
+                        }
+                        freezeColumnsUpToToolStripMenuItem.DropDownItems.Add(defaultMenuItem);
+                        freezeColumnsUpToToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
+                    }
+                }
+                
+                // Add columns up to finding a column with a pivot key.
                 var selectedColumnId = GetSelectedFrozenColumn();
                 for (var i = 0; i < BindingListSource.ItemProperties.Count; i++)
                 {
                     var columnPropertyDescriptor = BindingListSource.ItemProperties[i] as ColumnPropertyDescriptor;
-                    // Once we reach a column without a pivot key we no longer want to allow freezing
                     if (!(columnPropertyDescriptor is { PivotKey: null }))
                     {
                         break;
@@ -482,46 +504,62 @@ namespace pwiz.Common.DataBinding.Controls
 
                     var menuItem = new ToolStripMenuItem(columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized));
                     var columnId = ColumnId.GetColumnId(BindingListSource.ItemProperties[i]);
-                    menuItem.Click += (s, args) => FreezeColumnMenuItem_Click(s, args, columnId);
-                    freezeColumnsUpToToolStripMenuItem.DropDownItems.Add(menuItem);
-
-                    //Bold the selected column
-                    if (columnId.Equals(selectedColumnId))
+                    menuItem.Click += (s, args) => FreezeColumnMenuItem_Click(columnId);
+                    if (!defaultFrozenEnabled && columnId.Equals(selectedColumnId))
                     {
                         menuItem.Font = new Font(menuItem.Font, FontStyle.Bold);
                     }
+                    freezeColumnsUpToToolStripMenuItem.DropDownItems.Add(menuItem);
                 }
             }
             btnGroupTotal.DropDownItems.Add(new ToolStripSeparator());
         }
 
-        private void FreezeColumnMenuItem_Click(object sender, EventArgs args, ColumnId newSelectedColumnId)
+        private void FreezeColumnMenuItem_Click(ColumnId newSelectedColumnId)
         {
-            var previouslySelectedColumnId = GetSelectedFrozenColumn();
-            var isNewSelectedFrozen = BindingListSource.ColumnFormats.GetFormat(newSelectedColumnId).Frozen ?? false;
-            var sameSelected = newSelectedColumnId.Equals(previouslySelectedColumnId);
-            var shouldFreeze = (sameSelected && !isNewSelectedFrozen) || !sameSelected;
+            if (_bindingListSource.ColumnFormats.DefaultFrozenEnabled)
+            {
+                _bindingListSource.ColumnFormats.DefaultFrozenEnabled = false;
+            }
 
+            var previouslySelectedColumnId = GetSelectedFrozenColumn();
+            var shouldFreeze = !newSelectedColumnId.Equals(previouslySelectedColumnId);
             foreach (var itemProperty in BindingListSource.ItemProperties)
             {
                 var currentColumnId = ColumnId.GetColumnId(itemProperty);
                 var currentColumnFormat = BindingListSource.ColumnFormats.GetFormat(currentColumnId);
 
-                if (shouldFreeze || currentColumnFormat.Frozen != null)
+                if (currentColumnFormat.Frozen != shouldFreeze)
                 {
                     var updatedColumnFormat = currentColumnFormat.ChangeFrozen(shouldFreeze);
                     BindingListSource.ColumnFormats.SetFormat(currentColumnId, updatedColumnFormat);
                 }
 
-                //Once we find our selected column we start to disable freezing for remaining columns.
+                //Once we find our selected column we start to disable freezing for remaining columns where Frozen is set.
                 if (currentColumnId.Equals(newSelectedColumnId))
                 {
                     shouldFreeze = false;
                 }
             }
-
         }
 
+
+        private void DefaultFreezeColumnMenuItem_Click()
+        {
+            // Toggle default flag and then reset frozen state of existing columns.
+            _bindingListSource.ColumnFormats.DefaultFrozenEnabled = !_bindingListSource.ColumnFormats.DefaultFrozenEnabled;
+
+            foreach (var itemProperty in BindingListSource.ItemProperties)
+            {
+                var currentColumnId = ColumnId.GetColumnId(itemProperty);
+                var currentColumnFormat = BindingListSource.ColumnFormats.GetFormat(currentColumnId);
+                if (currentColumnFormat.Frozen != null)
+                {
+                    var updatedColumnFormat = currentColumnFormat.ChangeFrozen(null);
+                    BindingListSource.ColumnFormats.SetFormat(currentColumnId, updatedColumnFormat);
+                }
+            }
+        }
         private ColumnId GetSelectedFrozenColumn()
         {
             return BindingListSource.ItemProperties

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -56,7 +56,9 @@ namespace pwiz.Skyline.Controls.Databinding
         private Dictionary<PropertyPath, DataGridViewRow> _replicateGridRows;
         private Dictionary<ResultKey, DataGridViewColumn> _replicateGridColumns;
         private static readonly Color _readOnlyColor = Color.FromArgb(245, 245, 245);
-        private static readonly double _defaultDataGridSplitterRatio = .75;
+        private static readonly double _defaultDataGridSplitterRatio = .33;
+        private static readonly int _defaultFrozenColumnMax = 3;
+
         public DataboundGridControl()
         {
             InitializeComponent();
@@ -1169,21 +1171,23 @@ namespace pwiz.Skyline.Controls.Databinding
 
         }
 
-        private void UpdateMainGridDefaultFrozenState()
+        private void UpdateMainGridDefaultFrozenColumn()
         {
-            var firstColumn = boundDataGridView.Columns
+            var visibleColumns = boundDataGridView.Columns
                 .Cast<DataGridViewColumn>()
-                .First(col => col.Visible);
-            var firstColumnId = ColumnId.GetColumnId(GetPropertyDescriptor(firstColumn));
-            var firstColumnFormat = bindingListSource.ColumnFormats.GetFormat(firstColumnId);
+                .Where(col => col.Visible)
+                .ToList();
 
-            // We check for false because we only want to enable the column if a state has not been set.
-            if (firstColumnFormat.Frozen != false)
+            var startingIndex = Math.Min(visibleColumns.Count, _defaultFrozenColumnMax - 1);
+            for (var i = startingIndex; i >= 0; i--)
             {
-                var updatedColumnFormat = firstColumnFormat.ChangeFrozen(true);
-                BindingListSource.ColumnFormats.SetFormat(firstColumnId, updatedColumnFormat);
+                var column = visibleColumns[i];
+                if (i == 0 || column is DataGridViewLinkColumn)
+                {
+                    BindingListSource.ColumnFormats.DefaultFrozenColumnCount = i + 1;
+                    break;
+                }
             }
-            
         }
 
         private void InitializeDataGridSplitterDistance()
@@ -1323,7 +1327,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     replicatePivotDataGridView.Show();
                     dataGridSplitContainer.Panel1Collapsed = false;
                     PopulateReplicateDataGridView(replicatePivotColumns);
-                    UpdateMainGridDefaultFrozenState();
+                    UpdateMainGridDefaultFrozenColumn();
                     InitializeDataGridSplitterDistance();
                     AlignPivotByReplicateGridColumns(replicatePivotColumns);
                 }

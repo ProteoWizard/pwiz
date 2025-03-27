@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
 
@@ -26,6 +27,8 @@ namespace pwiz.Common.DataBinding
     public class ColumnFormats
     {
         private Dictionary<ColumnId, ColumnFormat> _formats = new Dictionary<ColumnId, ColumnFormat>();
+        private int _defaultFrozenColumnCount;
+        private bool? _defaultFrozenEnabled;
         public void SetFormat(ColumnId columnId, ColumnFormat columnFormat)
         {
             if (columnFormat.IsEmpty)
@@ -37,6 +40,33 @@ namespace pwiz.Common.DataBinding
                 _formats[columnId] = columnFormat;
             }
             FireFormatChanged();
+        }
+
+        public int DefaultFrozenColumnCount
+        {
+            get
+            {
+                return _defaultFrozenColumnCount;
+            }
+            set
+            {
+                _defaultFrozenColumnCount = value;
+                FireFormatChanged();
+            }
+        }
+
+        public bool DefaultFrozenEnabled
+        {
+            get
+            {
+                // Deduce value until explicitly set.
+                return _defaultFrozenEnabled ?? _formats.Values.All(format => format.Frozen == null);
+            }
+            set
+            {
+                _defaultFrozenEnabled = value;
+                FireFormatChanged();
+            }
         }
 
         public ColumnFormat GetFormat(ColumnId columnId)
