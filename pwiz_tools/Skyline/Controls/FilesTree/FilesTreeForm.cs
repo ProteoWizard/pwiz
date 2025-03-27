@@ -20,6 +20,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -28,6 +29,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using Label = System.Windows.Forms.Label;
 using Process = System.Diagnostics.Process;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
@@ -40,8 +42,10 @@ namespace pwiz.Skyline.Controls.FilesTree
     public partial class FilesTreeForm : DockableFormEx, ITipDisplayer
     {
         private NodeTip _nodeTip;
-        private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private Panel _dropTargetRemove;
+        private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
+
+        private const bool ROUND_CORNERS = true;
 
         public FilesTreeForm()
         {
@@ -82,7 +86,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             _dropTargetRemove.DragEnter += DropTargetRemove_DragEnter;
             _dropTargetRemove.DragLeave += DropTargetRemove_DragLeave;
             _dropTargetRemove.DragDrop += DropTargetRemove_DragDrop;
-            _dropTargetRemove.BorderStyle = BorderStyle.FixedSingle;
             _dropTargetRemove.QueryContinueDrag += FilesTree_QueryContinueDrag;
 
             filesTree.Controls.Add(_dropTargetRemove);
@@ -164,6 +167,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ManageResults();
         }
 
+        private void OpenImportResultsDialog()
+        {
+            SkylineWindow.ImportResults();
+        }
+
+
         public void OpenLibraryExplorerDialog()
         {
             SkylineWindow.ViewSpectralLibraries();
@@ -171,11 +180,19 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private DialogResult ConfirmItemDeletion(string confirmMsg)
         {
-            return MultiButtonMsgDlg.Show(this, 
-                                          confirmMsg,
-                                          MultiButtonMsgDlg.BUTTON_YES, 
-                                          MultiButtonMsgDlg.BUTTON_NO,
-                                          false);
+            var confirmDlg = new MultiButtonMsgDlg(confirmMsg, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
+
+            // Activate the "No" button
+            confirmDlg.ActiveControl = confirmDlg.VisibleButtons.Last();
+            confirmDlg.KeyUp += (sender, e) =>
+            {
+                if (e.KeyCode == Keys.Escape)
+                {
+                    confirmDlg.BtnCancelClick();
+                }
+            };
+
+            return confirmDlg.ShowAndDispose(this);
         }
 
         public void RemoveAll(FilesTreeNode node)
@@ -261,14 +278,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                         for (var i = 0; i < oldChromatograms.Length; i++)
                         {
                             // skip items selected for removal
-                            if (!ContainsCheckReferenceEquals(selectedIds, oldChromatograms[i].Id))
+                            if (!Utils.ContainsCheckReferenceEquals(selectedIds, oldChromatograms[i].Id))
                             {
                                 newChromatograms.Add(oldChromatograms[i]);
                             }
                         }
 
                         var newMeasuredResults = oldMeasuredResults.ChangeChromatograms(newChromatograms);
-                        return document.ChangeMeasuredResults(newMeasuredResults);
+                        var newDoc = document.ChangeMeasuredResults(newMeasuredResults);
+                        newDoc.ValidateResults();
+                        return newDoc;
                     },
                     docPair => AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedIds)
                 );
@@ -284,7 +303,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                         foreach (var librarySpec in oldLibrarySpecs)
                         {
                             // skip items selected for removal
-                            if (!ContainsCheckReferenceEquals(selectedIds, librarySpec.Id))
+                            if (!Utils.ContainsCheckReferenceEquals(selectedIds, librarySpec.Id))
                             {
                                 newLibrarySpecs.Add(librarySpec);
                             }
@@ -315,7 +334,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             var newName = newLabel;
 
             SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, 
-                document =>
+                doc =>
                 {
                     var newChromatogram = (ChromatogramSet)chromatogram.ChangeName(newName);
                     var measuredResults = SkylineWindow.Document.MeasuredResults;
@@ -330,7 +349,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                     }
 
                     measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-                    return document.ChangeMeasuredResults(measuredResults);
+                    var newDoc = doc.ChangeMeasuredResults(measuredResults);
+                    newDoc.ValidateResults();
+                    return newDoc;
                 },
                 docPair => 
                     AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_renamed, docPair.NewDocumentType, oldName, newName)
@@ -345,10 +366,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             try
             {
-                if (dropNode == null || !dropNode.IsDroppable() || draggedNodes.Count == 0 || draggedNodes.Contains(dropNode))
+                if (effect != DragDropEffects.Move || dropNode == null || !dropNode.IsDroppable() || draggedNodes.Count == 0 || draggedNodes.Contains(dropNode))
                     return;
 
-                if (effect == DragDropEffects.Move)
+                var type = primaryDraggedNode.Model.GetType();
+                if (type == typeof(Replicate))
                 {
                     SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
                         doc =>
@@ -363,8 +385,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                                 newChromatogramSets.Remove(item);
                             }
 
-                            // CONSIDER: make it possible to drag to the bottom of the list without precisely dropping on the last
-                            //           node. Maybe highlight a blue "bar" drop target when dragging below the last item?
                             if (dropNode.Model.GetType() == typeof(ReplicatesFolder))
                             {
                                 newChromatogramSets.InsertRange(0, draggedImmutables);
@@ -389,10 +409,77 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                             var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatogramSets);
                             var newDoc = doc.ChangeMeasuredResults(newMeasuredResults);
-
+                            newDoc.ValidateResults();
                             return newDoc;
                         },
-                        docPair => {
+                        docPair =>
+                        {
+                            var entry = AuditLogEntry.CreateCountChangeEntry(
+                                MessageType.files_tree_node_drag_and_drop,
+                                MessageType.files_tree_nodes_drag_and_drop,
+                                docPair.NewDocumentType,
+                                draggedNodes.Select(node => node.Text),
+                                draggedNodes.Count,
+                                str => MessageArgs.Create(str, dropNode.Text),
+                                MessageArgs.Create(draggedNodes.Count, dropNode.Text)
+                            );
+
+                            if (draggedNodes.Count > 1)
+                            {
+                                entry = entry.ChangeAllInfo(draggedNodes.Select(node =>
+                                    new MessageInfo(MessageType.files_tree_node_drag_and_drop, docPair.NewDocumentType,
+                                        node.Text, dropNode.Text)).ToList());
+                            }
+
+                            return entry;
+                        }
+                    );
+                }
+                else if (type == typeof(SpectralLibrary))
+                {
+                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
+                        doc => {
+                            var draggedImmutables = draggedNodes.Select(item => (LibrarySpec)item.Model.Immutable).ToList();
+                            var newLibSpecs = new List<LibrarySpec>(doc.Settings.PeptideSettings.Libraries.LibrarySpecs);
+
+                            var primaryDraggedNodeIndex = newLibSpecs.IndexOf((LibrarySpec)primaryDraggedNode.Model.Immutable);
+
+                            foreach (var item in draggedImmutables)
+                            {
+                                newLibSpecs.Remove(item);
+                            }
+
+                            if (dropNode.Model.GetType() == typeof(SpectralLibrariesFolder))
+                            {
+                                newLibSpecs.InsertRange(0, draggedImmutables);
+                            }
+                            else
+                            {
+                                var dropNodeIndex = newLibSpecs.IndexOf((LibrarySpec)dropNode.Model.Immutable);
+
+                                if (primaryDraggedNodeIndex < dropNodeIndex)
+                                {
+                                    newLibSpecs.InsertRange(dropNodeIndex + 1, draggedImmutables);
+                                }
+                                else if (primaryDraggedNodeIndex > dropNodeIndex)
+                                {
+                                    newLibSpecs.InsertRange(dropNodeIndex, draggedImmutables);
+                                }
+                                else if (primaryDraggedNodeIndex == dropNodeIndex)
+                                {
+                                    newLibSpecs.InsertRange(dropNodeIndex + 1, draggedImmutables);
+                                }
+                            }
+
+                            var newLibs = new Library[newLibSpecs.Count]; // Required by PeptideSettings.Validate() 
+                            var newPepLibraries = doc.Settings.PeptideSettings.Libraries.ChangeLibraries(newLibSpecs, newLibs);
+                            var newPepSettings = doc.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
+                            var newSettings = doc.Settings.ChangePeptideSettings(newPepSettings);
+                            var newDoc = doc.ChangeSettings(newSettings);
+                            return newDoc;
+                        },
+                        docPair =>
+                        {
                             var entry = AuditLogEntry.CreateCountChangeEntry(
                                 MessageType.files_tree_node_drag_and_drop,
                                 MessageType.files_tree_nodes_drag_and_drop,
@@ -411,20 +498,20 @@ namespace pwiz.Skyline.Controls.FilesTree
                             return entry;
                         }
                     );
-
-                    // After the drop, reset selection so dragged nodes are blue
-                    filesTree.SelectedNodes.Clear();
-
-                    filesTree.SelectedNode = primaryDraggedNode;
-
-                    foreach (var node in draggedNodes)
-                    {
-                        filesTree.SelectNode(node, true);
-                    }
-
-                    filesTree.Invalidate();
-                    filesTree.Focus();
                 }
+
+                // After the drop, reset selection so dragged nodes are blue
+                filesTree.SelectedNodes.Clear();
+
+                filesTree.SelectedNode = primaryDraggedNode;
+
+                foreach (var node in draggedNodes)
+                {
+                    filesTree.SelectNode(node, true);
+                }
+
+                filesTree.Invalidate();
+                filesTree.Focus();
             }
             finally
             {
@@ -454,6 +541,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             libraryExplorerMenuItem.Visible = false;
             manageResultsMenuItem.Visible = false;
+            importResultsMenuItem.Visible = false;
             openAuditLogMenuItem.Visible = false;
             openLibraryInLibraryExplorerMenuItem.Visible = false;
             openContainingFolderMenuItem.Visible = false;
@@ -479,7 +567,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 case ReplicatesFolder _:
                     manageResultsMenuItem.Visible = true;
-                    manageResultsMenuItem.Enabled = true;
+                    importResultsMenuItem.Visible = true;
                     return;
                 case Replicate _:
                 case ReplicateSampleFile _:
@@ -523,6 +611,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
         {
             OpenManageResultsDialog();
+        }
+
+        private void FilesTree_ImportResultsMenuItem(object sender, EventArgs e)
+        {
+            OpenImportResultsDialog();
         }
 
         private void FilesTree_OpenLibraryExplorerMenuItem(object sender, EventArgs e) 
@@ -663,7 +756,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (e.Data.GetDataPresent(typeof(FilesTreeNode)))
                 e.Effect = DragDropEffects.Move;
 
-            ShowDropTarget(_dropTargetRemove);
+            ShowDropTargets(_dropTargetRemove);
         }
 
         private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
@@ -679,6 +772,11 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (node.IsDraggable())
                 {
                     draggedNodes.Add(node);
+                }
+                // Cannot drag the .sky file and need to prevent running the next check on Root
+                else if (ReferenceEquals(node, FilesTree.Root))
+                {
+                    return;
                 }
                 else if (((FilesTreeNode)node.Parent).IsDraggable() && selectedNodes.Contains(node.Parent))
                 {
@@ -696,12 +794,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // TODO: does this work when Skyline is resized?
                 _dropTargetRemove.Location = new Point
                 {
-                    X = filesTree.Right - 110,
-                    Y = filesTree.Bottom - 110
+                    X = filesTree.Parent.Right - 110,
+                    Y = filesTree.Parent.Bottom - 110
                 };
-
             }
-            ShowDropTarget(_dropTargetRemove);
+
+            ShowDropTargets(_dropTargetRemove);
 
             var dataObj = new DataObject();
             dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
@@ -740,12 +838,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.SelectedNode = null;
             filesTree.SelectedNodes.Clear();
 
-            ShowDropTarget(_dropTargetRemove, true);
+            ShowDropTargets(_dropTargetRemove, true);
         }
 
         private void DropTargetRemove_DragLeave(object sender, EventArgs e)
         {
-            ShowDropTarget(_dropTargetRemove);
+            ShowDropTargets(_dropTargetRemove);
         }
 
         private void DropTargetRemove_DragDrop(object sender, DragEventArgs e)
@@ -765,7 +863,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         private void FilesTree_DragLeave(object sender, EventArgs e)
         {
             var mouseLocation = MousePosition;
-            var inside = IsPointInRectangle(mouseLocation, Bounds);
+            var inside = Utils.IsPointInRectangle(mouseLocation, Bounds);
 
             if (!inside)
             {
@@ -773,37 +871,30 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        private static bool ContainsCheckReferenceEquals(IList<Identity> list, Identity item)
-        {
-            for (var i = 0; i < list.Count; i++)
-            {
-                if (ReferenceEquals(list[i], item))
-                    return true;
-            }
-            return false;
-        }
-
-        private static void ShowDropTarget(Panel panel, bool highlight = false)
+        private static void ShowDropTargets(Panel panel, bool highlight = false)
         {
             panel.Visible = true;
-            panel.BackColor = highlight ? SystemColors.Highlight : Color.White;
+            panel.BackColor = highlight ? Color.LightYellow : Color.WhiteSmoke;
         }
 
         private static void HideDropTargets(Panel panel)
         {
             panel.Visible = false;
-            panel.BackColor = Color.White;
+            panel.BackColor = Color.WhiteSmoke;
         }
 
         private static Panel CreateDropTarget(string label, Image icon, DockStyle dockStyle)
         {
             var dropTarget = new Panel
             {
-                Width = 100,
                 Dock = dockStyle,
                 Padding = new Padding(2),
-                Size = new Size { Height = 55, Width = 55 }
+                Size = new Size { Height = 55, Width = 55 },
             };
+
+            if (ROUND_CORNERS)
+                dropTarget.Region = Utils.RegionWithRoundCorners(55, 55);
+            else dropTarget.BorderStyle = BorderStyle.FixedSingle;
 
             var pictureBox = new PictureBox
             {
@@ -825,14 +916,33 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             return dropTarget;
         }
+    }
 
-        private static bool IsPointInRectangle(Point point, Rectangle rectangle)
+    internal class Utils
+    {
+        internal static bool ContainsCheckReferenceEquals(IList<Identity> list, Identity item)
+        {
+            for (var i = 0; i < list.Count; i++)
+            {
+                if (ReferenceEquals(list[i], item))
+                    return true;
+            }
+            return false;
+        }
+
+        internal static bool IsPointInRectangle(Point point, Rectangle rectangle)
         {
             return point.X >= rectangle.X && 
                    point.X <= rectangle.X + rectangle.Width && 
                    point.Y >= rectangle.Y && 
                    point.Y <= rectangle.Y + rectangle.Height;
         }
+
+        internal static Region RegionWithRoundCorners(int width, int height)
+        {
+            return Region.FromHrgn(Gdi32.CreateRoundRectRgn(0, 0, width, height, 20, 20));
+        }
+
     }
 
     // Used as a key for passing drag-and-drop data between event handlers

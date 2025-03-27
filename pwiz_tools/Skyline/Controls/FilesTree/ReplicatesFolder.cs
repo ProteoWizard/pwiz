@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -39,9 +38,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             get
             {
-                if (Document.MeasuredResults == null)
+                if (Document.MeasuredResults == null || Document.MeasuredResults.IsEmpty)
                 {
-                    return Array.Empty<Replicate>().ToList<FileNode>();
+                    return ImmutableList.Empty<FileNode>(); 
                 }
 
                 var files = Document.MeasuredResults.Chromatograms.Select(chromatogramSet => 

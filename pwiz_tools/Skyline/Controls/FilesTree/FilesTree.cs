@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // Look for TreeNodes whose model represent a file group. If any are found, rely on their
                 // models being up-to-date (since it was just merged with the document) and recursively
                 // create / update / delete TreeNodes associated with its children
-                if (model != null && model.HasFiles())
+                if (model != null)
                     MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc);
             }
         }
@@ -649,13 +649,16 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public bool IsDraggable()
         {
-            return Model.GetType() == typeof(Replicate);
+            return Model.GetType() == typeof(Replicate) ||
+                   Model.GetType() == typeof(SpectralLibrary);
         }
 
         public bool IsDroppable()
         {
             return Model.GetType() == typeof(Replicate) ||
-                   Model.GetType() == typeof(ReplicatesFolder);
+                   Model.GetType() == typeof(ReplicatesFolder) ||
+                   Model.GetType() == typeof(SpectralLibrary) ||
+                   Model.GetType() == typeof(SpectralLibrariesFolder);
         }
 
         ///
@@ -697,6 +700,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         // from the given node.
         internal static void UpdateFileImages(FilesTreeNode filesTreeNode)
         {
+            if (filesTreeNode == null)
+                return;
+
             do
             {
                 filesTreeNode.OnModelChanged();

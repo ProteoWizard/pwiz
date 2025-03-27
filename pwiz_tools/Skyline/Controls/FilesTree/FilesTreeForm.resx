@@ -145,7 +145,7 @@
     <value>filesTree</value>
   </data>
   <data name="&gt;&gt;filesTree.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.FilesTree.FilesTree, Skyline-daily, Version=24.1.1.402, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.FilesTree.FilesTree, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;filesTree.Parent" xml:space="preserve">
     <value>panel1</value>
@@ -188,6 +188,12 @@
   </data>
   <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
     <value>Open Library Explorer</value>
+  </data>
+  <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>201, 22</value>
+  </data>
+  <data name="importResultsMenuItem.Text" xml:space="preserve">
+    <value>Import Results</value>
   </data>
   <data name="manageResultsMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -238,7 +244,7 @@
     <value>Remove</value>
   </data>
   <data name="filesTreeContextMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>202, 202</value>
+    <value>202, 224</value>
   </data>
   <data name="&gt;&gt;filesTreeContextMenu.Name" xml:space="preserve">
     <value>filesTreeContextMenu</value>
@@ -289,7 +295,7 @@
     <value>ModeUIExtender</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.402, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;libraryExplorerMenuItem.Name" xml:space="preserve">
     <value>libraryExplorerMenuItem</value>
@@ -339,10 +345,16 @@
   <data name="&gt;&gt;removeMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;importResultsMenuItem.Name" xml:space="preserve">
+    <value>importResultsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;importResultsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>FilesTreeForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=24.1.1.402, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

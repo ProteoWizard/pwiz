@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 
@@ -89,8 +90,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         public ImageId ImageAvailable { get; }
         public ImageId ImageMissing { get; }
 
-
-        public virtual IList<FileNode> Files => new List<FileNode>();
+        public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
         public virtual bool HasFiles() => Files != null && Files.Count > 0;
     }
 }

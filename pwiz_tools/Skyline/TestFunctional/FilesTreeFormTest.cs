@@ -33,8 +33,11 @@ using Peptide = pwiz.Skyline.Model.Peptide;
 // TODO: Replicate => verify right-click menu includes Open Containing Folder
 // TODO: Test Tooltips. See MethodEditTutorialTest.ShowNodeTip
 // TODO: tests for imsdb / irtdb with separate .sky file
-// TODO: test file system watcher - add, rename, delete
-// TODO: add a test scenario with an Audit Log
+// TODO: test file system watcher - add, delete
+// TODO: add an Audit Log scenario
+// TODO: drag-and-drop disjoint set of nodes
+// TODO: non-draggable nodes cannot be dragged
+// ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
@@ -58,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
-            Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+            Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
             Assert.AreEqual(string.Empty, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, "savedFileName.sky");
@@ -88,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
 
             // FilesTree should only have one set of nodes after opening a new document
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
-            Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+            Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
             Assert.IsTrue(OnlyContainsFilesTreeNodes(SkylineWindow.FilesTree.Root));
 
@@ -135,7 +138,7 @@ namespace pwiz.SkylineTestFunctional
             //
             var doc = SkylineWindow.Document;
 
-            CheckReplicateEquivalence(42);
+            CheckEquivalence_Replicates(42);
 
             // Rename replicate. Tree node should get new node in correct position with expanded folder
             RunUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Expand());
@@ -161,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
 
             doc = WaitForDocumentChange(doc);
 
-            CheckReplicateEquivalence(42);
+            CheckEquivalence_Replicates(42);
             // make sure no new top-level folders were added
             Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
 
@@ -202,7 +205,7 @@ namespace pwiz.SkylineTestFunctional
 
             WaitForDocumentChange(doc);
 
-            CheckReplicateEquivalence(42);
+            CheckEquivalence_Replicates(42);
 
             // Delete replicate
             doc = SkylineWindow.Document;
@@ -223,13 +226,13 @@ namespace pwiz.SkylineTestFunctional
             });
             doc = WaitForDocumentChange(doc);
 
-            CheckReplicateEquivalence(38);
+            CheckEquivalence_Replicates(38);
 
             // Undo deletion of replicate
             RunUI(() => SkylineWindow.Undo());
             WaitForDocumentChange(doc);
 
-            CheckReplicateEquivalence(42);
+            CheckEquivalence_Replicates(42);
 
             RunUI(() =>
             {
@@ -249,7 +252,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            CheckReplicateEquivalence(42);
+            CheckEquivalence_Replicates(42);
 
             RunUI(() =>
             {
@@ -340,7 +343,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageAvailable, sampleFileTreeNode.Parent.Parent.ImageIndex);
             Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
 
-            CheckReplicateEquivalence(42);
+            CheckEquivalence_Replicates(42);
 
             //
             // File system - watch for file deleted
@@ -366,12 +369,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageMissing, sampleFileTreeNode.Parent.Parent.ImageIndex);
             Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
 
-            CheckReplicateEquivalence(42);
+            CheckEquivalence_Replicates(42);
 
             Assert.IsTrue(OnlyContainsFilesTreeNodes(SkylineWindow.FilesTree.Root));
 
             //
-            // Drag-and-drop
+            // Drag-and-drop - replicates
             //
             {
                 // Start with a clean document
@@ -384,20 +387,43 @@ namespace pwiz.SkylineTestFunctional
 
                 var lastItemIndex = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
 
-                // TODO: disjoint drag tests
-                DragDropAndVerify(new[] { 0 }, 1, DragDirection.down);
-                DragDropAndVerify(new[] { 1 }, 0, DragDirection.up);
+                var dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 1, DragDirection.down);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
 
-                DragDropAndVerify(new[] { 0 }, lastItemIndex, DragDirection.down);
-                DragDropAndVerify(new[] { lastItemIndex }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 1 }, 0, DragDirection.up);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
 
-                DragDropAndVerify(new[] { 3, 4, 5 }, 9, DragDirection.down);
-                DragDropAndVerify(new[] { 7, 8, 9 }, 3, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, lastItemIndex, DragDirection.down);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
 
-                DragDropAndVerify(new[] { 3, 4, 5 }, lastItemIndex, DragDirection.down);
-                DragDropAndVerify(new[] { lastItemIndex - 2, lastItemIndex - 1, lastItemIndex }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { lastItemIndex }, 0, DragDirection.up);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
+
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, 9, DragDirection.down);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
+
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 7, 8, 9 }, 3, DragDirection.up);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
+                
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, lastItemIndex, DragDirection.down);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
+
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { lastItemIndex - 2, lastItemIndex - 1, lastItemIndex }, 0, DragDirection.up);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
             }
 
+            //
+            // Drag-and-drop - spectral libraries
+            //
+            {
+                var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragDirection.down);
+                VerifyDragAndDrop(dnd, CheckEquivalence_SpectralLibraries);
+
+                dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 1 }, 0, DragDirection.up);
+                VerifyDragAndDrop(dnd, CheckEquivalence_SpectralLibraries);
+            }
+
+            // Drag-and-drop
             {
                 var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
                 var replicateNode = (FilesTreeNode)replicateFolder.Nodes[0];
@@ -408,38 +434,15 @@ namespace pwiz.SkylineTestFunctional
                 var libraryFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
                 Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode((FilesTreeNode)libraryFolder.Nodes[0], replicateNode));
                 Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(libraryFolder, replicateNode));
+
+                var libraryNode = (FilesTreeNode)libraryFolder.Nodes[0];
+                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode((FilesTreeNode)libraryFolder.Nodes[0], libraryNode));
+                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(libraryFolder, libraryNode));
             }
 
             //
-            // Remove
+            // TODO: Remove
             // 
-            // TODO: figure out how to click Ok on dialog to confirm node removals
-            //
-            // doc = SkylineWindow.Document;
-            // RunUI(() =>
-            // {
-            //     var removeNodes = new List<FilesTreeNode> {
-            //         (FilesTreeNode)replicateFolderModel.Nodes[1],
-            //         (FilesTreeNode)replicateFolderModel.Nodes[2]
-            //     };
-            //
-            //     SkylineWindow.FilesTreeForm.RemoveSelected(removeNodes);
-            // });
-            //
-            // var confirmDlg = WaitForMultiButtonMsgDlg(FilesTreeResources.FilesTreeForm_ConfirmItemDeletion_Replicates);
-            // OkDialog(confirmDlg, confirmDlg.BtnYesClick);
-            //
-            // WaitForDocumentChangeLoaded(doc);
-            //
-            // // Expecting two fewer replicates than previous version of SrmDocument
-            // CheckReplicateEquivalence(doc.MeasuredResults.Chromatograms.Count - 2);
-
-            // // Project Files => Audit Log Action
-            // RunUI(() =>
-            // {
-            //     SkylineWindow.FilesTreeForm.OpenAuditLog();
-            // });
-            // WaitForConditionUI(() => SkylineWindow.AuditLogForm.Visible);
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() =>
@@ -448,20 +451,10 @@ namespace pwiz.SkylineTestFunctional
             });
         }
 
-        internal enum DragDirection { up, down }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="dragNodeIndexes"></param>
-        /// <param name="dropNodeIndex"></param>
-        /// <param name="direction"></param>
-        /// <param name="selectedIndex">item in dragNodeIndexes to use as the dragged node</param>
-        ///
-        // TODO: support disjoint dragged items where items could be *below* the dropNodeIndex
-        private static void DragDropAndVerify(int[] dragNodeIndexes, int dropNodeIndex, DragDirection direction, int selectedIndex = 0)
+        // TODO: support disjoint dragged items where items could be located above *and below* the dropNodeIndex
+        private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes, int dropNodeIndex, DragDirection direction) where T : FileNode
         {
-            var folder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+            var folder = SkylineWindow.FilesTree.Folder<T>();
 
             var dragNodes = new List<FilesTreeNode>();
             foreach (var index in dragNodeIndexes)
@@ -479,25 +472,47 @@ namespace pwiz.SkylineTestFunctional
             });
             var newDoc = WaitForDocumentChangeLoaded(oldDoc);
 
-            Assert.IsFalse(ReferenceEquals(oldDoc.MeasuredResults.Chromatograms, newDoc.MeasuredResults.Chromatograms));
-            CheckReplicateEquivalence(folder.Nodes.Count);
+            return new DragAndDropParams {
+                DragNodeIndexes = dragNodeIndexes,
+                DropNodeIndex = dropNodeIndex,
+                Direction = direction,
+                OldDoc = oldDoc,
+                NewDoc = newDoc,
+                Folder = folder,
+                DraggedNodes = dragNodes,
+                DropNode = dropNode
+            };
+        }
 
-            folder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+        private static void VerifyDragAndDrop(DragAndDropParams d, CheckEquivalence callback)
+        {
+            // CONSIDER: check !RefEquals deeper in SrmSettings
+            Assert.IsFalse(ReferenceEquals(d.OldDoc.Settings, d.NewDoc.Settings));
 
-            var dropNodeExpectedIndex = direction == DragDirection.down ? dropNodeIndex - dragNodeIndexes.Length : dropNodeIndex + dragNodeIndexes.Length;
+            callback(d.Folder.Nodes.Count);
 
-            Assert.AreEqual(dropNode, folder.Nodes[dropNodeExpectedIndex]);
+            var dropNodeExpectedIndex = 
+                d.Direction == DragDirection.down ? 
+                    d.DropNodeIndex - d.DragNodeIndexes.Length :
+                    d.DropNodeIndex + d.DragNodeIndexes.Length;
 
-            for(var i = 0; i < dragNodeIndexes.Length; i++)
+            Assert.AreEqual(d.DropNode, d.Folder.Nodes[dropNodeExpectedIndex]);
+
+            for (var i = 0; i < d.DragNodeIndexes.Length; i++)
             {
-                var expectedIndex = 
-                    direction == DragDirection.down ? dropNodeExpectedIndex + 1 + i : dropNodeExpectedIndex - dragNodes.Count + i; // dropNodeIndex + i;
+                var expectedIndex =
+                    d.Direction == DragDirection.down ?
+                        dropNodeExpectedIndex + 1 + i : 
+                        dropNodeExpectedIndex - d.DraggedNodes.Count + i;
 
-                Assert.AreEqual(dragNodes[i], folder.Nodes[expectedIndex]);
+                Assert.AreEqual(d.DraggedNodes[i], d.Folder.Nodes[expectedIndex]);
             }
         }
 
-        private static void CheckReplicateEquivalence(int expectedCount)
+        // CONSIDER: use a more generalized way to check equivalence of SrmSettings with the tree
+        private delegate void CheckEquivalence(int expectedCount);
+
+        private static void CheckEquivalence_Replicates(int expectedCount)
         {
             var docNodes = SkylineWindow.Document.Settings.MeasuredResults.Chromatograms;
 
@@ -529,6 +544,39 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private static void CheckEquivalence_SpectralLibraries(int expectedCount)
+        {
+            var docNodes = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs;
+
+            var filesModel = new RootFileNode(SkylineWindow.Document, SkylineWindow.DocumentFilePath);
+            
+            var folderModel = filesModel.Files[1];
+
+            var treeNodes = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>().Nodes;
+
+            Assert.IsNotNull(docNodes);
+            Assert.IsNotNull(treeNodes);
+            Assert.IsNotNull(folderModel);
+
+            Assert.AreEqual(expectedCount, docNodes.Count);
+            Assert.AreEqual(docNodes.Count, treeNodes.Count);
+            Assert.AreEqual(docNodes.Count, treeNodes.Count);
+            Assert.AreEqual(docNodes.Count, folderModel.Files.Count);
+
+            for (var i = 0; i < docNodes.Count; i++)
+            {
+                var filesTreeNode = treeNodes[i] as FilesTreeNode;
+
+                Assert.IsTrue(ReferenceEquals(docNodes[i], folderModel.Files[i].Immutable));
+                Assert.IsTrue(ReferenceEquals(docNodes[i], filesTreeNode?.Model.Immutable));
+
+                Assert.AreEqual(docNodes[i].Id, folderModel.Files[i].IdentityPath.GetIdentity(0));
+                Assert.AreEqual(docNodes[i].Id, filesTreeNode?.Model.IdentityPath.GetIdentity(0));
+                Assert.AreEqual(docNodes[i].Name, folderModel.Files[i].Name);
+                Assert.AreEqual(docNodes[i].Name, treeNodes[i].Name);
+            }
+        }
+
         // FilesTree assumes the tree only contains nodes extending FilesTreeNode
         // so make sure other TreeNode types (ex: TreeNodeMS subclasses) were not 
         // inadvertently added to the tree.
@@ -545,6 +593,20 @@ namespace pwiz.SkylineTestFunctional
 
             return true;
         }
+    }
+
+    internal enum DragDirection { up, down }
+
+    internal class DragAndDropParams
+    {
+        internal int[] DragNodeIndexes;
+        internal int DropNodeIndex;
+        internal DragDirection Direction;
+        internal SrmDocument OldDoc;
+        internal SrmDocument NewDoc;
+        internal FilesTreeNode Folder;
+        internal IList<FilesTreeNode> DraggedNodes;
+        internal FilesTreeNode DropNode;
     }
 
     // Borrowing for now from FindNodeCancelTest. Will consolidate if useful.

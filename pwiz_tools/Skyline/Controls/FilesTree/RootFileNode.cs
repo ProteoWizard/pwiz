@@ -20,7 +20,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 
-
 namespace pwiz.Skyline.Controls.FilesTree
 {
     public class RootFileNode : FileNode
@@ -48,6 +47,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         public override string FilePath { get; }
         public override string FileName { get; }
 
+        // CONSIDER: avoid building this list on each get. Cache results or create externally
+        //           and pass into the constructor. Similar comment for other FileNode subclasses
         public override IList<FileNode> Files
         {
             get
@@ -57,8 +58,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // CONSIDER: add a "HasFiles" check to avoid eagerly loading everything
                 //           from SrmDocument for files shown in the tree
                 FileNode files = new ReplicatesFolder(Document, DocumentPath);
-                if(files.Files.Count > 0) 
-                    list.Add(files);
+                list.Add(files); // Always show the folder for Replicates
 
                 files = new SpectralLibrariesFolder(Document, DocumentPath);
                 if (files.Files.Count > 0)
@@ -67,15 +67,15 @@ namespace pwiz.Skyline.Controls.FilesTree
                 files = new BackgroundProteomeFolder(Document, DocumentPath);
                 if (files.Files.Count > 0)
                     list.Add(files);
-                
+            
                 files = new RTCalcFolder(Document, DocumentPath);
                 if (files.Files.Count > 0)
                     list.Add(files);
-                
+            
                 files = new IonMobilityLibraryFolder(Document, DocumentPath);
                 if (files.Files.Count > 0)
                     list.Add(files);
-                
+            
                 files = new OptimizationLibraryFolder(Document, DocumentPath);
                 if (files.Files.Count > 0)
                     list.Add(files);

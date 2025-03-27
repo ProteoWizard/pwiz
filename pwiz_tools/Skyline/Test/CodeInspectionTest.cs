@@ -560,7 +560,7 @@ namespace pwiz.SkylineTest
             {
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
-                { typeof(Gdi32), 4 },
+                { typeof(Gdi32), 5 },
                 { typeof(Kernel32), 6 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
