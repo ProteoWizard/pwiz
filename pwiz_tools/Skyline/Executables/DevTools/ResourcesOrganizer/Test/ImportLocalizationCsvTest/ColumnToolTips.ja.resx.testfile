@@ -1513,7 +1513,7 @@ Double Blank（ダブルブランク）</value>
     <value>プリカーサーのTotalAreaNormalized値の標準偏差。</value>
   </data>
   <data name="Strict">
-    <value>Calculated value unavailable when missing data could comparisons between replicates.</value>
+    <value>Calculated value unavailable when missing data could impact comparisons between replicates.</value>
     <comment>Needs Review:New resource</comment>
   </data>
   <data name="SummaryMessage">

@@ -218,6 +218,10 @@ namespace pwiz.Skyline.EditUI
             if (_skylineWindow != null)
             {
                 _skylineWindow.DocumentUIChangedEvent += SkylineWindowOnDocumentUIChangedEvent;
+                if (!ReferenceEquals(_document, _skylineWindow.DocumentUI))
+                {
+                    SkylineWindowOnDocumentUIChangedEvent(_skylineWindow, new DocumentChangedEventArgs(_document));
+                }
             }
 
             if (_overrideFastaPath != null)
@@ -718,6 +722,10 @@ namespace pwiz.Skyline.EditUI
                 {
                     lock (notifyObject)
                     {
+                        if (longWaitBroker.IsCanceled)
+                        {
+                            return;
+                        }
                         if (DocumentFinal != null && ReferenceEquals(_document, _skylineWindow.Document))
                         {
                             return;
