@@ -500,6 +500,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string TAB = "\t";
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
         private const string UNDERSCORE = TextUtil.UNDERSCORE;
+        private const double CCS_IM_COEFF = 1059.62245;
+        private const double N2_MASS = 28.0;
 
         public string AmbiguousMatchesMessage
         {
@@ -804,7 +806,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         line.Add(@"2"); // Ion Mobility Units
                         double ccs =
                             double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) *
-                            1080 * charge / Math.Sqrt(28*(mz * charge)/(28+(mz*charge)));
+                            CCS_IM_COEFF * charge / Math.Sqrt(N2_MASS*(mz * charge)/(N2_MASS+(mz*charge)));
                         line.Add(ccs.ToString(CultureInfo.InvariantCulture));
 
                     }
