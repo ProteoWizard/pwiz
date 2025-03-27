@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Threading;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
