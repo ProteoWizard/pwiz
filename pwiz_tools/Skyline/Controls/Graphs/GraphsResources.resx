@@ -748,4 +748,7 @@ Here are the last 3 errors:
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>Rank</value>
   </data>
+  <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
+    <value>No quantitative chromatograms found</value>
+  </data>
 </root>

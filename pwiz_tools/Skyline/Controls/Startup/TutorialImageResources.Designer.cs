@@ -133,6 +133,16 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap DIA_Umpire_TTOF_start {
+            get {
+                object obj = ResourceManager.GetObject("DIA_Umpire_TTOF_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ExistingQuant_start {
             get {
                 object obj = ResourceManager.GetObject("ExistingQuant_start", resourceCulture);
@@ -246,6 +256,16 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static System.Drawing.Bitmap PRM_start {
             get {
                 object obj = ResourceManager.GetObject("PRM_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PRMOrbitrap_start {
+            get {
+                object obj = ResourceManager.GetObject("PRMOrbitrap_start", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
