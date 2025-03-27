@@ -20,24 +20,25 @@ using System.Drawing;
 using System.Globalization;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     public class PeptideRegressionTipProvider : ITipProvider
     {
-        public PeptideRegressionTipProvider(PeptideDocNode docNode, string xLabel, string yLabel, PointD point)
+        public PeptideRegressionTipProvider(Target modifiedTarget, string xLabel, string yLabel, double? xValue, double? yValue)
         {
-            DocNode = docNode;
+            ModifiedTarget = modifiedTarget;
             XLabel = xLabel;
             YLabel = yLabel;
-            Point = point;
+            XValue = xValue;
+            YValue = yValue;
         }
 
-        public PeptideDocNode DocNode { get; private set; }
+        public Target ModifiedTarget { get; private set; }
         public string XLabel { get; private set; }
         public string YLabel { get; private set; }
-        public PointD Point { get; private set; }
+        public double? XValue { get; private set; }
+        public double? YValue { get; private set; }
 
         public bool HasTip
         {
@@ -49,10 +50,17 @@ namespace pwiz.Skyline.Controls.Graphs
             var table = new TableDesc();
             using (var rt = new RenderTools())
             {
-                table.AddDetailRow(GraphsResources.PeptideRegressionTipProvider_RenderTip_Peptide, DocNode.ModifiedSequence, rt);
+                table.AddDetailRow(GraphsResources.PeptideRegressionTipProvider_RenderTip_Peptide, ModifiedTarget.ToString(), rt);
 
-                table.AddDetailRow(XLabel, Point.X.ToString(CultureInfo.CurrentCulture), rt);
-                table.AddDetailRow(YLabel, Point.Y.ToString(CultureInfo.CurrentCulture), rt);
+                if (XValue.HasValue)
+                {
+                    table.AddDetailRow(XLabel, XValue.Value.ToString(CultureInfo.CurrentCulture), rt);
+                }
+
+                if (YValue.HasValue)
+                {
+                    table.AddDetailRow(YLabel, YValue.Value.ToString(CultureInfo.CurrentCulture), rt);
+                }
 
                 var size = table.CalcDimensions(g);
 
