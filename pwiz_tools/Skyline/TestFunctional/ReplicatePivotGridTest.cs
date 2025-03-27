@@ -79,28 +79,29 @@ namespace pwiz.SkylineTestFunctional
             ResizeGridColumns(documentGrid.DataboundGridControl.DataGridView);
             verifyColumnSizesAligned(documentGrid);
 
-            // Verify columns begin frozen by default, since partial freezing the scroll offset shrinks replicate grid column by scroll offset.
-            var scrollOffset = 10;
-            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = scrollOffset);
-            Assert.AreEqual(0, documentGrid.DataboundGridControl.ReplicatePivotDataGridView.HorizontalScrollingOffset);
-            Assert.AreEqual(GetMainGridPropertyColumnsWidth(documentGrid), GetMainGridPropertyColumnsWidth(documentGrid, true) + scrollOffset);
-            Assert.AreEqual(GetReplicateGridPropertyWidth(documentGrid, true), GetMainGridPropertyColumnsWidth(documentGrid, true));
+            // Verify columns begin frozen by default, then scroll and verify alignment
+            var mainGridFrozenColumns = GetMainGridFrozenColumns(documentGrid);
+            Assert.AreEqual(mainGridFrozenColumns.Count, 1);
+            Assert.AreEqual(mainGridFrozenColumns.Last().DataPropertyName, "COLUMN_Peptide.Protein");
+            Assert.IsTrue(GetReplicateGridPropertyColumn(documentGrid).Frozen);
+            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = 10);
+            verifyColumnSizesAligned(documentGrid);
 
-            // Select frozen column do disable freezing and verify columns are not frozen
+            // Select frozen option to disable freezing and verify columns are not frozen
             RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
             RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
             RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[0].PerformClick());
-            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = GetReplicateGridPropertyWidth(documentGrid));
-            Assert.AreEqual(0, GetReplicateGridPropertyWidth(documentGrid, true));
-            Assert.AreEqual(0, GetMainGridPropertyColumnsWidth(documentGrid, true));
+            mainGridFrozenColumns = GetMainGridFrozenColumns(documentGrid);
+            Assert.AreEqual(mainGridFrozenColumns.Count, 0);
+            Assert.IsFalse(GetReplicateGridPropertyColumn(documentGrid).Frozen);
 
-            // Freeze all eligible columns and verify they remain visible after scrolling.
+            // Freeze all eligible columns and verify alignment
             RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
             RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
-            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[6].PerformClick());
-            RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = GetReplicateGridPropertyWidth(documentGrid));
-            Assert.AreEqual(GetReplicateGridPropertyWidth(documentGrid), GetReplicateGridPropertyWidth(documentGrid, true));
-            Assert.AreEqual(GetMainGridPropertyColumnsWidth(documentGrid), GetMainGridPropertyColumnsWidth(documentGrid, true));
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[7].PerformClick());
+            mainGridFrozenColumns = GetMainGridFrozenColumns(documentGrid);
+            Assert.AreEqual(mainGridFrozenColumns.Count, 6);
+            Assert.IsTrue(GetReplicateGridPropertyColumn(documentGrid).Frozen);
 
 
             // Verify link cell can be clicked and updates replicate selection
@@ -146,21 +147,24 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(replicateGridPropertyColumnWidth, mainGridPropertyColumnsWidth);
         }
 
-        private Dictionary<string, int> GetReplicateGridColumnWidths(DocumentGridForm documentGrid, bool onlyVisibleWidth = false)
+        private Dictionary<string, int> GetReplicateGridColumnWidths(DocumentGridForm documentGrid)
         {
             var replicateGridView = documentGrid.DataboundGridControl.ReplicatePivotDataGridView;
+            var lastVisibleColumn = replicateGridView.Columns.Cast<DataGridViewColumn>().Last(col => col.Visible && CalculateColumnVisibleWidth(replicateGridView, col) > 0);
+            var scrollBarWidth = GetVerticalScrollBarWidth(replicateGridView);
 
-            return replicateGridView.Columns
-                .Cast<DataGridViewColumn>()
-                .Where(col => !"colReplicateProperty".Equals(col.Name))
-                .ToDictionary(col => col.Name, col => onlyVisibleWidth ? CalculateColumnVisibleWidth(replicateGridView, col) : col.Width);
+            return replicateGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => !"Property".Equals(col.HeaderText) && col.Visible)
+                .ToDictionary(col => col.HeaderText, col => CalculateColumnVisibleWidth(replicateGridView, col) + (col.Equals(lastVisibleColumn) ? scrollBarWidth : 0));
         }
 
-        private Dictionary<string, int> GetMainGridColumnWidths(DocumentGridForm documentGrid, bool onlyVisibleWidth = false)
+        private Dictionary<string, int> GetMainGridColumnWidths(DocumentGridForm documentGrid)
         {
             var itemProperties = documentGrid.DataboundGridControl.BindingListSource.ItemProperties;
             var boundDataGridView = documentGrid.DataboundGridControl.DataGridView;
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(itemProperties);
+            var lastVisibleColumn = boundDataGridView.Columns.Cast<DataGridViewColumn>().Last(col => col.Visible && CalculateColumnVisibleWidth(boundDataGridView, col) > 0);
+            var scrollBarWidth = GetVerticalScrollBarWidth(boundDataGridView);
 
             return replicatePivotColumns.GetReplicateColumnGroups()
                 .ToDictionary(
@@ -169,20 +173,18 @@ namespace pwiz.SkylineTestFunctional
                         boundDataGridView.Columns
                             .Cast<DataGridViewColumn>()
                             .Where(col => col.Visible && col.DataPropertyName == column.Name)
-                            .Sum(col => onlyVisibleWidth ? CalculateColumnVisibleWidth(boundDataGridView, col) : col.Width)
+                            .Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col) + (col.Equals(lastVisibleColumn) ? scrollBarWidth : 0))
                     )
                 );
         }
 
-        private int GetReplicateGridPropertyWidth(DocumentGridForm documentGrid, bool onlyVisibleWidth = false)
+        private int GetReplicateGridPropertyWidth(DocumentGridForm documentGrid)
         {
             var replicateGridView = documentGrid.DataboundGridControl.ReplicatePivotDataGridView;
-            return onlyVisibleWidth ? 
-                CalculateColumnVisibleWidth(replicateGridView, documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Columns[@"colReplicateProperty"]!) 
-                : documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Columns[@"colReplicateProperty"]!.Width;
+            return CalculateColumnVisibleWidth(replicateGridView, GetReplicateGridPropertyColumn(documentGrid));
         }
 
-        private int GetMainGridPropertyColumnsWidth(DocumentGridForm documentGrid, bool onlyVisibleWidth = false)
+        private int GetMainGridPropertyColumnsWidth(DocumentGridForm documentGrid)
         {
             var itemProperties = documentGrid.DataboundGridControl.BindingListSource.ItemProperties;
             var boundDataGridView = documentGrid.DataboundGridControl.DataGridView;
@@ -191,10 +193,33 @@ namespace pwiz.SkylineTestFunctional
                 .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
             return boundDataGridView.Columns.Cast<DataGridViewColumn>()
                 .Where(col => !replicateColumnNames.Contains(col.DataPropertyName))
-                .Sum(col => onlyVisibleWidth ? CalculateColumnVisibleWidth(boundDataGridView, col) : col.Width);
+                .Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
 
         }
-        
+
+        private DataGridViewColumn GetReplicateGridPropertyColumn(DocumentGridForm documentGrid)
+        {
+            return documentGrid.DataboundGridControl.ReplicatePivotDataGridView.Columns[@"colReplicateProperty"];
+        }
+
+        private List<DataGridViewColumn> GetMainGridFrozenColumns(DocumentGridForm documentGrid)
+        {
+            return documentGrid.DataboundGridControl.DataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => col.Frozen).ToList();
+        }
+
+        private int GetVerticalScrollBarWidth(DataGridView dataGridView)
+        {
+            var scrollBarWidth = 0;
+            var vScrollBar = dataGridView.Controls.OfType<VScrollBar>().FirstOrDefault();
+            if (vScrollBar is { Visible: true, Enabled: true })
+            {
+                scrollBarWidth = vScrollBar.Width;
+            }
+
+            return scrollBarWidth;
+        }
+
         private void ResizeGridColumns(DataGridView dataGridView)
         {
             var random = new Random();

@@ -1137,6 +1137,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     dataGridViewColumn = new DataGridViewTextBoxColumn
                     {
                         HeaderText = group.Key.ToString(),
+                        Name = group.Key.ToString(),
                         SortMode = DataGridViewColumnSortMode.NotSortable
                     };
                     replicatePivotDataGridView.Columns.Add(dataGridViewColumn);
