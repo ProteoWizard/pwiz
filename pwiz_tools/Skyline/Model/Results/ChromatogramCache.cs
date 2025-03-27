@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
@@ -1513,8 +1514,15 @@ namespace pwiz.Skyline.Model.Results
                 // Copy the cache, if moving to a new location
                 using (FileSaver fs = new FileSaver(cachePathOpt))
                 {
-                    Kernel32.CopyFileWithProgress(CachePath, fs.SafeName, true, 
-                        progress.CancellationToken, value => progress.ProgressValue = value);
+                    if (progress != null)
+                    {
+                        Kernel32.CopyFileWithProgress(CachePath, fs.SafeName, true,
+                            progress.CancellationToken, value => progress.ProgressValue = value);
+                    }
+                    else
+                    {
+                        File.Copy(CachePath, fs.SafeName, true);
+                    }
                     fs.Commit(ReadStream);
                 }
                 return ChangeCachePath(cachePathOpt, streamManager);
