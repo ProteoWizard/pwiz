@@ -45,8 +45,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         private Panel _dropTargetRemove;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
-        private const bool ROUND_CORNERS = true;
-
         public FilesTreeForm()
         {
             InitializeComponent();
@@ -892,7 +890,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 Size = new Size { Height = 55, Width = 55 },
             };
 
-            if (ROUND_CORNERS)
+            if (FilesTreeSettings.ROUND_CORNERS_ON_FLOATING_DROP_TARGETS)
                 dropTarget.Region = Utils.RegionWithRoundCorners(55, 55);
             else dropTarget.BorderStyle = BorderStyle.FixedSingle;
 
@@ -942,7 +940,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             return Region.FromHrgn(Gdi32.CreateRoundRectRgn(0, 0, width, height, 20, 20));
         }
+    }
 
+    internal class FilesTreeSettings
+    {
+        internal const bool ROUND_CORNERS_ON_FLOATING_DROP_TARGETS = false;
+        internal const bool MONITOR_FILES_SYNCHRONOUSLY = true;
     }
 
     // Used as a key for passing drag-and-drop data between event handlers

@@ -37,6 +37,7 @@ using Peptide = pwiz.Skyline.Model.Peptide;
 // TODO: add an Audit Log scenario
 // TODO: drag-and-drop disjoint set of nodes
 // TODO: non-draggable nodes cannot be dragged
+// TODO: use some non-local file paths in SrmSettings
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
 {

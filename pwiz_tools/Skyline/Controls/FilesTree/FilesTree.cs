@@ -57,7 +57,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.CacheFile);
             ImageList.Images.Add(Resources.ViewFile);
 
-            _fsWorkQueue.RunAsync(ParallelEx.GetThreadCount(), @"FilesTree file system work queue");
+            var threadCount = FilesTreeSettings.MONITOR_FILES_SYNCHRONOUSLY ? 0 : ParallelEx.GetThreadCount();
+
+            _fsWorkQueue.RunAsync(threadCount, @"FilesTree file system work queue");
         }
 
         [Browsable(false)]
@@ -128,6 +130,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             DoubleBuffered = true;
 
             SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+
+            if (!IsHandleCreated)
+                CreateHandle();
 
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
         }
@@ -327,7 +332,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             // queue tasks to initialize the local file for a node
             foreach (var node in localFileInitList)
             {
-                InitializeLocalFile(node);
+                QueueInitLocalFile(node);
             }
 
             // finished merging latest data model for these nodes. Now, recursively update any nodes whose model has children
@@ -346,18 +351,18 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void InitializeAllLocalFiles(FilesTreeNode node)
         {
-            InitializeLocalFile(node);
+            QueueInitLocalFile(node);
 
             foreach (TreeNode child in node.Nodes)
             {
-                InitializeLocalFile((FilesTreeNode)child);
+                InitializeAllLocalFiles((FilesTreeNode)child);
             }
         }
 
         // Initialize this model's local file path in the background
         // to avoid blocking the UI thread. Finding the file could be
         // slow if the file is on a network drive / etc.
-        private void InitializeLocalFile(FilesTreeNode node)
+        private void QueueInitLocalFile(FilesTreeNode node)
         {
             _fsWorkQueue.Add(() =>
             {
@@ -575,7 +580,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             if (Model.IsBackedByFile && ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET))
             {
-                LocalFilePath = LookForFileInPotentialLocations(DocumentPath, FileName);
+                LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, DocumentPath);
+
                 FileState = LocalFilePath != null ? FileState.available : FileState.missing;
             }
         }
@@ -593,7 +599,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (typeof(RootFileNode) == Model.GetType())
                 ImageIndex = FileState == FileState.missing ? (int)ImageMissing : (int)ImageAvailable;
             else
-                ImageIndex = IsAnyChildFileMissing(this) ? (int)ImageMissing : (int)ImageAvailable;
+                ImageIndex = IsAnyNodeMissingLocalFile(this) ? (int)ImageMissing : (int)ImageAvailable;
         }
 
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
@@ -668,26 +674,26 @@ namespace pwiz.Skyline.Controls.FilesTree
         /// the given path but those paths may be set on others machines. If not available locally, use
         /// <see cref="PathEx.FindExistingRelativeFile"/> to search for the file locally.
         ///
-        /// <param name="relativeFilePath">Usually the SrmDocument path.</param>
-        /// <param name="fileName"></param>
-        ///
         /// TODO: is this the same way Skyline finds replicate sample files? Ex: Chromatogram.GetExistingDataFilePath
-        internal static string LookForFileInPotentialLocations(string relativeFilePath, string fileName)
+        internal static string LookForFileInPotentialLocations(string filePath, string fileName, string documentPath)
         {
-            if (File.Exists(fileName) || Directory.Exists(fileName))
-                return fileName;
-            else
-                return PathEx.FindExistingRelativeFile(relativeFilePath, fileName);
+            string localPath;
+
+            if (File.Exists(filePath) || Directory.Exists(filePath))
+                localPath = filePath;
+            else localPath = PathEx.FindExistingRelativeFile(documentPath, fileName);
+
+            return localPath;
         }
 
-        internal static bool IsAnyChildFileMissing(FilesTreeNode node)
+        internal static bool IsAnyNodeMissingLocalFile(FilesTreeNode node)
         {
             if (node.Model.IsBackedByFile && node.FileState == FileState.missing)
                 return true;
 
             foreach (FilesTreeNode child in node.Nodes)
             {
-                if (IsAnyChildFileMissing(child))
+                if (IsAnyNodeMissingLocalFile(child))
                     return true;
             }
 
