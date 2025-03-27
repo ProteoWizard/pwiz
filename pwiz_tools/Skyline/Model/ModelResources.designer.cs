@@ -243,6 +243,62 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Executing peptdeep.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to build library by executing the peptdeep cmd-flow command..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_" +
+                        "the_peptdeep_cmd_flow_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing spectral library.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_Importing_spectral_library {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_Importing_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to generate settings.yaml file by executing the peptdeep export-settings command..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_" +
+                        "file_by_executing_the_peptdeep_export_settings_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing settings file.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing spectral library.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_TransformPeptdeepOutput_Importing_spectral_library {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_TransformPeptdeepOutput_Importing_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
         public static string AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__ {
@@ -974,6 +1030,24 @@ namespace pwiz.Skyline.Model {
             get {
                 return ResourceManager.GetString("LibKeyModificationMatcher_EnumerateSequenceInfos_The_number___0___is_not_in_the_c" +
                         "orrect_format_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing prediction input file.
+        /// </summary>
+        public static string LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file {
+            get {
+                return ResourceManager.GetString("LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing training input file.
+        /// </summary>
+        public static string LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file {
+            get {
+                return ResourceManager.GetString("LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file", resourceCulture);
             }
         }
         
