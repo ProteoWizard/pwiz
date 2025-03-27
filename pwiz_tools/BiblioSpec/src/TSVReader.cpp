@@ -313,7 +313,6 @@ namespace {
         public:
         static constexpr const TSVColumnTranslator requiredColumns[] =
         {
-            {"IonMobility", -1, TSVLine::insertIonMobility},
             {"StrippedPeptide", -1, TSVLine::insertStrippedSequence},
             {"FragmentCharge", -1, TSVLine::insertFragmentCharge},
             {"FragmentLossType", -1, TSVLine::insertFragmentLossType},
@@ -331,6 +330,9 @@ namespace {
         static constexpr const TSVColumnTranslator optionalColumns[] =
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
+            {"IonMobility", -1, TSVLine::insertIonMobility},
+            {"IonMobilityUnits", -1, TSVLine::insertIonMobilityUnits},
+            {"CollisionalCrossSection", -1, TSVLine::insertCollisionalCrossSection},
             {"CollisionEnergy", -1, TSVLine::insertCE},
             {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
@@ -442,7 +444,8 @@ namespace {
                 if (line.ionMobility > 0)
                 {
                     currentPsm->ionMobility = line.ionMobility;
-                    currentPsm->ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
+                    currentPsm->ionMobilityType = line.ionMobilityUnits;
+                    currentPsm->ccs = line.collisionalCrossSectionSqA;
                 }
             }
 
@@ -1205,6 +1208,7 @@ bool TSVReader::getSpectrum(PSM* psm, SPEC_ID_TYPE findBy, SpecData& returnData,
     returnData.startTime = ((TSVPSM*)psm)->leftWidth;
     returnData.endTime = ((TSVPSM*)psm)->rightWidth;
     returnData.mz = ((TSVPSM*)psm)->mz;
+    returnData.ccs = ((TSVPSM*)psm)->ccs;
     returnData.numPeaks = ((TSVPSM*)psm)->mzs.size();
 
     if (getPeaks) {

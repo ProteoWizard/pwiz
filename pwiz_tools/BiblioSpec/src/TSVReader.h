@@ -68,12 +68,14 @@ public:
     double rightWidth;
     double ce;
     double ionMobility;
+    BiblioSpec::IONMOBILITY_TYPE ionMobilityUnits;
+    double collisionalCrossSectionSqA;
     std::string peakArea;
     std::string fragmentAnnotation;
     int fragmentSeriesNumber;
     double score;
 
-    TSVLine() : rt(0), charge(0), mz(0), decoy(false), leftWidth(0), rightWidth(0), ce(0), ionMobility(0), score(0) {}
+    TSVLine() : rt(0), charge(0), mz(0), decoy(false), leftWidth(0), rightWidth(0), ce(0), ionMobility(0), ionMobilityUnits(BiblioSpec::IONMOBILITY_NONE), collisionalCrossSectionSqA(0), score(0) {}
 
     static void insertFilename(TSVLine& line, const std::string& value) {
         line.filename = value;
@@ -107,6 +109,9 @@ public:
     }
     static void insertCharge(TSVLine& line, const std::string& value) {
         line.charge = value.empty() ? 0 : lexical_cast<int>(value);
+    }
+    static void insertIonMobilityUnits(TSVLine& line, const std::string& value) {
+        line.ionMobilityUnits = (BiblioSpec::IONMOBILITY_TYPE) (value.empty() ? 0 : lexical_cast<int>(value));
     }
     static void insertMz(TSVLine& line, const std::string& value) {
         line.mz = value.empty() ? 0 : lexical_cast<double>(value);
@@ -143,6 +148,9 @@ public:
     }
     static void insertIonMobility(TSVLine& line, const std::string& value) {
         line.ionMobility = lexical_cast<double>(value);
+    }
+    static void insertCollisionalCrossSection(TSVLine& line, const std::string& value) {
+        line.collisionalCrossSectionSqA = lexical_cast<double>(value);
     }
     static void ignore(TSVLine& line, const std::string& value) {
     }

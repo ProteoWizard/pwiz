@@ -481,6 +481,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string LIBRARY_COMMAND = @"library";
         private const string MODIFIED_PEPTIDE = "ModifiedPeptide";
         private const string NORMALIZED_RT = "RT";
+        private const string ION_MOBILITY = "IonMobility";
+        private const string ION_MOBILITY_UNITS = "IonMobilityUnits";
+        private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
+        private const string PREC_CHARGE = "PrecursorCharge";
+        private const string PREC_MZ = "PrecursorMz";
         private const string MODS = @"mods";
         private const string OUTPUT = @"output";
         private const string OUTPUT_MODELS = @"output_models";
@@ -749,6 +754,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     newColName = colName;
                 }
                 newColNames.Add(newColName);
+                if (newColName == ION_MOBILITY)
+                {
+                    newColName = ION_MOBILITY_UNITS;
+                    newColNames.Add(newColName);
+                    newColName = COLLISIONAL_CROSS_SECTION;
+                    newColNames.Add(newColName);
+                }
             }
             var header = string.Join(TAB, newColNames);
             result.Add(header);
@@ -757,6 +769,20 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             while (null != reader.ReadLine())
             {
                 var line = new List<string>();
+                double charge = 0;
+                double mz = 0;
+                foreach (var colName in colNames)
+                {
+                    if (colName != PREC_CHARGE && colName != PREC_MZ)
+                        continue;
+    
+                    var cell = reader.GetFieldByName(colName);
+                    if (colName == PREC_CHARGE)
+                        charge = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+                    if (colName == PREC_MZ)
+                        mz = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+                }
+
                 foreach (var colName in colNames)
                 {
                     var cell = reader.GetFieldByName(colName);
@@ -771,6 +797,16 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     {
                         double transformedCell = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) * 100;
                         line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
+                    }
+                    else if (colName == ION_MOBILITY)
+                    {
+                        line.Add(cell);
+                        line.Add(@"2"); // Ion Mobility Units
+                        double ccs =
+                            double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) *
+                            1080 * charge / Math.Sqrt(28*(mz * charge)/(28+(mz*charge)));
+                        line.Add(ccs.ToString(CultureInfo.InvariantCulture));
+
                     }
                     else
                     {
