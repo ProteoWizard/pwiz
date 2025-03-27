@@ -500,8 +500,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string TAB = "\t";
         private const string TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME = @"predict_transformed.speclib.tsv";
         private const string UNDERSCORE = TextUtil.UNDERSCORE;
-        private const double CCS_IM_COEFF = 1059.62245;
-        private const double N2_MASS = 28.0;
+        private const double CCS_IM_COEFF = 1059.62245;  // https://github.com/MannLabs/alphabase/blob/main/alphabase/constants/const_files/common_constants.yaml
+        private const double N2_MASS = 28.0;  // amu of N2 carrier gas
 
         public string AmbiguousMatchesMessage
         {
@@ -803,7 +803,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     else if (colName == ION_MOBILITY)
                     {
                         line.Add(cell);
-                        line.Add(@"2"); // Ion Mobility Units
+                        line.Add(@"2"); // These are the IonMobilityUnits column, 2 => 1/K0
                         double ccs =
                             double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) *
                             CCS_IM_COEFF * charge / Math.Sqrt(N2_MASS*(mz * charge)/(N2_MASS+(mz*charge)));
