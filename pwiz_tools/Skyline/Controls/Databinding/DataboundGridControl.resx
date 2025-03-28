@@ -340,7 +340,7 @@
     <value>replicatePivotDataGridView</value>
   </data>
   <data name="&gt;&gt;replicatePivotDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline-daily, Version=24.1.1.433, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.DataGridViewEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;replicatePivotDataGridView.Parent" xml:space="preserve">
     <value>dataGridSplitContainer.Panel1</value>
@@ -379,7 +379,7 @@
     <value>boundDataGridView</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline-daily, Version=24.1.1.433, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Databinding.BoundDataGridViewEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;boundDataGridView.Parent" xml:space="preserve">
     <value>dataGridSplitContainer.Panel2</value>

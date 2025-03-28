@@ -1802,4 +1802,13 @@
   <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
     <value>スコアタイプ</value>
   </data>
+  <data name="TransitionGroupDocNode_SpectrumFilter" xml:space="preserve">
+    <value>スペクトルフィルタ</value>
+  </data>
+  <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
+    <value>スペクトルフィルタ</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
+    <value>スペクトルフィルタ</value>
+  </data>
 </root>
