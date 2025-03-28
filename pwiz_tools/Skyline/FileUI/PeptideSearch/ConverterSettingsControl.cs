@@ -335,7 +335,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         public DiaConverter GetDiaConverter()
         {
-            return new DiaConverter(ImportPeptideSearch);
+            return new DiaConverter(ImportPeptideSearch, _fullScanSettingsControlGetter().FullScan.SpectrumFilter);
         }
 
         public HardklorDdaConverter GetHardklorConverter()

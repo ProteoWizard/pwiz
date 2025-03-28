@@ -4142,7 +4142,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated value unavailable when missing data could comparisons between replicates..
+        ///   Looks up a localized string similar to Calculated value unavailable when missing data could impact comparisons between replicates..
         /// </summary>
         public static string Strict {
             get {
