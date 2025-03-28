@@ -86,7 +86,10 @@ SpectrumList_mzXMLImpl::SpectrumList_mzXMLImpl(shared_ptr<istream> is, const MSD
     }
 
     if (!gotIndex)
+    {
+        is_->clear();
         createIndex();
+    }
 
     scanMsLevelCache_.resize(index_.size());
 
@@ -200,7 +203,7 @@ struct HandlerPrecursor : public SAXParser::Handler
                 scan->set(MS_inverse_reduced_ion_mobility, invK0, MS_Vs_cm_2);
 
             if (!collisionalCrossSection.empty())
-                scan->userParams.emplace_back("CCS", collisionalCrossSection);
+                precursor->selectedIons.back().set(MS_collisional_cross_sectional_area, collisionalCrossSection, UO_square_angstrom);
 
             return Status::Ok;
         }
@@ -824,28 +827,36 @@ bool SpectrumList_mzXMLImpl::readIndex()
     if (indexIndexOffset == string::npos)
         return false; // no index present 
 
-    is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), std::ios::end);
-    if (!*is_)
-        throw index_not_found("[SpectrumList_mzXML::readIndex()] Error seeking to <indexOffset>."); 
-    
-    // read <indexOffset>
+    try
+    {
+        is_->seekg(-bufferSize + static_cast<int>(indexIndexOffset), std::ios::end);
+        if (!*is_)
+            throw index_not_found("[SpectrumList_mzXML::readIndex()] Error seeking to <indexOffset>."); 
 
-    stream_offset indexOffset = 0;
-    HandlerIndexOffset handlerIndexOffset(indexOffset);
-    SAXParser::parse(*is_, handlerIndexOffset);
-    if (indexOffset == 0)
-        throw index_not_found("[SpectrumList_mzXML::readIndex()] Error parsing <indexOffset>."); 
+        // read <indexOffset>
 
-    // read <index>
+        stream_offset indexOffset = 0;
+        HandlerIndexOffset handlerIndexOffset(indexOffset);
+        SAXParser::parse(*is_, handlerIndexOffset);
+        if (indexOffset == 0)
+            throw index_not_found("[SpectrumList_mzXML::readIndex()] Error parsing <indexOffset>."); 
 
-    is_->seekg(offset_to_position(indexOffset));
-    if (!*is_)
-        throw index_not_found("[SpectrumList_mzXML::readIndex()] Error seeking to <index>."); 
+        // read <index>
 
-    HandlerIndex handlerIndex(index_, msd_);
-    SAXParser::parse(*is_, handlerIndex);
-    if (index_.empty())
-        throw index_not_found("[SpectrumList_mzXML::readIndex()] <index> is empty.");
+        is_->seekg(offset_to_position(indexOffset));
+        if (!*is_)
+            throw index_not_found("[SpectrumList_mzXML::readIndex()] Error seeking to <index>."); 
+
+        HandlerIndex handlerIndex(index_, msd_);
+        SAXParser::parse(*is_, handlerIndex);
+        if (index_.empty())
+            throw index_not_found("[SpectrumList_mzXML::readIndex()] <index> is empty.");
+    }
+    catch (exception& e)
+    {
+        cerr << e.what() << endl; // TODO: log
+        return false;
+    }
 
     return true;
 }
