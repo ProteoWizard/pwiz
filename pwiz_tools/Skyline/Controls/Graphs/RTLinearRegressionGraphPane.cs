@@ -23,14 +23,12 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
-using NHibernate.Mapping;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -38,6 +36,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 using Array = System.Array;
+using RetentionScoreCalculatorSpec = pwiz.Skyline.Model.DocSettings.RetentionScoreCalculatorSpec;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -61,7 +60,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private NodeTip _tip;
         private int _progressValue = -1;
         private PaneProgressBar _progressBar;
-        private Receiver<RegressionSettings, GraphData> _graphDataReceiver;
+        private Receiver<RegressionSettings, RtRegressionResults> _graphDataReceiver;
 
         public RTLinearRegressionGraphPane(GraphSummary graphSummary, bool runToRun)
             : base(graphSummary)
@@ -334,16 +333,44 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
+        private bool _inUpdate;
         public override void UpdateGraph(bool selectionChanged)
+        {
+            if (_inUpdate)
+            {
+                return;
+            }
+            try
+            {
+                _inUpdate = true;
+                UpdateNow();
+            }
+            finally
+            {
+                _inUpdate = false;
+            }
+        }
+
+        private void UpdateNow() 
         {
             GraphObjList.Clear();
             CurveList.Clear();
             var regressionSettings = GetRegressionSettings();
-            if (!_graphDataReceiver.TryGetProduct(regressionSettings, out _data))
+            if (!_graphDataReceiver.TryGetProduct(regressionSettings, out var results))
             {
                 return;
             }
-            
+
+            if (UpdateInitializedCalculators(results.InitializedCalculators))
+            {
+                return;
+            }
+
+            _data = results.GraphData;
+            if (_data == null)
+            {
+                return;
+            }
             GraphHelper.FormatGraphPane(this);
 
             var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
@@ -404,7 +431,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         ? GraphsResources.GraphData_GraphResiduals_Time_from_Prediction
                         : Resources.GraphData_GraphResiduals_Time_from_Regression;
                 }
-
             }
             AxisChange();
             GraphSummary.GraphControl.Invalidate();
@@ -412,6 +438,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool _allowDisplayTip;
 
+        private bool UpdateInitializedCalculators(IEnumerable<InitializedRetentionScoreCalculator> calcs)
+        {
+            bool anyChanges = false;
+            var settingsList = Settings.Default.RTScoreCalculatorList;
+            foreach (var calc in calcs)
+            {
+                if (calc.Initialized != null && settingsList.Contains(calc.Original))
+                {
+                    settingsList.SetValue(calc.Initialized);
+                    anyChanges = true;
+                }
+            }
+
+            return anyChanges;
+        }
         public bool IsCalculating
         {
             get
@@ -554,8 +595,6 @@ namespace pwiz.Skyline.Controls.Graphs
             public RetentionTimeRegression _regressionRefined;
             public RetentionTimeStatistics _statisticsRefined;
 
-            private readonly string _calculatorName;
-
             private readonly RetentionScoreCalculatorSpec _calculator;
             private bool _refine;
 
@@ -630,7 +669,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     pointInfos.Add(new PointInfo(identityPath, nodePeptide.ModifiedTarget, rtOrig, rtTarget));
                 }
-                _calculatorName = Settings.Default.RTCalculatorName;
                 var targetTimes = pointInfos.Where(pt => pt.Y.HasValue)
                     .Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y.Value)).ToList();
 
@@ -650,10 +688,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    if (RegressionSettings.CalculatorName == null || null == RegressionSettings.Calculators.FirstOrDefault())
+                    var usableCalculators = RegressionSettings.Calculators.Where(calc => calc.IsUsable).ToList();
+                    if (RegressionSettings.CalculatorName == null)
                     {
-                        var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL,
-                            RegressionSettings.Calculators, targetTimes, _scoreCache, true,
+                        var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL, usableCalculators, targetTimes, _scoreCache, true,
                             RegressionSettings.RegressionMethod, token);
                         
                         _calculator = summary.Best.Calculator;
@@ -663,17 +701,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     else
                     {
                         // Initialize the one calculator
-                        var calc = RegressionSettings.Calculators.FirstOrDefault();
-                        _regressionAll = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
-                            calc,
-                            targetTimes,
-                            _scoreCache,
-                            true,
-                            RegressionSettings.RegressionMethod,
-                            out _statisticsAll,
-                            out _,
-                            token);
-
+                        var calc = usableCalculators.FirstOrDefault();
+                        if (calc != null)
+                        {
+                            _regressionAll = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
+                                calc,
+                                targetTimes,
+                                _scoreCache,
+                                true,
+                                RegressionSettings.RegressionMethod,
+                                out _statisticsAll,
+                                out _,
+                                token);
+                        }
                         token.ThrowIfCancellationRequested();
                         _calculator = calc;
                     }
@@ -1214,13 +1254,94 @@ namespace pwiz.Skyline.Controls.Graphs
             public double? Y { get; }
         }
 
-        private static Producer<RegressionSettings, GraphData> _producer = new DataProducer();
-        private class DataProducer : Producer<RegressionSettings, GraphData>
+        private class RtRegressionResults : Immutable
         {
-            public override GraphData ProduceResult(ProductionMonitor productionMonitor, RegressionSettings parameter, IDictionary<WorkOrder, object> inputs)
+            public RtRegressionResults(RegressionSettings regressionSettings)
             {
-                return new GraphData(parameter, productionMonitor);
+                RegressionSettings = regressionSettings;
             }
+            public RegressionSettings RegressionSettings { get; private set; }
+            public ImmutableList<InitializedRetentionScoreCalculator> InitializedCalculators { get; private set; }
+
+            public RtRegressionResults ChangeInitializedCalculators(IEnumerable<InitializedRetentionScoreCalculator> calcs)
+            {
+                return ChangeProp(ImClone(this), im => im.InitializedCalculators = calcs.ToImmutable());
+            }
+            public GraphData GraphData { get; private set; }
+
+            public RtRegressionResults ChangeGraphData(GraphData graphData)
+            {
+                return ChangeProp(ImClone(this), im => im.GraphData = graphData);
+            }
+        }
+
+        private static Producer<RegressionSettings, RtRegressionResults> _producer = new DataProducer();
+        private class DataProducer : Producer<RegressionSettings, RtRegressionResults>
+        {
+            public override RtRegressionResults ProduceResult(ProductionMonitor productionMonitor, RegressionSettings parameter, IDictionary<WorkOrder, object> inputs)
+            {
+                var results = new RtRegressionResults(parameter)
+                    .ChangeInitializedCalculators(inputs.Values.OfType<InitializedRetentionScoreCalculator>());
+                if (results.InitializedCalculators.Any(calc => calc.Initialized != null))
+                {
+                    return results;
+                }
+
+                return results.ChangeGraphData(new GraphData(parameter, productionMonitor));
+            }
+
+            public override IEnumerable<WorkOrder> GetInputs(RegressionSettings parameter)
+            {
+                foreach (var calculator in parameter.Calculators.Where(calc => !calc.IsUsable))
+                {
+                    yield return _rtScoreInitializer.MakeWorkOrder(calculator);
+                }
+            }
+        }
+
+        private static Producer<RetentionScoreCalculatorSpec, InitializedRetentionScoreCalculator> _rtScoreInitializer =
+            new RtScoreInitializer();
+
+        private class RtScoreInitializer : Producer<RetentionScoreCalculatorSpec, InitializedRetentionScoreCalculator>
+        {
+            public override InitializedRetentionScoreCalculator ProduceResult(ProductionMonitor productionMonitor,
+                RetentionScoreCalculatorSpec parameter, IDictionary<WorkOrder, object> inputs)
+            {
+                if (parameter.IsUsable)
+                {
+                    return new InitializedRetentionScoreCalculator(parameter, parameter);
+                }
+
+                try
+                {
+                    return new InitializedRetentionScoreCalculator(parameter, parameter.Initialize(new SilentProgressMonitor(productionMonitor.CancellationToken)));
+                }
+                catch (Exception exception)
+                {
+                    return new InitializedRetentionScoreCalculator(parameter, exception);
+                }
+            }
+        }
+
+        private class InitializedRetentionScoreCalculator : Immutable
+        {
+            public InitializedRetentionScoreCalculator(RetentionScoreCalculatorSpec original,
+                RetentionScoreCalculatorSpec initialized)
+            {
+                Original = original;
+                Initialized = initialized;
+            }
+
+            public InitializedRetentionScoreCalculator(RetentionScoreCalculatorSpec original, Exception exception)
+            {
+                Original = original;
+                Exception = exception;
+            }
+
+            public RetentionScoreCalculatorSpec Original { get; private set; }
+            public RetentionScoreCalculatorSpec Initialized { get; private set; }
+
+            public Exception Exception { get; private set; }
         }
     }
 }
