@@ -183,8 +183,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (isFeatureDetection)
                 {
                     this.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection;
-                    label14.Text =
-                        PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
                     lblDDASearch.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection; // Was "DDA Search"
                     // Set some defaults
                     SearchSettingsControl.HardklorSignalToNoise = Settings.Default.FeatureFindingSignalToNoise;
@@ -198,6 +196,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     Height = BuildPepSearchLibControl.Bottom;
                 }
+            }
+
+            if (isFeatureDetection || isRunPeptideSearch)
+            {
+                label14.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
             }
         }
 

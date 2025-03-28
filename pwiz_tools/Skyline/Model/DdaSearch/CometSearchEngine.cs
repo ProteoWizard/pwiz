@@ -101,11 +101,11 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_obo", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_verbose_output", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_length_range", "1 63"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_tolerance", 3.0, 0));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_units", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_tolerance", 3.0, 0));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_units", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_NL_ions", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_charge", "0 0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_tolerance_type", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_tolerance_type", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("print_expect_score", "1"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_peak", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_tolerance", 1.5, 0.0));
@@ -117,10 +117,10 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 0, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("text_file_extension", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("theoretical_fragment_ions", 1, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_A_ions", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", "1", new []{ "0", "1" }));
+            /*AddAdditionalSetting(COMET_SETTINGS, new Setting("use_A_ions", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_B_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_C_ions", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_X_ions", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Y_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Z1_ions", 0, 0, 1));
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod06", "0.0 null 0 4 -1 0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod07", "0.0 null 0 4 -1 0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod08", "0.0 null 0 4 -1 0 0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod09", "0.0 null 0 4 -1 0 0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod09", "0.0 null 0 4 -1 0 0"));*/
             // ReSharper restore LocalizableElement
         }
 
@@ -193,7 +193,21 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
         public override string[] Ms2Analyzers => new [] { @"Default" };
-        public override MzTolerance.Units[] FragmentIonToleranceUnitTypes => new[] { MzTolerance.Units.mz };
+
+        public override MzToleranceUnits[] PrecursorIonToleranceUnitTypes
+        {
+            get
+            {
+                string mzName = (int) AdditionalSettings[@"precursor_tolerance_type"].Value == 0 ? @"Da" : @"m/z";
+                return new[]
+                {
+                    new MzToleranceUnits(mzName, MzTolerance.Units.mz),
+                    new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm)
+                };
+            }
+        }
+
+        public override MzToleranceUnits[] FragmentIonToleranceUnitTypes => new[] { new MzToleranceUnits(@"m/z", MzTolerance.Units.mz) };
         public override string EngineName => @"Comet";
         public override Bitmap SearchEngineLogo => null;
         public override string CutoffScoreName => _cutoffScoreName;
@@ -234,15 +248,28 @@ namespace pwiz.Skyline.Model.DdaSearch
                 SetCometParam(paramsFileText, @"max_variable_mods_in_peptide", _maxVariableMods);
                 foreach (var settingName in COMET_SETTINGS)
                     SetCometParam(paramsFileText, settingName, AdditionalSettings[settingName].ValueToString(CultureInfo.InvariantCulture));
+
+                // ReSharper disable LocalizableElement
+                string[] possibleIonTypes = { "a", "b", "c", "x", "y", "z", "z1" };
+                // ReSharper restore LocalizableElement
+                foreach (var ionType in possibleIonTypes)
+                {
+                    if (_fragmentIons.Contains(ionType))
+                        SetCometParam(paramsFileText, @"use_" + ionType.ToUpperInvariant() + @"_ions", 1);
+                    else
+                        SetCometParam(paramsFileText, @"use_" + ionType.ToUpperInvariant() + @"_ions", 0);
+                }
+
                 paramsFileText.Append(_modParams);
 
                 paramsFileText.Append(enzymeParameterInfo);
                 // 1. Trypsin             1      KR P
-                paramsFileText.AppendFormat(@"1. {0} {1} {2} {3}\r\n",
+                paramsFileText.AppendFormat(@"1. {0} {1} {2} {3}{4}",
                     _enzyme.Name ?? @"unnamed",
                     _enzyme.IsCTerm ? 1 : 0,
                     _enzyme.CleavageC ?? _enzyme.CleavageN,
-                    _enzyme.RestrictC ?? _enzyme.RestrictN);
+                    _enzyme.RestrictC ?? _enzyme.RestrictN,
+                    Environment.NewLine);
 
                 string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, "comet-output");
 
@@ -665,17 +692,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override void SetFragmentIons(string ions)
         {
             _fragmentIons = new SortedSet<string>(ions.Split(','));
-            // ReSharper disable LocalizableElement
-            string[] possibleIonTypes = { "a", "b", "c", "x", "y", "z", "z1" };
-            // ReSharper restore LocalizableElement
-            foreach (var ionType in possibleIonTypes)
-            {
-                if (_fragmentIons.Contains(ionType))
-                    AdditionalSettings[@"use_" + ionType.ToUpperInvariant() + @"_ions"].Value = 1;
-                else
-                    AdditionalSettings[@"use_" + ionType.ToUpperInvariant() + @"_ions"].Value = 0;
-            }
-
         }
 
         public override void SetMs2Analyzer(string ms2Analyzer)
@@ -701,8 +717,16 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
         private string GetCometSearchResultFilepath(MsDataFileUri searchFilepath, string extension = ".pep.xml")
         {
-            return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
-                @"comet." + Path.ChangeExtension(searchFilepath.GetFileName(), extension));
+            if (SpectrumFileNames.Length > 1)
+            {
+                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
+                    @"comet." + Path.ChangeExtension(searchFilepath.GetFileName(), extension));
+            }
+            else
+            {
+                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
+                    Path.ChangeExtension(@"comet", extension));
+            }
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw" };
@@ -718,6 +742,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         public bool IsCanceled => _cancelToken?.IsCancellationRequested ?? false;
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
+            // trim INFO: prefix
+            status = status.ChangeMessage(status.Message.Replace(@"INFO: ", @""));
+
             SearchProgressChanged?.Invoke(this, status);
             return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
         }

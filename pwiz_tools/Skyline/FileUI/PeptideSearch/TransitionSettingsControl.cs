@@ -320,7 +320,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             // Reset control locations, in case this isn't the first call to Initialize.
             foreach (var kvp in _originalLocations)
-                kvp.Key.Location = kvp.Value;
+                kvp.Key.Location = new Point(kvp.Key.Location.X, kvp.Value.Y);
 
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
