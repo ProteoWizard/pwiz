@@ -618,7 +618,7 @@ namespace pwiz.Skyline.Model.Results
             }
             else if (retentionTimes.Length == 0)
             {
-                // Be sure not to remove anything with a higher combined score than
+                // Be sure not to remove anything with as high a combined score as
                 // what happen to look visually like the biggest peaks.
                 double minKeepScore = _listPeakSets.Take(iRemove).Min(peakSet => peakSet.CombinedScore);
 
@@ -626,7 +626,7 @@ namespace pwiz.Skyline.Model.Results
                 // this sorting happened before peaks were extended.
                 _listPeakSets.Sort(ComparePeakLists);
 
-                iRemove = Math.Max(iRemove, _listPeakSets.IndexOf(peakSet => peakSet.CombinedScore == minKeepScore));
+                iRemove = Math.Max(iRemove, _listPeakSets.IndexOf(peakSet => peakSet.CombinedScore == minKeepScore) + 1);
             }
             else
             {
