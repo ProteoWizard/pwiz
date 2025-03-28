@@ -22,7 +22,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
