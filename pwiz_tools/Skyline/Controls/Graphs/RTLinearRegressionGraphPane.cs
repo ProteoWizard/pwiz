@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private GraphData _data;
         private NodeTip _tip;
         private int _progressValue = -1;
-        private PaneProgressBar _progressBar;
+        public PaneProgressBar _progressBar;
         private Receiver<RegressionSettings, RtRegressionResults> _graphDataReceiver;
 
         public RTLinearRegressionGraphPane(GraphSummary graphSummary, bool runToRun)
@@ -583,8 +583,6 @@ namespace pwiz.Skyline.Controls.Graphs
             private ImmutableList<PointInfo> _outlierPoints;
             private ImmutableList<PointInfo> _refinedPoints;
 
-            private readonly RetentionTimeScoreCache _scoreCache;
-
             public readonly RetentionTimeRegression _regressionPredict;
             public readonly IRegressionFunction _conversionPredict;
             public readonly RetentionTimeStatistics _statisticsPredict;
@@ -622,7 +620,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
                     }
                     var identityPath = new IdentityPath(peptideGroupDocNode.PeptideGroup, nodePeptide.Peptide);
-                    ProgressMonitor.CheckCanceled(token);
+                    productionMonitor.CancellationToken.ThrowIfCancellationRequested();
                     switch (RTGraphController.PointsType)
                     {
                         case PointsTypeRT.targets:
@@ -691,7 +689,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var usableCalculators = RegressionSettings.Calculators.Where(calc => calc.IsUsable).ToList();
                     if (RegressionSettings.CalculatorName == null)
                     {
-                        var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL, usableCalculators, targetTimes, _scoreCache, true,
+                        var summary = RetentionTimeRegression.CalcBestRegressionBackground(XmlNamedElement.NAME_INTERNAL, usableCalculators, targetTimes, null, true,
                             RegressionSettings.RegressionMethod, token);
                         
                         _calculator = summary.Best.Calculator;
@@ -707,7 +705,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             _regressionAll = RetentionTimeRegression.CalcSingleRegression(XmlNamedElement.NAME_INTERNAL,
                                 calc,
                                 targetTimes,
-                                _scoreCache,
+                                null,
                                 true,
                                 RegressionSettings.RegressionMethod,
                                 out _statisticsAll,
@@ -723,12 +721,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         pointInfos = pointInfos.Select(pt =>
                             pt.ChangeX(_calculator.ScoreSequence(pt.ModifiedTarget))).ToList();
                     }
-                }
-
-                if (_regressionAll != null)
-                {
-                    _scoreCache = new RetentionTimeScoreCache(new[] { _calculator }, targetTimes, null);
-                    _scoreCache.RecalculateCalcCache(_calculator, token);
                 }
 
                 _regressionPredict = (IsRunToRun || RegressionSettings.RegressionMethod != RegressionMethodRT.linear)  ? null : document.Settings.PeptideSettings.Prediction.RetentionTime;
@@ -857,7 +849,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                          _statisticsAll,
                                                                          _calculator,
                                                                          RegressionSettings.RegressionMethod,
-                                                                         _scoreCache,
+                                                                         null,
                                                                          cancellationToken, 
                                                                          ref statisticsRefined,
                                                                          ref outlierIndexes);

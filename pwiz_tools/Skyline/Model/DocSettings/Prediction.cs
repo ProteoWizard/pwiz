@@ -1065,29 +1065,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator, CancellationToken token)
-        {
-            var calcCache = _cache[calculator.Name];
-            if(calcCache != null)
-            {
-                try
-                {
-                    var newCalcCache = new Dictionary<Target, double>();
-                    foreach (var key in calcCache.Keys)
-                    {
-                        //force recalculation
-                        newCalcCache.Add(key, CalcScore(calculator, key, null));
-                        ProgressMonitor.CheckCanceled(token);
-                    }
-
-                    _cache[calculator.Name] = newCalcCache;
-                }
-                catch (OperationCanceledException)
-                {
-                }
-            }
-        }
-
         public double CalcScore(IRetentionScoreCalculator calculator, Target peptide)
         {
             Dictionary<Target, double> cacheCalc;
@@ -1106,7 +1083,7 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (var pep in peptides)
             {
                 result.Add(CalcScore(calculator, pep, cacheCalc));
-                ProgressMonitor.CheckCanceled(token);
+                token.ThrowIfCancellationRequested();
             }
             return result;
         }

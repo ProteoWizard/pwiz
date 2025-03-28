@@ -21,12 +21,11 @@ using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using pwiz.Skyline.Model;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class PaneProgressBar : IProgressBar
+    public class PaneProgressBar
     {
         readonly LineObj _left = new LineObj()
         {
@@ -120,23 +119,6 @@ namespace pwiz.Skyline.Controls.Graphs
             var graph = GraphControl;
             if (graph != null && !graph.IsDisposed && graph.IsHandleCreated)
                 graph.Invoke((Action) (() => { this.DrawBar(progress); }));
-        }
-
-        bool IProgressBar.IsDisposed()
-        {
-            var graph = GraphControl;
-            return IsDisposed || graph == null || !graph.IsHandleCreated || graph.IsDisposed;
-        }
-
-        void IProgressBar.UpdateProgress(int progress)
-        {
-            this.UpdateProgress(progress);
-        }
-
-        void IProgressBar.UIInvoke(Action act)
-        {
-            var graph = GraphControl;
-            graph.Invoke(act);
         }
     }
 }
