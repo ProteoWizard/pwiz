@@ -35,8 +35,6 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
-using Array = System.Array;
-using RetentionScoreCalculatorSpec = pwiz.Skyline.Model.DocSettings.RetentionScoreCalculatorSpec;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -95,7 +93,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void RTScoreCalculatorList_ListChanged(object sender, EventArgs e)
         {
-            UpdateGraph(false);
+            if (GraphSummary.IsHandleCreated)
+            {
+                GraphSummary.BeginInvoke(new Action(() =>
+                {
+                    UpdateGraph(false);
+                }));
+            }
         }
 
         private void ProductAvailableAction()
@@ -122,7 +126,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 _progressBar = null;
                 _progressValue = -1;
             }
-
         }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
