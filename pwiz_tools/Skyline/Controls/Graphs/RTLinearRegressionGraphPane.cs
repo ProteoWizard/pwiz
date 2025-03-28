@@ -23,10 +23,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Forms;
-using Inference;
+using MathNet.Numerics;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Alerts;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -37,7 +37,6 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -59,10 +58,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private GraphData _data;
         private NodeTip _tip;
-        private CancellationTokenSource _cancellationTokenSource;
-        public IProgressBar _progressBar;
-
-        private bool _pendingUpdate;
+        private int _progressValue = -1;
+        private PaneProgressBar _progressBar;
+        private Receiver<RegressionSettings, GraphData> _graphDataReceiver;
 
         public RTLinearRegressionGraphPane(GraphSummary graphSummary, bool runToRun)
             : base(graphSummary)
@@ -71,15 +69,16 @@ namespace pwiz.Skyline.Controls.Graphs
             RunToRun = runToRun;
             Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
             AllowDisplayTip = true;
-            _cancellationTokenSource = new CancellationTokenSource();
+            _graphDataReceiver = _producer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            _graphDataReceiver.ProgressChange += ProgressChangeAction;
         }
 
         public void Dispose()
         {
-            Cancel(false);
+            _progressBar?.Dispose();
+            _progressBar = null;
             AllowDisplayTip = false;
             Settings.Default.RTScoreCalculatorList.ListChanged -= RTScoreCalculatorList_ListChanged;
-            ProgressMonitor.TerminateProgressBar(_cancellationTokenSource.Token);
         }
 
         public override bool HasToolbar { get { return RunToRun; } }
@@ -96,26 +95,34 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void RTScoreCalculatorList_ListChanged(object sender, EventArgs e)
         {
-            // Avoid updating on every minor change to the list.
-            if (_pendingUpdate)
-                return;
-
-            // Wait for the UI thread to become available again, and then update
-            if (GraphSummary.IsHandleCreated)
-            {
-                GraphSummary.BeginInvoke(new Action(DelayedUpdate));
-                _pendingUpdate = true;
-            }
+            UpdateGraph(false);
         }
 
-        private void DelayedUpdate()
+        private void ProductAvailableAction()
         {
-            // Any change to the calculator list requires a full data update when in auto mode.
-            if (string.IsNullOrEmpty(Settings.Default.RTCalculatorName))
-                Data = null;
+            ProgressChangeAction();
+            UpdateGraph(false);
+        }
 
-            UpdateGraph(true);
-            _pendingUpdate = false;
+        private void ProgressChangeAction()
+        {
+            if (_graphDataReceiver.IsProcessing())
+            {
+                int newProgressValue = _graphDataReceiver.GetProgressValue();
+                if (newProgressValue != _progressValue)
+                {
+                    _progressBar ??= new PaneProgressBar(this);
+                    _progressBar?.UpdateProgress(_graphDataReceiver.GetProgressValue());
+                    _progressValue = newProgressValue;
+                }
+            }
+            else
+            {
+                _progressBar?.Dispose();
+                _progressBar = null;
+                _progressValue = -1;
+            }
+
         }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -162,6 +169,11 @@ namespace pwiz.Skyline.Controls.Graphs
             return false;
         }
 
+        private bool IsResiduals(GraphData graphData)
+        {
+            return RTGraphController.PlotType == PlotTypeRT.residuals &&
+                   null != graphData?.ResidualsRegression?.Conversion;
+        }
         public bool RunToRun { get; private set; }
 
         public void SelectPeptide(IdentityPath peptidePath)
@@ -213,11 +225,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
-            var regressionSettings = new RegressionSettings(document, -1, -1, bestResult, )
-            var parameters = new GraphParameters().ChangeThreshold(threshold).ChangeThresholdPrecision(precision)
-                .ChangeBestReplicate(bestResult).ChangeRegressionMethod(RTGraphController.RegressionMethod);
-            return new GraphData(document, null, parameters, CancellationToken.None).Refine(CancellationToken.None)
-                .Outliers.Select(pt=>(PeptideDocNode) document.FindNode(pt.IdentityPath)).ToArray();
+            var regressionSettings = new RegressionSettings(document, -1, -1, bestResult, threshold, false,
+                RTGraphController.PointsType, RTGraphController.RegressionMethod, Settings.Default.RTCalculatorName,
+                false);
+            var productionMonitor = new ProductionMonitor(CancellationToken.None, _ => { });
+            return new GraphData(regressionSettings, productionMonitor).Outliers
+                .Select(pt => (PeptideDocNode) document.FindNode(pt.IdentityPath)).ToArray();
         }
 
         public RetentionTimeRegression RegressionRefined
@@ -238,17 +251,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private static bool IsValidFor(GraphData data, SrmDocument document)
-        {
-            return data != null && data.IsValidFor(document);
-        }
-
-        public bool IsValidFor(SrmDocument document, int targetIndex, int originalIndex, bool bestResult, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod)
-        {
-            var data = Data;
-            return data != null && data.IsValidFor(document, targetIndex, originalIndex,bestResult, threshold, refine, pointsType, regressionMethod);
-        }
-
         public void Clear()
         {
             Data = null;
@@ -259,17 +261,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void Graph(IdentityPath selectedPeptide)
         {
-            var data = Data;
-            if (data != null)
-                data.Graph(this, selectedPeptide);
-        }
-
-        private GraphData Update(SrmDocument document, int targetIndex, double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, int origIndex, CancellationToken token)
-        {
-            bool bestResults = (ShowReplicate == ReplicateDisplay.best);
-            return new GraphData(document, Data, targetIndex, threshold, null, refine, bestResults, 
-                pointsType, regressionMethod, origIndex, this, token);
-            
+            if (RTGraphController.PlotType == PlotTypeRT.correlation)
+            {
+                GraphCorrelation(selectedPeptide);
+            }
+            else
+            {
+                GraphResiduals(selectedPeptide);
+            }
         }
 
         private static bool IsDataRefined(GraphData data)
@@ -283,17 +282,6 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public bool RegressionRefinedNull => Data.RegressionRefinedNull;
-
-        private GraphData Refine(GraphData currentData, CancellationToken cancellationToken)
-        {
-            GraphData dataNew = currentData != null ? currentData.Refine(cancellationToken) : null;
-
-            // No refinement happened, if data did not change
-            if (ReferenceEquals(dataNew, currentData))
-                return currentData;
-
-            return dataNew;
-        }
 
         public override void Draw(Graphics g)
         {
@@ -311,7 +299,25 @@ namespace pwiz.Skyline.Controls.Graphs
         private PointInfo PeptideIndexFromPoint(PointF point)
         {
             var data = Data;
-            return data != null ? data.PeptideIndexFromPoint(this, point) : null;
+            if (data == null)
+            {
+                return null;
+            }
+
+            bool residuals = IsResiduals(data);
+            foreach (var pointInfo in data.AllPoints)
+            {
+                double? y = residuals ? pointInfo.Residual : pointInfo.Y;
+                if (pointInfo.X.HasValue && y.HasValue)
+                {
+                    if (PointIsOver(point, pointInfo.X.Value, y.Value))
+                    {
+                        return pointInfo;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private const int OVER_THRESHOLD = 4;
@@ -327,189 +333,77 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
-        private void Cancel(bool createNew = true)
-        {
-            if (_cancellationTokenSource == null)
-                return;
-
-            _cancellationTokenSource.Cancel();
-
-            if (createNew)
-                _cancellationTokenSource = new CancellationTokenSource();
-        }
-
         public override void UpdateGraph(bool selectionChanged)
         {
+            GraphObjList.Clear();
+            CurveList.Clear();
+            var regressionSettings = GetRegressionSettings();
+            if (!_graphDataReceiver.TryGetProduct(regressionSettings, out _data))
+            {
+                return;
+            }
+
             GraphHelper.FormatGraphPane(this);
-            SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
-            PeptideDocNode nodeSelected = null;
-            int targetIndex = (ShowReplicate == ReplicateDisplay.single || RunToRun ? GraphSummary.TargetResultsIndex : -1);
-            int originalIndex = RunToRun ? GraphSummary.OriginalResultsIndex : -1;
-            var results = document.Settings.MeasuredResults;
-            bool resultsAvailable = results != null;
-            if (resultsAvailable)
+
+            var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
+            var nodePeptide = nodeTree as PeptideTreeNode;
+            while (nodePeptide == null && nodeTree != null)
             {
-                if (targetIndex == -1)
-                    resultsAvailable = results.IsLoaded;
-                else
-                    resultsAvailable = results.Chromatograms.Count > targetIndex &&
-                                       results.IsChromatogramSetLoaded(targetIndex);
+                nodeTree = nodeTree.Parent as SrmTreeNode;
+                nodePeptide = nodeTree as PeptideTreeNode;
             }
 
-            if (RunToRun && originalIndex < 0)
+            IdentityPath selectedPeptidePath = null;
+            if (nodePeptide != null)
             {
-                resultsAvailable = false;
+                selectedPeptidePath = nodeTree.Path;
             }
 
-            if (!resultsAvailable)
-            {
-                Clear();
-            }
-            else
-            {
-                GraphObjList.Clear();
-                var nodeTree = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
-                var nodePeptide = nodeTree as PeptideTreeNode;
-                while (nodePeptide == null && nodeTree != null)
-                {
-                    nodeTree = nodeTree.Parent as SrmTreeNode;
-                    nodePeptide = nodeTree as PeptideTreeNode;
-                }
-
-                IdentityPath selectedPeptidePath = null;
-                if (nodePeptide != null)
-                {
-                    nodeSelected = nodePeptide.DocNode;
-                    selectedPeptidePath = nodeTree.Path;
-                }
-
-                bool shouldDrawGraph = true;
-
-                double threshold = RTGraphController.OutThreshold;
-                bool refine = Settings.Default.RTRefinePeptides && RTGraphController.CanDoRefinementForRegressionMethod;
-
-                bool bestResult = (ShowReplicate == ReplicateDisplay.best);
-                    
-                if ((RTGraphController.PointsType == PointsTypeRT.standards && !document.GetRetentionTimeStandards().Any()) ||
-                    (RTGraphController.PointsType == PointsTypeRT.decoys &&
-                        !document.PeptideGroups.Any(nodePepGroup => nodePepGroup.Children.Cast<PeptideDocNode>().Any(nodePep => nodePep.IsDecoy))) ||
-                    RTGraphController.PointsType == PointsTypeRT.targets_fdr && targetIndex == -1) // Replicate display is not single and this is not a run to run regression
-                {
-                    RTGraphController.PointsType = PointsTypeRT.targets;
-                }
-
-                PointsTypeRT pointsType = RTGraphController.PointsType;
-                RegressionMethodRT regressionMethod = RTGraphController.RegressionMethod;
-                var currentRegressionSettings = new RegressionSettings(document, targetIndex, originalIndex, bestResult,
-                    threshold, refine, pointsType, regressionMethod, Settings.Default.RTCalculatorName, RunToRun);
-                if (!IsValidFor(document, targetIndex, originalIndex, bestResult, threshold, refine, pointsType,
-                    regressionMethod))
-                {
-                    var requested = new RequestContext();
-                    if (UpdateData(requested))
-                    {
-                        // Calculate and refine regression on background thread
-                        lock (_requestLock)
-                        {
-                            // 
-                            var ctx = _requestContext;
-                            var token = _cancellationTokenSource.Token;
-                            var decoyCount = document.Molecules.Count((m) => m.IsDecoy);
-                            var calcCount = Settings.Default.RTCalculatorName.IsNullOrEmpty()
-                                ? Settings.Default.RTScoreCalculatorList.Count
-                                : 1;
-                            var maxCount = 0;
-                            if (calcCount == 1)
-                                maxCount = document.MoleculeCount + (document.MoleculeCount - decoyCount) * 2;
-                            else
-                                maxCount = document.MoleculeCount + (document.MoleculeCount - decoyCount) * calcCount;
-
-                            _progressBar = ProgressMonitor.RegisterProgressBar(token, maxCount
-                                , 1, new PaneProgressBar(this));
-
-                            ActionUtil.RunAsync(() => UpdateAndRefine(ctx, token),
-                                @"Update and refine regression data");
-                        }
-                        Title.Text = Resources.RTLinearRegressionGraphPane_UpdateGraph_Calculating___;
-                        shouldDrawGraph = false;
-                        Legend.IsVisible = false;
-                    }
-                }
-                else
-                {
-                    lock (_requestLock)
-                    {
-                        _requestContext = null;
-                        ProgressMonitor.TerminateProgressBar(_cancellationTokenSource.Token);
-                        _progressBar = null;
-                        Legend.IsVisible = true;
-                    }
-                }
-
-                if (shouldDrawGraph)
-                    Graph(selectedPeptidePath);
-            }
-
-            lock (_requestLock)
-            {
-                if (_requestContext?.Settings == null)
-                    Title.Text = string.Empty;
-            }
+            Legend.IsVisible = true;
+            Graph(selectedPeptidePath);
 
             AxisChange();
             GraphSummary.GraphControl.Invalidate();
         }
 
-        // Returns true if data should be updated
-        bool UpdateData(RequestContext requested)
-        {
-            lock (_requestLock)
-            {
-                if (_requestContext?.Settings == null)
-                {
-                    _requestContext = requested;
-                    return true;
-                }
-                else
-                {
-                    var valid = _requestContext.Settings.IsValidFor(requested.Settings);
-                    if (!valid)
-                    {
-                        Cancel();
-                        _requestContext = requested;
-                    }
-
-                    return !valid;
-                }
-            }
-        }
-
-        private class RequestContext
-        {
-            public RequestContext(RegressionSettings requested)
-            {
-                Settings = requested;
-            }
-
-            public RegressionSettings Settings { get; set; }
-        }
-
-        private RequestContext _requestContext;
-        private readonly object _requestLock = new object();
         private bool _allowDisplayTip;
 
         public bool IsCalculating
         {
             get
             {
-                lock (_requestLock)
-                {
-                    return _requestContext?.Settings != null;
-                }
+                return _graphDataReceiver.IsProcessing();
             }
         }
 
-        private class RegressionSettings
+        private RegressionSettings GetRegressionSettings()
+        {
+            var targetIndex = ShowReplicate == ReplicateDisplay.single || RunToRun
+                ? GraphSummary.TargetResultsIndex
+                : -1;
+            var originalIndex = RunToRun ? GraphSummary.OriginalResultsIndex : -1;
+            var pointsType = RTGraphController.PointsType;
+            var document = GraphSummary.DocumentUIContainer.DocumentUI;
+            if (pointsType == PointsTypeRT.standards && !document.GetRetentionTimeStandards().Any())
+            {
+                pointsType = PointsTypeRT.targets;
+            }
+            if (pointsType == PointsTypeRT.decoys && !document.Molecules.Any(pep=>pep.IsDecoy))
+            {
+                pointsType = PointsTypeRT.targets;
+            }
+            if (RTGraphController.PointsType == PointsTypeRT.targets_fdr && targetIndex == -1)
+            {
+                pointsType = PointsTypeRT.targets;
+            }
+
+            return new RegressionSettings(document, targetIndex, originalIndex, ShowReplicate == ReplicateDisplay.best,
+                RTGraphController.OutThreshold,
+                Settings.Default.RTRefinePeptides && RTGraphController.CanDoRefinementForRegressionMethod, pointsType,
+                RTGraphController.RegressionMethod, Settings.Default.RTCalculatorName, RunToRun);
+        }
+
+        private class RegressionSettings : Immutable
         {
             public RegressionSettings(SrmDocument document, int targetIndex, int originalIndex, bool bestResult,
                 double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, string calculatorName, bool isRunToRun)
@@ -566,118 +460,33 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            public bool IsValidFor(RegressionSettings other)
-            {
-                return IsValidFor(other.Document, other.TargetIndex, other.OriginalIndex, other.BestResult,
-                    other.Threshold, other.Refine, other.PointsType, other.RegressionMethod, other.CalculatorName, other.IsRunToRun);
-            }
-
-            private bool IsValidFor(SrmDocument document, int targetIndex, int originalIndex, bool bestResult,
-                double threshold, bool refine, PointsTypeRT pointsType, RegressionMethodRT regressionMethod, string calculatorName, bool isRunToRun)
-            {
-                if(!(ReferenceEquals(Document, document) && TargetIndex == targetIndex &&
-                            OriginalIndex == originalIndex && BestResult == bestResult && Threshold == threshold &&
-                            Refine == refine && PointsType == pointsType && RegressionMethod == regressionMethod &&
-                            IsRunToRun == isRunToRun))
-                    return false;
-
-                if (!IsRunToRun)
-                {
-                    if (string.IsNullOrEmpty(calculatorName))
-                        return ArrayUtil.EqualsDeep(Calculators, Settings.Default.RTScoreCalculatorList);
-                    else
-                        return CalculatorName == calculatorName && Equals(Calculators[0],
-                                   Settings.Default.GetCalculatorByName(calculatorName));
-                }
-
-                return true;
-            }
-
             public SrmDocument Document { get; private set; }
             public int TargetIndex { get; private set; }
             public int OriginalIndex { get; private set; }
             public bool BestResult { get; private set; }
             public double Threshold { get; private set; }
+            public int? ThresholdPrecision { get; private set; }
+
+            public RegressionSettings ChangeThresholdPrecision(int? value)
+            {
+                return ChangeProp(ImClone(this), im => im.ThresholdPrecision = value);
+            }
             public bool Refine { get; private set; }
             public PointsTypeRT PointsType { get; private set; }
             public RegressionMethodRT RegressionMethod { get; private set; }
             public string CalculatorName { get; private set; }
+
+            public RegressionSettings ChangeCalculatorName(string value)
+            {
+                return ChangeProp(ImClone(this), im => im.CalculatorName = value);
+            }
             public ImmutableList<RetentionScoreCalculatorSpec> Calculators { get; private set; }
+
+            public RegressionSettings ChangeCalculators(IEnumerable<RetentionScoreCalculatorSpec> value)
+            {
+                return ChangeProp(ImClone(this), im => im.Calculators = value.ToImmutable());
+            }
             public bool IsRunToRun { get; private set; }
-        }
-
-        private void UpdateAndRefine(RequestContext requestContext,
-            CancellationToken cancellationToken)
-        {
-            try
-            {
-                var regressionSettings = requestContext.Settings;
-                var newData = Update(regressionSettings.Document, regressionSettings.TargetIndex,
-                    regressionSettings.Threshold,
-                    regressionSettings.Refine, regressionSettings.PointsType, regressionSettings.RegressionMethod,
-                    regressionSettings.OriginalIndex,
-                    // ReSharper disable once InconsistentlySynchronizedField
-                    cancellationToken);
-
-                if (regressionSettings.Refine && !IsDataRefined(newData))
-                {
-                    var data = newData;
-                    using (var cancellationTokenSource = new DocumentCancellationToken(cancellationToken,
-                        GraphSummary.DocumentUIContainer, doc => !IsValidFor(data, doc)))
-                    {
-                        newData = Refine(newData, cancellationTokenSource.Token);
-                    }
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // Update the graph on the UI thread.
-                lock (_requestLock)
-                {
-                    if (ReferenceEquals(_requestContext, requestContext))
-                    {
-                        Interlocked.CompareExchange(ref _data, newData, Data);
-                    }
-
-                    // Set to null so that the next UpdateGraph call will update graph title accordingly
-                    requestContext.Settings = null;
-                }
-
-                if (GraphSummary.IsHandleCreated)
-                {
-                    try
-                    {
-                        GraphSummary.Invoke(new Action(() =>
-                        {
-                            try
-                            {
-                                if (!cancellationToken.IsCancellationRequested)
-                                    UpdateGraph(false);
-                            }
-                            catch (Exception ex)
-                            {
-                                Program.ReportException(ex);
-                            }
-                        }));
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // Can happen during tests
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception x)
-            {
-                Program.ReportException(x);
-            }
-
-            lock (_requestLock)
-            {
-                requestContext.Settings = null;
-            }
         }
 
         /// <summary>
@@ -691,30 +500,29 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private readonly RetentionTimeScoreCache _scoreCache;
 
-            private readonly RetentionTimeRegression _regressionPredict;
-            private readonly IRegressionFunction _conversionPredict;
-            private readonly RetentionTimeStatistics _statisticsPredict;
+            public readonly RetentionTimeRegression _regressionPredict;
+            public readonly IRegressionFunction _conversionPredict;
+            public readonly RetentionTimeStatistics _statisticsPredict;
 
-            private readonly RetentionTimeRegression _regressionAll;
-            private readonly RetentionTimeStatistics _statisticsAll;
+            public readonly RetentionTimeRegression _regressionAll;
+            public readonly RetentionTimeStatistics _statisticsAll;
 
-            private RetentionTimeRegression _regressionRefined;
-            private RetentionTimeStatistics _statisticsRefined;
+            public RetentionTimeRegression _regressionRefined;
+            public RetentionTimeStatistics _statisticsRefined;
 
             private readonly string _calculatorName;
 
             private readonly RetentionScoreCalculatorSpec _calculator;
             private bool _refine;
 
-            private RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
+            public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
 
-            public GraphData(RegressionSettings regressionSettings, 
-                GraphData dataPrevious,
-                bool refine,
-                CancellationToken token)
+            public GraphData(RegressionSettings regressionSettings, ProductionMonitor productionMonitor)
             {
                 RegressionSettings = regressionSettings;
                 var document = Document;
+                var token = productionMonitor.CancellationToken;
+                bool refine = regressionSettings.Refine;
                 var pointInfos = new List<PointInfo>();
                 var standards = new HashSet<Target>();
                 if (RTGraphController.PointsType == PointsTypeRT.standards)
@@ -837,25 +645,23 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var tryIrtCalc = calc as RCalcIrt;
                             //Only show an error message if the user specifically chooses this calculator.
-                            if (dataPrevious != null && !ReferenceEquals(calc, dataPrevious.Calculator) &&
-                                tryIrtCalc != null)
-                            {
-                                MessageDlg.Show(Program.MainWindow, string.Format(
-                                    GraphsResources.GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_,
-                                    tryIrtCalc.Name, tryIrtCalc.DatabasePath));
-                                return;
-                            }
+                            var todo = "TODO: fix this";
+                            // if (dataPrevious != null && !ReferenceEquals(calc, dataPrevious.Calculator) &&
+                            //     tryIrtCalc != null)
+                            // {
+                            //     MessageDlg.Show(Program.MainWindow, string.Format(
+                            //         GraphsResources.GraphData_GraphData_The_database_for_the_calculator__0__could_not_be_opened__Check_that_the_file__1__was_not_moved_or_deleted_,
+                            //         tryIrtCalc.Name, tryIrtCalc.DatabasePath));
+                            //     return;
+                            // }
                         }
                     }
                 }
 
                 if (_regressionAll != null)
                 {
-                    _scoreCache = new RetentionTimeScoreCache(new[] { _calculator }, targetTimes,
-                                                              dataPrevious != null ? dataPrevious._scoreCache : null);
-
-                    if (dataPrevious != null && !ReferenceEquals(_calculator, dataPrevious._calculator))
-                        _scoreCache.RecalculateCalcCache(_calculator, token);
+                    _scoreCache = new RetentionTimeScoreCache(new[] { _calculator }, targetTimes, null);
+                    _scoreCache.RecalculateCalcCache(_calculator, token);
                 }
 
                 _regressionPredict = (IsRunToRun || RegressionSettings.RegressionMethod != RegressionMethodRT.linear)  ? null : document.Settings.PeptideSettings.Prediction.RetentionTime;
@@ -887,6 +693,94 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 // Only refine, if not already exceeding the threshold
                 _refine = refine && !IsRefined();
+                _points = pointInfos.ToImmutable();
+                if (!refine || IsRefined())
+                {
+                    _refinedPoints = _points;
+                }
+                else
+                {
+
+                }
+            }
+
+            private void Refine(CancellationToken cancellationToken)
+            {
+                var candidatePoints = _refinedPoints.Where(pt => pt.X.HasValue && pt.Y.HasValue).ToList();
+                // Create list of deltas between predicted and measured times
+                // Now that we have added iRT calculators, RecalcRegression
+                // cannot go and mark as outliers peptides at will anymore. It must know which peptides, if any,
+                // are required by the calculator for a regression. With iRT calcs, the standard is required.
+                if (!_calculator.IsUsable)
+                    return;
+
+                HashSet<Target> standardNames;
+                try
+                {
+                    var names = _calculator.GetStandardPeptides(candidatePoints.Select(pep => pep.ModifiedTarget));
+                    standardNames = new HashSet<Target>(names);
+                }
+                catch (CalculatorException)
+                {
+                    standardNames = new HashSet<Target>();
+                }
+
+                //For run to run all peptides are variables. There are no standards.
+                var standardPeptides = IsRunToRun
+                    ? new MeasuredRetentionTime[0]
+                    : candidatePoints.Where(pt => standardNames.Contains(pt.ModifiedTarget)).Select(pt =>
+                        new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y.Value, true, true)).ToArray();
+                var variableTargetPeptides = candidatePoints
+                    .Where(pt => IsRunToRun || !standardNames.Contains(pt.ModifiedTarget)).Select(pt =>
+                        new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y.Value, true)).ToArray();
+                var variableOrigPeptides = candidatePoints.Select(pt=>new MeasuredRetentionTime(pt.ModifiedTarget, pt.X.Value, true)).ToArray();
+
+                //Throws DatabaseNotConnectedException
+                _regressionRefined = (_regressionAll == null
+                                          ? null
+                                          : _regressionAll.FindThreshold(RegressionSettings.Threshold,
+                                                                         RegressionSettings.ThresholdPrecision,
+                                                                         0,
+                                                                         variableTargetPeptides.Length,
+                                                                         standardPeptides,
+                                                                         variableTargetPeptides,
+                                                                         variableOrigPeptides,
+                                                                         _statisticsAll,
+                                                                         _calculator,
+                                                                         RegressionSettings.RegressionMethod,
+                                                                         _scoreCache,
+                                                                         cancellationToken,
+                                                                         ref _statisticsRefined,
+                                                                         ref _outlierIndexes));
+
+                if (ReferenceEquals(_regressionRefined, _regressionAll))
+                    return null;
+
+                // Separate lists into acceptable and outliers
+                var listScoresRefined = new List<double>();
+                var listTimesRefined = new List<double>();
+                var listScoresOutliers = new List<double>();
+                var listTimesOutliers = new List<double>();
+                for (int i = 0; i < _scoresRefined.Length; i++)
+                {
+                    if (_outlierIndexes.Contains(i))
+                    {
+                        listScoresOutliers.Add(_scoresRefined[i]);
+                        listTimesOutliers.Add(_timesRefined[i]);
+                    }
+                    else
+                    {
+                        listScoresRefined.Add(_scoresRefined[i]);
+                        listTimesRefined.Add(_timesRefined[i]);
+                    }
+                }
+                _scoresRefined = listScoresRefined.ToArray();
+                _timesRefined = listTimesRefined.ToArray();
+                _scoresOutliers = listScoresOutliers.ToArray();
+                _timesOutliers = listTimesOutliers.ToArray();
+
+                return this;
+
             }
 
             public SrmDocument Document
@@ -912,36 +806,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 return chromInfos.Max(ci => ci.QValue.Value);
             }
 
-            public bool IsValidFor(SrmDocument document)
-            {
-                return ReferenceEquals(document, Document);
-            }
+            public int TargetIndex { get { return RegressionSettings.TargetIndex; } }
 
-            public bool IsValidFor(RegressionSettings regressionSettings)
-            {
-                if (IsRunToRun)
-                {
-                    return regressionSettings.Change
-                }
-                string calculatorName = Settings.Default.RTCalculatorName;
-                if (string.IsNullOrEmpty(calculatorName) && !IsRunToRun)
-                    calculatorName = _calculator.Name;
-                return IsValidFor(document) &&
-                        _targetIndex == targetIndex &&
-                        _originalIndex == originalIndex &&
-                        _bestResult == bestResult &&
-                        _threshold == threshold &&
-                        _pointsType == pointsType &&
-                        _regressionMethod == regressionMethod && 
-                        (IsRunToRun || (_calculatorName == Settings.Default.RTCalculatorName &&
-                        ReferenceEquals(_calculator, Settings.Default.GetCalculatorByName(calculatorName)))) &&
-                        // Valid if refine is true, and this data requires no further refining
-                        (_refine == refine || (refine && IsRefined()));
-            }
-
-            public int TargetIndex { get { return _targetIndex; } }
-
-            public int OriginalIndex { get { return _originalIndex; } }
+            public int OriginalIndex { get { return RegressionSettings.OriginalIndex; } }
 
             public RetentionTimeRegression RegressionRefined
             {
@@ -962,7 +829,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return true;
                 if (_statisticsAll == null)
                     return false;
-                return RetentionTimeRegression.IsAboveThreshold(_statisticsAll.R, _threshold);
+                return RetentionTimeRegression.IsAboveThreshold(_statisticsAll.R, RegressionSettings.Threshold);
             }
 
             public GraphData Refine(CancellationToken cancellationToken)
@@ -996,8 +863,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 var outlierIndexes = new HashSet<int>();
                 //Throws DatabaseNotConnectedException
                 RetentionTimeStatistics statisticsRefined = null;
-                var regressionRefined = _regressionAll?.FindThreshold(_threshold,
-                                                                         _thresholdPrecision,
+                var regressionRefined = _regressionAll?.FindThreshold(RegressionSettings.Threshold,
+                                                                         RegressionSettings.ThresholdPrecision,
                                                                          0,
                                                                          variableTargetPeptides.Count,
                                                                          Array.Empty<MeasuredRetentionTime>(),
@@ -1005,7 +872,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                          variableOrigPeptides,
                                                                          _statisticsAll,
                                                                          _calculator,
-                                                                         _regressionMethod,
+                                                                         RegressionSettings.RegressionMethod,
                                                                          _scoreCache,
                                                                          cancellationToken, 
                                                                          ref statisticsRefined,
@@ -1044,126 +911,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 get { return _outlierPoints; }
             }
 
-            public void Graph(GraphPane graphPane, IdentityPath selectedPeptide)
-            {
-                graphPane.CurveList.Clear();
-                graphPane.XAxis.Title.Text = XAxisName;
-                graphPane.YAxis.Title.Text = YAxisName;
-                if (RTGraphController.PlotType == PlotTypeRT.correlation)
-                    GraphCorrelation(graphPane, selectedPeptide);
-                else
-                    GraphResiduals(graphPane, selectedPeptide);
-            }
-
             public double? GetXValue(PointInfo pointInfo)
             {
                 return pointInfo.X ?? 0;
             }
 
-            public double? GetYValue(PointInfo pointInfo)
+            public double? GetYValue(PlotTypeRT plotType, PointInfo pointInfo)
             {
-                if (RTGraphController.PlotType == PlotTypeRT.correlation)
+                if (plotType == PlotTypeRT.correlation)
                 {
                     return pointInfo.Y ?? 0;
                 }
                 return pointInfo.Residual;
             }
 
-            private void GraphCorrelation(GraphPane graphPane, IdentityPath selectedPeptide)
-            {
-                if (graphPane.YAxis.Scale.MinAuto)
-                {
-                    graphPane.YAxis.Scale.MinAuto = false;
-                    graphPane.YAxis.Scale.Min = 0;
-                }
-
-                double scoreSelected, timeSelected;
-                if (PointFromPeptide(nodeSelected, out scoreSelected, out timeSelected))
-                {
-                    Color colorSelected = GraphSummary.ColorSelected;
-                    var curveOut = graphPane.AddCurve(null, new[] { scoreSelected }, new[] { timeSelected },
-                                                      colorSelected, SymbolType.Diamond);
-                    curveOut.Line.IsVisible = false;
-                    curveOut.Symbol.Fill = new Fill(colorSelected);
-                    curveOut.Symbol.Size = 8f;
-                }
-
-                string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides, _document.DocumentType);
-                if (!_refine)
-                {
-                    GraphRegression(graphPane, _statisticsAll, _regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
-                }
-                else
-                {
-                    labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, _document.DocumentType);
-                    GraphRegression(graphPane, _statisticsRefined, _regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
-                    GraphRegression(graphPane, _statisticsAll, _regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
-                }
-
-                if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
-                {
-                    GraphRegression(graphPane, _statisticsPredict, _regressionAll, GraphsResources.GraphData_Graph_Predictor, COLOR_LINE_PREDICT);
-                }
-
-                var curve = graphPane.AddCurve(labelPoints, _scoresRefined, _timesRefined,
-                                               Color.Black, SymbolType.Diamond);
-                curve.Line.IsVisible = false;
-                curve.Symbol.Border.IsVisible = false;
-                curve.Symbol.Fill = new Fill(COLOR_REFINED);
-
-                if (_scoresOutliers != null)
-                {
-                    var curveOut = graphPane.AddCurve(GraphsResources.GraphData_Graph_Outliers, _scoresOutliers, _timesOutliers,
-                                                      Color.Black, SymbolType.Diamond);
-                    curveOut.Line.IsVisible = false;
-                    curveOut.Symbol.Border.IsVisible = false;
-                    curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
-                }
-            }
-
-            private void GraphResiduals(GraphPane graphPane, IdentityPath selectedPeptide)
-            {
-                if (!graphPane.YAxis.Scale.MinAuto && graphPane.ZoomStack.Count == 0)
-                {
-                    graphPane.YAxis.Scale.MinAuto = true;
-                    graphPane.YAxis.Scale.MaxAuto = true;
-                }
-
-                var regression = ResidualsRegression;
-                if (regression == null || regression.Conversion == null)
-                    return;
-
-                double scoreSelected, timeSelected;
-                if (PointFromPeptide(nodeSelected, out scoreSelected, out timeSelected))
-                {
-                    timeSelected = GetResidual(regression, scoreSelected, timeSelected);
-
-                    Color colorSelected = GraphSummary.ColorSelected;
-                    var curveOut = graphPane.AddCurve(null, new[] { scoreSelected }, new[] { timeSelected },
-                                                      colorSelected, SymbolType.Diamond);
-                    curveOut.Line.IsVisible = false;
-                    curveOut.Symbol.Fill = new Fill(colorSelected);
-                    curveOut.Symbol.Size = 8f;
-                }
-
-                string labelPoints =
-                    Helpers.PeptideToMoleculeTextMapper.Translate(_refine ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides, _document.DocumentType); 
-                var curve = graphPane.AddCurve(labelPoints, _scoresRefined, GetResiduals(regression, _scoresRefined, _timesRefined),
-                                               Color.Black, SymbolType.Diamond);
-                curve.Line.IsVisible = false;
-                curve.Symbol.Border.IsVisible = false;
-                curve.Symbol.Fill = new Fill(COLOR_REFINED);
-
-                if (_scoresOutliers != null)
-                {
-                    var curveOut = graphPane.AddCurve(GraphsResources.GraphData_Graph_Outliers, _scoresOutliers, 
-                                                      GetResiduals(regression, _scoresOutliers, _timesOutliers),
-                                                      Color.Black, SymbolType.Diamond);
-                    curveOut.Line.IsVisible = false;
-                    curveOut.Symbol.Border.IsVisible = false;
-                    curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
-                }
-            }
 
             public RetentionTimeRegression ResidualsRegression
             {
@@ -1177,7 +938,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (IsRunToRun)
                     {
                         return string.Format(GraphsResources.GraphData_ResidualsLabel_Time_from_Regression___0__,
-                            _document.MeasuredResults.Chromatograms[_targetIndex].Name);
+                            Document.MeasuredResults.Chromatograms[RegressionSettings.TargetIndex].Name);
                     }
                     else
                     {
@@ -1195,7 +956,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (IsRunToRun)
                     {
                         return string.Format(GraphsResources.GraphData_CorrelationLabel_Measured_Time___0__,
-                            _document.MeasuredResults.Chromatograms[_targetIndex].Name);
+                            Document.MeasuredResults.Chromatograms[RegressionSettings.TargetIndex].Name);
                     }
                     else
                     {
@@ -1227,29 +988,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 return regression.Conversion;
             }
 
-            private static void GraphRegression(GraphPane graphPane,
-                                                RetentionTimeStatistics statistics, RetentionTimeRegression regression, string name, Color color)
-            {
-                double[] lineScores, lineTimes;
-                if (statistics == null || regression == null)
-                {
-                    lineScores = new double[0];
-                    lineTimes = new double[0];
-                }
-                else
-                {
-                    regression.Conversion.GetCurve(statistics, out lineScores, out lineTimes);    
-                }
-                var curve = graphPane.AddCurve(name, lineScores, lineTimes, color, SymbolType.None);
-                if (lineScores.Length > 0 && lineTimes.Length > 0)
-                {
-                    graphPane.AddCurve(string.Empty, new[] { lineScores[0] }, new[] { lineTimes[0] }, color, SymbolType.Square);
-                    graphPane.AddCurve(string.Empty, new[] { lineScores.Last() }, new[] { lineTimes.Last() }, color, SymbolType.Square);
-                }
-
-                curve.Line.IsAntiAlias = true;
-                curve.Line.IsOptimizedDraw = true;
-            }
 
             public void AddLabels(GraphPane graphPane, Graphics g)
             {
@@ -1332,10 +1070,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (IsRunToRun)
                     {
-                        if (_document.MeasuredResults != null && 0 <= _originalIndex && _originalIndex < _document.MeasuredResults.Chromatograms.Count)
+                        if (Document.MeasuredResults != null && 0 <= RegressionSettings.OriginalIndex && RegressionSettings.OriginalIndex < Document.MeasuredResults.Chromatograms.Count)
                         {
                             return string.Format(GraphsResources.GraphData_CorrelationLabel_Measured_Time___0__,
-                                _document.MeasuredResults.Chromatograms[_originalIndex].Name);
+                                Document.MeasuredResults.Chromatograms[RegressionSettings.OriginalIndex].Name);
                         }
                         return string.Empty;
                     }
@@ -1352,6 +1090,159 @@ namespace pwiz.Skyline.Controls.Graphs
                     else
                         return ResidualsLabel;
                 }
+            }
+        }
+
+        private void GraphRegression(RetentionTimeStatistics statistics, RetentionTimeRegression regression, string name, Color color)
+        {
+            double[] lineScores, lineTimes;
+            if (statistics == null || regression == null)
+            {
+                lineScores = new double[0];
+                lineTimes = new double[0];
+            }
+            else
+            {
+                regression.Conversion.GetCurve(statistics, out lineScores, out lineTimes);
+            }
+            var curve = AddCurve(name, lineScores, lineTimes, color, SymbolType.None);
+            if (lineScores.Length > 0 && lineTimes.Length > 0)
+            {
+                AddCurve(string.Empty, new[] { lineScores[0] }, new[] { lineTimes[0] }, color, SymbolType.Square);
+                AddCurve(string.Empty, new[] { lineScores.Last() }, new[] { lineTimes.Last() }, color, SymbolType.Square);
+            }
+
+            curve.Line.IsAntiAlias = true;
+            curve.Line.IsOptimizedDraw = true;
+        }
+
+
+        private double GetX(PointInfo point)
+        {
+            return point.X ?? Data?.Calculator?.UnknownScore ?? 0;
+        }
+
+        private double GetY(PlotTypeRT plotType, PointInfo point)
+        {
+            if (plotType == PlotTypeRT.correlation)
+            {
+                return point.Y ?? Data?.Calculator?.UnknownScore ?? 0;
+            }
+
+            return point.Residual ?? PointPairBase.Missing;
+        }
+
+        private double GetYCorrelation(PointInfo pt)
+        {
+            return pt.Y ?? Data?.Calculator?.UnknownScore ?? 0;
+        }
+
+        private double GetYResidual(PointInfo pt)
+        {
+            return pt.Residual ?? PointPairBase.Missing;
+        }
+
+        private PointInfo PointFromPeptide(IdentityPath selectedPeptide)
+        {
+            if (selectedPeptide == null)
+            {
+                return null;
+            }
+
+            return Data?.AllPoints.FirstOrDefault(pt => selectedPeptide.Equals(pt.IdentityPath));
+        }
+
+        private void GraphCorrelation(IdentityPath selectedPeptide)
+        {
+            if (YAxis.Scale.MinAuto)
+            {
+                YAxis.Scale.MinAuto = false;
+                YAxis.Scale.Min = 0;
+            }
+
+            PointInfo selectedPoint = PointFromPeptide(selectedPeptide);
+
+            if (selectedPoint != null)
+            {
+                Color colorSelected = GraphSummary.ColorSelected;
+                var curveOut = AddCurve(null, new[] { GetX(selectedPoint) }, new[] { GetY(PlotTypeRT.correlation, selectedPoint) },
+                    colorSelected, SymbolType.Diamond);
+                curveOut.Line.IsVisible = false;
+                curveOut.Symbol.Fill = new Fill(colorSelected);
+                curveOut.Symbol.Size = 8f;
+            }
+
+            string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides, Data.Document.DocumentType);
+            if (!Data.RegressionSettings.Refine)
+            {
+                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
+            }
+            else
+            {
+                labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(GraphsResources.GraphData_Graph_Peptides_Refined, Data.Document.DocumentType);
+                GraphRegression(Data._statisticsRefined, Data._regressionAll, GraphsResources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
+                GraphRegression(Data._statisticsAll, Data._regressionAll, GraphsResources.GraphData_Graph_Regression, COLOR_LINE_ALL);
+            }
+
+            if (Data._regressionPredict != null && Settings.Default.RTPredictorVisible)
+            {
+                GraphRegression(Data._statisticsPredict, Data._regressionAll, GraphsResources.GraphData_Graph_Predictor, COLOR_LINE_PREDICT);
+            }
+
+            var curve = AddCurve(labelPoints, Data.RefinedPoints.Select(GetX).ToArray(),
+                Data.RefinedPoints.Select(GetYCorrelation).ToArray(), Color.Black, SymbolType.Diamond);
+            curve.Line.IsVisible = false;
+            curve.Symbol.Border.IsVisible = false;
+            curve.Symbol.Fill = new Fill(COLOR_REFINED);
+
+            if (Data.Outliers != null)
+            {
+                var curveOut = AddCurve(GraphsResources.GraphData_Graph_Outliers, Data.Outliers.Select(GetX).ToArray(),
+                    Data.Outliers.Select(GetYCorrelation).ToArray(), Color.Black, SymbolType.Diamond);
+                curveOut.Line.IsVisible = false;
+                curveOut.Symbol.Border.IsVisible = false;
+                curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
+            }
+        }
+
+        private void GraphResiduals(IdentityPath selectedPeptide)
+        {
+            if (!YAxis.Scale.MinAuto && ZoomStack.Count == 0)
+            {
+                YAxis.Scale.MinAuto = true;
+                YAxis.Scale.MaxAuto = true;
+            }
+
+            var regression = Data.ResidualsRegression;
+            if (regression == null || regression.Conversion == null)
+                return;
+
+            var ptSelected = PointFromPeptide(selectedPeptide);
+            if (null != ptSelected)
+            {
+                Color colorSelected = GraphSummary.ColorSelected;
+                var curveOut = AddCurve(null, new[] { GetX(ptSelected) }, new[] { GetYResidual(ptSelected) },
+                    colorSelected, SymbolType.Diamond);
+                curveOut.Line.IsVisible = false;
+                curveOut.Symbol.Fill = new Fill(colorSelected);
+                curveOut.Symbol.Size = 8f;
+            }
+
+            string labelPoints = Helpers.PeptideToMoleculeTextMapper.Translate(
+                Data.IsRefined() ? GraphsResources.GraphData_Graph_Peptides_Refined : GraphsResources.GraphData_Graph_Peptides, Data.Document.DocumentType);
+            var curve = AddCurve(labelPoints, Data.RefinedPoints.Select(GetX).ToArray(),
+                Data.RefinedPoints.Select(GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
+            curve.Line.IsVisible = false;
+            curve.Symbol.Border.IsVisible = false;
+            curve.Symbol.Fill = new Fill(COLOR_REFINED);
+
+            if (Data.Outliers != null)
+            {
+                var curveOut = AddCurve(GraphsResources.GraphData_Graph_Outliers, Data.Outliers.Select(GetX).ToArray(),
+                    Data.Outliers.Select(GetYResidual).ToArray(), Color.Black, SymbolType.Diamond);
+                curveOut.Line.IsVisible = false;
+                curveOut.Symbol.Border.IsVisible = false;
+                curveOut.Symbol.Fill = new Fill(COLOR_OUTLIERS);
             }
         }
 
@@ -1381,12 +1272,14 @@ namespace pwiz.Skyline.Controls.Graphs
             public IdentityPath IdentityPath { get; }
             public double? X { get; }
             public double? Y { get; }
+        }
 
-            public double? Residual { get; private set; }
-
-            public PointInfo ChangeResidual(double? value)
+        private static Producer<RegressionSettings, GraphData> _producer = new DataProducer();
+        private class DataProducer : Producer<RegressionSettings, GraphData>
+        {
+            public override GraphData ProduceResult(ProductionMonitor productionMonitor, RegressionSettings parameter, IDictionary<WorkOrder, object> inputs)
             {
-                return ChangeProp(ImClone(this), im => im.Residual = value);
+                return new GraphData(parameter, productionMonitor);
             }
         }
     }
