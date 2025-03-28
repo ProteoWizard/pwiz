@@ -681,26 +681,41 @@ const std::vector<Signal>& MassHunterDataImpl::getSignals() const
         for each (auto device in devices)
         {
             auto deviceNameAndOrdinal = device->DeviceName + device->OrdinalNumber.ToString();
-            auto chromatogramSignalTable = reader_->FileInformation->GetSignalTable(deviceNameAndOrdinal, MHDAC::StoredDataType::Chromatograms);
-            auto instrumentCurveSignalTable = reader_->FileInformation->GetSignalTable(deviceNameAndOrdinal, MHDAC::StoredDataType::InstrumentCurves);
-
-            for each (System::Data::DataRow^ chromatogram in chromatogramSignalTable->Rows)
+            try
             {
-                auto signalName = chromatogram["SignalName"]->ToString();
-                auto signalDescription = ToStdString(chromatogram["SignalDescription"]->ToString());
-                signals_.emplace_back(Signal{ ToStdString(deviceNameAndOrdinal), ToStdString(signalName), signalDescription, false, (DeviceType) device->DeviceType });
+                auto chromatogramSignalTable = reader_->FileInformation->GetSignalTable(deviceNameAndOrdinal, MHDAC::StoredDataType::Chromatograms);
+                for each (System::Data::DataRow ^ chromatogram in chromatogramSignalTable->Rows)
+                {
+                    auto signalName = chromatogram["SignalName"]->ToString();
+                    auto signalDescription = ToStdString(chromatogram["SignalDescription"]->ToString());
+                    signals_.emplace_back(Signal{ ToStdString(deviceNameAndOrdinal), ToStdString(signalName), signalDescription, false, (DeviceType)device->DeviceType });
+                }
+                for each (auto signal in nonMsDataReader->GetSignalInfo(device, MHDAC::StoredDataType::Chromatograms))
+                    signalInfoMap_->default[deviceNameAndOrdinal + signal->SignalName] = signal;
             }
-            for each (auto signal in nonMsDataReader->GetSignalInfo(device, MHDAC::StoredDataType::Chromatograms))
-                signalInfoMap_->default[deviceNameAndOrdinal + signal->SignalName] = signal;
-
-            for each (System::Data::DataRow^ curve in instrumentCurveSignalTable->Rows)
+            catch (System::Exception^ ex)
             {
-                auto signalName = curve["SignalName"]->ToString();
-                auto signalDescription = ToStdString(curve["SignalDescription"]->ToString());
-                signals_.emplace_back(Signal{ ToStdString(deviceNameAndOrdinal), ToStdString(signalName), signalDescription, true, (DeviceType) device->DeviceType });
+                // TODO: log error
+                cerr << "Error reading chromatogram signal table for " << ToStdString(deviceNameAndOrdinal) << ": " << ToStdString(ex->Message) << endl;
             }
-            for each (auto signal in nonMsDataReader->GetSignalInfo(device, MHDAC::StoredDataType::InstrumentCurves))
-                signalInfoMap_->default[deviceNameAndOrdinal + signal->SignalName] = signal;
+
+            try
+            {
+                auto instrumentCurveSignalTable = reader_->FileInformation->GetSignalTable(deviceNameAndOrdinal, MHDAC::StoredDataType::InstrumentCurves);
+                for each (System::Data::DataRow ^ curve in instrumentCurveSignalTable->Rows)
+                {
+                    auto signalName = curve["SignalName"]->ToString();
+                    auto signalDescription = ToStdString(curve["SignalDescription"]->ToString());
+                    signals_.emplace_back(Signal{ ToStdString(deviceNameAndOrdinal), ToStdString(signalName), signalDescription, true, (DeviceType)device->DeviceType });
+                }
+                for each (auto signal in nonMsDataReader->GetSignalInfo(device, MHDAC::StoredDataType::InstrumentCurves))
+                    signalInfoMap_->default[deviceNameAndOrdinal + signal->SignalName] = signal;
+            }
+            catch (System::Exception^ ex)
+            {
+                // TODO: log error
+                cerr << "Error reading instrument curve signal table for " << ToStdString(deviceNameAndOrdinal) << ": " << ToStdString(ex->Message) << endl;
+            }
         }
         return signals_;
     }
