@@ -937,7 +937,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Recalculate values for the indexes that were not used to generate
                     // the current regression.
                     var peptideTime = variableTargetPeptides[i];
-                    double score = scoreCache.CalcScore(Calculator, peptideTime.PeptideSequence);
+                    double score = scoreCache?.CalcScore(Calculator, peptideTime.PeptideSequence) ?? Calculator.ScoreSequence(peptideTime.PeptideSequence) ?? unknownScore;
                     delta = double.MaxValue;
                     if (score != unknownScore)
                     {

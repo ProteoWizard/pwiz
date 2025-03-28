@@ -228,11 +228,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
-            var regressionSettings = new RegressionSettings(document, -1, -1, bestResult, threshold, false,
+            var regressionSettings = new RegressionSettings(document, -1, -1, bestResult, threshold, true,
                 RTGraphController.PointsType, RTGraphController.RegressionMethod, Settings.Default.RTCalculatorName,
-                false);
+                false).ChangeThresholdPrecision(precision);
             var productionMonitor = new ProductionMonitor(CancellationToken.None, _ => { });
-            return new GraphData(regressionSettings, productionMonitor).Outliers
+            var graphData = new GraphData(regressionSettings, productionMonitor);
+            if (ReferenceEquals(graphData.RegressionRefined, graphData._regressionAll))
+            {
+                return Array.Empty<PeptideDocNode>();
+            }
+            return graphData.Outliers
                 .Select(pt => (PeptideDocNode) document.FindNode(pt.IdentityPath)).ToArray();
         }
 
@@ -860,7 +865,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (ReferenceEquals(regressionRefined, _regressionAll))
                     return;
 
-                _outlierPoints = outlierPoints.ToImmutable();
+                _outlierPoints = outlierPoints.Concat(outlierIndexes.Select(i => validPoints[i])).ToImmutable();
                 _refinedPoints = Enumerable.Range(0, validPoints.Count).Where(i => !outlierIndexes.Contains(i))
                     .Select(i => validPoints[i]).ToImmutable();
                 _regressionRefined = regressionRefined;
