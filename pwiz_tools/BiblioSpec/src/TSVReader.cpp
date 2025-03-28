@@ -1055,7 +1055,7 @@ std::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* tsv
         return std::static_pointer_cast<TSVReader>(std::make_shared<OpenSwathResultReader>(maker, tsvName, parentProgress));
     if (OpenSwathAssayReader::hasExpectedColumns(headerLine))
         return std::make_shared<OpenSwathAssayReader>(maker, tsvName, parentProgress);
-    throw BlibException(false, "Did not find required columns. Only OpenSWATH result, OpenSWATH assay, and Paser .tsv files are supported.");
+    throw BlibException(false, "Did not find required columns. Only OpenSWATH result, OpenSWATH assay, AlphaPepDeep, and Paser .tsv files are supported.");
 }
 
 void TSVReader::parseHeader(LineParser& headerLine, vector<TSVColumnTranslator>& targetColumns, vector<TSVColumnTranslator>& optionalColumns) {
