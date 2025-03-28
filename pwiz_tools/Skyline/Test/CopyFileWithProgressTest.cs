@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.SkylineTestUtil;
 
@@ -127,6 +128,11 @@ namespace pwiz.SkylineTest
                 }
 
                 AssertFileContent(fileBytes, destination);
+                if (ProcessEx.IsRunningOnWine)
+                {
+                    // Wine does not support progress notifications so there is nothing more to test
+                    return;
+                }
             }
         }
 
@@ -179,6 +185,11 @@ namespace pwiz.SkylineTest
                 }
 
                 AssertFileContent(fileBytes, destination);
+                if (ProcessEx.IsRunningOnWine)
+                {
+                    // Wine does not support cancelling a copy so there's nothing more to test
+                    return;
+                }
             }
         }
 
