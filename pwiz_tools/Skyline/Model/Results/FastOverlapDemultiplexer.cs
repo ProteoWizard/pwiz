@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Chemistry;
@@ -68,13 +68,13 @@ namespace pwiz.Skyline.Model.Results
             {
                 return new[] {originalSpectrum};
             }
-            double[] mzs = originalSpectrum.Mzs;
+            var mzs = originalSpectrum.Mzs;
             List<KeyValuePair<double, double>> lowerPeaks = new List<KeyValuePair<double, double>>();
             List<KeyValuePair<double, double>> upperPeaks = new List<KeyValuePair<double, double>>();
             // ReSharper disable CollectionNeverQueried.Local
             List<KeyValuePair<double, double>> removedPeaks = new List<KeyValuePair<double, double>>();
             // ReSharper restore CollectionNeverQueried.Local
-            for (int i = 0; i < mzs.Length; i++)
+            for (int i = 0; i < mzs.Count; i++)
             {
                 double mz = mzs[i];
                 double earlyLowIntensity = GetIntensity(earlyLow, mz);
@@ -155,15 +155,14 @@ namespace pwiz.Skyline.Model.Results
 
         private static MsDataSpectrum MakeDeconvSpectrum(MsDataSpectrum originalSpectrum, List<KeyValuePair<double, double>> peaks)
         {
-            return new MsDataSpectrum
+            var value =  new MsDataSpectrum(peaks.Select(p => p.Key).ToArray(), peaks.Select(p => p.Value).ToArray())
             {
                 RetentionTime = originalSpectrum.RetentionTime,
                 Centroided = originalSpectrum.Centroided,
                 IonMobility = originalSpectrum.IonMobility,
-                Level = originalSpectrum.Level,
-                Mzs = peaks.Select(p=>p.Key).ToArray(),
-                Intensities = peaks.Select(p=>p.Value).ToArray(),
+                Level = originalSpectrum.Level
             };
+            return value;
         }
 
 
@@ -176,7 +175,7 @@ namespace pwiz.Skyline.Model.Results
                 // get the intensity.
                 return double.Epsilon;
             }
-            var indices = _fragmentTolerance.GetIndices(spectrum.Mzs, mz);
+            var indices = _fragmentTolerance.GetIndices(spectrum, mz);
             return indices.Sum(i => spectrum.Intensities[i]);
         }
 
@@ -235,18 +234,14 @@ namespace pwiz.Skyline.Model.Results
          * @param target
          * @return all matching masses in range
          */
-            public IEnumerable<int> GetIndices(double[] peaks, double target)
+            public IEnumerable<int> GetIndices(MsDataSpectrum peaks, double target)
             {
                 double lowerMz = target - target * _percent;
                 double upperMz = target + target * _percent;
-                int lowerIndex = Array.BinarySearch(peaks, lowerMz);
-                if (lowerIndex < 0)
-                {
-                    lowerIndex = ~lowerIndex;
-                }
+                int lowerIndex = peaks.FindMzIndex(lowerMz);
                 for (int i = lowerIndex; i < peaks.Length; i++)
                 {
-                    if (peaks[i] > upperMz)
+                    if (peaks.Mzs[i] > upperMz)
                     {
                         yield break;
                     }
