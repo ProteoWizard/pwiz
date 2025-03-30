@@ -333,7 +333,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 isolationMzLowByScanNumber.resize(maxScanNum);
                 auto& isolationMzHighByScanNumber = isolationMzHighByScanNumberByWindowGroup_[windowGroup - 1];
                 isolationMzHighByScanNumber.resize(maxScanNum);
-                for (; scanBegin < scanEnd; ++scanBegin)
+                for (; scanBegin <= scanEnd; ++scanBegin)
                 {
                     isolationMzLowByScanNumber[scanBegin] = isolationMz - isolationWidth/2;
                     isolationMzHighByScanNumber[scanBegin] = isolationMz + isolationWidth/2;
@@ -877,7 +877,7 @@ void TimsSpectrum::getCombinedSpectrumData(BinaryData<double>& mz, BinaryData<do
         const auto& isolationMzHighByScanNumber = frame_.timsDataImpl_.isolationMzHighByScanNumberByWindowGroup_[frame_.windowGroup_.get() - 1];
         double* itr3 = &isolationWindowStart[0];
         double* itr4 = &isolationWindowEnd[0];
-        // TODO: need an array of CE per scan
+        // CONSIDER: need an array of CE per scan?
         for (int i = 0; i <= range; ++i)
         {
             auto intensityCounts = frameProxy.getScanY(i);
