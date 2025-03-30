@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
@@ -316,6 +317,8 @@ namespace pwiz.Skyline.Model
         public bool HasIsotopeDist { get { return IsotopeDist != null; } }
 
         public SpectrumHeaderInfo LibInfo { get; private set; }
+
+        public bool LibraryMayBePrecursorsOnly => Equals(LibInfo?.ScoreType, ScoreType.HARDKLOR_IDOTP); // Hardklor-derived libraries don't provide fragment spectra, just precursor info
 
         public bool HasLibInfo { get { return LibInfo != null; } }
 
