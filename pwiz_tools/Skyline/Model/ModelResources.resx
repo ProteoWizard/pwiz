@@ -921,4 +921,28 @@ in the Windows registry key '{0}' from:</value>
   <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
       <value>Unknown Thermo instrument type '{0}' installed.</value>
   </data>
+  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
+      <value>Failed to generate settings.yaml file by executing the peptdeep export-settings command.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
+      <value>Failed to build library by executing the peptdeep cmd-flow command.</value>
+  </data>
+  <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
+      <value>Preparing prediction input file</value>
+  </data>
+  <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
+      <value>Preparing training input file</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
+      <value>Preparing settings file</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep" xml:space="preserve">
+      <value>Executing peptdeep</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_TransformPeptdeepOutput_Importing_spectral_library" xml:space="preserve">
+      <value>Importing spectral library</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_Importing_spectral_library" xml:space="preserve">
+      <value>Importing spectral library</value>
+  </data>
 </root>

@@ -4243,6 +4243,7 @@
     <Content Include="Resources\StartPage\DIA-QE_start.png" />
     <Content Include="Resources\StartPage\DIA-TTOF_start.png" />
     <Content Include="Resources\StartPage\DIA-Umpire-TTOF_start.png" />
+    <Content Include="Resources\StartPage\PRMOrbitrap_start.png" />
     <Content Include="Resources\StartPage\PRM_start-ja.png" />
     <Content Include="Resources\StartPage\PRM_start-zh-CHS.png" />
     <Content Include="Resources\StartPage\PRM_start.png" />

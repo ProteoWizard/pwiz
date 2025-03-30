@@ -321,7 +321,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (Builder == null && newBuilder)
                     {
                         Builder = new AlphapeptdeepLibraryBuilder(name, outputPath,
-                            AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
+                            AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI, IrtStandard);
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }
                 }

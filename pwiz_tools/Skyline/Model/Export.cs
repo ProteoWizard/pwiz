@@ -4486,6 +4486,10 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write("label_type");                
             }
+            writer.Write(FieldSeparator);
+            writer.Write("precursor_charge");
+            writer.Write(FieldSeparator);
+            writer.Write("rt_window");
             writer.WriteLine();
         }
         // ReSharper restore LocalizableElement
@@ -4581,6 +4585,10 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
+            writer.Write(FieldSeparator);
+            writer.Write(nodeTranGroup.PrecursorAdduct.AdductCharge);
+            writer.Write(FieldSeparator);
+            writer.Write(RTWindow);
             writer.WriteLine();
         }
 
