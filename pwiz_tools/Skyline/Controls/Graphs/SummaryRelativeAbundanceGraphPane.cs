@@ -25,7 +25,6 @@ using System.Drawing;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Windows.Forms;
 using Newtonsoft.Json;
 using pwiz.Common.SystemUtil;
@@ -58,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
         // Persisted layout kept between graph refreshes
         private static List<LabeledPoint.PointLayout> _labelsLayout = new List<LabeledPoint.PointLayout>();
         private static RelativeAbundanceFormatting _formattingOverride;
-
+        private int _progressValue = -1;
         private NodeTip _toolTip;
         protected SummaryRelativeAbundanceGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -89,12 +88,36 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             // ReSharper disable once VirtualMemberCallInConstructor
             _graphDataReceiver = GraphDataProducer.RegisterCustomer(GraphSummary, ProductAvailableAction);
+            _graphDataReceiver.ProgressChange += UpdateProgressHandler;
         }
 
+        private PaneProgressBar ProgressBar { get; set; }
         private void ProductAvailableAction()
         {
+            UpdateProgressHandler();
             UpdateGraph(false);
         }
+        private void UpdateProgressHandler()
+        {
+            if (_graphDataReceiver.IsProcessing())
+            {
+                var newProgressValue = _graphDataReceiver.GetProgressValue();
+                if (newProgressValue != _progressValue)
+                {
+                    ProgressBar ??= new PaneProgressBar(this);
+                    ProgressBar.UpdateProgress(newProgressValue);
+                    _progressValue = newProgressValue;
+                }
+            }
+            else
+            {
+                ProgressBar?.Dispose();
+                ProgressBar = null;
+                _progressValue = -1;
+            }
+        }
+
+
 
         public override void OnClose(EventArgs e)
         {
@@ -583,7 +606,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public abstract class GraphData : Immutable
         {
-            protected GraphData(SrmDocument document, GraphSettings graphSettings, CancellationToken cancellationToken)
+            protected GraphData(SrmDocument document, GraphSettings graphSettings, ProductionMonitor productionMonitor)
             {
                 Document = document;
                 GraphSettings = graphSettings;
@@ -592,33 +615,41 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool anyMolecules = document.HasSmallMolecules;
                 // Build the list of points to show.
                 var listPoints = new List<GraphPointData>();
-                foreach (var nodeGroupPep in document.MoleculeGroups)
+                var moleculeGroups = document.MoleculeGroups.Where(moleculeGroup =>
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    if (nodeGroupPep.IsPeptideList && graphSettings.ExcludePeptideLists &&
-                        !anyMolecules)
+                    if (graphSettings.ExcludePeptideLists && !anyMolecules && moleculeGroup.IsPeptideList)
                     {
-                        continue;
+                        return false;
                     }
 
-                    if (graphSettings.ExcludeStandards && ContainsStandards(nodeGroupPep))
+                    if (graphSettings.ExcludeStandards && ContainsStandards(moleculeGroup))
                     {
-                        continue;
+                        return false;
                     }
 
+                    return true;
+                }).ToList();
+                int moleculeCount = moleculeGroups.Sum(group => group.MoleculeCount);
+                int iMolecule = 0;
+                for (int iMoleculeGroup = 0; iMoleculeGroup < moleculeGroups.Count; iMoleculeGroup++)
+                {
+                    productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                    var moleculeGroup = moleculeGroups[iMoleculeGroup];
                     if (graphSettings.AreaProteinTargets && !anyMolecules)
                     {
-                        var path = new IdentityPath(IdentityPath.ROOT, nodeGroupPep.PeptideGroup);
+                        productionMonitor.SetProgress(100 * iMoleculeGroup / moleculeGroups.Count);
+                        var path = new IdentityPath(IdentityPath.ROOT, moleculeGroup.PeptideGroup);
                         var protein = new Protein(schema, path);
                         listPoints.Add(new GraphPointData(protein));
                     }
                     else
                     {
-                        foreach (PeptideDocNode nodePep in nodeGroupPep.Children)
+                        foreach (var nodePep in moleculeGroup.Molecules)
                         {
-                            cancellationToken.ThrowIfCancellationRequested();
-                            var pepPath = new IdentityPath(nodeGroupPep.PeptideGroup,
-                                nodePep.Peptide);
+                            productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                            productionMonitor.SetProgress(100 * iMolecule / moleculeCount);
+                            iMolecule++;
+                            var pepPath = new IdentityPath(moleculeGroup.PeptideGroup, nodePep.Peptide);
                             var peptide = new Peptide(schema, pepPath);
                             listPoints.Add(new GraphPointData(peptide));
                         }

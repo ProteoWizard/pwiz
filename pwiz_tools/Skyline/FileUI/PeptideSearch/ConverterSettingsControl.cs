@@ -266,9 +266,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             stringToValueIfNonDefault(EstimateBackground.ToString(), defaultDiaUmpireSettings[ESTIMATEBG]);
 
-            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(this, PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 allDiaUmpireSettings, valueToString, stringToValueIfNonDefault,
-                (value, setting) => setting.Validate(value));
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues);
         }
 
         private void UpdateSettingIfNonDefault<T>(IDictionary<string, AbstractDdaSearchEngine.Setting> settingStore,
