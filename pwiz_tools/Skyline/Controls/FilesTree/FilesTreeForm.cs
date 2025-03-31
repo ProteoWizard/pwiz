@@ -20,7 +20,6 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -29,13 +28,11 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using Label = System.Windows.Forms.Label;
 using Process = System.Diagnostics.Process;
 
 // CONSIDER: using IdentityPath (and DocNode.ReplaceChild) to simplify replicate name changes
 //           But replicates do not have IdentityPath support because ChromatogramSet does not
 //           inherit from DocNode. Will revisit later.
-// TODO: drag-and-drop for spectral libraries
 // ReSharper disable WrongIndentSize
 namespace pwiz.Skyline.Controls.FilesTree
 {
@@ -78,11 +75,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             _nodeTip = new NodeTip(this) { Parent = TopLevelControl };
 
             // FilesTree => floating drop target
-            _dropTargetRemove = CreateDropTarget(FilesTreeResources.FilesTreeForm_DropTargetLabel_Remove, FilesTreeResources.Trash, DockStyle.None);
+            _dropTargetRemove = CreateDropTarget(FilesTreeResources.Trash, DockStyle.None);
             _dropTargetRemove.Visible = false;
             _dropTargetRemove.AllowDrop = true;
             _dropTargetRemove.DragEnter += DropTargetRemove_DragEnter;
-            _dropTargetRemove.DragLeave += DropTargetRemove_DragLeave;
             _dropTargetRemove.DragDrop += DropTargetRemove_DragDrop;
             _dropTargetRemove.QueryContinueDrag += FilesTree_QueryContinueDrag;
 
@@ -169,7 +165,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             SkylineWindow.ImportResults();
         }
-
 
         public void OpenLibraryExplorerDialog()
         {
@@ -787,14 +782,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (!_dropTargetRemove.Visible)
             {
-                // TODO: manually adjust drop target location for scrollbars?
-                // TODO: is this the correct location? Should the layout be configured in the designer?
-                // TODO: does this work when Skyline is resized?
-                _dropTargetRemove.Location = new Point
-                {
-                    X = filesTree.Parent.Right - 110,
-                    Y = filesTree.Parent.Bottom - 110
-                };
+                // TODO: adjust sizing dynamically (hard-coded width, center vertically, adjust for scrollbars, handle Skyline resize)
+                var x = FilesTree.Bounds.X + FilesTree.Bounds.Width - 80;
+                var y = FilesTree.SelectedNode.Bounds.Y;
+
+                _dropTargetRemove.Location = new Point(x, y);
             }
 
             ShowDropTargets(_dropTargetRemove);
@@ -839,11 +831,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             ShowDropTargets(_dropTargetRemove, true);
         }
 
-        private void DropTargetRemove_DragLeave(object sender, EventArgs e)
-        {
-            ShowDropTargets(_dropTargetRemove);
-        }
-
         private void DropTargetRemove_DragDrop(object sender, DragEventArgs e)
         {
             var nodes = (IList<FilesTreeNode>)e.Data.GetData(typeof(FilesTreeNode));
@@ -881,18 +868,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             panel.BackColor = Color.WhiteSmoke;
         }
 
-        private static Panel CreateDropTarget(string label, Image icon, DockStyle dockStyle)
+        private static Panel CreateDropTarget(Image icon, DockStyle dockStyle)
         {
             var dropTarget = new Panel
             {
                 Dock = dockStyle,
                 Padding = new Padding(2),
-                Size = new Size { Height = 55, Width = 55 },
+                Size = new Size { Height = 30, Width = 30 },
+                BorderStyle = BorderStyle.FixedSingle
             };
-
-            if (FilesTreeSettings.ROUND_CORNERS_ON_FLOATING_DROP_TARGETS)
-                dropTarget.Region = Utils.RegionWithRoundCorners(55, 55);
-            else dropTarget.BorderStyle = BorderStyle.FixedSingle;
 
             var pictureBox = new PictureBox
             {
@@ -901,16 +885,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 Dock = DockStyle.Fill,
             };
 
-            var targetLabel = new Label
-            {
-                Text = label,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Bottom,
-                ForeColor = Color.Black
-            };
-
             dropTarget.Controls.Add(pictureBox);
-            dropTarget.Controls.Add(targetLabel);
 
             return dropTarget;
         }
@@ -935,17 +910,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                    point.Y >= rectangle.Y && 
                    point.Y <= rectangle.Y + rectangle.Height;
         }
-
-        internal static Region RegionWithRoundCorners(int width, int height)
-        {
-            return Region.FromHrgn(Gdi32.CreateRoundRectRgn(0, 0, width, height, 20, 20));
-        }
-    }
-
-    internal class FilesTreeSettings
-    {
-        internal const bool ROUND_CORNERS_ON_FLOATING_DROP_TARGETS = false;
-        internal const bool MONITOR_FILES_SYNCHRONOUSLY = true;
     }
 
     // Used as a key for passing drag-and-drop data between event handlers
@@ -953,8 +917,10 @@ namespace pwiz.Skyline.Controls.FilesTree
     {
         public static bool DoesDropTargetAcceptDraggedNode(FilesTreeNode possibleDropTarget, FilesTreeNode primaryDraggedNode)
         {
-            return possibleDropTarget.Model.GetType() == primaryDraggedNode.Model.GetType() || 
-                   possibleDropTarget.Model.GetType() == ((FilesTreeNode)primaryDraggedNode.Parent).Model.GetType();
+            if (primaryDraggedNode == null)
+                return false;
+            else return possibleDropTarget.Model.GetType() == primaryDraggedNode.Model.GetType() || 
+                        possibleDropTarget.Model.GetType() == ((FilesTreeNode)primaryDraggedNode.Parent).Model.GetType();
         }
     }
 }

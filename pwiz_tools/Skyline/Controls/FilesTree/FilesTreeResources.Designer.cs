@@ -295,11 +295,20 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Remove.
+        ///   Looks up a localized string similar to Replicate count.
         /// </summary>
-        public static string FilesTreeForm_DropTargetLabel_Remove {
+        public static string FilesTreeNode_TreeNode_RenderTip_ReplicateCount {
             get {
-                return ResourceManager.GetString("FilesTreeForm_DropTargetLabel_Remove", resourceCulture);
+                return ResourceManager.GetString("FilesTreeNode_TreeNode_RenderTip_ReplicateCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sample file count.
+        /// </summary>
+        public static string FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount {
+            get {
+                return ResourceManager.GetString("FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount", resourceCulture);
             }
         }
         

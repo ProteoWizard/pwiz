@@ -57,7 +57,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.CacheFile);
             ImageList.Images.Add(Resources.ViewFile);
 
-            var threadCount = FilesTreeSettings.MONITOR_FILES_SYNCHRONOUSLY ? 0 : ParallelEx.GetThreadCount();
+            // Set to zero to synchronously handle file work items
+            var threadCount = ParallelEx.GetThreadCount();
 
             _fsWorkQueue.RunAsync(threadCount, @"FilesTree file system work queue");
         }
@@ -602,6 +603,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ImageIndex = IsAnyNodeMissingLocalFile(this) ? (int)ImageMissing : (int)ImageAvailable;
         }
 
+        // CONSIDER: use subclasses to customize behavior. This is working for now but probably
+        //           breaks down in the near future.
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
             using var rt = new RenderTools();
@@ -610,20 +613,26 @@ namespace pwiz.Skyline.Controls.FilesTree
             var customTable = new TableDesc();
             customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_Name, Name, rt);
 
-            if (Model.IsBackedByFile)
+            if (Model.GetType() == typeof(ReplicatesFolder))
             {
-                if (FileState == FileState.missing)
+                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_RenderTip_ReplicateCount, Nodes.Count.ToString(), rt);
+
+                var sampleFileCount = 0;
+                for (var i = 0; i < Nodes.Count; i++)
                 {
-                    var font = rt.FontBold;
-                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileMissing, string.Empty, rt);
-                    font = rt.FontNormal;
+                    sampleFileCount += Nodes[i].Nodes.Count;
                 }
 
+                customTable.AddDetailRow(FilesTreeResources.FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount, sampleFileCount.ToString(), rt);
+            }
+
+            if (Model.IsBackedByFile)
+            {
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
 
-                if (Model.IsBackedByFile)
-                    customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, LocalFilePath, rt);
+                var text = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_RenderTip_FileMissing : LocalFilePath;
+                customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, text, rt);
             }
 
             var size = customTable.CalcDimensions(g);
