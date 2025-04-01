@@ -1591,7 +1591,8 @@ namespace TestPerf
         private void WaitForBarGraphPoints(FoldChangeBarGraph barGraph, int barCount, int? lowerBoundCount = null)
         {
             WaitForConditionUI(() => barGraph.ZedGraphControl.GraphPane.CurveList.Count == 1);
-Console.WriteLine("# skipping bar graph point check until somebody sort that out"); return;
+Console.WriteLine(@"# skipping bar graph point check until somebody sort that out"); return;   // TODO (Brendan?)
+// ReSharper disable once HeuristicUnreachableCode
             if (!lowerBoundCount.HasValue)
             {
                 WaitForConditionUI(() => barCount == GetBarCount(barGraph),

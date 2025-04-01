@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-
 namespace pwiz.Skyline.Model.Results
 {
     public class IntensityAccumulator
