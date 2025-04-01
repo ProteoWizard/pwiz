@@ -150,12 +150,13 @@ namespace pwiz.SkylineTestFunctional
         private Dictionary<string, int> GetReplicateGridColumnWidths(DocumentGridForm documentGrid)
         {
             var replicateGridView = documentGrid.DataboundGridControl.ReplicatePivotDataGridView;
-            var lastVisibleColumn = replicateGridView.Columns.Cast<DataGridViewColumn>().Last(col => col.Visible && CalculateColumnVisibleWidth(replicateGridView, col) > 0);
-            var scrollBarWidth = GetVerticalScrollBarWidth(replicateGridView);
-
-            return replicateGridView.Columns.Cast<DataGridViewColumn>()
+            var originalScrollBars = documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars;
+            RunUI(() => documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars = ScrollBars.None);
+            var columnWidths = replicateGridView.Columns.Cast<DataGridViewColumn>()
                 .Where(col => !"Property".Equals(col.HeaderText) && col.Visible)
-                .ToDictionary(col => col.HeaderText, col => CalculateColumnVisibleWidth(replicateGridView, col) + (col.Equals(lastVisibleColumn) ? scrollBarWidth : 0));
+                .ToDictionary(col => col.HeaderText, col => CalculateColumnVisibleWidth(replicateGridView, col));
+            RunUI(() => documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars = originalScrollBars);
+            return columnWidths;
         }
 
         private Dictionary<string, int> GetMainGridColumnWidths(DocumentGridForm documentGrid)
@@ -163,19 +164,20 @@ namespace pwiz.SkylineTestFunctional
             var itemProperties = documentGrid.DataboundGridControl.BindingListSource.ItemProperties;
             var boundDataGridView = documentGrid.DataboundGridControl.DataGridView;
             var replicatePivotColumns = ReplicatePivotColumns.FromItemProperties(itemProperties);
-            var lastVisibleColumn = boundDataGridView.Columns.Cast<DataGridViewColumn>().Last(col => col.Visible && CalculateColumnVisibleWidth(boundDataGridView, col) > 0);
-            var scrollBarWidth = GetVerticalScrollBarWidth(boundDataGridView);
-
-            return replicatePivotColumns.GetReplicateColumnGroups()
+            var originalScrollBars = documentGrid.DataboundGridControl.DataGridView.ScrollBars;
+            RunUI(() => documentGrid.DataboundGridControl.DataGridView.ScrollBars = ScrollBars.None);
+            var columnWidths = replicatePivotColumns.GetReplicateColumnGroups()
                 .ToDictionary(
                     kvp => kvp.Key.ReplicateName,
                     kvp => kvp.Sum(column =>
                         boundDataGridView.Columns
                             .Cast<DataGridViewColumn>()
                             .Where(col => col.Visible && col.DataPropertyName == column.Name)
-                            .Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col) + (col.Equals(lastVisibleColumn) ? scrollBarWidth : 0))
+                            .Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col))
                     )
                 );
+            RunUI(() => documentGrid.DataboundGridControl.DataGridView.ScrollBars = originalScrollBars);
+            return columnWidths;
         }
 
         private int GetReplicateGridPropertyWidth(DocumentGridForm documentGrid)
