@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
@@ -32,7 +31,6 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override Immutable Immutable => Document.Settings.PeptideSettings;
-
         public override string Name => FileResources.FileModel_Libraries;
         public override string FilePath => string.Empty;
 
@@ -42,10 +40,12 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasLibraries)
                 {
-                    return Array.Empty<Replicate>().ToList<FileNode>();
+                    return ImmutableList.Empty<FileNode>();
                 }
 
-                var files = Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Select(library => new SpectralLibrary(Document, DocumentPath, library.Id)).ToList<FileNode>();
+                var files = Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Select(library => 
+                    new SpectralLibrary(Document, DocumentPath, library.Id)).ToList<FileNode>();
+
                 return ImmutableList.ValueOf(files);
             }
         }

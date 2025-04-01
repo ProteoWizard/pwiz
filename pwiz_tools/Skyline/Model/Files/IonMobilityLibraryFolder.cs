@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -33,7 +31,6 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override Immutable Immutable => Document.Settings.TransitionSettings;
-
         public override string Name => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
         public override string FilePath => string.Empty;
 
@@ -43,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.TransitionSettings == null || !Document.Settings.TransitionSettings.HasIonMobilityLibraryPersisted)
                 {
-                    return Array.Empty<Replicate>().ToList<FileNode>();
+                    return ImmutableList.Empty<FileNode>();
                 }
 
                 return ImmutableList<FileNode>.Singleton(new IonMobilityLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id));

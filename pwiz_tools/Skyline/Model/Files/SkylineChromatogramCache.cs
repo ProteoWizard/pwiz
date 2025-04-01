@@ -21,7 +21,6 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SkylineChromatogramCache : FileNode
     {
-        // TODO: this is a temporary Id for ChromatogramCache, which doesn't have one of its own
         private class ChromatogramCacheId : Identity { }
 
         public SkylineChromatogramCache(SrmDocument document, string documentPath) : 
@@ -29,12 +28,9 @@ namespace pwiz.Skyline.Model.Files
         {
         }
 
-        public override Immutable Immutable => Document.Settings.MeasuredResults;
-
-        public override string Name => FileResources.FileModel_ChromatogramCache;
-
-        public override string FilePath => ChromatogramCache.FinalPathForName(DocumentPath, null);
-
         public override bool IsBackedByFile => true;
+        public override Immutable Immutable => Document.Settings.MeasuredResults;
+        public override string Name => FileResources.FileModel_ChromatogramCache;
+        public override string FilePath => ChromatogramCache.FinalPathForName(DocumentPath, null);
     }
 }

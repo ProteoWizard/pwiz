@@ -22,21 +22,19 @@ namespace pwiz.Skyline.Model.Files
     // .imsdb
     public class IonMobilityLibrary : FileNode
     {
-        private readonly Lazy<Model.IonMobility.IonMobilityLibrary> _lazy;
+        private readonly Lazy<IonMobility.IonMobilityLibrary> _lazy;
 
         public IonMobilityLibrary(SrmDocument document, string documentPath, Identity id) : base(document, documentPath, new IdentityPath(id))
         {
-            _lazy = new Lazy<Model.IonMobility.IonMobilityLibrary>(FindIonMobilityLibrary);
+            _lazy = new Lazy<IonMobility.IonMobilityLibrary>(FindIonMobilityLibrary);
         }
 
+        public override bool IsBackedByFile => true;
         public override Immutable Immutable => _lazy.Value;
-
         public override string Name => _lazy.Value.Name;
         public override string FilePath => _lazy.Value.FilePath;
 
-        public override bool IsBackedByFile => true;
-
-        private Model.IonMobility.IonMobilityLibrary FindIonMobilityLibrary()
+        private IonMobility.IonMobilityLibrary FindIonMobilityLibrary()
         {
             return Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
         }

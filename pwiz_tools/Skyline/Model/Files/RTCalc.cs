@@ -30,12 +30,10 @@ namespace pwiz.Skyline.Model.Files
             _lazy = new Lazy<RetentionScoreCalculatorSpec>(FindRTCalcSpec);
         }
 
+        public override bool IsBackedByFile => true;
         public override Immutable Immutable => _lazy.Value;
-
         public override string Name => _lazy.Value.Name;
         public override string FilePath => _lazy.Value.FilePath;
-
-        public override bool IsBackedByFile => true;
 
         private RetentionScoreCalculatorSpec FindRTCalcSpec()
         {

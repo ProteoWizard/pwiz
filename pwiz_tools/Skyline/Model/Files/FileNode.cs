@@ -78,11 +78,11 @@ namespace pwiz.Skyline.Model.Files
 
         public SrmDocument Document { get; }
         public string DocumentPath { get; set; }
-        public IdentityPath IdentityPath { get; }
-        public abstract Immutable Immutable { get; }
 
-        public abstract string Name { get; }
+        public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
+        public abstract Immutable Immutable { get; }
+        public abstract string Name { get; }
         public abstract string FilePath { get; }
         public virtual string FileName => Path.GetFileName(FilePath);
 

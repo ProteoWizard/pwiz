@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -33,7 +31,6 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override Immutable Immutable => Document.Settings.TransitionSettings;
-
         public override string Name => FileResources.FileModel_OptimizationLibrary;
         public override string FilePath => string.Empty;
 
@@ -43,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.TransitionSettings == null || !Document.Settings.TransitionSettings.HasOptimizationLibraryPersisted)
                 {
-                    return Array.Empty<Replicate>().ToList<FileNode>();
+                    return ImmutableList.Empty<FileNode>();
                 }
 
                 return ImmutableList.Singleton<FileNode>(new OptimizationLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id));

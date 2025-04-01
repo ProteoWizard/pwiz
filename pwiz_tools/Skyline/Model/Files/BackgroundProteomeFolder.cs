@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -32,7 +30,6 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override Immutable Immutable => Document.Settings.PeptideSettings;
-
         public override string Name => FileResources.FileModel_BackgroundProteome;
         public override string FilePath => string.Empty;
         public override string FileName => string.Empty;
@@ -43,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasBackgroundProteome)
                 {
-                    return Array.Empty<Replicate>().ToList<FileNode>();
+                    return ImmutableList.Empty<FileNode>();
                 }
 
                 return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, DocumentPath, Document.Settings.PeptideSettings.BackgroundProteome.Id));

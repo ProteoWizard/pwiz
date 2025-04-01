@@ -21,23 +21,21 @@ namespace pwiz.Skyline.Model.Files
 {
     public class BackgroundProteome : FileNode
     {
-        private readonly Lazy<Model.Proteome.BackgroundProteome> _backgroundProteome;
+        private readonly Lazy<Proteome.BackgroundProteome> _backgroundProteome;
 
         public BackgroundProteome(SrmDocument document, string documentPath, Identity backgroundProteomeId) : 
             base(document, documentPath, new IdentityPath(backgroundProteomeId))
         {
-            _backgroundProteome = new Lazy<Model.Proteome.BackgroundProteome>(FindBackgroundProteome);
+            _backgroundProteome = new Lazy<Proteome.BackgroundProteome>(FindBackgroundProteome);
         }
 
-        public override Immutable Immutable { get => _backgroundProteome.Value; }
-
+        public override bool IsBackedByFile => true;
+        public override Immutable Immutable => _backgroundProteome.Value;
         public override string Name => _backgroundProteome.Value.Name;
         public override string FilePath => _backgroundProteome.Value.FilePath;
         public override string FileName => _backgroundProteome.Value.FileName;
 
-        public override bool IsBackedByFile => true;
-
-        private Model.Proteome.BackgroundProteome FindBackgroundProteome()
+        private Proteome.BackgroundProteome FindBackgroundProteome()
         {
             return Document.Settings.PeptideSettings.BackgroundProteome;
         }

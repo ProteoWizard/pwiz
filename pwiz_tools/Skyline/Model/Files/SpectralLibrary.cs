@@ -30,12 +30,10 @@ namespace pwiz.Skyline.Model.Files
             _librarySpec = new Lazy<LibrarySpec>(FindLibrarySpec);
         }
 
+        public override bool IsBackedByFile => true;
         public override Immutable Immutable => _librarySpec.Value;
-
         public override string Name => _librarySpec.Value.Name;
         public override string FilePath => _librarySpec.Value.FilePath;
-
-        public override bool IsBackedByFile => true;
 
         private LibrarySpec FindLibrarySpec()
         {

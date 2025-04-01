@@ -30,13 +30,11 @@ namespace pwiz.Skyline.Model.Files
             _chromFileInfo = new Lazy<ChromFileInfo>(FindChromFileInfo);
         }
 
+        public override bool IsBackedByFile => true;
         public override Immutable Immutable => _chromFileInfo.Value;
-
         public override string Name => _chromFileInfo.Value.Name;
         public override string FilePath => _chromFileInfo.Value.FilePath.GetFilePath();
         public override string FileName => _chromFileInfo.Value.FilePath.GetFileName();
-
-        public override bool IsBackedByFile => true;
 
         private ChromFileInfo FindChromFileInfo()
         {

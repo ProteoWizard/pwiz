@@ -26,6 +26,7 @@ namespace pwiz.Skyline.Model.Files
         public RootFileNode(SrmDocument document, string documentPath) :
             base(document, documentPath, IdentityPath.ROOT, ImageId.skyline)
         {
+            // DocumentPath is null when a .sky document is new and has not been saved to disk yet
             if (documentPath == null)
             {
                 Name = FileResources.FileModel_NewDocument;
@@ -40,22 +41,20 @@ namespace pwiz.Skyline.Model.Files
             }
         }
 
-        public override Immutable Immutable => Document;
         public override bool IsBackedByFile => true;
+        public override Immutable Immutable => Document;
         public override string Name { get; }
         public override string FilePath { get; }
         public override string FileName { get; }
 
-        // CONSIDER: avoid building this list on each get. Cache results or create externally
-        //           and pass into the constructor. Similar comment for other FileNode subclasses
+        // CONSIDER: don't build this list on each get. Cache results or create externally and
+        //           pass into the constructor. Similar comment for other FileNode subclasses
         public override IList<FileNode> Files
         {
             get
             {
                 var list = new List<FileNode>();
 
-                // CONSIDER: add a "HasFiles" check to avoid eagerly loading everything
-                //           from SrmDocument for files shown in the tree
                 FileNode files = new ReplicatesFolder(Document, DocumentPath);
                 list.Add(files); // Always show the folder for Replicates
 

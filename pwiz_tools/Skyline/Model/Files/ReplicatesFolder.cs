@@ -32,6 +32,9 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override Immutable Immutable => Document.Settings.MeasuredResults;
+        public override string Name => FileResources.FileModel_Replicates;
+        public override string FilePath => string.Empty;
+        public override string FileName => string.Empty;
 
         public override IList<FileNode> Files
         {
@@ -48,9 +51,5 @@ namespace pwiz.Skyline.Model.Files
                 return ImmutableList.ValueOf(files);
             }
         }
-
-        public override string Name => FileResources.FileModel_Replicates;
-        public override string FilePath => string.Empty;
-        public override string FileName => string.Empty;
     }
 }

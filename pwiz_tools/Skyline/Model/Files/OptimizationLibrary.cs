@@ -21,22 +21,20 @@ namespace pwiz.Skyline.Model.Files
 {
     public class OptimizationLibrary : FileNode
     {
-        private readonly Lazy<Model.Optimization.OptimizationLibrary> _lazy;
+        private readonly Lazy<Optimization.OptimizationLibrary> _lazy;
 
         public OptimizationLibrary(SrmDocument document, string documentPath, Identity optimizedLibraryId) : 
             base(document, documentPath, new IdentityPath(optimizedLibraryId))
         {
-            _lazy = new Lazy<Model.Optimization.OptimizationLibrary>(FindOptimizationLibrary);
+            _lazy = new Lazy<Optimization.OptimizationLibrary>(FindOptimizationLibrary);
         }
 
+        public override bool IsBackedByFile => true;
         public override Immutable Immutable => _lazy.Value;
-
         public override string Name => _lazy.Value.Name;
         public override string FilePath => _lazy.Value.FilePath;
 
-        public override bool IsBackedByFile => true;
-
-        private Model.Optimization.OptimizationLibrary FindOptimizationLibrary()
+        private Optimization.OptimizationLibrary FindOptimizationLibrary()
         {
             return Document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
         }

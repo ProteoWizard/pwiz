@@ -30,7 +30,6 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override Immutable Immutable => Document;
-
         public override string Name => FileResources.FileModel_ProjectFiles;
         public override string FilePath => string.Empty;
 
@@ -43,12 +42,12 @@ namespace pwiz.Skyline.Model.Files
                 if (Document.Settings.DataSettings.IsAuditLoggingEnabled) 
                     files.Add(new SkylineAuditLog(Document, DocumentPath));
 
-                // TODO: does this need to check for whether the Skyline Document is saved to disk?
+                // CONSIDER: does this need to check for whether the Skyline Document is saved to disk?
                 files.Add(new SkylineViewFile(Document, DocumentPath));
 
                 // Chromatogram Caches (.skyd)
-                // TODO: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
-                // TODO: does this also need to check if the file exists?
+                // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
+                // CONSIDER: does this also need to check if the file exists?
                 var cachePaths = Document.Settings.MeasuredResults?.CachePaths;
                 if (cachePaths != null)
                 {
@@ -58,7 +57,7 @@ namespace pwiz.Skyline.Model.Files
                     }
                 }
 
-                return ImmutableList<FileNode>.ValueOf(files);
+                return ImmutableList.ValueOf(files);
             }
         }
 
