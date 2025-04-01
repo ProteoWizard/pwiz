@@ -18,7 +18,6 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
-using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -31,7 +30,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestFilesModel()
         {
-            // These test files are large (90MB) so reuse rather than duplidate
+            // These test files are large (90MB) so reuse rather than duplicate
             TestFilesZip = @"TestFunctional\FilesTreeFormTest.zip";
             RunFunctionalTest();
         }
