@@ -136,6 +136,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (!IsHandleCreated)
                 CreateHandle();
 
+            OnTextZoomChanged(); // Required to respect non-default fonts when initialized
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
         }
 
