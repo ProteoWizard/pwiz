@@ -18,7 +18,6 @@
  */
 
 using System.Collections.Generic;
-using System.Threading;
 using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -44,8 +43,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal class AreaGraphData : GraphData
         {
-            public AreaGraphData(SrmDocument document, GraphSettings graphSettings, CancellationToken cancellationToken)
-                : base(document, graphSettings, cancellationToken)
+            public AreaGraphData(SrmDocument document, GraphSettings graphSettings, ProductionMonitor productionMonitor)
+                : base(document, graphSettings, productionMonitor)
             {
             }
 
@@ -58,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public override GraphData ProduceResult(ProductionMonitor productionMonitor, GraphDataParameters parameter, IDictionary<WorkOrder, object> inputs)
             {
-                return new AreaGraphData(parameter.Document, parameter.GraphSettings, productionMonitor.CancellationToken);
+                return new AreaGraphData(parameter.Document, parameter.GraphSettings, productionMonitor);
             }
         }
     }
