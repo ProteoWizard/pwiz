@@ -1078,7 +1078,7 @@ namespace pwiz.Skyline.Model.Proteome
                 }
                 else if (newNodePepGroup.Any())
                 {
-                    newPeptideGroups.Add((PeptideGroupDocNode)nodePepGroup.ChangeChildren(newNodePepGroup.ToArray()));
+                    newPeptideGroups.Add((PeptideGroupDocNode)nodePepGroup.ChangeChildren(newNodePepGroup.ToArray()).ChangeAutoManageChildren(false));
                 }
             }
 
@@ -1086,7 +1086,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 var unmappedNakedPeptides = unmappedPeptideNodes.Select(node => node.Value.RemoveFastaSequence());
                 var unmappedPeptideList = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
-                    Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides, string.Empty, unmappedNakedPeptides.ToArray());
+                    Resources.ProteinAssociation_CreateDocTree_Unmapped_Peptides, string.Empty, unmappedNakedPeptides.ToArray(), false);
                 appendPeptideLists.Add(unmappedPeptideList);
             }
 
