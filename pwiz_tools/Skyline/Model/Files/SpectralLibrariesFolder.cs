@@ -19,35 +19,34 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
-    // .imsdb
-    public class IonMobilityLibraryFolder : FileNode
+    public class SpectralLibrariesFolder : FileNode
     {
-        private static readonly Identity IMSDB_FOLDER = new StaticFolderId();
+        private static readonly Identity SPECTRAL_LIBRARIES = new StaticFolderId();
 
-        public IonMobilityLibraryFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(IMSDB_FOLDER), ImageId.folder)
+        public SpectralLibrariesFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder)
         {
         }
 
-        public override Immutable Immutable => Document.Settings.TransitionSettings;
+        public override Immutable Immutable => Document.Settings.PeptideSettings;
 
-        public override string Name => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
+        public override string Name => FileResources.FileModel_Libraries;
         public override string FilePath => string.Empty;
 
         public override IList<FileNode> Files
         {
             get
             {
-                if (Document.Settings.TransitionSettings == null || !Document.Settings.TransitionSettings.HasIonMobilityLibraryPersisted)
+                if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasLibraries)
                 {
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                return ImmutableList<FileNode>.Singleton(new IonMobilityLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id));
+                var files = Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Select(library => new SpectralLibrary(Document, DocumentPath, library.Id)).ToList<FileNode>();
+                return ImmutableList.ValueOf(files);
             }
         }
     }

@@ -24,6 +24,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -631,6 +632,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FileName, FileName, rt);
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_FilePath, FilePath, rt);
 
+                // CONSIDER: use red font if file missing
                 var text = FileState == FileState.missing ? FilesTreeResources.FilesTree_TreeNode_RenderTip_FileMissing : LocalFilePath;
                 customTable.AddDetailRow(FilesTreeResources.FilesTree_TreeNode_RenderTip_LocalFilePath, text, rt);
             }

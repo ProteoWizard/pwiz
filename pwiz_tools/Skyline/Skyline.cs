@@ -1974,7 +1974,9 @@ namespace pwiz.Skyline
         {
             TargetsTextFactor = textFactor;
             SequenceTree.OnTextZoomChanged();
-            FilesTree.OnTextZoomChanged();
+
+            // Null check is required since FilesTree is not visible by default and may not exist yet
+            FilesTree?.OnTextZoomChanged(); 
         }
 
         public void ChangeColorScheme()

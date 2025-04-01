@@ -576,30 +576,35 @@
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />
     <Compile Include="Model\DocumentModifier.cs" />
-    <Compile Include="Controls\FilesTree\BackgroundProteome.cs" />
-    <Compile Include="Controls\FilesTree\BackgroundProteomeFolder.cs" />
-    <Compile Include="Controls\FilesTree\FileNode.cs" />
+    <Compile Include="Model\Files\BackgroundProteome.cs" />
+    <Compile Include="Model\Files\BackgroundProteomeFolder.cs" />
+    <Compile Include="Model\Files\FileNode.cs" />
     <Compile Include="Controls\FilesTree\FilesTreeResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>FilesTreeResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Controls\FilesTree\IonMobilityLibrary.cs" />
-    <Compile Include="Controls\FilesTree\IonMobilityLibraryFolder.cs" />
-    <Compile Include="Controls\FilesTree\OptimizationLibraryFolder.cs" />
-    <Compile Include="Controls\FilesTree\OptimizationLibrary.cs" />
-    <Compile Include="Controls\FilesTree\ProjectFilesFolder.cs" />
-    <Compile Include="Controls\FilesTree\Replicate.cs" />
-    <Compile Include="Controls\FilesTree\ReplicateSampleFile.cs" />
-    <Compile Include="Controls\FilesTree\ReplicatesFolder.cs" />
-    <Compile Include="Controls\FilesTree\RootFileNode.cs" />
-    <Compile Include="Controls\FilesTree\RTCalcFolder.cs" />
-    <Compile Include="Controls\FilesTree\RTCalc.cs" />
-    <Compile Include="Controls\FilesTree\SkylineAuditLog.cs" />
-    <Compile Include="Controls\FilesTree\SkylineChromatogramCache.cs" />
-    <Compile Include="Controls\FilesTree\SkylineViewFile.cs" />
-    <Compile Include="Controls\FilesTree\SpectralLibrariesFolder.cs" />
-    <Compile Include="Controls\FilesTree\SpectralLibrary.cs" />
+    <Compile Include="Model\Files\IonMobilityLibrary.cs" />
+    <Compile Include="Model\Files\IonMobilityLibraryFolder.cs" />
+    <Compile Include="Model\Files\OptimizationLibraryFolder.cs" />
+    <Compile Include="Model\Files\OptimizationLibrary.cs" />
+    <Compile Include="Model\Files\ProjectFilesFolder.cs" />
+    <Compile Include="Model\Files\Replicate.cs" />
+    <Compile Include="Model\Files\ReplicateSampleFile.cs" />
+    <Compile Include="Model\Files\ReplicatesFolder.cs" />
+    <Compile Include="Model\Files\RootFileNode.cs" />
+    <Compile Include="Model\Files\RTCalcFolder.cs" />
+    <Compile Include="Model\Files\RTCalc.cs" />
+    <Compile Include="Model\Files\SkylineAuditLog.cs" />
+    <Compile Include="Model\Files\SkylineChromatogramCache.cs" />
+    <Compile Include="Model\Files\SkylineViewFile.cs" />
+    <Compile Include="Model\Files\SpectralLibrariesFolder.cs" />
+    <Compile Include="Model\Files\SpectralLibrary.cs" />
+    <Compile Include="Model\Files\FileResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>FileResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\FullScanPropertiesRes.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -3753,6 +3758,11 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>FilesTreeResources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Model\Files\FileResources.resx">
+      <SubType>Designer</SubType>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>FileResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\FullScanPropertiesRes.ja.resx">
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>

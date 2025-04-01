@@ -24,6 +24,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
@@ -757,6 +758,9 @@ namespace pwiz.Skyline.Controls.FilesTree
             var selectedNode = FilesTree.SelectedNode;
             var selectedNodes = FilesTree.SelectedNodes.Cast<FilesTreeNode>().ToList();
 
+            if (selectedNode == null || selectedNodes.Count == 0)
+                return;
+
             // Order matters! Do this first to either short-circuit if attempting to select an un-draggable
             // node or collect nodes to drag
             var draggedNodes = new List<FilesTreeNode>();
@@ -782,9 +786,12 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (!_dropTargetRemove.Visible)
             {
-                // TODO: adjust sizing dynamically (hard-coded width, center vertically, adjust for scrollbars, handle Skyline resize)
-                var x = FilesTree.Bounds.X + FilesTree.Bounds.Width - 80;
-                var y = FilesTree.SelectedNode.Bounds.Y;
+                // Deliberately ignoring window resize events because they cancel an
+                // active drag-and-drop operation, which hides any visible drop targets
+
+                var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
+                // Vertically center the drop target on the SelectNode's midline
+                var y = FilesTree.SelectedNode.Bounds.Y + FilesTree.SelectedNode.Bounds.Height / 2 - _dropTargetRemove.Height / 2;
 
                 _dropTargetRemove.Location = new Point(x, y);
             }
@@ -820,7 +827,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         // TODO: de-select all items in tree when mouse enters a drop target. Possible
         //       there's a bug in TreeNodeMS (?) keeping an item highlighted (light blue) 
-        //       despite clearing SelectedNode/Nodes, even when invalidating tree
+        //       despite clearing SelectedNode/Nodes, even after invalidating FilesTree
         private void DropTargetRemove_DragEnter(object sender, DragEventArgs e)
         {
             e.Effect = e.AllowedEffect;

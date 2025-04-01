@@ -16,18 +16,18 @@
 
 using System;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
-    public class OptimizationLibrary : FileNode
+    // .irtdb
+    public class RTCalc : FileNode
     {
-        private readonly Lazy<Model.Optimization.OptimizationLibrary> _lazy;
+        private readonly Lazy<RetentionScoreCalculatorSpec> _lazy;
 
-        public OptimizationLibrary(SrmDocument document, string documentPath, Identity optimizedLibraryId) : 
-            base(document, documentPath, new IdentityPath(optimizedLibraryId))
+        public RTCalc(SrmDocument document, string documentPath, Identity id) : base(document, documentPath, new IdentityPath(id))
         {
-            _lazy = new Lazy<Model.Optimization.OptimizationLibrary>(FindOptimizationLibrary);
+            _lazy = new Lazy<RetentionScoreCalculatorSpec>(FindRTCalcSpec);
         }
 
         public override Immutable Immutable => _lazy.Value;
@@ -37,9 +37,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public override bool IsBackedByFile => true;
 
-        private Model.Optimization.OptimizationLibrary FindOptimizationLibrary()
+        private RetentionScoreCalculatorSpec FindRTCalcSpec()
         {
-            return Document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
+            return Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
         }
     }
 }

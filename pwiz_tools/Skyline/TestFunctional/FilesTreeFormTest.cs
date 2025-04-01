@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Files;
 using Peptide = pwiz.Skyline.Model.Peptide;
 
 // TODO: Replicate => verify right-click menu includes Open Containing Folder
@@ -60,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(FileResources.FileModel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
             Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
@@ -88,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual(FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+            Assert.AreEqual(FileResources.FileModel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
 
             // FilesTree should only have one set of nodes after opening a new document
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
@@ -304,8 +305,8 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => projectFilesRoot.IsVisible);
 
             Assert.AreEqual(2, projectFilesRoot.Nodes.Count);
-            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ViewFile));
-            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FilesTreeResources.FilesTree_TreeNodeLabel_ChromatogramCache));
+            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FileResources.FileModel_ViewFile));
+            Assert.IsTrue(projectFilesRoot.Nodes.ContainsKey(FileResources.FileModel_ChromatogramCache));
 
             //
             // File system - watch for file renamed

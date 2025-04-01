@@ -15,9 +15,8 @@
  */
 
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
     public class SkylineViewFile : FileNode
     {
@@ -30,7 +29,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public override Immutable Immutable => Document.Settings;
 
-        public override string Name => FilesTreeResources.FilesTree_TreeNodeLabel_ViewFile;
+        public override string Name => FileResources.FileModel_ViewFile;
         public override string FilePath => SkylineWindow.GetViewFile(DocumentPath);
         public override bool IsBackedByFile => true;
     }

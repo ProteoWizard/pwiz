@@ -16,9 +16,8 @@
 
 using System;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
     // .imsdb
     public class IonMobilityLibrary : FileNode

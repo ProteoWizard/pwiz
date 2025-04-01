@@ -117,47 +117,11 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="FilesTree_TreeNodeLabel_AuditLog" xml:space="preserve">
-    <value>Audit Log</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_BackgroundProteome" xml:space="preserve">
-    <value>Background Proteome</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_ChromatogramCache" xml:space="preserve">
-    <value>Chromatogram Cache</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_Libraries" xml:space="preserve">
-    <value>Spectral Libraries</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_NewDocument" xml:space="preserve">
-    <value>New Document</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_ProjectFiles" xml:space="preserve">
-    <value>Project Files</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_Replicates" xml:space="preserve">
-    <value>Replicates</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_ViewFile" xml:space="preserve">
-    <value>View File</value>
-  </data>
-  <data name="FilesTree_TreeNode_RenderTip_AcquiredTime" xml:space="preserve">
-    <value>Acquired Time</value>
-  </data>
-  <data name="FilesTree_TreeNode_RenderTip_ActiveDirectory" xml:space="preserve">
-    <value>Active Directory</value>
-  </data>
   <data name="FilesTree_TreeNode_RenderTip_FileMissing" xml:space="preserve">
     <value>Unable to find file</value>
   </data>
   <data name="FilesTree_TreeNode_RenderTip_FileName" xml:space="preserve">
     <value>File Name</value>
-  </data>
-  <data name="FilesTree_TreeNode_RenderTip_InstrumentModel" xml:space="preserve">
-    <value>Instrument Model</value>
   </data>
   <data name="FilesTree_TreeNode_RenderTip_LocalPath" xml:space="preserve">
     <value>Local Path</value>
@@ -167,9 +131,6 @@
   </data>
   <data name="FilesTree_TreeNode_RenderTip_SampleName" xml:space="preserve">
     <value>Sample Name</value>
-  </data>
-  <data name="FilesTree_TreeNodeLabel_OptimizationLibrary" xml:space="preserve">
-    <value>Optimization Library</value>
   </data>
   <data name="FilesTree_TreeNode_RenderTip_FilePath" xml:space="preserve">
     <value>File Path</value>
@@ -211,10 +172,10 @@
   <data name="Trash" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\Resources\Trash.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount" xml:space="preserve">
-      <value>Sample file count</value>
-  </data>
   <data name="FilesTreeNode_TreeNode_RenderTip_ReplicateCount" xml:space="preserve">
-      <value>Replicate count</value>
+      <value>Replicates</value>
+  </data>
+  <data name="FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount" xml:space="preserve">
+      <value>Sample files</value>
   </data>
 </root>

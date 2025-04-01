@@ -17,9 +17,8 @@
 using System.Collections.Generic;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
     public class ProjectFilesFolder : FileNode
     {
@@ -32,7 +31,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public override Immutable Immutable => Document;
 
-        public override string Name => FilesTreeResources.FilesTree_TreeNodeLabel_ProjectFiles;
+        public override string Name => FileResources.FileModel_ProjectFiles;
         public override string FilePath => string.Empty;
 
         public override IList<FileNode> Files

@@ -79,24 +79,6 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Acquired Time.
-        /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_AcquiredTime {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_AcquiredTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Active Directory.
-        /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_ActiveDirectory {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_ActiveDirectory", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unable to find file.
         /// </summary>
         public static string FilesTree_TreeNode_RenderTip_FileMissing {
@@ -120,15 +102,6 @@ namespace pwiz.Skyline.Controls.FilesTree {
         public static string FilesTree_TreeNode_RenderTip_FilePath {
             get {
                 return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_FilePath", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Instrument Model.
-        /// </summary>
-        public static string FilesTree_TreeNode_RenderTip_InstrumentModel {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNode_RenderTip_InstrumentModel", resourceCulture);
             }
         }
         
@@ -169,96 +142,6 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Audit Log.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_AuditLog {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_AuditLog", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Background Proteome.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_BackgroundProteome {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_BackgroundProteome", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Chromatogram Cache.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_ChromatogramCache {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_ChromatogramCache", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Spectral Libraries.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_Libraries {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_Libraries", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to New Document.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_NewDocument {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_NewDocument", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_None {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_None", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Optimization Library.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_OptimizationLibrary {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_OptimizationLibrary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project Files.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_ProjectFiles {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_ProjectFiles", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Replicates.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_Replicates {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_Replicates", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to View File.
-        /// </summary>
-        public static string FilesTree_TreeNodeLabel_ViewFile {
-            get {
-                return ResourceManager.GetString("FilesTree_TreeNodeLabel_ViewFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete this replicate?.
         /// </summary>
         public static string FilesTreeForm_ConfirmRemove_Replicate {
@@ -295,7 +178,7 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Replicate count.
+        ///   Looks up a localized string similar to Replicates.
         /// </summary>
         public static string FilesTreeNode_TreeNode_RenderTip_ReplicateCount {
             get {
@@ -304,7 +187,7 @@ namespace pwiz.Skyline.Controls.FilesTree {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Sample file count.
+        ///   Looks up a localized string similar to Sample files.
         /// </summary>
         public static string FilesTreeNode_TreeNode_RenderTip_ReplicateSampleFileCount {
             get {

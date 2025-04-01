@@ -16,31 +16,30 @@
 
 using System;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
-    // .irtdb
-    public class RTCalc : FileNode
+    public class SpectralLibrary : FileNode
     {
-        private readonly Lazy<RetentionScoreCalculatorSpec> _lazy;
+        private readonly Lazy<LibrarySpec> _librarySpec;
 
-        public RTCalc(SrmDocument document, string documentPath, Identity id) : base(document, documentPath, new IdentityPath(id))
+        public SpectralLibrary(SrmDocument document, string documentPath, Identity libraryId) : 
+            base(document, documentPath, new IdentityPath(libraryId), ImageId.peptide)
         {
-            _lazy = new Lazy<RetentionScoreCalculatorSpec>(FindRTCalcSpec);
+            _librarySpec = new Lazy<LibrarySpec>(FindLibrarySpec);
         }
 
-        public override Immutable Immutable => _lazy.Value;
+        public override Immutable Immutable => _librarySpec.Value;
 
-        public override string Name => _lazy.Value.Name;
-        public override string FilePath => _lazy.Value.FilePath;
+        public override string Name => _librarySpec.Value.Name;
+        public override string FilePath => _librarySpec.Value.FilePath;
 
         public override bool IsBackedByFile => true;
 
-        private RetentionScoreCalculatorSpec FindRTCalcSpec()
+        private LibrarySpec FindLibrarySpec()
         {
-            return Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
+            return Document.Settings.PeptideSettings.Libraries.FindLibrarySpec(IdentityPath.GetIdentity(0));
         }
     }
 }

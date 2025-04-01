@@ -18,7 +18,6 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
 /*
   (1) How to check whether a file exists in a separate thread? Where to store file states?
@@ -46,7 +45,7 @@ using pwiz.Skyline.Model;
 
  */
 // ReSharper disable WrongIndentSize
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
     public enum ImageId
     {

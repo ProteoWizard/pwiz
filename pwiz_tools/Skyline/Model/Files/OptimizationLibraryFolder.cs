@@ -19,9 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
     public class OptimizationLibraryFolder : FileNode
     {
@@ -35,7 +34,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public override Immutable Immutable => Document.Settings.TransitionSettings;
 
-        public override string Name => FilesTreeResources.FilesTree_TreeNodeLabel_OptimizationLibrary;
+        public override string Name => FileResources.FileModel_OptimizationLibrary;
         public override string FilePath => string.Empty;
 
         public override IList<FileNode> Files

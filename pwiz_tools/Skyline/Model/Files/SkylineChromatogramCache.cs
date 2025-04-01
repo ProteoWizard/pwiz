@@ -15,23 +15,25 @@
  */
 
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
-    public class SkylineAuditLog : FileNode
+    public class SkylineChromatogramCache : FileNode
     {
-        private static readonly Identity AUDIT_LOG_FILE = new StaticFolderId();
+        // TODO: this is a temporary Id for ChromatogramCache, which doesn't have one of its own
+        private class ChromatogramCacheId : Identity { }
 
-        public SkylineAuditLog(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(AUDIT_LOG_FILE), ImageId.audit_log)
+        public SkylineChromatogramCache(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(new ChromatogramCacheId()), ImageId.cache_file)
         {
         }
 
-        public override Immutable Immutable => Document.Settings;
+        public override Immutable Immutable => Document.Settings.MeasuredResults;
 
-        public override string Name => FilesTreeResources.FilesTree_TreeNodeLabel_AuditLog;
-        public override string FilePath => SrmDocument.GetAuditLogPath(DocumentPath);
+        public override string Name => FileResources.FileModel_ChromatogramCache;
+
+        public override string FilePath => ChromatogramCache.FinalPathForName(DocumentPath, null);
 
         public override bool IsBackedByFile => true;
     }

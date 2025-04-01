@@ -19,35 +19,34 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
-    public class BackgroundProteomeFolder : FileNode
+    // .imsdb
+    public class IonMobilityLibraryFolder : FileNode
     {
-        private static readonly Identity BACKGROUND_PROTEOME = new StaticFolderId();
+        private static readonly Identity IMSDB_FOLDER = new StaticFolderId();
 
-        public BackgroundProteomeFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder)
+        public IonMobilityLibraryFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(IMSDB_FOLDER), ImageId.folder)
         {
         }
 
-        public override Immutable Immutable => Document.Settings.PeptideSettings;
+        public override Immutable Immutable => Document.Settings.TransitionSettings;
 
-        public override string Name => FilesTreeResources.FilesTree_TreeNodeLabel_BackgroundProteome;
+        public override string Name => SkylineResources.SkylineWindow_FindIonMobilityLibrary_Ion_Mobility_Library;
         public override string FilePath => string.Empty;
-        public override string FileName => string.Empty;
 
         public override IList<FileNode> Files
         {
             get
             {
-                if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasBackgroundProteome)
+                if (Document.Settings.TransitionSettings == null || !Document.Settings.TransitionSettings.HasIonMobilityLibraryPersisted)
                 {
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, DocumentPath, Document.Settings.PeptideSettings.BackgroundProteome.Id));
+                return ImmutableList<FileNode>.Singleton(new IonMobilityLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id));
             }
         }
     }

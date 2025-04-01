@@ -18,9 +18,8 @@ using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
     public class RootFileNode : FileNode
     {
@@ -29,7 +28,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             if (documentPath == null)
             {
-                Name = FilesTreeResources.FilesTree_TreeNodeLabel_NewDocument;
+                Name = FileResources.FileModel_NewDocument;
                 FilePath = null;
                 FileName = null;
             }

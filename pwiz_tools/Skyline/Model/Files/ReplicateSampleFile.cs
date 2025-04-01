@@ -16,10 +16,9 @@
 
 using System;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFile : FileNode
     {

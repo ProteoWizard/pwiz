@@ -19,6 +19,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls.FilesTree;
+using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 

@@ -19,35 +19,34 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 
-namespace pwiz.Skyline.Controls.FilesTree
+namespace pwiz.Skyline.Model.Files
 {
-    public class SpectralLibrariesFolder : FileNode
+    public class BackgroundProteomeFolder : FileNode
     {
-        private static readonly Identity SPECTRAL_LIBRARIES = new StaticFolderId();
+        private static readonly Identity BACKGROUND_PROTEOME = new StaticFolderId();
 
-        public SpectralLibrariesFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder)
+        public BackgroundProteomeFolder(SrmDocument document, string documentPath) : 
+            base(document, documentPath, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder)
         {
         }
 
         public override Immutable Immutable => Document.Settings.PeptideSettings;
 
-        public override string Name => FilesTreeResources.FilesTree_TreeNodeLabel_Libraries;
+        public override string Name => FileResources.FileModel_BackgroundProteome;
         public override string FilePath => string.Empty;
+        public override string FileName => string.Empty;
 
         public override IList<FileNode> Files
         {
             get
             {
-                if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasLibraries)
+                if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasBackgroundProteome)
                 {
                     return Array.Empty<Replicate>().ToList<FileNode>();
                 }
 
-                var files = Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Select(library => new SpectralLibrary(Document, DocumentPath, library.Id)).ToList<FileNode>();
-                return ImmutableList.ValueOf(files);
+                return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, DocumentPath, Document.Settings.PeptideSettings.BackgroundProteome.Id));
             }
         }
     }
