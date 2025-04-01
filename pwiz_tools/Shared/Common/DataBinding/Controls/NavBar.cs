@@ -480,8 +480,9 @@ namespace pwiz.Common.DataBinding.Controls
                     var defaultColumnPropertyDescriptor = _bindingListSource.ItemProperties[defaultFrozenColumnIndex] as ColumnPropertyDescriptor;
                     if (defaultColumnPropertyDescriptor != null)
                     {
-                        var defaultMenuItemTest = $"Default({defaultColumnPropertyDescriptor.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized)})";
-                        var defaultMenuItem = new ToolStripMenuItem(defaultMenuItemTest);
+                        var defaultColumnName = defaultColumnPropertyDescriptor.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
+                        var defaultMenuItemText = string.Format(Resources.NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_, defaultColumnName);
+                        var defaultMenuItem = new ToolStripMenuItem(defaultMenuItemText);
                         defaultMenuItem.Click += (s, args) => DefaultFreezeColumnMenuItem_Click();
                         if (defaultFrozenEnabled)
                         {

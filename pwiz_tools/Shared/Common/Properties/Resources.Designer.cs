@@ -996,6 +996,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default({0}).
+        /// </summary>
+        internal static string NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_ {
+            get {
+                return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Manage layouts....
         /// </summary>
         internal static string NavBar_UpdateGroupTotalDropdown_Manage_layouts___ {
