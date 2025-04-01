@@ -1114,7 +1114,7 @@ namespace pwiz.Skyline.Model.Proteome
                     }).ToList())
                     : new ProteinMetadata(protein.Name, protein.Description, metadata.PreferredName, metadata.Accession,
                         metadata.Gene, metadata.Species);
-                var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray());
+                var peptideGroupDocNode = new PeptideGroupDocNode(protein, proteinOrGroupMetadata, children.ToArray(), false);
                 //peptideGroupDocNode = peptideGroupDocNode.ChangeName(protein.Name).ChangeDescription(protein.Description);
                 newPeptideGroups.Add(peptideGroupDocNode);
 
