@@ -452,7 +452,7 @@
     <value>Modify Current Pivot...</value>
   </data>
   <data name="NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_" xml:space="preserve">
-    <value>Default({0})</value>
+    <value>Default ({0})</value>
   </data>
   <data name="ManageLayoutsForm_UpdateUi_Manage_layouts_for__0_" xml:space="preserve">
     <value>Manage layouts for {0}</value>

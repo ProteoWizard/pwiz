@@ -55,7 +55,6 @@ namespace pwiz.Skyline.Controls.Databinding
         private ReplicatePivotColumns _replicatePivotColumns;
         private Dictionary<PropertyPath, DataGridViewRow> _replicateGridRows;
         private Dictionary<ResultKey, DataGridViewColumn> _replicateGridColumns;
-        private static readonly Color _readOnlyColor = Color.FromArgb(245, 245, 245);
         private static readonly double _defaultDataGridSplitterRatio = .33;
         private static readonly int _defaultFrozenColumnMax = 3;
 
@@ -900,6 +899,7 @@ namespace pwiz.Skyline.Controls.Databinding
         {
             var replicateTotalWidthMap = GetMainGridReplicateColumnWidths(replicatePivotColumns);
             var boundColumns = boundDataGridView.Columns.OfType<DataGridViewColumn>()
+                .Where(col => col.Visible)
                 .ToDictionary(col => col.DataPropertyName);
             foreach (var grouping in replicatePivotColumns.GetReplicateColumnGroups())
             {
@@ -1104,7 +1104,7 @@ namespace pwiz.Skyline.Controls.Databinding
                     if (replicatePivotColumns.IsConstantColumnReadOnly(column))
                     {
                         cell.ReadOnly = true;
-                        cell.Style.BackColor = _readOnlyColor;
+                        cell.Style.BackColor = AbstractViewContext.DefaultReadOnlyCellColor;
                     }
                     else
                     {
@@ -1433,7 +1433,13 @@ namespace pwiz.Skyline.Controls.Databinding
             formGroup.ShowSibling(pcaPlot);
             pcaPlot.ClusterInput = CreateClusterInput();
         }
-        
+
+        /*
+         * Class used to round values and carry over remainders. This
+         * is used when aligning replicate grid columns the width of a
+         * column is split up into multiple which are could require
+         * rounding as the value is divided. 
+         */
         private class AdjustingRounder
         {
             private double _roundedDifference;

@@ -318,11 +318,11 @@ namespace pwiz.Common.DataBinding.Controls
             }
             else
             {
-                return GetColumnFormatSelectedColumn();
+                return GetColumnFormatSelectedFrozenColumn();
             }
         }
 
-        private ColumnId GetColumnFormatSelectedColumn()
+        private ColumnId GetColumnFormatSelectedFrozenColumn()
         {
             return _bindingListSource.ItemProperties
                 .Select(ColumnId.GetColumnId)

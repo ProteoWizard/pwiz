@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: Eduardo Armendariz <wardough .at. u.washington.edu>,
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2024 University of Washington - Seattle, WA
@@ -26,6 +26,13 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /*
+     * ReplicatePivotColumns provides utility methods to group ItemProperties
+     * into replicate groups. This can provide a distinction between replicate
+     * variable, replicate constant and non-replicate item properties. These
+     * tests validate that item properties are qualified as expected when
+     * parsing a set of properties. 
+     */
     [TestClass]
     public class ReplicatePivotColumnsTest : AbstractFunctionalTest
     {

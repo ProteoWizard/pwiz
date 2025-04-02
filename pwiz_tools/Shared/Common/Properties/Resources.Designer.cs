@@ -996,7 +996,7 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Default({0}).
+        ///   Looks up a localized string similar to Default ({0}).
         /// </summary>
         internal static string NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_ {
             get {

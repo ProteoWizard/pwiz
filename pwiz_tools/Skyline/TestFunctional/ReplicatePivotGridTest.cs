@@ -37,7 +37,12 @@ namespace pwiz.SkylineTestFunctional
         private const string replicatePivotViewName = "Replicate Pivot";
         private const string replicatePivotNoVariablePropertyViewName = "Replicate Pivot No Variable Property";
         private const string replicatePivotNoConstantPropertyViewName = "Replicate Pivot No Constant Property";
-       
+        private const int expectedReplicateGridRowCount = 5;
+        private const int expectedFreezeEligibleColumns = 6;
+        private const int expectedDefaultFrozenColumns = 1;
+        private const string expectedDefaultFrozenColumn = "COLUMN_Peptide.Protein";
+        private const int randomSeed = 1000;
+
         [TestMethod]
         public void TestReplicatePivotGrid()
         {
@@ -57,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => documentGrid.IsComplete);
             
             Assert.IsTrue(replicatePivotDataGridView.Visible);
-            Assert.AreNotEqual(0, replicatePivotDataGridView.RowCount);
+            Assert.AreEqual(expectedReplicateGridRowCount, replicatePivotDataGridView.RowCount);
 
             // Verify pivot by replicate pivot grid is hidden if no replicate variable properties.
             RunUI(() => documentGrid.ChooseView(replicatePivotNoVariablePropertyViewName));
@@ -72,38 +77,39 @@ namespace pwiz.SkylineTestFunctional
             // Verify that column sizes are aligned for each replicate.
             RunUI(() => documentGrid.ChooseView(replicatePivotViewName));
             WaitForConditionUI(() => documentGrid.IsComplete);
-            verifyColumnSizesAligned(documentGrid);
+            VerifyColumnSizesAligned(documentGrid);
 
             // Resize replicate pivot grid and verify main grid widths are aligned.
             ResizeGridColumns(documentGrid.DataboundGridControl.ReplicatePivotDataGridView);
-            verifyColumnSizesAligned(documentGrid);
+            VerifyColumnSizesAligned(documentGrid);
 
             // Resize main grid and verify replicate pivot grid widths are aligned.
             ResizeGridColumns(documentGrid.DataboundGridControl.DataGridView);
-            verifyColumnSizesAligned(documentGrid);
+            VerifyColumnSizesAligned(documentGrid);
 
             // Verify columns begin frozen by default, then scroll and verify alignment
             var mainGridFrozenColumns = GetMainGridFrozenColumns(documentGrid);
-            Assert.AreEqual(mainGridFrozenColumns.Count, 1);
-            Assert.AreEqual(mainGridFrozenColumns.Last().DataPropertyName, "COLUMN_Peptide.Protein");
+            Assert.AreEqual(expectedDefaultFrozenColumns, mainGridFrozenColumns.Count);
+            Assert.AreEqual(expectedDefaultFrozenColumn, mainGridFrozenColumns.Last().DataPropertyName);
             Assert.IsTrue(GetReplicateGridPropertyColumn(documentGrid).Frozen);
             RunUI(() => documentGrid.DataboundGridControl.DataGridView.HorizontalScrollingOffset = 10);
-            verifyColumnSizesAligned(documentGrid);
+            VerifyColumnSizesAligned(documentGrid);
 
             // Select frozen option to disable freezing and verify columns are not frozen
             RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
             RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
             RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[0].PerformClick());
             mainGridFrozenColumns = GetMainGridFrozenColumns(documentGrid);
-            Assert.AreEqual(mainGridFrozenColumns.Count, 0);
+            Assert.AreEqual(0, mainGridFrozenColumns.Count);
             Assert.IsFalse(GetReplicateGridPropertyColumn(documentGrid).Frozen);
 
             // Freeze all eligible columns and verify alignment
             RunUI(() => documentGrid.NavBar.GroupButton.ShowDropDown());
             RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.ShowDropDown());
-            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[7].PerformClick());
+            // We add one as the dropdown starts with the default option
+            RunUI(() => documentGrid.NavBar.FreezeColumnsMenuItem.DropDownItems[expectedFreezeEligibleColumns + 1].PerformClick());
             mainGridFrozenColumns = GetMainGridFrozenColumns(documentGrid);
-            Assert.AreEqual(mainGridFrozenColumns.Count, 6);
+            Assert.AreEqual(expectedFreezeEligibleColumns, mainGridFrozenColumns.Count);
             Assert.IsTrue(GetReplicateGridPropertyColumn(documentGrid).Frozen);
 
 
@@ -118,7 +124,7 @@ namespace pwiz.SkylineTestFunctional
             var outputCsvFile = TestContext.GetTestResultsPath("DocumentGridExportTest.csv");
             var expectedCsvFile = TestFilesDir.GetTestPath("Replicate Pivot.csv");
             RunUI(() => documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, outputCsvFile, TextUtil.CsvSeparator));
-            Assert.AreEqual(File.ReadAllText(outputCsvFile), File.ReadAllText(expectedCsvFile));
+            Assert.AreEqual(File.ReadAllText(expectedCsvFile), File.ReadAllText(outputCsvFile));
 
             // Verify copy generates expected clipboard data
             var expectedTsvFile = TestFilesDir.GetTestPath("Replicate Pivot CopyAll.tsv");
@@ -144,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
                 .First(row => rowName.Equals(row.Cells[0].Value?.ToString()));
         }
 
-        private void verifyColumnSizesAligned(DocumentGridForm documentGrid)
+        private void VerifyColumnSizesAligned(DocumentGridForm documentGrid)
         {
             // Verify replicate columns are aligned.
             var mainGridColumnWidths = GetMainGridColumnWidths(documentGrid);
@@ -227,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void ResizeGridColumns(DataGridView dataGridView)
         {
-            var random = new Random();
+            var random = new Random(randomSeed);
             foreach (DataGridViewColumn column in dataGridView.Columns)
             {
                 var originalWidth = column.Width;

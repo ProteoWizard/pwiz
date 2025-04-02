@@ -135,6 +135,7 @@ namespace pwiz.Common.DataBinding
             {
                 var hashCode = (Format != null ? Format.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Width.GetHashCode();
+                hashCode = (hashCode * 397) ^ Frozen.GetHashCode();
                 return hashCode;
             }
         }

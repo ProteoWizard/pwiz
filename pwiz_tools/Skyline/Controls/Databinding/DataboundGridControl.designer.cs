@@ -1,4 +1,5 @@
 ﻿using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Controls.Databinding
 {
@@ -236,7 +237,7 @@ namespace pwiz.Skyline.Controls.Databinding
             // 
             // colReplicateProperty
             // 
-            dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(245, 245, 245);
+            dataGridViewCellStyle1.BackColor = AbstractViewContext.DefaultReadOnlyCellColor;
             this.colReplicateProperty.DefaultCellStyle = dataGridViewCellStyle1;
             resources.ApplyResources(this.colReplicateProperty, "colReplicateProperty");
             this.colReplicateProperty.Name = "colReplicateProperty";

@@ -464,12 +464,10 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void AddFreezeColumnMenuItems()
         {
-
             if (BindingListSource != null)
             {
                 freezeColumnsUpToToolStripMenuItem.DropDownItems.Clear();
                 btnGroupTotal.DropDownItems.Add(freezeColumnsUpToToolStripMenuItem);
-
 
                 // Add default frozen menu item.
                 var defaultFrozenEnabled = BindingListSource.ColumnFormats.DefaultFrozenEnabled;
@@ -483,7 +481,7 @@ namespace pwiz.Common.DataBinding.Controls
                         var defaultColumnName = defaultColumnPropertyDescriptor.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
                         var defaultMenuItemText = string.Format(Resources.NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_, defaultColumnName);
                         var defaultMenuItem = new ToolStripMenuItem(defaultMenuItemText);
-                        defaultMenuItem.Click += (s, args) => DefaultFreezeColumnMenuItem_Click();
+                        defaultMenuItem.Click += (s, args) => defaultFreezeColumnMenuItem_Click();
                         if (defaultFrozenEnabled)
                         {
                             defaultMenuItem.Font = new Font(defaultMenuItem.Font, FontStyle.Bold);
@@ -505,7 +503,7 @@ namespace pwiz.Common.DataBinding.Controls
 
                     var menuItem = new ToolStripMenuItem(columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.GetColumnCaption(ColumnCaptionType.localized));
                     var columnId = ColumnId.GetColumnId(BindingListSource.ItemProperties[i]);
-                    menuItem.Click += (s, args) => FreezeColumnMenuItem_Click(columnId);
+                    menuItem.Click += (s, args) => freezeColumnMenuItem_Click(columnId);
                     if (!defaultFrozenEnabled && columnId.Equals(selectedColumnId))
                     {
                         menuItem.Font = new Font(menuItem.Font, FontStyle.Bold);
@@ -516,7 +514,11 @@ namespace pwiz.Common.DataBinding.Controls
             btnGroupTotal.DropDownItems.Add(new ToolStripSeparator());
         }
 
-        private void FreezeColumnMenuItem_Click(ColumnId newSelectedColumnId)
+        /*
+         * Assigned to menu items dynamically as menu items are created when menu is opened.
+         * Can remain private as this is currently tested through clicking menu items.
+         */
+        private void freezeColumnMenuItem_Click(ColumnId newSelectedColumnId)
         {
             if (_bindingListSource.ColumnFormats.DefaultFrozenEnabled)
             {
@@ -545,7 +547,11 @@ namespace pwiz.Common.DataBinding.Controls
         }
 
 
-        private void DefaultFreezeColumnMenuItem_Click()
+        /*
+         * Assigned to default menu item dynamically as default menu item is created when menu is opened.
+         * Can remain private as this is currently tested through clicking menu item.
+         */
+        private void defaultFreezeColumnMenuItem_Click()
         {
             // Toggle default flag and then reset frozen state of existing columns.
             _bindingListSource.ColumnFormats.DefaultFrozenEnabled = !_bindingListSource.ColumnFormats.DefaultFrozenEnabled;

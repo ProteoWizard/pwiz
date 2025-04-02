@@ -45,6 +45,7 @@ namespace pwiz.Common.DataBinding
     {
         
         public const string DefaultViewName = "default";
+        public static readonly Color DefaultReadOnlyCellColor = Color.FromArgb(245, 245, 245);
         private IList<RowSourceInfo> _rowSources;
 
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
@@ -548,7 +549,7 @@ namespace pwiz.Common.DataBinding
             column.DefaultCellStyle.FormatProvider = DataSchema.DataSchemaLocalizer.FormatProvider;
             if (propertyDescriptor.IsReadOnly)
             {
-                column.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245); // Lighter than Color.LightGray, which is still pretty dark actually
+                column.DefaultCellStyle.BackColor = DefaultReadOnlyCellColor;
             }
             if (!string.IsNullOrEmpty(propertyDescriptor.Description))
             {
