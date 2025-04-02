@@ -170,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(1.0005),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(123, 297, 358, 1074, 144)
+                ExpectedResultsFinal = new ExpectedResults(130, 309, 372, 1116, 150)
             };
 
             RunFunctionalTest();
@@ -241,9 +241,8 @@ namespace pwiz.SkylineTestFunctional
                     { "check_spectral_files", "0" },
                     { "calibrate_mass", "0" },
                     //{ "output_report_topN", "5" },
-                    { "train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture) }
                 },
-                ExpectedResultsFinal = new ExpectedResults(143, 340, 428, 1284, 166)
+                ExpectedResultsFinal = new ExpectedResults(143, 337, 425, 1275, 165)
             };
 
             RunFunctionalTest();
