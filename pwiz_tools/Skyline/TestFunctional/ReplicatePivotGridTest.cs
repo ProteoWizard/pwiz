@@ -20,11 +20,14 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.SkylineTestUtil;
 using System.Windows.Forms;
+using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -110,6 +113,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(cellToClick);
             RunUI(() => documentGrid.DataboundGridControl.replicatePivotDataGridView_OnCellContentClick(null, new DataGridViewCellEventArgs(cellToClick.ColumnIndex, cellToClick.RowIndex)));
             Assert.AreEqual("D_102_REP3", GetCurrentReplicateSelection());
+            
+            // Verify Export generates expected file
+            var outputCsvFile = TestContext.GetTestResultsPath("DocumentGridExportTest.csv");
+            var expectedCsvFile = TestFilesDir.GetTestPath("Replicate Pivot.csv");
+            RunUI(() => documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, outputCsvFile, TextUtil.CsvSeparator));
+            Assert.AreEqual(File.ReadAllText(outputCsvFile), File.ReadAllText(expectedCsvFile));
+
+            // Verify copy generates expected clipboard data
+            var expectedTsvFile = TestFilesDir.GetTestPath("Replicate Pivot CopyAll.tsv");
+            RunUI(() => documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, outputCsvFile, TextUtil.CsvSeparator));
+            RunUI(() => documentGrid.NavBar.ViewContext.CopyAll(documentGrid.NavBar, documentGrid.BindingListSource));
+            Assert.AreEqual(File.ReadAllText(expectedTsvFile), ClipboardEx.GetText());
         }
 
         private string GetCurrentReplicateSelection()
@@ -210,24 +225,11 @@ namespace pwiz.SkylineTestFunctional
                 .Where(col => col.Frozen).ToList();
         }
 
-        private int GetVerticalScrollBarWidth(DataGridView dataGridView)
-        {
-            var scrollBarWidth = 0;
-            var vScrollBar = dataGridView.Controls.OfType<VScrollBar>().FirstOrDefault();
-            if (vScrollBar is { Visible: true, Enabled: true })
-            {
-                scrollBarWidth = vScrollBar.Width;
-            }
-
-            return scrollBarWidth;
-        }
-
         private void ResizeGridColumns(DataGridView dataGridView)
         {
             var random = new Random();
             foreach (DataGridViewColumn column in dataGridView.Columns)
             {
-                
                 var originalWidth = column.Width;
                 var newWidth = (int)(originalWidth * (.9 + (random.NextDouble() * .1)));
                 RunUI(() => column.Width = Math.Max(newWidth, 10));
