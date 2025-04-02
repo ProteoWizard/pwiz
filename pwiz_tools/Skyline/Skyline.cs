@@ -97,7 +97,6 @@ namespace pwiz.Skyline
             IUndoable,
             IDocumentUIContainer,
             IProgressMonitor,
-            ILibraryBuildNotificationContainer,
             IToolMacroProvider,
             IModifyDocumentContainer,
             IRetentionScoreSource,
@@ -119,7 +118,6 @@ namespace pwiz.Skyline
         private readonly RetentionTimeManager _retentionTimeManager;
         private readonly IonMobilityLibraryManager _ionMobilityLibraryManager;
         private readonly LibraryManager _libraryManager;
-        private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
         private readonly AutoTrainManager _autoTrainManager;
 
@@ -165,7 +163,6 @@ namespace pwiz.Skyline
             _libraryManager = new LibraryManager();
             _libraryManager.ProgressUpdateEvent += UpdateProgress;
             _libraryManager.Register(this);
-            _libraryBuildNotificationHandler = new LibraryBuildNotificationHandler(this);
 
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
@@ -1785,6 +1782,26 @@ namespace pwiz.Skyline
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
             deleteContextMenuItem.Enabled = enabled;
+            if (SequenceTree.SelectedNodes.Count > 0)
+            {
+                expandSelectionContextMenuItem.Enabled = true;
+                expandSelectionContextMenuItem.Visible = true;
+            }
+            else
+            {
+                expandSelectionContextMenuItem.Enabled = false;
+                expandSelectionContextMenuItem.Visible = false;
+            }
+            if (Settings.Default.UIMode == UiModes.PROTEOMIC)
+            {
+                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Protein;
+                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title;
+            }
+            else
+            {
+                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Molecule_List;
+                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title_Molecule;
+            }
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
             removePeakContextMenuItem.Visible = (SequenceTree.SelectedNode is TransitionTreeNode && enabled);
@@ -1840,7 +1857,22 @@ namespace pwiz.Skyline
         {
             SequenceTree.ShowPickList(okOnDeactivate);
         }
-
+        private void expandSelectionNoneContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(SrmTreeNodeParent));
+        }
+        private void expandSelectionProteinsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(PeptideGroupTreeNode));
+        }
+        private void expandSelectionPeptidesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(PeptideTreeNode));
+        }
+        private void expandSelectionPrecursorsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(TransitionGroupTreeNode));
+        }
         /// <summary>
         /// Shows pop-up pick list for tests, with no automatic OK on deactivation of the pick list,
         /// since this can cause failures, if the test computer is in use during the tests.
@@ -4008,13 +4040,6 @@ namespace pwiz.Skyline
                     return;
             }
 
-            // TODO: replace this with more generic logic fed from IProgressMonitor
-            if (BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(x))
-            {
-                e.Response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, x);
-                return;
-            }
-
             var message = ExceptionUtil.GetMessage(x);
 
             // Drill down to see if the innermost exception was an out-of-memory exception.
@@ -4147,25 +4172,7 @@ namespace pwiz.Skyline
             ShowAllChromatogramsGraph();
         }
 
-        Point INotificationContainer.NotificationAnchor
-        {
-            get { return new Point(Left, statusStrip.Visible ? Bottom - statusStrip.Height : Bottom); }
-        }
-
-        LibraryManager ILibraryBuildNotificationContainer.LibraryManager
-        {
-            get { return _libraryManager; }
-        }
-
-        public Action<LibraryManager.BuildState, bool> LibraryBuildCompleteCallback
-        {
-            get { return _libraryBuildNotificationHandler.LibraryBuildCompleteCallback; }
-        }
-
-        public void RemoveLibraryBuildNotification()
-        {
-            _libraryBuildNotificationHandler.RemoveLibraryBuildNotification();
-        }
+        public LibraryManager LibraryManager => _libraryManager;
 
         public bool StatusContains(string format)
         {

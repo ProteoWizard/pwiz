@@ -87,6 +87,8 @@ targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['Bumbersho
 
 targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
 targets['All'] = merge(targets['Core'], targets['SkylineWithTestConnected'], targets['Bumbershoot'], targets['Container'])
+targets['Windows'] = merge(targets['CoreWindows'], targets['SkylineWithTestConnected'], targets['BumbershootRelease'], targets['Container'])
+targets['Linux'] = merge(targets['CoreLinux'], targets['BumbershootLinux'])
 
 # Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
@@ -108,6 +110,8 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
     ("pwiz_tools/.*", targets['All']),
-    ("Jamroot.jam", targets['All'])
+    ("Jamroot.jam", targets['All']),
+    (".*\.bat", targets['Windows']),
+    (".*\.sh", targets['Linux'])
 ]
 

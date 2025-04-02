@@ -1388,6 +1388,20 @@ namespace pwiz.Skyline.Util
             return charges;
         }
 
+        public bool TryApplyToMolecule(ParsedMolecule molecule, out ParsedMolecule result)
+        {
+            try
+            {
+                result = ApplyToMolecule(molecule);
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                result = null; // Trying to remove more O, or label more C, etc, than is present
+                return false;
+            }
+        }
+
         public ParsedMolecule ApplyToMolecule(Molecule molecule)
         {
             return ApplyToMolecule(ParsedMolecule.Create(molecule));

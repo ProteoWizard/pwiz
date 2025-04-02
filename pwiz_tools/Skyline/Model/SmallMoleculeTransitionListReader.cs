@@ -792,13 +792,14 @@ namespace pwiz.Skyline.Model
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
         }
 
-        public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct,
-            TypedMass mz, int? charge, bool? isPositive, bool isPrecursor, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
+        public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct, 
+            MoleculeAccessionNumbers accessionNumbers, TypedMass mz, int? charge, bool? isPositive, bool isPrecursor, out TypedMass monoMass, out TypedMass averageMass, out double? mzCalc)
         {
             var ion = new CustomIon(moleculeFormula);
             monoMass = ion.GetMass(MassType.Monoisotopic);
             averageMass = ion.GetMass(MassType.Average);
             var mass = mz.IsMonoIsotopic() ? monoMass : averageMass;
+            var isotopeLabels = accessionNumbers.FindLabels(); // InChi may have label information
 
             // Does given charge, if any, agree with mass and mz?
             var adductInferred = adduct;
@@ -833,15 +834,26 @@ namespace pwiz.Skyline.Model
                 foreach (var text in Adduct.DEFACTO_STANDARD_ADDUCTS.Concat(Adduct.COMMON_CHARGEONLY_ADDUCTS))
                 {
                     adductInferred = Adduct.FromString(text, Adduct.ADDUCT_TYPE.non_proteomic, null);
+                    if (isotopeLabels != null && isotopeLabels.Any())
+                    {
+                        adductInferred = adductInferred.ChangeIsotopeLabels(isotopeLabels);
+                    }
                     if (minCharge <= adductInferred.AdductCharge && adductInferred.AdductCharge <= maxCharge)
                     {
-                        var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                        if (err <= tolerance && err < leastError)
+                        bool CheckLeastError(double errVal)
                         {
-                            bestMatch = adductInferred;
-                            leastError = err;
+                            if (errVal <= tolerance && errVal < leastError && // Close to m/z 
+                                adductInferred.TryApplyToMolecule(ion.ParsedMolecule, out var _)) // Sanity check for formula with this adduct
+                            {
+                                bestMatch = adductInferred;
+                                leastError = errVal;
+                                return true;
+                            }
+                            return false;
                         }
-                        else if (isPrecursor)
+
+                        var err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
+                        if (!CheckLeastError(err) && isPrecursor)
                         {
                             // Try water loss
                             var parts = text.Split('+', '-'); // Only for simple adducts like M+H, M+Na etc
@@ -850,21 +862,12 @@ namespace pwiz.Skyline.Model
                                 var tail = text.Substring(parts[0].Length);
                                 adductInferred = Adduct.FromString(parts[0] + @"-H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                 err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                if (err <= tolerance && err < leastError)
-                                {
-                                    bestMatch = adductInferred;
-                                    leastError = err;
-                                }
-                                else
+                                if (!CheckLeastError(err))
                                 {
                                     // Try double water loss (as in https://www.drugbank.ca/spectra/mzcal/DB01299 )
                                     adductInferred = Adduct.FromString(parts[0] + @"-2H2O" + tail, Adduct.ADDUCT_TYPE.non_proteomic, null);
                                     err = Math.Abs(adductInferred.MzFromNeutralMass(mass) - mz);
-                                    if (err <= tolerance && err < leastError)
-                                    {
-                                        bestMatch = adductInferred;
-                                        leastError = err;
-                                    }
+                                    CheckLeastError(err);
                                 }
                             }
                         }
@@ -1725,7 +1728,11 @@ namespace pwiz.Skyline.Model
                         if (!adduct.IsEmpty)
                         {
                             var labels = BioMassCalc.FindIsotopeLabelsInFormula(formula);
-                            if (labels.Any())
+                            if ((labels == null || !labels.Any()) && precursorInfo != null)
+                            {
+                                labels = precursorInfo.MoleculeID.FindLabels(); // InChi may have label information
+                            }
+                            if (labels != null && labels.Any())
                             {
                                 adduct = adduct.ChangeIsotopeLabels(labels);
                                 formula = BioMassCalc.MONOISOTOPIC.StripLabelsFromFormula(formula);
@@ -1746,7 +1753,7 @@ namespace pwiz.Skyline.Model
                             var initialCharge = charge;
                             var initialAdduct = adduct;
                             charge = ValidateFormulaWithMzAndAdduct(tolerance, useMonoisotopicMass,
-                                ref formula, ref adduct,  mz, charge, expectIsPositiveCharge, getPrecursorColumns, out monoMass, out averageMass, out mzCalc);
+                                ref formula, ref adduct, moleculeID?.AccessionNumbers, mz, charge, expectIsPositiveCharge, getPrecursorColumns, out monoMass, out averageMass, out mzCalc);
                             row.UpdateCell(indexFormula, formula);
                             massOk = monoMass < CustomMolecule.MAX_MASS && averageMass < CustomMolecule.MAX_MASS &&
                                      !(massTooLow = charge.HasValue && (monoMass < CustomMolecule.MIN_MASS || averageMass < CustomMolecule.MIN_MASS)); // Null charge => masses are 0 but meaningless

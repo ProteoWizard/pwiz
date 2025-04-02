@@ -913,7 +913,7 @@ namespace pwiz.Skyline.Model.Irt
             {
                 string.Format(
                     IrtResources.IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_,
-                    calc.Name, standardCount, minStandardCount, missingTargets.Count),
+                    calc.Name, minStandardCount, standardCount, missingTargets.Count),
                 string.Empty
             };
             lines.AddRange(missingTargets.Select(target => target.ToString()));

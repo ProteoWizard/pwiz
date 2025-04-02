@@ -220,14 +220,12 @@
   </data>
   <data name="cbAnonymous.Text" xml:space="preserve">
     <value>匿名アクセス</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <metadata name="toolTipAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
   <data name="cbAnonymous.ToolTip" xml:space="preserve">
     <value>サーバーにアカウントを持っていない場合は、このボックスをオンにします。ユーザーアカウントがない場合、サーバー上の公開ドキュメントは匿名で閲覧、ダウンロード、開くことができますが、サーバーにドキュメントをアップロードすることはできません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbAnonymous.Name" xml:space="preserve">
     <value>cbAnonymous</value>
@@ -501,10 +499,6 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Panoramaサーバーの編集</value>
-    <comment>Needs Review:English text changed
-Old English:Edit Server
-Current English:Edit Panorama Server
-Old Localized:サーバーを編集</comment>
   </data>
   <data name="&gt;&gt;toolTipAnonymous.Name" xml:space="preserve">
     <value>toolTipAnonymous</value>

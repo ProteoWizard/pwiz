@@ -362,6 +362,17 @@ namespace pwiz.Skyline.Controls.Startup
                 },
                 new TutorialActionBoxControl
                 {
+                    Caption = TutorialTextResources.PRMOrbitrap_Caption,
+                    Icon = TutorialImageResources.PRMOrbitrap_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.PRMOrbitrap_zip,
+                        TutorialLinkResources.PRMOrbitrap_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.PRMOrbitraip_Description
+                },
+                new TutorialActionBoxControl
+                {
                     Caption = TutorialTextResources.DIA_Caption,
                     Icon = TutorialImageResources.DIA_start,
                     EventAction = () => Tutorial(
@@ -392,6 +403,17 @@ namespace pwiz.Skyline.Controls.Startup
                         string.Empty
                     ),
                     Description = TutorialTextResources.DIA_PASEF_Description
+                },
+                new TutorialActionBoxControl
+                {
+                    Caption = TutorialTextResources.DIA_Umpire_TTOF_Caption,
+                    Icon = TutorialImageResources.DIA_Umpire_TTOF_start,
+                    EventAction = () => Tutorial(
+                        TutorialLinkResources.DIA_Umpire_TTOF_zip,
+                        TutorialLinkResources.DIA_Umpire_TTOF_pdf,
+                        string.Empty
+                    ),
+                    Description = TutorialTextResources.DIA_Umpire_TTOF_Description
                 }
             };
             var tutorialSmallMoleculeBoxPanels = new Control[]

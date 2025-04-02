@@ -2147,6 +2147,14 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
+            IDictionary<string, string> accessions)
+        {
+            accessions.TryGetValue(MoleculeAccessionNumbers.TagInChiKey, out var inChiKey);
+            return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, 
+                string.Join(@"\t", accessions.Where(kvp => kvp.Key != MoleculeAccessionNumbers.TagInChiKey).Select(kvp => kvp.Key + @":" + kvp.Value)));
+        }
+
+        public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
             string inChiKey, string otherKeys)
         {
             try

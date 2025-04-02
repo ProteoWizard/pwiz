@@ -41,7 +41,8 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class SrmTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once    
         public void TestSrmTutorialLegacy()
         {
             //Set true to look at tutorial screenshots
@@ -267,10 +268,11 @@ namespace pwiz.SkylineTestTutorial
             var pepSettings2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() => pepSettings2.SelectedTab = PeptideSettingsUI.TABS.Library);
             var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(pepSettings2.ShowBuildLibraryDlg);
+            const string libraryName = "Mtb_hDP_20140210";
             RunUI(() =>
             {
                 buildLibraryDlg.LibraryPath = GetTestPath("Skyline");
-                buildLibraryDlg.LibraryName = "Mtb_hDP_20140210";
+                buildLibraryDlg.LibraryName = libraryName;
             });
             PauseForScreenShot("Build Library Window");
             RunUI(() =>
@@ -282,6 +284,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => buildLibraryDlg.Grid.SetScoreThreshold(0.9));
             PauseForScreenShot("Build Library Window Next");
             OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+            WaitForConditionUI(() => pepSettings2.PickedLibraries.Contains(libraryName));
             RunUI(() =>
             {
                 pepSettings2.SetLibraryChecked(0, true);

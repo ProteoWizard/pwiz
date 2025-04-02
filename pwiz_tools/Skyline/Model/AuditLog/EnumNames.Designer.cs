@@ -1456,6 +1456,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Comet.
+        /// </summary>
+        public static string SearchEngine_Comet {
+            get {
+                return ResourceManager.GetString("SearchEngine_Comet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hardklör.
         /// </summary>
         public static string SearchEngine_Hardklor {

@@ -113,6 +113,12 @@ namespace pwiz.SkylineTestUtil
             set { TestContext.Properties["RunSmallMoleculeTestVersions"] = value.ToString(CultureInfo.InvariantCulture); }
         }
 
+        protected int TestPass
+        {
+            get { return (int) TestContext.GetLongValue("TestPass", 0); }
+            set { TestContext.Properties["TestPass"] = value.ToString(); }
+        }
+
         /// <summary>
         /// Controls whether or not certain machines run the often flaky TestToolService
         /// </summary>

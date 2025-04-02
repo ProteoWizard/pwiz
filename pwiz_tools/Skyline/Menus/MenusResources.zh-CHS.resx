@@ -326,10 +326,8 @@
 
 1. 导航至“设置 &gt; 肽段设置 - 库”选项卡，然后单击“编辑列表”。
 2. 选择库中的某项，单击“编辑”，然后取消选中“使用明示峰界限”复选框。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RefineMenu_ShowGenerateDecoysDlg_Add_Decoys" xml:space="preserve">
     <value>添加诱饵</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>

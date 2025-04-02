@@ -203,6 +203,22 @@ namespace sqlite3pp
         sqlite3_enable_load_extension(db_, 0);
     }
 
+    void database::load_extension(int (*init_extension_func)(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi))
+    {
+        char* errorBuf = NULL;
+        int rc = init_extension_func(db_, &errorBuf, NULL);
+        if (rc != SQLITE_OK)
+        {
+            std::string error;
+            if (errorBuf)
+            {
+                error = errorBuf;
+                sqlite3_free(errorBuf);
+            }
+            throw database_error("loading extension: " + error);
+        }
+    }
+
     int database::load_from_file(const std::string& dbname)
     {
         return loadOrSaveDb(db_, dbname.c_str(), 0);

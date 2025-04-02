@@ -113,6 +113,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Collections\DisposableCollection.cs" />
+    <Compile Include="Collections\Factor.cs" />
+    <Compile Include="Collections\ImmutableListFactory.cs" />
+    <Compile Include="Collections\IntegerList.cs" />
     <Compile Include="CommonApplicationSettings.cs" />
     <Compile Include="Chemistry\AminoAcidFormulas.cs" />
     <Compile Include="Chemistry\Formula.cs" />
@@ -185,6 +188,7 @@
     <Compile Include="SystemUtil\ItemDescription.cs" />
     <Compile Include="SystemUtil\PInvoke\PInvokeCommon.cs" />
     <Compile Include="SystemUtil\ProcessEx.cs" />
+    <Compile Include="SystemUtil\ProgressStream.cs" />
     <Compile Include="SystemUtil\StreamEx.cs" />
     <Compile Include="SystemUtil\StringSearch.cs" />
     <Compile Include="Spectra\SpectrumMetadata.cs" />

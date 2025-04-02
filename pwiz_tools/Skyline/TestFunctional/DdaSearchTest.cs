@@ -87,9 +87,11 @@ namespace pwiz.SkylineTestFunctional
             public string Ms2Analyzer { get; set; }
             public MzTolerance PrecursorTolerance { get; set; }
             public MzTolerance FragmentTolerance { get; set; }
-            public List<KeyValuePair<string, string>> AdditionalSettings { get; set; }
+            public Dictionary<string, string> AdditionalSettings { get; set; }
             public ExpectedResults ExpectedResults { get; set; }
             public ExpectedResults ExpectedResultsFinal { get; set; }
+            public Action BeforeSettingsAction { get; set; }
+            public Action ExpectedErrorAction { get; set; }
             public bool HasMissingDependencies { get; private set; }
         }
 
@@ -112,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
-                AdditionalSettings = new List<KeyValuePair<string, string>>(),
+                AdditionalSettings = new Dictionary<string, string>(),
                 ExpectedResultsFinal = new ExpectedResults(133, 332, 394, 1182, 163)
             };
 
@@ -140,8 +142,75 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = "Orbitrap/FTICR/Lumos",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
-                AdditionalSettings = new List<KeyValuePair<string, string>>(),
+                AdditionalSettings = new Dictionary<string, string>(),
                 ExpectedResultsFinal = new ExpectedResults(104, 256, 317, 951, 124)
+            };
+
+            RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.COMET_UNICODE_ISSUES)]
+        public void TestDdaSearchComet()
+        {
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            if (RedownloadTools)
+                foreach (var requiredFile in CometSearchEngine.FilesToDownload)
+                    if (requiredFile.Unzip)
+                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                    else
+                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+
+            TestSettings = new DdaTestSettings
+            {
+                SearchEngine = SearchSettingsControl.SearchEngine.Comet,
+                FragmentIons = "b,y",
+                Ms2Analyzer = "Default",
+                PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(1.0005),
+                AdditionalSettings = new Dictionary<string, string>(),
+                ExpectedResultsFinal = new ExpectedResults(123, 297, 358, 1074, 144)
+            };
+
+            RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.COMET_UNICODE_ISSUES)]
+        public void TestDdaSearchCometAutoTolerance()
+        {
+            // Check that the error from having not enough spectra to do auto-tolerance calculation is report properly.
+
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            if (RedownloadTools)
+                foreach (var requiredFile in CometSearchEngine.FilesToDownload)
+                    if (requiredFile.Unzip)
+                        DirectoryEx.SafeDelete(requiredFile.InstallPath);
+                    else
+                        FileEx.SafeDelete(Path.Combine(requiredFile.InstallPath, requiredFile.Filename));
+
+            TestSettings = new DdaTestSettings
+            {
+                SearchEngine = SearchSettingsControl.SearchEngine.Comet,
+                FragmentIons = "b,y",
+                Ms2Analyzer = "Default",
+                PrecursorTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(0.5),
+                AdditionalSettings = new Dictionary<string, string>
+                {
+                    { "auto_fragment_bin_tol", "fail" },
+                    { "auto_peptide_mass_tolerance", "fail" }
+                },
+                ExpectedResultsFinal = new ExpectedResults(new IOException()),
+                ExpectedErrorAction = () =>
+                {
+                    var errorCalculationFailedDlg = WaitForOpenForm<MessageDlg>();
+                    StringAssert.Contains(errorCalculationFailedDlg.Message, "Precursor error calculation failed");
+                    StringAssert.Contains(errorCalculationFailedDlg.Message, "Fragment error calculation failed");
+                    OkDialog(errorCalculationFailedDlg, errorCalculationFailedDlg.ClickOk);
+                }
             };
 
             RunFunctionalTest();
@@ -167,12 +236,12 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
-                AdditionalSettings = new List<KeyValuePair<string, string>>
+                AdditionalSettings = new Dictionary<string, string>
                 {
-                    new KeyValuePair<string, string>("check_spectral_files", "0"),
-                    new KeyValuePair<string, string>("calibrate_mass", "0"),
-                    //new KeyValuePair<string, string>("output_report_topN", "5"),
-                    new KeyValuePair<string, string>("train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture))
+                    { "check_spectral_files", "0" },
+                    { "calibrate_mass", "0" },
+                    //{ "output_report_topN", "5" },
+                    { "train-fdr", Convert.ToString(0.1, CultureInfo.CurrentCulture) }
                 },
                 ExpectedResultsFinal = new ExpectedResults(143, 340, 428, 1284, 166)
             };
@@ -200,11 +269,19 @@ namespace pwiz.SkylineTestFunctional
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
-                AdditionalSettings = new List<KeyValuePair<string, string>>
+                AdditionalSettings = new Dictionary<string, string>
                 {
-                    new KeyValuePair<string, string>("check_spectral_files", "0")
+                    { "check_spectral_files", "0" }
                 },
-                ExpectedResultsFinal = new ExpectedResults(new FileNotFoundException())
+                BeforeSettingsAction = () => File.Delete(GetTestPath(TestSettings.FastaFilename)),
+                ExpectedResultsFinal = new ExpectedResults(new FileNotFoundException()),
+                ExpectedErrorAction = () =>
+                {
+                    var fastaFileNotFoundDlg = WaitForOpenForm<MessageDlg>();
+                    var expectedMsg = new FileNotFoundException(GetSystemResourceString("IO.FileNotFound_FileName", GetTestPath(TestSettings.FastaFilename))).Message;
+                    Assert.AreEqual(expectedMsg, fastaFileNotFoundDlg.Message);
+                    OkDialog(fastaFileNotFoundDlg, fastaFileNotFoundDlg.ClickOk);
+                }
             };
 
             RunFunctionalTest();
@@ -356,11 +433,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
             });
 
-
-
-            // delete the FASTA to cause the error
-            if (errorExpected)
-                File.Delete(GetTestPath(TestSettings.FastaFilename));
+            TestSettings.BeforeSettingsAction?.Invoke();
 
             RunUI(() =>
             {
@@ -422,10 +495,7 @@ namespace pwiz.SkylineTestFunctional
             }
             else // errorExpected
             {
-                var fastaFileNotFoundDlg = WaitForOpenForm<MessageDlg>();
-                var expectedMsg = new FileNotFoundException(GetSystemResourceString("IO.FileNotFound_FileName", GetTestPath(TestSettings.FastaFilename))).Message;
-                Assert.AreEqual(expectedMsg, fastaFileNotFoundDlg.Message);
-                OkDialog(fastaFileNotFoundDlg, fastaFileNotFoundDlg.ClickOk);
+                TestSettings.ExpectedErrorAction?.Invoke();
                 WaitForConditionUI(60000, () => searchSucceeded.HasValue);
                 OkDialog(importPeptideSearchDlg, importPeptideSearchDlg.ClickCancelButton);
                 return;

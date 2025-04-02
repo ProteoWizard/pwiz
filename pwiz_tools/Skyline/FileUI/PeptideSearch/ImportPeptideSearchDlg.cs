@@ -183,8 +183,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 if (isFeatureDetection)
                 {
                     this.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection;
-                    label14.Text =
-                        PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
                     lblDDASearch.Text = PeptideSearchResources.ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection; // Was "DDA Search"
                     // Set some defaults
                     SearchSettingsControl.HardklorSignalToNoise = Settings.Default.FeatureFindingSignalToNoise;
@@ -198,6 +196,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 {
                     Height = BuildPepSearchLibControl.Bottom;
                 }
+            }
+
+            if (isFeatureDetection || isRunPeptideSearch)
+            {
+                label14.Text = PeptideSearchResources.BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search; // Was "Spectral Library"
             }
         }
 
@@ -567,22 +570,37 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     {
                         if (!BuildPepSearchLibControl.PerformDDASearch)
                         {
-                             HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
-                                if (BuildPepSearchLibControl.SearchFilenames.Any(f => f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
-                                {
-                                    MessageDlg.Show(this, PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
-                                    return;
-                                }
+                            HasPeakBoundaries = BuildPepSearchLibControl.SearchFilenames.All(f =>
+                                f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV));
+                            if (BuildPepSearchLibControl.SearchFilenames.Any(f =>
+                                    f.EndsWith(BiblioSpecLiteBuilder.EXT_TSV)) && !HasPeakBoundaries)
+                            {
+                                MessageDlg.Show(this,
+                                    PeptideSearchResources
+                                        .ImportPeptideSearchDlg_NextPage_Cannot_build_library_from_OpenSWATH_results_mixed_with_results_from_other_tools_);
+                                return;
                             }
                         }
+                    }
 
                     var eCancel = new CancelEventArgs();
                     if (!BuildPepSearchLibControl.PerformDDASearch && !BuildPeptideSearchLibrary(eCancel, IsFeatureDetectionWorkflow))
                     {
-                        // Page shows error
                         if (eCancel.Cancel)
+                        {
+                            // Page has shown an error and canceled further progress
                             return;
+                        }
+                        // A failure has occurred
+                        // CONSIDER(brendanx): This looks suspicious to me. It closes the entire wizard
+                        // when BuildPeptideSearchLibrary has failed but eCancel.Cancel is not set, which
+                        // makes it unclear if the user has seen an error message before the UI disappears.
+                        // I am not ready to dig into this further as it has been this way for years,
+                        // passing most tests. It is hard to imagine how the wizard could continue if
+                        // it fails to create a library, and it is not performing a search.
                         CloseWizard(DialogResult.Cancel);
+                        // Not a good idea to continue once the wizard has been closed
+                        return;
                     }
 
                     // The user had the option to finish right after 
@@ -1010,7 +1028,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     ? AbstractDdaConverter.MsdataFileFormat.mzML // Hardklor reads only mzML
                     : AbstractDdaConverter.MsdataFileFormat.mz5;
             if (ImportPeptideSearch.DdaConverter == null &&
-                BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))
+                (BuildPepSearchLibControl.DdaSearchDataSources.Any(f => ImportPeptideSearch.SearchEngine.GetSearchFileNeedsConversion(f, out requiredFormat)))/* ||
+                !FullScan.SpectrumClassFilter.IsEmpty*/) // CONSIDER(MCC): consider spectrum filters in GetSearchFileNeedsConversion and apply them in Converter
             {
                 if (IsFeatureDetectionWorkflow)
                     ImportPeptideSearch.DdaConverter = ConverterSettingsControl.GetHardklorConverter();
@@ -1156,6 +1175,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 btnBack.Hide();
                 btnEarlyFinish.Location = btnBack.Location;
             }
+            else if (CurrentPage == Pages.spectra_page) // No "back" from page zero
+            {
+                btnBack.Hide();
+            }
             else if (!btnBack.Visible)
             {
                 btnEarlyFinish.Left = btnBack.Left - btnBack.Width - 6;
@@ -1272,6 +1295,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             TransitionFullScan fullScan;
             if (!FullScanSettingsControl.ValidateFullScanSettings(helper, out fullScan))
                 return false;
+
+            fullScan = fullScan.ChangeSpectrumFilter(TransitionSettingsControl.SpectrumFilter);
 
             Helpers.AssignIfEquals(ref fullScan, TransitionSettings.FullScan);
 
