@@ -389,27 +389,37 @@ namespace pwiz.SkylineTestFunctional
 
                 var lastItemIndex = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
 
+                // A,B,C,D => Drag A to B => A,B,C,D
                 var dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 1, DragDirection.down);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
 
+                // A,B,C,D => Drag A to C => B,A,C,D
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 2, DragDirection.down);
+                VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
+
+                // B,A,C,D => Drag A to B => A,B,C,D
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { 1 }, 0, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
 
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, lastItemIndex, DragDirection.down);
+                // A,B,C,D => Drag A to D => B,C,A,D
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, lastItemIndex, DragDirection.down, true);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
-
+                
+                // B,C,A,D => Drag D to B => A,B,C,D
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { lastItemIndex }, 0, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
 
+                // A,B,C,D,E => Drag A,B,C to E => D,A,B,C,E
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, 9, DragDirection.down);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
 
+                // D,A,B,C,E => Drag A,B,C to D => A,B,C,D,E
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { 7, 8, 9 }, 3, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
-                
+
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, lastItemIndex, DragDirection.down);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
-
+                
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { lastItemIndex - 2, lastItemIndex - 1, lastItemIndex }, 0, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalence_Replicates);
             }
@@ -418,14 +428,14 @@ namespace pwiz.SkylineTestFunctional
             // Drag-and-drop - spectral libraries
             //
             {
-                var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragDirection.down);
+                var dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 0 }, 1, DragDirection.down, true);
                 VerifyDragAndDrop(dnd, CheckEquivalence_SpectralLibraries);
-
+                
                 dnd = DragAndDrop<SpectralLibrariesFolder>(new[] { 1 }, 0, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalence_SpectralLibraries);
             }
 
-            // Drag-and-drop
+            // Drag-and-drop internals 
             {
                 var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
                 var replicateNode = (FilesTreeNode)replicateFolder.Nodes[0];
@@ -443,7 +453,7 @@ namespace pwiz.SkylineTestFunctional
             }
 
             //
-            // TODO: Remove
+            // TODO: Test Remove and Remove All
             // 
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
@@ -454,7 +464,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // TODO: support disjoint dragged items where items could be located above *and below* the dropNodeIndex
-        private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes, int dropNodeIndex, DragDirection direction) where T : FileNode
+        private static DragAndDropParams DragAndDrop<T>(int[] dragNodeIndexes, int dropNodeIndex, DragDirection direction, bool dropBelowLastNode = false) where T : FileNode
         {
             var folder = SkylineWindow.FilesTree.Folder<T>();
 
@@ -470,42 +480,61 @@ namespace pwiz.SkylineTestFunctional
             var oldDoc = SkylineWindow.Document;
             RunUI(() =>
             {
-                SkylineWindow.FilesTreeForm.DropNodes(dropNode, selectedNode, dragNodes, DragDropEffects.Move);
+                SkylineWindow.FilesTreeForm.DropNodes(dragNodes, selectedNode, dropNode, dropBelowLastNode, DragDropEffects.Move);
             });
             var newDoc = WaitForDocumentChangeLoaded(oldDoc);
+            
+            folder = SkylineWindow.FilesTree.Folder<T>();
 
             return new DragAndDropParams {
                 DragNodeIndexes = dragNodeIndexes,
-                DropNodeIndex = dropNodeIndex,
-                Direction = direction,
-                OldDoc = oldDoc,
-                NewDoc = newDoc,
-                Folder = folder,
                 DraggedNodes = dragNodes,
-                DropNode = dropNode
+
+                Direction = direction,
+
+                DropNodeIndex = dropNodeIndex,
+                DropNode = dropNode,
+                DropBelowLastNode = dropBelowLastNode,
+
+                Folder = folder,
+
+                OldDoc = oldDoc,
+                NewDoc = newDoc
             };
         }
 
         private static void VerifyDragAndDrop(DragAndDropParams d, CheckEquivalence callback)
         {
-            // CONSIDER: check !RefEquals deeper in SrmSettings
+            // Verify SrmSettings changed after a DnD operation
+            // CONSIDER: do a more precise check of what specifically changed in SrmSettings
             Assert.IsFalse(ReferenceEquals(d.OldDoc.Settings, d.NewDoc.Settings));
 
+            // Verify document nodes match tree nodes
             callback(d.Folder.Nodes.Count);
 
-            var dropNodeExpectedIndex = 
-                d.Direction == DragDirection.down ? 
-                    d.DropNodeIndex - d.DragNodeIndexes.Length :
-                    d.DropNodeIndex + d.DragNodeIndexes.Length;
+            // Now, make sure DnD put dragged nodes and the drop target in the correct places
+
+            // Compute the expected index of the drop target node and verify it's in the correct place
+            int dropNodeExpectedIndex;
+
+            if (d.DropBelowLastNode)
+                dropNodeExpectedIndex = d.DropNodeIndex - d.DraggedNodes.Count;
+            else if (d.Direction == DragDirection.down)
+                dropNodeExpectedIndex = d.DropNodeIndex;
+            else 
+                dropNodeExpectedIndex = d.DropNodeIndex + d.DragNodeIndexes.Length;
 
             Assert.AreEqual(d.DropNode, d.Folder.Nodes[dropNodeExpectedIndex]);
 
+            // Compute the expected index of each dragged node and verify it's in the correct place
             for (var i = 0; i < d.DragNodeIndexes.Length; i++)
             {
-                var expectedIndex =
-                    d.Direction == DragDirection.down ?
-                        dropNodeExpectedIndex + 1 + i : 
-                        dropNodeExpectedIndex - d.DraggedNodes.Count + i;
+                int expectedIndex;
+                if (d.DropBelowLastNode)
+                    expectedIndex = dropNodeExpectedIndex + 1 + i;
+                    // expectedIndex = d.DropNodeIndex - d.DraggedNodes.Count + i + 1;
+                else 
+                    expectedIndex = dropNodeExpectedIndex - d.DraggedNodes.Count + i;
 
                 Assert.AreEqual(d.DraggedNodes[i], d.Folder.Nodes[expectedIndex]);
             }
@@ -609,6 +638,7 @@ namespace pwiz.SkylineTestFunctional
         internal FilesTreeNode Folder;
         internal IList<FilesTreeNode> DraggedNodes;
         internal FilesTreeNode DropNode;
+        internal bool DropBelowLastNode;
     }
 
     // Borrowing for now from FindNodeCancelTest. Will consolidate if useful.

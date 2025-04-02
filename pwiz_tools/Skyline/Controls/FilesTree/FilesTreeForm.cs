@@ -356,7 +356,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         // CONSIDER: use IdentityPath to save and restore selected nodes? Caveat, all draggable nodes
         //           types must subclass DocNode, which is not true of replicates.
-        public void DropNodes(FilesTreeNode dropNode, FilesTreeNode primaryDraggedNode, IList<FilesTreeNode> draggedNodes, DragDropEffects effect)
+        public void DropNodes(IList<FilesTreeNode> draggedNodes, FilesTreeNode primaryDraggedNode, FilesTreeNode dropNode, bool dropBelowLastNode, DragDropEffects effect)
         {
             try
             {
@@ -370,10 +370,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                         doc =>
                         {
                             var draggedImmutables = draggedNodes.Select(item => (ChromatogramSet)item.Model.Immutable).ToList();
+
                             var newChromatogramSets = new List<ChromatogramSet>(doc.MeasuredResults.Chromatograms);
-
-                            var primaryDraggedNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)primaryDraggedNode.Model.Immutable);
-
                             foreach (var item in draggedImmutables)
                             {
                                 newChromatogramSets.Remove(item);
@@ -383,22 +381,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                             {
                                 newChromatogramSets.InsertRange(0, draggedImmutables);
                             }
-                            else
-                            {
+                            else {
                                 var dropNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
 
-                                if (primaryDraggedNodeIndex < dropNodeIndex)
-                                {
+                                if (dropBelowLastNode)
                                     newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                                }
-                                else if (primaryDraggedNodeIndex > dropNodeIndex)
-                                {
+                                else
                                     newChromatogramSets.InsertRange(dropNodeIndex, draggedImmutables);
-                                }
-                                else if (primaryDraggedNodeIndex == dropNodeIndex)
-                                {
-                                    newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                                }
                             }
 
                             var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatogramSets);
@@ -434,10 +423,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                     SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
                         doc => {
                             var draggedImmutables = draggedNodes.Select(item => (LibrarySpec)item.Model.Immutable).ToList();
+
                             var newLibSpecs = new List<LibrarySpec>(doc.Settings.PeptideSettings.Libraries.LibrarySpecs);
-
-                            var primaryDraggedNodeIndex = newLibSpecs.IndexOf((LibrarySpec)primaryDraggedNode.Model.Immutable);
-
                             foreach (var item in draggedImmutables)
                             {
                                 newLibSpecs.Remove(item);
@@ -451,18 +438,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                             {
                                 var dropNodeIndex = newLibSpecs.IndexOf((LibrarySpec)dropNode.Model.Immutable);
 
-                                if (primaryDraggedNodeIndex < dropNodeIndex)
-                                {
+                                if (dropBelowLastNode)
                                     newLibSpecs.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                                }
-                                else if (primaryDraggedNodeIndex > dropNodeIndex)
-                                {
+                                else
                                     newLibSpecs.InsertRange(dropNodeIndex, draggedImmutables);
-                                }
-                                else if (primaryDraggedNodeIndex == dropNodeIndex)
-                                {
-                                    newLibSpecs.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                                }
                             }
 
                             var newLibs = new Library[newLibSpecs.Count]; // Required by PeptideSettings.Validate() 
@@ -496,7 +475,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 // After the drop, reset selection so dragged nodes are blue
                 filesTree.SelectedNodes.Clear();
-
                 filesTree.SelectedNode = primaryDraggedNode;
 
                 foreach (var node in draggedNodes)
@@ -728,6 +706,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                 e.Effect = DragDropEffects.None;
             }
 
+            // Re-paint as the mouse moves over drop targets so the insert line moves too
+            // CONSIDER: when drag-and-drop is canceled, repaint the tree to get rid
+            //           of the insertion highlight. Might be more efficient to 
+            //           invalidate a more specific region.
+            filesTree.Invalidate();
+
             // CONSIDER: does setting AutoScroll on the form negate the need for this code?
             // Auto-scroll if near the top or bottom edge.
             var ptView = FilesTree.PointToClient(new Point(e.X, e.Y));
@@ -813,7 +797,18 @@ namespace pwiz.Skyline.Controls.FilesTree
             var primaryDraggedNode = (FilesTreeNode)e.Data.GetData(typeof(PrimarySelectedNode));
             var dragNodeList = (IList<FilesTreeNode>)e.Data.GetData(typeof(FilesTreeNode));
 
-            DropNodes(dropNode, primaryDraggedNode, dragNodeList, e.Effect);
+            // Do not move this check.
+            //
+            // It reads the location of the mouse when dropping on the last node in a folder.
+            // This happens to decide whether to drop above or below that node.
+            //
+            // Automated tests will fail unpredictably if this check moves into DropNodes because
+            // the test will read a mouse location that has nothing to do with what's happening
+            // in the test.
+            var dropBelowLastNode = 
+                FilesTreeNode.IsLastNodeInFolder(dropNode) && FilesTreeNode.IsMouseInLowerHalf(dropNode);
+
+            DropNodes(dragNodeList, primaryDraggedNode, dropNode, dropBelowLastNode, e.Effect);
         }
 
         private void FilesTree_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
@@ -863,14 +858,23 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        private static void ShowDropTargets(Panel panel, bool highlight = false)
+        private void ShowDropTargets(Panel panel, bool highlight = false)
         {
+            FilesTree.IsDragAndDrop = true;
+
             panel.Visible = true;
             panel.BackColor = highlight ? Color.LightYellow : Color.WhiteSmoke;
         }
 
-        private static void HideDropTargets(Panel panel)
+        private void HideDropTargets(Panel panel)
         {
+            FilesTree.IsDragAndDrop = false;
+
+            // CONSIDER: when drag-and-drop is canceled, repaint the tree to get rid
+            //           of the insertion highlight. Might be more efficient to 
+            //           invalidate a more specific region.
+            FilesTree.Invalidate();
+
             panel.Visible = false;
             panel.BackColor = Color.WhiteSmoke;
         }

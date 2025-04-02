@@ -15,7 +15,9 @@
  */
 
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
+using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Files;
@@ -88,6 +90,27 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        // Convenience method to avoid a repetitive cast
+        public FilesTree FilesTree => (FilesTree)TreeView;
+
+        private bool IsCurrentDropTarget(FilesTreeNode node)
+        {
+            return FilesTree.IsDragAndDrop && IsDraggable() && ReferenceEquals(FilesTree.SelectedNode, this);
+        }
+
+        internal static bool IsLastNodeInFolder(FilesTreeNode node)
+        {
+            return node != null && node.NextNode == null;
+        }
+
+        internal static bool IsMouseInLowerHalf(FilesTreeNode node)
+        {
+            var mousePosition = node.FilesTree.PointToClient(Cursor.Position);
+            var mouseInLowerHalf = mousePosition.Y > node.BoundsMS.Y + 0.5 * node.BoundsMS.Height;
+
+            return mouseInLowerHalf;
+        }
+
         public void UpdateState()
         {
             OnModelChanged();
@@ -104,8 +127,78 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ImageIndex = IsAnyNodeMissingLocalFile(this) ? (int)ImageMissing : (int)ImageAvailable;
         }
 
-        // CONSIDER: use subclasses to customize behavior. This is working for now but probably
-        //           breaks down in the near future.
+        public override Color ForeColorMS
+        {
+            get
+            {
+                if (IsCurrentDropTarget(this))
+                {
+                    return Color.Black;
+                }
+
+                return base.ForeColorMS;
+            }
+        }
+
+        public override Color BackColorMS
+        {
+            get
+            {
+                if (IsCurrentDropTarget(this))
+                {
+                    return BackColor;
+                }
+
+                return base.BackColorMS;
+            }
+        }
+
+        public override Brush SelectionBrush
+        {
+            get
+            {
+                if (IsCurrentDropTarget(this))
+                {
+                    return new SolidBrush(BackColorMS); 
+                }
+
+                return base.SelectionBrush;
+            }
+        }
+
+        protected override void DrawFocus(Graphics g)
+        {
+            if (IsCurrentDropTarget(this))
+            {
+                Point lineStart, lineEnd;
+
+                // If dropping on the last node in this folder, move the insertion point *below* the current node
+                if (IsLastNodeInFolder(this) && IsMouseInLowerHalf(this))
+                {
+                    lineStart = new Point(BoundsMS.X, BoundsMS.Y + BoundsMS.Height);
+                    lineEnd = new Point(BoundsMS.X + BoundsMS.Width, BoundsMS.Y + BoundsMS.Height);
+                }
+                // Otherwise, the insertion point is *above* the current node
+                else
+                {
+                    lineStart = new Point(BoundsMS.X, BoundsMS.Y);
+                    lineEnd = new Point(BoundsMS.X + BoundsMS.Width, BoundsMS.Y);
+                }
+
+                // TODO: does Pen use need to be wrapped in using (pen) {...}
+                var pen = new Pen(SystemColors.Highlight) {
+                    Width = 2,
+                    DashStyle = DashStyle.Dash
+                };
+
+                g.DrawLine(pen, lineStart, lineEnd);
+                return;
+            }
+
+            base.DrawFocus(g);
+        }
+
+        // CONSIDER: customize behavior in subclasses. Putting everything in FilesTreeNode won't work long-term.
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
             using var rt = new RenderTools();
