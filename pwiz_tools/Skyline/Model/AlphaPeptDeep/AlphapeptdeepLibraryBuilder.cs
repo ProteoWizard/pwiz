@@ -213,20 +213,29 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             Document = document;
             IrtStandard = irtStandard;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            if (Document.DocumentHash != null)
-                InitializeLibraryHelper();
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
 
             ToolName = @"AlphaPeptDeep";
-            Directory.CreateDirectory(RootDir);
+
+            if (RootDir == null)
+            {
+                RootDir = Path.GetDirectoryName(libOutPath);
+            }
+
+            if (RootDir != null)
+            {
+                RootDir = Path.Combine(RootDir, libName);
+                //Directory.CreateDirectory(RootDir);
+                InitializeLibraryHelper(RootDir);
+            }
         }
 
-        private void InitializeLibraryHelper()
+        private void InitializeLibraryHelper(string rootDir)
         {
             if (LibraryHelper == null)
             {
-                LibraryHelper = new LibraryHelper(ALPHAPEPTDEEP);
-                RootDir = LibraryHelper.GetRootDir(ALPHAPEPTDEEP);
+                LibraryHelper = new LibraryHelper(rootDir, ALPHAPEPTDEEP);
+                RootDir = LibraryHelper.GetRootDir(rootDir, ALPHAPEPTDEEP);
                 LibraryHelper.InitializeLibraryHelper(InputFilePath);
             }
         }
@@ -235,7 +244,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
-                InitializeLibraryHelper();
+                InitializeLibraryHelper(RootDir);
                 RunAlphapeptdeep(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
                 LibraryHelper = null;

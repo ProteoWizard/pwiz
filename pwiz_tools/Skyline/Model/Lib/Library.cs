@@ -47,7 +47,6 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Tools;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -91,10 +90,14 @@ namespace pwiz.Skyline.Model.Lib
 
         private string _rootDir;
 
-        public string GetRootDir(string tool)
+        public string GetRootDir(string path, string tool)
         {
             if (_rootDir == null)
-                _rootDir = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), tool, TimeStamp);
+            {
+                _rootDir = Path.Combine(path, tool, TimeStamp);
+                Directory.CreateDirectory(_rootDir);
+            }
+
             return _rootDir;
         }
         public string InputFilePath { get; private set; }
@@ -153,11 +156,11 @@ namespace pwiz.Skyline.Model.Lib
             return modList;
         }
 
-        public LibraryHelper(string tool = null)
+        public LibraryHelper(string path, string tool = null)
         {
             StampDateTimeNow();
             if (!tool.IsNullOrEmpty())
-                GetRootDir(tool);
+                GetRootDir(path, tool);
         }
 
         public void InitializeLibraryHelper(string inputFilePath, string trainingFilePath = null, string dataFilePath = null)
