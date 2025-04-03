@@ -113,20 +113,23 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             };
 
-        internal static readonly IList<ModificationType> CarafeSupportedModificationNames = populateUniModList(carafeSupportedModificationIndices);
+        /// <summary>
+        /// List of UniMod Modifications supported by Carafe/AlphaPeptDeep
+        /// </summary>
+        internal static readonly IList<ModificationType> CarafeSupportedModificationNames = PopulateUniModList(carafeSupportedModificationIndices);
 
         /// <summary>
         /// List of UniMod Modifications available
         /// </summary>
-        internal static readonly IList<ModificationType> AlphapeptdeepModificationNames = populateUniModList(null);
-        private static IList<ModificationType> populateUniModList(IList<ModificationIndex> supportedList)
+        internal static readonly IList<ModificationType> AlphapeptdeepModificationNames = PopulateUniModList(null);
+        private static IList<ModificationType> PopulateUniModList(IList<ModificationIndex> supportedList)
         {
             IList<ModificationType> modList = new List<ModificationType>();
             for (int m = 0; m < UniModData.UNI_MOD_DATA.Length; m++)
             {
                 if (!UniModData.UNI_MOD_DATA[m].ID.HasValue ||
                     (supportedList != null &&
-                     supportedList.Where(x => x.Index == UniModData.UNI_MOD_DATA[m].ID.Value).ToArray().SingleOrDefault() == null))
+                     supportedList.FirstOrDefault(x => x.Index == UniModData.UNI_MOD_DATA[m].ID.Value) == null))
                     continue;
 
                 var accession = UniModData.UNI_MOD_DATA[m].ID.Value + @":" + UniModData.UNI_MOD_DATA[m].Name;
@@ -154,13 +157,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public static string GetDataFileName()
         {
             if (DataFilePath.IsNullOrEmpty())
-                return "";
+                return string.Empty;
             return Path.GetFileName(DataFilePath);
         }
         public void PreparePrecursorInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Preparing prediction input file")
+                .ChangeMessage(ModelResources.LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file)
                 .ChangePercentComplete(0));
 
             var warningMods = GetWarningMods(Document, toolName);
@@ -173,7 +176,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public void PrepareTrainingInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Preparing training input file")
+                .ChangeMessage(ModelResources.LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file)
                 .ChangePercentComplete(0));
 
             var warningMods = GetWarningMods(Document, toolName);
@@ -209,14 +212,16 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             if (alphapeptDeepFormat)
                 header = string.Join(TAB, PrecursorTableColumnNames);
             else if (toolName.Equals(@"carafe"))
+            {
                 if (training)
                     header = string.Join(TAB, TrainingTableColumnNamesCarafe);
                 else
                     header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
+            }
             else
+            {
                 header = string.Join(TAB, PrecursorTableColumnNamesCarafe);
-
-
+            }
 
             result.Add(header);
 
@@ -255,7 +260,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                         continue;
                     }
-                    if (modNames.Length == 0) continue;
+                    if (modNames.Length == 0)
+                        continue;
 
                     string modName = "";
 
@@ -284,15 +290,12 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 {
                     if (alphapeptDeepFormat)
                     {
-                        result.Add(string.Join(TAB, new[]
-                            {
-                                unmodifiedSequence, modsBuilder.ToString(), modSitesBuilder.ToString(), charge.ToString()
-                            })
-                        );
+                        result.Add(new[] { unmodifiedSequence, modsBuilder.ToString(), modSitesBuilder.ToString(), charge.ToString() }
+                            .ToDsvLine(TextUtil.SEPARATOR_TSV));
                     }
                     else
                     {
-                        var docNode = peptide.TransitionGroups.Where(group => group.PrecursorCharge == charge).FirstOrDefault();
+                        var docNode = peptide.TransitionGroups.FirstOrDefault(group => group.PrecursorCharge == charge);
                         if (docNode == null)
                         {
                             continue;
@@ -309,7 +312,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                         var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime;
                         string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
                             docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : @"#N/A";
-                        var apex_psm = @"unknown";//docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
+                        var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
                         var filename = LibraryHelper.GetDataFileName();
                         if (training)
                             result.Add(string.Join(TAB, new object[]
@@ -340,8 +343,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 return null;
 
             var resultList = new List<string>();
-
-            bool alphapeptDeepFormat = toolName.Equals(@"alphapeptdeep");
 
             // Build precursor table row by row
             foreach (var peptide in Document.Peptides)
@@ -421,7 +422,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public string Value { get; private set; }
         public string Dash { get; set; }
 
-        public override string ToString() { return Dash + Name + TextUtil.SPACE + Value; }
+        public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
     }
 
     public class ModificationType
@@ -463,7 +464,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         public override string ToString()
         {
-            return Index.ToString() + @":" + Modification.ToString();
+            return Index + @":" + Modification;
         }
     }
 
@@ -505,24 +506,19 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         public string AmbiguousMatchesMessage
         {
-            //TODO(xgwang): implement
             get { return null; }
         }
-        public IrtStandard IrtStandard
-        {
-            //TODO(xgwang): implement
-            get { return null; }
-        }
+        public IrtStandard IrtStandard { get; private set; }
+
         public string BuildCommandArgs
         {
-            //TODO(xgwang): implement
             get { return null; }
         }
         public string BuildOutput
         {
-            //TODO(xgwang): implement
             get { return null; }
         }
+
         public LibrarySpec LibrarySpec { get; private set; }
 
         private string BuilderLibraryPath
@@ -552,16 +548,12 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
-        private string OutputSpectraLibFilepath
-        {
-            get { return Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME); }
-            set => throw new NotImplementedException();
-        }
-
+        private string OutputSpectraLibFilepath =>  Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
         private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
         public string ToolName { get; }
         public SrmDocument Document { get; private set; }
+
         /// <summary>
         /// The peptdeep cmd-flow command is how we can pass arguments that will override the settings.yaml file.
         /// This is how the peptdeep CLI supports command line arguments.
@@ -592,12 +584,15 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 { @"FragmentNumber", @"FragmentSeriesNumber" }
             };
 
-        public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir, SrmDocument document)
+        public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir,
+            SrmDocument document, IrtStandard irtStandard)
 
         {
             Document = document;
+            IrtStandard = irtStandard;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            if (Document.DocumentHash != null) InitializeLibraryHelper();
+            if (Document.DocumentHash != null)
+                InitializeLibraryHelper();
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
 
             ToolName = @"alphapeptdeep";
@@ -609,7 +604,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             if (LibraryHelper == null)
             {
                 LibraryHelper = new LibraryHelper(ALPHAPEPTDEEP);
-                //LibraryHelper.StampDateTimeNow();
                 RootDir = LibraryHelper.GetRootDir(ALPHAPEPTDEEP);
                 LibraryHelper.InitializeLibraryHelper(InputFilePath);
             }
@@ -635,6 +629,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
+            // CONSIDER: These segments don't seem well-balanced. Maybe give each a defined range instead.
             progressStatus = progressStatus.ChangeSegments(0, 5);
 
             LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"alphapeptdeep");
@@ -650,6 +645,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             progressStatus = progressStatus.NextSegment();
 
             TransformPeptdeepOutput(progress, ref progressStatus);
+
             progressStatus = progressStatus.NextSegment();
 
             ImportSpectralLibrary(progress, ref progressStatus);
@@ -658,7 +654,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Preparing settings file")
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file)
                 .ChangePercentComplete(0));
 
             // generate template settings.yaml file
@@ -679,8 +675,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             catch (Exception ex)
             {
-                // TODO(xgwang): update this exception to an Alphapeptdeep specific one
-                throw new Exception(@"Failed to generate settings.yaml file by executing the peptdeep export-settings command.", ex);
+                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_, ex);
             }
 
             progress.UpdateProgress(progressStatus = progressStatus
@@ -690,15 +685,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Executing peptdeep")
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep)
                 .ChangePercentComplete(0));
 
             // compose peptdeep cmd-flow command arguments to build library
-            var args = new StringBuilder();
-            foreach (var arg in CmdFlowCommandArguments)
-            {
-                args.Append(arg).Append(SPACE);
-            }
+            var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
 
             // execute command
             var pr = new ProcessRunner();
@@ -728,8 +719,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             }
             catch (Exception ex)
             {
-                // TODO(xgwang): update this exception to an Alphapeptdeep specific one
-                throw new Exception(@"Failed to build library by executing the peptdeep cmd-flow command.", ex);
+                throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_, ex);
             }
 
             progress.UpdateProgress(progressStatus = progressStatus
@@ -739,7 +729,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Importing spectral library")
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_TransformPeptdeepOutput_Importing_spectral_library)
                 .ChangePercentComplete(0));
 
             var result = new List<string>();
@@ -833,22 +823,24 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            string[] inputFile = new string[] { TransformedOutputSpectraLibFilepath };
-            BlibBuild build = new BlibBuild(LibrarySpec.FilePath, inputFile);
+            string[] inputFile = { TransformedOutputSpectraLibFilepath };
+            var build = new BlibBuild(LibrarySpec.FilePath, inputFile);
 
 
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(@"Importing spectral library")
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_Importing_spectral_library)
                 .ChangePercentComplete(0));
 
             string[] ambiguous;
             bool completed = build.BuildLibrary(LibraryBuildAction.Create, progress, ref progressStatus, out ambiguous);
 
             if (ambiguous.Length > 0)
+            {
                 foreach (string msg in ambiguous)
                 {
                     Messages.WriteAsyncUserMessage(msg);
                 }
+            }
 
             if (completed)
             {
@@ -858,8 +850,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             {
                 Messages.WriteAsyncUserMessage(ModelResources.Alphapeptdeep_Blib_failed_to_complete);
             }
-
         }
-
     }
 }
