@@ -155,6 +155,15 @@ namespace pwiz.SkylineTestFunctional
             // Verify replicate columns are aligned.
             var mainGridColumnWidths = GetMainGridColumnWidths(documentGrid);
             var replicateGridColumnWidths = GetReplicateGridColumnWidths(documentGrid);
+            Console.WriteLine("Temporary log for debugging tests");
+            foreach (var mainGridColumnWidth in mainGridColumnWidths)
+            {
+                Console.WriteLine($"Main Grid Replicate: {mainGridColumnWidth.Key} Width: {mainGridColumnWidth.Value}");
+            }
+            foreach (var replicateGridColumnWidth in replicateGridColumnWidths)
+            {
+                Console.WriteLine($"Replicate Grid Replicate: {replicateGridColumnWidth.Key} Width: {replicateGridColumnWidth.Value}");
+            }
 
             CollectionAssert.AreEqual(
                 mainGridColumnWidths.OrderBy(kv => kv.Key).ToList(),
