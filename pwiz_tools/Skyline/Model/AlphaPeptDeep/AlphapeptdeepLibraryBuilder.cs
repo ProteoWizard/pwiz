@@ -755,12 +755,16 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 {
                     newColName = colName;
                 }
-                newColNames.Add(newColName);
                 if (newColName == ION_MOBILITY)
                 {
+                    newColNames.Add(newColName);
                     newColName = ION_MOBILITY_UNITS;
                     newColNames.Add(newColName);
                     newColName = COLLISIONAL_CROSS_SECTION;
+                    newColNames.Add(newColName);
+                }
+                else
+                {
                     newColNames.Add(newColName);
                 }
             }
@@ -802,8 +806,10 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
                     else if (colName == ION_MOBILITY)
                     {
+                        //Compute CCS below and report that until AlphaPeptDeep can be coerced to report CCS as advertised
                         line.Add(cell);
                         line.Add(@"2"); // These are the IonMobilityUnits column, 2 => 1/K0
+                        
                         double ccs =
                             double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) *
                             CCS_IM_COEFF * charge / Math.Sqrt(N2_MASS*(mz * charge)/(N2_MASS+(mz*charge)));
