@@ -475,19 +475,25 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 // After the drop, reset selection so dragged nodes are blue
                 filesTree.SelectedNodes.Clear();
-                filesTree.SelectedNode = primaryDraggedNode;
 
                 foreach (var node in draggedNodes)
                 {
                     filesTree.SelectNode(node, true);
                 }
 
+                // DO NOT MOVE
+                //
+                // Set the SelectedNode without clearing already selected items. This trickery is necessary
+                // because setting SelectedNode directly clears already selected items and setting before calling
+                // SelectNode(...) mis-orders the dropped items.
+                filesTree.SelectNodeWithoutResettingSelection(primaryDraggedNode);
+
                 filesTree.Invalidate();
                 filesTree.Focus();
             }
             finally
             {
-                HideDropTargets(_dropTargetRemove);
+                HideRemoveDropTarget();
             }
         }
 
@@ -706,14 +712,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                 e.Effect = DragDropEffects.None;
             }
 
-            // Re-paint as the mouse moves over drop targets so the insert line moves too
-            // CONSIDER: when drag-and-drop is canceled, repaint the tree to get rid
-            //           of the insertion highlight. Might be more efficient to 
-            //           invalidate a more specific region.
+            // Re-paint as the mouse moves over drop targets so the insert line also repaints
+            // CONSIDER: may be more efficient to invalidate a more specific region
             filesTree.Invalidate();
 
             // CONSIDER: does setting AutoScroll on the form negate the need for this code?
-            // Auto-scroll if near the top or bottom edge.
+            // Scroll the tree if near the top or bottom edge
             var ptView = FilesTree.PointToClient(new Point(e.X, e.Y));
             if (ptView.Y < 10)
             {
@@ -734,7 +738,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (e.Data.GetDataPresent(typeof(FilesTreeNode)))
                 e.Effect = DragDropEffects.Move;
 
-            ShowDropTargets(_dropTargetRemove);
+            ShowRemoveDropTarget();
         }
 
         private void FilesTree_ItemDrag(object sender, ItemDragEventArgs e)
@@ -744,6 +748,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (selectedNode == null || selectedNodes.Count == 0)
                 return;
+
+            _nodeTip.HideTip();
 
             // Order matters! Do this first to either short-circuit if attempting to select an un-draggable
             // node or collect nodes to drag
@@ -766,21 +772,22 @@ namespace pwiz.Skyline.Controls.FilesTree
                 else return;
             }
 
-            _nodeTip.HideTip();
+            // Clear selection of dragged nodes, which omits the light blue selection color
+            filesTree.SelectedNodes.Clear();
 
+            // Set the location for the remove drop target based on the tree's SelectedNode. This
+            // deliberately ignore window resize events. They cancel an active drag-and-drop operation.
+            // No need to do extra work handling them.
             if (!_dropTargetRemove.Visible)
             {
-                // Deliberately ignoring window resize events because they cancel an
-                // active drag-and-drop operation, which hides any visible drop targets
-
-                var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
                 // Vertically center the drop target on the SelectNode's midline
+                var x = FilesTree.Bounds.X + FilesTree.ClientSize.Width - _dropTargetRemove.Width - 10 /* extra padding */;
                 var y = FilesTree.SelectedNode.Bounds.Y + FilesTree.SelectedNode.Bounds.Height / 2 - _dropTargetRemove.Height / 2;
 
                 _dropTargetRemove.Location = new Point(x, y);
             }
 
-            ShowDropTargets(_dropTargetRemove);
+            ShowRemoveDropTarget();
 
             var dataObj = new DataObject();
             dataObj.SetData(typeof(PrimarySelectedNode), selectedNode);
@@ -805,18 +812,20 @@ namespace pwiz.Skyline.Controls.FilesTree
             // Automated tests will fail unpredictably if this check moves into DropNodes because
             // the test will read a mouse location that has nothing to do with what's happening
             // in the test.
-            var dropBelowLastNode = 
-                FilesTreeNode.IsLastNodeInFolder(dropNode) && FilesTreeNode.IsMouseInLowerHalf(dropNode);
+            var dropBelowLastNode = dropNode.IsLastNodeInFolder() && dropNode.IsMouseInLowerHalf();
 
             DropNodes(dragNodeList, primaryDraggedNode, dropNode, dropBelowLastNode, e.Effect);
         }
 
+        // CONSIDER: when drag operation canceled, would be nice to re-select the original dragged nodes.
+        //           But it's not obvious how to get the list of dragged nodes. TreeView doesn't seem to
+        //           make them available during DragLeave events, so do they need to be stored separately?
         private void FilesTree_QueryContinueDrag(object sender, QueryContinueDragEventArgs e)
         {
             if (e.EscapePressed)
             {
                 e.Action = DragAction.Cancel;
-                HideDropTargets(_dropTargetRemove);
+                HideRemoveDropTarget();
             }
         }
 
@@ -829,8 +838,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             filesTree.SelectedNode = null;
             filesTree.SelectedNodes.Clear();
+            filesTree.Invalidate();
 
-            ShowDropTargets(_dropTargetRemove, true);
+            ShowRemoveDropTarget(true);
         }
 
         private void DropTargetRemove_DragDrop(object sender, DragEventArgs e)
@@ -843,7 +853,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             finally
             {
-                HideDropTargets(_dropTargetRemove);
+                HideRemoveDropTarget();
             }
         }
 
@@ -854,19 +864,19 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             if (!inside)
             {
-                HideDropTargets(_dropTargetRemove);
+                HideRemoveDropTarget();
             }
         }
 
-        private void ShowDropTargets(Panel panel, bool highlight = false)
+        private void ShowRemoveDropTarget(bool highlight = false)
         {
             FilesTree.IsDragAndDrop = true;
 
-            panel.Visible = true;
-            panel.BackColor = highlight ? Color.LightYellow : Color.WhiteSmoke;
+            _dropTargetRemove.Visible = true;
+            _dropTargetRemove.BackColor = highlight ? Color.LightYellow : Color.WhiteSmoke;
         }
 
-        private void HideDropTargets(Panel panel)
+        private void HideRemoveDropTarget()
         {
             FilesTree.IsDragAndDrop = false;
 
@@ -875,10 +885,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             //           invalidate a more specific region.
             FilesTree.Invalidate();
 
-            panel.Visible = false;
-            panel.BackColor = Color.WhiteSmoke;
+            _dropTargetRemove.Visible = false;
+            _dropTargetRemove.BackColor = Color.WhiteSmoke;
         }
 
+        // CONSIDER: should this be laid out in the designer?
         private static Panel CreateDropTarget(Image icon, DockStyle dockStyle)
         {
             var dropTarget = new Panel

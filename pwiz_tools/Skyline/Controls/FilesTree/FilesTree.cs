@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 {
     public class FilesTree : TreeViewMS
     {
+        private bool _inhibitOnAfterSelect;
         private FileSystemWatcher _fileSystemWatcher;
         private QueueWorker<Action> _fsWorkQueue = new QueueWorker<Action>(null, (a, i) => a());
 
@@ -126,6 +127,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             
             return null;
+        }
+
+        public void SelectNodeWithoutResettingSelection(FilesTreeNode node)
+        {
+            _inhibitOnAfterSelect = true;
+            SelectedNode = node;
+            _inhibitOnAfterSelect = false;
         }
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
@@ -353,6 +361,12 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (model != null)
                     MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc);
             }
+        }
+
+        protected override void OnAfterSelect(TreeViewEventArgs e)
+        {
+            if (!_inhibitOnAfterSelect)
+                base.OnAfterSelect(e);
         }
 
         private void InitializeAllLocalFiles(FilesTreeNode node)

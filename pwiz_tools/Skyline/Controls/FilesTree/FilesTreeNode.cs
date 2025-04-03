@@ -93,20 +93,20 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Convenience method to avoid a repetitive cast
         public FilesTree FilesTree => (FilesTree)TreeView;
 
-        private bool IsCurrentDropTarget(FilesTreeNode node)
+        private bool IsCurrentDropTarget()
         {
             return FilesTree.IsDragAndDrop && IsDraggable() && ReferenceEquals(FilesTree.SelectedNode, this);
         }
 
-        internal static bool IsLastNodeInFolder(FilesTreeNode node)
+        internal bool IsLastNodeInFolder()
         {
-            return node != null && node.NextNode == null;
+            return NextNode == null;
         }
 
-        internal static bool IsMouseInLowerHalf(FilesTreeNode node)
+        internal bool IsMouseInLowerHalf()
         {
-            var mousePosition = node.FilesTree.PointToClient(Cursor.Position);
-            var mouseInLowerHalf = mousePosition.Y > node.BoundsMS.Y + 0.5 * node.BoundsMS.Height;
+            var mousePosition = FilesTree.PointToClient(Cursor.Position);
+            var mouseInLowerHalf = mousePosition.Y > BoundsMS.Y + 0.5 * BoundsMS.Height;
 
             return mouseInLowerHalf;
         }
@@ -127,53 +127,20 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ImageIndex = IsAnyNodeMissingLocalFile(this) ? (int)ImageMissing : (int)ImageAvailable;
         }
 
-        public override Color ForeColorMS
-        {
-            get
-            {
-                if (IsCurrentDropTarget(this))
-                {
-                    return Color.Black;
-                }
+        public override Color ForeColorMS => IsCurrentDropTarget() ? Color.Black : base.ForeColorMS;
 
-                return base.ForeColorMS;
-            }
-        }
+        public override Color BackColorMS => IsCurrentDropTarget() ? BackColor : base.BackColorMS;
 
-        public override Color BackColorMS
-        {
-            get
-            {
-                if (IsCurrentDropTarget(this))
-                {
-                    return BackColor;
-                }
-
-                return base.BackColorMS;
-            }
-        }
-
-        public override Brush SelectionBrush
-        {
-            get
-            {
-                if (IsCurrentDropTarget(this))
-                {
-                    return new SolidBrush(BackColorMS); 
-                }
-
-                return base.SelectionBrush;
-            }
-        }
+        public override Brush SelectionBrush => IsCurrentDropTarget() ? new SolidBrush(BackColorMS) : base.SelectionBrush;
 
         protected override void DrawFocus(Graphics g)
         {
-            if (IsCurrentDropTarget(this))
+            if (IsCurrentDropTarget())
             {
                 Point lineStart, lineEnd;
 
                 // If dropping on the last node in this folder, move the insertion point *below* the current node
-                if (IsLastNodeInFolder(this) && IsMouseInLowerHalf(this))
+                if (IsLastNodeInFolder() && IsMouseInLowerHalf())
                 {
                     lineStart = new Point(BoundsMS.X, BoundsMS.Y + BoundsMS.Height);
                     lineEnd = new Point(BoundsMS.X + BoundsMS.Width, BoundsMS.Y + BoundsMS.Height);
@@ -185,7 +152,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     lineEnd = new Point(BoundsMS.X + BoundsMS.Width, BoundsMS.Y);
                 }
 
-                // TODO: does Pen use need to be wrapped in using (pen) {...}
+                // TODO: does Pen need to be wrapped in using (pen) {...}
                 var pen = new Pen(SystemColors.Highlight) {
                     Width = 2,
                     DashStyle = DashStyle.Dash
