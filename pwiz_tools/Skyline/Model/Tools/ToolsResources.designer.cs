@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Creating virtual environment {0}.
+        ///   Looks up a localized string similar to Creating virtual environment [{0}]..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Creating_virtual_environment__0_ {
             get {
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading Cuda Installer.
+        ///   Looks up a localized string similar to Downloading Nvidia Cuda Toolkit installer..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_Cuda_Installer {
             get {
@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading CuDNN Installer.
+        ///   Looks up a localized string similar to Downloading Nvidia Cuda Deep Neural Network..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_CuDNN_Installer {
             get {
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading Python embeddable package.
+        ///   Looks up a localized string similar to Downloading Python embeddable package..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package {
             get {
@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading the get-pip.py script.
+        ///   Looks up a localized string similar to Downloading the get-pip.py script..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script {
             get {
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enabling Windows Long Paths for python packages installation in virtual environment [{0}].
+        ///   Looks up a localized string similar to Enabling Windows long paths for Python packages installation in virtual environment [{0}]..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_ {
             get {
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enabling search path in Python embeddable package.
+        ///   Looks up a localized string similar to Enabling search path in Python embeddable package..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package {
             get {
@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to create virtual environment {0}.
+        ///   Looks up a localized string similar to Failed to create virtual environment [{0}]..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_ {
             get {
@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download Cuda Installer.
+        ///   Looks up a localized string similar to Failed to download Nvidia Cuda Toolkit installer..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_download_Cuda_Installer {
             get {
@@ -283,7 +283,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download CuDNN Installer.
+        ///   Looks up a localized string similar to Failed to download Nvidia Cuda Deep Neural Network..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_download_CuDNN_Installer {
             get {
@@ -292,7 +292,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download Python embeddable package.
+        ///   Looks up a localized string similar to Failed to download Python embeddable package..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package {
             get {
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to download the get-pip.py script.
+        ///   Looks up a localized string similar to Failed to download the get-pip.py script..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script {
             get {
@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to enable Windows Long Paths for python installation in virtual environment [{0}].
+        ///   Looks up a localized string similar to Failed to enable Windows long paths for Python installation in virtual environment [{0}]..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_ {
             get {
@@ -320,7 +320,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to enable search path in Python embeddable package.
+        ///   Looks up a localized string similar to Failed to enable search path in Python embeddable package..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package {
             get {
@@ -330,7 +330,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to install Cuda Library.
+        ///   Looks up a localized string similar to Failed to install Cuda Toolkit..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_install_Cuda {
             get {
@@ -339,7 +339,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to install CuDNN Library.
+        ///   Looks up a localized string similar to Failed to install Nvidia Cuda Deep Neural Network..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_install_CuDNN {
             get {
@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to install Python packages in virtual environment {0}.
+        ///   Looks up a localized string similar to Failed to install Python packages in virtual environment [{0}]..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_ {
             get {
@@ -358,7 +358,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to run pip install {0}.
+        ///   Looks up a localized string similar to Failed to run pip install [{0}]..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_ {
             get {
@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to run the get-pip.py script.
+        ///   Looks up a localized string similar to Failed to run the get-pip.py script..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script {
             get {
@@ -376,7 +376,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to unzip Python embeddable package.
+        ///   Looks up a localized string similar to Failed to unzip Python embeddable package..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package {
             get {
@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Cuda Library.
+        ///   Looks up a localized string similar to Installing Nvidia Cuda Toolkit installer..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Installing_Cuda {
             get {
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing CuDNN Library.
+        ///   Looks up a localized string similar to Installing Nvidia Cuda Deep Neural Network..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Installing_CuDNN {
             get {
@@ -403,7 +403,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Python packages in virtual environment {0}. First installs can take up to 10-15 minutes, please be patient ....
+        ///   Looks up a localized string similar to Installing Python packages in virtual environment [{0}]. First installs can take up to 10-15 minutes, please be patient ....
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_ {
             get {
@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Running pip install {0}.
+        ///   Looks up a localized string similar to Running pip install [{0}]..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Running_pip_install__0_ {
             get {
@@ -422,7 +422,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Running the get-pip.py script.
+        ///   Looks up a localized string similar to Running the get-pip.py script..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Running_the_get_pip_py_script {
             get {
@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unzipping Python embeddable package.
+        ///   Looks up a localized string similar to Unzipping Python embeddable package..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package {
             get {
@@ -579,7 +579,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to parse package name and version from entry [{0}].
+        ///   Looks up a localized string similar to Failed to parse package name and version from entry [{0}]..
         /// </summary>
         public static string PythonInstallerTaskValidator_ValidatePipInstallPackages_Failed_to_parse_package_name_and_version_from_entry___0__ {
             get {
@@ -589,7 +589,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Task with action type {0} is not supported by PythonInstaller yet.
+        ///   Looks up a localized string similar to Task with action type {0} is not supported by the Python installer yet..
         /// </summary>
         public static string PythonInstallerUnsupportedTaskException_Task_with_action_type__0__is_not_supported_by_PythonInstaller_yet {
             get {
@@ -599,7 +599,7 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Task with task name {0} is not supported by PythonInstaller yet.
+        ///   Looks up a localized string similar to Task with task name {0} is not supported by the Python installer yet..
         /// </summary>
         public static string PythonInstallerUnsupportedTaskNameException_Task_with_task_name__0__is_not_supported_by_PythonInstaller_yet {
             get {

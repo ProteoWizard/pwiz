@@ -62,7 +62,8 @@ namespace pwiz.Skyline.Model.Koina
             _replaceLibrary = replaceLibrary;
             IrtStandard = irtStandard;
             _nce = nce;
-            ToolName = @"koina";
+            //Name of the tool presented to the user for Warning messages
+            ToolName = @"Koina";
             LibraryHelper = new LibraryHelper(ToolName);
 
         }

@@ -279,10 +279,22 @@ namespace pwiz.Skyline.Model.Tools
         public void WriteInstallNvidiaBatScript()
         {
             FileEx.SafeDelete(InstallNvidiaLibrariesBat);
-            string resourceString = ModelResources.NvidiaInstaller_Batch_script;
-            resourceString = resourceString.Replace(@"{{0}}", CUDA_VERSION);
-            resourceString = resourceString.Replace(@"{{1}}", CUDNN_VERSION);
-            File.WriteAllText(InstallNvidiaLibrariesBat, resourceString);
+            var type = typeof(PythonInstaller);
+            using var stream = type.Assembly.GetManifestResourceStream(type, "InstallNvidiaLibraries-bat.txt");
+            if (stream != null)
+            {
+                using var reader = new StreamReader(stream);
+                string resourceString = reader.ReadToEnd();
+                resourceString = resourceString.Replace(@"{{0}}", CUDA_VERSION);
+                resourceString = resourceString.Replace(@"{{1}}", CUDNN_VERSION);
+                File.WriteAllText(InstallNvidiaLibrariesBat, resourceString);
+            }
+            else
+            {
+                string msg = string.Format(ModelResources.NvidiaInstaller_Missing_resource_0_,
+                    @"InstallNvidiaLibraries-bat.txt");
+                Console.WriteLine(msg);
+            }
         }
 
         public static bool IsRunningElevated()

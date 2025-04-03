@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.Properties;
@@ -377,21 +378,14 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Filtering Lines of Output
+        /// Function to help with filtering lines of output, return true if line contains one of possible filters provided, false otherwise
         /// </summary>
         /// <param name="line">line considered for filtering</param>
-        /// <param name="filters">filters</param>
+        /// <param name="filters">array of string filters being considered</param>
         /// <returns>true when filter matches, false otherwise</returns>
         private bool FilterOutputLine(string line, string[] filters)
         {
-            foreach (string filter in filters)
-            {
-                if (line.Contains(filter))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return filters.Any(filter => line.Contains(filter));
         }
 
         public IEnumerable<string> MessageLog()

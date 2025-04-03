@@ -264,9 +264,9 @@ namespace pwiz.Skyline.Model {
         /// <summary>
         ///   Looks up a localized string similar to Importing spectral library.
         /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_Importing_spectral_library {
+        public static string AlphapeptdeepLibraryBuilder_Importing_spectral_library {
             get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_Importing_spectral_library", resourceCulture);
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Importing_spectral_library", resourceCulture);
             }
         }
         
@@ -286,15 +286,6 @@ namespace pwiz.Skyline.Model {
         public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file {
             get {
                 return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Importing spectral library.
-        /// </summary>
-        public static string AlphapeptdeepLibraryBuilder_TransformPeptdeepOutput_Importing_spectral_library {
-            get {
-                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_TransformPeptdeepOutput_Importing_spectral_library", resourceCulture);
             }
         }
         
@@ -371,6 +362,15 @@ namespace pwiz.Skyline.Model {
         public static string BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_ {
             get {
                 return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Building library....
+        /// </summary>
+        public static string BuildingPrecursorTable_Building_library {
+            get {
+                return ResourceManager.GetString("BuildingPrecursorTable_Building_library", resourceCulture);
             }
         }
         
@@ -1303,33 +1303,29 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///@echo off
-        ///setlocal enabledelayedexpansion
-        ///
-        ///:: Set paths and URIs (you need to define these)
-        ///set &quot;CudaVersion={{0}}&quot;
-        ///set &quot;CudaInstaller=cuda_%CudaVersion%_windows_network.exe&quot;
-        ///set &quot;CudaDownloadUri=https://developer.download.nvidia.com/compute/cuda/%CudaVersion%/network_installers/%CudaInstaller%&quot;
-        ///set &quot;CudaDownloadPath=%USERPROFILE%\Downloads\%CudaInstaller%&quot;
-        ///
-        ///set &quot;CuDNNVersion={{1}}&quot;
-        ///set &quot;CuDNNArchive=cudnn-windows-x86_64-%CuDNNVersion%-archive&quot;
-        ///set &quot;CuDNNDownloadUri=https://developer.download.n [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to Install.
         /// </summary>
-        public static string NvidiaInstaller_Batch_script {
+        public static string NvidiaInstaller_Install {
             get {
-                return ResourceManager.GetString("NvidiaInstaller_Batch_script", resourceCulture);
+                return ResourceManager.GetString("NvidiaInstaller_Install", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Administrative privileges are required to install this feature the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+        ///   Looks up a localized string similar to Missing resource {0}.
+        /// </summary>
+        public static string NvidiaInstaller_Missing_resource_0_ {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Missing_resource_0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
         ///    {0}
         ///	
         ///        Would you like to continue?
-        ///	
-        ///	Hint: Clicking &apos;OK&apos; activates installation of Nvidia libraries....
+        ///    .
         /// </summary>
         public static string NvidiaInstaller_Requesting_Administrator_elevation {
             get {

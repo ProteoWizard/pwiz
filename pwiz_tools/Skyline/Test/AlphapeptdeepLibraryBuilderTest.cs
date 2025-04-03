@@ -19,7 +19,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
-using pwiz.Skyline.Model.AlphaPeptDeep;
+using pwiz.Skyline.Model.Lib;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest

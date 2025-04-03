@@ -372,10 +372,10 @@
     <value>Skyline detected an Nvidia GPU on this computer. Would you like to enable faster AI processing by setting up Nvidia GPU computation? Elevated privileges are required to install this feature.</value>
   </data>
   <data name="PythonInstaller_Downloading_Cuda_Library" xml:space="preserve">
-    <value>Downloading Cuda software library...</value>
+    <value>Downloading Nvidia Cuda Toolkit and Deep Neural Network software.</value>
   </data>
   <data name="PythonInstaller_Installing_Cuda_Library" xml:space="preserve">
-    <value>Installing Cuda software library...</value>
+    <value>Installing Nvidia Cuda Toolkit and Deep Neural Network software.</value>
   </data>
   <data name="SkylineProcessRunner_Timeout" xml:space="preserve">
     <value>SkylineProcessRunner timed-out after {0} milliseconds</value>
