@@ -77,8 +77,8 @@ class PWIZ_API_DECL PeptideDatabase
 {
     public:
 
-    static std::auto_ptr<PeptideDatabase> create();
-    static std::auto_ptr<const PeptideDatabase> create(const std::string& filename);
+    static std::unique_ptr<PeptideDatabase> create();
+    static std::unique_ptr<const PeptideDatabase> create(const std::string& filename);
     virtual ~PeptideDatabase(){}
 
     virtual int size() const = 0;

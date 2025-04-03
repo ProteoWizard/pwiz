@@ -173,6 +173,22 @@
     <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_prm</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
   </data>
+  <data name="PRMOrbitrap_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/PRMOrbitrap.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="PRMOrbitrap_pdf" xml:space="preserve">
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_prm_orbi</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="DIA_Umpire_TTOF_zip" xml:space="preserve">
+    <value>https://skyline.ms/tutorials/DIA-TTOF.zip</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
+  <data name="DIA_Umpire_TTOF_pdf" xml:space="preserve">
+    <value>https://skyline.ms/wiki/home/software/Skyline/page.view?name=tutorial_dia_umpire_ttof</value>
+    <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>
+  </data>
   <data name="CustomReports_zip" xml:space="preserve">
     <value>https://skyline.ms/tutorials/CustomReports.zip</value>
     <comment>Not to be localized with other Skyline content.  Skyline developers will take care of localizing these.</comment>

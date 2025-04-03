@@ -50,7 +50,7 @@ class PWIZ_API_DECL FrequencyEstimatorPhysicalModel : public FrequencyEstimator
     };
 
     /// create an instance
-    static std::auto_ptr<FrequencyEstimatorPhysicalModel> create(const Config& config);
+    static std::unique_ptr<FrequencyEstimatorPhysicalModel> create(const Config& config);
 
     /// \name FrequencyEstimator interface
     //@{

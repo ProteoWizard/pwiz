@@ -39,8 +39,6 @@
 #include <vector>
 #include "BlibUtils.h" // For IONMOBILITY_TYPE enum
 
-using std::binary_function;
-
 
 namespace BiblioSpec {
 
@@ -60,7 +58,7 @@ struct PEAK_T
   };
 };
 
-struct PeakIntLessThan : public binary_function<PEAK_T, PEAK_T, bool>
+struct PeakIntLessThan
 {
   bool operator()(PEAK_T p1, PEAK_T p2) 
   {
@@ -74,7 +72,7 @@ struct PeakIntLessThan : public binary_function<PEAK_T, PEAK_T, bool>
   }
 };
 
-struct compPeakInt : public binary_function<PEAK_T, PEAK_T, bool>
+struct compPeakInt
 {
   bool operator()(PEAK_T p1, PEAK_T p2) 
   { 
@@ -88,7 +86,7 @@ struct compPeakInt : public binary_function<PEAK_T, PEAK_T, bool>
   }
 };
 
-struct compPeakMz : public binary_function<PEAK_T, PEAK_T, bool>
+struct compPeakMz
 {
   bool operator()(PEAK_T p1, PEAK_T p2) 
   {
@@ -185,7 +183,7 @@ class Spectrum
     
 };
  
-struct compSpecMz : public binary_function<Spectrum, Spectrum, bool>
+struct compSpecMz
 {
     bool operator()(Spectrum s1, Spectrum s2) 
     {
@@ -199,7 +197,7 @@ struct compSpecMz : public binary_function<Spectrum, Spectrum, bool>
     }
 };
 
-struct compSpecPtrMz : public binary_function<Spectrum*, Spectrum*, bool>{
+struct compSpecPtrMz {
     bool operator()(Spectrum* s1, Spectrum* s2) 
     {
         if( s1->getMz() <  s2->getMz() ){
@@ -212,22 +210,22 @@ struct compSpecPtrMz : public binary_function<Spectrum*, Spectrum*, bool>{
     }
 };
 
-struct compSpecScanNum : public binary_function<Spectrum, Spectrum, bool>
+struct compSpecScanNum
 {
     bool operator()(Spectrum s1, Spectrum s2) {return s1.getScanNumber() <  s2.getScanNumber();}
 };
 
-struct compSpecPtrScanNum : public binary_function<Spectrum*, Spectrum*, bool>
+struct compSpecPtrScanNum 
 {
     bool operator()(Spectrum* s1, Spectrum* s2) {return s1->getScanNumber() <  s2->getScanNumber();}
 };
 
-struct compSpecPtrRetentionTime : public binary_function<Spectrum*, Spectrum*, bool>
+struct compSpecPtrRetentionTime
 {
     bool operator()(Spectrum* s1, Spectrum* s2) {return s1->getRetentionTime() < s2->getRetentionTime();}
 };
 
-struct compSpecPtrSignalToNoise : public binary_function<Spectrum*, Spectrum*, bool>
+struct compSpecPtrSignalToNoise
 {
     bool operator()(Spectrum* s1, Spectrum* s2) {return s1->getSignalToNoise() > s2->getSignalToNoise();}
 };

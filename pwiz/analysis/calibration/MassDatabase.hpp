@@ -38,9 +38,9 @@ class MassDatabase
 {
     public:
 
-    static std::auto_ptr<MassDatabase> createFromPeptideDatabase(const std::string& filename);
-    static std::auto_ptr<MassDatabase> createFromTextFile(const std::string& filename);
-    static std::auto_ptr<MassDatabase> createIntegerTestDatabase();
+    static std::unique_ptr<MassDatabase> createFromPeptideDatabase(const std::string& filename);
+    static std::unique_ptr<MassDatabase> createFromTextFile(const std::string& filename);
+    static std::unique_ptr<MassDatabase> createIntegerTestDatabase();
 
     struct Entry
     {

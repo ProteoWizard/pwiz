@@ -391,6 +391,19 @@ namespace pwiz.Skyline.Model.Lib
                 return -1; // SQLite returns -1 if column does not exist, but documentation says can throw IndexOutOfRangeException
             }
         }
+        
+        /// <summary>
+        /// Returns True iff the library is redundant (it has no RetentionTimes table)
+        /// </summary>
+        public static bool IsRedundantLibrary(string filepath)
+        {
+            var connBuilder = new SQLiteConnectionStringBuilder();
+            connBuilder.DataSource = filepath;
+            using var conn = new SQLiteConnection(connBuilder.ConnectionString);
+            conn.Open();
+            using var cmd = new SQLiteCommand(@"SELECT name FROM sqlite_master WHERE name = 'RetentionTimes'", conn);
+            return cmd.ExecuteScalar() == null;
+        }
 
         /// <summary>
         /// Path to the file on disk from which this library was loaded.  This value
@@ -624,7 +637,6 @@ namespace pwiz.Skyline.Model.Lib
             status = status.ChangeSegments(0, segmentCount).ChangeMessage(string.Format("Reading entries from {0} library", Path.GetFileName(FilePath)));
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
-
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
@@ -690,7 +702,6 @@ namespace pwiz.Skyline.Model.Lib
                         int iIdFilename =
                             reader.GetOrdinal(SpectrumSourceFiles
                                 .idFileName); // Save the search result file, too (may be distinct from the spectra source file)
-
                         while (reader.Read())
                         {
                             string filename = reader.GetString(iFilename);

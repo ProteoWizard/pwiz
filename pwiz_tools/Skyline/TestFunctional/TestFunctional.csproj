@@ -164,6 +164,7 @@
     <Compile Include="AlphabeticalReportEditorTest.cs" />
     <Compile Include="ApplyPeakToAllTest.cs" />
     <Compile Include="AreaNormalizeOptionTest.cs" />
+    <Compile Include="AssociateProteinsWhileLoadingTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="AutoZoomTest.cs" />
@@ -577,6 +578,7 @@
     <None Include="ExportChromatogramTest.zip" />
     <None Include="ExportIsolationListTest.zip" />
     <None Include="ExportMethodDialogTest.zip" />
+    <EmbeddedResource Include="ExportMethodDialogThermoTest.json" />
     <None Include="ExportSpectralLibraryTest.zip" />
     <None Include="ExpressionAnnotationsTest.zip" />
     <None Include="FiguresOfMeritTest.zip" />

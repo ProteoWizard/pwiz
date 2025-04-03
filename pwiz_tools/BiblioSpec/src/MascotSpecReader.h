@@ -42,8 +42,8 @@ class MascotSpecReader : public SpecFileReader {
         : ms_file_(NULL), ms_results_(NULL), disableRtConversion_(false), needsRtConversion_(false) {
     }
     MascotSpecReader(const char* filename,
-                     ms_mascotresfile* ms_file, 
-                     ms_mascotresults* ms_results = NULL,
+                     ms_mascotresfile_dat* ms_file, 
+                     ms_peptidesummary* ms_results = NULL,
                      const std::vector<std::string>& rawfiles = std::vector<std::string>(),
                      boost::shared_ptr<TempFileDeleter> tmpFileDeleter = boost::shared_ptr<TempFileDeleter>())
         : disableRtConversion_(false), needsRtConversion_(false), tmpFileDeleter_(tmpFileDeleter) {
@@ -74,7 +74,7 @@ class MascotSpecReader : public SpecFileReader {
         Verbosity::comment(V_STATUS, "Opening and importing spectra from %s.", 
                            filename);
             delete ms_file_;
-            ms_file_ = new ms_mascotresfile(filename);
+            ms_file_ = new ms_mascotresfile_dat(filename);
             if( !ms_file_->isValid() ) {
                 throw BlibException(true,
                                     "'%s' is not a valid .dat file.", 
@@ -89,8 +89,8 @@ class MascotSpecReader : public SpecFileReader {
         }
     }
     
-    void setFile(ms_mascotresfile* ms_file, 
-                 ms_mascotresults* ms_results = NULL){
+    void setFile(ms_mascotresfile_dat* ms_file,
+                 ms_peptidesummary* ms_results = NULL){
         Verbosity::comment(V_DETAIL, "MascotSpecReader attaching open file.");
         //delete ms_file_;
         ms_file_ = ms_file;
@@ -203,8 +203,8 @@ class MascotSpecReader : public SpecFileReader {
     
  private:
     string filename_;   // keep around for reporting purposes
-    ms_mascotresfile* ms_file_;    // get spec from here
-    ms_mascotresults* ms_results_; // get pep from here (for m/z)
+    ms_mascotresfile_dat* ms_file_;    // get spec from here
+    ms_peptidesummary* ms_results_; // get pep from here (for m/z)
     size_t numRawFiles_;
     bool disableRtConversion_; // rt units known
     bool needsRtConversion_; // rt units unknown and we've seen a retention time >750

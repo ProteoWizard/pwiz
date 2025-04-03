@@ -177,13 +177,16 @@ namespace TestPerf
                 // Check default settings shown in the tutorial
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+
+                Assert.AreEqual(ImportPeptideSearchDlg.Pages.chromatograms_page, importPeptideSearchDlg.CurrentPage);
+                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
             });
 
             //WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
 
             WaitForDocumentLoaded();
 
-            RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page));
+            RunUI(() => Assert.AreEqual(ImportPeptideSearchDlg.Pages.match_modifications_page, importPeptideSearchDlg.CurrentPage));
 
             var editStructModListUI =
                 ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(importPeptideSearchDlg.MatchModificationsControl.ClickAddStructuralModification);
@@ -279,6 +282,7 @@ namespace TestPerf
             {
                 Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
+                importPeptideSearchDlg.ConverterSettingsControl.UseDiaUmpire = true;
                 importPeptideSearchDlg.ConverterSettingsControl.InstrumentPreset = _instrumentValues.InstrumentPreset;
                 importPeptideSearchDlg.ConverterSettingsControl.EstimateBackground = true;
                 importPeptideSearchDlg.ConverterSettingsControl.AdditionalSettings = _instrumentValues.AdditionalSettings;

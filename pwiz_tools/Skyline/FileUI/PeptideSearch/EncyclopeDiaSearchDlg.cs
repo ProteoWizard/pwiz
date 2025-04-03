@@ -542,7 +542,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void btnAdditionalSettings_Click(object sender, EventArgs e)
         {
-            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(this, PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 EncyclopeDiaConfig.Parameters,
                 setting => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,
