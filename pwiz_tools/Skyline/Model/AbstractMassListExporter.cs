@@ -229,9 +229,9 @@ namespace pwiz.Skyline.Model
             string compoundName = nodePep.Peptide.IsCustomMolecule
                 ? nodeGroup.CustomMolecule.InvariantName
                 : Document.Settings.GetModifiedSequence(nodePep).Sequence;
-            if (!showLabelType)
-                return compoundName;
-            return string.Format(@"{0} ({1})", compoundName, nodeGroup.TransitionGroup.LabelType);
+            if (showLabelType)
+                compoundName = string.Format(@"{0} ({1})", compoundName, nodeGroup.TransitionGroup.LabelType);
+            return compoundName.ToDsvField(FieldSeparator, FieldSeparatorReplacement);
         }
 
         public string GetCAS(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
