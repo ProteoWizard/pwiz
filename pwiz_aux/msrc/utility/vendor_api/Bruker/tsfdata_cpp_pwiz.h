@@ -128,8 +128,8 @@ namespace tsfdata
 
             // buffer-growing loop
             for(;;) {
-                uint32_t required_len = tsf_read_profile_spectrum_v2(handle, frame_id, &profileIntensityBuffer[0], initial_frame_buffer_size);
-                if(required_len == 0)
+                int32_t required_len = tsf_read_profile_spectrum_v2(handle, frame_id, &profileIntensityBuffer[0], initial_frame_buffer_size);
+                if(required_len <= 0)
                     throwLastError();
 
                 if (initial_frame_buffer_size >= required_len)

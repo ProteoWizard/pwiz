@@ -270,7 +270,7 @@ void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
 
         string fileName, fileType, fileSha1;
 
-        fileName = sf.location + "/" + sf.name;
+        fileName = (bfs::path(sf.location) / sf.name).string();
         switch (nativeIdFormat)
         {
             // nativeID formats from processed data file types
