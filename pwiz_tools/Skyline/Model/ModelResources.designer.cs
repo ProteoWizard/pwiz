@@ -366,11 +366,11 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Building library....
+        ///   Looks up a localized string similar to Build Library.
         /// </summary>
-        public static string BuildingPrecursorTable_Building_library {
+        public static string BuildingPrecursorTable_Build_Library {
             get {
-                return ResourceManager.GetString("BuildingPrecursorTable_Building_library", resourceCulture);
+                return ResourceManager.GetString("BuildingPrecursorTable_Build_Library", resourceCulture);
             }
         }
         

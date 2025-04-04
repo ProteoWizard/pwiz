@@ -889,7 +889,7 @@ in the Windows registry key '{0}' from:</value>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
       <value>Importing spectral library</value>
   </data>
-  <data name="BuildingPrecursorTable_Building_library" xml:space="preserve">
-    <value>Building library...</value>
+  <data name="BuildingPrecursorTable_Build_Library" xml:space="preserve">
+    <value>Build Library</value>
   </data>
 </root>
