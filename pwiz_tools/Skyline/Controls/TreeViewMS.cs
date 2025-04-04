@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Controls
 
         public bool IsInSelection { get; protected internal set; }
 
-        public Color ForeColorMS
+        public virtual Color ForeColorMS
         {
             get
             {
@@ -489,7 +489,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public Color BackColorMS
+        public virtual Color BackColorMS
         {
             get
             {
@@ -509,7 +509,7 @@ namespace pwiz.Skyline.Controls
             return hsbColor.ToRGB();
         }
 
-        public Brush SelectionBrush
+        public virtual Brush SelectionBrush
         {
             get
             {
@@ -674,7 +674,7 @@ namespace pwiz.Skyline.Controls
                 g.FillRectangle(SelectionBrush, BoundsMS);
         }
 
-        protected void DrawFocus(Graphics g)
+        protected virtual void DrawFocus(Graphics g)
         {
             if (IsSelected && TreeView.Focused)
                 ControlPaint.DrawFocusRectangle(g, BoundsMS, ForeColorMS, BackColorMS);

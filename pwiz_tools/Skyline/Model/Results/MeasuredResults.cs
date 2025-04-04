@@ -25,6 +25,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -32,7 +33,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Results
 {
     [XmlRoot("measured_results")]
-    public sealed class MeasuredResults : Immutable, IXmlSerializable
+    public sealed class MeasuredResults : Immutable, IXmlSerializable, IValidating, IFileProvider
     {
         public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
@@ -61,6 +62,8 @@ namespace pwiz.Skyline.Model.Results
             // The only way to get peaks with areas not normalized by
             // time is to load an older document that was created this way.
             IsTimeNormalArea = true;
+
+            UpdateFiles();
         }
 
         public bool IsEmpty
@@ -537,36 +540,35 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)
         {
             // Clone the current node, and update its cache properties.
-            var results = ImClone(this);
-
-            // Make sure peaks are adjusted as chromatograms are rescored
-            if (resultsCache._cacheRecalc != null &&
-                resultsCache._listPartialCaches != null)
+            return ChangeProp(ImClone(this), results =>
             {
-                results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
-            }
+                // Make sure peaks are adjusted as chromatograms are rescored
+                if (resultsCache._cacheRecalc != null &&
+                    resultsCache._listPartialCaches != null)
+                {
+                    results.Chromatograms = results.GetRescoredChromatograms(resultsCache);
+                }
 
-            results.UpdateClonedCaches(resultsCache);
+                results.UpdateClonedCaches(resultsCache);
 
-            results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
-            results.IsDeserialized = false;
+                results.IsResultsUpdateRequired = resultsCache.IsResultsUpdateRequired;
+                results.IsDeserialized = false;
 
-            string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
-            var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
-            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation()); // Ignore centroiding, combineIMS etc for key purposes
-            var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
-            var setCachedFileNames = new HashSet<string>(enumCachedNames);
-            var chromatogramSets = new List<ChromatogramSet>();
-            foreach (var chromSet in results.Chromatograms)
-            {
-                chromatogramSets.Add(chromSet.ChangeFileCacheFlags(
-                    dictCachedFiles, setCachedFileNames, cachePath));
-            }
+                string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
+                var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
+                var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath.GetLocation()); // Ignore centroiding, combineIMS etc for key purposes
+                var enumCachedNames = cachedFiles.Select(cachedFile => cachedFile.FilePath.GetFileName());
+                var setCachedFileNames = new HashSet<string>(enumCachedNames);
+                var chromatogramSets = new List<ChromatogramSet>();
+                foreach (var chromSet in results.Chromatograms)
+                {
+                    chromatogramSets.Add(chromSet.ChangeFileCacheFlags(
+                        dictCachedFiles, setCachedFileNames, cachePath));
+                }
 
-            if (!ArrayUtil.ReferencesEqual(chromatogramSets, results.Chromatograms))
-                results.Chromatograms = chromatogramSets;
-
-            return results;
+                if (!ArrayUtil.ReferencesEqual(chromatogramSets, results.Chromatograms))
+                    results.Chromatograms = chromatogramSets;
+            });
         }
 
         private void UpdateClonedCaches(MeasuredResults resultsCache)
@@ -968,6 +970,31 @@ namespace pwiz.Skyline.Model.Results
             return new ChromCacheMinimizer(document, _cacheFinal);
         }
 
+        private static Identity _replicateFolderId = new StaticFolderId();
+
+        public IList<IFileModel> Files { get; private set; }
+
+        public void Validate()
+        {
+            UpdateFiles();
+        }
+
+        private void UpdateFiles()
+        {
+            if (IsEmpty)
+                return;
+
+            var newChromatogramSetList = Chromatograms?.Select(item => item).Cast<IFileModel>().ToList();
+
+            var oldReplicatesFolder = Files?.FirstOrDefault();
+            var oldChromatogramSetList = oldReplicatesFolder?.Files;
+            if (!ArrayUtil.ReferencesEqual(newChromatogramSetList, oldChromatogramSetList))
+            {
+                IFileModel folder = new FolderModel(_replicateFolderId, FileType.folder_replicates, newChromatogramSetList);
+                Files = ImmutableList.Singleton(folder);
+            }
+        }
+
         #region Property change methods
 
         public MeasuredResults ClearDeserialized()
@@ -1292,6 +1319,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MeasuredResults()
         {
+            UpdateFiles();
         }
 
         private enum ATTR
@@ -1937,6 +1965,11 @@ namespace pwiz.Skyline.Model.Results
         public double? GetMedianTicArea()
         {
             return _medianTicArea;
+        }
+
+        public ChromatogramSet FindChromatogramSet(ChromatogramSetId chromatogramSetId)
+        {
+            return _chromatograms.FirstOrDefault(chromatogramSet => ReferenceEquals(chromatogramSet.Id, chromatogramSetId));
         }
     }
 

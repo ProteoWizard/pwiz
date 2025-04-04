@@ -183,7 +183,12 @@ namespace pwiz.Skyline.Model.AuditLog
         edited_ion_mobility_library,
         permuted_isotope_label_simple,
         permuted_isotope_label_complete,
-        added_spectrum_filter
+        added_spectrum_filter,
+        files_tree_node_renamed,
+        files_tree_node_drag_and_drop,
+        files_tree_nodes_drag_and_drop,
+        files_tree_node_remove,
+        files_tree_nodes_remove_all
     } // N.B. as you add to this, consider whether or not the human-readable message may want to refuse the "peptide"->"molecule" translation for small molecule UI (see ModeUIInvariantMesdsageTypes below)
 
     /// <summary>
