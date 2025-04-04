@@ -153,22 +153,11 @@ namespace pwiz.SkylineTestFunctional
         private void VerifyColumnSizesAligned(DocumentGridForm documentGrid)
         {
             // Verify replicate columns are aligned.
-            var mainGridColumnWidths = GetMainGridColumnWidths(documentGrid);
-            var replicateGridColumnWidths = GetReplicateGridColumnWidths(documentGrid);
-            Console.WriteLine("Temporary log for debugging tests");
-            foreach (var mainGridColumnWidth in mainGridColumnWidths)
-            {
-                Console.WriteLine($"Main Grid Replicate: {mainGridColumnWidth.Key} Width: {mainGridColumnWidth.Value}");
-            }
-            foreach (var replicateGridColumnWidth in replicateGridColumnWidths)
-            {
-                Console.WriteLine($"Replicate Grid Replicate: {replicateGridColumnWidth.Key} Width: {replicateGridColumnWidth.Value}");
-            }
-
-            CollectionAssert.AreEqual(
-                mainGridColumnWidths.OrderBy(kv => kv.Key).ToList(),
-                replicateGridColumnWidths.OrderBy(kv => kv.Key).ToList()
-            );
+            var mainGridColumnWidths = TextUtil.SpaceSeparate(GetMainGridColumnWidths(documentGrid)
+                .OrderBy(kvp => kvp.Key).Select(kvp => kvp.Key + "=" + kvp.Value));
+            var replicateGridColumnWidths = TextUtil.SpaceSeparate(GetReplicateGridColumnWidths(documentGrid)
+                .OrderBy(kvp => kvp.Key).Select(kvp => kvp.Key + "=" + kvp.Value));
+            Assert.AreEqual(mainGridColumnWidths, replicateGridColumnWidths);
 
             // Verify property column is aligned.
             var replicateGridPropertyColumnWidth = GetReplicateGridPropertyWidth(documentGrid);
@@ -184,7 +173,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars = ScrollBars.None);
             var columnWidths = replicateGridView.Columns.Cast<DataGridViewColumn>()
                 .Where(col => !"Property".Equals(col.HeaderText) && col.Visible)
-                .ToDictionary(col => col.HeaderText, col => CalculateColumnVisibleWidth(replicateGridView, col));
+                // Use col.Width for non-freezable columns as they should always align.
+                .ToDictionary(col => col.HeaderText, col => col.Width);
             RunUI(() => documentGrid.DataboundGridControl.ReplicatePivotDataGridView.ScrollBars = originalScrollBars);
             return columnWidths;
         }
@@ -203,7 +193,8 @@ namespace pwiz.SkylineTestFunctional
                         boundDataGridView.Columns
                             .Cast<DataGridViewColumn>()
                             .Where(col => col.Visible && col.DataPropertyName == column.Name)
-                            .Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col))
+                            // Use col.Width for non-freezable columns as they should always align.
+                            .Sum(col => col.Width)
                     )
                 );
             RunUI(() => documentGrid.DataboundGridControl.DataGridView.ScrollBars = originalScrollBars);

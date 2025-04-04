@@ -862,11 +862,12 @@ namespace pwiz.Skyline.Controls.Databinding
                 .SelectMany(group => group.Select(col => col.Name)).ToHashSet();
 
             // If columns are frozen we size the property column based on visible width
+            var isMainGridFrozen = IsMainGridFrozen();
             var nonReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
                 .Where(col => !replicateColumnNames.Contains(col.DataPropertyName) && col.Visible)
                 .Sum(col =>
                 {
-                    if (IsMainGridFrozen())
+                    if (isMainGridFrozen)
                     {
                         return CalculateColumnVisibleWidth(boundDataGridView, col);
                     }
@@ -876,6 +877,21 @@ namespace pwiz.Skyline.Controls.Databinding
                     }
                 });
 
+            // We need to consider a special case where the main grid vertical scroll bar width needs to be accounted for.
+            var mainGridVScrollBar = FindVisibleVerticalScrollBar(boundDataGridView);
+            var replicateGridVScrollBar = FindVisibleVerticalScrollBar(replicatePivotDataGridView);
+            if (isMainGridFrozen && mainGridVScrollBar != null && replicateGridVScrollBar == null)
+            {
+                // If there is no visible replicate columns then the VScrollBar width should be added to the non-replicate width.  
+                var visibleReplicateWidth = boundDataGridView.Columns.Cast<DataGridViewColumn>()
+                    .Where(col => replicateColumnNames.Contains(col.DataPropertyName) && col.Visible)
+                    .Sum(col => CalculateColumnVisibleWidth(boundDataGridView, col));
+                if (visibleReplicateWidth <= 0)
+                {
+                    nonReplicateWidth += mainGridVScrollBar.Width;
+                }
+            }
+
             colReplicateProperty.Width = nonReplicateWidth;
             foreach (DataGridViewColumn column in replicatePivotDataGridView.Columns)
             {
@@ -884,6 +900,18 @@ namespace pwiz.Skyline.Controls.Databinding
                     column.Width = replicateTotalWidth;
                 }
             }
+        }
+
+        private static VScrollBar FindVisibleVerticalScrollBar(DataGridView dataGridView)
+        {
+            foreach (Control control in dataGridView.Controls)
+            {
+                if (control is VScrollBar { Visible: true } vScrollBar)
+                {
+                    return vScrollBar;
+                }
+            }
+            return null;
         }
 
         private int CalculateColumnVisibleWidth(DataGridView view, DataGridViewColumn column)
