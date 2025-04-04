@@ -119,7 +119,7 @@ namespace vendor_api {
 namespace Bruker {
 
 
-TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool allowMsMsWithoutPrecursor, const vector<chemistry::MzMobilityWindow>& isolationMzFilter)
+TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool allowMsMsWithoutPrecursor, bool singleFrameDiaPASEF, const vector<chemistry::MzMobilityWindow>& isolationMzFilter)
     : tdfFilepath_((bfs::path(rawpath) / "analysis.tdf").string()),
       combineSpectra_(combineIonMobilitySpectra),
       hasPASEFData_(false),
@@ -128,6 +128,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
       isolationMzFilter_(isolationMzFilter),
       currentFrameId_(-1),
       isDiagonalPASEF_(false),
+      singleFrameDiaPASEF_(singleFrameDiaPASEF),
       tdfStoragePtr_(new TimsBinaryData(rawpath)),
       tdfStorage_(*tdfStoragePtr_)
 {
@@ -304,7 +305,7 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
         string checkDiagPasefSql = "SELECT MAX(cnt) FROM (SELECT COUNT(*) AS cnt FROM DiaFrameMsMsWindows GROUP BY WindowGroup)";
         sqlite::query checkDiagPasefQuery(db, checkDiagPasefSql.c_str());
         int countMaxIsolationMzPerGroup = checkDiagPasefQuery.begin()->get<sqlite3_int64>(0);
-        isDiagonalPASEF_ = maxNumScans - countMaxIsolationMzPerGroup < 10; // heuristic from Bruker based on MCC email 2/11/2025
+        isDiagonalPASEF_ = singleFrameDiaPASEF_ || maxNumScans - countMaxIsolationMzPerGroup < 10; // heuristic from Bruker based on MCC email 2/11/2025
 
         if (isDiagonalPASEF_)
         {

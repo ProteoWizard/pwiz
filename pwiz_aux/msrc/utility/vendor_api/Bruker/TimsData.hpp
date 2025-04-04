@@ -233,7 +233,7 @@ typedef boost::shared_ptr<TimsSpectrum> TimsSpectrumPtr;
 
 struct PWIZ_API_DECL TimsDataImpl : public CompassData
 {
-    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true,
+    TimsDataImpl(const std::string& rawpath, bool combineIonMobilitySpectra, int preferOnlyMsLevel = 0, bool allowMsMsWithoutPrecursor = true, bool singleFrameDiaPASEF = false,
                  const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>());
     virtual ~TimsDataImpl() {}
 
@@ -325,6 +325,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
 
     int64_t currentFrameId_; // used for cacheing frame contents
     bool isDiagonalPASEF_;
+    bool singleFrameDiaPASEF_;
 
 protected:
     friend struct TimsFrame;

@@ -763,12 +763,13 @@ PWIZ_API_DECL CompassDataPtr CompassData::create(const string& rawpath, bool com
                                                  Reader_Bruker_Format format,
                                                  int preferOnlyMsLevel, // when nonzero, caller only wants spectra at this ms level
                                                  bool allowMsMsWithoutPrecursor, // when false, PASEF MS2 specta without precursor info will be excluded
+                                                 bool singleFrameDiaPASEF,
                                                  const vector<chemistry::MzMobilityWindow>& isolationMzFilter) // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
 {
     if (format == Reader_Bruker_Format_BAF || format == Reader_Bruker_Format_BAF_and_U2)
         return CompassDataPtr(new Baf2SqlImpl(rawpath));
     else if (format == Reader_Bruker_Format_TDF)
-        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor, isolationMzFilter));
+        return CompassDataPtr(new TimsDataImpl(rawpath, combineIonMobilitySpectra, preferOnlyMsLevel, allowMsMsWithoutPrecursor, singleFrameDiaPASEF, isolationMzFilter));
     else if (format == Reader_Bruker_Format_TSF)
 #ifdef _WIN64
         return CompassDataPtr(new TsfDataImpl(rawpath, preferOnlyMsLevel));

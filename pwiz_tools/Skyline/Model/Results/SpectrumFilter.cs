@@ -1001,7 +1001,7 @@ namespace pwiz.Skyline.Model.Results
                 // This window group has not been considered before, is it the best for this FilterPair?
                 var distanceToCenter = double.MaxValue;
                 var filterTargetIM = CalcCenter(filterPair.MinIonMobilityValue, filterPair.MaxIonMobilityValue);
-                if (spectrum.IonMobility.HasValue) // As in Diagonal PASEF - Isolation window and IM change per scan within frame
+                if (spectrum.IonMobility.HasValue && filterTargetIM != null) // As in Diagonal PASEF - Isolation window and IM change per scan within frame
                 {
                     // Need to look at the entire frame
                     foreach (var spec in allSpectra)
@@ -1099,7 +1099,7 @@ namespace pwiz.Skyline.Model.Results
                 var spectrumFilterPairs = activeFilters.SelectMany(f => f.SpectrumFilterPairs).Distinct();
                 foreach (var filterPair in spectrumFilterPairs)
                 {
-                    var extractedSpectra = activeFilters.Select(f => f.GetExtractedSpectra(filterPair)).ToList();
+                    var extractedSpectra = activeFilters.Select(f => f.GetExtractedSpectra(filterPair)).Where(es => es != null).ToList();
                     var all = extractedSpectra.SelectMany(es => es).ToList();
                     var firstSpectrum = all.First();
                     var countSpectra = 1;

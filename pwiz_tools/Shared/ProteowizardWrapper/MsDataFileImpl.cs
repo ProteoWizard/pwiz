@@ -193,7 +193,8 @@ namespace pwiz.ProteowizardWrapper
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
                     ignoreCalibrationScans = true, // For Waters, we don't need to hear about lockmass values
                     reportSonarBins = true, // For Waters SONAR data, report bin number instead of false drift time
-                    globalChromatogramsAreMs1Only = true
+                    globalChromatogramsAreMs1Only = true,
+                    singleFrameDiaPASEF = false
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -2154,6 +2155,34 @@ namespace pwiz.ProteowizardWrapper
             return slice;
         }
 
+        /// <summary>
+        /// Split a diagonalPASEF spectrum with scanning quadruple arrays into a list of virtual spectra:
+        /// each virtual spectrum will have the same scanning quadrupole value as its isolation info.
+        /// </summary>
+        public IEnumerable<MsDataSpectrum> GetVirtualSpectra(MsDataFileImpl dataFile)
+        {
+            var sliceStart = 0;
+            var currentMzQuadLow = double.MinValue;
+            int i;
+            for (i = 0; i < ScanningQuadMzLows.Length; i++)
+            {
+                if (ScanningQuadMzLows[i] != currentMzQuadLow)
+                {
+                    if (i != sliceStart)
+                    {
+                        var slice = CreateSlice(sliceStart, i - sliceStart, dataFile);
+                        yield return slice;
+                        sliceStart = i;
+                    }
+                    currentMzQuadLow = ScanningQuadMzLows[i];
+                }
+            }
+            // Last slice
+            if (i != sliceStart)
+            {
+                yield return CreateSlice(sliceStart, i - sliceStart, dataFile);
+            }
+        }
 
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)

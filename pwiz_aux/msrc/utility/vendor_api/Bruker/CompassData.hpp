@@ -292,6 +292,7 @@ struct PWIZ_API_DECL CompassData
                       msdata::detail::Bruker::Reader_Bruker_Format format = msdata::detail::Bruker::Reader_Bruker_Format_Unknown, 
                       int preferOnlyMsLevel = 0, // when nonzero, caller only wants spectra at this ms level
                       bool allowMsMsWithoutPrecursor = true, // when false, PASEF MS2 specta without precursor info will be excluded
+                      bool singleFrameDiaPASEF = false,
                       const std::vector<chemistry::MzMobilityWindow>& isolationMzFilter = std::vector<chemistry::MzMobilityWindow>()); // when non-empty, only scans from precursors matching one of the included m/zs (i.e. within a precursor isolation window) will be enumerated
 
     virtual ~CompassData() {}
