@@ -70,21 +70,21 @@ namespace pwiz.Skyline.Alerts
                 //Text = kvp.Key,
                 Dock = DockStyle.Fill,
                 AutoSize = true,
-                TextAlign = ContentAlignment.MiddleCenter
+                TextAlign = ContentAlignment.MiddleRight,
             }, 0, 0);
 
             var keyToControl = new Dictionary<string, Control>();
             var controlToSetting = new Dictionary<object, TValue>();
             int row = 1;
             var ctlTextRepresentation = new StringBuilder();
-            foreach (var kvp in gridValues.OrderBy(kvp => kvp.Key))
+            foreach (var kvp in gridValues) //.OrderBy(kvp => kvp.Key))
             {
                 var lbl = new Label
                 {
                     Text = kvp.Key,
                     Dock = DockStyle.Fill,
                     AutoSize = true,
-                    TextAlign = ContentAlignment.MiddleCenter,
+                    TextAlign = ContentAlignment.MiddleRight,
                 };
                 
 
@@ -145,8 +145,9 @@ namespace pwiz.Skyline.Alerts
                 layout.Controls.Add(valueControl, 1, row);
                 keyToControl[kvp.Key] = valueControl;
                 controlToSetting[valueControl] = kvp.Value;
-                //TODO: keyToToolTip is necessary here
+
                 ToolTip toolTip = new ToolTip();
+                toolTip.AutoPopDelay = 5000;
                 if (keyToName != null) toolTip.SetToolTip(lbl, keyToName(controlToSetting[keyToControl[kvp.Key]]));
                 ctlTextRepresentation.AppendLine($@"{kvp.Key} = {valueToString(kvp.Value)}");
                 row++;

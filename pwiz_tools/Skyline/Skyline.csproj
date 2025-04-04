@@ -46,15 +46,15 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview/</InstallUrl>
-    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview/</UpdateUrl>
+    <InstallUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview2/</InstallUrl>
+    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview2/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
-    <ProductName>Skyline-Carafe-Preview</ProductName>
+    <ProductName>Skyline-Carafe-Preview-2</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>250</ApplicationRevision>
-    <ApplicationVersion>24.1.1.250</ApplicationVersion>
+    <ApplicationRevision>254</ApplicationRevision>
+    <ApplicationVersion>24.1.1.254</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
