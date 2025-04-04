@@ -166,7 +166,7 @@
     <None Include="Resources\Icojam-Blueberry-Basic-Arrow-up2.bmp" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\Copy.bmp" />
+    <None Include="Resources\Copy.bmp" />
     <Content Include="Resources\PanoramaDownload.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

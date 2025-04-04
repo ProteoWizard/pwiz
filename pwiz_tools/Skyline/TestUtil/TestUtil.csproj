@@ -300,8 +300,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\DiskFailure.png" />
-    <EmbeddedResource Include="Resources\larrow-cur.bmp" />
+    <None Include="Resources\DiskFailure.png" />
+    <None Include="Resources\larrow-cur.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
