@@ -553,6 +553,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\DropImageNoBackground.png" />
+    <None Include="Resources\FreezeCells.png" />
     <None Include="Resources\HiddenColumns.bmp" />
     <None Include="Resources\Cluster.bmp" />
     <None Include="Resources\Alphabetical.bmp" />
