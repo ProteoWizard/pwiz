@@ -27,7 +27,6 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.SkylineTestUtil;
 using System.Windows.Forms;
 using pwiz.Skyline.Util.Extensions;
-using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestFunctional
 {
