@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
@@ -44,6 +45,10 @@ namespace pwiz.Skyline.Model.Koina
         private readonly IList<TransitionGroupDocNode> _precursors;
         private readonly int _nce;
 
+        public SrmDocument Document { get => _document; }
+
+        public string ToolName { get; }
+
         public KoinaLibraryBuilder(SrmDocument doc, string name, string outPath, Func<bool> replaceLibrary,
             IrtStandard irtStandard, IList<PeptideDocNode> peptides, IList<TransitionGroupDocNode> precursors, int nce)
         {
@@ -57,6 +62,10 @@ namespace pwiz.Skyline.Model.Koina
             _replaceLibrary = replaceLibrary;
             IrtStandard = irtStandard;
             _nce = nce;
+            //Name of the tool presented to the user for Warning messages
+            ToolName = @"Koina";
+            LibraryHelper = new LibraryHelper(ToolName);
+
         }
 
         public bool BuildLibrary(IProgressMonitor progress)
@@ -175,6 +184,11 @@ namespace pwiz.Skyline.Model.Koina
             return true;
         }
 
+        public LibraryHelper LibraryHelper { get; }
+        public string ProductLibraryPath()
+        {
+            return LibrarySpec.FilePath;
+        }
         public static List<KoinaIntensityModel.PeptidePrecursorNCE> ReadStandardPeptides(IrtStandard standard, int? nce)
         {
             var peps = standard.GetDocument().Peptides.ToList();
@@ -208,5 +222,8 @@ namespace pwiz.Skyline.Model.Koina
         {
             get { return null; }
         }
+
+        public string BuilderLibraryPath => BuildOutput;
+
     }
 }

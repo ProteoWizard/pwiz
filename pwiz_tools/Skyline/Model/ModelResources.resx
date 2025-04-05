@@ -466,6 +466,31 @@
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
     <value>Adjusting peak boundaries</value>
   </data>
+  <data name="Alphapeptdeep_Blib_completed_ok" xml:space="preserve">
+    <value>BlibBuilder completed ok</value>
+  </data>
+  <data name="Alphapeptdeep_Blib_failed_to_complete" xml:space="preserve">
+    <value>BlibBuilder failed to complete</value>
+  </data>
+  <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
+    <value>Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+{0}
+	
+Would you like to continue building this predicted library?</value>
+  </data>
+  <data name="NvidiaInstaller_Requesting_Administrator_elevation" xml:space="preserve">
+    <value>Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+    {0}
+	
+        Would you like to continue?
+    </value>
+  </data>
+  <data name="NvidiaInstaller_Install" xml:space="preserve">
+    <value>Install</value>
+  </data>
+  <data name="NvidiaInstaller_Missing_resource_0_" xml:space="preserve">
+    <value>Missing resource {0}</value>
+  </data>
   <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>The precursor m/z {0} is not measureable with your current instrument settings.</value>
   </data>
@@ -842,5 +867,29 @@ in the Windows registry key '{0}' from:</value>
   </data>
   <data name="ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_" xml:space="preserve">
       <value>Unknown Thermo instrument type '{0}' installed.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_" xml:space="preserve">
+      <value>Failed to generate settings.yaml file by executing the peptdeep export-settings command.</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_" xml:space="preserve">
+      <value>Failed to build library by executing the peptdeep cmd-flow command.</value>
+  </data>
+  <data name="LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file" xml:space="preserve">
+      <value>Preparing prediction input file</value>
+  </data>
+  <data name="LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file" xml:space="preserve">
+      <value>Preparing training input file</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
+      <value>Preparing settings file</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep" xml:space="preserve">
+      <value>Executing peptdeep</value>
+  </data>
+  <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
+      <value>Importing spectral library</value>
+  </data>
+  <data name="BuildingPrecursorTable_Build_Library" xml:space="preserve">
+    <value>Build Library</value>
   </data>
 </root>

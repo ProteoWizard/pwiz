@@ -736,6 +736,10 @@ namespace pwiz.Skyline.SettingsUI
             dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
+
+                Cursor.Current = Cursors.WaitCursor;
+
+
                 if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                 {
                     using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
@@ -749,6 +753,7 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
 
+                Cursor.Current = Cursors.Default;
                 BuildLibrary(dlg.Builder);
             }
         }
@@ -758,12 +763,32 @@ namespace pwiz.Skyline.SettingsUI
             IsBuildingLibrary = true;
 
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
+            if (builder.LibraryHelper != null)
+            {
+                var warningMods = builder.LibraryHelper.GetWarningMods(builder.Document, builder.ToolName);
+
+                if (warningMods?.Count > 0)
+                {
+                    string warningModString = string.Join(Environment.NewLine, warningMods);
+                    AlertDlg warnMessageDlg =
+                        new AlertDlg(
+                            string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                                warningModString), MessageBoxButtons.OKCancel);
+                    var warnModChoice = warnMessageDlg.ShowDialog();
+
+                    if (warnModChoice == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                }
+            }
 
             bool retry;
             do
             {
                 using (var longWaitDlg = new LongWaitDlg(_parent))
                 {
+                    longWaitDlg.Text = string.Format(ModelResources.BuildingPrecursorTable_Build_Library);
                     var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
                         _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
 
@@ -792,6 +817,11 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                         }
                     }
+                    else if (status.IsCanceled)
+                    {
+                        return;
+                    }
+
                     retry = false;
                 }
             } while (retry);

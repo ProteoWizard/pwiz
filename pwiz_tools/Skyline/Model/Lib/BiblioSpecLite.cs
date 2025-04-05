@@ -665,27 +665,42 @@ namespace pwiz.Skyline.Model.Lib
             using (cacheFileStream) 
             {
                 using SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection);
-                int rows;
+                int rows = 0;
                 string lsid;
                 int dataRev, schemaVer;
 
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                try
                 {
-                    if (!reader.Read())
-                        throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
+                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                            throw new IOException(string.Format(
+                                LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
+                                FilePath));
 
-                    rows = reader.GetInt32(LibInfo.numSpecs);
+                        rows = reader.GetInt32(LibInfo.numSpecs);
 
-                    lsid = reader.GetString(LibInfo.libLSID);
+                        lsid = reader.GetString(LibInfo.libLSID);
 
-                    dataRev = reader.GetInt32(LibInfo.majorVersion);
-                    schemaVer = reader.GetInt32(LibInfo.minorVersion);
+                        dataRev = reader.GetInt32(LibInfo.majorVersion);
+                        schemaVer = reader.GetInt32(LibInfo.minorVersion);
 
-                    // Set these now, in case we encounter an error further in
-                    Lsid = lsid;
-                    SetRevision(dataRev, schemaVer);
+                        // Set these now, in case we encounter an error further in
+                        Lsid = lsid;
+                        SetRevision(dataRev, schemaVer);
+                    }
+
+                }
+                catch (Exception)
+                {
+                    // test if file is empty
+                    FileInfo fileInfo = new FileInfo(FilePath);
+                    if (fileInfo.Exists && fileInfo.Length == 0)
+                        return false;
+                    // Console.Out.WriteLine($@"Exception caught: {ex}");
+                    throw;
                 }
 
                 // Corrupted library without a valid row count, but try to compensate
