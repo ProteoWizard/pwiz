@@ -3793,19 +3793,19 @@
       <DependentUpon>FeatureTooltips.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\PeptideLib.bmp" />
-    <EmbeddedResource Include="Resources\PeptideIrtLib.bmp" />
-    <EmbeddedResource Include="Resources\PeptideIrt.bmp" />
-    <EmbeddedResource Include="Resources\PeptideQc.bmp" />
-    <EmbeddedResource Include="Resources\PeptideQcLib.bmp" />
-    <EmbeddedResource Include="Resources\Skyline_Release.bmp" />
-    <EmbeddedResource Include="Resources\ToolUpdateAvailable.bmp" />
-    <EmbeddedResource Include="Resources\directoryicon.png" />
+    <None Include="Resources\PeptideLib.bmp" />
+    <None Include="Resources\PeptideIrtLib.bmp" />
+    <None Include="Resources\PeptideIrt.bmp" />
+    <None Include="Resources\PeptideQc.bmp" />
+    <None Include="Resources\PeptideQcLib.bmp" />
+    <None Include="Resources\Skyline_Release.bmp" />
+    <None Include="Resources\ToolUpdateAvailable.bmp" />
+    <None Include="Resources\directoryicon.png" />
     <EmbeddedResource Include="Model\IonMobility\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
-    <EmbeddedResource Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-right.ico" />
+    <None Include="Resources\Icojam-Blueberry-Basic-Arrow-left.ico" />
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\pwiz_aux\msrc\utility\vendor_api\Shimadzu\x86\CLFIO32.dll">
       <Link>CLFIO32.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -4044,25 +4044,25 @@
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Resources\EmptyList.bmp" />
-    <EmbeddedResource Include="Resources\HomeIcon.bmp" />
-    <EmbeddedResource Include="Resources\magnifier_zoom_in.ico" />
+    <None Include="Resources\EmptyList.bmp" />
+    <None Include="Resources\HomeIcon.bmp" />
+    <None Include="Resources\magnifier_zoom_in.ico" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
-    <EmbeddedResource Include="Resources\StartPage\WizardTransitionIcon.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardFasta.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardImportPeptide.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardImportProteins.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardImportTransition.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideIcon.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearch.png" />
-    <EmbeddedResource Include="Resources\Molecule.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeList.bmp" />
-    <EmbeddedResource Include="Resources\PeptideList.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
-    <EmbeddedResource Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
-    <EmbeddedResource Include="Resources\Ions_fragments.bmp" />
-    <EmbeddedResource Include="Resources\Edit_Undo_Multiple.bmp" />
+    <None Include="Resources\StartPage\WizardTransitionIcon.png" />
+    <None Include="Resources\StartPage\WizardBlankDocument.bmp" />
+    <None Include="Resources\StartPage\WizardFasta.png" />
+    <None Include="Resources\StartPage\WizardImportPeptide.png" />
+    <None Include="Resources\StartPage\WizardImportProteins.png" />
+    <None Include="Resources\StartPage\WizardImportTransition.png" />
+    <None Include="Resources\StartPage\WizardPeptideIcon.png" />
+    <None Include="Resources\StartPage\WizardPeptideSearch.png" />
+    <None Include="Resources\Molecule.bmp" />
+    <None Include="Resources\MoleculeList.bmp" />
+    <None Include="Resources\PeptideList.bmp" />
+    <None Include="Resources\StartPage\WizardPeptideSearchDIA.png" />
+    <None Include="Resources\StartPage\WizardPeptideSearchPRM.png" />
+    <None Include="Resources\Ions_fragments.bmp" />
+    <None Include="Resources\Edit_Undo_Multiple.bmp" />
     <EmbeddedResource Include="Model\Koina\Config\KoinaConfig.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
@@ -4096,7 +4096,7 @@
     <Protobuf Include="ProtocolBuffers\grpc_service.proto" />
     <Protobuf Include="ProtocolBuffers\model_config.proto" />
     <None Include="Resources\Locked.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeLib.bmp" />
+    <None Include="Resources\MoleculeLib.bmp" />
     <None Include="Resources\MoleculeStandard.bmp" />
     <None Include="Resources\MoleculeUI.bmp" />
     <None Include="Resources\Pindownlight.bmp" />
@@ -4122,78 +4122,78 @@
     <None Include="Method\Waters\BuildWatersMethod.exe.config" />
     <None Include="ProtocolBuffers\ChromatogramGroupData.proto" />
     <None Include="ProtocolBuffers\SkylineDocument.proto" />
-    <EmbeddedResource Include="Resources\StartPage\WizardMoleculeIcon.png" />
-    <EmbeddedResource Include="Resources\UIModeMixed.bmp" />
-    <EmbeddedResource Include="Resources\UIModeProteomic.bmp" />
-    <EmbeddedResource Include="Resources\UIModeSmallMolecules.bmp" />
+    <None Include="Resources\StartPage\WizardMoleculeIcon.png" />
+    <None Include="Resources\UIModeMixed.bmp" />
+    <None Include="Resources\UIModeProteomic.bmp" />
+    <None Include="Resources\UIModeSmallMolecules.bmp" />
     <None Include="Resources\Unlocked.bmp" />
     <None Include="Resources\warning.png" />
-    <EmbeddedResource Include="Resources\MoleculeIrt.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeIrtLib.bmp" />
-    <EmbeddedResource Include="Resources\MoleculeStandardLib.bmp" />
-    <EmbeddedResource Include="Resources\Skyline_Release.ico" />
+    <None Include="Resources\MoleculeIrt.bmp" />
+    <None Include="Resources\MoleculeIrtLib.bmp" />
+    <None Include="Resources\MoleculeStandardLib.bmp" />
+    <None Include="Resources\Skyline_Release.ico" />
     <None Include="Resources\GenerateDecoys.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-ja.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\WizardBlankDocument-zh-CHS.bmp" />
+    <None Include="Resources\StartPage\WizardBlankDocument-ja.bmp" />
+    <None Include="Resources\StartPage\WizardBlankDocument-zh-CHS.bmp" />
     <None Include="Resources\EditLink.bmp" />
-    <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\AbsoluteQuant_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\AuditLog_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\AuditLog_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\AuditLog_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\CustomReports_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\CustomReports_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\CustomReports_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA-SWATH_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA-SWATH_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA-SWATH_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\DIA_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\ExistingQuant_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\ExistingQuant_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\ExistingQuant_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\GroupedStudies_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\GroupedStudies_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\GroupedStudies_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\HiResMetabolomics_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\IMSFiltering_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\IMSFiltering_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\IMSFiltering_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\iRT_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\iRT_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\iRT_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\LibraryExplorer_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\LibraryExplorer_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\LibraryExplorer_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodEdit_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodEdit_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodEdit_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodRefine_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodRefine_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\MethodRefine_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\MS1Filtering_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\MS1Filtering_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\MS1Filtering_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\OptimizeCE_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\OptimizeCE_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\OptimizeCE_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\PeakPicking_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\PeakPicking_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\PeakPicking_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMoleculeQuantification_start.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start-ja.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start-zh-CHS.png" />
-    <EmbeddedResource Include="Resources\StartPage\SmallMolecule_start.png" />
-    <EmbeddedResource Include="Resources\LogoAmanda_32.bmp" />
+    <None Include="Resources\StartPage\AbsoluteQuant_start-ja.png" />
+    <None Include="Resources\StartPage\AbsoluteQuant_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\AbsoluteQuant_start.png" />
+    <None Include="Resources\StartPage\AuditLog_start-ja.png" />
+    <None Include="Resources\StartPage\AuditLog_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\AuditLog_start.png" />
+    <None Include="Resources\StartPage\CustomReports_start-ja.png" />
+    <None Include="Resources\StartPage\CustomReports_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\CustomReports_start.png" />
+    <None Include="Resources\StartPage\DIA-SWATH_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-SWATH_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA-SWATH_start.png" />
+    <None Include="Resources\StartPage\DIA_start-ja.png" />
+    <None Include="Resources\StartPage\DIA_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA_start.png" />
+    <None Include="Resources\StartPage\ExistingQuant_start-ja.png" />
+    <None Include="Resources\StartPage\ExistingQuant_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\ExistingQuant_start.png" />
+    <None Include="Resources\StartPage\GroupedStudies_start-ja.png" />
+    <None Include="Resources\StartPage\GroupedStudies_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\GroupedStudies_start.png" />
+    <None Include="Resources\StartPage\HiResMetabolomics_start-ja.png" />
+    <None Include="Resources\StartPage\HiResMetabolomics_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\HiResMetabolomics_start.png" />
+    <None Include="Resources\StartPage\IMSFiltering_start-ja.png" />
+    <None Include="Resources\StartPage\IMSFiltering_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\IMSFiltering_start.png" />
+    <None Include="Resources\StartPage\iRT_start-ja.png" />
+    <None Include="Resources\StartPage\iRT_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\iRT_start.png" />
+    <None Include="Resources\StartPage\LibraryExplorer_start-ja.png" />
+    <None Include="Resources\StartPage\LibraryExplorer_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\LibraryExplorer_start.png" />
+    <None Include="Resources\StartPage\MethodEdit_start-ja.png" />
+    <None Include="Resources\StartPage\MethodEdit_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\MethodEdit_start.png" />
+    <None Include="Resources\StartPage\MethodRefine_start-ja.png" />
+    <None Include="Resources\StartPage\MethodRefine_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\MethodRefine_start.png" />
+    <None Include="Resources\StartPage\MS1Filtering_start-ja.png" />
+    <None Include="Resources\StartPage\MS1Filtering_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\MS1Filtering_start.png" />
+    <None Include="Resources\StartPage\OptimizeCE_start-ja.png" />
+    <None Include="Resources\StartPage\OptimizeCE_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\OptimizeCE_start.png" />
+    <None Include="Resources\StartPage\PeakPicking_start-ja.png" />
+    <None Include="Resources\StartPage\PeakPicking_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\PeakPicking_start.png" />
+    <None Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-ja.png" />
+    <None Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\SmallMoleculeMethodDevCEOpt_start.png" />
+    <None Include="Resources\StartPage\SmallMoleculeQuantification_start-ja.png" />
+    <None Include="Resources\StartPage\SmallMoleculeQuantification_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\SmallMoleculeQuantification_start.png" />
+    <None Include="Resources\StartPage\SmallMolecule_start-ja.png" />
+    <None Include="Resources\StartPage\SmallMolecule_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\SmallMolecule_start.png" />
+    <None Include="Resources\LogoAmanda_32.bmp" />
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -4220,22 +4220,29 @@
     <None Include="Resources\Close.bmp" />
     <None Include="Resources\hardklor_logo.png" />
     <None Include="Resources\PanoramaDownload.bmp" />
-    <EmbeddedResource Include="Resources\koina-logo.fdf731d5.png" />
+    <None Include="Resources\koina-logo.fdf731d5.png" />
     <None Include="Resources\Error.png" />
-    <Content Include="Resources\StartPage\DDASearch_start-ja.png" />
-    <Content Include="Resources\StartPage\DDASearch_start-zh-CHS.png" />
-    <Content Include="Resources\StartPage\DDASearch_start.png" />
-    <Content Include="Resources\StartPage\DIA-PASEF_start-ja.png" />
-    <Content Include="Resources\StartPage\DIA-PASEF_start-zh-CHS.png" />
-    <Content Include="Resources\StartPage\DIA-PASEF_start.png" />
-    <Content Include="Resources\StartPage\DIA-QE_start.png" />
-    <Content Include="Resources\StartPage\DIA-TTOF_start.png" />
-    <Content Include="Resources\StartPage\DIA-Umpire-TTOF_start.png" />
-    <Content Include="Resources\StartPage\PRMOrbitrap_start.png" />
-    <Content Include="Resources\StartPage\PRM_start-ja.png" />
-    <Content Include="Resources\StartPage\PRM_start-zh-CHS.png" />
-    <Content Include="Resources\StartPage\PRM_start.png" />
-    <Content Include="Resources\StartPage\SmallMoleculeIMSLibraries_start.png" />
+    <None Include="Resources\StartPage\DDASearch_start-ja.png" />
+    <None Include="Resources\StartPage\DDASearch_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DDASearch_start.png" />
+    <None Include="Resources\StartPage\DIA-PASEF_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-PASEF_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA-PASEF_start.png" />
+    <None Include="Resources\StartPage\DIA-QE_start.png" />
+    <None Include="Resources\StartPage\DIA-TTOF_start.png" />
+    <None Include="Resources\StartPage\DIA-Umpire-TTOF_start.png" />
+    <None Include="Resources\StartPage\PRMOrbitrap_start.png" />
+    <None Include="Resources\StartPage\PRM_start-ja.png" />
+    <None Include="Resources\StartPage\PRM_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\PRM_start.png" />
+    <None Include="Resources\StartPage\SmallMoleculeIMSLibraries_start.png" />
+    <None Include="Resources\StartPage\DIA-QE_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-QE_start-zh-CHS.png" />
+    <None Include="Resources\StartPage\DIA-TTOF_start-ja.png" />
+    <None Include="Resources\StartPage\DIA-TTOF_start-zh-CHS.png" />
+    <None Include="Resources\Properties.bmp" />
+    <None Include="Resources\prosit_logo_dark_blue.png" />
+    <None Include="Resources\Skyline_Daily.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -5854,18 +5861,18 @@
     <None Include="Properties\app.manifest">
       <SubType>Designer</SubType>
     </None>
-    <EmbeddedResource Include="Resources\Blank.bmp" />
-    <EmbeddedResource Include="Resources\DataProcessing.png" />
-    <EmbeddedResource Include="Resources\File.png" />
-    <EmbeddedResource Include="Resources\Folder.png" />
-    <EmbeddedResource Include="Resources\DropImage.bmp" />
-    <EmbeddedResource Include="Resources\Filter.bmp" />
-    <EmbeddedResource Include="Resources\ExternalTool.bmp" />
-    <EmbeddedResource Include="Resources\GreenCheck.bmp" />
-    <EmbeddedResource Include="Resources\Peptide.bmp" />
-    <EmbeddedResource Include="Resources\Protein.bmp" />
-    <EmbeddedResource Include="Resources\RedX.bmp" />
-    <EmbeddedResource Include="Resources\Skyline.bmp" />
+    <None Include="Resources\Blank.bmp" />
+    <None Include="Resources\DataProcessing.png" />
+    <None Include="Resources\File.png" />
+    <None Include="Resources\Folder.png" />
+    <None Include="Resources\DropImage.bmp" />
+    <None Include="Resources\Filter.bmp" />
+    <None Include="Resources\ExternalTool.bmp" />
+    <None Include="Resources\GreenCheck.bmp" />
+    <None Include="Resources\Peptide.bmp" />
+    <None Include="Resources\Protein.bmp" />
+    <None Include="Resources\RedX.bmp" />
+    <None Include="Resources\Skyline.bmp" />
     <EmbeddedResource Include="SettingsUI\EditDPDlg.resx">
       <DependentUpon>EditDPDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -6724,11 +6731,11 @@
       <DependentUpon>ImportResultsNameDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\TransitionGroup.bmp" />
-    <EmbeddedResource Include="Resources\NoPeak.bmp" />
-    <EmbeddedResource Include="Resources\Keep.bmp" />
-    <EmbeddedResource Include="Resources\Peak.bmp" />
-    <EmbeddedResource Include="Resources\TransitionGroupLib.bmp" />
+    <None Include="Resources\TransitionGroup.bmp" />
+    <None Include="Resources\NoPeak.bmp" />
+    <None Include="Resources\Keep.bmp" />
+    <None Include="Resources\Peak.bmp" />
+    <None Include="Resources\TransitionGroupLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtCalculatorDlg.resx">
       <DependentUpon>AddIrtCalculatorDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -6776,31 +6783,31 @@
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Comment.bmp" />
-    <EmbeddedResource Include="Resources\PeakBlank.bmp" />
-    <EmbeddedResource Include="Resources\Copy.bmp" />
-    <EmbeddedResource Include="Resources\Cut.bmp" />
-    <EmbeddedResource Include="Resources\Delete.bmp" />
-    <EmbeddedResource Include="Resources\down-pro32.bmp" />
-    <EmbeddedResource Include="Resources\Edit_Redo.bmp" />
-    <EmbeddedResource Include="Resources\Edit_Undo.bmp" />
-    <EmbeddedResource Include="Resources\Find.bmp" />
-    <EmbeddedResource Include="Resources\FindNext.bmp" />
-    <EmbeddedResource Include="Resources\FragmentS.bmp" />
-    <EmbeddedResource Include="Resources\FragmentLibS.bmp" />
-    <EmbeddedResource Include="Resources\NewDocument.bmp" />
-    <EmbeddedResource Include="Resources\Note.bmp" />
-    <EmbeddedResource Include="Resources\Open.bmp" />
-    <EmbeddedResource Include="Resources\OpenFolder.bmp" />
-    <EmbeddedResource Include="Resources\Paste.bmp" />
-    <EmbeddedResource Include="Resources\PopupBtn.bmp" />
-    <EmbeddedResource Include="Resources\Save.bmp" />
-    <EmbeddedResource Include="Resources\up-pro32.bmp" />
+    <None Include="Resources\Comment.bmp" />
+    <None Include="Resources\PeakBlank.bmp" />
+    <None Include="Resources\Copy.bmp" />
+    <None Include="Resources\Cut.bmp" />
+    <None Include="Resources\Delete.bmp" />
+    <None Include="Resources\down-pro32.bmp" />
+    <None Include="Resources\Edit_Redo.bmp" />
+    <None Include="Resources\Edit_Undo.bmp" />
+    <None Include="Resources\Find.bmp" />
+    <None Include="Resources\FindNext.bmp" />
+    <None Include="Resources\FragmentS.bmp" />
+    <None Include="Resources\FragmentLibS.bmp" />
+    <None Include="Resources\NewDocument.bmp" />
+    <None Include="Resources\Note.bmp" />
+    <None Include="Resources\Open.bmp" />
+    <None Include="Resources\OpenFolder.bmp" />
+    <None Include="Resources\Paste.bmp" />
+    <None Include="Resources\PopupBtn.bmp" />
+    <None Include="Resources\Save.bmp" />
+    <None Include="Resources\up-pro32.bmp" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Fragment.bmp" />
-    <EmbeddedResource Include="Resources\FragmentLib.bmp" />
+    <None Include="Resources\Fragment.bmp" />
+    <None Include="Resources\FragmentLib.bmp" />
     <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.resx">
       <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -6813,27 +6820,27 @@
       <DependentUpon>ViewLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Wand.bmp" />
-    <EmbeddedResource Include="Resources\minus.bmp" />
-    <EmbeddedResource Include="Resources\plus.bmp" />
-    <EmbeddedResource Include="Resources\Dash.bmp" />
-    <EmbeddedResource Include="Resources\WandProhibit.bmp" />
-    <EmbeddedResource Include="Resources\Copy_Bitmap.bmp" />
-    <EmbeddedResource Include="Resources\Ions_1.bmp" />
-    <EmbeddedResource Include="Resources\Ions_2.bmp" />
-    <EmbeddedResource Include="Resources\Ions_A.bmp" />
-    <EmbeddedResource Include="Resources\Ions_B.bmp" />
-    <EmbeddedResource Include="Resources\Ions_C.bmp" />
-    <EmbeddedResource Include="Resources\Ions_X.bmp" />
-    <EmbeddedResource Include="Resources\Ions_Y.bmp" />
-    <EmbeddedResource Include="Resources\Ions_Z.bmp" />
-    <EmbeddedResource Include="Resources\Print.bmp" />
-    <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
+    <None Include="Resources\Wand.bmp" />
+    <None Include="Resources\minus.bmp" />
+    <None Include="Resources\plus.bmp" />
+    <None Include="Resources\Dash.bmp" />
+    <None Include="Resources\WandProhibit.bmp" />
+    <None Include="Resources\Copy_Bitmap.bmp" />
+    <None Include="Resources\Ions_1.bmp" />
+    <None Include="Resources\Ions_2.bmp" />
+    <None Include="Resources\Ions_A.bmp" />
+    <None Include="Resources\Ions_B.bmp" />
+    <None Include="Resources\Ions_C.bmp" />
+    <None Include="Resources\Ions_X.bmp" />
+    <None Include="Resources\Ions_Y.bmp" />
+    <None Include="Resources\Ions_Z.bmp" />
+    <None Include="Resources\Print.bmp" />
+    <None Include="Resources\ProteoWizard.bmp" />
     <Content Include="$(MascotParserPath)\config\unimod_2.xsd">
       <Link>unimod_2.xsd</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <EmbeddedResource Include="Resources\add-pro32.bmp" />
+    <None Include="Resources\add-pro32.bmp" />
     <Content Include="SkylineCmd.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -6853,31 +6860,31 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Skyline_TemporaryKey.pfx" />
-    <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
-    <EmbeddedResource Include="Resources\PeptideStandardLib.bmp" />
-    <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
+    <None Include="Resources\PeptideStandard.bmp" />
+    <None Include="Resources\PeptideStandardLib.bmp" />
+    <None Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Calculator.bmp" />
-    <EmbeddedResource Include="Resources\FragmentDecoy.bmp" />
-    <EmbeddedResource Include="Resources\PeptideDecoy.bmp" />
-    <EmbeddedResource Include="Resources\ProteinDecoy.bmp" />
-    <EmbeddedResource Include="Resources\TransitionGroupDecoy.bmp" />
-    <EmbeddedResource Include="Resources\FindResults.ico" />
-    <EmbeddedResource Include="Resources\Immediate.ico" />
-    <EmbeddedResource Include="Resources\PeptideDecoyLib.bmp" />
-    <EmbeddedResource Include="Resources\TransitionGroupLibDecoy.bmp" />
-    <EmbeddedResource Include="Resources\FragmentLibDecoy.bmp" />
-    <EmbeddedResource Include="Resources\AllIonsStatusButton.bmp" />
-    <EmbeddedResource Include="Resources\Panorama.bmp" />
-    <EmbeddedResource Include="Resources\ChromLib.bmp" />
-    <EmbeddedResource Include="Resources\LabKey.bmp" />
+    <None Include="Resources\Calculator.bmp" />
+    <None Include="Resources\FragmentDecoy.bmp" />
+    <None Include="Resources\PeptideDecoy.bmp" />
+    <None Include="Resources\ProteinDecoy.bmp" />
+    <None Include="Resources\TransitionGroupDecoy.bmp" />
+    <None Include="Resources\FindResults.ico" />
+    <None Include="Resources\Immediate.ico" />
+    <None Include="Resources\PeptideDecoyLib.bmp" />
+    <None Include="Resources\TransitionGroupLibDecoy.bmp" />
+    <None Include="Resources\FragmentLibDecoy.bmp" />
+    <None Include="Resources\AllIonsStatusButton.bmp" />
+    <None Include="Resources\Panorama.bmp" />
+    <None Include="Resources\ChromLib.bmp" />
+    <None Include="Resources\LabKey.bmp" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml">
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\PanoramaPublish.bmp" />
+    <None Include="Resources\PanoramaPublish.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>
