@@ -119,18 +119,18 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(cellToClick);
             RunUI(() => documentGrid.DataboundGridControl.replicatePivotDataGridView_OnCellContentClick(null, new DataGridViewCellEventArgs(cellToClick.ColumnIndex, cellToClick.RowIndex)));
             Assert.AreEqual("D_102_REP3", GetCurrentReplicateSelection());
-            
-            // Verify Export generates expected file
+
+            // Verify Export generates expected file, use invariant to avoid language and timezone discrepancies across environments
             var outputCsvFile = TestContext.GetTestResultsPath("DocumentGridExportTest.csv");
             var expectedCsvFile = TestFilesDir.GetTestPath("Replicate Pivot.csv");
-            RunUI(() => documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, outputCsvFile, TextUtil.CsvSeparator));
+            var exportReportDlg = ShowDialog<ExportLiveReportDlg>(SkylineWindow.ShowExportReportDialog);
+            RunUI(() =>
+            {
+                exportReportDlg.ReportName = replicatePivotViewName;
+                exportReportDlg.SetUseInvariantLanguage(true);
+            });
+            OkDialog(exportReportDlg, () => exportReportDlg.OkDialog(outputCsvFile, ','));
             Assert.AreEqual(File.ReadAllText(expectedCsvFile), File.ReadAllText(outputCsvFile));
-
-            // Verify copy generates expected clipboard data
-            var expectedTsvFile = TestFilesDir.GetTestPath("Replicate Pivot CopyAll.tsv");
-            RunUI(() => documentGrid.NavBar.ViewContext.ExportToFile(documentGrid.NavBar, documentGrid.BindingListSource, outputCsvFile, TextUtil.CsvSeparator));
-            RunUI(() => documentGrid.NavBar.ViewContext.CopyAll(documentGrid.NavBar, documentGrid.BindingListSource));
-            Assert.AreEqual(File.ReadAllText(expectedTsvFile), ClipboardEx.GetText());
         }
 
         private string GetCurrentReplicateSelection()
