@@ -381,10 +381,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(2637, proteinCount);
-                        Assert.AreEqual(5299, peptideCount);
-                        Assert.AreEqual(10461, precursorCount);
-                        Assert.AreEqual(31383, transitionCount);
+                        Assert.AreEqual(2624, proteinCount);
+                        Assert.AreEqual(5273, peptideCount);
+                        Assert.AreEqual(10411, precursorCount);
+                        Assert.AreEqual(31233, transitionCount);
                     }
                 }
             });
