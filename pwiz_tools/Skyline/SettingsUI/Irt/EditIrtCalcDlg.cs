@@ -197,6 +197,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public int StandardPeptideCount => StandardPeptideList.Count;
         public int LibraryPeptideCount => LibraryPeptideList.Count;
+        public bool AnyEntries
+        {
+            get
+            {
+                return AllPeptides.Any();
+            }
+        }
 
         public IrtRegressionType SelectedRegressionType
         {
@@ -441,25 +448,28 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return;                
             }
 
-            if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
+            if (StandardPeptideList.Count > 0)
             {
-                MessageDlg.Show(this, ModeUIAwareStringFormat(IrtResources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
-                    CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
-                gridViewStandard.Focus();
-                return;
-            }
-
-            if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
-            {
-                var messageTooFewPeptides = ModeUIAwareStringFormat(IrtResources
-                        .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
-                    CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count);
-
-                if (MultiButtonMsgDlg.Show(this, messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES,
-                        MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
+                if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
                 {
+                    MessageDlg.Show(this, ModeUIAwareStringFormat(IrtResources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
+                        CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                     gridViewStandard.Focus();
                     return;
+                }
+
+                if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
+                {
+                    var messageTooFewPeptides = ModeUIAwareStringFormat(IrtResources
+                            .EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
+                        CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count);
+
+                    if (MultiButtonMsgDlg.Show(this, messageTooFewPeptides, MultiButtonMsgDlg.BUTTON_YES,
+                            MultiButtonMsgDlg.BUTTON_NO, false) != DialogResult.Yes)
+                    {
+                        gridViewStandard.Focus();
+                        return;
+                    }
                 }
             }
 
@@ -649,7 +659,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         /// </summary>
         private void btnAddResults_Click(object sender, EventArgs e)
         {
-            if (StandardPeptideCount < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
+            if (StandardPeptideCount < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES && AnyEntries)
             {
                 MessageDlg.Show(this, ModeUIAwareStringFormat(IrtResources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
                     CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
@@ -1047,7 +1057,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             var message = TextUtil.LineSeparate(string.Format(
                                 IrtResources.LibraryGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__,
                                 librarySpec.FilePath), x.Message);
-                            MessageDlg.Show(MessageParent, message);
+                            MessageDlg.ShowWithException(MessageParent, message, x);
                             return;
                         }
                     }

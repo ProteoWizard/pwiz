@@ -702,8 +702,15 @@ namespace pwiz.Skyline.Model.Irt
             IReadOnlyList<DbIrtPeptide> standardPeptides, IReadOnlyList<DbIrtPeptide> heavyStandardPeptides)
         {
             RetentionTimeProvider = retentionTimes;
-
             Peptides = new List<Peptide>(standardPeptides.Count);
+
+            if (standardPeptides.Count == 0)
+            {
+                RegressionRefined = Regression = new RegressionLine(1, 0);
+                RegressionSuccess = true;
+                return;
+            }
+
             for (var i = 0; i < standardPeptides.Count; i++)
             {
                 var heavy = heavyStandardPeptides[i] != null;
