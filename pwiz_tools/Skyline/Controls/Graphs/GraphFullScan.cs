@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (!scan.IonMobility.HasValue && scan.IonMobilities == null)
                         continue;
-                    for (int j = 0; j < scan.Mzs.Length; j++)
+                    for (int j = 0; j < scan.Length; j++)
                     {
                         double mobilityValue = scan.IonMobilities != null
                             ? scan.IonMobilities[j]
@@ -572,7 +572,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     spectrumProperties.IonMobilityRange = TextUtil.AppendColon(ionMobilityMin.ToString(Formats.IonMobility)) + ionMobilityMax.ToString(Formats.IonMobility);
                     if(_msDataFileScanHelper.GetIonMobilityFilterDisplayRange(out minIonMobilityFilter, out maxIonMobilityFilter, ChromSource.unknown))
                         spectrumProperties.IonMobilityFilterRange = TextUtil.AppendColon(minIonMobilityFilter.ToString(Formats.IonMobility)) + maxIonMobilityFilter.ToString(Formats.IonMobility);
-                    spectrumProperties.DataPoints = fullScans.Select(scan => scan.Intensities.Length).Sum().ToString(@"N0");
+                    spectrumProperties.DataPoints = fullScans.Select(scan => scan.Length).Sum().ToString(@"N0");
                     spectrumProperties.MzCount = fullScans.SelectMany(scan => scan.Mzs).Distinct().Count().ToString(@"N0");
                     
                     if(fullScans.Any(scan => scan.IonMobilities != null))
@@ -589,7 +589,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    spectrumProperties.MzCount = spectra[0].Mzs.Length.ToString(@"N0");
+                    spectrumProperties.MzCount = spectra[0].Length.ToString(@"N0");
 
                     var parts = _msDataFileScanHelper.MsDataSpectra[0].Id.Split('.'); // Check for merge.frame.start.stop from 3-array IMS data
                     var id = parts.Length < 4
@@ -701,8 +701,8 @@ namespace pwiz.Skyline.Controls.Graphs
             });
 
             // extract peak intensities for the document fragments from the current spectrum
-            var expectedSpectrum = filter.FilterQ1SpectrumList(new[] { new MsDataSpectrum
-                { Mzs = _peaks.Select(p => p.Mz).ToArray(), Intensities = _peaks.Select(p => (double)p.Intensity).ToArray(), NegativeCharge = isNegative } });
+            var expectedSpectrum = filter.FilterQ1SpectrumList(new[] {  new MsDataSpectrum(_peaks.Select(p => p.Mz).ToArray(), _peaks.Select(p => (double)p.Intensity).ToArray())
+                { NegativeCharge = isNegative }  });
 
             // expectedSpectrum to docTransitions join
             var thisSpectrumHash = Enumerable.Range(0, expectedSpectrum.ProductFilters.Length)
@@ -1068,7 +1068,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var scan = spectra[i];
                 int indexMz = indices[i];
-                if (indexMz < scan.Mzs.Length)
+                if (indexMz < scan.Length)
                     minMz = Math.Min(minMz, spectra[i].Mzs[indexMz]);
             }
             return minMz;
@@ -1082,7 +1082,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var scan = spectra[i];
                 int indexMz;
                 // Sometimes spectra have multiple intensities for a given m/z.  Sum all intensities for that m/z
-                for (indexMz = indices[i]; indexMz < scan.Mzs.Length && scan.Mzs[indexMz] == mz; indexMz++)
+                for (indexMz = indices[i]; indexMz < scan.Length && scan.Mzs[indexMz] == mz; indexMz++)
                 {
                     if (scan.IonMobilities != null)
                     {

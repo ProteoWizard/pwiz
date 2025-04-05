@@ -439,6 +439,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to PASEF MS2 window group.
+        /// </summary>
+        internal static string Description_WindowGroup {
+            get {
+                return ResourceManager.GetString("Description_WindowGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Detector.
         /// </summary>
         internal static string Detector {
@@ -687,6 +696,15 @@ namespace pwiz.Skyline.Model {
         internal static string TotalIonCurrent {
             get {
                 return ResourceManager.GetString("TotalIonCurrent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Window Group.
+        /// </summary>
+        internal static string WindowGroup {
+            get {
+                return ResourceManager.GetString("WindowGroup", resourceCulture);
             }
         }
     }

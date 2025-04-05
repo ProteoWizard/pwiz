@@ -96,6 +96,9 @@ class PWIZ_API_DECL Reader
         // to the same precursor from the same survey scan, and lockmass-correcting the precursor mass (if the lockmass refiner is active).
         bool ddaProcessing;
 
+        /// when true, diaPASEF data is combined frame-by-frame instead of grouped by isolation window
+        bool singleFrameDiaPASEF;
+
         Config();
         Config(const Config& rhs);
 

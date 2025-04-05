@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 
@@ -24,10 +25,16 @@ namespace pwiz.Common.Spectra
 {
     public class SpectrumPrecursor : Immutable
     {
-        public SpectrumPrecursor(SignedMz precursorMz)
+        public SpectrumPrecursor(SignedMz precursorMz, 
+            double? isolationWindowLowerWidth = null, double? isolationWindowUpperWidth = null, double? collisionEnergy = null)
         {
             PrecursorMz = precursorMz;
+            IsolationWindowLowerWidth = isolationWindowLowerWidth;
+            IsolationWindowUpperWidth = isolationWindowUpperWidth;
+            CollisionEnergy = collisionEnergy;
         }
+
+        public static List<SpectrumPrecursor> EMPTY_LIST = new List<SpectrumPrecursor>();
 
         public SignedMz PrecursorMz { get; }
         public double? CollisionEnergy { get; private set; }
