@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.SkylineTestUtil;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.SkylineTestFunctional
@@ -114,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Verify link cell can be clicked and updates replicate selection
             Assert.AreEqual("H_146_REP1", GetCurrentReplicateSelection());
-            var cellToClick = GetReplicateGridCell(documentGrid, "Replicate", "D_102_REP3") as DataGridViewLinkCell;
+            var cellToClick = GetReplicateGridCell(documentGrid, ColumnCaptions.Replicate, "D_102_REP3") as DataGridViewLinkCell;
             Assert.IsNotNull(cellToClick);
             RunUI(() => documentGrid.DataboundGridControl.replicatePivotDataGridView_OnCellContentClick(null, new DataGridViewCellEventArgs(cellToClick.ColumnIndex, cellToClick.RowIndex)));
             Assert.AreEqual("D_102_REP3", GetCurrentReplicateSelection());
