@@ -4158,7 +4158,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            string compound = GetCompound(nodePep, nodeTranGroup, true);
+            string compound = GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement);
             string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
 
             string start = string.Empty;
@@ -4256,7 +4256,7 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
             int step)
         {
-            writer.Write(GetCompound(nodePep, nodeTranGroup, true));
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
@@ -4340,7 +4340,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(GetCompound(nodePep, nodeTranGroup, true));
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
             writer.Write(FieldSeparator);
 
             if (Tune3Columns)

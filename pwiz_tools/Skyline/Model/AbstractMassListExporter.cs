@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Model
                 : Document.Settings.GetModifiedSequence(nodePep).Sequence;
             if (showLabelType)
                 compoundName = string.Format(@"{0} ({1})", compoundName, nodeGroup.TransitionGroup.LabelType);
-            return compoundName.ToDsvField(FieldSeparator, FieldSeparatorReplacement);
+            return compoundName;
         }
 
         public string GetCAS(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
