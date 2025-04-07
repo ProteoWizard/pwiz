@@ -555,6 +555,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
+    <Compile Include="Controls\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
@@ -891,6 +892,7 @@
       <DependentUpon>FileUIResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Util\AnnotatedDouble.cs" />
+    <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\UtilResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -5083,7 +5085,6 @@
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />
-    <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
     <Compile Include="Util\DirectSerializer.cs" />
     <Compile Include="Util\DockableFormEx.cs">
