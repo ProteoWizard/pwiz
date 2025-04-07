@@ -447,6 +447,9 @@ namespace {
                     currentPsm->ionMobilityType = line.ionMobilityUnits;
                     currentPsm->ccs = line.collisionalCrossSectionSqA;
                 }
+                else if (line.collisionalCrossSectionSqA > 0) {
+                    currentPsm->ccs = line.collisionalCrossSectionSqA;
+                }
             }
 
             // add product m/z and intensity to current PSM

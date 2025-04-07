@@ -106,6 +106,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private const string NORMALIZED_RT = "RT";
         private const string ION_MOBILITY = "IonMobility";
         private const string ION_MOBILITY_UNITS = "IonMobilityUnits";
+        private const string CCS = "CCS";
         private const string COLLISIONAL_CROSS_SECTION = "CollisionalCrossSection";
         private const string PREC_CHARGE = "PrecursorCharge";
         private const string PREC_MZ = "PrecursorMz";
@@ -377,10 +378,17 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     newColName = colName;
                 }
                 if (newColName == ION_MOBILITY)
+                { 
+                    // Skip this and keep CCS
+                    // newColNames.Add(newColName);
+                    // newColName = ION_MOBILITY_UNITS;
+                    // newColNames.Add(newColName);
+                    // newColName = COLLISIONAL_CROSS_SECTION;
+                    // newColNames.Add(newColName);
+                }
+                else if (newColName == CCS)
                 {
-                    newColNames.Add(newColName);
-                    newColName = ION_MOBILITY_UNITS;
-                    newColNames.Add(newColName);
+                    //Rename column name from CCS to CollisionalCrossSection
                     newColName = COLLISIONAL_CROSS_SECTION;
                     newColNames.Add(newColName);
                 }
@@ -427,14 +435,15 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
                     else if (colName == ION_MOBILITY)
                     {
-                        //Compute CCS below and report that until AlphaPeptDeep can be coerced to report CCS as advertised
-                        line.Add(cell);
-                        line.Add(@"2"); // These are the IonMobilityUnits column, 2 => 1/K0
-                        
-                        double ccs =
-                            double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) *
-                            CCS_IM_COEFF * charge / Math.Sqrt(N2_MASS*(mz * charge)/(N2_MASS+(mz*charge)));
-                        line.Add(ccs.ToString(CultureInfo.InvariantCulture));
+                        // As of 4/4/25 CCS is reported correctly by AlphaPeptDeep, keep CollisionalCrossSection and not IonMobility
+                        // Compute CCS below and report that until AlphaPeptDeep can be coerced to report CCS as advertised
+                        // line.Add(cell);
+                        // line.Add(@"2"); // These are the IonMobilityUnits column, 2 => 1/K0
+
+                        // double ccs =
+                        //    double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) *
+                        //    CCS_IM_COEFF * charge / Math.Sqrt(N2_MASS*(mz * charge)/(N2_MASS+(mz*charge)));
+                        // line.Add(ccs.ToString(CultureInfo.InvariantCulture));
 
                     }
                     else
