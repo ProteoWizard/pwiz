@@ -35,7 +35,6 @@ using pwiz.Common.Database;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -1656,116 +1655,29 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryGetIrts(out LibraryRetentionTimes retentionTimes)
         {
-            // TODO: This is a bit of a hack that needs to be improved to work better for
-            //       more cases and further optimized. But, it has been shown to work very
-            //       well for the case where the library is composed of a number of highly
-            //       similar runs, and acceptably even for the combined runs of the Navarro,
-            //       Nature Biotech, 2016 HYE data set where 6 runs share only tens of peptides
-            //       including the iRT standards with the first run.
-            var newSources = ResultNameMap.FromNamedElements(ListRetentionTimeSources());
-            var allLibraryRetentionTimes = ReadAllRetentionTimes(newSources);
-            foreach (var retentionTimeSource in newSources.Values)
+            var dictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
+            foreach (var group in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
-                var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name, allLibraryRetentionTimes);
-                if (fileAlignments == null)
-                    break;
-                retentionTimes = new LibraryRetentionTimes(FilePath, AlignAndAverageAllRetentionTimes(newSources, fileAlignments));
-                return true;
-            }
-            retentionTimes = null;
-            return false;
-        }
-
-        public ResultNameMap<IDictionary<Target, double>> ReadAllRetentionTimes(ResultNameMap<RetentionTimeSource> sources)
-        {
-            var allRetentionTimes = new Dictionary<string, IDictionary<Target, double>>();
-            foreach (var source in sources)
-            {
-                LibraryRetentionTimes libraryRetentionTimes;
-                if (TryGetRetentionTimes(MsDataFileUri.Parse(source.Value.Name), out libraryRetentionTimes))
-                    allRetentionTimes.Add(source.Key, libraryRetentionTimes.GetFirstRetentionTimes());
-            }
-            return ResultNameMap.FromDictionary(allRetentionTimes);
-        }
-
-        public static IList<AlignedRetentionTimes> CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<Target, double>> libraryRetentionTimes)
-        {
-            var alignments = new List<AlignedRetentionTimes>();
-
-            new LongOperationRunner
-            {
-                JobTitle = LibResources.BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times
-            }.Run(longWaitBroker =>
-            {
-                var targetTimes = libraryRetentionTimes.Find(dataFileName);
-                foreach (var entry in libraryRetentionTimes)
+                var firstRetentionTimes = new List<double>();
+                foreach (var file in _librarySourceFiles)
                 {
-                    AlignedRetentionTimes aligned = null;
-                    if (dataFileName != entry.Key)
+                    var firstTime = group.SelectMany(spectrum => spectrum.RetentionTimesByFileId.GetTimes(file.Id))
+                        .Append(double.MaxValue).Min();
+                    if (firstTime < double.MaxValue)
                     {
-                        try
-                        {
-                            aligned = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, 0,
-                                RegressionMethodRT.linear,
-                                longWaitBroker.CancellationToken);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            alignments = null;
-                            throw;
-                        }
-
-                        if (aligned != null && aligned.RegressionPointCount < MIN_IRT_ALIGNMENT_POINT_COUNT)
-                        {
-                            alignments = null;
-                            return;
-                        }
-                    }
-                    alignments.Add(aligned);
-                }
-            });
-
-            return alignments;
-        }
-
-        private IDictionary<Target, Tuple<TimeSource, double[]>> AlignAndAverageAllRetentionTimes(
-            ResultNameMap<RetentionTimeSource> sources, IList<AlignedRetentionTimes> fileAlignments)
-        {
-            var allRetentionTimes = new Dictionary<Target, List<double>>();
-            int i = 0;
-            foreach (var source in sources)
-            {
-                LibraryRetentionTimes libraryRetentionTimes;
-                if (TryGetRetentionTimes(MsDataFileUri.Parse(source.Value.Name), out libraryRetentionTimes))
-                    AddAlignedRetentionTimes(libraryRetentionTimes, allRetentionTimes, fileAlignments[i]);
-                i++;
-            }
-            return allRetentionTimes.ToDictionary(t => t.Key,
-                t => new Tuple<TimeSource, double[]>(TimeSource.scan,
-                    new[] { new Statistics(t.Value).Percentile(IrtStandard.GetSpectrumTimePercentile(t.Key)) }));
-        }
-
-        private void AddAlignedRetentionTimes(LibraryRetentionTimes libraryTimes, IDictionary<Target, List<double>> allRetentionTimes, AlignedRetentionTimes fileAlignment)
-        {
-            foreach (var measuredTime in libraryTimes.PeptideRetentionTimes)
-            {
-                List<double> peptideTimes;
-                if (!allRetentionTimes.TryGetValue(measuredTime.PeptideSequence, out peptideTimes))
-                {
-                    peptideTimes = new List<double>();
-                    allRetentionTimes.Add(measuredTime.PeptideSequence, peptideTimes);
-                }
-                var alignedTime = measuredTime.RetentionTime;
-                if (fileAlignment != null)
-                {
-                    if (fileAlignment.RegressionRefined != null)
-                    {
-                        alignedTime = fileAlignment.RegressionRefined.Conversion.GetY(alignedTime);
+                        firstRetentionTimes.Add(firstTime);
                     }
                 }
-                peptideTimes.Add(alignedTime);
+
+                if (firstRetentionTimes.Count > 0)
+                {
+                    var median = new Statistics(firstRetentionTimes).Median();
+                    dictionary.Add(group.Key, Tuple.Create(TimeSource.scan, new []{median}));
+                }
             }
+
+            retentionTimes = new LibraryRetentionTimes(FilePath, dictionary);
+            return true;
         }
 
         public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
