@@ -43,7 +43,8 @@ namespace pwiz.SkylineTestFunctional
         private const string expectedDefaultFrozenColumn = "COLUMN_Peptide.Protein";
         private const int randomSeed = 1000;
 
-        [TestMethod]
+        // TODO(wardough): Fix the issue or switch to a generalized string in TestExclusionReason
+        [TestMethod, NoParallelTesting("VerifyColumnSizesAligned failing in Docker Desktop")]
         public void TestReplicatePivotGrid()
         {
             TestFilesZip = @"TestFunctional\ReplicatePivotGridTest.zip";
