@@ -24,9 +24,12 @@ using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.SeqNode;
@@ -36,6 +39,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -51,6 +55,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
+        private Receiver<PeakBoundaryImputer.ImputedBoundsParameter, ImputedPeakBounds> _imputedBoundsReceiver;
+        private ImputedPeakBounds _imputedPeakBounds;
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
 
         public static ShowRTChrom ShowRT
@@ -216,7 +222,21 @@ namespace pwiz.Skyline.Controls.Graphs
             // Note that this only affects applying ZoomState to a graph pane.  Explicit changes 
             // to Scale Min/Max properties need to be manually applied to each axis.
             graphControl.IsSynchronizeXAxes = true;
+            _imputedBoundsReceiver = (documentContainer as SkylineWindow)?.GetPeakBoundaryImputer()?.ImputedBoundsProducer?.RegisterCustomer(this, ImputedBoundsAvailable);
         }
+
+        private void ImputedBoundsAvailable()
+        {
+            if (true == _imputedBoundsReceiver?.TryGetCurrentProduct(out var newBounds))
+            {
+                if (!Equals(newBounds, _imputedPeakBounds))
+                {
+                    _imputedPeakBounds = newBounds;
+                    UpdateUI(false);
+                }
+            }
+        }
+
 
         public string NameSet
         {
@@ -2292,6 +2312,33 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodeGroups, lookupSequence, lookupMods);
+            ShowImputedPeakBounds(chromGraphPrimary, nodePeps);
+        }
+
+        private void ShowImputedPeakBounds(ChromGraphItem chromGraphPrimary, PeptideDocNode[] nodePeps)
+        {
+            if (!Settings.Default.ShowImputedPeakBounds)
+            {
+                return;
+            }
+            var peptide = (Peptide)nodePeps.Select(pep => pep.Peptide).Distinct(ReferenceValue.EQUALITY_COMPARER).SingleOrDefault();
+            if (peptide == null)
+            {
+                return;
+            }
+            var doc = _documentContainer.DocumentUI;
+            var peptideGroupDocNode =
+                doc.MoleculeGroups.FirstOrDefault(node => node.FindNodeIndex(peptide) >= 0);
+            if (peptideGroupDocNode == null)
+            {
+                return;
+            }
+            var peptideIdentityPath = new IdentityPath(peptideGroupDocNode.PeptideGroup, peptide);
+            var parameter = new PeakBoundaryImputer.ImputedBoundsParameter(doc, peptideIdentityPath, chromGraphPrimary.Chromatogram.FilePath);
+            if (true == _imputedBoundsReceiver?.TryGetProduct(parameter, out var imputedBounds))
+            {
+                chromGraphPrimary.ImputedBounds = imputedBounds.PeakBounds;
+            }
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,
@@ -3516,6 +3563,77 @@ namespace pwiz.Skyline.Controls.Graphs
             int iCharge = adducts.IndexOf(nodeGroup.TransitionGroup.PrecursorAdduct);
             int iSpectrumFilter = spectrumFilters.IndexOf(nodeGroup.SpectrumClassFilter);
             return iCharge * countLabelTypes * spectrumFilters.Count  + iSpectrumFilter * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
+        }
+
+        private class ImputedBoundsParameter
+        {
+            public ImputedBoundsParameter(SrmDocument document, MsDataFileUri dataFileUri,
+                IEnumerable<IdentityPath> peptideIdentityPaths)
+            {
+                Document = document;
+                FilePath = dataFileUri;
+                PeptideIdentityPaths = peptideIdentityPaths.ToImmutable();
+            }
+
+            public SrmDocument Document { get; }
+            public MsDataFileUri FilePath { get; }
+            public ImmutableList<IdentityPath> PeptideIdentityPaths { get; }
+
+            protected bool Equals(ImputedBoundsParameter other)
+            {
+                return ReferenceEquals(Document, other.Document) && FilePath.Equals(other.FilePath) && PeptideIdentityPaths.Equals(other.PeptideIdentityPaths);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is null) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((ImputedBoundsParameter)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = RuntimeHelpers.GetHashCode(Document);
+                    hashCode = (hashCode * 397) ^ FilePath.GetHashCode();
+                    hashCode = (hashCode * 397) ^ PeptideIdentityPaths.GetHashCode();
+                    return hashCode;
+                }
+            }
+        }
+
+        private readonly ImputedBoundsProducer IMPUTED_BOUNDS_PRODUCER = new ImputedBoundsProducer();
+
+        private class ImputedBoundsProducer : Producer<ImputedBoundsParameter, ImmutableList<KeyValuePair<IdentityPath, ImputedPeakBounds>>>
+        {
+            public override ImmutableList<KeyValuePair<IdentityPath, ImputedPeakBounds>> ProduceResult(ProductionMonitor productionMonitor, ImputedBoundsParameter parameter, IDictionary<WorkOrder, object> inputs)
+            {
+                var result = new List<KeyValuePair<IdentityPath, ImputedPeakBounds>>();
+                foreach (var identityPath in parameter.PeptideIdentityPaths)
+                {
+                    var peakBounds = inputs.Where(kvp =>
+                            identityPath.Equals((kvp.Key.WorkParameter as ImputedPeakBounds.Parameter)?.IdentityPath))
+                        .Select(kvp => kvp.Value).OfType<ImputedPeakBounds>().FirstOrDefault();
+                    if (peakBounds != null)
+                    {
+                        result.Add(new KeyValuePair<IdentityPath, ImputedPeakBounds>(identityPath, peakBounds));
+                    }
+                }
+
+                return result.ToImmutable();
+            }
+
+            public override IEnumerable<WorkOrder> GetInputs(ImputedBoundsParameter parameter)
+            {
+                var alignmentTarget = AlignmentTarget.GetAlignmentTarget(parameter.Document);
+                foreach (var identityPath in parameter.PeptideIdentityPaths)
+                {
+                    yield return ImputedPeakBounds.PRODUCER.MakeWorkOrder(
+                        new ImputedPeakBounds.Parameter(parameter.Document, identityPath, parameter.FilePath, alignmentTarget));
+                }
+            }
         }
 
         #region Test support

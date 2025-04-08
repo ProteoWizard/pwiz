@@ -1658,26 +1658,52 @@ namespace pwiz.Skyline.Model.Lib
             var dictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
             foreach (var group in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
-                var firstRetentionTimes = new List<double>();
-                foreach (var file in _librarySourceFiles)
-                {
-                    var firstTime = group.SelectMany(spectrum => spectrum.RetentionTimesByFileId.GetTimes(file.Id))
-                        .Append(double.MaxValue).Min();
-                    if (firstTime < double.MaxValue)
-                    {
-                        firstRetentionTimes.Add(firstTime);
-                    }
-                }
-
+                var firstRetentionTimes = GetMinRetentionTimes(group);
                 if (firstRetentionTimes.Count > 0)
                 {
-                    var median = new Statistics(firstRetentionTimes).Median();
-                    dictionary.Add(group.Key, Tuple.Create(TimeSource.scan, new []{median}));
+                    dictionary.Add(group.Key,
+                        Tuple.Create(TimeSource.scan, new[] { new Statistics(firstRetentionTimes.Values).Median() }));
                 }
             }
 
             retentionTimes = new LibraryRetentionTimes(FilePath, dictionary);
             return true;
+        }
+
+        private double? GetMinRetentionTime(IEnumerable<BiblioLiteSpectrumInfo> spectrumInfos, BiblioLiteSourceInfo sourceInfo)
+        {
+            var minTime = spectrumInfos.SelectMany(spectrum => spectrum.RetentionTimesByFileId.GetTimes(sourceInfo.Id))
+                .Append(double.MaxValue).Min();
+            if (minTime == double.MaxValue)
+            {
+                return null;
+            }
+
+            return minTime;
+        }
+
+        private Dictionary<int, double> GetMinRetentionTimes(IEnumerable<BiblioLiteSpectrumInfo> spectrumInfos)
+        {
+            var result = new Dictionary<int, double>();
+            foreach (var spectrumInfo in spectrumInfos)
+            {
+                foreach (var entry in spectrumInfo.RetentionTimesByFileId.GetMinRetentionTimes())
+                {
+                    if (result.TryGetValue(entry.Key, out var oldMin))
+                    {
+                        if (entry.Value < oldMin)
+                        {
+                            result[entry.Key] = entry.Value;
+                        }
+                    }
+                    else
+                    {
+                        result.Add(entry.Key, entry.Value);
+                    }
+                }
+            }
+
+            return result;
         }
 
         public override bool TryGetIonMobilityInfos(LibKey key, MsDataFileUri filePath, out IonMobilityAndCCS[] ionMobilities)
@@ -2557,6 +2583,26 @@ namespace pwiz.Skyline.Model.Lib
             newSequence.Append(unmodifiedSequence.Substring(aaCount));
             return new PeptideLibraryKey(newSequence.ToString(), impreciseLibraryKey.Charge);
         }
+
+        public override Dictionary<Target, double>[] GetAllRetentionTimes()
+        {
+            var result = _librarySourceFiles.Select(file => new Dictionary<Target, double>()).ToArray();
+
+            foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
+            {
+                var minTimes = GetMinRetentionTimes(grouping);
+                for (int iFile = 0; iFile < _librarySourceFiles.Length; iFile++)
+                {
+                    var file = _librarySourceFiles[iFile];
+                    if (minTimes.TryGetValue(file.Id, out var minTime))
+                    {
+                        result[iFile].Add(grouping.Key, minTime);
+                    }
+                }
+            }
+
+            return result;
+        }
     }
 
     public sealed class SpectrumLiteKey : IEquatable<SpectrumLiteKey>
@@ -2628,6 +2674,17 @@ namespace pwiz.Skyline.Model.Lib
                 return new double[0];
             }
             return times.Select(time => (double) time).ToArray();
+        }
+
+        public IEnumerable<KeyValuePair<int, double>> GetMinRetentionTimes()
+        {
+            foreach (var entry in _timesById)
+            {
+                if (entry.Value.Length > 0)
+                {
+                    yield return new KeyValuePair<int, double>(entry.Key, entry.Value.Min());
+                }
+            }
         }
       
         public void Write(Stream stream)

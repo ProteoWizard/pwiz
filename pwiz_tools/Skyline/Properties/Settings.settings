@@ -863,9 +863,6 @@
     <Setting Name="FullScanPropertySheetVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="FeatureFindingMinIntensityPPM" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">100.0</Value>
-    </Setting>
     <Setting Name="FeatureFindingMinIdotP" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.9</Value>
     </Setting>
@@ -883,6 +880,12 @@
     </Setting>
     <Setting Name="KoinaRetryCount" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">10</Value>
+    </Setting>
+    <Setting Name="FeatureFindingMinIntensityPPM" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">100</Value>
+    </Setting>
+    <Setting Name="ShowImputedPeakBounds" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
     </Setting>
   </Settings>
 </SettingsFile>

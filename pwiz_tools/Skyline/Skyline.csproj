@@ -602,6 +602,12 @@
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
+    <Compile Include="Model\RetentionTimes\AlignmentResults.cs" />
+    <Compile Include="Model\RetentionTimes\AlignmentTarget.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\ImputedBoundariesCollection.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\BestPeakBounds.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\ImputedPeakBounds.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -7184,6 +7190,7 @@
       <Version>1.0.2420.47</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />

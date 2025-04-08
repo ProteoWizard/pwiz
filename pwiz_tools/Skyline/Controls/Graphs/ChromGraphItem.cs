@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.PeakFinding;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -48,6 +49,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_BOUNDARIES = Color.LightGray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
         public static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.FromArgb(30, Color.BlueViolet);
+        public static readonly Color COLOR_IMPUTED_PEAK_SHADE = Color.FromArgb(30, Color.ForestGreen);
+
 
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
         private const int MIN_BEST_BOUNDARY_HEIGHT = 20;
@@ -187,6 +190,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool HideBest { get; set; }
 
         public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _measuredTimes[_bestPeakTimeIndex] : 0; } }
+        public PeakBounds ImputedBounds { get; set; }
 
         public string CurveAnnotation { get; set; }
         public PeptideGraphInfo GraphInfo { get; set; }
@@ -449,12 +453,25 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddOriginalPeakAnnotation(ChromPeak bestPeak, GraphObjList annotations)
         {
-            var start = ScaleRetentionTime(bestPeak.StartTime);
-            var end = ScaleRetentionTime(bestPeak.EndTime);
+            AddPeakAnnotation(bestPeak.StartTime, bestPeak.EndTime, annotations, GraphObjType.original_peak_shading, COLOR_ORIGINAL_PEAK_SHADE);
+        }
+        private void AddImputedBoundsAnnotation(PeakBounds peakBounds, GraphObjList annotations)
+        {
+            if (peakBounds != null)
+            {
+                AddPeakAnnotation(peakBounds.StartTime, peakBounds.EndTime, annotations, GraphObjType.imputed_peak_shading, COLOR_IMPUTED_PEAK_SHADE);
+            }
+        }
+
+        private void AddPeakAnnotation(double startTime, double endTime, GraphObjList annotations,
+            GraphObjType graphObjType, Color color)
+        {
+            var start = ScaleRetentionTime(startTime);
+            var end = ScaleRetentionTime(endTime);
             var width = end.DisplayTime - start.DisplayTime;
             var originalPeakShadingBox = new BoxObj(start.DisplayTime, 0, width, 1)
             {
-                Fill = new Fill(COLOR_ORIGINAL_PEAK_SHADE),
+                Fill = new Fill(color),
                 ZOrder = ZOrder.F_BehindGrid,
                 Border = new Border { IsVisible = false },
                 IsClippedToChartRect = true,
@@ -462,6 +479,7 @@ namespace pwiz.Skyline.Controls.Graphs
             };
             originalPeakShadingBox.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
             annotations.Add(originalPeakShadingBox);
+
         }
 
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g,
@@ -532,6 +550,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         annotations.Add(line);
                     }
                 }
+                AddImputedBoundsAnnotation(ImputedBounds, annotations);
+
             }
 
             // If explicit retention time is in use, show that instead of predicted since it overrides
@@ -1030,7 +1050,8 @@ namespace pwiz.Skyline.Controls.Graphs
             best_peak,
             raw_time,
             peak,
-            original_peak_shading
+            original_peak_shading, 
+            imputed_peak_shading
         }
 
         public class GraphObjTag

@@ -982,6 +982,11 @@ namespace pwiz.Skyline.Model.Lib
             get { return false; }
         }
 
+        public virtual Dictionary<Target, double>[] GetAllRetentionTimes()
+        {
+            return null;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
