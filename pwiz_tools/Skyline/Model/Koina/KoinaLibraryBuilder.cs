@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;

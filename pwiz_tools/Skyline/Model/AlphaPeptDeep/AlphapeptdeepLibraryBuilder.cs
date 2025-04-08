@@ -151,6 +151,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         }
 
         public LibrarySpec LibrarySpec { get; private set; }
+       
 
         private string BuilderLibraryPath
         {
@@ -201,6 +202,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 new ArgumentAndValue(@"library--output_folder", OutputSpectralLibsDir, true),
                 new ArgumentAndValue(@"library--output_tsv--enabled", @"True"),
                 new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
+                new ArgumentAndValue(@"library--rt_to_irt", @"True"),
                 new ArgumentAndValue(@"library--decoy", @"diann"),
                 new ArgumentAndValue(@"device", @"gpu"),
             };
@@ -251,6 +253,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         public bool BuildLibrary(IProgressMonitor progress)
         {
             IProgressStatus progressStatus = new ProgressStatus();
+
             try
             {
                 InitializeLibraryHelper(RootDir);
@@ -272,7 +275,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             // CONSIDER: These segments don't seem well-balanced. Maybe give each a defined range instead.
             progressStatus = progressStatus.ChangeSegments(0, 5);
 
-            LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep");
+            LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep", IrtStandard);
 
             progressStatus = progressStatus.NextSegment();
 
@@ -438,7 +441,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     }
                     else if (colName == NORMALIZED_RT)
                     {
-                        double transformedCell = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) * 100;
+                        double transformedCell = double.Parse(cell.ToString(CultureInfo.InvariantCulture),
+                            CultureInfo.InvariantCulture);// * 100;
                         line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
                     }
                     else if (colName == ION_MOBILITY)
@@ -472,7 +476,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             string[] inputFile = { TransformedOutputSpectraLibFilepath };
-            var build = new BlibBuild(LibrarySpec.FilePath, inputFile);
+            string unfilteredBlibPath = String.Concat( LibrarySpec.FilePath , @"_Unfiltered.blib" );
+            var build = new BlibBuild(unfilteredBlibPath, inputFile);
 
 
             progress.UpdateProgress(progressStatus = progressStatus
@@ -489,6 +494,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                     Messages.WriteAsyncUserMessage(msg);
                 }
             }
+
+            BlibFilter blibFilter = new BlibFilter();
+            // Build the final filtered library
+            completed = completed &&
+                        blibFilter.Filter(unfilteredBlibPath, LibrarySpec.FilePath, progress, ref progressStatus);
 
             if (completed)
             {

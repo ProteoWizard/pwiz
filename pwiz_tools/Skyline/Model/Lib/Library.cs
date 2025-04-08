@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model.Lib
                 return string.Empty;
             return Path.GetFileName(DataFilePath);
         }
-        public void PreparePrecursorInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
+        public void PreparePrecursorInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName, IrtStandard standard = null)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file)
@@ -184,11 +184,12 @@ namespace pwiz.Skyline.Model.Lib
 
             var warningMods = GetWarningMods(Document, toolName);
 
-            var precursorTable = GetPrecursorTable(Document, toolName, warningMods);
+            var precursorTable = GetPrecursorTable(Document, toolName, warningMods, false, standard);
             File.WriteAllLines(InputFilePath, precursorTable);
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
         }
+
         public void PrepareTrainingInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
         {
             progress.UpdateProgress(progressStatus = progressStatus
@@ -219,7 +220,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
 
-        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, string toolName, List<string> warningMods = null, bool training = false)
+        public IEnumerable<string> GetPrecursorTable(SrmDocument Document, string toolName,  List<string> warningMods = null, bool training = false, IrtStandard standard = null)
         {
             var result = new List<string>();
             string header;
@@ -240,118 +241,147 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             result.Add(header);
+            
+            // First add the iRT standard peptides
+            if (standard != null && !standard.IsEmpty && !standard.IsAuto)
+                foreach (var peptide in standard.GetDocument().Peptides)
+                {
+                    AddPeptideToResult(peptide, ref result, alphapeptDeepFormat, Document, warningMods, toolName, training);
+                }
 
             // Build precursor table row by row
             foreach (var peptide in Document.Peptides)
             {
-                var unmodifiedSequence = peptide.Peptide.Sequence;
-                var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
-                var modsBuilder = new StringBuilder();
-                var modSitesBuilder = new StringBuilder();
-                bool unsupportedModification = false;
 
-                var ModificationNames =
-                    alphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
+                AddPeptideToResult(peptide, ref result, alphapeptDeepFormat, Document, warningMods, toolName, training);
 
-                for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
+            }
+
+            return result.Distinct();
+        }
+
+
+        /// <summary>
+        /// Helper function that adds a peptide to the result list
+        /// </summary>
+        /// <param name="peptide"></param>
+        /// <param name="result"></param>
+        /// <param name="alphapeptDeepFormat"></param>
+        /// <param name="Document"></param>
+        /// <param name="warningMods"></param>
+        /// <param name="toolName"></param>
+        /// <param name="training"></param>
+        private void AddPeptideToResult(PeptideDocNode peptide, ref List<string> result, bool alphapeptDeepFormat, SrmDocument Document, List<string> warningMods, string toolName, bool training )
+        {
+
+            var unmodifiedSequence = peptide.Peptide.Sequence;
+            var modifiedSequence = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
+            var modsBuilder = new StringBuilder();
+            var modSitesBuilder = new StringBuilder();
+            bool unsupportedModification = false;
+
+            var ModificationNames =
+                alphapeptDeepFormat ? AlphapeptdeepModificationNames : CarafeSupportedModificationNames;
+
+            for (var i = 0; i < modifiedSequence.ExplicitMods.Count; i++)
+            {
+                var mod = modifiedSequence.ExplicitMods[i];
+                var modWarns = warningMods.Where(m => m == mod.Name).ToArray();
+                if (!mod.UnimodId.HasValue && modWarns.Length == 0)
                 {
-                    var mod = modifiedSequence.ExplicitMods[i];
-                    var modWarns = warningMods.Where(m => m == mod.Name).ToArray();
-                    if (!mod.UnimodId.HasValue && modWarns.Length == 0)
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, toolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        unsupportedModification = true;
-                        continue;
-                    }
-
-                    var unimodIdWithName = mod.UnimodIdWithName;
-                    var modNames = ModificationNames.Where(m => m.Accession == unimodIdWithName).ToArray();
-
-                    if (modNames.Length == 0 && modWarns.Length == 0)
-                    {
-                        var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdWithName, toolName);
-                        Messages.WriteAsyncUserMessage(msg);
-                        unsupportedModification = true;
-
-                        continue;
-                    }
-                    if (modNames.Length == 0)
-                        continue;
-
-                    string modName = "";
-
-                    if (alphapeptDeepFormat)
-                    {
-                        modName = modNames.Single().AlphaNameWithAminoAcid(unmodifiedSequence, mod.IndexAA);
-                    }
-                    else
-                    {
-                        modName = modNames.Single().Name;
-                    }
-
-                    modsBuilder.Append(modName);
-                    modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
-                    if (i != modifiedSequence.ExplicitMods.Count - 1)
-                    {
-                        modsBuilder.Append(TextUtil.SEMICOLON);
-                        modSitesBuilder.Append(TextUtil.SEMICOLON);
-                    }
+                    var msg = string.Format(ModelsResources.BuildPrecursorTable_UnsupportedModification, modifiedSequence, mod.Name, toolName);
+                    Messages.WriteAsyncUserMessage(msg);
+                    unsupportedModification = true;
+                    continue;
                 }
-                if (unsupportedModification)
+
+                var unimodIdWithName = mod.UnimodIdWithName;
+                var modNames = ModificationNames.Where(m => m.Accession == unimodIdWithName).ToArray();
+
+                if (modNames.Length == 0 && modWarns.Length == 0)
+                {
+                    var msg = string.Format(ModelsResources.BuildPrecursorTable_Unimod_UnsupportedModification, modifiedSequence, mod.Name, unimodIdWithName, toolName);
+                    Messages.WriteAsyncUserMessage(msg);
+                    unsupportedModification = true;
+
+                    continue;
+                }
+                if (modNames.Length == 0)
                     continue;
 
-                foreach (var charge in peptide.TransitionGroups
-                             .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
+                string modName = "";
+
+                if (alphapeptDeepFormat)
                 {
-                    if (alphapeptDeepFormat)
+                    modName = modNames.Single().AlphaNameWithAminoAcid(unmodifiedSequence, mod.IndexAA);
+                }
+                else
+                {
+                    modName = modNames.Single().Name;
+                }
+
+                modsBuilder.Append(modName);
+                modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
+                if (i != modifiedSequence.ExplicitMods.Count - 1)
+                {
+                    modsBuilder.Append(TextUtil.SEMICOLON);
+                    modSitesBuilder.Append(TextUtil.SEMICOLON);
+                }
+            }
+
+            if (unsupportedModification)
+                return;
+
+            foreach (var charge in peptide.TransitionGroups
+                         .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
+            {
+                if (alphapeptDeepFormat)
+                {
+                    result.Add(new[] { unmodifiedSequence, modsBuilder.ToString(), modSitesBuilder.ToString(), charge.ToString() }
+                        .ToDsvLine(TextUtil.SEPARATOR_TSV));
+                }
+                else
+                {
+                    var docNode = peptide.TransitionGroups.FirstOrDefault(group => group.PrecursorCharge == charge);
+                    if (docNode == null)
                     {
-                        result.Add(new[] { unmodifiedSequence, modsBuilder.ToString(), modSitesBuilder.ToString(), charge.ToString() }
-                            .ToDsvLine(TextUtil.SEPARATOR_TSV));
+                        continue;
                     }
-                    else
-                    {
-                        var docNode = peptide.TransitionGroups.FirstOrDefault(group => group.PrecursorCharge == charge);
-                        if (docNode == null)
+                    var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
+                    var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
+                    var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
+                    var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
+                    var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
+                    var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";
+                    var unimodSequence = modifiedSequence.ToString();
+                    var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime;
+                    var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime;
+                    var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime;
+                    string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
+                        docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : @"#N/A";
+                    var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
+                    var filename = LibraryHelper.GetDataFileName();
+                    if (training)
+                        result.Add(string.Join(TAB, new object[]
                         {
-                            continue;
-                        }
-                        var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
-                        var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
-                        var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
-                        var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
-                        var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
-                        var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";
-                        var unimodSequence = modifiedSequence.ToString();
-                        var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime;
-                        var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime;
-                        var max_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.EndRetentionTime;
-                        string ionmob_ms1 = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo?.IonMobilityMS1.HasValue == true ?
-                            docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.IonMobilityInfo.IonMobilityMS1.ToString() : @"#N/A";
-                        var apex_psm = @"unknown"; //docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.Identified
-                        var filename = LibraryHelper.GetDataFileName();
-                        if (training)
-                            result.Add(string.Join(TAB, new object[]
-                            {
                                 precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
                                 docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
                                 note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds,
                                 best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore
-                            }));
-                        else
-                            result.Add(string.Join(TAB, new[]
-                                {
+                        }));
+                    else
+                        result.Add(string.Join(TAB, new[]
+                            {
                                     precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
                                     docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
                                     note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds
                                 })
-                            );
+                        );
 
-                    }
                 }
             }
-            return result;
         }
+
         [CanBeNull]
         public List<string> GetWarningMods([CanBeNull] SrmDocument Document, string toolName)
         {
