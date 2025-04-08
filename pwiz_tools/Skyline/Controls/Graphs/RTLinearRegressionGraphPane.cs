@@ -619,10 +619,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 
                 // Only used if we are comparing two runs
                 var modifiedTargets = IsRunToRun ? null : new HashSet<Target>();
-
+                int moleculeCount = document.MoleculeCount;
+                int iMolecule = 0;
                 foreach (var peptideGroupDocNode in document.MoleculeGroups)
                 foreach (var nodePeptide in peptideGroupDocNode.Molecules)
                 {
+                    productionMonitor.SetProgress(iMolecule * 100 / moleculeCount);
+                    iMolecule++;
                     if (false == modifiedTargets?.Add(nodePeptide.ModifiedTarget))
                     {
                         continue;
@@ -1280,6 +1283,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public override RtRegressionResults ProduceResult(ProductionMonitor productionMonitor, RegressionSettings parameter, IDictionary<WorkOrder, object> inputs)
             {
+                productionMonitor.SetProgress(0);
                 var results = new RtRegressionResults(parameter)
                     .ChangeInitializedCalculators(inputs.Values.OfType<InitializedRetentionScoreCalculator>());
                 if (results.InitializedCalculators.Any(calc => calc.Initialized != null))
