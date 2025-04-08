@@ -16,14 +16,14 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         public PeakBoundaryImputer()
         {
-            ImputedBoundsProducer = Producer.FromFunction<ImputedBoundsParameter, ImputedPeakBounds>(ProduceImputedBounds);
+            ImputedBoundsProducer = Producer.FromFunction<ImputedBoundsParameter, ImputedPeak>(ProduceImputedBounds);
         }
         
         private class LibraryInfo
         {
             private Dictionary<Tuple<AlignmentTarget, string>, AlignmentFunction> _alignmentFunctions =
                 new Dictionary<Tuple<AlignmentTarget, string>, AlignmentFunction>();
-            private Dictionary<Target, BestPeakBounds> _bestPeakBounds = new Dictionary<Target, BestPeakBounds>();
+            private Dictionary<Target, ExemplaryPeak> _bestPeakBounds = new Dictionary<Target, ExemplaryPeak>();
             public LibraryInfo(Library library, Dictionary<Target, double>[] allRetentionTimes)
             {
                 Library = library;
@@ -62,21 +62,46 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return alignmentFunction;
             }
 
-            public BestPeakBounds GetBestPeakBounds(CancellationToken cancellationToken, Target target)
+            public ExemplaryPeak GetExemplaryPeak(CancellationToken cancellationToken, Target target)
             {
-                BestPeakBounds bestPeakBounds;
                 lock (this)
                 {
-                    if (_bestPeakBounds.TryGetValue(target, out bestPeakBounds))
+                    if (_bestPeakBounds.TryGetValue(target, out var exemplaryPeak))
                     {
-                        return bestPeakBounds;
+                        return exemplaryPeak;
                     }
 
-                    bestPeakBounds = BestPeakBounds.GetBestPeakBounds(cancellationToken,
-                        new BestPeakBounds.Parameter(Library, new[] { target }));
-                    _bestPeakBounds[target] = bestPeakBounds;
-                    return bestPeakBounds;
+                    exemplaryPeak = FindExemplaryPeak(cancellationToken, new[] { target });
+                    _bestPeakBounds[target] = exemplaryPeak;
+                    return exemplaryPeak;
                 }
+            }
+
+            private ExemplaryPeak FindExemplaryPeak(CancellationToken cancellationToken, IList<Target> targets)
+            {
+                ExplicitPeakBounds bestPeakBounds = null;
+                string bestFile = null;
+                foreach (var filePath in Library.LibraryFiles.FilePaths)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var peakBounds = Library.GetExplicitPeakBounds(MsDataFileUri.Parse(filePath), targets);
+                    if (peakBounds != null)
+                    {
+                        if (bestPeakBounds == null || bestPeakBounds.Score > peakBounds.Score)
+                        {
+                            bestPeakBounds = peakBounds;
+                            bestFile = filePath;
+                        }
+                    }
+                }
+
+                if (bestPeakBounds == null)
+                {
+                    return null;
+                }
+
+                return new ExemplaryPeak(Library, bestFile, new PeakBounds(bestPeakBounds.StartTime, bestPeakBounds.EndTime));
             }
         }
 
@@ -143,7 +168,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
         }
 
-        public ImputedPeakBounds GetImputedPeakBounds(CancellationToken cancellationToken, SrmDocument document,
+        public ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, SrmDocument document,
             IdentityPath identityPath, MsDataFileUri filePath)
         {
             var peptideDocNode = (PeptideDocNode)document.FindNode(identityPath);
@@ -161,16 +186,15 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 }
 
                 var libraryInfo = GetLibraryInfo(library);
-                var bestPeakBounds = libraryInfo.GetBestPeakBounds(cancellationToken, peptideDocNode.ModifiedTarget);
-                if (bestPeakBounds == null)
+                var exemplaryPeak = libraryInfo.GetExemplaryPeak(cancellationToken, peptideDocNode.ModifiedTarget);
+                if (exemplaryPeak == null)
                 {
                     continue;
                 }
 
                 if (alignmentTarget == null)
                 {
-                    return new ImputedPeakBounds(bestPeakBounds.PeakBounds, library.Name,
-                        bestPeakBounds.SpectrumSourceFile);
+                    return new ImputedPeak(exemplaryPeak.PeakBounds, exemplaryPeak);
                 }
                 var fileIndex = library.LibraryFiles.FindIndexOf(filePath);
                 if (fileIndex < 0)
@@ -185,27 +209,28 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     continue;
                 }
                 var libraryAlignment = libraryInfo.GetAlignmentFunction(cancellationToken, alignmentTarget,
-                    bestPeakBounds.SpectrumSourceFile);
+                    exemplaryPeak.SpectrumSourceFile);
                 if (libraryAlignment == null)
                 {
                     continue;
                 }
-                var midTime = (bestPeakBounds.PeakBounds.StartTime + bestPeakBounds.PeakBounds.EndTime) / 2;
-                var halfPeakWidth = (bestPeakBounds.PeakBounds.EndTime - bestPeakBounds.PeakBounds.StartTime) / 2;
+                var midTime = (exemplaryPeak.PeakBounds.StartTime + exemplaryPeak.PeakBounds.EndTime) / 2;
+                var halfPeakWidth = (exemplaryPeak.PeakBounds.EndTime - exemplaryPeak.PeakBounds.StartTime) / 2;
                 var newMidTime = fileAlignment.GetY(libraryAlignment.GetX(midTime));
                 var imputedBounds = new PeakBounds(newMidTime - halfPeakWidth, newMidTime + halfPeakWidth);
-                return new ImputedPeakBounds(imputedBounds, library.Name, bestPeakBounds.SpectrumSourceFile);
+                return new ImputedPeak(imputedBounds, exemplaryPeak);
             }
 
             return null;
         }
 
-        private ImputedPeakBounds ProduceImputedBounds(ProductionMonitor productionMonitor,
+        private ImputedPeak ProduceImputedBounds(ProductionMonitor productionMonitor,
             ImputedBoundsParameter parameter)
         {
             return GetImputedPeakBounds(productionMonitor.CancellationToken, parameter.Document, parameter.IdentityPath,
                 parameter.FilePath);
         }
-        public Producer<ImputedBoundsParameter, ImputedPeakBounds> ImputedBoundsProducer { get;  }
+        public Producer<ImputedBoundsParameter, ImputedPeak> ImputedBoundsProducer { get;  }
     }
+
 }

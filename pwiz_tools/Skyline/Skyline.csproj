@@ -604,9 +604,8 @@
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentResults.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentTarget.cs" />
-    <Compile Include="Model\RetentionTimes\PeakImputation\ImputedBoundariesCollection.cs" />
-    <Compile Include="Model\RetentionTimes\PeakImputation\BestPeakBounds.cs" />
-    <Compile Include="Model\RetentionTimes\PeakImputation\ImputedPeakBounds.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\ExemplaryPeak.cs" />
+    <Compile Include="Model\RetentionTimes\PeakImputation\ImputedPeak.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>

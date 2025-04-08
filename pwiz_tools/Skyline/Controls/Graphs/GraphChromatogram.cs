@@ -55,8 +55,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
-        private Receiver<PeakBoundaryImputer.ImputedBoundsParameter, ImputedPeakBounds> _imputedBoundsReceiver;
-        private ImputedPeakBounds _imputedPeakBounds;
+        private Receiver<PeakBoundaryImputer.ImputedBoundsParameter, ImputedPeak> _imputedBoundsReceiver;
+        private ImputedPeak _imputedPeak;
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
 
         public static ShowRTChrom ShowRT
@@ -229,9 +229,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (true == _imputedBoundsReceiver?.TryGetCurrentProduct(out var newBounds))
             {
-                if (!Equals(newBounds, _imputedPeakBounds))
+                if (!Equals(newBounds, _imputedPeak))
                 {
-                    _imputedPeakBounds = newBounds;
+                    _imputedPeak = newBounds;
                     UpdateUI(false);
                 }
             }
@@ -3603,39 +3603,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
-
-        private readonly ImputedBoundsProducer IMPUTED_BOUNDS_PRODUCER = new ImputedBoundsProducer();
-
-        private class ImputedBoundsProducer : Producer<ImputedBoundsParameter, ImmutableList<KeyValuePair<IdentityPath, ImputedPeakBounds>>>
-        {
-            public override ImmutableList<KeyValuePair<IdentityPath, ImputedPeakBounds>> ProduceResult(ProductionMonitor productionMonitor, ImputedBoundsParameter parameter, IDictionary<WorkOrder, object> inputs)
-            {
-                var result = new List<KeyValuePair<IdentityPath, ImputedPeakBounds>>();
-                foreach (var identityPath in parameter.PeptideIdentityPaths)
-                {
-                    var peakBounds = inputs.Where(kvp =>
-                            identityPath.Equals((kvp.Key.WorkParameter as ImputedPeakBounds.Parameter)?.IdentityPath))
-                        .Select(kvp => kvp.Value).OfType<ImputedPeakBounds>().FirstOrDefault();
-                    if (peakBounds != null)
-                    {
-                        result.Add(new KeyValuePair<IdentityPath, ImputedPeakBounds>(identityPath, peakBounds));
-                    }
-                }
-
-                return result.ToImmutable();
-            }
-
-            public override IEnumerable<WorkOrder> GetInputs(ImputedBoundsParameter parameter)
-            {
-                var alignmentTarget = AlignmentTarget.GetAlignmentTarget(parameter.Document);
-                foreach (var identityPath in parameter.PeptideIdentityPaths)
-                {
-                    yield return ImputedPeakBounds.PRODUCER.MakeWorkOrder(
-                        new ImputedPeakBounds.Parameter(parameter.Document, identityPath, parameter.FilePath, alignmentTarget));
-                }
-            }
-        }
-
         #region Test support
 
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
