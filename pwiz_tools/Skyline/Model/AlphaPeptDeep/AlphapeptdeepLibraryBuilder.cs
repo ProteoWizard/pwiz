@@ -34,10 +34,18 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 {
     public class ArgumentAndValue
     {
-        public ArgumentAndValue(string name, string value, string dash = @"--")
+        private const string DEFAULT_DASH = @"--";
+
+        public ArgumentAndValue(string name, string value, bool quoteValue)
+            : this(name, value, DEFAULT_DASH, quoteValue)
+        {}
+
+        public ArgumentAndValue(string name, string value, string dash = DEFAULT_DASH, bool quoteValue = false)
         {
             Name = name;
             Value = value;
+            if (quoteValue)
+                Value = '"' + Value + '"';
             Dash = dash;
         }
         public string Name { get; private set; }
@@ -185,12 +193,12 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             new[]
             {
                 new ArgumentAndValue(@"task_workflow", @"library"),
-                new ArgumentAndValue(@"settings_yaml", SettingsFilePath),
-                new ArgumentAndValue(@"PEPTDEEP_HOME", RootDir),
-                new ArgumentAndValue(@"transfer--model_output_folder", OutputModelsDir),
+                new ArgumentAndValue(@"settings_yaml", SettingsFilePath, true),
+                new ArgumentAndValue(@"PEPTDEEP_HOME", RootDir, true),
+                new ArgumentAndValue(@"transfer--model_output_folder", OutputModelsDir, true),
                 new ArgumentAndValue(@"library--infile_type", @"precursor_table"),
-                new ArgumentAndValue(@"library--infiles", InputFilePath),
-                new ArgumentAndValue(@"library--output_folder", OutputSpectralLibsDir),
+                new ArgumentAndValue(@"library--infiles", InputFilePath, true),
+                new ArgumentAndValue(@"library--output_folder", OutputSpectralLibsDir, true),
                 new ArgumentAndValue(@"library--output_tsv--enabled", @"True"),
                 new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
                 new ArgumentAndValue(@"library--decoy", @"diann"),
@@ -291,7 +299,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             // generate template settings.yaml file
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{EXPORT_SETTINGS_COMMAND} {SettingsFilePath}")
+            var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{EXPORT_SETTINGS_COMMAND} ""{SettingsFilePath}""")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
