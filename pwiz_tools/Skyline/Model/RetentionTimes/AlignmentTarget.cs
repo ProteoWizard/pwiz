@@ -98,6 +98,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return null;
             }
 
+            // TODO: use actual regression type
             var regressionType = RegressionMethodRT.kde;
             if (irtCalculator.RegressionType == IrtRegressionType.LOWESS)
             {

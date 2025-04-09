@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
-        private readonly PeakBoundaryImputer _peakBoundaryImputer = PeakBoundaryImputer.GetInstance();
+        private readonly PeakBoundaryImputer _peakBoundaryImputer;
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
@@ -98,6 +98,7 @@ namespace pwiz.Skyline.Model.Results
 
             string basename = MSDataFilePath.GetFileNameWithoutExtension();
             FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
+            _peakBoundaryImputer = PeakBoundaryImputer.GetInstance(document);
         }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
@@ -105,7 +106,7 @@ namespace pwiz.Skyline.Model.Results
             // Score peaks.
             GetPeptideRetentionTimes(chromDataSets);
             var explicitPeakBounds = _peakBoundaryImputer.GetExplicitPeakBounds(
-                _document, chromDataSets.NodePep, chromDataSets.FileInfo.FilePath);
+                chromDataSets.NodePep, chromDataSets.FileInfo.FilePath);
             chromDataSets.PickChromatogramPeaks(explicitPeakBounds);
             StorePeptideRetentionTime(chromDataSets);
 

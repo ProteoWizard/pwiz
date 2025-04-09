@@ -55,7 +55,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
-        private Receiver<PeakBoundaryImputer.ImputedBoundsParameter, ImputedPeak> _imputedBoundsReceiver;
+        private Receiver<ImputedBoundsParameter, ImputedPeak> _imputedBoundsReceiver;
+        private PeakBoundaryImputer _peakBoundaryImputer;
         private ImputedPeak _imputedPeak;
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
 
@@ -222,7 +223,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // Note that this only affects applying ZoomState to a graph pane.  Explicit changes 
             // to Scale Min/Max properties need to be manually applied to each axis.
             graphControl.IsSynchronizeXAxes = true;
-            _imputedBoundsReceiver = PeakBoundaryImputer.GetInstance().ImputedBoundsProducer?.RegisterCustomer(this, ImputedBoundsAvailable);
+            var imputedBoundsProducer = Producer.FromFunction<ImputedBoundsParameter, ImputedPeak>(ProduceImputedPeak);
+            _imputedBoundsReceiver = imputedBoundsProducer?.RegisterCustomer(this, ImputedBoundsAvailable);
         }
 
         private void ImputedBoundsAvailable()
@@ -2334,7 +2336,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
             var peptideIdentityPath = new IdentityPath(peptideGroupDocNode.PeptideGroup, peptide);
-            var parameter = new PeakBoundaryImputer.ImputedBoundsParameter(doc, peptideIdentityPath, chromGraphPrimary.Chromatogram.FilePath);
+            var parameter = new ImputedBoundsParameter(doc, peptideIdentityPath, chromGraphPrimary.Chromatogram.FilePath);
             if (true == _imputedBoundsReceiver?.TryGetProduct(parameter, out var imputedBounds))
             {
                 chromGraphPrimary.ImputedBounds = imputedBounds.PeakBounds;
@@ -3565,23 +3567,29 @@ namespace pwiz.Skyline.Controls.Graphs
             return iCharge * countLabelTypes * spectrumFilters.Count  + iSpectrumFilter * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
         }
 
-        private class ImputedBoundsParameter
+        private class ImputedBoundsParameter : Immutable
         {
-            public ImputedBoundsParameter(SrmDocument document, MsDataFileUri dataFileUri,
-                IEnumerable<IdentityPath> peptideIdentityPaths)
+            public ImputedBoundsParameter(SrmDocument document, IdentityPath identityPath, MsDataFileUri filePath)
             {
                 Document = document;
-                FilePath = dataFileUri;
-                PeptideIdentityPaths = peptideIdentityPaths.ToImmutable();
+                IdentityPath = identityPath;
+                AlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
+                FilePath = filePath;
             }
 
             public SrmDocument Document { get; }
-            public MsDataFileUri FilePath { get; }
-            public ImmutableList<IdentityPath> PeptideIdentityPaths { get; }
+            public IdentityPath IdentityPath { get; }
+            public AlignmentTarget AlignmentTarget { get; private set; }
+            public MsDataFileUri FilePath { get; private set; }
+
+            public ImputedBoundsParameter ChangeAlignmentTarget(AlignmentTarget value)
+            {
+                return ChangeProp(ImClone(this), im => im.AlignmentTarget = value);
+            }
 
             protected bool Equals(ImputedBoundsParameter other)
             {
-                return ReferenceEquals(Document, other.Document) && FilePath.Equals(other.FilePath) && PeptideIdentityPaths.Equals(other.PeptideIdentityPaths);
+                return ReferenceEquals(Document, other.Document) && Equals(IdentityPath, other.IdentityPath) && Equals(AlignmentTarget, other.AlignmentTarget) && Equals(FilePath, other.FilePath);
             }
 
             public override bool Equals(object obj)
@@ -3597,12 +3605,33 @@ namespace pwiz.Skyline.Controls.Graphs
                 unchecked
                 {
                     var hashCode = RuntimeHelpers.GetHashCode(Document);
-                    hashCode = (hashCode * 397) ^ FilePath.GetHashCode();
-                    hashCode = (hashCode * 397) ^ PeptideIdentityPaths.GetHashCode();
+                    hashCode = (hashCode * 397) ^ IdentityPath.GetHashCode();
+                    hashCode = (hashCode * 397) ^ (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ FilePath?.GetHashCode() ?? 0;
                     return hashCode;
                 }
             }
         }
+
+        private ImputedPeak ProduceImputedPeak(ProductionMonitor productionMonitor, ImputedBoundsParameter imputedBoundsParameter)
+        {
+            PeakBoundaryImputer peakBoundaryImputer;
+            lock (this)
+            {
+                peakBoundaryImputer = _peakBoundaryImputer;
+                if (!ReferenceEquals(imputedBoundsParameter.Document, peakBoundaryImputer?.Document))
+                {
+                    peakBoundaryImputer = PeakBoundaryImputer.GetInstance(imputedBoundsParameter.Document);
+                }
+
+                _peakBoundaryImputer = peakBoundaryImputer;
+            }
+
+            return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,
+                imputedBoundsParameter.IdentityPath, imputedBoundsParameter.FilePath);
+        }
+
+
         #region Test support
 
         public void TestMouseMove(double x, double y, PaneKey? paneKey)
