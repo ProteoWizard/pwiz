@@ -1510,7 +1510,6 @@ namespace pwiz.Skyline.Model
                     ChromatogramGroupInfo chromGroupInfo = chromGroupInfos[j];
                     PeakGroupIntegrator peakGroupIntegrator = null;
                     ChromFileInfoId fileId = fileIds[j];
-                    PeakFeatureStatistics reintegratePeak = reintegratePeaks != null ? reintegratePeaks[j] : null;
 
                     var listChromInfo = chromGroupInfo.GetAllTransitionInfo(nodeTran,
                         mzMatchTolerance, chromatograms.OptimizationFunction, TransformChrom.interpolated);
@@ -1568,17 +1567,22 @@ namespace pwiz.Skyline.Model
                                         userSet = chromInfoBest.UserSet;
                                     }
                                 }
+                                else if (resultsHandler != null)
+                                {
+                                    peak = resultsHandler.GetBestPeak(nodePep, this, chromatograms, info,
+                                        ref peakGroupIntegrator, out userSet);
+                                }
                                 // Or if there is a matching peak on another precursor in the peptide
                                 else if (nodePep.HasResults && !HasResults &&
-                                    TryGetMatchingGroupInfo(nodePep, chromIndex, fileId, step, out chromGroupInfoMatch))
+                                         TryGetMatchingGroupInfo(nodePep, chromIndex, fileId, step, out chromGroupInfoMatch))
                                 {
                                     peakGroupIntegrator ??= MakePeakGroupIntegrator(settingsNew, chromatograms, chromGroupInfo);
-                                    peak = CalcMatchingPeak(settingsNew, peakGroupIntegrator, info, chromGroupInfoMatch, reintegratePeak, qcutoff, ref userSet);
+                                    peak = CalcMatchingPeak(settingsNew, peakGroupIntegrator, info, chromGroupInfoMatch, qcutoff, ref userSet);
                                 }
                                 // Otherwise use the best peak chosen at import time
                                 else
                                 {
-                                    int bestIndex = GetBestIndex(info, reintegratePeak, qcutoff, ref userSet);
+                                    int bestIndex = info.BestPeakIndex;
                                     if (bestIndex != -1)
                                         peak = info.GetPeak(bestIndex);
                                 }
@@ -1765,7 +1769,6 @@ namespace pwiz.Skyline.Model
                                                   PeakGroupIntegrator peakGroupIntegrator,
                                                   ChromatogramInfo info,
                                                   TransitionGroupChromInfo chromGroupInfoMatch,
-                                                  PeakFeatureStatistics reintegratePeak,
                                                   double qcutoff, 
                                                   ref UserSet userSet)
         {
@@ -1775,7 +1778,7 @@ namespace pwiz.Skyline.Model
             var peak = info.CalcPeak(peakGroupIntegrator, chromGroupInfoMatch.StartRetentionTime.Value, chromGroupInfoMatch.EndRetentionTime.Value, flags);
             userSet = UserSet.MATCHED;
             var userSetBest = UserSet.FALSE;
-            int bestIndex = GetBestIndex(info, reintegratePeak, qcutoff, ref userSetBest);
+            int bestIndex = info.BestPeakIndex;
             if (bestIndex != -1)
             {
                 var peakBest = info.GetPeak(bestIndex);
@@ -1997,7 +2000,7 @@ namespace pwiz.Skyline.Model
                     iResult, transitionCount, listChromInfo));
             }
 
-            public void AddReintegrateInfo(MProphetResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
+            public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
             {
                 _listResultCalcs.Last().AddReintegrateInfo(resultsHandler, fileIds, reintegratePeaks);
             }
@@ -2373,7 +2376,7 @@ namespace pwiz.Skyline.Model
             private int TransitionCount { get; set; }
             private List<TransitionGroupChromInfoCalculator> Calculators { get; set; }
 
-            private MProphetResultsHandler ReintegrateResults { get; set; }
+            private ReintegrateResultsHandler ReintegrateResults { get; set; }
             private ChromFileInfoId[] ReintegrateFileIds { get; set; }
             private PeakFeatureStatistics[] ReintegratePeaks { get; set; }
 
@@ -2388,7 +2391,7 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            public void AddReintegrateInfo(MProphetResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
+            public void AddReintegrateInfo(ReintegrateResultsHandler resultsHandler, ChromFileInfoId[] fileIds, PeakFeatureStatistics[] reintegratePeaks)
             {
                 if (resultsHandler != null)
                 {

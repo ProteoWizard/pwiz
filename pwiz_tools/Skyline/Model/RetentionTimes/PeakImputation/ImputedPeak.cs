@@ -17,6 +17,4 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         public ExemplaryPeak ExemplaryPeak { get; }
     }
-
-
 }

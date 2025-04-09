@@ -580,6 +580,7 @@
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
+    <Compile Include="Model\ReintegrateResultsHandler.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />

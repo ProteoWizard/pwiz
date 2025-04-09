@@ -301,6 +301,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsAutoCalcRequired(SrmDocument document, SrmDocument previous)
         {
+            if (Calculator is RCalcIrt rCalcIrt)
+            {
+                if (rCalcIrt.IsUsable && !rCalcIrt.GetStandardPeptides().Any())
+                {
+                    return false;
+                }
+            }
             // Any time there is no regression information, an auto-calc is required
             // unless the document has no results
             if (Conversion == null)
