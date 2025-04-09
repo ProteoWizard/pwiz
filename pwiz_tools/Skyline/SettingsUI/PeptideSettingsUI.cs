@@ -1770,6 +1770,42 @@ namespace pwiz.Skyline.SettingsUI
             set { comboLodMethod.SelectedItem = value; }
         }
 
+        public bool ImputeMissingPeaks
+        {
+            get
+            {
+                return cbxImputeMissingPeaks.Checked;
+            }
+            set
+            {
+                cbxImputeMissingPeaks.Checked = value;
+            }
+        }
+
+        public double? MaxRtShift
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxRtShift.Text) ? (double?) null : double.Parse(tbxMaxRtShift.Text);
+            }
+            set
+            {
+                tbxMaxRtShift.Text = value.ToString();
+            }
+        }
+
+        public double? MaxPeakWidthVariation
+        {
+            get
+            {
+                return string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text) ? (double?)null : double.Parse(tbxMaxPeakWidthVariation.Text);
+            }
+            set
+            {
+                tbxMaxPeakWidthVariation.Text = value.ToString();
+            }
+        }
+
         #endregion
 
         public sealed class LabelTypeComboDriver

@@ -217,6 +217,7 @@
     <Compile Include="PanoramaClientPublishTest.cs" />
     <Compile Include="PeakAreaRelativeAbundanceGraphTest.cs" />
     <Compile Include="PeakAreaPeptideGraphTest.cs" />
+    <Compile Include="PeakImputationTest.cs" />
     <Compile Include="PeakMetricsTest.cs" />
     <Compile Include="PrmCeOptimizationTest.cs" />
     <Compile Include="QcTraceChromatogramTest.cs" />
