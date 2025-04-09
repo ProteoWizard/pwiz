@@ -114,14 +114,14 @@ namespace pwiz.Skyline.SettingsUI
             this.tabIntegration = new System.Windows.Forms.TabPage();
             this.label36 = new System.Windows.Forms.Label();
             this.tabQuantification = new System.Windows.Forms.TabPage();
-            this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
             this.label20 = new System.Windows.Forms.Label();
-            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
+            this.groupBoxFiguresOfMerit = new System.Windows.Forms.GroupBox();
             this.lblCaclulateLodBy = new System.Windows.Forms.Label();
             this.lblMaxLoqBias = new System.Windows.Forms.Label();
             this.lblMaxLoqBiasPct = new System.Windows.Forms.Label();
             this.lblMaxLoqCvPct = new System.Windows.Forms.Label();
             this.lblMaxLoqCv = new System.Windows.Forms.Label();
+            this.lblIonRatioThreshold = new System.Windows.Forms.Label();
             this.lblQuantUnits = new System.Windows.Forms.Label();
             this.lblMsLevel = new System.Windows.Forms.Label();
             this.lblNormalizationMethod = new System.Windows.Forms.Label();
@@ -131,6 +131,12 @@ namespace pwiz.Skyline.SettingsUI
             this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.groupBoxPeakImputation = new System.Windows.Forms.GroupBox();
+            this.lblMaxRtShift = new System.Windows.Forms.Label();
+            this.tbxMaxRtShift = new System.Windows.Forms.TextBox();
+            this.lblMaxPeakWidthVariation = new System.Windows.Forms.Label();
+            this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
+            this.cbxImputeMissingPeaks = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -143,6 +149,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.SuspendLayout();
             this.groupBoxFiguresOfMerit.SuspendLayout();
             this.contextMenuCalculator.SuspendLayout();
+            this.groupBoxPeakImputation.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOk
@@ -560,6 +567,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPrediction
             // 
+            this.tabPrediction.Controls.Add(this.groupBoxPeakImputation);
             this.tabPrediction.Controls.Add(this.btnUpdateCalculator);
             this.tabPrediction.Controls.Add(this.label14);
             this.tabPrediction.Controls.Add(this.textMeasureRTWindow);
@@ -800,6 +808,11 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.Name = "tabQuantification";
             this.tabQuantification.UseVisualStyleBackColor = true;
             // 
+            // label20
+            // 
+            resources.ApplyResources(this.label20, "label20");
+            this.label20.Name = "label20";
+            // 
             // groupBoxFiguresOfMerit
             // 
             resources.ApplyResources(this.groupBoxFiguresOfMerit, "groupBoxFiguresOfMerit");
@@ -813,16 +826,6 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBoxFiguresOfMerit.Controls.Add(this.lblMaxLoqCv);
             this.groupBoxFiguresOfMerit.Name = "groupBoxFiguresOfMerit";
             this.groupBoxFiguresOfMerit.TabStop = false;
-            // 
-            // label20
-            // 
-            resources.ApplyResources(this.label20, "label20");
-            this.label20.Name = "label20";
-            // 
-            // lblIonRatioThreshold
-            // 
-            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
-            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
             // 
             // lblCaclulateLodBy
             // 
@@ -848,6 +851,11 @@ namespace pwiz.Skyline.SettingsUI
             // 
             resources.ApplyResources(this.lblMaxLoqCv, "lblMaxLoqCv");
             this.lblMaxLoqCv.Name = "lblMaxLoqCv";
+            // 
+            // lblIonRatioThreshold
+            // 
+            resources.ApplyResources(this.lblIonRatioThreshold, "lblIonRatioThreshold");
+            this.lblIonRatioThreshold.Name = "lblIonRatioThreshold";
             // 
             // lblQuantUnits
             // 
@@ -901,6 +909,43 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.editCalculatorListContextMenuItem, "editCalculatorListContextMenuItem");
             this.editCalculatorListContextMenuItem.Click += new System.EventHandler(this.editCalculatorListContextMenuItem_Click);
             // 
+            // groupBoxPeakImputation
+            // 
+            this.groupBoxPeakImputation.Controls.Add(this.cbxImputeMissingPeaks);
+            this.groupBoxPeakImputation.Controls.Add(this.tbxMaxPeakWidthVariation);
+            this.groupBoxPeakImputation.Controls.Add(this.lblMaxPeakWidthVariation);
+            this.groupBoxPeakImputation.Controls.Add(this.tbxMaxRtShift);
+            this.groupBoxPeakImputation.Controls.Add(this.lblMaxRtShift);
+            resources.ApplyResources(this.groupBoxPeakImputation, "groupBoxPeakImputation");
+            this.groupBoxPeakImputation.Name = "groupBoxPeakImputation";
+            this.groupBoxPeakImputation.TabStop = false;
+            // 
+            // lblMaxRtShift
+            // 
+            resources.ApplyResources(this.lblMaxRtShift, "lblMaxRtShift");
+            this.lblMaxRtShift.Name = "lblMaxRtShift";
+            // 
+            // tbxMaxRtShift
+            // 
+            resources.ApplyResources(this.tbxMaxRtShift, "tbxMaxRtShift");
+            this.tbxMaxRtShift.Name = "tbxMaxRtShift";
+            // 
+            // lblMaxPeakWidthVariation
+            // 
+            resources.ApplyResources(this.lblMaxPeakWidthVariation, "lblMaxPeakWidthVariation");
+            this.lblMaxPeakWidthVariation.Name = "lblMaxPeakWidthVariation";
+            // 
+            // tbxMaxPeakWidthVariation
+            // 
+            resources.ApplyResources(this.tbxMaxPeakWidthVariation, "tbxMaxPeakWidthVariation");
+            this.tbxMaxPeakWidthVariation.Name = "tbxMaxPeakWidthVariation";
+            // 
+            // cbxImputeMissingPeaks
+            // 
+            resources.ApplyResources(this.cbxImputeMissingPeaks, "cbxImputeMissingPeaks");
+            this.cbxImputeMissingPeaks.Name = "cbxImputeMissingPeaks";
+            this.cbxImputeMissingPeaks.UseVisualStyleBackColor = true;
+            // 
             // PeptideSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -937,6 +982,8 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBoxFiguresOfMerit.ResumeLayout(false);
             this.groupBoxFiguresOfMerit.PerformLayout();
             this.contextMenuCalculator.ResumeLayout(false);
+            this.groupBoxPeakImputation.ResumeLayout(false);
+            this.groupBoxPeakImputation.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1042,5 +1089,11 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox tbxIonRatioThreshold;
         private System.Windows.Forms.Label lblIonRatioThreshold;
         private System.Windows.Forms.CheckBox cbxSimpleRatios;
+        private System.Windows.Forms.GroupBox groupBoxPeakImputation;
+        private System.Windows.Forms.TextBox tbxMaxRtShift;
+        private System.Windows.Forms.Label lblMaxRtShift;
+        private System.Windows.Forms.CheckBox cbxImputeMissingPeaks;
+        private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
+        private System.Windows.Forms.Label lblMaxPeakWidthVariation;
     }
 }

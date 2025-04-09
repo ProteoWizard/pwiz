@@ -222,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Note that this only affects applying ZoomState to a graph pane.  Explicit changes 
             // to Scale Min/Max properties need to be manually applied to each axis.
             graphControl.IsSynchronizeXAxes = true;
-            _imputedBoundsReceiver = (documentContainer as SkylineWindow)?.GetPeakBoundaryImputer()?.ImputedBoundsProducer?.RegisterCustomer(this, ImputedBoundsAvailable);
+            _imputedBoundsReceiver = PeakBoundaryImputer.GetInstance().ImputedBoundsProducer?.RegisterCustomer(this, ImputedBoundsAvailable);
         }
 
         private void ImputedBoundsAvailable()

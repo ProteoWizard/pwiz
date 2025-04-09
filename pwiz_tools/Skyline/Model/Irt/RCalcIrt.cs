@@ -138,11 +138,16 @@ namespace pwiz.Skyline.Model.Irt
         public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             RequireUsable();
+            var databaseCount = _database.StandardPeptideCount;
+            if (databaseCount == 0)
+            {
+                minCount = 0;
+                return Array.Empty<Target>();
+            }
 
             var pepArr = peptides.ToArray();
             var returnStandard = pepArr.Where(_database.IsStandard).Distinct().ToArray();
             var returnCount = returnStandard.Length;
-            var databaseCount = _database.StandardPeptideCount;
 
             if (!IsAcceptableStandardCount(databaseCount, returnCount))
             {

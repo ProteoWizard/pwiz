@@ -71,6 +71,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             Quantification = QuantificationSettings.DEFAULT;
             ProteinAssociationSettings = proteinAssociationSettings;
+            Imputation = ImputationSettings.DEFAULT;
         }
 
         [TrackChildren]
@@ -102,6 +103,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren]
         public ProteinAssociation.ParsimonySettings ProteinAssociationSettings { get; private set; }
+
+        [TrackChildren]
+        public ImputationSettings Imputation { get; private set; }
 
         #region Property change methods
 
@@ -164,6 +168,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideSettings ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
         {
             return ChangeProp(ImClone(this), im => im.ProteinAssociationSettings = prop);
+        }
+
+        public PeptideSettings ChangeImputation(ImputationSettings imputation)
+        {
+            return ChangeProp(ImClone(this), im => im.Imputation = imputation);
         }
 
         public PeptideSettings MergeDefaults(PeptideSettings defPep)
@@ -230,10 +239,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 Integration = reader.DeserializeElement<PeptideIntegration>();
                 Quantification = reader.DeserializeElement<QuantificationSettings>();
                 ProteinAssociationSettings = reader.DeserializeElement<ProteinAssociation.ParsimonySettings>();
+                Imputation = reader.DeserializeElement<ImputationSettings>();
                 reader.ReadEndElement();
             }
 
-            Quantification = Quantification ?? QuantificationSettings.DEFAULT;
+            Quantification ??= QuantificationSettings.DEFAULT;
+            Imputation ??= ImputationSettings.DEFAULT;
             // Defer validation to the SrmSettings object
         }
 
@@ -254,6 +265,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(Quantification);
             if (!Equals(ProteinAssociationSettings, ProteinAssociation.ParsimonySettings.DEFAULT))
                 writer.WriteElement(ProteinAssociationSettings);
+            if (!Equals(Imputation, ImputationSettings.DEFAULT))
+                writer.WriteElement(Imputation);
         }
 
         #endregion
@@ -273,7 +286,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Integration, Integration) &&
                    Equals(obj.BackgroundProteome, BackgroundProteome) &&
                    Equals(obj.Quantification, Quantification) &&
-                   Equals(obj.ProteinAssociationSettings, ProteinAssociationSettings);
+                   Equals(obj.ProteinAssociationSettings, ProteinAssociationSettings) &&
+                   Equals(obj.Imputation, Imputation);
         }
 
         public override bool Equals(object obj)

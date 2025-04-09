@@ -133,7 +133,6 @@ namespace pwiz.Skyline
         private readonly object _documentChangeLock = new object();
         private readonly List<SkylineControl> _skylineMenuControls = new List<SkylineControl>();
         private readonly ImmediateWindowWarningListener _immediateWindowWarningListener;
-        private readonly PeakBoundaryImputer _peakBoundaryImputer = new PeakBoundaryImputer();
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -4793,11 +4792,6 @@ namespace pwiz.Skyline
             {
                 throw new ApplicationException(@"Crash Skyline Menu Item Clicked");
             }).Start();
-        }
-
-        public PeakBoundaryImputer GetPeakBoundaryImputer()
-        {
-            return _peakBoundaryImputer;
         }
     }
 }

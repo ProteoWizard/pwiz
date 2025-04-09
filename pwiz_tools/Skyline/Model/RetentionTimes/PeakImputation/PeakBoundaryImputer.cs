@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 
@@ -12,6 +14,24 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 {
     public class PeakBoundaryImputer
     {
+        private static WeakReference<PeakBoundaryImputer> _instance;
+
+        public static PeakBoundaryImputer GetInstance()
+        {
+            lock (typeof(PeakBoundaryImputer))
+            {
+                if (true == _instance?.TryGetTarget(out var peakBoundaryImputer))
+                {
+                    return peakBoundaryImputer;
+                }
+
+                peakBoundaryImputer = new PeakBoundaryImputer();
+                _instance = new WeakReference<PeakBoundaryImputer>(peakBoundaryImputer);
+                return peakBoundaryImputer;
+            }
+        }
+
+
         private Dictionary<string, LibraryInfo> _libraryInfos = new Dictionary<string, LibraryInfo>();
 
         public PeakBoundaryImputer()
@@ -127,7 +147,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             protected bool Equals(ImputedBoundsParameter other)
             {
-                return ReferenceEquals(Document, other.Document) && Equals(IdentityPath, other.IdentityPath) && Equals(AlignmentTarget, other.AlignmentTarget);
+                return ReferenceEquals(Document, other.Document) && Equals(IdentityPath, other.IdentityPath) && Equals(AlignmentTarget, other.AlignmentTarget) && Equals(FilePath, other.FilePath);
             }
 
             public override bool Equals(object obj)
@@ -145,6 +165,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     var hashCode = RuntimeHelpers.GetHashCode(Document);
                     hashCode = (hashCode * 397) ^ IdentityPath.GetHashCode();
                     hashCode = (hashCode * 397) ^ (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ FilePath?.GetHashCode() ?? 0;
                     return hashCode;
                 }
             }
@@ -231,6 +252,72 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 parameter.FilePath);
         }
         public Producer<ImputedBoundsParameter, ImputedPeak> ImputedBoundsProducer { get;  }
-    }
 
+        public ExplicitPeakBounds GetExplicitPeakBounds(SrmDocument document, PeptideDocNode peptideDocNode,
+            MsDataFileUri filePath)
+        {
+            var explicitPeakBounds = document.Settings.GetExplicitPeakBounds(peptideDocNode, filePath);
+            if (explicitPeakBounds == null)
+            {
+                return null;
+            }
+            var imputationSettings = document.Settings.PeptideSettings.Imputation;
+            if (Equals(imputationSettings, ImputationSettings.DEFAULT))
+            {
+                return explicitPeakBounds;
+            }
+
+            if (!(imputationSettings.MaxPeakWidthVariation.HasValue || imputationSettings.MaxRtShift.HasValue) &&
+                !explicitPeakBounds.IsEmpty)
+            {
+                return explicitPeakBounds;
+            }
+
+            var moleculeGroup = document.MoleculeGroups.FirstOrDefault(mg => mg.FindNodeIndex(peptideDocNode.Peptide) >= 0);
+            if (moleculeGroup == null)
+            {
+                return explicitPeakBounds;
+            }
+
+            var identityPath = new IdentityPath(moleculeGroup.PeptideGroup, peptideDocNode.Peptide);
+            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, document, identityPath, filePath);
+            if (IsAcceptable(imputationSettings, explicitPeakBounds, imputedPeak))
+            {
+                return explicitPeakBounds;
+            }
+
+            return new ExplicitPeakBounds(imputedPeak.PeakBounds.StartTime, imputedPeak.PeakBounds.EndTime, ExplicitPeakBounds.UNKNOWN_SCORE);
+        }
+
+        private bool IsAcceptable(ImputationSettings imputationSettings, ExplicitPeakBounds peakBounds, ImputedPeak imputedPeak)
+        {
+            if (peakBounds.IsEmpty)
+            {
+                return false;
+            }
+            if (imputationSettings.MaxRtShift.HasValue)
+            {
+                var peakTime = (peakBounds.StartTime + peakBounds.EndTime) / 2;
+                var imputedPeakTime = (imputedPeak.PeakBounds.StartTime + imputedPeak.PeakBounds.EndTime) / 2;
+                var rtShift = Math.Abs(peakTime - imputedPeakTime);
+                if (rtShift > imputationSettings.MaxRtShift.Value)
+                {
+                    return false;
+                }
+            }
+
+            if (imputationSettings.MaxPeakWidthVariation.HasValue)
+            {
+                var peakWidth = (peakBounds.EndTime - peakBounds.StartTime) / 2;
+                var imputedPeakWidth = (imputedPeak.PeakBounds.EndTime - imputedPeak.PeakBounds.StartTime) / 2;
+                if (Math.Abs(imputedPeakWidth - peakWidth) >
+                    imputationSettings.MaxPeakWidthVariation * imputedPeakWidth)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
 }

@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -58,9 +59,10 @@ namespace pwiz.Skyline.Model.Results
 
         // Accessed only on the write thread
         private readonly RetentionTimePredictor _retentionTimePredictor;
-        private readonly Dictionary<Target, int> _dictSequenceToByteIndex = new Dictionary<Target, int>();
 
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
+
+        private readonly PeakBoundaryImputer _peakBoundaryImputer = PeakBoundaryImputer.GetInstance();
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
 
         public ChromCacheBuilder(SrmDocument document, ChromatogramCache cacheRecalc,
@@ -102,7 +104,9 @@ namespace pwiz.Skyline.Model.Results
         {
             // Score peaks.
             GetPeptideRetentionTimes(chromDataSets);
-            chromDataSets.PickChromatogramPeaks();
+            var explicitPeakBounds = _peakBoundaryImputer.GetExplicitPeakBounds(
+                _document, chromDataSets.NodePep, chromDataSets.FileInfo.FilePath);
+            chromDataSets.PickChromatogramPeaks(explicitPeakBounds);
             StorePeptideRetentionTime(chromDataSets);
 
             if (chromDataSets.IsDelayedWrite)

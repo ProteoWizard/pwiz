@@ -198,6 +198,9 @@ namespace pwiz.Skyline.SettingsUI
             tbxIonRatioThreshold.Text = _peptideSettings.Quantification.QualitativeIonRatioThreshold.ToString();
             cbxSimpleRatios.Checked = _peptideSettings.Quantification.SimpleRatios;
             UpdateComboNormalizationMethod();
+            cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
+            tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
+            tbxMaxPeakWidthVariation.Text = _peptideSettings.Imputation.MaxPeakWidthVariation?.ToString() ?? string.Empty;
         }
 
         /// <summary>
@@ -406,6 +409,21 @@ namespace pwiz.Skyline.SettingsUI
             var prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
             Helpers.AssignIfEquals(ref prediction, Prediction);
 
+            var imputation = ImputationSettings.DEFAULT.ChangeImputeMissing(cbxImputeMissingPeaks.Checked);
+            if (!string.IsNullOrEmpty(tbxMaxRtShift.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxRtShift, 0, null, out var maxRtShift))
+                    return null;
+                imputation = imputation.ChangeMaxRtShift(maxRtShift);
+            }
+
+            if (!string.IsNullOrEmpty(tbxMaxPeakWidthVariation.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(tbxMaxPeakWidthVariation, 0, null, out var maxPeakWidthVariation))
+                    return null;
+                imputation = imputation.ChangeMaxPeakWidthVariation(maxPeakWidthVariation);
+            }
+
             // Validate and hold filter settings
             int excludeNTermAAs;
             if (!helper.ValidateNumberTextBox(textExcludeAAs,
@@ -567,7 +585,7 @@ namespace pwiz.Skyline.SettingsUI
             quantification = quantification.ChangeSimpleRatios(cbxSimpleRatios.Checked);
 
             return new PeptideSettings(enzyme, digest, prediction, filter, libraries, modifications, integration, backgroundProteome, _peptideSettings.ProteinAssociationSettings)
-                    .ChangeAbsoluteQuantification(quantification);
+                .ChangeAbsoluteQuantification(quantification).ChangeImputation(imputation);
         }
 
         public void OkDialog()

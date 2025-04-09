@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static AlignmentTarget GetAlignmentTarget(SrmDocument document)
         {
             var irtCalculator = document.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
-            if (irtCalculator == null)
+            if (true != irtCalculator?.IsUsable)
             {
                 return null;
             }
