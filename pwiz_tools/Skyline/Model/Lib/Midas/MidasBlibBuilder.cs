@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
 

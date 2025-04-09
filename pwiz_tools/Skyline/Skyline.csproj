@@ -4209,7 +4209,9 @@
     <Content Include="Method\Thermo\Thermo.TNG.MethodXMLInterface2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Model\Tools\InstallNvidiaLibraries-bat.txt" />
+    <Content Include="Model\Tools\InstallNvidiaLibraries-bat.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="percolator\msvcp140.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
