@@ -138,8 +138,7 @@ namespace pwiz.Skyline.Model.Irt
         public override IEnumerable<Target> ChooseRegressionPeptides(IEnumerable<Target> peptides, out int minCount)
         {
             RequireUsable();
-            var databaseCount = _database.StandardPeptideCount;
-            if (databaseCount == 0)
+            if (IsAlignmentOnly)
             {
                 minCount = 0;
                 return Array.Empty<Target>();
@@ -148,6 +147,7 @@ namespace pwiz.Skyline.Model.Irt
             var pepArr = peptides.ToArray();
             var returnStandard = pepArr.Where(_database.IsStandard).Distinct().ToArray();
             var returnCount = returnStandard.Length;
+            var databaseCount = _database.StandardPeptideCount;
 
             if (!IsAcceptableStandardCount(databaseCount, returnCount))
             {
@@ -193,6 +193,11 @@ namespace pwiz.Skyline.Model.Irt
         {
             if (!IsUsable)
                 throw new InvalidOperationException(IrtResources.RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_);
+        }
+
+        public override bool IsAlignmentOnly
+        {
+            get { return IsUsable && !GetStandardPeptides().Any(); }
         }
 
         public IEnumerable<Target> GetStandardPeptides()

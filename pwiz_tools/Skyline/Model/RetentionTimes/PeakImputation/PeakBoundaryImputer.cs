@@ -589,7 +589,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     }
 
                     var peakFeatureStatistics = MProphetResultsHandler.GetPeakFeatureStatistics(peptideDocNode.Peptide, chromFileInfo.FileId);
-                    if (peakFeatureStatistics.BestPeakIndex < 0)
+                    if (peakFeatureStatistics == null || peakFeatureStatistics.BestPeakIndex < 0)
                     {
                         continue;
                     }

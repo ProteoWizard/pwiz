@@ -51,7 +51,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public static readonly Color COLOR_ORIGINAL_PEAK_SHADE = Color.FromArgb(30, Color.BlueViolet);
         public static readonly Color COLOR_IMPUTED_PEAK_SHADE = Color.FromArgb(30, Color.ForestGreen);
 
-
         private const int MIN_BOUNDARY_DISPLAY_WIDTH = 7;
         private const int MIN_BEST_BOUNDARY_HEIGHT = 20;
 
