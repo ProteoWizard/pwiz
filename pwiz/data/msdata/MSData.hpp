@@ -745,7 +745,7 @@ class PWIZ_API_DECL SpectrumList
     // (as with msconvert's --ignoreCalibrationScans flag)
     virtual bool calibrationSpectraAreOmitted() const;
 
-    virtual ~SpectrumList(){} 
+    virtual ~SpectrumList(){}
 };
 
 
