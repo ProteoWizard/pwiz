@@ -29,6 +29,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -45,6 +46,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -913,6 +915,50 @@ namespace pwiz.Skyline.Menus
                     docPair => auditLogEntry);
             }
         }
+
+        private void imputePeakBoundariesMenuItem_Click(object sender, EventArgs e)
+        {
+            ImputePeakBoundaries();
+        }
+
+        public void ImputePeakBoundaries()
+        {
+            lock (SkylineWindow.GetDocumentChangeLock())
+            {
+                var originalDocument = DocumentUI;
+                var imputationSettings = DocumentUI.Settings.PeptideSettings.Imputation;
+                if (ImputationSettings.DEFAULT.Equals(imputationSettings))
+                {
+                    MessageDlg.Show(SkylineWindow,
+                        "No imputations options have been chosen for this document.\r\nGo to the Prediction tab in Peptide Settings to choose some imputation options.");
+                    return;
+                }
+                var peptidePaths =
+                    SkylineWindow.SequenceTree.SelectedPaths.SelectMany(path =>
+                        originalDocument.EnumeratePathsAtLevel(path, SrmDocument.Level.Molecules)).Distinct().ToList();
+                if (peptidePaths.Count == 0)
+                {
+                    return;
+                }
+
+                var peakImputer = PeakBoundaryImputer.GetInstance(originalDocument);
+                using var longWait = new LongWaitDlg(SkylineWindow);
+                ModifiedDocument modifiedDocument = null;
+                longWait.Text = "Imputing peak boundaries";
+                longWait.PerformWork(SkylineWindow, 100, longWaitBroker =>
+                {
+                    var productionMonitor = new ProductionMonitor(longWaitBroker.CancellationToken,
+                        progress => longWaitBroker.ProgressValue = progress);
+                    modifiedDocument = peakImputer.ImputePeakBoundaries(productionMonitor, peptidePaths);
+                });
+                if (longWait.IsCanceled || modifiedDocument == null)
+                {
+                    return;
+                }
+                SkylineWindow.ModifyDocument("Imputed peak boundaries", DocumentModifier.FromResult(originalDocument, modifiedDocument));
+            }
+        }
+
 
         private void removePeakMenuItem_Click(object sender, EventArgs e)
         {
@@ -1928,5 +1974,6 @@ namespace pwiz.Skyline.Menus
             }
             return document;
         }
+
     }
 }

@@ -24,6 +24,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.Caching;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -752,7 +754,13 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return null;
             }
 
-            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, filePath);
+            return GetImputedPeak(CancellationToken.None, identityPath, filePath, candidatePeak);
+        }
+
+        public ImputedPeak GetImputedPeak(CancellationToken cancellationToken, IdentityPath peptideIdentityPath, MsDataFileUri filePath,
+            PeakBounds candidatePeak)
+        {
+            var imputedPeak = GetImputedPeakBounds(cancellationToken, peptideIdentityPath, filePath);
             if (imputedPeak == null)
             {
                 return null;
@@ -764,6 +772,117 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
 
             return imputedPeak;
+        }
+
+        public SrmDocument ImputePeak(CancellationToken cancellationToken, SrmDocument document, IdentityPath peptideIdentityPath)
+        {
+            var peptideDocNode = (PeptideDocNode)document.FindNode(peptideIdentityPath);
+            if (peptideDocNode == null)
+            {
+                return document;
+            }
+
+            var measuredResults = document.Settings.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return document;
+            }
+            for (int iReplicate = 0; iReplicate < measuredResults.Chromatograms.Count; iReplicate++)
+            {
+                var chromatogramSet = measuredResults.Chromatograms[iReplicate];
+                foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    var peakBounds = GetPeakBounds(peptideDocNode, iReplicate, chromFileInfo.FileId);
+                    var imputedPeak = GetImputedPeak(cancellationToken, peptideIdentityPath, chromFileInfo.FilePath, peakBounds);
+                    if (imputedPeak != null)
+                    {
+                        foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
+                        {
+                            var groupPath = new IdentityPath(peptideIdentityPath,
+                                transitionGroupDocNode.TransitionGroup);
+                            document = document.ChangePeak(groupPath, chromatogramSet.Name, chromFileInfo.FilePath,
+                                null, imputedPeak.PeakBounds.StartTime, imputedPeak.PeakBounds.EndTime,
+                                UserSet.REINTEGRATED, null, false);
+                        }
+                    }
+                }
+            }
+
+            return document;
+        }
+
+        private PeakBounds GetPeakBounds(PeptideDocNode peptideDocNode, int replicateIndex,
+            ChromFileInfoId chromFileInfoId)
+        {
+            double minStartTime = double.MaxValue;
+            double maxEndTime = double.MinValue;
+            foreach (var transitionGroupChromInfo in peptideDocNode.TransitionGroups.SelectMany(tg =>
+                         tg.GetSafeChromInfo(replicateIndex)))
+            {
+                if (!ReferenceEquals(chromFileInfoId, transitionGroupChromInfo.FileId))
+                {
+                    continue;
+                }
+
+                if (transitionGroupChromInfo.StartRetentionTime.HasValue)
+                {
+                    minStartTime = Math.Min(transitionGroupChromInfo.StartRetentionTime.Value, minStartTime);
+                }
+
+                if (transitionGroupChromInfo.EndRetentionTime.HasValue)
+                {
+                    maxEndTime = Math.Max(maxEndTime, transitionGroupChromInfo.EndRetentionTime.Value);
+                }
+            }
+
+            if (minStartTime >= maxEndTime)
+            {
+                return null;
+            }
+
+            return new PeakBounds(minStartTime, maxEndTime);
+        }
+
+        public ModifiedDocument ImputePeakBoundaries(ProductionMonitor productionMonitor, List<IdentityPath> peptidePaths)
+        {
+            var originalDocument = Document;
+            var changedPaths = new List<PropertyName>();
+            var document = Document.BeginDeferSettingsChanges();
+            for (int iPeptide = 0; iPeptide < peptidePaths.Count; iPeptide++)
+            {
+                productionMonitor.CancellationToken.ThrowIfCancellationRequested();
+                productionMonitor.SetProgress(iPeptide * 100 / peptidePaths.Count);
+                var peptidePath = peptidePaths[iPeptide];
+                var newDoc = ImputePeak(productionMonitor.CancellationToken, document, peptidePath);
+                if (!ReferenceEquals(document, newDoc))
+                {
+                    document = newDoc;
+                    var auditLogProperty = PropertyName.ROOT
+                        .SubProperty(document.FindNode(peptidePath.GetIdentity(0)).AuditLogText)
+                        .SubProperty(document.FindNode(peptidePath).AuditLogText);
+                    changedPaths.Add(auditLogProperty);
+                }
+            }
+
+            if (changedPaths.Count == 0)
+            {
+                return null;
+            }
+            var messageType = MessageType.imputed_boundaries;
+            AuditLogEntry auditLogEntry;
+            if (changedPaths.Count == 1)
+            {
+                auditLogEntry = AuditLogEntry.CreateSimpleEntry(messageType, originalDocument.DocumentType, changedPaths[0].ToString());
+            }
+            else
+            {
+                auditLogEntry = AuditLogEntry.CreateSimpleEntry(messageType, originalDocument.DocumentType, MessageArgs.Create(changedPaths.Count).Args);
+            }
+
+
+            return new ModifiedDocument(document.EndDeferSettingsChanges(originalDocument,
+                new SrmSettingsChangeMonitor(new SilentProgressMonitor(productionMonitor.CancellationToken),
+                    string.Empty, new ProgressStatus()))).ChangeAuditLogEntry(auditLogEntry);
         }
     }
 }
