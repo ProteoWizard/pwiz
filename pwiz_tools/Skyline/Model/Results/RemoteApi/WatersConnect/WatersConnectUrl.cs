@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -64,7 +65,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             return ChangeProp(ImClone(this), im => im.Type = type);
         }
-        
+
+        public override RemoteUrl ChangePathParts(IEnumerable<string> parts)
+        {
+            var result = (WatersConnectUrl) base.ChangePathParts(parts);
+            result.FolderOrSampleSetId = null;
+            result.Type = ItemType.folder;
+            return result;
+        }
+
         public override bool IsWatersLockmassCorrectionCandidate()
         {
             return false;
@@ -84,14 +93,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             return result;
         }
 
-        public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openParams)
+        private string GetMsDataUrl()
         {
             var account = FindMatchingAccount(Settings.Default.RemoteAccountList) as WatersConnectAccount;
             if (account == null)
             {
-                throw new RemoteServerException(string.Format(WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__, 
+                throw new RemoteServerException(string.Format(WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__,
                     Username, ServerUrl));
             }
+
             // ReSharper disable LocalizableElement
             string serverUrl = ServerUrl.Replace("://", "://" + account.Username + ":" + account.Password + "@");
             serverUrl += $@"/?sampleSetId={FolderOrSampleSetId}&injectionId={InjectionId}";
@@ -99,7 +109,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                          Uri.EscapeDataString(account.ClientScope) + "&secret=" +
                          Uri.EscapeDataString(account.ClientSecret);
             // ReSharper restore LocalizableElement
-            return new MsDataFileImpl(serverUrl, 0, LockMassParameters, openParams.SimAsSpectra,
+            return serverUrl;
+        }
+
+        public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openParams)
+        {
+            Assume.IsNotNull(FolderOrSampleSetId);
+            Assume.IsNotNull(InjectionId);
+            return new MsDataFileImpl(GetMsDataUrl(), 0, LockMassParameters, openParams.SimAsSpectra,
                 requireVendorCentroidedMS1: openParams.CentroidMs1, requireVendorCentroidedMS2: openParams.CentroidMs2,
                 ignoreZeroIntensityPoints: openParams.IgnoreZeroIntensityPoints, preferOnlyMsLevel: openParams.PreferOnlyMs1 ? 1 : 0);
         }

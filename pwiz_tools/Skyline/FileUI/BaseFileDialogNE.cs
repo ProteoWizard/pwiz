@@ -918,6 +918,12 @@ namespace pwiz.Skyline.FileUI
                     parent = new MsDataFilePath(parentDirectory.FullName);
                 }
             }
+            else if (_currentDirectory is RemoteUrl remoteUrl)
+            {
+                var pathParts = remoteUrl.GetPathParts().ToList();
+                if (pathParts.Count > 1)
+                    parent = remoteUrl.ChangePathParts(remoteUrl.GetPathParts().Take(pathParts.Count - 1));
+            }
             else
             {
                 if (_previousDirectories.Any())
