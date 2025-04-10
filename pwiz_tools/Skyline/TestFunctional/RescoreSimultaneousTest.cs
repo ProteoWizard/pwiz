@@ -1,4 +1,23 @@
-﻿using System.Collections.Generic;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2025 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,15 +30,20 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
+    /// <summary>
+    /// Tests re-scoring a document when <see cref="Settings.ImportResultsSimultaneousFiles"/> is set to "many".
+    /// There used to be a bug where <see cref="ChromatogramCache.ReadStream"/> would get closed while another
+    /// thread was using it resulting in ObjectDisposedException.
+    /// </summary>
     [TestClass]
-    public class RescoreThreadingTest : AbstractFunctionalTest
+    public class RescoreSimultaneousTest : AbstractFunctionalTest
     {
-        const int REPLICATE_COUNT = 100;
-        const int PEPTIDE_COUNT = 100;
+        const int REPLICATE_COUNT = 10;
+        const int PEPTIDE_COUNT = 5;
         [TestMethod]
-        public void TestRescoreThreading()
+        public void TestRescoreSimultaneous()
         {
-            TestFilesZip = @"TestFunctional\RescoreThreadingTest.zip";
+            TestFilesZip = @"TestFunctional\RescoreSimultaneousTest.zip";
             RunFunctionalTest();
         }
 

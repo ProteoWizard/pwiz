@@ -345,7 +345,7 @@ namespace pwiz.Skyline.Util
         {
             using (ReaderWriterLock.CancelAndGetWriteLock())
             {
-                //lock (this)
+                lock (this)
                 {
                     _connectionPool.Disconnect(this);
                 }

@@ -230,7 +230,7 @@
     <Compile Include="ReplicatePivotColumnsTest.cs" />
     <Compile Include="ReplicatePivotGridTest.cs" />
     <Compile Include="RescoreInPlaceTest.cs" />
-    <Compile Include="RescoreThreadingTest.cs" />
+    <Compile Include="RescoreSimultaneousTest.cs" />
     <Compile Include="ResultFileMetadataBackCompatTest.cs" />
     <Compile Include="SaveAfterProteinAssociationTest.cs" />
     <Compile Include="SelectSpectrumTest.cs" />
