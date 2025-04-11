@@ -2336,7 +2336,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
             var peptideIdentityPath = new IdentityPath(peptideGroupDocNode.PeptideGroup, peptide);
-            var parameter = new ImputedBoundsParameter(doc, peptideIdentityPath, chromGraphPrimary.Chromatogram.FilePath);
+            ChromatogramSet chromatogramSet = null;
+            doc.Settings.MeasuredResults?.TryGetChromatogramSet(_nameChromatogramSet, out chromatogramSet, out _);
+            var parameter = new ImputedBoundsParameter(doc, peptideIdentityPath, chromatogramSet, chromGraphPrimary.Chromatogram.FilePath);
             if (true == _imputedBoundsReceiver?.TryGetProduct(parameter, out var imputedBounds))
             {
                 chromGraphPrimary.ImputedBounds = imputedBounds?.PeakBounds;
@@ -3569,7 +3571,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class ImputedBoundsParameter : Immutable
         {
-            public ImputedBoundsParameter(SrmDocument document, IdentityPath identityPath, MsDataFileUri filePath)
+            public ImputedBoundsParameter(SrmDocument document, IdentityPath identityPath, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
             {
                 Document = document;
                 IdentityPath = identityPath;
@@ -3580,6 +3582,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public SrmDocument Document { get; }
             public IdentityPath IdentityPath { get; }
             public AlignmentTarget AlignmentTarget { get; private set; }
+            public ChromatogramSet ChromatogramSet { get; private set; }
             public MsDataFileUri FilePath { get; private set; }
 
             public ImputedBoundsParameter ChangeAlignmentTarget(AlignmentTarget value)
@@ -3589,7 +3592,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected bool Equals(ImputedBoundsParameter other)
             {
-                return ReferenceEquals(Document, other.Document) && Equals(IdentityPath, other.IdentityPath) && Equals(AlignmentTarget, other.AlignmentTarget) && Equals(FilePath, other.FilePath);
+                return ReferenceEquals(Document, other.Document) && Equals(IdentityPath, other.IdentityPath) && Equals(AlignmentTarget, other.AlignmentTarget) && Equals(FilePath, other.FilePath) && Equals(ChromatogramSet?.BatchName, other.ChromatogramSet?.BatchName);
             }
 
             public override bool Equals(object obj)
@@ -3628,7 +3631,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,
-                imputedBoundsParameter.IdentityPath, imputedBoundsParameter.FilePath);
+                imputedBoundsParameter.IdentityPath, imputedBoundsParameter.ChromatogramSet, imputedBoundsParameter.FilePath);
         }
 
 

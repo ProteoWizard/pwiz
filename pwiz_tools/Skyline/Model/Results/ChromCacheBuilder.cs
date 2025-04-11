@@ -49,6 +49,7 @@ namespace pwiz.Skyline.Model.Results
 
         // Lock on this to access these variables
         private readonly SrmDocument _document;
+        private readonly ChromatogramSet _chromatogramSet;
         private FileBuildInfo _currentFileInfo;
 
         private readonly ChromatogramCache _cacheRecalc;
@@ -99,6 +100,9 @@ namespace pwiz.Skyline.Model.Results
             string basename = MSDataFilePath.GetFileNameWithoutExtension();
             FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
             _peakBoundaryImputer = PeakBoundaryImputer.GetInstance(document);
+            _chromatogramSet =
+                document.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(chromSet =>
+                    chromSet.IndexOfPath(msDataFilePath) >= 0);
         }
 
         private void ScoreWriteChromDataSets(PeptideChromDataSets chromDataSets, int threadIndex)
@@ -106,7 +110,7 @@ namespace pwiz.Skyline.Model.Results
             // Score peaks.
             GetPeptideRetentionTimes(chromDataSets);
             var explicitPeakBounds = _peakBoundaryImputer.GetExplicitPeakBounds(
-                chromDataSets.NodePep, chromDataSets.FileInfo.FilePath);
+                chromDataSets.NodePep, _chromatogramSet, chromDataSets.FileInfo.FilePath);
             chromDataSets.PickChromatogramPeaks(explicitPeakBounds);
             StorePeptideRetentionTime(chromDataSets);
 

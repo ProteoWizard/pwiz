@@ -1,42 +1,26 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using pwiz.Common.SystemUtil.Caching;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
     public class LibraryAlignments
     {
-        public static readonly Producer<Parameter, LibraryAlignments> PRODUCER = new Producer();
-        private Dictionary<string, AlignmentFunction> _alignmentFunctions;
+        public static readonly LibraryAlignments EMPTY =
+            new LibraryAlignments(Array.Empty<KeyValuePair<string, PiecewiseLinearMap>>());
+        private Dictionary<string, LibraryAlignment> _alignmentFunctions;
 
-        public LibraryAlignments(Parameter parameter, Dictionary<string, AlignmentFunction> alignmentFunctions)
+        public LibraryAlignments(IEnumerable<KeyValuePair<string, PiecewiseLinearMap>> alignmentFunctions)
         {
-            Param = parameter;
-            _alignmentFunctions = alignmentFunctions;
-        }
-
-        public Parameter Param { get; }
-
-        public class Parameter
-        {
-            public Parameter(AlignmentTarget target, Library library)
-            {
-                Target = target;
-                Library = library;
-            }
-
-            public AlignmentTarget Target { get; }
-            public Library Library { get; }
+            _alignmentFunctions = alignmentFunctions.ToDictionary(kvp=>kvp.Key, kvp=>new LibraryAlignment(kvp.Value));
         }
 
         public AlignmentFunction GetAlignmentFunction(string name)
         {
             _alignmentFunctions.TryGetValue(name, out var result);
-            return result;
+            return result?.AlignmentFunction;
         }
 
         public AlignmentFunction GetAlignmentFunction(MsDataFileUri msDataFileUri)
@@ -46,43 +30,35 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 if (name == Path.GetFileNameWithoutExtension(entry.Key))
                 {
-                    return entry.Value;
+                    return entry.Value?.AlignmentFunction;
                 }
             }
 
             return null;
         }
 
-        public IEnumerable<KeyValuePair<string, AlignmentFunction>> GetAllAlignmentFunctions()
+        public IEnumerable<KeyValuePair<string, PiecewiseLinearMap>> GetAllAlignmentFunctions()
         {
-            return _alignmentFunctions.AsEnumerable();
+            return _alignmentFunctions.Select(kvp=>new KeyValuePair<string, PiecewiseLinearMap>(kvp.Key, kvp.Value.ForwardMap));
         }
 
-        private class Producer : Producer<Parameter, LibraryAlignments>
+        private class LibraryAlignment
         {
-            public override LibraryAlignments ProduceResult(ProductionMonitor productionMonitor, Parameter parameter, IDictionary<WorkOrder, object> inputs)
+            public LibraryAlignment(PiecewiseLinearMap forwardMap)
             {
-                var allRetentionTimes = parameter.Library.GetAllRetentionTimes();
-                var alignments = new Dictionary<string, AlignmentFunction>();
-                if (allRetentionTimes != null)
-                {
-                    for (int i = 0; i < allRetentionTimes.Length; i++)
-                    {
-                        productionMonitor.SetProgress(100 * i / allRetentionTimes.Length);
-                        var file = parameter.Library.LibraryFiles[i];
-                        var dict = allRetentionTimes[i];
-                        var measuredTimes =
-                            dict.Select(kvp => new MeasuredRetentionTime(kvp.Key, kvp.Value, true)).ToList();
-                        var alignmentFunction =
-                            parameter.Target.PerformAlignment(dict, productionMonitor.CancellationToken);
-                        if (alignmentFunction != null)
-                        {
-                            alignments.Add(file, alignmentFunction);
-                        }
-                    }
-                }
+                ForwardMap = forwardMap;
+                ReverseMap = ForwardMap.ReverseMap();
+            }
 
-                return new LibraryAlignments(parameter, alignments);
+            public PiecewiseLinearMap ForwardMap { get; }
+            public PiecewiseLinearMap ReverseMap { get; }
+
+            public AlignmentFunction AlignmentFunction
+            {
+                get
+                {
+                    return AlignmentFunction.Define(ForwardMap.GetY, ReverseMap.GetY);
+                }
             }
         }
     }

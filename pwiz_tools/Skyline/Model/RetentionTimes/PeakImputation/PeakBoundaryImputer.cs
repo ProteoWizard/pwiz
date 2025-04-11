@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
     public class PeakBoundaryImputer
     {
         private static WeakReference<PeakBoundaryImputer> _sharedInstance;
-        private readonly Dictionary<string, LibraryInfo> _libraryInfos = new Dictionary<string, LibraryInfo>();
+        private readonly Dictionary<DocumentRetentionTimes.LibraryAlignmentKey, LibraryInfo> _libraryInfos = new Dictionary<DocumentRetentionTimes.LibraryAlignmentKey, LibraryInfo>();
         private readonly Dictionary<MsDataFileUri, AlignmentFunction> _alignmentFunctions =
             new Dictionary<MsDataFileUri, AlignmentFunction>();
         private readonly Dictionary<IdentityPath, Dictionary<MsDataFileUri, ScoredPeak>> _scoredPeaks =
@@ -79,10 +79,10 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                         continue;
                     }
 
-                    var newLibraryInfo = libraryInfo.ChangeAlignment(libraries.GetLibraryAlignment(newLibrary));
+                    var newLibraryInfo = libraryInfo.ChangeAlignment(newDocument.Settings.DocumentRetentionTimes.GetLibraryAlignments(libraryInfo.Key));
                     if (newLibraryInfo != null)
                     {
-                        result._libraryInfos.Add(newLibraryInfo.Library.Name, newLibraryInfo);
+                        result._libraryInfos.Add(newLibraryInfo.Key, newLibraryInfo);
                     }
                 }
             }
@@ -113,18 +113,29 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         private class LibraryInfo
         {
             private Dictionary<Target, ExemplaryPeak> _bestPeakBounds = new Dictionary<Target, ExemplaryPeak>();
-            public LibraryInfo(Library library, LibraryAlignment libraryAlignment)
+            public LibraryInfo(Library library, string batchName, LibraryAlignments libraryAlignment)
             {
                 Library = library;
-                LibraryAlignment = libraryAlignment;
+                BatchName = batchName;
+                LibraryAlignments = libraryAlignment;
             }
 
             public Library Library { get; }
-            public LibraryAlignment LibraryAlignment { get; }
+            public string BatchName { get; }
+
+            public DocumentRetentionTimes.LibraryAlignmentKey Key
+            {
+                get
+                {
+                    return new DocumentRetentionTimes.LibraryAlignmentKey(Library.Name, BatchName);
+                }
+            }
+
+            public LibraryAlignments LibraryAlignments { get; }
 
             public AlignmentFunction GetAlignmentFunction(CancellationToken cancellationToken, string spectrumSourceFile)
             {
-                return LibraryAlignment?.GetAlignmentFunction(spectrumSourceFile);
+                return LibraryAlignments?.GetAlignmentFunction(spectrumSourceFile);
             }
 
             public ExemplaryPeak GetExemplaryPeak(CancellationToken cancellationToken, Target target)
@@ -181,16 +192,16 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return new ExemplaryPeak(Library, bestFile, new PeakBounds(bestPeakBounds.StartTime, bestPeakBounds.EndTime));
             }
 
-            public LibraryInfo ChangeAlignment(LibraryAlignment libraryAlignment)
+            public LibraryInfo ChangeAlignment(LibraryAlignments libraryAlignment)
             {
-                if (Equals(libraryAlignment, LibraryAlignment))
+                if (Equals(libraryAlignment, LibraryAlignments))
                 {
                     return this;
                 }
 
                 lock (this)
                 {
-                    var newLibraryInfo = new LibraryInfo(Library, libraryAlignment);
+                    var newLibraryInfo = new LibraryInfo(Library, BatchName, libraryAlignment);
                     foreach (var bestPeakBounds in _bestPeakBounds)
                     {
                         newLibraryInfo._bestPeakBounds.Add(bestPeakBounds.Key, bestPeakBounds.Value);
@@ -247,11 +258,12 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
         }
 
-        private LibraryInfo GetLibraryInfo(Library library)
+        private LibraryInfo GetLibraryInfo(Library library, string batchName)
         {
             lock (this)
             {
-                if (_libraryInfos.TryGetValue(library.Name, out var libraryInfo))
+                var key = new DocumentRetentionTimes.LibraryAlignmentKey(library.Name, batchName);
+                if (_libraryInfos.TryGetValue(key, out var libraryInfo))
                 {
                     if (Equals(library, libraryInfo.Library))
                     {
@@ -259,19 +271,20 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     }
                 }
 
-                libraryInfo = new LibraryInfo(library, Document.Settings.PeptideSettings.Libraries.GetLibraryAlignment(library));
-                _libraryInfos[library.Name] = libraryInfo;
+                libraryInfo = new LibraryInfo(library, batchName, Document.Settings.DocumentRetentionTimes.GetLibraryAlignments(key));
+                _libraryInfos[key] = libraryInfo;
                 return libraryInfo;
             }
         }
 
         public ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
-            MsDataFileUri filePath)
+            ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
-            return GetImputedPeakBounds(cancellationToken, identityPath, filePath, false);
+            return GetImputedPeakBounds(cancellationToken, identityPath, chromatogramSet, filePath, false);
         }
 
         private ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
+            ChromatogramSet chromatogramSet,
             MsDataFileUri filePath, bool explicitBoundsOnly)
         {
             var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
@@ -291,7 +304,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     continue;
                 }
                 
-                var libraryInfo = GetLibraryInfo(library);
+                var libraryInfo = GetLibraryInfo(library, chromatogramSet?.BatchName);
                 var exemplaryPeak = libraryInfo.GetExemplaryPeak(cancellationToken, peptideDocNode.ModifiedTarget);
                 if (exemplaryPeak == null)
                 {
@@ -349,7 +362,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return new ImputedPeak(imputedBounds, exemplaryPeak);
         }
 
-        public ExplicitPeakBounds GetExplicitPeakBounds(PeptideDocNode peptideDocNode, MsDataFileUri filePath)
+        public ExplicitPeakBounds GetExplicitPeakBounds(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
             var explicitPeakBounds = Document.Settings.GetExplicitPeakBounds(peptideDocNode, filePath);
             if (explicitPeakBounds == null)
@@ -373,7 +386,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 return explicitPeakBounds;
             }
-            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, filePath, false);
+            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, false);
             if (!explicitPeakBounds.IsEmpty && IsAcceptable(imputationSettings, new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime), imputedPeak))
             {
                 return explicitPeakBounds;
@@ -656,7 +669,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 }
             }
 
-            return AlignmentTarget.PerformAlignment(observedTimes, cancellationToken);
+            return AlignmentTarget.PerformAlignment(observedTimes, cancellationToken)?.ToAlignmentFunction();
         }
 
         private int FindReplicateIndex(MsDataFileUri filePath, out ChromFileInfoId fileId)
@@ -724,7 +737,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return new IdentityPath(moleculeGroup.PeptideGroup, peptideDocNode.Peptide);
         }
 
-        public ImputedPeak GetImputedPeak(PeptideDocNode peptideDocNode, MsDataFileUri filePath, PeakBounds candidatePeak)
+        public ImputedPeak GetImputedPeak(PeptideDocNode peptideDocNode, ChromatogramSet chromatogramSet, MsDataFileUri filePath, PeakBounds candidatePeak)
         {
             var identityPath = GetIdentityPath(peptideDocNode);
             if (identityPath == null)
@@ -732,13 +745,13 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return null;
             }
 
-            return GetImputedPeak(CancellationToken.None, identityPath, filePath, candidatePeak);
+            return GetImputedPeak(CancellationToken.None, identityPath, chromatogramSet, filePath, candidatePeak);
         }
 
-        public ImputedPeak GetImputedPeak(CancellationToken cancellationToken, IdentityPath peptideIdentityPath, MsDataFileUri filePath,
+        public ImputedPeak GetImputedPeak(CancellationToken cancellationToken, IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, MsDataFileUri filePath,
             PeakBounds candidatePeak)
         {
-            var imputedPeak = GetImputedPeakBounds(cancellationToken, peptideIdentityPath, filePath);
+            var imputedPeak = GetImputedPeakBounds(cancellationToken, peptideIdentityPath, chromatogramSet, filePath);
             if (imputedPeak == null)
             {
                 return null;
@@ -771,7 +784,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
                 {
                     var peakBounds = GetPeakBounds(peptideDocNode, iReplicate, chromFileInfo.FileId);
-                    var imputedPeak = GetImputedPeak(cancellationToken, peptideIdentityPath, chromFileInfo.FilePath, peakBounds);
+                    var imputedPeak = GetImputedPeak(cancellationToken, peptideIdentityPath, chromatogramSet, chromFileInfo.FilePath, peakBounds);
                     if (imputedPeak != null)
                     {
                         foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)

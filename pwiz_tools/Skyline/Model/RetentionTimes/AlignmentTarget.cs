@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
-        public AlignmentFunction PerformAlignment(Dictionary<Target, double> times, CancellationToken cancellationToken)
+        public PiecewiseLinearMap PerformAlignment(Dictionary<Target, double> times, CancellationToken cancellationToken)
         {
             var xValues = new List<double>();
             var yValues = new List<double>();
@@ -58,10 +58,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     var statRT = new Statistics(yValues);
                     var stat = new Statistics(xValues);
-                    var regressionLineElement = new RegressionLineElement(statRT.Slope(stat), statRT.Intercept(stat));
-                    var regressionLine =
-                        new RegressionLine(regressionLineElement.Slope, regressionLineElement.Intercept);
-                    return AlignmentFunction.Define(regressionLine.GetY, regressionLine.GetX);
+                    var slope = statRT.Slope(stat);
+                    var intercept = statRT.Intercept(stat);
+                    return PiecewiseLinearMap.FromValues(new Dictionary<double, double>
+                    {
+                        { 0, intercept},
+                        { 1, slope + intercept }
+                    });
                 }
                 case RegressionMethodRT.kde:
                 {
@@ -72,7 +75,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
                     var kdeAligner = new KdeAligner(-1, -1);
                     kdeAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
-                    return AlignmentFunction.Define(kdeAligner.GetValue, kdeAligner.GetValueReversed);
+                    kdeAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
+                    return PiecewiseLinearMap.FromValues(xSmoothed, ySmoothed);
                 }
                 case RegressionMethodRT.log:
                     // TODO
@@ -82,7 +86,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     var loessAligner = new LoessAligner(-1, -1, 0.4);
                     loessAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
-                    return AlignmentFunction.Define(loessAligner.GetValue, loessAligner.GetValueReversed);
+                    loessAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
+                    return PiecewiseLinearMap.FromValues(xSmoothed, ySmoothed);
                 }
                 default:
                     return null;
@@ -92,12 +97,24 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static AlignmentTarget GetAlignmentTarget(SrmDocument document)
         {
-            var irtCalculator = document.Settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
-            if (true != irtCalculator?.IsUsable)
+            TryGetAlignmentTarget(document.Settings, out var alignmentTarget);
+            return alignmentTarget;
+        }
+
+        public static bool TryGetAlignmentTarget(SrmSettings settings, out AlignmentTarget alignmentTarget)
+        {
+            var irtCalculator = settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
+            if (irtCalculator == null)
             {
-                return null;
+                alignmentTarget = null;
+                return true;
             }
 
+            if (!irtCalculator.IsUsable)
+            {
+                alignmentTarget = null;
+                return false;
+            }
             // TODO: use actual regression type
             var regressionType = RegressionMethodRT.kde;
             if (irtCalculator.RegressionType == IrtRegressionType.LOWESS)
@@ -105,7 +122,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 regressionType = RegressionMethodRT.loess;
             }
 
-            return new AlignmentTarget(regressionType, irtCalculator);
+            alignmentTarget = new AlignmentTarget(regressionType, irtCalculator);
+            return true;
         }
     }
 }

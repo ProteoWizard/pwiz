@@ -982,7 +982,7 @@ namespace pwiz.Skyline.Model.Lib
             get { return false; }
         }
 
-        public virtual Dictionary<Target, double>[] GetAllRetentionTimes()
+        public virtual Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
         {
             return null;
         }

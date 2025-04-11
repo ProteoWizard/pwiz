@@ -1658,7 +1658,7 @@ namespace pwiz.Skyline.Model.Lib
             var dictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
             foreach (var group in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
-                var firstRetentionTimes = GetMinRetentionTimes(group);
+                var firstRetentionTimes = GetMinRetentionTimes(group, null);
                 if (firstRetentionTimes.Count > 0)
                 {
                     dictionary.Add(group.Key,
@@ -1682,12 +1682,12 @@ namespace pwiz.Skyline.Model.Lib
             return minTime;
         }
 
-        private Dictionary<int, double> GetMinRetentionTimes(IEnumerable<BiblioLiteSpectrumInfo> spectrumInfos)
+        private Dictionary<int, double> GetMinRetentionTimes(IEnumerable<BiblioLiteSpectrumInfo> spectrumInfos, IList<int> fileIds)
         {
             var result = new Dictionary<int, double>();
             foreach (var spectrumInfo in spectrumInfos)
             {
-                foreach (var entry in spectrumInfo.RetentionTimesByFileId.GetMinRetentionTimes())
+                foreach (var entry in spectrumInfo.RetentionTimesByFileId.GetMinRetentionTimes(fileIds))
                 {
                     if (result.TryGetValue(entry.Key, out var oldMin))
                     {
@@ -2584,17 +2584,29 @@ namespace pwiz.Skyline.Model.Lib
             return new PeptideLibraryKey(newSequence.ToString(), impreciseLibraryKey.Charge);
         }
 
-        public override Dictionary<Target, double>[] GetAllRetentionTimes()
+        public override Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
         {
-            var result = _librarySourceFiles.Select(file => new Dictionary<Target, double>()).ToArray();
+            var files = _librarySourceFiles.Cast<BiblioLiteSourceInfo?>().ToList();
+            IList<int> fileIds = null;
+            if (spectrumSourceFiles != null)
+            {
+                files = spectrumSourceFiles.Select(file =>
+                    files.FirstOrDefault(spectrumSourceFile => spectrumSourceFile?.FilePath == file)).ToList();
+                fileIds = files.Select(file => file?.Id).OfType<int>().OrderBy(i=>i).ToList();
+            }
 
+            var result = files.Select(file => new Dictionary<Target, double>()).ToArray();
             foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
-                var minTimes = GetMinRetentionTimes(grouping);
-                for (int iFile = 0; iFile < _librarySourceFiles.Length; iFile++)
+                var minTimes = GetMinRetentionTimes(grouping, fileIds);
+                if (minTimes.Count == 0)
                 {
-                    var file = _librarySourceFiles[iFile];
-                    if (minTimes.TryGetValue(file.Id, out var minTime))
+                    continue;
+                }
+                for (int iFile = 0; iFile < files.Count; iFile++)
+                {
+                    var file = files[iFile];
+                    if (file.HasValue && minTimes.TryGetValue(file.Value.Id, out var minTime))
                     {
                         result[iFile].Add(grouping.Key, minTime);
                     }
@@ -2676,17 +2688,34 @@ namespace pwiz.Skyline.Model.Lib
             return times.Select(time => (double) time).ToArray();
         }
 
-        public IEnumerable<KeyValuePair<int, double>> GetMinRetentionTimes()
+        public IEnumerable<KeyValuePair<int, double>> GetMinRetentionTimes(IList<int> fileIds)
         {
             if (_timesById == null)
             {
                 yield break;
             }
+
+            using var enFileIds = fileIds?.GetEnumerator();
+            if (false == enFileIds?.MoveNext())
+            {
+                yield break;
+            }
             foreach (var entry in _timesById)
             {
-                if (entry.Value.Length > 0)
+                if (enFileIds == null || entry.Key == enFileIds.Current)
                 {
                     yield return new KeyValuePair<int, double>(entry.Key, entry.Value.Min());
+                }
+
+                if (enFileIds != null)
+                {
+                    while (entry.Key >= enFileIds.Current)
+                    {
+                        if (!enFileIds.MoveNext())
+                        {
+                            yield break;
+                        }
+                    }
                 }
             }
         }

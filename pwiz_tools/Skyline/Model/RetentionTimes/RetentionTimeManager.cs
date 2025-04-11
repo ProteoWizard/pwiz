@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using EnvDTE;
 using MathNet.Numerics.Statistics;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -43,20 +44,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected override string IsNotLoadedExplained(SrmDocument document)
         {
-            var alignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
-            if (alignmentTarget == null)
-            {
-                return null;
-            }
-            var libraries = document.Settings.PeptideSettings.Libraries;
-            var unloadedLibraries = IndexesOfUnalignedLibraries(libraries).Select(i => libraries.Libraries[i]).ToList();
-            if (unloadedLibraries.Count == 0)
-            {
-                return null;
-            }
-
-            return nameof(RetentionTimeManager) + @": " +
-                   TextUtil.SpaceSeparate(unloadedLibraries.Select(lib => lib.Name));
+            return DocumentRetentionTimes.IsNotLoadedExplained(document);
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -70,165 +58,99 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
-            var loadingTag = tag as LoadingTag;
-            if (loadingTag == null)
+            var param = tag as DocumentRetentionTimes.LibraryAlignmentParam;
+            if (param == null)
             {
                 return false;
             }
-
+            
             var document = container.Document;
-            var peptideLibraries = document.Settings.PeptideSettings.Libraries;
-            if (!peptideLibraries.Libraries.Contains(loadingTag.Library))
-            {
-                return true;
-            }
-
-            if (!Equals(loadingTag.AlignmentTarget, AlignmentTarget.GetAlignmentTarget(document)))
-            {
-                return true;
-            }
-
-            if (null != peptideLibraries.GetLibraryAlignment(loadingTag.Library))
-            {
-                return true;
-            }
-
-            return false;
+            return !document.Settings.DocumentRetentionTimes.GetMissingAlignments(document.Settings).Contains(param);
         }
 
-        protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
+        protected override bool LoadBackground(IDocumentContainer container, SrmDocument document,
+            SrmDocument docCurrent)
+        {
+            bool result = false;
+            try
+            {
+                result = PerformNextAlignment(container, document, docCurrent);
+            }
+            finally
+            {
+                if (!result)
+                {
+                    EndProcessing(document);
+                }
+            }
+
+            return result;
+        }
+        private bool PerformNextAlignment(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
             var alignmentTarget = AlignmentTarget.GetAlignmentTarget(docCurrent);
             if (alignmentTarget == null)
             {
                 return false;
             }
-            var peptideLibraries = docCurrent.Settings.PeptideSettings.Libraries;
-            var indexUnaligned = IndexesOfUnalignedLibraries(peptideLibraries).Append(-1).FirstOrDefault();
-            if (indexUnaligned < 0)
-            {
-                return false;
-            }
 
-            var library = peptideLibraries.Libraries[indexUnaligned];
-            var loadMonitor = new LoadMonitor(this, container, new LoadingTag(alignmentTarget, library));
-            IProgressStatus progressStatus = new ProgressStatus(string.Format("Performing alignment between library {0} and {1}", library.Name, alignmentTarget.Calculator.Name));
-            LibraryAlignment libraryAlignment = null;
-            try
+            var documentRetentionTimes = docCurrent.Settings.DocumentRetentionTimes;
+            var newDocumentRetentionTimes = documentRetentionTimes.UpdateFromLoadedSettings(docCurrent.Settings);
+            if (newDocumentRetentionTimes == null)
             {
-                loadMonitor.UpdateProgress(progressStatus);
-                libraryAlignment = PerformAlignment(loadMonitor, ref progressStatus, alignmentTarget, library);
-
-                loadMonitor.UpdateProgress(progressStatus.Complete());
-            }
-            catch (Exception e)
-            {
-                if (loadMonitor.IsCanceled)
+                var alignmentParam = documentRetentionTimes.GetMissingAlignments(docCurrent.Settings).FirstOrDefault();
+                if (alignmentParam == null)
                 {
                     return false;
                 }
-                loadMonitor.UpdateProgress(progressStatus.ChangeErrorException(e));
-                return false;
-            }
-            if (libraryAlignment == null)
-            {
-                return false;
+                var loadMonitor = new LoadMonitor(this, container, alignmentParam);
+                IProgressStatus progressStatus = new ProgressStatus(string.Format("Performing alignment between library {0} and {1}", alignmentParam.Key, alignmentTarget.Calculator.Name));
+                LibraryAlignments libraryAlignment;
+                try
+                {
+                    loadMonitor.UpdateProgress(progressStatus);
+                    libraryAlignment = DocumentRetentionTimes.
+                        PerformAlignment(loadMonitor, ref progressStatus, alignmentParam);
+
+                    loadMonitor.UpdateProgress(progressStatus.Complete());
+                }
+                catch (Exception e)
+                {
+                    if (loadMonitor.IsCanceled)
+                    {
+                        loadMonitor.UpdateProgress(progressStatus.Cancel());
+                        return false;
+                    }
+                    loadMonitor.UpdateProgress(progressStatus.ChangeErrorException(e));
+                    return false;
+                }
+                if (libraryAlignment == null)
+                {
+                    return false;
+                }
+
+                newDocumentRetentionTimes =
+                    documentRetentionTimes.ChangeLibraryAlignments(alignmentParam, libraryAlignment);
             }
 
             SrmDocument docNew;
             do
             {
                 docCurrent = container.Document;
-                if (!Equals(peptideLibraries, docCurrent.Settings.PeptideSettings.Libraries) || !Equals(alignmentTarget, AlignmentTarget.GetAlignmentTarget(docCurrent)))
+                if (!ReferenceEquals(docCurrent.Id, document.Id))
                 {
                     return false;
                 }
-                var alignments = peptideLibraries.LibraryAlignments.ToList();
-                alignments[indexUnaligned] = libraryAlignment;
-                peptideLibraries = peptideLibraries.ChangeLibraryAlignments(alignments);
-                docNew = docCurrent;
-                docNew = docNew.ChangeSettings(
-                    docNew.Settings.ChangePeptideSettings(
-                        docNew.Settings.PeptideSettings.ChangeLibraries(peptideLibraries)));
+                if (!Equals(documentRetentionTimes, docCurrent.Settings.DocumentRetentionTimes) || !Equals(alignmentTarget, AlignmentTarget.GetAlignmentTarget(docCurrent)))
+                {
+                    return false;
+                }
+
+                docNew = docCurrent.ChangeSettings(
+                    docCurrent.Settings.ChangeDocumentRetentionTimes(newDocumentRetentionTimes));
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
-        }
-
-        private IEnumerable<int> IndexesOfUnalignedLibraries(PeptideLibraries peptideLibraries)
-        {
-            return Enumerable.Range(0, peptideLibraries.Libraries.Count).Where(i =>
-                true == peptideLibraries.Libraries[i]?.IsLoaded && null == peptideLibraries.LibraryAlignments[i]);
-        }
-
-        public static LibraryAlignment PerformAlignment(ILoadMonitor loadMonitor, ref IProgressStatus progressStatus, AlignmentTarget alignmentTarget, Library library)
-        {
-            var allRetentionTimes = library.GetAllRetentionTimes();
-            if (allRetentionTimes == null)
-            {
-                return new LibraryAlignment(library, new Dictionary<Target, double>(), null,
-                    new Dictionary<string, AlignmentFunction>());
-            }
-
-            var medianRetentionTimes = new Dictionary<Target, double>();
-            foreach (var target in allRetentionTimes.SelectMany(dict => dict.Keys).Distinct())
-            {
-                if (loadMonitor.IsCanceled)
-                {
-                    return null;
-                }
-
-                var retentionTimes = new List<double>();
-                foreach (var dict in allRetentionTimes)
-                {
-                    if (dict.TryGetValue(target, out var rt))
-                    {
-                        retentionTimes.Add(rt);
-                    }
-                }
-
-                if (retentionTimes.Count > 0)
-                {
-                    medianRetentionTimes.Add(target, retentionTimes.Median());
-                }
-            }
-
-            using var pollingCancellationToken = new PollingCancellationToken(() => loadMonitor.IsCanceled);
-            var alignmentFunctions = new AlignmentFunction[allRetentionTimes.Length];
-            int completedCount = 0;
-            IProgressStatus localProgressStatus = progressStatus;
-            ParallelEx.For(0, alignmentFunctions.Length, iFile =>
-            {
-                var alignment =
-                    alignmentTarget.PerformAlignment(allRetentionTimes[iFile], pollingCancellationToken.Token);
-                if (loadMonitor.IsCanceled)
-                {
-                    return;
-                }
-                lock (alignmentFunctions)
-                {
-                    alignmentFunctions[iFile] = alignment;
-                    loadMonitor.UpdateProgress(localProgressStatus =
-                        localProgressStatus.ChangePercentComplete(100 * completedCount++ / alignmentFunctions.Length));
-                }
-            });
-            progressStatus = localProgressStatus;
-            return new LibraryAlignment(library, medianRetentionTimes, alignmentTarget, library.LibraryFiles.FilePaths
-                .Zip(alignmentFunctions,
-                    Tuple.Create).ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2));
-        }
-
-        class LoadingTag
-        {
-            public LoadingTag(AlignmentTarget alignmentTarget, Library library)
-            {
-                AlignmentTarget = alignmentTarget;
-                Library = library;
-            }
-
-
-            public AlignmentTarget AlignmentTarget { get; }
-            public Library Library { get; }
         }
     }
 }

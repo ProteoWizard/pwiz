@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model
             {
                 candidatePeakBounds = new PeakBounds(candidatePeak.StartTime, candidatePeak.EndTime);
             }
-            var imputedPeak = PeakBoundaryImputer!.GetImputedPeak(peptideDocNode, chromatogramInfo.FilePath, candidatePeakBounds);
+            var imputedPeak = PeakBoundaryImputer!.GetImputedPeak(peptideDocNode, chromatogramSet, chromatogramInfo.FilePath, candidatePeakBounds);
             if (imputedPeak == null)
             {
                 return candidatePeak;

@@ -1941,7 +1941,6 @@ namespace pwiz.Skyline.Model.DocSettings
             HasDocumentLibrary = hasDocLib;
             LibrarySpecs = librarySpecs;
             Libraries = libraries;
-            LibraryAlignments = new LibraryAlignment[Libraries.Count].ToImmutable();
             DoValidate();
         }
 
@@ -1991,38 +1990,6 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return _libraries; }
             private set { _libraries = MakeReadOnly(value); }
-        }
-
-        public ImmutableList<LibraryAlignment> LibraryAlignments
-        {
-            get; private set;
-        }
-
-        public PeptideLibraries ChangeLibraryAlignments(IEnumerable<LibraryAlignment> newAlignments)
-        {
-            var list = newAlignments.ToImmutable();
-            if (list.Count != Libraries.Count)
-            {
-                throw new ArgumentException();
-            }
-
-            return ChangeProp(ImClone(this), im => im.LibraryAlignments = list);
-        }
-
-        public LibraryAlignment GetLibraryAlignment(Library library)
-        {
-            if (true != library?.IsLoaded)
-            {
-                return null;
-            }
-
-            int index = Libraries.IndexOf(library);
-            if (index < 0)
-            {
-                return null;
-            }
-
-            return LibraryAlignments[index];
         }
 
         public IEnumerable<MidasLibrary> MidasLibraries
@@ -2338,7 +2305,6 @@ namespace pwiz.Skyline.Model.DocSettings
                                       if (im.Libraries.Count != prop.Count)
                                       {
                                           im.Libraries = new Library[prop.Count];
-                                          im.LibraryAlignments = new LibraryAlignment[prop.Count].ToImmutable();
                                       }
                                   });
         }        
@@ -2348,7 +2314,6 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im =>
             {
                 im.Libraries = prop;
-                im.LibraryAlignments = im.Libraries.Select(GetLibraryAlignment).ToImmutable();
             });
         }
 
@@ -2359,7 +2324,6 @@ namespace pwiz.Skyline.Model.DocSettings
                                   {
                                       im.LibrarySpecs = specs;
                                       im.Libraries = libs;
-                                      im.LibraryAlignments = im.Libraries.Select(GetLibraryAlignment).ToImmutable();
                                   });
         }
 
@@ -2382,7 +2346,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 im._disconnectedLibraries = _libraries;
                 im.Libraries = new Library[0];
                 im.LibrarySpecs = new LibrarySpec[0];
-                im.LibraryAlignments = ImmutableList<LibraryAlignment>.EMPTY;
             });
         }
 
@@ -2684,7 +2647,6 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             Libraries = libraries;
             LibrarySpecs = librarySpecs;
-            LibraryAlignments = new LibraryAlignment[libraries.Length].ToImmutable();
 
             DoValidate();
         }
@@ -2754,7 +2716,6 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, obj)) return true;
             return ArrayUtil.EqualsDeep(obj._librarySpecs, _librarySpecs) &&
                 ArrayUtil.EqualsDeep(obj._libraries, _libraries) &&
-                Equals(obj.LibraryAlignments, LibraryAlignments) &&
                 Equals(obj._rankIdName, _rankIdName) &&
                 Equals(obj.Pick, Pick) &&
                 Equals(obj.RankId, RankId) &&
