@@ -431,9 +431,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 new PythonPackage {Name = @"peptdeep", Version = null },
                 
-                // This is to address the CollisionalCrossSection / IonMobility problem fixed by Wenfeng ZENG's PR for CCS reporting by APD
-                new PythonPackage {Name = @"git+https://github.com/MannLabs/alphabase.git@311-need-ccs-in-output-table", Version= null},
-
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved

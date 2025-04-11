@@ -476,8 +476,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             string[] inputFile = { TransformedOutputSpectraLibFilepath };
-            string unfilteredBlibPath = String.Concat( LibrarySpec.FilePath , @"_Unfiltered.blib" );
-            var build = new BlibBuild(unfilteredBlibPath, inputFile);
+            string incompleteBlibPath = String.Concat( LibrarySpec.FilePath , @"_incomplete.blib" );
+            var build = new BlibBuild(incompleteBlibPath, inputFile);
 
 
             progress.UpdateProgress(progressStatus = progressStatus
@@ -498,7 +498,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             BlibFilter blibFilter = new BlibFilter();
             // Build the final filtered library
             completed = completed &&
-                        blibFilter.Filter(unfilteredBlibPath, LibrarySpec.FilePath, progress, ref progressStatus);
+                        blibFilter.Filter(incompleteBlibPath, LibrarySpec.FilePath, progress, ref progressStatus);
 
             if (completed)
             {
@@ -508,6 +508,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             {
                 Messages.WriteAsyncUserMessage(ModelResources.Alphapeptdeep_Blib_failed_to_complete);
             }
+            File.Delete(incompleteBlibPath);
         }
     }
 }
