@@ -1614,21 +1614,18 @@ namespace pwiz.Skyline.Model.Lib
             if (j != -1)
             {
                 var source = _librarySourceFiles[j];
-                ILookup<Target, double[]> timesLookup = _libraryEntries.ToLookup(
-                    entry => entry.Key.Target, 
-                    entry=>entry.RetentionTimesByFileId.GetTimes(source.Id));
-                var timesDict = timesLookup.ToDictionary(
-                    grouping => grouping.Key,
-                    grouping =>
-                        {
-                            var array = grouping.SelectMany(values => values).ToArray();
-                            Array.Sort(array);
-                            return array;
-                        });
-                var nonEmptyTimesDict = timesDict
-                    .Where(kvp => kvp.Value.Length > 0)
-                    .ToDictionary(kvp => kvp.Key, kvp => new Tuple<TimeSource, double[]>(TimeSource.scan, kvp.Value));
-                retentionTimes = new LibraryRetentionTimes(filePath.ToString(), nonEmptyTimesDict);
+                var dictionary = new Dictionary<Target, Tuple<TimeSource, double[]>>();
+                foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
+                {
+                    var times = grouping.SelectMany(entry => entry.RetentionTimesByFileId.GetTimes(source.Id))
+                        .OrderBy(time => time).ToArray();
+                    if (times.Length > 0)
+                    {
+                        dictionary.Add(grouping.Key, Tuple.Create(TimeSource.scan, times));
+                    }
+                }
+
+                retentionTimes = new LibraryRetentionTimes(filePath.ToString(), dictionary);
                 return true;
             }
 

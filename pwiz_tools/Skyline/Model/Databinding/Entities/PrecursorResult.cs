@@ -21,9 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.ElementLocators;
@@ -234,7 +236,6 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
         }
 
-
         [InvariantDisplayName("PrecursorReplicateNote")]
         [Importable]
         public string Note 
@@ -280,6 +281,15 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         public PeptideResult PeptideResult 
         {
             get { return _peptideResult = _peptideResult ?? new PeptideResult(Precursor.Peptide, GetResultFile()); }
+        }
+
+        [ChildDisplayName("Imputed{0}")]
+        public PeakBounds ImputedPeak
+        {
+            get
+            {
+                return DataSchema.PeakBoundaryImputer.GetImputedPeakIfQuick(PeptideResult.Peptide.IdentityPath, GetResultFile().ChromFileInfo.FilePath)?.PeakBounds;
+            }
         }
 
         [InvariantDisplayName("PrecursorResultLocator")]

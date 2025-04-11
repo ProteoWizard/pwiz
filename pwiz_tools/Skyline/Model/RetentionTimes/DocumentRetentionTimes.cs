@@ -65,7 +65,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static string IsNotLoadedExplained(SrmSettings srmSettings)
         {
-            if (!srmSettings.PeptideSettings.Libraries.IsLoaded)
+            if (true || !srmSettings.PeptideSettings.Libraries.IsLoaded)
             {
                 return null;
             }

@@ -282,9 +282,13 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             foreach (var library in Document.Settings.PeptideSettings.Libraries.Libraries)
             {
-                if (true != library?.IsLoaded)
+                if (library == null)
                 {
                     continue;
+                }
+                if (!library.IsLoaded)
+                {
+                    return null;
                 }
                 if (!library.HasExplicitBounds || !library.UseExplicitPeakBounds)
                 {
@@ -305,6 +309,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 return null;
             }
+
             return GetImputedPeakFromDocument(cancellationToken, identityPath, filePath);
         }
 
@@ -750,6 +755,12 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
 
             return imputedPeak;
+        }
+
+        public ImputedPeak GetImputedPeakIfQuick(IdentityPath peptideIdentityPath,
+            MsDataFileUri filePath)
+        {
+            return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, filePath, true);
         }
 
         public SrmDocument ImputePeak(CancellationToken cancellationToken, SrmDocument document, IdentityPath peptideIdentityPath)
