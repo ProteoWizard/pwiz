@@ -2339,7 +2339,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var parameter = new ImputedBoundsParameter(doc, peptideIdentityPath, chromGraphPrimary.Chromatogram.FilePath);
             if (true == _imputedBoundsReceiver?.TryGetProduct(parameter, out var imputedBounds))
             {
-                chromGraphPrimary.ImputedBounds = imputedBounds.PeakBounds;
+                chromGraphPrimary.ImputedBounds = imputedBounds?.PeakBounds;
             }
         }
 

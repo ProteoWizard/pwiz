@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using Google.Protobuf;
 using pwiz.Common.Chemistry;
@@ -973,56 +975,43 @@ namespace pwiz.Skyline.Model.Results
                 ChromTransition.DEFAULT_BLOCK_SIZE,
                 progressMonitor,
                 status));
-            if (raw.ChromCacheFiles.Any(file => file.HasResultFileData))
+            var resultFileDatas = ReadResultFileDatas(stream, cacheHeader, chromCachedFiles);
+            if (resultFileDatas != null)
             {
-                var resultFileDatas = new List<ResultFileMetaData>();
-                foreach (var chromCachedFile in raw.ChromCacheFiles)
-                {
-                    if (!chromCachedFile.HasResultFileData)
-                    {
-                        resultFileDatas.Add(null);
-                        continue;
-                    }
-
-                    stream.Seek(chromCachedFile.LocationScanIds + cacheHeader.locationScanIds, SeekOrigin.Begin);
-                    var byteArray = new byte[chromCachedFile.SizeScanIds];
-                    ReadComplete(stream, byteArray, byteArray.Length);
-                    resultFileDatas.Add(ResultFileMetaData.FromByteArray(byteArray));
-                }
-
                 raw = raw.ChangeResultFileDatas(resultFileDatas);
             }
-
             if (progressMonitor != null)
                 progressMonitor.UpdateProgress(status = status.ChangePercentComplete(50));
 
             return raw.LocationScanIds;  // Bytes of chromatogram data
         }
 
-        private IList<ResultFileMetaData> ReadResultFileDatas(Stream stream,
-            CachedFileHeaderStruct cacheHeader,
-            IList<ChromCachedFile> chromCachedFiles)
+        private static ResultFileMetaData[] ReadResultFileDatas(Stream stream, CacheHeaderStruct cacheHeader, IList<ChromCachedFile> chromCachedFiles)
         {
-            if (chromCachedFiles.All(file=>!file.HasResultFileData))
+            int countWithData = chromCachedFiles.Count(file => file.HasResultFileData);
+            if (countWithData == 0)
             {
                 return null;
             }
-            var resultFileDatas = new List<ResultFileMetaData>();
-            foreach (var chromCachedFile in chromCachedFiles)
+            ResultFileMetaData[] resultFileMetaDatas = new ResultFileMetaData[chromCachedFiles.Count];
+            using var queueWorker = new QueueWorker<Tuple<byte[], int>>(null, (tuple, threadIndex) =>
             {
-                if (!chromCachedFile.HasResultFileData)
+                resultFileMetaDatas[tuple.Item2] = ResultFileMetaData.FromByteArray(tuple.Item1);
+            });
+            queueWorker.RunAsync(ParallelEx.GetThreadCount(countWithData), nameof(ReadResultFileDatas));
+            for (int iFile = 0; iFile < chromCachedFiles.Count; iFile++)
+            {
+                var chromCachedFile = chromCachedFiles[iFile];
+                if (chromCachedFile.HasResultFileData)
                 {
-                    resultFileDatas.Add(null);
-                    continue;
+                    stream.Seek(chromCachedFile.LocationScanIds + cacheHeader.locationScanIds, SeekOrigin.Begin);
+                    var byteArray = new byte[chromCachedFile.SizeScanIds];
+                    ReadComplete(stream, byteArray, byteArray.Length);
+                    queueWorker.Add(Tuple.Create(byteArray, iFile));
                 }
-
-                stream.Seek(chromCachedFile.LocationScanIds + cacheHeader.locationScanIds, SeekOrigin.Begin);
-                var byteArray = new byte[chromCachedFile.SizeScanIds];
-                ReadComplete(stream, byteArray, byteArray.Length);
-                resultFileDatas.Add(ResultFileMetaData.FromByteArray(byteArray));
             }
-
-            return resultFileDatas;
+            queueWorker.Wait();
+            return resultFileMetaDatas;
         }
 
         private static int GetInt32(byte[] bytes, int index)

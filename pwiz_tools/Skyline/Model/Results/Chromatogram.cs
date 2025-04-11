@@ -157,10 +157,10 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return false;
                 }
-                if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
-                {
-                    return false;
-                }
+                // if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
+                // {
+                //     return false;
+                // }
                 if (IonMobilityLibraryManager.IsNotLoadedDocumentExplained(document) != null)
                 {
                     return false; // Need to wait for imsdb file to load into memory

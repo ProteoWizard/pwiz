@@ -69,15 +69,17 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             var result = new PeakBoundaryImputer(newDocument);
             lock (this)
             {
+                var libraries = newDocument.Settings.PeptideSettings.Libraries;
                 foreach (var libraryInfo in _libraryInfos.Values)
                 {
-                    var newLibrary = newDocument.Settings.PeptideSettings.Libraries.Libraries.FirstOrDefault(lib => lib?.Name == libraryInfo.Library.Name);
+                    
+                    var newLibrary = libraries.Libraries.FirstOrDefault(lib => lib?.Name == libraryInfo.Library.Name);
                     if (!Equals(newLibrary, libraryInfo.Library))
                     {
                         continue;
                     }
 
-                    var newLibraryInfo = libraryInfo.ChangeAlignmentTarget(result.AlignmentTarget);
+                    var newLibraryInfo = libraryInfo.ChangeAlignment(libraries.GetLibraryAlignment(newLibrary));
                     if (newLibraryInfo != null)
                     {
                         result._libraryInfos.Add(newLibraryInfo.Library.Name, newLibraryInfo);
@@ -110,47 +112,19 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private class LibraryInfo
         {
-            private Dictionary<string, AlignmentFunction> _alignmentFunctions =
-                new Dictionary<string, AlignmentFunction>();
             private Dictionary<Target, ExemplaryPeak> _bestPeakBounds = new Dictionary<Target, ExemplaryPeak>();
-            public LibraryInfo(Library library, Dictionary<Target, double>[] allRetentionTimes, AlignmentTarget alignmentTarget)
+            public LibraryInfo(Library library, LibraryAlignment libraryAlignment)
             {
                 Library = library;
-                AllRetentionTimes = allRetentionTimes;
-                AlignmentTarget = alignmentTarget;
+                LibraryAlignment = libraryAlignment;
             }
 
             public Library Library { get; }
-            public Dictionary<Target, double>[] AllRetentionTimes { get; set; }
-            public AlignmentTarget AlignmentTarget { get; }
+            public LibraryAlignment LibraryAlignment { get; }
 
             public AlignmentFunction GetAlignmentFunction(CancellationToken cancellationToken, string spectrumSourceFile)
             {
-                if (AlignmentTarget == null)
-                {
-                    return AlignmentFunction.IDENTITY;
-                }
-                AlignmentFunction alignmentFunction;
-                lock (this)
-                {
-                    if (_alignmentFunctions.TryGetValue(spectrumSourceFile, out alignmentFunction))
-                    {
-                        return alignmentFunction;
-                    }
-                }
-
-                int fileIndex = Library.LibraryFiles.FilePaths.IndexOf(spectrumSourceFile);
-                if (fileIndex < 0)
-                {
-                    return null;
-                }
-
-                alignmentFunction = AlignmentTarget.PerformAlignment(AllRetentionTimes[fileIndex], cancellationToken);
-                lock (this)
-                {
-                    _alignmentFunctions[spectrumSourceFile] = alignmentFunction;
-                }
-                return alignmentFunction;
+                return LibraryAlignment?.GetAlignmentFunction(spectrumSourceFile);
             }
 
             public ExemplaryPeak GetExemplaryPeak(CancellationToken cancellationToken, Target target)
@@ -207,16 +181,16 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return new ExemplaryPeak(Library, bestFile, new PeakBounds(bestPeakBounds.StartTime, bestPeakBounds.EndTime));
             }
 
-            public LibraryInfo ChangeAlignmentTarget(AlignmentTarget alignmentTarget)
+            public LibraryInfo ChangeAlignment(LibraryAlignment libraryAlignment)
             {
-                if (Equals(alignmentTarget, AlignmentTarget))
+                if (Equals(libraryAlignment, LibraryAlignment))
                 {
                     return this;
                 }
 
                 lock (this)
                 {
-                    var newLibraryInfo = new LibraryInfo(Library, AllRetentionTimes, alignmentTarget);
+                    var newLibraryInfo = new LibraryInfo(Library, libraryAlignment);
                     foreach (var bestPeakBounds in _bestPeakBounds)
                     {
                         newLibraryInfo._bestPeakBounds.Add(bestPeakBounds.Key, bestPeakBounds.Value);
@@ -285,7 +259,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     }
                 }
 
-                libraryInfo = new LibraryInfo(library, library.GetAllRetentionTimes(), AlignmentTarget.GetAlignmentTarget(Document));
+                libraryInfo = new LibraryInfo(library, Document.Settings.PeptideSettings.Libraries.GetLibraryAlignment(library));
                 _libraryInfos[library.Name] = libraryInfo;
                 return libraryInfo;
             }
@@ -316,7 +290,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 {
                     continue;
                 }
-
+                
                 var libraryInfo = GetLibraryInfo(library);
                 var exemplaryPeak = libraryInfo.GetExemplaryPeak(cancellationToken, peptideDocNode.ModifiedTarget);
                 if (exemplaryPeak == null)
