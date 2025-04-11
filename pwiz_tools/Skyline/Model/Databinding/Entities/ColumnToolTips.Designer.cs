@@ -144,6 +144,87 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Product of the total transition intensity and the injection time of the spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexAnalyteIonCount {
+            get {
+                return ResourceManager.GetString("ApexAnalyteIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product of the total transition intensity and the injection time of the MS2 spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexAnalyteIonCountFragment {
+            get {
+                return ResourceManager.GetString("ApexAnalyteIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity.
+        /// </summary>
+        public static string ApexAnalyteIonCountMS1 {
+            get {
+                return ResourceManager.GetString("ApexAnalyteIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identifier of the spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexSpectrumId {
+            get {
+                return ResourceManager.GetString("ApexSpectrumId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identifier of the MS2 spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexSpectrumIdFragment {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identifier of the MS1 spectrum with the highest precursor intensity.
+        /// </summary>
+        public static string ApexSpectrumIdMS1 {
+            get {
+                return ResourceManager.GetString("ApexSpectrumIdMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexTotalIonCount {
+            get {
+                return ResourceManager.GetString("ApexTotalIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product of the total ion current and the injection time of the MS2 spectrum with the highest transition intensity.
+        /// </summary>
+        public static string ApexTotalIonCountFragment {
+            get {
+                return ResourceManager.GetString("ApexTotalIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Product of the total precursor intensity and the injection time of the MS1 spectrum with the highest precursor intensity.
+        /// </summary>
+        public static string ApexTotalIonCountMS1 {
+            get {
+                return ResourceManager.GetString("ApexTotalIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Area under the curve (AUC), minus background, for the transition peak..
         /// </summary>
         public static string Area {
@@ -255,7 +336,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Average Mass Error PPM.
+        ///   Looks up a localized string similar to The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM).
         /// </summary>
         public static string AverageMassErrorPPM {
             get {
@@ -608,7 +689,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         /// <summary>
         ///   Looks up a localized string similar to The number of transitions for a precursor that integrate a peak with a
         ///boundary at either end of the acquisition time range, where intensity at the end is
-        ///greater than 1% of the entire peak height higher than the other extent..
+        ///greater than 25% of the background-subtracted peak height higher than the other extent..
         /// </summary>
         public static string CountTruncated {
             get {
@@ -1483,6 +1564,105 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         public static string LastPosition {
             get {
                 return ResourceManager.GetString("LastPosition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the transition intensities and the injection time of the spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakAnalyteIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakAnalyteIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the transition intensities and the injection time of the MS2 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakAnalyteIonCountFragment {
+            get {
+                return ResourceManager.GetString("LcPeakAnalyteIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the total precursor intensity and the injection time of the MS1 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakAnalyteIonCountMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakAnalyteIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values related to the number of ions in the mass spectrometer while collecting MS2 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakIonMetricsFragment {
+            get {
+                return ResourceManager.GetString("LcPeakIonMetricsFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Values related to the number of ions in the mass spectrometer while collecting MS1 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakIonMetricsMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakIonMetricsMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the total ion current and the injection time of the spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTotalIonCount {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the total ion current and the injection time of the MS2 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTotalIonCountFragment {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCountFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sum of the products of the total ion current and the injection time of the MS1 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTotalIonCountMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCountMS1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Integral of the total ion current between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTotalIonCurrentArea {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCurrentArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Integral of the total ion current of the MS2 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTotalIonCurrentAreaFragment {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCurrentAreaFragment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Integral of the total ion current of the MS1 spectra between the peak integration boundaries.
+        /// </summary>
+        public static string LcPeakTotalIonCurrentAreaMS1 {
+            get {
+                return ResourceManager.GetString("LcPeakTotalIonCurrentAreaMS1", resourceCulture);
             }
         }
         
@@ -3103,6 +3283,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The area weighted mean (0 to 1.0) of transitions for a precursor that integrate a peak with a
+        ///boundary at either end of the acquisition time range, where intensity at the end is
+        ///greater than 25% of the background-subtracted peak height higher than the other extent..
+        /// </summary>
+        public static string ProportionTruncated {
+            get {
+                return ResourceManager.GetString("ProportionTruncated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein.
         /// </summary>
         public static string Protein {
@@ -3951,7 +4142,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated value unavailable when missing data could comparisons between replicates..
+        ///   Looks up a localized string similar to Calculated value unavailable when missing data could impact comparisons between replicates..
         /// </summary>
         public static string Strict {
             get {
@@ -4228,8 +4419,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to True if the integrated a peak has a boundary at either end of the acquisition
-        ///time range, where intensity at the end is greater than 1% of the entire peak height
+        ///   Looks up a localized string similar to True if the integrate peak has a boundary at either end of the acquisition
+        ///time range, where intensity at the end is greater than 25% of the background-subtracted peak height
         ///higher than the other extent..
         /// </summary>
         public static string Truncated {

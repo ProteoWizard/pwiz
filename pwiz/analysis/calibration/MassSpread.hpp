@@ -49,7 +49,7 @@ class MassSpread
     };
 
     // const interface
-    static std::auto_ptr<const MassSpread> create(double measurement,
+    static std::unique_ptr<const MassSpread> create(double measurement,
                                                   double initialError,
                                                   const MassDatabase* massDatabase);
     virtual double measurement() const = 0;
@@ -61,7 +61,7 @@ class MassSpread
 
     // non-const interface
     // note: must recalculate() sums after changing distribution()
-    static std::auto_ptr<MassSpread> create();
+    static std::unique_ptr<MassSpread> create();
     virtual std::vector<Pair>& distribution() = 0;
     virtual void recalculate() = 0;
 

@@ -243,7 +243,6 @@
   </data>
   <data name="forward.Text" xml:space="preserve">
     <value>次へ</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="up.Size" type="System.Drawing.Size, System.Drawing">
     <value>28, 28</value>
@@ -307,7 +306,6 @@
   </data>
   <data name="copyLinkAddressToolStripMenuItem.Text" xml:space="preserve">
     <value>リンクのアドレスをコピー</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="contextMenuStrip.Size" type="System.Drawing.Size, System.Drawing">
     <value>168, 26</value>
@@ -335,7 +333,6 @@
   </data>
   <data name="folderLabel.Text" xml:space="preserve">
     <value>リモートフォルダ(&amp;R)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;folderLabel.Name" xml:space="preserve">
     <value>folderLabel</value>
@@ -387,7 +384,6 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Panoramaフォルダ</value>
-    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;back.Name" xml:space="preserve">
     <value>back</value>

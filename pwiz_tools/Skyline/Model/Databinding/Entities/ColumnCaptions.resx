@@ -144,6 +144,33 @@
   <data name="Analyzer">
     <value>Analyzer</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>Apex Analyte Ion Count</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>Apex Analyte Ion Count Fragment</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>Apex Analyte Ion Count MS1</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>Apex Spectrum ID</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>Apex Spectrum ID Fragment</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>Apex Spectrum ID MS1</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>Apex Total Ion Count</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>Apex Total Ion Count Fragment</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>Apex Total Ion Count MS1</value>
+  </data>
   <data name="Area">
     <value>Area</value>
   </data>
@@ -578,6 +605,39 @@
   </data>
   <data name="LastPosition">
     <value>Last Position</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>LC Peak Analyte Ion Count</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>LC Peak Analyte Ion Count Fragment</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>LC Peak Analyte Ion Count MS1</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>LC Peak Ion Metrics Fragment</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>LC Peak Ion Metrics MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>LC Peak Total Ion Count</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>LC Peak Total Ion Count Fragment</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>LC Peak Total Ion Count MS1</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>LC Peak Total Ion Current Area</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>LC Peak Total Ion Current Area Fragment</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>LC Peak Total Ion Current Area MS1</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>Library Collision Cross Section</value>
@@ -1097,6 +1157,9 @@
   </data>
   <data name="ProductNeutralMass">
     <value>Product Neutral Mass</value>
+  </data>
+  <data name="ProportionTruncated">
+    <value>Proportion Truncated</value>
   </data>
   <data name="Protein">
     <value>Protein</value>

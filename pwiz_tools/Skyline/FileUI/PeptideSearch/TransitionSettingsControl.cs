@@ -5,11 +5,18 @@ using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -19,6 +26,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
     {
         private readonly IModifyDocumentContainer _documentContainer;
         private readonly Dictionary<Control, Point> _originalLocations;
+        private SpectrumClassFilter _spectrumFilter;
 
         public TransitionSettingsControl(IModifyDocumentContainer documentContainer)
         {
@@ -53,13 +61,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 : this(FixWhitespace(control.txtPeptidePrecursorCharges.Text),
                     FixWhitespace(control.txtPrecursorIonCharges.Text), FixWhitespace(control.txtIonTypes.Text),
                     control.ExclusionUseDIAWindow, control.IonMatchMzTolerance, control.MinIonCount, control.IonCount,
-                    control.IonRangeFrom, control.IonRangeTo, control.MinIonMz, control.MaxIonMz)
+                    control.IonRangeFrom, control.IonRangeTo, control.MinIonMz, control.MaxIonMz, control.SpectrumFilter)
             {
             }
 
             public TransitionFilterAndLibrariesSettings(string peptidePrecursorCharges, string peptideIonCharges,
                 string peptideIonTypes, bool exclusionUseDiaWindow, MzTolerance ionMatchMzTolerance, int minIonCount,
-                int ionCount, string ionRangeFrom, string ionRangeTo, double minIonMz, double maxIonMz)
+                int ionCount, string ionRangeFrom, string ionRangeTo, double minIonMz, double maxIonMz,
+                SpectrumClassFilter spectrumClassFilter)
             {
                 PeptidePrecursorCharges = peptidePrecursorCharges;
                 PeptideIonCharges = peptideIonCharges;
@@ -72,6 +81,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 IonRangeTo = ionRangeTo;
                 MinIonMz = minIonMz;
                 MaxIonMz = maxIonMz;
+                SpectrumClassFilter = spectrumClassFilter;
             }
 
             public static TransitionFilterAndLibrariesSettings GetDefault(TransitionSettings transitionSettings)
@@ -83,7 +93,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     transitionSettings.Libraries.MinIonCount,
                     transitionSettings.Libraries.IonCount, transitionSettings.Filter.FragmentRangeFirst.Label,
                     transitionSettings.Filter.FragmentRangeLast.Label, transitionSettings.Instrument.MinMz,
-                    transitionSettings.Instrument.MaxMz);
+                    transitionSettings.Instrument.MaxMz, new SpectrumClassFilter());
             }
 
             [Track]
@@ -108,6 +118,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             public double MinIonMz { get; private set; }
             [Track]
             public double MaxIonMz { get; private set; }
+            public SpectrumClassFilter SpectrumClassFilter { get; private set; }
+            [Track(defaultValues: typeof(DefaultValuesStringNullOrEmpty))]
+            public string SpectrumFilter
+            {
+                get { return SpectrumClassFilter.ToString(); }
+            }
         }
 
         public void SetFields(TransitionSettings settings)
@@ -133,6 +149,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             MinIonMz = settings.Instrument.MinMz;
             MaxIonMz = settings.Instrument.MaxMz;
+
+            SpectrumFilter = settings.FullScan.SpectrumClassFilter;
         }
 
         public bool IonFilter
@@ -241,11 +259,68 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             set { txtMaxMz.Text = value.ToString(LocalizationHelper.CurrentCulture); }
         }
 
+        public SpectrumClassFilter SpectrumFilter
+        {
+            get
+            {
+                return _spectrumFilter;
+            }
+            set
+            {
+                _spectrumFilter = value;
+                UpdateSpectrumFilterText();
+            }
+        }
+        private void btnEditSpectrumFilter_Click(object sender, EventArgs e)
+        {
+            EditSpectrumFilter();
+        }
+
+        private void UpdateSpectrumFilterText()
+        {
+            tbxSpectrumFilter.Text = SpectrumClassFilter.FromFilterPages(GetFilterPages()).GetText(true);
+        }
+
+        public FilterPages GetFilterPages()
+        {
+            var filterPages = SpectrumFilter.GetFilterPages();
+            if (filterPages.Pages.Contains(SpectrumClassFilter.GenericFilterPage))
+            {
+                return filterPages;
+            }
+
+            var requiredPages = new List<FilterPage>
+            {
+                SpectrumClassFilter.Ms1FilterPage,
+                SpectrumClassFilter.Ms2FilterPage
+            };
+
+            return TransitionSettingsUI.GetFilterPages(requiredPages, filterPages);
+        }
+
+        public void EditSpectrumFilter()
+        {
+            var skylineDataSchema = new SkylineDataSchema(_documentContainer, SkylineDataSchema.GetLocalizedSchemaLocalizer());
+            var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
+            var filterPages = GetFilterPages();
+            if (filterPages.Pages.Count == 0)
+            {
+                MessageDlg.Show(this, SettingsUIResources.TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_);
+                return;
+            }
+            using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages);
+            dlg.CreateCopyVisible = false;
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                SpectrumFilter = SpectrumClassFilter.FromFilterPages(dlg.FilterPages);
+            }
+        }
+
         public void Initialize(ImportPeptideSearchDlg.Workflow workflow)
         {
             // Reset control locations, in case this isn't the first call to Initialize.
             foreach (var kvp in _originalLocations)
-                kvp.Key.Location = kvp.Value;
+                kvp.Key.Location = new Point(kvp.Key.Location.X, kvp.Value.Y);
 
             if (workflow != ImportPeptideSearchDlg.Workflow.dia)
             {
@@ -441,7 +516,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             var libraries = new TransitionLibraries(new MzTolerance(ionMatchTolerance, ionMatchToleranceUnit), minIonCount, ionCount, TransitionLibraryPick.filter);
             Helpers.AssignIfEquals(ref libraries, settings.Libraries);
 
-            return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, settings.FullScan, settings.IonMobilityFiltering);
+            var fullScan = settings.FullScan.ChangeSpectrumFilter(SpectrumFilter);
+
+            return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, fullScan, settings.IonMobilityFiltering);
         }
 
         private void comboMatchToleranceUnit_SelectedIndexChanged(object sender, EventArgs e)

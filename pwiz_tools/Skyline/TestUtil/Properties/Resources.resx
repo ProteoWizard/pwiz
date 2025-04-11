@@ -130,6 +130,18 @@
   <data name="DiskFailure" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\DiskFailure.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="filechanged" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\filechanged.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="fileunchanged" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\fileunchanged.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="fileunknown" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\fileunknown.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="gitsource" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\gitsource.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="hand_cur" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\hand-cur.bmp;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -159,6 +171,9 @@
   </data>
   <data name="textbutton" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\textbutton.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="undo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\undo.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="webdestination" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\webdestination.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

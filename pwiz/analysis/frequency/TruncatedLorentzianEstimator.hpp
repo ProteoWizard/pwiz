@@ -40,7 +40,7 @@ class PWIZ_API_DECL TruncatedLorentzianEstimator
 {
     public:
 
-    static std::auto_ptr<TruncatedLorentzianEstimator> create();
+    static std::unique_ptr<TruncatedLorentzianEstimator> create();
 
     virtual TruncatedLorentzianParameters initialEstimate(const pwiz::data::FrequencyData& fd) const = 0;
 

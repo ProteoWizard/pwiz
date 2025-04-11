@@ -601,7 +601,7 @@ namespace pwiz.Skyline.Model.Irt
             // Minimize document to only the peptides we need
             var minimalPeptides = standards.ToHashSet();
 
-            var oldPeptides = new Dictionary<Target, PeptideDocNode>();
+            var addPeptides = new Dictionary<Target, PeptideDocNode>();
             if (!string.IsNullOrEmpty(oldXml))
             {
                 try
@@ -609,7 +609,8 @@ namespace pwiz.Skyline.Model.Irt
                     using (var reader = new StringReader(oldXml))
                     {
                         var oldDoc = (SrmDocument)new XmlSerializer(typeof(SrmDocument)).Deserialize(reader);
-                        oldPeptides = oldDoc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)).ToDictionary(pep => pep.Target, pep => pep);
+                        addPeptides = oldDoc.Molecules.Where(pep => minimalPeptides.Contains(pep.ModifiedTarget))
+                            .ToDictionary(pep => pep.ModifiedTarget, pep => pep.RemoveFastaSequence());
                     }
                 }
                 catch
@@ -618,64 +619,117 @@ namespace pwiz.Skyline.Model.Irt
                 }
             }
 
-            var addPeptides = new List<PeptideDocNode>();
-            foreach (var nodePep in doc.Molecules.Where(pep => minimalPeptides.Contains(pep.Target)))
+            foreach (var nodePep in doc.Molecules.Where(pep => minimalPeptides.Contains(pep.ModifiedTarget)))
             {
-                if (oldPeptides.TryGetValue(nodePep.Target, out var nodePepOld))
-                {
-                    addPeptides.Add(nodePep.Merge(nodePepOld));
-                    oldPeptides.Remove(nodePep.Target);
-                }
-                else
-                {
-                    addPeptides.Add(nodePep);
-                }
+                var addPep = nodePep.RemoveFastaSequence();
+                if (addPeptides.TryGetValue(nodePep.ModifiedTarget, out var existing))
+                    addPep = addPep.Merge(existing);
+                addPeptides[nodePep.ModifiedTarget] = addPep;
             }
-            addPeptides.AddRange(oldPeptides.Values);
 
             var peptides = new List<PeptideDocNode>();
-            foreach (var nodePep in addPeptides)
+            Dictionary<Target, PeptideDocNode> standardPeps = null; // Only create this once, if necessary
+            bool addedDocPeptides = false;
+            foreach (var nodePep in addPeptides.Values)
             {
-                var precursors = new List<DocNode>();
-                foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
+                // Remove MS1 transitions which can be recalculated and are not useful
+                var nodePepMinimal = RemoveMs1Transitions(nodePep);
+                var nodeTranGroup = nodePepMinimal.TransitionGroups.FirstOrDefault();
+                if (nodeTranGroup != null)
                 {
                     var transitions = nodeTranGroup.Transitions.Where(tran => tran.ResultsRank.HasValue)
                         .OrderBy(tran => tran.ResultsRank.Value)
                         .Select(tran => tran.ChangeResults(null))
                         .Cast<DocNode>().ToList();
+                    if (transitions.Count < 3)
+                    {
+                        // CONSIDER: We could also rank by the library ranking which might
+                        // allow us to get valid relative transition abundance based on a library
+                        // spectrum, e.g. if the source was DDA data and only chromatograms for
+                        // the precursors were extracted.
+                        // Here that case is handled for the CiRT peptides where we have stored
+                        // the relative transition abundance reported in the paper.
+                        standardPeps ??= IrtStandard.CIRT.GetDocument().Peptides.ToDictionary(p => p.Target, p => p);
+                        if (standardPeps.TryGetValue(nodePep.Target, out var nodePepStandard))
+                        {
+                            peptides.Add(nodePepStandard);
+                            continue;
+                        }
+                    }
+
                     if (transitions.Count > 0)
-                        precursors.Add(nodeTranGroup.ChangeResults(null).ChangeChildren(transitions));
-                }
-                if (precursors.Count > 0)
-                {
-                    peptides.Add((PeptideDocNode)nodePep.ChangeResults(null).ChangeChildren(precursors));
+                    {
+                        var nodePepNew = (PeptideDocNode)nodePepMinimal.ChangeChildren(new[]
+                            { nodeTranGroup.ChangeResults(null).ChangeChildren(transitions) });
+                        peptides.Add(nodePepNew.ChangeResults(null));
+                        addedDocPeptides = true;
+                    }
                 }
             }
             if (peptides.Count == 0)
                 return null;
-
-            // Clear some settings to make the document smaller and so that they won't get imported into a document
-            doc = doc.ChangeMeasuredResults(null);
-            doc = (SrmDocument)doc.ChangeChildren(new[]
+            if (peptides.Count < minimalPeptides.Count)
             {
-                new PeptideGroupDocNode(new PeptideGroup(), Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty,
-                    Array.Empty<PeptideDocNode>())
-            });
-            doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs => libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
+                // If this document does not contain the full set of standard peptides, but there is a built-in IrtStandard that does have them all
+                // then return null so that the built-in standard will be used instead of the incomplete document xml.
+                var matchingStandard = IrtStandard.WhichStandard(minimalPeptides);
+                if (matchingStandard != null)
+                {
+                    return null;
+                }
+            }
 
+
+            // Empty peptide list with iRT standards name
+            var nodePepGroup = new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
+                Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty,
+                Array.Empty<PeptideDocNode>(), false);
+
+            if (!addedDocPeptides)
+                doc = IrtStandard.CIRT.GetDocument();   // All CiRT peptides so start with the CiRT document
+            else
+            {
+                // Clear some settings to make the document smaller and so that they won't get imported into a document
+                doc = (SrmDocument)doc.ChangeMeasuredResults(null).ChangeChildren(new[] { nodePepGroup });
+                doc = doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(libs =>
+                    libs.ChangeLibraries(new List<LibrarySpec>(), new List<Library>())));
+            }
+
+            // Add the peptides after clearing the libraries so they preserve their library ranking
             peptides.Sort((nodePep1, nodePep2) => nodePep1.ModifiedTarget.CompareTo(nodePep2.ModifiedTarget));
-            doc = (SrmDocument)doc.ChangeChildren(new[]
+            doc = (SrmDocument) doc.ChangeChildren(new []
             {
                 new PeptideGroupDocNode(new PeptideGroup(), Annotations.EMPTY,
                     Resources.IrtDb_MakeDocumentXml_iRT_standards, string.Empty, peptides.ToArray(), false)
             });
 
-            using (var writer = new StringWriter())
+            using (var writer = new XmlStringWriter())
             using (var writer2 = new XmlTextWriter(writer))
             {
                 doc.Serialize(writer2, null, SkylineVersion.CURRENT, null);
                 return writer.ToString();
             }
+        }
+
+        private static PeptideDocNode RemoveMs1Transitions(PeptideDocNode nodePep)
+        {
+            var nodeGroup = nodePep.TransitionGroups.FirstOrDefault();
+            if (nodePep.TransitionGroupCount > 1)
+            {
+                // Take the precursor with the most peak area.
+                // This assumes that they start out comparable and that removing the MS1
+                // transitions may leave them with nothing to compare by.
+                nodeGroup = nodePep.TransitionGroups.OrderByDescending(g =>
+                    g.Transitions.Sum(t => t.GetPeakArea(-1))).First();
+            }
+
+            if (nodeGroup == null)
+                return nodePep;
+
+            var listTrans = new List<DocNode>(nodeGroup.Transitions.Where(t => !t.IsMs1));
+            nodeGroup = (TransitionGroupDocNode)nodeGroup.ChangeChildrenChecked(listTrans);
+
+            return (PeptideDocNode)nodePep.ChangeChildrenChecked(new[] { nodeGroup });
         }
 
         private static void EnsureDocumentXmlTable(ISession session)

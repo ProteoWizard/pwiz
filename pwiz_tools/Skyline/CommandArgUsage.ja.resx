@@ -290,11 +290,9 @@
   </data>
   <data name="_import_pep_list" xml:space="preserve">
     <value>ペプチドまたはペプチドプリカーサー（電荷状態）のリストを--import-pep-list-nameで指定したオプションのリスト名でインポートします。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_import_pep_list_name" xml:space="preserve">
     <value>--import-pep-listで指定されたインポート対象のペプチドリストの名前です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_import_transition_list" xml:space="preserve">
     <value>Q1、Q3とペプチドシーケンスがあるシンプルなトランジションリストをインポートします。  また、ヘッダーが適切な分子トランジションリストもCSV形式でサポートします。</value>
@@ -925,181 +923,137 @@ Waters</value>
   </data>
   <data name="CommandArgs_GROUP_OTHER_FILE_TYPES" xml:space="preserve">
     <value>他のファイルタイプをエクスポート中</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_speclib_file" xml:space="preserve">
     <value>現在のドキュメントの実験データをスペクトルライブラリファイルにエクスポートします。ピーク面積はスペクトル強度として、ピーク頂点時間は保持時間として使用され、ドキュメントにiRT値がある場合は、それもライブラリに保存されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_exclude_feature" xml:space="preserve">
     <value>エクスポートしたファイルから名前で特定のフィーチャースコアを除外するために使用します。名前はユーザーインターフェイスで見つけられます。この引数を複数回使用すると、複数のフィーチャーを除外できます。--exp-mprophet-features引数が必要です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_features" xml:space="preserve">
     <value>各ペプチドの個々のフィーチャースコア、複合スコア、p値、q値をすべてmProphet形式にエクスポートします。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_best_peaks_only" xml:space="preserve">
     <value>最良スコアのピークに対してのみフィーチャースコアを含めます。--exp-mprophet-features引数が必要です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_mprophet_targets_only" xml:space="preserve">
     <value>ターゲットに対してのみフィーチャースコアを含めます。--exp-mprophet-features引数が必要です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations" xml:space="preserve">
     <value>ElementLocatorフィールドがあるテキストファイルにドキュメント内のすべての注釈を--import-annotationsで要求される形式でエクスポートします。--exp-annotations-include-propertiesを使用すると、プロパティも含まれます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_remove_blank_rows" xml:space="preserve">
     <value>エクスポートした注釈から空白行を削除するために使用します。 --exp-annotations引数が必要です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_include_object" xml:space="preserve">
     <value>エクスポートする注釈に含めるオブジェクトタイプの指定に使用します。デフォルトでは、すべてのオブジェクトタイプが含まれます。この引数を複数回使用すると、複数のオブジェクトタイプを指定できます。--exp-annotations引数が必要です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_exp_annotations_include_properties" xml:space="preserve">
     <value>エクスポートされた注釈にすべてのプロパティを含めるために使用します。デフォルトではどのプロパティも含まれません。--exp-annotations引数が必要です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_exclude_nterminal_aas" xml:space="preserve">
     <value>各タンパク質内でこのアミノ酸の位置より前にあるすべてのペプチドを除外します。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_exclude_potential_ragged_ends" xml:space="preserve">
     <value>切断部位の直前か直後に切断部位を持つペプチドを除外します。 例：トリプシンのRR、KK、RK、KR</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_length" xml:space="preserve">
     <value>ドキュメントに追加するペプチドの最大長。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_min_length" xml:space="preserve">
     <value>ドキュメントに追加するペプチドの最小長。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_GROUP_DOCUMENT_SETTINGS" xml:space="preserve">
     <value>ドキュメント設定</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_name" xml:space="preserve">
     <value>指定した名前でドキュメントに注釈を追加します。同一の名前を持つ既存の注釈は上書きされます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_targets" xml:space="preserve">
     <value>--annotation-name操作で注釈を適用するターゲットタイプのカンマ区切りリスト。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_type" xml:space="preserve">
     <value>--annotation-name操作の注釈のデータタイプを定義します。デフォルトはテキストです。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_values" xml:space="preserve">
     <value>--annotation-name操作でvalue_listタイプの注釈で使う値のカンマ区切りリスト。--annotation-type=value_list操作でのみ必須となります。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_ANNOTATION_VALUES_VALUE" xml:space="preserve">
     <value>「&lt;value&gt;、&lt;value&gt;、&lt;value&gt;...」</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_conflict_resolution" xml:space="preserve">
     <value>--annotation-name、--annotation-file、または--annotation-add-from-environmentを使用する際、注釈名の重複を解決する方法を、上書き、重複をスキップする、のいずれかで指定します（デフォルトは、重複のエラーメッセージの出力です。）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_annotation_file" xml:space="preserve">
     <value>XML形式のファイルからドキュメントと環境に注釈を追加します。XML形式ファイルの例は、ユーザーインターフェイスウィンドウの [ツール] &gt; [オプション] &gt; [その他] で指定されるuser.configファイルをご覧ください。同一の名前を持つ既存の注釈は上書きされます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_file" xml:space="preserve">
     <value>開いたドキュメントに適用するバックグラウンドプロテオーム（protdb）ファイルへのパス。この名前は、オプションで--background-proteome-nameを使って指定できます。指定しない場合、ファイル名がデフォルトとして使用されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_background_proteome_name" xml:space="preserve">
     <value>開いたドキュメントに適用するバックグラウンドプロテオームの名前。バックグラウンドプロテオームは、質量分析計に導入される試料マトリックス内に存在し得るすべてのタンパク質を指定します。名前がSkylineで定義されていない場合は、protdbファイルへのパスも--background-proteome-fileで設定する必要があります。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_digest_enzyme" xml:space="preserve">
     <value>ドキュメントにターゲットとして追加されたタンパク質配列からペプチド配列を解析するために使用されるプロテアーゼ酵素の定義。ペプチドリストがターゲットとして追加された場合、この設定は未切断数をカウントする以外は無視されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_missed_cleavages" xml:space="preserve">
     <value>タンパク質消化時に許容される最大未切断数。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_unique_by" xml:space="preserve">
     <value>「タンパク質」は、バックグラウンドプロテオームで2つ以上のタンパク質に出現するペプチドを全て除外します。 「遺伝子」は、バックグラウンドプロテオームで2つ以上の遺伝子のタンパク質に出現するペプチドを全て除外します。 「種」は、バックグラウンドプロテオームで2つ以上の種のタンパク質に出現するペプチドを全て除外します。複数の種を含む試料混合物に有用です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_verbose_errors" xml:space="preserve">
     <value>エラーが発生した場合、Skylineの開発者に役立つ可能性のある追加情報をプログラムの出力に追加します。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_associate_proteins_gene_level_parsimony" xml:space="preserve">
     <value>タンパク質ではなく遺伝子（または遺伝子グループ）とペプチドを関連付け、その関連付けにパーシモニーオプションを適用します。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_MOD_NAME_VALUE_full_name__e_g___Oxidation__M______short_name__Oxi_" xml:space="preserve">
     <value>フルネーム（例「Oxidation (M)」）| ショートネーム(Oxi)</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_MOD_UNIMOD_VALUE_UniMod_ID__e_g___35__" xml:space="preserve">
     <value>UniMod ID（例「35」）</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_integrate_all" xml:space="preserve">
     <value>設定すると、積分領域間のシグナルに寄与するすべてのトランジションが検出されたと見なされます。設定しない場合、共溶出しているトランジションのみが検出されたと見なされます。設定にかかわらず、積分領域間の定量的トランジションのシグナルはすべて合計され、プリカーサーの [総面積] となります。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_mod" xml:space="preserve">
     <value>ドキュメントにUniMod修飾を追加します。修飾は、PSI-MS名と部位を共に指定する必要があります（「酸化(M)」）。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod_aa" xml:space="preserve">
     <value>--pep-add-unimod により最後に追加されたペプチド修飾のアミノ酸特異性が提供されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod_term" xml:space="preserve">
     <value>--pep-add-unimod により最後に追加されたペプチド修飾の末端特異性が提供されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_unimod" xml:space="preserve">
     <value>UniMod IDでドキュメントにUniMod修飾を追加します。修飾に複数の特異性がある場合は、--pep-add-unimod-aaまたは--pep-add-unimod-termを使用して、ドキュメントに追加する特異性を選ぶ必要があります。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_clear_mods" xml:space="preserve">
     <value>現在開いているドキュメントからすべてのペプチド修飾を消去します。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_losses" xml:space="preserve">
     <value>単一のフラグメントイオンから許可される最大ニュートラルロス数。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_max_variable_mods" xml:space="preserve">
     <value>どのペプチドインスタンスにおける組み合わせでも発生可能な 最大可変修飾数。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CommandArgs_BOOL_VALUE__0__or__1_" xml:space="preserve">
     <value>{0} または {1}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_" xml:space="preserve">
     <value>値「{0}」は引数{1}に対して有効ではありません。{2}の1つを使用します。</value>
   </data>
   <data name="ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_" xml:space="preserve">
     <value>ペプチド修飾「{0}」を追加できません：{1}</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_" xml:space="preserve">
     <value>値「{0}」は引数{1}には有効ではありません。{2}である必要があります。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_associate_proteins_fasta" xml:space="preserve">
     <value>ドキュメント内のペプチドを、指定されたFASTAファイル内のタンパク質と関連付けます。この引数がなく、他の--associate-proteinsオプションがある場合は、--import-fastaからのFASTAが使用されます。--import-fastaもない場合は、タンパク質の関連付けに使用された最後のFASTAが使用されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="_pep_add_mod_variable" xml:space="preserve">
     <value>「true」の場合は修飾を変数として、「false」の場合は静的として追加します。損失のみの修飾（アンモニアと水の損失など）を除く構造修飾にのみ有効です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>

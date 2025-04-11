@@ -29,7 +29,6 @@
 #include "pwiz/utility/misc/Std.hpp"
 
 #include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/convenience.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include "boost/filesystem/exception.hpp"
 
@@ -57,11 +56,10 @@ class FrequencyEstimatorPhysicalModelImpl : public FrequencyEstimatorPhysicalMod
 
 
 PWIZ_API_DECL
-auto_ptr<FrequencyEstimatorPhysicalModel> 
+unique_ptr<FrequencyEstimatorPhysicalModel>
 FrequencyEstimatorPhysicalModel::create(const Config& config)
 {
-    return auto_ptr<FrequencyEstimatorPhysicalModel>(
-        new FrequencyEstimatorPhysicalModelImpl(config));
+    return std::make_unique<FrequencyEstimatorPhysicalModelImpl>(config);
 }
 
 
@@ -97,7 +95,7 @@ Peak FrequencyEstimatorPhysicalModelImpl::estimate(const FrequencyData& fd,
     window.noiseFloor(sqrt(fd.variance()));
 
     // create the estimator
-    auto_ptr<TruncatedLorentzianEstimator> estimator = TruncatedLorentzianEstimator::create(); 
+    unique_ptr<TruncatedLorentzianEstimator> estimator = TruncatedLorentzianEstimator::create();
 
     // TODO: clean up TruncatedLorentzianEstimator interface w/Config struct
     // set up estimator intermediate output

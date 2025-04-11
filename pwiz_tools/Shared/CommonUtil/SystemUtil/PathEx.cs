@@ -19,10 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Linq;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -119,12 +119,9 @@ namespace pwiz.Common.SystemUtil
             }
             else if (Environment.OSVersion.Version.Major >= 6)
             {
-                IntPtr pathPtr;
-                int hr = SHGetKnownFolderPath(ref FolderDownloads, 0, IntPtr.Zero, out pathPtr);
-                if (hr == 0)
+                path = Shell32.GetDownloadsFolder();
+                if (path != null)
                 {
-                    path = Marshal.PtrToStringUni(pathPtr);
-                    Marshal.FreeCoTaskMem(pathPtr);
                     return path;
                 }
             }
@@ -147,10 +144,6 @@ namespace pwiz.Common.SystemUtil
             return null != Environment.GetEnvironmentVariable(SKYLINE_DOWNLOAD_PATH)
                    && null == Environment.GetEnvironmentVariable(SKYLINE_DOWNLOAD_PATH, EnvironmentVariableTarget.User);
         }
-
-        private static Guid FolderDownloads = new Guid(@"374DE290-123F-4565-9164-39C4925E467B");
-        [DllImport(@"shell32.dll", CharSet = CharSet.Auto)]
-        private static extern int SHGetKnownFolderPath(ref Guid id, int flags, IntPtr token, out IntPtr path);
 
         /// <summary>
         /// Wrapper around <see cref="Path.GetDirectoryName"/> which, if an error occurs, adds
@@ -203,8 +196,25 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
+        /// Apparently this was added to Path in .NET 5 and later. Several places in the project have
+        /// now implemented this with either RemovePrefix or some other method.
+        /// </summary>
+        /// <param name="relativePathTo">The base path to make the path relative to</param>
+        /// <param name="path">The full path to make relative</param>
+        /// <returns>The relative path from the base path to the given path</returns>
+        public static string GetRelativePath(string relativePathTo, string path)
+        {
+            if (!relativePathTo.EndsWith(Path.DirectorySeparatorChar.ToString()))
+                relativePathTo += Path.DirectorySeparatorChar;
+            return RemovePrefix(path, relativePathTo);
+        }
+
+        /// <summary>
         /// If the path starts with the prefix, then skip over the prefix; 
-        /// otherwise, return the original path.
+        /// otherwise, return the original path. This works well as a method of getting a relative
+        /// path in combination with <see cref="GetCommonRoot(System.Collections.Generic.IEnumerable{string})"/>, since
+        /// it is guaranteed to return a directory path ending with a Path.DirectorySeparatorChar, but not in
+        /// cases where a path to a directory lacks a terminating separator. In those cases, use <see cref="GetRelativePath"/>.
         /// </summary>
         public static string RemovePrefix(string path, string prefix)
         {

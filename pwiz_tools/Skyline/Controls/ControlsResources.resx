@@ -169,6 +169,9 @@
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name" xml:space="preserve">
     <value>Targets by Preferred Name</value>
   </data>
+  <data name="SequenceTree_ExpansionTooLargeMessage" xml:space="preserve">
+    <value>Cannot expand because the number of nodes in the expansion is {0} and it exceeds the limit of {1}</value>
+  </data>
   <data name="StatementCompletionForm_AddDescription_List_view_item_already_has_a_description" xml:space="preserve">
     <value>List view item already has a description</value>
   </data>

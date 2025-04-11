@@ -74,6 +74,8 @@ Import Peptide Search > Configure Transition Settings > Pick product ions is "6"
 Import Peptide Search > Configure Transition Settings > Product ion selection start is "ion 3"
 Import Peptide Search > Configure Transition Settings > Product ion selection end is "last ion"
 Import Peptide Search > Configure Transition Settings > Max ion m/z is "2000"
+Import Peptide Search > Configure Full-Scan Settings > Isolation scheme is "500 to 900 by 20"
+Import Peptide Search > Configure Full-Scan Settings > Isotope labeling enrichment is "Default"
 Import Peptide Search > Import FASTA > FASTA file is "pituitary_database.fasta"
 Import Peptide Search > Associate Proteins > Group proteins is False
 Import Peptide Search > Associate Proteins > Find minimal protein list is False
@@ -100,6 +102,11 @@ Configure Transition Settings =
     Product ion selection start = "ion 3",
     Product ion selection end = "last ion",
     Max ion m/z = "2000"
+},
+Configure Full-Scan Settings = 
+{
+    Isolation scheme = "500 to 900 by 20",
+    Isotope labeling enrichment = "Default"
 },
 Import FASTA = 
 {

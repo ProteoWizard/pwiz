@@ -458,7 +458,6 @@
   </data>
   <data name="enterListButton.Text" xml:space="preserve">
     <value>リストの入力(&amp;E)...</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;enterListButton.Name" xml:space="preserve">
     <value>enterListButton</value>

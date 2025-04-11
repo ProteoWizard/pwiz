@@ -39,7 +39,7 @@ call build.bat --UPDATE -sLOCATE_TARGET=bin.nt
 setlocal
 @echo off
 set PWIZ_BJAM=%BOOST_BUILD_PATH%\src\engine\b2.exe
-IF NOT EXIST "%PWIZ_BJAM%" echo Error building bjam. & exit /b 1
+IF NOT EXIST "%PWIZ_BJAM%" echo Error building bjam. & echo PATH=%PATH% & exit /b 1
 popd
 :SKIP_BJAM
 

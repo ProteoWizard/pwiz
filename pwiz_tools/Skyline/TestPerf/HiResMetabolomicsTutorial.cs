@@ -40,6 +40,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs.Calibration;
+using pwiz.Skyline.Controls.Graphs;
 
 namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB download
 {
@@ -49,6 +50,10 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
         [TestMethod]
         public void TestHiResMetabolomicsTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
@@ -101,7 +106,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                     transitionSettingsUI.SetAutoSelect = true;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab", 4);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Filter tab");
                 RunUI(() =>
                 {
                     // Full Scan Settings
@@ -113,7 +118,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     transitionSettingsUI.PrecursorResMz = 200;
                     transitionSettingsUI.RetentionTimeFilterType = RetentionTimeFilterType.none;
                 });
-                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab", 5);
+                PauseForScreenShot<TransitionSettingsUI.PredictionTab>("Transition Settings -Full Scan tab");
 
                 OkDialog(transitionSettingsUI, transitionSettingsUI.OkDialog);
                 var docTargets = WaitForDocumentChange(doc);
@@ -121,7 +126,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 RunUIForScreenShot(() => ResizeFormOnScreen(importDialog, 600, 300));
-                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list", 6);
+                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List ready to accept paste of transition list");
 
                 var text = GetCsvFileText(GetTestPath("PUFA_TransitionList.csv"));
                 var col4Dlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text);
@@ -134,20 +139,20 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     col4Dlg.SetColumnWidth(2, 120); // To show "Molecule Formula" fully
                     col4Dlg.SetColumnWidth(5, 135); // To reduce wrapping to just 2 rows
                 });
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker", 6);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column picker");
 
                 var errDlg = ShowDialog<ImportTransitionListErrorDlg>(col4Dlg.CheckForErrors);
                 RunUI(() => errDlg.Size = new Size(680, 250));
-                PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem", 7);
+                PauseForScreenShot<ImportTransitionListErrorDlg>("Check For Errors dialog showing charge problem");
                 OkDialog(errDlg, errDlg.OkDialog);
 
                 RunUI(() => col4Dlg.ComboBoxes[4].SelectedIndex = 0); // Set the Precursor charge column to "ignore"
 
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents", 7);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Paste Dialog with validated contents");
                 OkDialog(col4Dlg, col4Dlg.OkDialog);
 
                 var autoSelectDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                PauseForScreenShot<MultiButtonMsgDlg>("Auto-select query", 8);
+                PauseForScreenShot<MultiButtonMsgDlg>("Auto-select query");
                 OkDialog(autoSelectDlg, autoSelectDlg.OkDialog);
 
                 docTargets = WaitForDocumentChange(docTargets);
@@ -155,22 +160,59 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 AssertEx.IsDocumentState(docTargets, null, 1, 4, 7, 14);
                 Assert.IsFalse(docTargets.MoleculeTransitions.Any(t => !t.Transition.IsPrecursor()));
 
+                const int SHORT_HEIGHT = 654;
                 RunUI(() =>
                 {
                     SkylineWindow.ChangeTextSize(TreeViewMS.DEFAULT_TEXT_FACTOR);
-                    SkylineWindow.Size = new Size(957, 654);
+                    SkylineWindow.Size = new Size(957, SHORT_HEIGHT);
                     SkylineWindow.ExpandPrecursors();
                 });
                 RestoreViewOnScreen(5);
 
-                PauseForScreenShot("Skyline with 14 transition - show the right-click menu for setting DHA to be a surrogate standard", 9);
+                PauseForScreenShot("Skyline with 14 transition");
 
                 // Set the standard type of the surrogate standards to StandardType.SURROGATE_STANDARD
                 SelectNode(SrmDocument.Level.Molecules, 3);
 
-                // TODO: Show right-click menu with "Surrogate Standard" selected
+                if (IsPauseForScreenShots)
+                {
+                    RunUI(() => SkylineWindow.Height = 720);    // Taller for context menu
+
+                    var sequenceTree = SkylineWindow.SequenceTree;
+                    ToolStripDropDown menuStrip = null, subMenuStrip = null;
+
+                    RunUI(() =>
+                    {
+                        var rectSelectedItem = sequenceTree.SelectedNode.Bounds;
+                        SkylineWindow.ContextMenuTreeNode.Show(sequenceTree.PointToScreen(
+                            new Point(rectSelectedItem.X + rectSelectedItem.Width / 2,
+                                rectSelectedItem.Y + rectSelectedItem.Height / 2)));
+                        var setStandardTypeMenu = SkylineWindow.ContextMenuTreeNode.Items.OfType<ToolStripMenuItem>()
+                            .First(i => Equals(i.Name, @"setStandardTypeContextMenuItem"));
+                        setStandardTypeMenu.ShowDropDown();
+                        setStandardTypeMenu.DropDownItems.OfType<ToolStripMenuItem>()
+                            .First(i => Equals(i.Name, @"surrogateStandardContextMenuItem")).Select();
+
+                        menuStrip = SkylineWindow.ContextMenuTreeNode;
+                        subMenuStrip = setStandardTypeMenu.DropDown;
+                        menuStrip.Closing += DenyMenuClosing;
+                        subMenuStrip.Closing += DenyMenuClosing;
+                    });
+
+                    // Should all land on the SkylineWindow, so just screenshot the whole window
+                    PauseForScreenShot("Skyline with 4 molecules with menu and submenu showing for surrogate standard setting");
+
+                    RunUI(() =>
+                    {
+                        menuStrip.Closing -= DenyMenuClosing;
+                        subMenuStrip.Closing -= DenyMenuClosing;
+                        menuStrip.Close();
+
+                        SkylineWindow.Height = SHORT_HEIGHT;
+                    });
+                }
+
                 RunUI(() => SkylineWindow.SetStandardType(StandardType.SURROGATE_STANDARD));
-                PauseForScreenShot("Skyline with 4 molecules and one set as surrogate standard");
                 RunUI(() => SkylineWindow.SaveDocument(GetTestPath("FattyAcids_demo.sky")));
 
                 using (new WaitDocumentChange(1, true))
@@ -183,7 +225,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         openDataSourceDialog1.CurrentDirectory = new MsDataFilePath(Path.Combine(TestFilesDirs.First().PersistentFilesDir, GetDataFolder()));
                         openDataSourceDialog1.SelectAllFileType(ExtWatersRaw);
                     });
-                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form", 10);
+                    PauseForScreenShot<OpenDataSourceDialog>("Import Results Files form");
                     OkDialog(openDataSourceDialog1, openDataSourceDialog1.Open);
                     OkDialog(importResultsDlg1,importResultsDlg1.OkDialog);
                 }
@@ -191,7 +233,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 SelectNode(SrmDocument.Level.MoleculeGroups, 0);
                 RunUI(SkylineWindow.CollapsePrecursors);
-                PauseForScreenShot("Skyline window multi-target graph", 11);
+                PauseForScreenShot("Skyline window multi-target graph");
 
                 var docResults = SkylineWindow.Document;
 
@@ -234,12 +276,13 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     RunUI(() => documentGrid.DataboundGridControl.ChooseView(new ViewName(ViewGroup.BUILT_IN.Id,
                         Resources.SkylineViewContext_GetDocumentGridRowSources_Molecules)));
                 }
-                PauseForScreenShot("Skyline window multi-replicate layout", 12);
+                PauseForScreenShot("Skyline window multi-replicate layout");
 
                 if (IsCoverShotMode)
                 {
                     RunUI(() =>
                     {
+                        Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.label.ToString();
                         Settings.Default.ChromatogramFontSize = 14;
                         Settings.Default.AreaFontSize = 14;
                         SkylineWindow.ChangeTextSize(TreeViewMS.LRG_TEXT_FACTOR);
@@ -260,6 +303,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                     WaitForGraphs();
                     RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.NextNode);
                     WaitForGraphs();
+                    FocusDocument();
 
                     TakeCoverShot();
                     return;
@@ -281,7 +325,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                         peptideSettingsUI.QuantUnits = "uM";
                     });
 
-                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Molecule Settings - Quantitation", 13);
+                    PauseForScreenShot<PeptideSettingsUI.QuantificationTab>("Molecule Settings - Quantitation");
                     OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
                 }
 
@@ -312,7 +356,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 // Make sure the edits have flowed to the document
                 WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.Chromatograms.Where(c => c.Name.StartsWith("GW")).All(c => c.SampleType.Equals(SampleType.QC)));
                 RestoreViewOnScreen(14);
-                PauseForScreenShot<DocumentGridForm>("Document Grid - replicates", 14);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - replicates");
 
                 // Finish setting up quant
                 var documentGrid3 = FindOpenForm<DocumentGridForm>();
@@ -338,12 +382,12 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
                 });
 
                 RestoreViewOnScreen(15);
-                PauseForScreenShot<DocumentGridForm>("Document Grid - molecule quant again", 15);
+                PauseForScreenShot<DocumentGridForm>("Document Grid - molecule quant again");
 
                 RunUI(() => SkylineWindow.ShowCalibrationForm());
                 SelectNode(SrmDocument.Level.Molecules, 0);
                 WaitForGraphs();
-                PauseForScreenShot<CalibrationForm>("Calibration curve", 15);
+                PauseForScreenShot<CalibrationForm>("Calibration curve");
             }
         }
     }

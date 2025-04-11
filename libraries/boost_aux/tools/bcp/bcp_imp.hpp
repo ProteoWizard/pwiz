@@ -13,6 +13,8 @@
 #include <list>
 #include <set>
 #include <map>
+#include <queue>
+#include <string>
 #include <boost/filesystem/path.hpp>
 
 namespace fs = boost::filesystem;
@@ -67,6 +69,7 @@ private:
    void set_namespace(const char* name);
    void set_namespace_alias(bool);
    void set_namespace_list(bool);
+   void add_excluded(const char* p);
 
    virtual int run();
 
@@ -75,6 +78,7 @@ private:
    void scan_cvs_path(const fs::path& p);
    void scan_svn_path(const fs::path& p);
    void add_path(const fs::path& p);
+   void add_pending_path(const fs::path& p) { m_pending_paths.push(p); }
    void add_directory(const fs::path& p);
    void add_file(const fs::path& p);
    void copy_path(const fs::path& p);
@@ -115,5 +119,7 @@ private:
    std::string                                           m_namespace_name;             // namespace rename.
    std::set<std::string>                                 m_lib_names;                  // List of library binary names
    std::map<std::string, fs::path>                       m_top_namespaces;             // List of top level namespace names
+   std::queue<fs::path, std::list<fs::path> >            m_pending_paths;              // Queue of paths we haven't scanned yet.
+   std::set<fs::path, path_less>                         m_excluded;                   // paths to ignore in scan
 };
 

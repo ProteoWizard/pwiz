@@ -119,14 +119,12 @@
   </resheader>
   <data name="Abort" xml:space="preserve">
     <value>中断</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Cancel" xml:space="preserve">
     <value>キャンセル</value>
   </data>
   <data name="Ignore" xml:space="preserve">
     <value>無視</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="No" xml:space="preserve">
     <value>いいえ</value>

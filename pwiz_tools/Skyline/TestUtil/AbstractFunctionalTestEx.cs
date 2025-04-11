@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
@@ -49,6 +50,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -74,6 +76,12 @@ namespace pwiz.SkylineTestUtil
         /// <param name="documentPath">File path of document</param>
         public SrmDocument OpenDocument(string documentPath)
         {
+            // In a test it's possible to programatically open a document while forms like
+            // PeptideSettingsUI or TransitionSettingsUI are open, but this isn't possible
+            // in actual UI use and will doubtless lead to confusing test behavior.
+            var unexpectedOpenForms = FindOpenForms<Form>().Where(f => f.Modal).Select(form => form.Name).ToList();
+            AssertEx.AreEqual(0, unexpectedOpenForms.Count, $@"Can't open a document when other dialogs are still open: {CommonTextUtil.LineSeparate(unexpectedOpenForms)}");
+
             string documentFile = null;
             foreach (var testFileDir in TestFilesDirs)
             {
@@ -525,14 +533,14 @@ namespace pwiz.SkylineTestUtil
             ClickChromatogram(null, x, y, paneKey);
         }
 
-        public static void ClickChromatogram(string graphName, double x, double y, PaneKey? paneKey = null)
+        public static void ClickChromatogram(string graphName, double x, double y, PaneKey? paneKey = null, double? titleTime = null)
         {
             WaitForGraphs();
             var graphChromatogram = GetGraphChrom(graphName);
             MouseOverChromatogramInternal(graphChromatogram, x, y, paneKey);
             RunUI(() => graphChromatogram.TestMouseDown(x, y, paneKey));
             WaitForGraphs();
-            CheckFullScanSelection(graphName, x, y, paneKey);
+            CheckFullScanSelection(graphName, x, y, paneKey, titleTime);
         }
 
         public static void MouseOverChromatogram(double x, double y, PaneKey? paneKey = null)
@@ -567,15 +575,22 @@ namespace pwiz.SkylineTestUtil
                     sleepInterval * sleepCycles / 1000.0)));
         }
 
-        public static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null)
+        public static void CheckFullScanSelection(double x, double y, PaneKey? paneKey = null, double? titleTime = null)
         {
-            CheckFullScanSelection(null, x, y, paneKey);
+            CheckFullScanSelection(null, x, y, paneKey, titleTime);
         }
 
-        public static void CheckFullScanSelection(string graphName, double x, double y, PaneKey? paneKey = null)
+        public static void CheckFullScanSelection(string graphName, double x, double y, PaneKey? paneKey = null, double? titleTime = null)
         {
             var graphChromatogram = GetGraphChrom(graphName);
             WaitForConditionUI(() => SkylineWindow.GraphFullScan != null && SkylineWindow.GraphFullScan.IsLoaded);
+            if (titleTime.HasValue)
+            {
+                // Good idea to check the title for a tutorial screenshot
+                var matchTime = Regex.Match(SkylineWindow.GraphFullScan.TitleText, @".([0-9.,]+) [\w]+.$");
+                Assert.IsTrue(matchTime.Success);
+                Assert.AreEqual(titleTime.Value, double.Parse(matchTime.Groups[1].Value));
+            }
             Assert.AreEqual(string.Empty, graphChromatogram.TestFullScanSelection(x, y, paneKey));
         }
 
@@ -652,11 +667,11 @@ namespace pwiz.SkylineTestUtil
                                             string annotationName,
                                             AnnotationDef.AnnotationType annotationType = AnnotationDef.AnnotationType.text,
                                             IList<string> annotationValues = null,
-                                            int? pausePage = null)
+                                            bool pause = false)
         {
             AddAnnotation(documentSettingsDlg, annotationName, annotationType, annotationValues,
                     AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.replicate),
-                    pausePage);
+                    pause);
         }
 
         public void AddAnnotation(DocumentSettingsDlg documentSettingsDlg,
@@ -664,7 +679,7 @@ namespace pwiz.SkylineTestUtil
                                             AnnotationDef.AnnotationType annotationType,
                                             IList<string> annotationValues,
                                             AnnotationDef.AnnotationTargetSet annotationTargets,
-                                            int? pausePage = null)
+                                            bool pause = false)
         {
             var annotationsListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>
                 (documentSettingsDlg.EditAnnotationList);
@@ -680,10 +695,10 @@ namespace pwiz.SkylineTestUtil
                 annotationDefDlg.AnnotationTargets = annotationTargets;
             });
 
-            if (pausePage.HasValue)
+            if (pause)
             {
                 RunUI(() => annotationDefDlg.Height = 442);  // Shorter for screenshots
-                PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName, pausePage.Value);
+                PauseForScreenShot<DefineAnnotationDlg>("Define Annotation form - " + annotationName);
             }
 
             OkDialog(annotationDefDlg, annotationDefDlg.OkDialog);

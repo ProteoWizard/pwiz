@@ -120,7 +120,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             // Add all peptides
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(viewLibUI.AddAllPeptides);
             var docBefore = WaitForProteinMetadataBackgroundLoaderCompletedUI();
-            using (new CheckDocumentState(1, 8433, 10882, 43484))
+            using (new CheckDocumentState(1, 8591, 11057, 44174))
             {
                 RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
                 {
@@ -146,6 +146,7 @@ namespace TestPerf // Tests in this namespace are skipped unless the RunPerfTest
             RunUI(() =>
             {
                 Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
                 importPeptideSearchDlg.BuildPepSearchLibControl.AddSearchFiles(SearchFiles);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsEarlyFinishButtonEnabled);

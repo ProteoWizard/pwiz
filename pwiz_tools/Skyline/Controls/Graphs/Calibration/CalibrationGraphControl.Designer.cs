@@ -39,7 +39,6 @@
             this.showLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showFiguresOfMeritContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.showBootstrapCurvesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.moreDisplayOptionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -72,7 +71,6 @@
             this.showLegendContextMenuItem,
             this.showSelectionContextMenuItem,
             this.showFiguresOfMeritContextMenuItem,
-            this.showBootstrapCurvesContextMenuItem,
             this.moreDisplayOptionsContextMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             resources.ApplyResources(this.contextMenuStrip1, "contextMenuStrip1");
@@ -118,12 +116,6 @@
             resources.ApplyResources(this.showFiguresOfMeritContextMenuItem, "showFiguresOfMeritContextMenuItem");
             this.showFiguresOfMeritContextMenuItem.Click += new System.EventHandler(this.showFiguresOfMeritContextMenuItem_Click);
             // 
-            // showBootstrapCurvesContextMenuItem
-            // 
-            this.showBootstrapCurvesContextMenuItem.Name = "showBootstrapCurvesContextMenuItem";
-            resources.ApplyResources(this.showBootstrapCurvesContextMenuItem, "showBootstrapCurvesContextMenuItem");
-            this.showBootstrapCurvesContextMenuItem.Click += new System.EventHandler(this.showBootstrapCurvesToolStripMenuItem_Click);
-            // 
             // moreDisplayOptionsContextMenuItem
             // 
             this.moreDisplayOptionsContextMenuItem.Name = "moreDisplayOptionsContextMenuItem";
@@ -152,7 +144,6 @@
         private System.Windows.Forms.ToolStripMenuItem showLegendContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSelectionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showFiguresOfMeritContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem showBootstrapCurvesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem moreDisplayOptionsContextMenuItem;
     }
 }

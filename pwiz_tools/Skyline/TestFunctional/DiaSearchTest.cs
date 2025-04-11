@@ -81,8 +81,8 @@ namespace pwiz.SkylineTestFunctional
                 DocumentPath = "TestVariableWindowDiaUmpire.sky",
                 SearchFiles = new[]
                 {
-                    "collinsb_I180316_001_SW-A-subset.mz5",
-                    "collinsb_I180316_002_SW-B-subset.mz5"
+                    "collinsb_I180316_001_SW-A-subset.mzML",
+                    "collinsb_I180316_002_SW-B-subset.mzML"
                 },
                 FastaPath = "collinsb_I180316.fasta",
                 PrecursorMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
@@ -103,7 +103,10 @@ namespace pwiz.SkylineTestFunctional
             };
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -116,7 +119,10 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsgfPlus()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -130,7 +136,10 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod,
+         NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
+         NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindowsMsFragger()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
@@ -140,7 +149,7 @@ namespace pwiz.SkylineTestFunctional
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.Initial = new TestDetails.DocumentCounts { ProteinCount = 877, PeptideCount = 78, PrecursorCount = 91, TransitionCount = 819 };
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 110, PeptideCount = 118, PrecursorCount = 137, TransitionCount = 1233 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 89, PeptideCount = 94, PrecursorCount = 113, TransitionCount = 1017 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("check_spectral_files", "0"),
@@ -151,7 +160,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 // run it twice to make sure logic still works
                 TestDiaUmpireSearch();
-                TestDiaUmpireSearch();
+                if (TestPass == 1)
+                    TestDiaUmpireSearch();
             };
 
             RunFunctionalTest();
@@ -180,7 +190,7 @@ namespace pwiz.SkylineTestFunctional
                 FragmentMzTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
 
                 Initial = new TestDetails.DocumentCounts { ProteinCount = 268, PeptideCount = 93, PrecursorCount = 94, TransitionCount = 846 },
-                Final = new TestDetails.DocumentCounts { ProteinCount = 103, PeptideCount = 108, PrecursorCount = 110, TransitionCount = 990 },
+                Final = new TestDetails.DocumentCounts { ProteinCount = 108, PeptideCount = 114, PrecursorCount = 119, TransitionCount = 1071 },
 
                 EditIsolationSchemeAction = (importPeptideSearchDlg, isolationScheme) =>
                 {
@@ -209,8 +219,8 @@ namespace pwiz.SkylineTestFunctional
                 DocumentPath = "TestVariableWindowMsFragger.sky",
                 SearchFiles = new[]
                 {
-                    "collinsb_I180316_001_SW-A-subset.mz5",
-                    "collinsb_I180316_002_SW-B-subset.mz5"
+                    "collinsb_I180316_001_SW-A-subset.mzML",
+                    "collinsb_I180316_002_SW-B-subset.mzML"
                 },
                 FastaPath = "collinsb_I180316.fasta",
 
@@ -228,7 +238,7 @@ namespace pwiz.SkylineTestFunctional
             _testDetails.SearchEngine = SearchSettingsControl.SearchEngine.MSFragger;
             _testDetails.PrecursorMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
             _testDetails.FragmentMzTolerance = new MzTolerance(25, MzTolerance.Units.ppm);
-            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 127, PeptideCount = 136, PrecursorCount = 161, TransitionCount = 1449 };
+            _testDetails.Final = new TestDetails.DocumentCounts { ProteinCount = 128, PeptideCount = 137, PrecursorCount = 163, TransitionCount = 1467 };
             _testDetails.AdditionalSettings = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("check_spectral_files", "0"),

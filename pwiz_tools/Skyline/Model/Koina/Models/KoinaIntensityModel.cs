@@ -199,6 +199,8 @@ namespace pwiz.Skyline.Model.Koina.Models
 
             public PeptidePrecursorNCE WithNCE(int nce)
             {
+                if (NodePep != null)
+                    return new PeptidePrecursorNCE(NodePep, NodeGroup, LabelType, nce);
                 return new PeptidePrecursorNCE(Sequence, PrecursorCharge, PrecursorMz, ExplicitMods, LabelType, nce);
             }
 

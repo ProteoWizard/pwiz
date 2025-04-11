@@ -31,13 +31,13 @@
 #include "pwiz/data/proteome/Version.hpp"
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
+#include "pwiz/utility/misc/Timer.hpp"
 
 #include "quameterConfig.h"
 #include "quameterSharedTypes.h"
 #include "quameterSharedFuncs.h"
 #include "quameterFileReaders.h"
 
-#include <boost/timer.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/filesystem/operations.hpp>

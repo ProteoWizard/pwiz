@@ -591,7 +591,7 @@ namespace quameter
     {
         try
         {
-            boost::timer processingTimer;
+            pwiz::util::Timer processingTimer;
 
             string sourceFilename = currentFile.sourceFile;
             const string& srFile = currentFile.scanRankerFile;
@@ -671,7 +671,7 @@ namespace quameter
     {
         try
         {
-            boost::timer processingTimer;
+            pwiz::util::Timer processingTimer;
 
             string sourceFilename = currentFile.sourceFile;
 
@@ -1286,7 +1286,7 @@ namespace quameter
     {
         try 
         {
-            boost::timer processingTimer;
+            pwiz::util::Timer processingTimer;
 
             string sourceFilename = currentFile.sourceFile;
             const string& dbFilename = currentFile.idpDBFile;

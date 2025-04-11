@@ -154,7 +154,7 @@ class PWIZ_API_DECL FrequencyData
 
     private:
     struct Impl;
-    std::auto_ptr<Impl> impl_;
+    std::unique_ptr<Impl> impl_;
 
     /// Hidden to prevent unintended copying of large amounts of data.
     FrequencyData(FrequencyData& that);

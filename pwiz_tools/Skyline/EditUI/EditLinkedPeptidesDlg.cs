@@ -590,8 +590,11 @@ namespace pwiz.Skyline.EditUI
         {
             if (IsHandleCreated)
             {
-                dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[column.Index];
-                dataGridView.Focus();
+                if (column.Visible)
+                {
+                    dataGridView.CurrentCell = dataGridView.Rows[rowIndex].Cells[column.Index];
+                    dataGridView.Focus();
+                }
             }
             else
             {

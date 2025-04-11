@@ -96,8 +96,9 @@
             this.textTolerance = new System.Windows.Forms.TextBox();
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.tabInstrument = new System.Windows.Forms.TabPage();
-            this.tbxSpectrumFilter = new System.Windows.Forms.TextBox();
             this.btnEditSpectrumFilter = new System.Windows.Forms.Button();
+            this.tbxSpectrumFilter = new System.Windows.Forms.TextBox();
+            this.label13 = new System.Windows.Forms.Label();
             this.cbxTriggeredAcquisition = new System.Windows.Forms.CheckBox();
             this.textMaxInclusions = new System.Windows.Forms.TextBox();
             this.label21 = new System.Windows.Forms.Label();
@@ -125,7 +126,6 @@
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.contextMenuStripPrecursorAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.contextMenuStripFragmentAdduct = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.label13 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -661,18 +661,23 @@
             this.tabInstrument.Name = "tabInstrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
             // 
-            // tbxSpectrumFilter
-            // 
-            resources.ApplyResources(this.tbxSpectrumFilter, "tbxSpectrumFilter");
-            this.tbxSpectrumFilter.Name = "tbxSpectrumFilter";
-            this.tbxSpectrumFilter.ReadOnly = true;
-            // 
             // btnEditSpectrumFilter
             // 
             resources.ApplyResources(this.btnEditSpectrumFilter, "btnEditSpectrumFilter");
             this.btnEditSpectrumFilter.Name = "btnEditSpectrumFilter";
             this.btnEditSpectrumFilter.UseVisualStyleBackColor = true;
             this.btnEditSpectrumFilter.Click += new System.EventHandler(this.btnEditSpectrumFilter_Click);
+            // 
+            // tbxSpectrumFilter
+            // 
+            resources.ApplyResources(this.tbxSpectrumFilter, "tbxSpectrumFilter");
+            this.tbxSpectrumFilter.Name = "tbxSpectrumFilter";
+            this.tbxSpectrumFilter.ReadOnly = true;
+            // 
+            // label13
+            // 
+            resources.ApplyResources(this.label13, "label13");
+            this.label13.Name = "label13";
             // 
             // cbxTriggeredAcquisition
             // 
@@ -827,11 +832,6 @@
             // 
             this.contextMenuStripFragmentAdduct.Name = "contextMenuStripFragmentAdduct";
             resources.ApplyResources(this.contextMenuStripFragmentAdduct, "contextMenuStripFragmentAdduct");
-            // 
-            // label13
-            // 
-            resources.ApplyResources(this.label13, "label13");
-            this.label13.Name = "label13";
             // 
             // TransitionSettingsUI
             // 

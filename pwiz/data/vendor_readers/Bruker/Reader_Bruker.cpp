@@ -230,7 +230,7 @@ void Reader_Bruker::read(const string& filename,
     // trim filename from end of source path if necessary (it's not valid to pass to CompassXtract)
     bfs::path rootpath = filename;
     if (bfs::is_regular_file(rootpath))
-        rootpath = rootpath.branch_path();
+        rootpath = rootpath.parent_path();
 
     CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, 
         config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.isolationMzAndMobilityFilter));

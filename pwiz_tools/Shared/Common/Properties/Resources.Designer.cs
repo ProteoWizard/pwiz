@@ -821,6 +821,16 @@ namespace pwiz.Common.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap FreezeCells {
+            get {
+                object obj = ResourceManager.GetObject("FreezeCells", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap LinkColumn {
             get {
                 object obj = ResourceManager.GetObject("LinkColumn", resourceCulture);
@@ -982,6 +992,15 @@ namespace pwiz.Common.Properties {
         internal static string NavBar_RefreshUi_Transforming_data___ {
             get {
                 return ResourceManager.GetString("NavBar_RefreshUi_Transforming_data___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Default ({0}).
+        /// </summary>
+        internal static string NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_ {
+            get {
+                return ResourceManager.GetString("NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_", resourceCulture);
             }
         }
         

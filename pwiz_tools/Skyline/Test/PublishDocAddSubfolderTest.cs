@@ -81,7 +81,9 @@ namespace pwiz.SkylineTest
                                                      "         folderType: \"Targeted MS\", \n" +
                                                      "         type: \"folder\", \n" +
                                                      "         activeModules: [\"Core\", \"Wiki\", \"TargetedMS\"], \n" +
-                                                     "         userPermissions: 1, \n" + // READABLE
+                                                     "         effectivePermissions: [ \n" +  // READABLE
+                                                     "             \"org.labkey.api.security.permissions.ReadPermission\" \n" +
+                                                     "         ], \n" +
                                                      "         name: \"public\", \n" +
                                                      "         path: \"/Gibson/public\"\n" +
                                                      "         }\n" +
@@ -89,7 +91,9 @@ namespace pwiz.SkylineTest
                                                      "     folderType: \"Collaboration\", \n" +
                                                      "     type: \"project\", \n" +
                                                      "     activeModules: [\"Core\", \"Wiki\"], \n" +
-                                                     "     userPermissions: 1, \n" + // READABLE
+                                                     "     effectivePermissions: [  \n" +  // READABLE
+                                                     "         \"org.labkey.api.security.permissions.ReadPermission\" \n" +
+                                                     "     ], \n" +
                                                      "     name: \"Gibson\", \n" +
                                                      "     path: \"/Gibson\"\n" +
                                                      "     }, \n" +
@@ -102,7 +106,9 @@ namespace pwiz.SkylineTest
                                                      "         folderType: \"Targeted MS\", \n" +
                                                      "         type: \"folder\", \n" +
                                                      "         activeModules: [\"Core\", \"Wiki\", \"TargetedMS\"], \n" +
-                                                     "         userPermissions: 1, \n" + // READABLE
+                                                     "         effectivePermissions: [ \n" +  // READABLE
+                                                     "             \"org.labkey.api.security.permissions.ReadPermission\" \n" +
+                                                     "         ], \n" +
                                                      "         name: \"user1\", \n" +
                                                      "         path: \"/MacCoss/user1\"\n" +
                                                      "         }\n" +
@@ -110,7 +116,7 @@ namespace pwiz.SkylineTest
                                                      "     folderType: \"Collaboration\", \n" +
                                                      "     type: \"project\", \n" +
                                                      "     activeModules: [\"Core\", \"Wiki\"], \n" +
-                                                     "     userPermissions: 0, \n" + // NO PERMISSIONS
+                                                     "     effectivePermissions: [ ], \n" + // NO PERMISSIONS
                                                      "     name: \"MacCoss\", \n" +
                                                      "     path: \"/MacCoss\"\n" +
                                                      "     } \n" +
@@ -119,7 +125,7 @@ namespace pwiz.SkylineTest
                                                      "type: \"folder\", \n" +
                                                      "activeModules: [ ], \n" +
                                                      "title: \"\", \n" +
-                                                     "userPermissions: 0, \n" +
+                                                     "effectivePermissions: [ ], \n" +
                                                      "name: \"\", \n" +
                                                      "path: \"/\", \n" +
                                                      "parentPath: \"null\", \n" +
@@ -136,7 +142,9 @@ namespace pwiz.SkylineTest
                                                         "         folderType: \"Targeted MS\", \n" +
                                                         "         type: \"folder\", \n" +
                                                         "         activeModules: [\"Core\", \"Wiki\", \"TargetedMS\"], \n" +
-                                                        "         userPermissions: 1, \n" + // READABLE
+                                                        "         effectivePermissions: [ \n" +  // READABLE
+                                                        "             \"org.labkey.api.security.permissions.ReadPermission\" \n" +
+                                                        "         ], \n" +
                                                         "         name: \"public\", \n" +
                                                         "         path: \"/Gibson/public\"\n" +
                                                         "         }\n" +
@@ -144,7 +152,7 @@ namespace pwiz.SkylineTest
                                                         "     folderType: \"Collaboration\", \n" +
                                                         "     type: \"project\", \n" +
                                                         "     activeModules: [\"Core\", \"Wiki\"], \n" +
-                                                        "     userPermissions: 0, \n" + // NO PERMISSIONS
+                                                        "     effectivePermissions: [ ],\n" + // NO PERMISSIONS
                                                         "     name: \"Gibson\", \n" +
                                                         "     path: \"/Gibson\"\n" +
                                                         "     }, \n" +
@@ -157,7 +165,10 @@ namespace pwiz.SkylineTest
                                                         "         folderType: \"Targeted MS\", \n" +
                                                         "         type: \"folder\", \n" +
                                                         "         activeModules: [\"Core\", \"Wiki\", \"TargetedMS\"], \n" +
-                                                        "         userPermissions: 2, \n" + // WRITABLE
+                                                        "         effectivePermissions: [ \n" +  // WRITABLE
+                                                        "             \"org.labkey.api.security.permissions.ReadPermission\", \n" +
+                                                        "             \"org.labkey.api.security.permissions.InsertPermission\" \n" +
+                                                        "          ], \n" +
                                                         "         name: \"user1\", \n" +
                                                         "         path: \"/MacCoss/user1\"\n" +
                                                         "         }\n" +
@@ -165,7 +176,9 @@ namespace pwiz.SkylineTest
                                                         "     folderType: \"Collaboration\", \n" +
                                                         "     type: \"project\", \n" +
                                                         "     activeModules: [\"Core\", \"Wiki\"], \n" +
-                                                        "     userPermissions: 1, \n" + // READABLE
+                                                        "     effectivePermissions: [ \n" +  // READABLE
+                                                        "         \"org.labkey.api.security.permissions.ReadPermission\" \n" +
+                                                        "     ], \n" +
                                                         "     name: \"MacCoss\", \n" +
                                                         "     path: \"/MacCoss\"\n" +
                                                         "     } \n" +
@@ -174,11 +187,10 @@ namespace pwiz.SkylineTest
                                                         "type: \"folder\", \n" +
                                                         "activeModules: [ ], \n" +
                                                         "title: \"\", \n" +
-                                                        "userPermissions: 0, \n" +
+                                                        "effectivePermissions: [ ], \n" +
                                                         "name: \"\", \n" +
                                                         "path: \"/\", \n" +
-                                                        "parentPath: \"null\", \n" +
-                                                        "effectivePermissions: [ ]\n" +
+                                                        "parentPath: \"null\" \n" +
                                                         "}";
 
         private const string WRITABLEFOLDER_2_JSON = "{sortOrder: 0, children: [\n" +
@@ -191,7 +203,10 @@ namespace pwiz.SkylineTest
                                                         "         folderType: \"Collaboration\", \n" +
                                                         "         type: \"folder\", \n" +
                                                         "         activeModules: [\"Core\", \"Wiki\"], \n" + // No TargetedMS module
-                                                        "         userPermissions: 2, \n" + // WRITABLE
+                                                        "         effectivePermissions: [ \n" +  // WRITABLE
+                                                        "             \"org.labkey.api.security.permissions.ReadPermission\", \n" +
+                                                        "             \"org.labkey.api.security.permissions.InsertPermission\" \n" +
+                                                        "          ], \n" +
                                                         "         name: \"user1\", \n" +
                                                         "         path: \"/Carr/user1\"\n" +
                                                         "         }\n" +
@@ -199,7 +214,9 @@ namespace pwiz.SkylineTest
                                                         "     folderType: \"Collaboration\", \n" +
                                                         "     type: \"project\", \n" +
                                                         "     activeModules: [\"Core\", \"Wiki\"], \n" +
-                                                        "     userPermissions: 1, \n" + // READABLE
+                                                        "     effectivePermissions: [ \n" +  // READABLE
+                                                        "         \"org.labkey.api.security.permissions.ReadPermission\" \n" +
+                                                        "     ], \n" +
                                                         "     name: \"Carr\", \n" +
                                                         "     path: \"/Carr\"\n" +
                                                         "     }, \n" +
@@ -212,7 +229,10 @@ namespace pwiz.SkylineTest
                                                         "         folderType: \"Targeted MS\", \n" +
                                                         "         type: \"folder\", \n" +
                                                         "         activeModules: [\"Core\", \"Wiki\", \"TargetedMS\"], \n" +
-                                                        "         userPermissions: 2, \n" + // WRITABLE
+                                                        "         effectivePermissions: [ \n" +  // WRITABLE
+                                                        "             \"org.labkey.api.security.permissions.ReadPermission\", \n" +
+                                                        "             \"org.labkey.api.security.permissions.InsertPermission\" \n" +
+                                                        "          ], \n" +
                                                         "         name: \"user1\", \n" +
                                                         "         path: \"/MacCoss/user1\"\n" +
                                                         "         }\n" +
@@ -220,7 +240,7 @@ namespace pwiz.SkylineTest
                                                         "     folderType: \"Collaboration\", \n" +
                                                         "     type: \"project\", \n" +
                                                         "     activeModules: [\"Core\", \"Wiki\"], \n" +
-                                                        "     userPermissions: 0, \n" + // NO PERMISSIONS
+                                                        "     effectivePermissions: [ ], \n" + // NO PERMISSIONS
                                                         "     name: \"MacCoss\", \n" +
                                                         "     path: \"/MacCoss\"\n" +
                                                         "     }, \n" +
@@ -233,7 +253,10 @@ namespace pwiz.SkylineTest
                                                         "         folderType: \"Targeted MS\", \n" +
                                                         "         type: \"folder\", \n" +
                                                         "         activeModules: [\"Core\", \"Wiki\", \"TargetedMS\"], \n" +
-                                                        "         userPermissions: 2, \n" + // WRITABLE
+                                                        "         effectivePermissions: [ \n" +  // WRITABLE
+                                                        "             \"org.labkey.api.security.permissions.ReadPermission\", \n" +
+                                                        "             \"org.labkey.api.security.permissions.InsertPermission\" \n" +
+                                                        "          ], \n" +
                                                         "         name: \"userFolder\", \n" +
                                                         "         path: \"/Gibson/userFolder\"\n" +
                                                         "         }\n" +
@@ -241,7 +264,9 @@ namespace pwiz.SkylineTest
                                                         "     folderType: \"Collaboration\", \n" +
                                                         "     type: \"project\", \n" +
                                                         "     activeModules: [\"Core\", \"Wiki\"], \n" +
-                                                        "     userPermissions: 1, \n" + // READABLE
+                                                        "     effectivePermissions: [ \n" +  // READABLE
+                                                        "         \"org.labkey.api.security.permissions.ReadPermission\" \n" +
+                                                        "     ], \n" +
                                                         "     name: \"Gibson\", \n" +
                                                         "     path: \"/Gibson\"\n" +
                                                         "     }, \n" +
@@ -250,11 +275,10 @@ namespace pwiz.SkylineTest
                                                         "type: \"folder\", \n" +
                                                         "activeModules: [ ], \n" +
                                                         "title: \"\", \n" +
-                                                        "userPermissions: 0, \n" +
+                                                        "effectivePpermissions: [ ], \n" +
                                                         "name: \"\", \n" +
                                                         "path: \"/\", \n" +
-                                                        "parentPath: \"null\", \n" +
-                                                        "effectivePermissions: [ ]\n" +
+                                                        "parentPath: \"null\" \n" +
                                                         "}";   
     }
 }

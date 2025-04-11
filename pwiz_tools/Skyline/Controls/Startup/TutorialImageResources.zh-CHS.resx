@@ -157,7 +157,7 @@
   <data name="SmallMolecule_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\smallmolecule_start-zh-chs.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="TargetedMSMS_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\resources\startpage\targetedmsms_start-zh-chs.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="PRM_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\resources\startpage\prm_start-zh-chs.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

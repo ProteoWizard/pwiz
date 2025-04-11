@@ -410,6 +410,102 @@ namespace pwiz.Skyline.Controls.Graphs
             set { _axisLabelScaler.IsRepeatRemovalAllowed = value; }
         }
 
+        protected void RemoveInvalidPointValues()
+        {
+            if (!YAxis.Scale.IsLog)
+            {
+                return;
+            }
+
+            foreach (var curve in CurveList)
+            {
+                if (curve.IsY2Axis)
+                {
+                    continue;
+                }
+
+                curve.Points = NonPositiveToMissing(curve.Points);
+            }
+        }
+
+        /// <summary>
+        /// Replace with PointPairBase.Missing all points which do not have a positive y coordinate
+        /// and cannot be correctly displayed on a log scale.
+        /// </summary>
+        protected static IPointList NonPositiveToMissing(IPointList pointList)
+        {
+            int nPts = pointList.Count;
+            if (!Enumerable.Range(0, nPts).Any(i => pointList[i].Y <= 0))
+            {
+                return pointList;
+            }
+
+            var newPoints = new List<PointPair>(pointList.Count);
+            for (int i = 0; i < nPts; i++)
+            {
+                var pt = pointList[i];
+                if (pt.Y <= 0)
+                {
+                    newPoints.Add(new PointPair(pt.X, PointPairBase.Missing));
+                }
+                else
+                {
+                    newPoints.Add(pt);
+                }
+            }
+
+            return new PointPairList(newPoints);
+        }
+
+        protected void DrawSelectionBox(int xValue, double yMax, double yMin)
+        {
+            if (YAxis.Scale.IsLog)
+            {
+                // If it's a log scale, the bottom should be controlled by the lowest value displayed
+                var minPositiveYValue = GetMinPositiveYValue();
+                if (!minPositiveYValue.HasValue)
+                {
+                    return;
+                }
+
+                // The Y-axis is usually zoomed to Math.Pow(10.0, Math.Floor(Math.Log10(minPositiveYValue.Value)))
+                // Make the selection box extend 3 orders of magnitude below the lowest value so that it goes all the way
+                // even if the user zooms out a bit.
+                yMin = minPositiveYValue.Value / 1000;
+            }
+            GraphObjList.Add(new BoxObj(xValue + .5, yMax, 0.99,
+                yMin - yMax, Color.Black, Color.Empty)
+            {
+                IsClippedToChartRect = true,
+            });
+        }
+
+        protected double? GetMinPositiveYValue()
+        {
+            double? minValue = null;
+            foreach (var curve in CurveList)
+            {
+                if (curve.IsY2Axis)
+                {
+                    continue;
+                }
+
+                for (int i = 0; i < curve.NPts; i++)
+                {
+                    var pt = curve.Points[i];
+                    if (pt.Y > 0)
+                    {
+                        if (!minValue.HasValue || minValue.Value > pt.Y)
+                        {
+                            minValue = pt.Y;
+                        }
+                    }
+                }
+            }
+
+            return minValue;
+        }
+
         #region Test Support Methods
         public string[] GetOriginalXAxisLabels()
         {

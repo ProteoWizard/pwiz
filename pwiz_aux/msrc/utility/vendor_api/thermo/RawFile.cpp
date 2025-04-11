@@ -128,7 +128,7 @@ class RawFileImpl : public RawFile
     virtual std::string getInstrumentChannelLabel(long channel) const;
 
 #ifndef _WIN64
-    virtual auto_ptr<LabelValueArray> getTuneData(long segmentNumber) const;
+    virtual unique_ptr<LabelValueArray> getTuneData(long segmentNumber) const;
 #endif
 
     virtual InstrumentModelType getInstrumentModel() const;
@@ -365,7 +365,7 @@ RawFileImpl::RawFileImpl(const string& filename)
         {
 #ifndef _WIN64
 
-            auto_ptr<LabelValueArray> lvArray = getTuneData(0);
+            unique_ptr<LabelValueArray> lvArray = getTuneData(0);
             for (int i = 0; i < lvArray->size(); ++i)
                 if (lvArray->label(i) == "Model")
                 {
@@ -550,9 +550,9 @@ class VectorLabelValueArray : public LabelValueArray
 };
 } // namespace
 
-auto_ptr<LabelValueArray> RawFileImpl::getSequenceRowUserInfo()
+unique_ptr<LabelValueArray> RawFileImpl::getSequenceRowUserInfo()
 {
-    auto_ptr<VectorLabelValueArray> info(new VectorLabelValueArray);
+    unique_ptr<VectorLabelValueArray> info(new VectorLabelValueArray);
 
     for (int i=0; i<5; i++)
     {
@@ -2198,14 +2198,14 @@ class TuneDataLabelValueArray : public LabelValueArray
 } // namespace
 
 
-auto_ptr<LabelValueArray> RawFileImpl::getTuneData(long segmentNumber) const
+unique_ptr<LabelValueArray> RawFileImpl::getTuneData(long segmentNumber) const
 {
     _variant_t variantLabels;
     long size = 0;
 
     checkResult(raw_->GetTuneDataLabels(segmentNumber, &variantLabels, &size));
 
-    auto_ptr<TuneDataLabelValueArray> a(
+    unique_ptr<TuneDataLabelValueArray> a(
         new TuneDataLabelValueArray(variantLabels, size, raw_, segmentNumber));
     return a;
 }

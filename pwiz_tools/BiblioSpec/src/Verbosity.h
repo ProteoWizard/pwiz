@@ -49,6 +49,7 @@ class Verbosity{
  public:
   static V_LEVEL string_to_level(const char*);
   static void set_verbosity(V_LEVEL level);
+  static void set_timestamp(bool enabled);
   static void open_logfile();
   static void close_logfile();
 

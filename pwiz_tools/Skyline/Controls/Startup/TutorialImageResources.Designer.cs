@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Controls.Startup {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class TutorialImageResources {
@@ -126,6 +126,16 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static System.Drawing.Bitmap DIA_SWATH_start {
             get {
                 object obj = ResourceManager.GetObject("DIA_SWATH_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap DIA_Umpire_TTOF_start {
+            get {
+                object obj = ResourceManager.GetObject("DIA_Umpire_TTOF_start", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -243,6 +253,26 @@ namespace pwiz.Skyline.Controls.Startup {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap PRM_start {
+            get {
+                object obj = ResourceManager.GetObject("PRM_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap PRMOrbitrap_start {
+            get {
+                object obj = ResourceManager.GetObject("PRMOrbitrap_start", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap SmallMolecule_start {
             get {
                 object obj = ResourceManager.GetObject("SmallMolecule_start", resourceCulture);
@@ -276,16 +306,6 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static System.Drawing.Bitmap SmallMolLibraries_start {
             get {
                 object obj = ResourceManager.GetObject("SmallMolLibraries_start", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap TargetedMSMS_start {
-            get {
-                object obj = ResourceManager.GetObject("TargetedMSMS_start", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -19,6 +19,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -1232,7 +1233,9 @@ namespace ZedGraph
 			_dragText.UpdateLabelLocation(xScale.AddInterval(_dragText.LabelPosition.X, startX, mouseX),
 				yScale.AddInterval(_dragText.LabelPosition.Y, startY, mouseY), _dragPane);
 
-			Invalidate();
+            if (_dragPane.Layout != null)
+                Trace.WriteLine(string.Format(@"Goal function: {0}", _dragPane.Layout.CalculateGoalFunction(_dragText)));
+            Invalidate();
 		}
 
 		private void HandleLabelDragFinish(MouseEventArgs e)

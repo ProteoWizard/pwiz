@@ -150,6 +150,18 @@
   <data name="TargetedMSMS_Caption" xml:space="preserve">
     <value>Parallel Reaction Monitoring (PRM)</value>
   </data>
+  <data name="PRMOrbitraip_Description" xml:space="preserve">
+    <value>Get hands-on experience setting up an acquisition method to quantify 31 peptides from 19 proteins of interest in murine fibroblasts using Parallel Reaction Monitoring (PRM). Work with three biological replicates measured in 9 runs on a Thermo Fusion mass spectrometer employing the Orbitrap mass analyzer.</value>
+  </data>
+  <data name="PRMOrbitrap_Caption" xml:space="preserve">
+    <value>PRM With and Orbitrap Mass Spec</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Description" xml:space="preserve">
+    <value>Get hands-on experience running a peptide-spectrum search directly on a data independent acquisition (DIA) dataset, from a SCIEX TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper.</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Caption" xml:space="preserve">
+    <value>Library-Free DIA/SWATH</value>
+  </data>
   <data name="iRT_Caption" xml:space="preserve">
     <value>iRT Retention Time Prediction</value>
   </data>

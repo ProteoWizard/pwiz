@@ -81,7 +81,7 @@ class CalibratorTrial
         State final;
     };
 
-    static std::auto_ptr<CalibratorTrial> create(const Configuration& configuration);
+    static std::unique_ptr<CalibratorTrial> create(const Configuration& configuration);
     virtual ~CalibratorTrial(){}
 
     virtual void run() = 0;

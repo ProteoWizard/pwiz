@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
@@ -44,6 +45,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestLibraryExplorerTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
             // Set true to look at tutorial screenshots.
 //            IsPauseForScreenShots = true;
 //            IsCoverShotMode = true;
@@ -82,7 +86,7 @@ namespace pwiz.SkylineTestTutorial
                           peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
                           peptideSettingsUI.PickedLibraries = new[] {"Experiment 15N"};
                       });
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 3);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab");
 
             // Modifications Tab in peptideSttingsUI to check "Carbamidomethyl Cysteine"
             const string carbamidoName = StaticModList.DEFAULT_NAME;
@@ -91,7 +95,7 @@ namespace pwiz.SkylineTestTutorial
                           peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Modifications;
                           peptideSettingsUI.PickedStaticMods = new[] {carbamidoName};
                       });
-            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab", 4);
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab");
 
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
@@ -103,7 +107,8 @@ namespace pwiz.SkylineTestTutorial
             ViewLibraryDlg viewLibraryDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             var matchedPepsDlg = WaitForOpenForm<AddModificationsDlg>();
             OkDialog(matchedPepsDlg, matchedPepsDlg.CancelDialog);
-            PauseForScreenShot<ViewLibraryDlg>("Library Explorer", 5);
+            RunUIForScreenShot(() => viewLibraryDlg.Size = new Size(775, 463));
+            PauseForScreenShot<ViewLibraryDlg>("Library Explorer");
 
             // Types text in Peptide textbox in the Spectral Library Explorer Window
             RunUI(() =>
@@ -111,7 +116,7 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg.FilterString = "Q"; // Not L10N
                 Assert.AreEqual(7, viewLibraryDlg.PeptideDisplayCount);
             });
-            PauseForScreenShot<ViewLibraryDlg>("Library Explorer filtered for peptides beginning with Q", 6);
+            PauseForScreenShot<ViewLibraryDlg>("Library Explorer filtered for peptides beginning with Q");
 
             RunUI(() =>
             {
@@ -128,7 +133,7 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg.GraphSettings.ShowCharge2 = true;
                 Assert.AreEqual(35, viewLibraryDlg.GraphItem.IonLabels.Count());
             });
-            PauseForScreenShot<ViewLibraryDlg>("Library Explorer showing ISERT peptide with b and charge 2 ions", 7);
+            PauseForScreenShot<ViewLibraryDlg>("Library Explorer showing ISERT peptide with b and charge 2 ions");
             
             // Right click on spectrum chart and select Observed m/z Values
             RunUI(() =>
@@ -167,7 +172,7 @@ namespace pwiz.SkylineTestTutorial
             var mod15N = UniMod.GetModification(label15NName, out _);
             AddHeavyMod(mod15N, peptideSettingsUI1, "Edit Structural Modification form", 9);
             RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { label15NName });
-            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modificatoins tab", 10);
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modificatoins tab");
 
             OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
@@ -181,7 +186,7 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg.SelectedIndex = entryCount - 1;
                 viewLibraryDlg.SelectedIndex = entryCount - 19;
             });
-            PauseForScreenShot(viewLibraryDlg.ListControl,"Peptide list clipped from Library Explorer", 11);
+            PauseForScreenShot(viewLibraryDlg.ListControl,"Peptide list clipped from Library Explorer");
 
             if (IsCoverShotMode)
             {
@@ -190,7 +195,7 @@ namespace pwiz.SkylineTestTutorial
                 {
                     viewLibraryDlg.SetBounds(SkylineWindow.Left, SkylineWindow.Top, SkylineWindow.Width, SkylineWindow.Height);
                 });
-                TakeCoverShot();
+                TakeCoverShot(viewLibraryDlg);
 
                 OkDialog(viewLibraryDlg, viewLibraryDlg.CancelDialog);
                 return;
@@ -207,7 +212,7 @@ namespace pwiz.SkylineTestTutorial
             });
             {
                 var msgDlg = ShowDialog<FilterMatchedPeptidesDlg>(viewLibraryDlg.AddPeptide);
-                PauseForScreenShot<FilterMatchedPeptidesDlg>("Filter peptides form", 11);
+                PauseForScreenShot<FilterMatchedPeptidesDlg>("Filter peptides form");
 
                 OkDialog(msgDlg, msgDlg.OkDialog);
             }
@@ -244,7 +249,7 @@ namespace pwiz.SkylineTestTutorial
                 locationSaved = viewLibraryDlg.Location;
                 viewLibraryDlg.Location = new Point(SkylineWindow.Right + 20, SkylineWindow.Top);
             });
-            PauseForScreenShot("Main window", 12);
+            PauseForScreenShot("Main window");
             RunUIForScreenShot(() => viewLibraryDlg.Location = locationSaved);
 
             // Adding DNAGAATEEFIKR++ (has ok)
@@ -291,7 +296,7 @@ namespace pwiz.SkylineTestTutorial
                           settingsUI.PickedHeavyMods = new string[0];
                           settingsUI.PickedLibraries = new string[0];
                       });
-            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab", 14);
+            PauseForScreenShot<PeptideSettingsUI.ModificationsTab>("Peptide Settings - Modifications tab");
 
             var editListUI1 =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(settingsUI.EditLibraryList);
@@ -308,11 +313,11 @@ namespace pwiz.SkylineTestTutorial
                           settingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
                           settingsUI.PickedLibraries = new[] {humanPhosphoLibName};
                       });
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 15);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab");
 
             {
                 var msgDlg = ShowDialog<MultiButtonMsgDlg>(() => settingsUI.ShowViewLibraryDlg());
-                PauseForScreenShot<MultiButtonMsgDlg>("Save changes", 15);
+                PauseForScreenShot<MultiButtonMsgDlg>("Save changes");
 
                 OkDialog(msgDlg, msgDlg.Btn0Click);
             }
@@ -336,13 +341,16 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(2, viewLibraryDlg1.PeptideDisplayCount);
                 Assert.AreEqual(countLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
-            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 16);   // p. 16, figure 1a
+            RunUIForScreenShot(() => viewLibraryDlg1.Width -= 185);
+            LimitXAxis(viewLibraryDlg1);
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl);   // p. 16, figure 1a
             RunUI(() =>
             {
                 viewLibraryDlg1.SelectedIndex = 1;
                 Assert.AreEqual(countLabels2, viewLibraryDlg1.GraphItem.IonLabels.Count());
             });
-            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 16);   // p. 16, figure 1b
+            LimitXAxis(viewLibraryDlg1);
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl);   // p. 16, figure 1b
 
             docInitial = SkylineWindow.Document;
 
@@ -379,7 +387,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText)))); 
                 Assert.AreEqual(countLabels1 + countLossLabels1 + countPrecursors1, labelsPhospho.Count);
             });
-            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 18);   // p. 18, figure 1a.
+            LimitXAxis(viewLibraryDlg1);
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl);   // p. 18, figure 1a.
 
             RunUI(() =>
             {
@@ -389,7 +398,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(labelsPhospho.Contains(label => label.Contains(string.Format("{0} {1}", IonType.precursor.GetLocalizedString(), lossText))));
                 Assert.AreEqual(countLabels2 + countLossLabels2 + countPrecursors2, labelsPhospho.Count);
             });
-            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl, 18);   // p. 18, figure 1b.
+            LimitXAxis(viewLibraryDlg1);
+            PauseForGraphScreenShot("Spectrum graph metafile", viewLibraryDlg1.GraphExtensionControl);   // p. 18, figure 1b.
 
             // Matching Library Peptides to Proteins p. 18
             var peptideSettingsUI3 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -399,8 +409,9 @@ namespace pwiz.SkylineTestTutorial
             {
                 buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"human.protdb");
                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Human (mini)";
+                buildBackgroundProteomeDlg.SelToEndBackgroundProteomePath();
             });
-            PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome", 19);   // p. 19
+            PauseForScreenShot<BuildBackgroundProteomeDlg>("Edit Background Proteome");   // p. 19
 
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
             
@@ -443,11 +454,11 @@ namespace pwiz.SkylineTestTutorial
                           Assert.AreEqual(163, filterMatchedPeptidesDlg.DuplicateMatchesCount);
                           Assert.AreEqual(2, filterMatchedPeptidesDlg.UnmatchedCount);
                       });
-            PauseForScreenShot<FilterMatchedPeptidesDlg>("Filter Peptides", 20);   // p. 20, figure 1
+            PauseForScreenShot<FilterMatchedPeptidesDlg>("Filter Peptides");   // p. 20, figure 1
 
             {
                 var msgDlg = ShowDialog<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog);
-                PauseForScreenShot<MultiButtonMsgDlg>("Message form", 20);   // p. 20, figure 2
+                PauseForScreenShot<MultiButtonMsgDlg>("Message form");   // p. 20, figure 2
 
                 OkDialog(msgDlg, msgDlg.Btn1Click);
             }
@@ -459,9 +470,14 @@ namespace pwiz.SkylineTestTutorial
 
             RestoreViewOnScreen(21);
             RunUIForScreenShot(() => SkylineWindow.SequenceTree.SetScrollPos(Orientation.Horizontal, 0));
-            PauseForScreenShot("Main window", 21);
+            PauseForScreenShot("Main window");
 
             OkDialog(viewLibraryDlg, viewLibraryDlg.Close);
+        }
+
+        private void LimitXAxis(ViewLibraryDlg viewLibraryDlg)
+        {
+            viewLibraryDlg.GraphExtensionControl.Graph.GraphPane.XAxis.Scale.Max = 1225;
         }
     }
 }

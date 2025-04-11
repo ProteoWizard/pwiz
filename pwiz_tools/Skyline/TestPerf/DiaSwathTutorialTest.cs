@@ -23,6 +23,8 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -62,6 +64,7 @@ namespace TestPerf
             public string DiaFilesExtension;
             public string[] DiaFiles;
             public string[] SearchFiles;
+            public bool HasRedundantLibrary = true; // only DIA-NN directly creates a non-redundant library
             public int LibraryPeptideCount;
             public int ExpectedIrtPeptideCount;
             public IrtStandard IrtStandard;
@@ -80,6 +83,8 @@ namespace TestPerf
             public bool KeepPrecursors;
 
             public string IrtFilterText;
+            public string ScoreType;
+            public double ScoreThreshold;
             public int? MinPeptidesPerProtein;
             public bool RemoveDuplicates;
             //public int[] TargetCounts;
@@ -193,9 +198,13 @@ namespace TestPerf
                     UnpolishedProteins = 9,
                 };
             }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
+            _analysisValues.ScoreThreshold = 0.95;
         }
 
         public bool IsTtof => Equals("TTOF", _instrumentValues.InstrumentTypeName);
+
         public void TestQeData(bool fullSet)
         {
             SetInstrumentType(new InstrumentSpecificValues
@@ -250,9 +259,9 @@ namespace TestPerf
                         new[] { 2.2, 4.6 },
                         new[] { 1.9, 4.7 },
                     },
-                    DiffPeptideCounts = new[] { 10459, 6387, 2238, 1823 },
-                    UnpolishedProteins = 1647,
-                    PolishedProteins = 1647,
+                    DiffPeptideCounts = new[] { 10467, 6391, 2242, 1823 },
+                    UnpolishedProteins = 1653,
+                    PolishedProteins = 2031,
                 };
             }
             else
@@ -280,6 +289,103 @@ namespace TestPerf
                     FoldChangeProteinsMax = 2,
                 };
             }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
+            _analysisValues.ScoreThreshold = 0.95;
+        }
+
+        public void TestQeDataDiaNN(bool fullSet)
+        {
+            SetInstrumentType(new InstrumentSpecificValues
+            {
+                InstrumentTypeName = "QE",
+                DiaFilesExtension = DataSourceUtil.EXT_MZML,
+                DiaFiles = new[]
+                {
+                    "collinsb_X1803_171-A.mzML",
+                    "collinsb_X1803_172-B.mzML",
+                    "collinsb_X1803_173-A.mzML",
+                    "collinsb_X1803_174-B.mzML",
+                    "collinsb_X1803_175-A.mzML",
+                    "collinsb_X1803_176-B.mzML",
+                },
+                SearchFiles = new[]
+                {
+                    "report-lib.parquet.skyline.speclib"
+                },
+                HasRedundantLibrary = false,
+                IrtStandard = IrtStandard.AUTO,
+                LibraryPeptideCount = 21695,
+                ExpectedIrtPeptideCount = 11,
+                IrtSlope = 2.600,
+                IrtIntercept = -44.875,
+                HasAmbiguousMatches = false,
+                IsolationSchemeName = "ETH QE (18 variable)",
+                IsolationSchemeFile = "QE_DIA_18var.tsv",
+                IsolationSchemeFileSeparator = TextUtil.SEPARATOR_TSV,
+                ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
+            });
+
+            TestFilesZipPaths = TestFilesZipPaths
+                .Append(string.Format(@"http://skyline.ms/tutorials/{0}-DIANN.zip", ZipFileName))
+                .ToArray();
+
+            if (fullSet)
+            {
+                _analysisValues = new AnalysisValues
+                {
+                    KeepPrecursors = false,
+                    IsWholeProteome = true,
+                    IrtFilterText = "iRT",
+                    MinPeptidesPerProtein = 2,
+                    RemoveDuplicates = true,
+                    ChromatogramClickPoint = new PointF(32.05F, 268334.7F),
+                    //TargetCounts = new[] { 3991, 30916, 33841, 203044 },
+                    FinalTargetCounts = new[] { 3106, 32973, 34564, 207384 },
+                    MassErrorStats = new[]
+                    {
+                        new[] {1.9, 4.3},
+                        new[] {1.4, 4.3},
+                        new[] {2.0, 4.3},
+                        new[] {2.0, 4.2},
+                        new[] {2.1, 4.2},
+                        new[] {2.1, 4.2},
+                        new[] {1.9, 4.2},
+                    },
+                    DiffPeptideCounts = new[] { 14479, 9877, 2828, 1756 },
+                    UnpolishedProteins = 1846,
+                    PolishedProteins = 1846
+                };
+            }
+            else
+            {
+                _analysisValues = new AnalysisValues
+                {
+                    KeepPrecursors = false,
+                    IrtFilterText = "iRT",
+                    ChromatogramClickPoint = new PointF(31.98F, 285741.3F),
+                    //TargetCounts = new[] { 14, 271, 331, 1985 },
+
+                    FinalTargetCounts = new[] { 13, 275, 306, 1836 },
+                    MassErrorStats = new[]
+                    {
+                        new[] {1.8, 3.2},
+                        new[] {1.2, 3.0},
+                        new[] {1.8, 3.0},
+                        new[] {2.0, 3.2},
+                        new[] {2.1, 3.7},
+                        new[] {1.9, 3.2},
+                        new[] {1.6, 3.4},
+                    },
+                    DiffPeptideCounts = new[] { 125, 41, 28, 45 },
+                    UnpolishedProteins = 3,
+                    PolishedProteins = 11,
+                    FoldChangeProteinsMax = 2,
+                };
+            }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_q_value;
+            _analysisValues.ScoreThreshold = 0.01;
         }
 
         public void TestPasefData(bool fullSet)
@@ -398,9 +504,13 @@ namespace TestPerf
                     ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
                 });
             }
+
+            _analysisValues.ScoreType = pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence;
+            _analysisValues.ScoreThreshold = 0.95;
         }
 
         public bool IsPasef => Equals("PASEF", _instrumentValues.InstrumentTypeName);
+        public bool IsDiaNN => !_instrumentValues.HasRedundantLibrary;
 
         public void SetInstrumentType(InstrumentSpecificValues instrumentValues)
         {
@@ -454,6 +564,7 @@ namespace TestPerf
         private string ZipFileName => _testInfo._instrumentValues.ZipFileName ?? RootName;
         private bool IsTtof => _testInfo.IsTtof;
         private bool IsPasef => _testInfo.IsPasef;
+        private bool IsDiaNN => _testInfo.IsDiaNN;
         private DiaSwathTestInfo.AnalysisValues _analysisValues => _testInfo._analysisValues;
         private DiaSwathTestInfo.InstrumentSpecificValues _instrumentValues => _testInfo._instrumentValues;
 
@@ -465,7 +576,7 @@ namespace TestPerf
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower worker VMs
-        public void TestDiaTtofFullSearchTutorial()
+        public void TestDiaTtofFullSearchTutorialExtra()
         {
             _testInfo.TestTtofData(true);
             if (!IsCoverShotMode)
@@ -477,33 +588,51 @@ namespace TestPerf
         public void TestDiaQeTutorial()
         {
             _testInfo.TestQeData(false);
-            if (!IsCoverShotMode)
-                RunTest();
+            RunTest();
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
-        public void TestDiaQeFullSearchTutorial()
+        public void TestDiaQeFullSearchTutorialExtra()
         {
             _testInfo.TestQeData(true);
             if (!IsCoverShotMode)
                 RunTest();
         }
-       
+
+
+        [TestMethod]
+        public void TestDiaQeDiaNnTutorialDraft()
+        {
+            _testInfo.TestQeDataDiaNN(false);
+            RunTest();
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Times out on slower VMs
+        public void TestDiaQeDiaNnFullSearchTutorialExtra()
+        {
+            _testInfo.TestQeDataDiaNN(true);
+            if (!IsCoverShotMode)
+                RunTest();
+        }
+
 
         [TestMethod, NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING)] // Bruker wants exclusive read access to raw data
         [Timeout(int.MaxValue)] // These can take a long time
         public void TestDiaPasefTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             _testInfo.TestPasefData(false);
-            if (!IsCoverShotMode)
-                RunTest();
+            RunTest();
         }
 
         [TestMethod,
          NoParallelTesting(TestExclusionReason.VENDOR_FILE_LOCKING), // Bruker wants exclusive read access to raw data
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // Skip during Nightly
         [Timeout(int.MaxValue)] // These can take a long time
-        public void TestDiaPasefFullDataset()
+        public void TestDiaPasefFullDatasetExtra()
         {
             _testInfo.TestPasefData(true);
             if (!IsCoverShotMode)
@@ -531,7 +660,17 @@ namespace TestPerf
 
         private string GetTestPath(string path)
         {
-            return TestFilesDirs[0].GetTestPath(Path.Combine(ZipFileName, path));
+            foreach (var dir in TestFilesDirs)
+            {
+                string possiblePath = dir.GetTestPath(Path.Combine(ZipFileName, path));
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+                possiblePath = dir.GetTestPath(path);
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+            }
+
+            throw new ArgumentException($"{path} does not exist in any of the TestFilesDirs");
         }
 
         /// <summary>
@@ -560,8 +699,7 @@ namespace TestPerf
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowImportPeptideSearchDlg);
 
-            int screenshotPage = IsTtof ? 3 : 4;
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page", screenshotPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library empty page");
 
             // We're on the "Build Spectral Library" page of the wizard.
             // Add the test xml file to the search files list and try to 
@@ -578,16 +716,22 @@ namespace TestPerf
                 importPeptideSearchDlg.BuildPepSearchLibControl.WorkflowType = ImportPeptideSearchDlg.Workflow.dia;
             });
             WaitForConditionUI(() =>
-                Equals(pwiz.BiblioSpec.Properties.Resources.BiblioSpecScoreType_DisplayName_PeptideProphet_confidence,
-                    importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.FirstOrDefault()?.ScoreType?.ToString()));
+                Equals(_analysisValues.ScoreType, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.FirstOrDefault()?.ScoreType?.ToString()));
             RunUI(() =>
             {
                 // Check default settings shown in the tutorial
-                Assert.AreEqual(0.95, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
+                Assert.AreEqual(_analysisValues.ScoreThreshold, importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Files.First().ScoreThreshold);
                 Assert.IsFalse(importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches);
             });
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
-            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page", screenshotPage++);
+            RunUIForScreenShot(() =>
+            {
+                var cols = importPeptideSearchDlg.BuildPepSearchLibControl.Grid.Columns;
+                cols[0].AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+                cols[0].Width = 175;    // just "interact.pep.xml"
+                cols[1].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill; // To show the full PeptideProphet confidence
+            });
+            PauseForScreenShot<ImportPeptideSearchDlg.SpectraPage>("Import Peptide Search - Build Spectral Library populated page");
 
             AddIrtPeptidesDlg addIrtPeptidesDlg;
             AddIrtStandardsDlg addIrtStandardsDlg = null;
@@ -597,7 +741,7 @@ namespace TestPerf
             {
                 addIrtStandardsDlg = ShowDialog<AddIrtStandardsDlg>(() => importPeptideSearchDlg.ClickNextButton());
                 RunUI(() => addIrtStandardsDlg.StandardCount = _instrumentValues.ExpectedIrtPeptideCount);
-                PauseForScreenShot<AddIrtStandardsDlg>("Add Standard Peptides - Select number of CiRT peptides", screenshotPage);
+                PauseForScreenShot<AddIrtStandardsDlg>("Add Standard Peptides - Select number of CiRT peptides");
                 addIrtPeptidesDlg = ShowDialog<AddIrtPeptidesDlg>(addIrtStandardsDlg.OkDialog);
             }
             else
@@ -627,12 +771,10 @@ namespace TestPerf
                 Assert.AreEqual(Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_Success, row.Cells[4].Value);
                 addIrtPeptidesDlg.Width = 650;
             });
-            PauseForScreenShot<AddIrtPeptidesDlg>("Add iRT peptides form", screenshotPage);
-            if (addIrtStandardsDlg != null)
-                screenshotPage++;
+            PauseForScreenShot<AddIrtPeptidesDlg>("Add iRT peptides form");
 
             var irtGraph = ShowDialog<GraphRegression>(() => addIrtPeptidesDlg.ShowRegression(0));
-            PauseForScreenShot<GraphRegression>("iRT regression graph", screenshotPage++);
+            PauseForScreenShot<GraphRegression>("iRT regression graph");
 
             OkDialog(irtGraph, irtGraph.CloseDialog);
             var recalibrateMessage = ShowDialog<MultiButtonMsgDlg>(addIrtPeptidesDlg.OkDialog);
@@ -652,8 +794,12 @@ namespace TestPerf
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
 
             string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(documentFile);
-            string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
-            Assert.IsTrue(File.Exists(docLibPath) && File.Exists(redundantDocLibPath));
+            Assert.IsTrue(File.Exists(docLibPath));
+            if (_instrumentValues.HasRedundantLibrary)
+            {
+                string redundantDocLibPath = BiblioSpecLiteSpec.GetRedundantName(docLibPath);
+                Assert.IsTrue(File.Exists(redundantDocLibPath));
+            }
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
 
@@ -674,7 +820,7 @@ namespace TestPerf
                 foreach (var selectedFile in openDataFiles.SelectedFiles)
                     Assert.IsTrue(DiaFiles.Contains(selectedFile));
             });
-            PauseForScreenShot<OpenDataSourceDialog>("Results files form", screenshotPage++);
+            PauseForScreenShot<OpenDataSourceDialog>("Results files form");
             OkDialog(openDataFiles, openDataFiles.Open);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
@@ -683,9 +829,7 @@ namespace TestPerf
                 foreach (var resultFileName in importResults.FoundResultsFiles)
                     Assert.IsTrue(DiaFiles.Contains(Path.GetFileName(resultFileName.Path)));
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Extract chromatograms page with files", screenshotPage++);
-            if (IsPasef)
-                screenshotPage++;   // Because IPS wizard is so tall with IMS added
+            PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>("Extract chromatograms page with files");
 
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(() => importPeptideSearchDlg.ClickNextButton());
             OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
@@ -698,7 +842,7 @@ namespace TestPerf
             {
                 const string modOxidation = "Oxidation (M)";
                 // Define expected matched/unmatched modifications
-                var expectedMatched = !IsPasef ? new[] { modOxidation } : Array.Empty<string>();
+                var expectedMatched = !IsPasef && !IsDiaNN ? new[] { modOxidation } : Array.Empty<string>();
                 // Verify matched/unmatched modifications
                 AssertEx.AreEqualDeep(expectedMatched, importPeptideSearchDlg.MatchModificationsControl.MatchedModifications.ToArray());
                 Assert.IsFalse(importPeptideSearchDlg.MatchModificationsControl.UnmatchedModifications.Any());
@@ -738,7 +882,7 @@ namespace TestPerf
                 Assert.AreEqual(MzTolerance.Units.mz, importPeptideSearchDlg.TransitionSettingsControl.IonMatchMzTolerance.Unit);
                 // CONSIDER: Not that easy to validate 1, 2 in ion charges.
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Transition settings", screenshotPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.TransitionSettingsPage>("Transition settings");
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
 
             // We're on the "Configure Full-Scan Settings" page of the wizard.
@@ -791,19 +935,18 @@ namespace TestPerf
                         Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
                 }
             });
-            screenshotPage++;   // One page without a screenshot
-            PauseForScreenShot<EditIsolationSchemeDlg>("Isolation scheme", screenshotPage++);
+            PauseForScreenShot<EditIsolationSchemeDlg>("Isolation scheme");
 
             var isolationGraph = ShowDialog<DiaIsolationWindowsGraphForm>(isolationScheme.OpenGraph);
-            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Isolation scheme graph", screenshotPage++);
+            PauseForScreenShot<DiaIsolationWindowsGraphForm>("Isolation scheme graph");
 
             OkDialog(isolationGraph, isolationGraph.CloseButton);
             OkDialog(isolationScheme, isolationScheme.OkDialog);
 
             if (IsPasef)
-                PauseForScreenShot<ImportPeptideSearchDlg.ImsFullScanPage>("Import Peptide Search - Configure Full-Scan Settings page", screenshotPage++);
+                PauseForScreenShot<ImportPeptideSearchDlg.ImsFullScanPage>("Import Peptide Search - Configure Full-Scan Settings page");
             else
-                PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search - Configure Full-Scan Settings page", screenshotPage++);
+                PauseForScreenShot<ImportPeptideSearchDlg.Ms2FullScanPage>("Import Peptide Search - Configure Full-Scan Settings page");
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
@@ -818,10 +961,10 @@ namespace TestPerf
                 Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.DecoyGenerationEnabled);
                 importPeptideSearchDlg.ImportFastaControl.DecoyGenerationMethod =
                     Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence;
-                importPeptideSearchDlg.ImportFastaControl.AutoTrain = true;
+                importPeptideSearchDlg.ImportFastaControl.AutoTrain = !IsDiaNN; // use peak boundaries from DIA-NN
                 Assert.IsTrue(importPeptideSearchDlg.ImportFastaControl.ContainsFastaContent);
             });
-            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page", screenshotPage++);
+            PauseForScreenShot<ImportPeptideSearchDlg.FastaPage>("Import Peptide Search - Import FASTA page");
 
             if (IsRecordMode)
                 Console.WriteLine();
@@ -847,30 +990,43 @@ namespace TestPerf
                 peptidesPerProteinDlg.NewTargetsFinal(out proteinCount, out peptideCount, out precursorCount, out transitionCount);
                 _testInfo.ValidateTargets(IsRecordMode, _analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
             });
-            PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form", screenshotPage);
+            PauseForScreenShot<AssociateProteinsDlg>("Import FASTA summary form");
 
             OkDialog(peptidesPerProteinDlg, peptidesPerProteinDlg.OkDialog);
 
             var allChrom = WaitForOpenForm<AllChromatogramsGraph>();
-            WaitForConditionUI(() => allChrom.ProgressTotalPercent >= 20);
-            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", screenshotPage++, 30*1000); // 30 second timeout to avoid getting stuck
+            allChrom.SetFreezeProgressPercent(41, @"00:00:22");
+            WaitForCondition(() => allChrom.IsProgressFrozen());
+            PauseForScreenShot<AllChromatogramsGraph>("Loading chromatograms window", 30*1000); // 30 second timeout to avoid getting stuck
+            allChrom.SetFreezeProgressPercent(null, null);
             WaitForDocumentChangeLoaded(doc, 20 * 60 * 1000); // 20 minutes
 
-            var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
-            PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form", screenshotPage++);
-            ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
+            if (importPeptideSearchDlg.ImportFastaControl.AutoTrain)
+            {
+                var peakScoringModelDlg = WaitForOpenForm<EditPeakScoringModelDlg>();
+                PauseForScreenShot<EditPeakScoringModelDlg>("mProphet model form");
+                ValidateCoefficients(peakScoringModelDlg, _analysisValues.ScoringModelCoefficients);
 
-            OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
+                OkDialog(peakScoringModelDlg, peakScoringModelDlg.OkDialog);
+            }
 
             var docLibrary = SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries[0];
-            Assert.AreEqual(_instrumentValues.LibraryPeptideCount + _instrumentValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
-            RunUI(() => Assert.AreEqual(_instrumentValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount));
+            RunUI(() =>
+            {
+                if (!IsRecordMode)
+                {
+                    Assert.AreEqual(_instrumentValues.LibraryPeptideCount + _instrumentValues.ExpectedIrtPeptideCount, docLibrary.LibraryDetails.UniquePeptideCount);
+                    Assert.AreEqual(_instrumentValues.ExpectedIrtPeptideCount, SkylineWindow.Document.PeptideGroups.First().PeptideCount);
+                }
+                else
+                    _instrumentValues.ExpectedIrtPeptideCount = SkylineWindow.Document.PeptideGroups.First().PeptideCount;
+            });
 
             // Setup annotations
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
 
             AddReplicateAnnotation(documentSettingsDlg, "Condition", AnnotationDef.AnnotationType.value_list,
-                new[] { "A", "B" }, screenshotPage++);
+                new[] { "A", "B" }, true);
 
             AddReplicateAnnotation(documentSettingsDlg, "BioReplicate");
 
@@ -911,7 +1067,7 @@ namespace TestPerf
             SetClipboardText(TextUtil.LineSeparate(replicateAnnotations.Select(TextUtil.ToEscapedTSV)));
 
             RunUI(() => documentGrid.DataGridView.SendPaste());
-            PauseForScreenShot<DocumentGridForm>("Document Grid - filled", screenshotPage++);
+            PauseForScreenShot<DocumentGridForm>("Document Grid - filled");
 
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
 
@@ -937,6 +1093,11 @@ namespace TestPerf
                 RunUI(() =>
                 {
                     SkylineWindow.Size = new Size(900, 900);
+                    SkylineWindow.ForceOnScreen();  // Avoid this shifting the window under the floating window later
+                });
+                Thread.Sleep(200);  // Give layout time to adjust
+                RunUI(() =>
+                {
                     var chromPane1 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[0].Name);
                     var chromPane2 = SkylineWindow.GetGraphChrom(SkylineWindow.Document.Settings.MeasuredResults.Chromatograms[1].Name);
                     var rtGraphFrame = FindFloatingWindow(SkylineWindow.GraphRetentionTime);
@@ -946,10 +1107,10 @@ namespace TestPerf
                     rectFrame = rtGraphFrame.Bounds;
                     rtGraphFrame.Activate();    // TODO: Want the graph activated but a screenshot of screen
                 });
-                PauseForScreenShot<ScreenForm>("Docking floating image with cursor", screenshotPage++, null, bmp =>
+                PauseForScreenShot<ScreenForm>("Docking floating image with cursor", null, bmp =>
                     DrawLArrowCursorOnBitmap(ClipDockingRect(bmp, rectFrame), 0.5, 0.155));
                 BeginDragDisplay(SkylineWindow.GraphRetentionTime, 0.62, 0.11);
-                PauseForScreenShot<ScreenForm>("Docking image cursor on upper dock indicator", screenshotPage++, null, bmp =>
+                PauseForScreenShot<ScreenForm>("Docking image cursor on upper dock indicator", null, bmp =>
                     ClipDockingRect(bmp, rectFrame));
                 EndDragDisplay();
             }
@@ -971,12 +1132,11 @@ namespace TestPerf
             RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
 
-            screenshotPage++;   // Docking drag-drop image page
-            PauseForScreenShot("Manual review window layout with protein selected", screenshotPage++);
+            PauseForScreenShot("Manual review window layout with protein selected");
 
             FindNode(_instrumentValues.ExamplePeptide);
             WaitForGraphs();
-            PauseForScreenShot("Manual review window layout with peptide selected", screenshotPage++);
+            PauseForScreenShot("Manual review window layout with peptide selected");
 
             FindNode("_HUMAN");
             WaitForGraphs();
@@ -992,9 +1152,8 @@ namespace TestPerf
             }
 
             var graphChrom = SkylineWindow.GetGraphChrom(firstReplicateName);
-            PauseForScreenShot(graphChrom, "Snip just one chromatogram pane",
-                null, null, bmp => DrawHandCursorOnChromBitmap(bmp,
-                    graphChrom, true, clickPoint.X, clickPoint.Y));
+            PauseForScreenShot(graphChrom, "Snip just one chromatogram pane", null, bmp => DrawHandCursorOnChromBitmap(bmp,
+                graphChrom, true, clickPoint.X, clickPoint.Y));
 
             try
             {
@@ -1007,18 +1166,18 @@ namespace TestPerf
                     "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.", e);
             }
 
-            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", screenshotPage++);
+            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed");
 
             if (IsPasef)
             {
                 RunUI(() => SkylineWindow.GraphFullScan.ShowMobility(true));
                 WaitForGraphs();
-                PauseForScreenShot<GraphFullScan>("Full-Scan graph window - mobility zoomed", screenshotPage++);
+                PauseForScreenShot<GraphFullScan>("Full-Scan graph window - mobility zoomed");
             }
 
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
             WaitForGraphs();
-            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - unzoomed", screenshotPage++);
+            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - unzoomed");
 
             RunUI(SkylineWindow.GraphFullScan.Close);
             RunUI(SkylineWindow.ShowMassErrorHistogramGraph);
@@ -1064,11 +1223,11 @@ namespace TestPerf
             RunUI(SkylineWindow.ShowRTRegressionGraphScoreToRun);
             RestoreViewOnScreenNoSelChange(24);
             WaitForRegression();
-            PauseForScreenShot(SkylineWindow.GraphRetentionTime, "Retention time regression graph window - regression", screenshotPage++);
+            PauseForScreenShot(SkylineWindow.GraphRetentionTime, "Retention time regression graph window - regression");
 
             RunUI(() => SkylineWindow.ShowPlotType(PlotTypeRT.residuals));
             WaitForGraphs();
-            PauseForScreenShot(SkylineWindow.GraphRetentionTime, "Retention time regression graph window - residuals", screenshotPage++);
+            PauseForScreenShot(SkylineWindow.GraphRetentionTime, "Retention time regression graph window - residuals");
             RunUI(() => SkylineWindow.ShowGraphRetentionTime(false, GraphTypeSummary.score_to_run_regression));
 
             var editGroupComparisonDlg = ShowDialog<EditGroupComparisonDlg>(SkylineWindow.AddGroupComparison);
@@ -1087,7 +1246,7 @@ namespace TestPerf
                 editGroupComparisonDlg.ShowAdvanced(true);
                 editGroupComparisonDlg.TextBoxQValueCutoff.Text = (0.01).ToString(CultureInfo.CurrentCulture);
             });
-            PauseForScreenShot<EditGroupComparisonDlg>("Group comparison", screenshotPage++);
+            PauseForScreenShot<EditGroupComparisonDlg>("Group comparison");
 
             OkDialog(editGroupComparisonDlg, editGroupComparisonDlg.OkDialog);
             RunUI(() => SkylineWindow.ShowGroupComparisonWindow(groupComparisonName));
@@ -1105,14 +1264,14 @@ namespace TestPerf
                 });
                 WaitForConditionUI(() => 0 != fcGridControl.RowCount, "0 != foldChangeGrid.DataboundGridControl.RowCount");
                 WaitForConditionUI(() => fcGridControl.IsComplete, "foldChangeGrid.DataboundGridControl.IsComplete");
-                PauseForScreenShot<FoldChangeGrid>("By Condition grid", screenshotPage);
+                PauseForScreenShot<FoldChangeGrid>("By Condition grid");
 
                 var volcanoPlot = ShowDialog<FoldChangeVolcanoPlot>(fcGrid.ShowVolcanoPlot);
                 RestoreViewOnScreenNoSelChange(27);
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 WaitForConditionUI(() => fcGrid.DataboundGridControl.IsComplete && fcGrid.DataboundGridControl.RowCount > 11);
                 RunUI(() => fcGrid.DataboundGridControl.DataGridView.FirstDisplayedScrollingRowIndex = 11); // Re-apply scrolling
-                PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot - unformatted", screenshotPage++);
+                PauseForScreenShot<FoldChangeVolcanoPlot>("By Condition:Volcano Plot - unformatted");
                 volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreViewsOnScreen
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 5);
                 WaitForConditionUI(() => volcanoPlot.CurveList[4].Points.Count > SkylineWindow.Document.MoleculeCount/4);
@@ -1128,16 +1287,16 @@ namespace TestPerf
                 ApplyFormatting(formattingDlg, "ECOLI", "128, 0, 255");
                 var createExprDlg = ShowDialog<CreateMatchExpressionDlg>(() =>
                     formattingDlg.ClickCreateExpression(formattingDlg.ResultList.Count - 1));
-                PauseForScreenShot<CreateMatchExpressionDlg>("Create Expression form", screenshotPage++);
+                PauseForScreenShot<CreateMatchExpressionDlg>("Create Expression form");
                 OkDialog(createExprDlg, createExprDlg.OkDialog);
 
                 ApplyFormatting(formattingDlg, "YEAS", "255, 128, 0");
                 ApplyFormatting(formattingDlg, "HUMAN", "0, 128, 0");
-                PauseForScreenShot<VolcanoPlotFormattingDlg>("Volcano plot formatting form", screenshotPage);
+                PauseForScreenShot<VolcanoPlotFormattingDlg>("Volcano plot formatting form");
                 OkDialog(formattingDlg, formattingDlg.OkDialog);
                 //PauseTest();
                 WaitForConditionUI(() => volcanoPlot.CurveList.Count == 8 &&
-                                         volcanoPlot.CurveList[7].Points.Count == _instrumentValues.ExpectedIrtPeptideCount); // iRTs
+                                         volcanoPlot.CurveList[7].Points.Count >= _instrumentValues.ExpectedIrtPeptideCount); // iRTs
                 for (int i = 1; i < 4; i++)
                 {
                     RunUI(() =>
@@ -1176,10 +1335,10 @@ namespace TestPerf
                 var barGraph = WaitForOpenForm<FoldChangeBarGraph>();
                 int volcanoBarDelta = _instrumentValues.ExpectedIrtPeptideCount - 1; // iRTs - selected peptide
                 if (!IsRecordMode)
-                    WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta);
+                    WaitForBarGraphPoints(barGraph, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta, _analysisValues.DiffPeptideCounts[0] - volcanoBarDelta * 2);
 
                 SortByFoldChange(fcGridControl, _resultProperty);
-                PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides", screenshotPage++);
+                PauseForScreenShot<FoldChangeBarGraph>("By Condition:Bar Graph - peptides");
 
                 var changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
                 RunUI(() => changeGroupComparisonSettings.RadioScopePerProtein.Checked = true);
@@ -1198,6 +1357,9 @@ namespace TestPerf
                 RunUI(() => changeGroupComparisonSettings.ComboSummaryMethod.SelectedItem =
                     SummarizationMethod.MEDIANPOLISH);
 
+                if (IsDiaNN && _analysisValues.IsWholeProteome)
+                    return; // fold change bar graphs don't behave the same way for DIA-NN results as for iProphet, so exit early
+
                 if (!IsRecordMode)
                     WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
                 else
@@ -1206,13 +1368,17 @@ namespace TestPerf
                     if (GetBarCount(barGraph) != targetProteinCount)
                         Console.WriteLine(@"PolishedProteins = {0},", GetBarCount(barGraph));
                 }
+
                 fcGrid = WaitForOpenForm<FoldChangeGrid>();
                 var fcGridControlFinal = fcGrid.DataboundGridControl;
                 SortByFoldChange(fcGridControlFinal, _resultProperty);  // Re-apply the sort, in case it was lost in restoring views
 
                 RestoreViewOnScreen(31);
                 barGraph = WaitForOpenForm<FoldChangeBarGraph>();
-                WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                if (!IsRecordMode)
+                    WaitForBarGraphPoints(barGraph, _analysisValues.PolishedProteins ?? targetProteinCount);
+                else
+                    WaitForBarGraphPoints(barGraph, targetProteinCount, unpolishedCount);
                 RunUIForScreenShot(() =>
                 {
                     var yScale = barGraph.ZedGraphControl.GraphPane.YAxis.Scale;
@@ -1243,6 +1409,20 @@ namespace TestPerf
                     changeGroupComparisonSettings = ShowDialog<EditGroupComparisonDlg>(fcGrid.ShowChangeSettings);
                     RunUI(() => changeGroupComparisonSettings.RadioScopePerPeptide.Checked = true);
                     OkDialog(changeGroupComparisonSettings, changeGroupComparisonSettings.Close);
+                    WaitForConditionUI(() => fcGrid.IsComplete);
+                    WaitForGraphs();
+                    volcanoPlot = WaitForOpenForm<FoldChangeVolcanoPlot>();    // May have changed with RestoreCoverViewOnScreen
+                    WaitForConditionUI(() => !volcanoPlot.UpdatePending);
+                    RunUI(() =>
+                    {
+                        var pane = volcanoPlot.GraphControl.GraphPane;
+                        var xScale = pane.XAxis.Scale;
+                        xScale.MaxAuto = xScale.MinAuto = false;
+                        xScale.Min = -4;
+                        xScale.Max = 4;
+                        pane.AxisChange();
+                        volcanoPlot.GraphControl.Invalidate();
+                    });
 
                     RunUI(() =>
                     {
@@ -1251,16 +1431,20 @@ namespace TestPerf
                         fcFloatingWindow.Top = SkylineWindow.Bottom - fcFloatingWindow.Height - 8;
                     });
 
-                    if (IsPasef)
+                    if (!IsPasef)
+                    {
+                        FocusDocument();
+                        TakeCoverShot();
+                    }
+                    else
                     {
                         ClickChromatogram(SkylineWindow.Document.MeasuredResults.Chromatograms[0].Name,
                             1.2642E+01, 1.0521E+04);
                         RunUI(() => SkylineWindow.ShowChromatogramLegends(false));
                         RunUI(() => SkylineWindow.GraphFullScan.SetZoom(true));
                         WaitForGraphs();
+                        TakeCoverShot(FindOpenForm<GraphFullScan>());
                     }
-
-                    TakeCoverShot();
                 }
             }
         }
@@ -1494,7 +1678,17 @@ namespace TestPerf
 
         private string GetTestPath(string path)
         {
-            return TestFilesDirs[0].GetTestPath(Path.Combine(ZipFileName, path));
+            foreach(var dir in TestFilesDirs)
+            {
+                string possiblePath = dir.GetTestPath(Path.Combine(ZipFileName, path));
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+                possiblePath = dir.GetTestPath(path);
+                if (File.Exists(possiblePath) || Directory.Exists(possiblePath))
+                    return possiblePath;
+            }
+
+            throw new ArgumentException($"{path} does not exist in any of the TestFilesDirs");
         }
 
         private void RunTest()
