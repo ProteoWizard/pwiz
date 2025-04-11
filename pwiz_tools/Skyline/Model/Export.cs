@@ -4143,10 +4143,10 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = @"Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE,";
+            var hdr = @"Compound,Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE";
             if (UseSlens)
-                hdr += @"S-lens,";
-            return (hdr+@"Comment").Replace(',', fieldSeparator);
+                hdr += @",S-lens";
+            return hdr.Replace(',', fieldSeparator);
         }
 
         protected override void WriteTransition(TextWriter writer,
@@ -4158,6 +4158,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            string compound = GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement);
             string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
 
             string start = string.Empty;
@@ -4194,19 +4195,15 @@ namespace pwiz.Skyline.Model
                      ?? (wideWindowDia ? WIDE_NCE : NARROW_NCE); // Normalized CE, not a real voltage
             var ceString = ce.ToString(CultureInfo);
 
-            string comment = string.Format(@"{0} ({1})",
-                GetCompound(nodePep, nodeTranGroup),
-                nodeTranGroup.TransitionGroup.LabelType).ToDsvField(FieldSeparator);
-
             var polarity = (nodeTranGroup.PrecursorCharge > 0) ? @"Positive" : @"Negative";
             if (UseSlens)
             {
                 var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);  
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, slens, comment);
+                Write(writer, compound, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, slens);
             }
             else
             {
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, comment);
+                Write(writer, compound, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString);
             }
         }
     }
@@ -4227,6 +4224,8 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
+            writer.Write(@"Compound");
+            writer.Write(FieldSeparator);
             writer.Write(@"m/z");
             writer.Write(FieldSeparator);
             writer.Write(@"z");
@@ -4257,6 +4256,8 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
             int step)
         {
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
+            writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
@@ -4316,7 +4317,7 @@ namespace pwiz.Skyline.Model
         public string GetHeader(char fieldSeparator)
         {
             var hdr = !Tune3Columns
-                ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
+                ? @"Compound,m/z,z,t start (min),t end (min),CID Collision Energy (%)"
                 : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
                 hdr += @",S-lens";
@@ -4339,12 +4340,11 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
+            writer.Write(FieldSeparator);
+
             if (Tune3Columns)
             {
-                writer.Write(@"{0} ({1})",
-                    nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
-                    nodeTranGroup.TransitionGroup.LabelType);
-                writer.Write(FieldSeparator);
                 writer.Write(string.Empty);
                 writer.Write(FieldSeparator);
                 writer.Write(string.Empty);
