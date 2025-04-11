@@ -1649,7 +1649,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AlignmentFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
-            if (tranPeakInfo == null || chromatogramInfo == null)
+            if (tranPeakInfo == null || chromatogramInfo == null || tranPeakInfo.IsEmpty)
                 return; // Nothing to shade
             if (chromatogramInfo.TransformChrom.IsDerivative())
             {
