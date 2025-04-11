@@ -2678,6 +2678,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public IEnumerable<KeyValuePair<int, double>> GetMinRetentionTimes()
         {
+            if (_timesById == null)
+            {
+                yield break;
+            }
             foreach (var entry in _timesById)
             {
                 if (entry.Value.Length > 0)

@@ -188,6 +188,10 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var peakBounds = keyValuePair.Value;
+                    if (peakBounds.IsEmpty || double.IsNaN(peakBounds.Score))
+                    {
+                        continue;
+                    }
                     if (bestPeakBounds == null || bestPeakBounds.Score > peakBounds.Score)
                     {
                         bestPeakBounds = peakBounds;

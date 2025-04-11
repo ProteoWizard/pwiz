@@ -1821,7 +1821,7 @@ namespace pwiz.Skyline.Model.Results
         {
             lock (ReadStream)
             {
-            var stream = ReadStream.Stream;
+                var stream = ReadStream.Stream;
                 try
                 {
                     return func(stream);

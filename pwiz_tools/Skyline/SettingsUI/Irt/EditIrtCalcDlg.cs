@@ -1025,7 +1025,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                             {
                                 if (library == null)
                                     library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
-
+                                if (longWait.IsCanceled)
+                                {
+                                    return;
+                                }
                                 var irtProvider = library.RetentionTimeProvidersIrt.ToArray();
                                 if (irtProvider.Any())
                                 {

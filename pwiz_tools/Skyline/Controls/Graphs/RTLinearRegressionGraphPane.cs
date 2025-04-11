@@ -315,13 +315,11 @@ namespace pwiz.Skyline.Controls.Graphs
             bool residuals = IsResiduals(data);
             foreach (var pointInfo in data.AllPoints)
             {
-                double? y = residuals ? Data.GetYResidual(pointInfo) : pointInfo.Y;
-                if (pointInfo.X.HasValue && y.HasValue)
+                double y = residuals ? Data.GetYResidual(pointInfo) : Data.GetYCorrelation(pointInfo);
+                double x = Data.GetX(pointInfo);
+                if (PointIsOver(point, x, y))
                 {
-                    if (PointIsOver(point, pointInfo.X.Value, y.Value))
-                    {
-                        return pointInfo;
-                    }
+                    return pointInfo;
                 }
             }
 
