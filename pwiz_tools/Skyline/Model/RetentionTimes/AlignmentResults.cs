@@ -23,8 +23,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             foreach (var entry in alignmentFunctions)
             {
-                _alignmentFunctions.Add(entry.Key, new Alignment(entry.Value));
-                files?.Add(entry.Key);
+                if (entry.Value != null)
+                {
+                    _alignmentFunctions.Add(entry.Key, new Alignment(entry.Value));
+                    files?.Add(entry.Key);
+                }
             }
 
             LibraryFiles = libraryFiles ?? new LibraryFiles(files);

@@ -84,6 +84,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return null;
                 case RegressionMethodRT.loess:
                 {
+                    if (xValues.Count < 2)
+                    {
+                        return null;
+                    }
                     var loessAligner = new LoessAligner(-1, -1, 0.4);
                     loessAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
                     loessAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
