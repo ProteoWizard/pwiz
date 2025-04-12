@@ -2096,6 +2096,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     result = result.ChangePeptideSettings(
                         result.PeptideSettings.ChangeImputation(ImputationSettings.DEFAULT));
                 }
+
+                result = result.ChangeDocumentRetentionTimes(DocumentRetentionTimes.EMPTY);
             }
 
             return result;

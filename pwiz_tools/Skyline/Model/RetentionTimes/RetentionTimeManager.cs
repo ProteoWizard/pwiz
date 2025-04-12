@@ -20,14 +20,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using EnvDTE;
-using MathNet.Numerics.Statistics;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
@@ -104,7 +98,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return false;
                 }
                 var loadMonitor = new LoadMonitor(this, container, alignmentParam);
-                IProgressStatus progressStatus = new ProgressStatus(string.Format("Performing alignment between library {0} and {1}", alignmentParam.Key, alignmentTarget.Calculator.Name));
+                IProgressStatus progressStatus = new ProgressStatus(string.Format("Performing alignment between library {0} and predictor {1}", alignmentParam.Key, alignmentTarget.Calculator.Name));
                 LibraryAlignments libraryAlignment;
                 try
                 {

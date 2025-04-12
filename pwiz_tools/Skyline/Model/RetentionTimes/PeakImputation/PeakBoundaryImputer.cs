@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             public AlignmentFunction GetAlignmentFunction(CancellationToken cancellationToken, string spectrumSourceFile)
             {
-                return LibraryAlignments?.GetAlignmentFunction(spectrumSourceFile);
+                return LibraryAlignments?.GetAlignmentFunction(spectrumSourceFile, true);
             }
 
             public ExemplaryPeak GetExemplaryPeak(CancellationToken cancellationToken, Target target)
@@ -157,6 +157,10 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 foreach (var filePath in Library.LibraryFiles.FilePaths)
                 {
+                    if (false == LibraryAlignments?.ContainsFile(filePath))
+                    {
+                        continue;
+                    }
                     var peakBounds = Library.GetExplicitPeakBounds(MsDataFileUri.Parse(filePath), targets);
                     if (peakBounds != null)
                     {
@@ -295,9 +299,13 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             foreach (var library in Document.Settings.PeptideSettings.Libraries.Libraries)
             {
-                if (true != library?.IsLoaded)
+                if (library == null)
                 {
                     continue;
+                }
+                if (!library.IsLoaded)
+                {
+                    return null;
                 }
                 if (!library.HasExplicitBounds || !library.UseExplicitPeakBounds)
                 {
@@ -318,6 +326,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 return null;
             }
+
             return GetImputedPeakFromDocument(cancellationToken, identityPath, filePath);
         }
 
@@ -386,7 +395,11 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 return explicitPeakBounds;
             }
-            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, false);
+            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, true);
+            if (imputedPeak == null)
+            {
+                return explicitPeakBounds;
+            }
             if (!explicitPeakBounds.IsEmpty && IsAcceptable(imputationSettings, new PeakBounds(explicitPeakBounds.StartTime, explicitPeakBounds.EndTime), imputedPeak))
             {
                 return explicitPeakBounds;
@@ -763,6 +776,12 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
 
             return imputedPeak;
+        }
+
+        public ImputedPeak GetImputedPeakIfQuick(IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, 
+            MsDataFileUri filePath)
+        {
+            return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, chromatogramSet, filePath, true);
         }
 
         public SrmDocument ImputePeak(CancellationToken cancellationToken, SrmDocument document, IdentityPath peptideIdentityPath)

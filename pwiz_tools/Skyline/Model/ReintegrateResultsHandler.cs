@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using pwiz.Common.PeakFinding;
+﻿using pwiz.Common.PeakFinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;

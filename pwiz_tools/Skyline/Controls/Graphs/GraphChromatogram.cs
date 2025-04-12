@@ -3575,6 +3575,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Document = document;
                 IdentityPath = identityPath;
+                ChromatogramSet = chromatogramSet;
                 AlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
                 FilePath = filePath;
             }

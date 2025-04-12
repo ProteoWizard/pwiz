@@ -24,7 +24,6 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using JetBrains.Annotations;
-using NHibernate.SqlCommand;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -76,7 +75,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             if (srmSettings.DocumentRetentionTimes.UpdateFromLoadedSettings(srmSettings) != null)
             {
-                return "DocumentRetentionTimes: need to update from loaded settings";
+                return nameof(DocumentRetentionTimes) + " need to update from loaded settings";
             }
             var unloadedLibraries = srmSettings.DocumentRetentionTimes.GetMissingAlignments(srmSettings).Select(param => param.Key.ToString()).ToList();
             if (unloadedLibraries.Count == 0)
@@ -85,7 +84,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return null;
             }
 
-            return nameof(RetentionTimeManager) + @": " + TextUtil.SpaceSeparate(unloadedLibraries);
+            return nameof(DocumentRetentionTimes) + @": " + TextUtil.SpaceSeparate(unloadedLibraries);
         }
 
         public static string IsNotLoadedExplained(SrmDocument document)
@@ -143,7 +142,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         private enum EL
         {
-            library,
+            alignments,
             alignment,
             x,
             y
@@ -151,7 +150,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         private enum ATTR
         {
-            name,
+            library,
+            file,
             batch
         }
 
@@ -169,15 +169,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             var xElement = (XElement) XNode.ReadFrom(reader);
             var libraryAlignments = new Dictionary<LibraryAlignmentKey, LibraryAlignmentValue>();
-            foreach (var elLibrary in xElement.Elements(EL.library))
+            foreach (var elLibrary in xElement.Elements(EL.alignments))
             {
-                var key = new LibraryAlignmentKey(elLibrary.Attribute(ATTR.name)?.Value, elLibrary.Attribute(ATTR.batch)?.Value);
+                var key = new LibraryAlignmentKey(elLibrary.Attribute(ATTR.library)?.Value, elLibrary.Attribute(ATTR.batch)?.Value);
                 var alignments = new Dictionary<string, PiecewiseLinearMap>();
                 foreach (var elAlignment in elLibrary.Elements(EL.alignment))
                 {
-                    var xValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elLibrary.Elements(EL.x).First().Value));
-                    var yValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elLibrary.Elements(EL.y).First().Value));
-                    alignments.Add(elAlignment.Attribute(ATTR.name).Value, PiecewiseLinearMap.FromValues(xValues, yValues));
+                    var xValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elAlignment.Elements(EL.x).First().Value));
+                    var yValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elAlignment.Elements(EL.y).First().Value));
+                    alignments.Add(elAlignment.Attribute(ATTR.file).Value, PiecewiseLinearMap.FromValues(xValues, yValues));
                 }
                 libraryAlignments.Add(key, new LibraryAlignmentValue(null, new LibraryAlignments(alignments)));
             }
@@ -190,13 +190,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             foreach (var entry in _libraryAlignments)
             {
-                writer.WriteStartElement(EL.library);
-                writer.WriteAttribute(ATTR.name, entry.Key.LibraryName);
+                writer.WriteStartElement(EL.alignments);
+                writer.WriteAttributeIfString(ATTR.library, entry.Key.LibraryName);
                 writer.WriteAttributeIfString(ATTR.batch, entry.Key.BatchName);
                 foreach (var alignment in entry.Value.LibraryAlignments.GetAllAlignmentFunctions().OrderBy(kvp=>kvp.Key))
                 {
                     writer.WriteStartElement(EL.alignment);
-                    writer.WriteAttribute(ATTR.name, alignment.Key);
+                    writer.WriteAttribute(ATTR.file, alignment.Key);
                     var piecewiseLinearMap = alignment.Value;
                     writer.WriteStartElement(EL.x);
                     writer.WriteValue(Convert.ToBase64String(PrimitiveArrays.ToBytes(piecewiseLinearMap.XValues.ToArray())));
@@ -590,24 +590,24 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public class LibraryAlignmentParam
         {
-            public LibraryAlignmentParam(AlignmentTarget alignmentTarget, LibraryAlignmentKey key, Library library, ImmutableList<string> spectrumSourceFiles)
+            public LibraryAlignmentParam(AlignmentTarget alignmentTarget, LibraryAlignmentKey key, Library library, ImmutableList<string> spectrumSourceFileSubset)
             {
                 AlignmentTarget = alignmentTarget;
                 Key = key;
                 Library = library;
                 Assume.AreEqual(Library.Name, Key.LibraryName);
-                SpectrumSourceFiles = spectrumSourceFiles;
+                SpectrumSourceFileSubset = spectrumSourceFileSubset;
 
             }
             public AlignmentTarget AlignmentTarget { get; }
             public LibraryAlignmentKey Key { get; private set; }
             public Library Library { get; private set; }
             [CanBeNull]
-            public ImmutableList<string> SpectrumSourceFiles { get; private set; }
+            public ImmutableList<string> SpectrumSourceFileSubset { get; private set; }
 
             protected bool Equals(LibraryAlignmentParam other)
             {
-                return Equals(AlignmentTarget, other.AlignmentTarget) && Equals(Key, other.Key) && Equals(Library, other.Library) && Equals(SpectrumSourceFiles, other.SpectrumSourceFiles);
+                return Equals(AlignmentTarget, other.AlignmentTarget) && Equals(Key, other.Key) && Equals(Library, other.Library) && Equals(SpectrumSourceFileSubset, other.SpectrumSourceFileSubset);
             }
 
             public override bool Equals(object obj)
@@ -625,7 +625,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     var hashCode = (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (Key != null ? Key.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ (Library != null ? Library.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (SpectrumSourceFiles != null ? SpectrumSourceFiles.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (SpectrumSourceFileSubset != null ? SpectrumSourceFileSubset.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -646,7 +646,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static LibraryAlignments PerformAlignment(ILoadMonitor loadMonitor, ref IProgressStatus progressStatus, LibraryAlignmentParam alignmentParam)
         {
             var library = alignmentParam.Library;
-            var allRetentionTimes = library.GetAllRetentionTimes(alignmentParam.SpectrumSourceFiles);
+            var spectrumSourceFiles = alignmentParam.SpectrumSourceFileSubset ?? library.LibraryFiles.FilePaths;
+            var allRetentionTimes = library.GetAllRetentionTimes(alignmentParam.SpectrumSourceFileSubset);
             if (allRetentionTimes == null)
             {
                 return LibraryAlignments.EMPTY;
@@ -665,7 +666,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
                 lock (alignmentFunctions)
                 {
-                    alignmentFunctions[iFile] = new KeyValuePair<string, PiecewiseLinearMap>(library.LibraryFiles.FilePaths[iFile], alignment);
+                    alignmentFunctions[iFile] = new KeyValuePair<string, PiecewiseLinearMap>(spectrumSourceFiles[iFile], alignment);
                     loadMonitor.UpdateProgress(localProgressStatus =
                         localProgressStatus.ChangePercentComplete(100 * completedCount++ / alignmentFunctions.Length));
                 }
@@ -714,6 +715,26 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return ChangeProp(ImClone(this), im => im._libraryAlignments = newLibraries);
             }
 
+            return null;
+        }
+
+        public AlignmentFunction GetAlignmentFunction(PeptideLibraries peptideLibraries, MsDataFileUri filePath, string batchName, bool forward)
+        {
+            if (string.IsNullOrEmpty(batchName))
+            {
+                batchName = null;
+            }
+
+            foreach (var library in peptideLibraries.Libraries.Where(lib => true == lib?.IsLoaded))
+            {
+                var key = new LibraryAlignmentKey(library.Name, batchName);
+                if (!_libraryAlignments.TryGetValue(key, out var value))
+                {
+                    continue;
+                }
+
+                return value.LibraryAlignments.GetAlignmentFunction(filePath, forward);
+            }
             return null;
         }
     }
