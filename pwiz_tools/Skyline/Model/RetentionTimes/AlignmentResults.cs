@@ -1,20 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
-    public class LibraryAlignments
+    public class Alignments
     {
-        public static readonly LibraryAlignments EMPTY =
-            new LibraryAlignments(Array.Empty<KeyValuePair<string, PiecewiseLinearMap>>());
-        private Dictionary<string, LibraryAlignment> _alignmentFunctions;
+        public static readonly Alignments EMPTY =
+            new Alignments(LibraryFiles.EMPTY, Array.Empty<KeyValuePair<string, PiecewiseLinearMap>>());
+        private Dictionary<string, Alignment> _alignmentFunctions;
 
-        public LibraryAlignments(IEnumerable<KeyValuePair<string, PiecewiseLinearMap>> alignmentFunctions)
+        public Alignments(LibraryFiles libraryFiles, IEnumerable<KeyValuePair<string, PiecewiseLinearMap>> alignmentFunctions)
         {
-            _alignmentFunctions = alignmentFunctions.ToDictionary(kvp=>kvp.Key, kvp=>new LibraryAlignment(kvp.Value));
+            _alignmentFunctions = new Dictionary<string, Alignment>();
+            List<string> files = null;
+            if (libraryFiles == null)
+            {
+                files = new List<string>();
+            }
+
+            foreach (var entry in alignmentFunctions)
+            {
+                _alignmentFunctions.Add(entry.Key, new Alignment(entry.Value));
+                files?.Add(entry.Key);
+            }
+
+            LibraryFiles = libraryFiles ?? new LibraryFiles(files);
         }
 
         public AlignmentFunction GetAlignmentFunction(string name, bool forward)
@@ -25,16 +38,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public AlignmentFunction GetAlignmentFunction(MsDataFileUri msDataFileUri, bool forward)
         {
-            var name = msDataFileUri.GetFileNameWithoutExtension();
-            foreach (var entry in _alignmentFunctions)
+            int index = LibraryFiles.FindIndexOf(msDataFileUri);
+            if (index < 0)
             {
-                if (name == Path.GetFileNameWithoutExtension(entry.Key))
-                {
-                    return entry.Value.GetAlignmentFunction(forward);
-                }
+                return null;
             }
 
-            return null;
+            return _alignmentFunctions[LibraryFiles[index]]?.GetAlignmentFunction(forward);
         }
 
         public bool ContainsFile(string file)
@@ -47,9 +57,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return _alignmentFunctions.Select(kvp=>new KeyValuePair<string, PiecewiseLinearMap>(kvp.Key, kvp.Value.ForwardMap));
         }
 
-        private class LibraryAlignment
+        public LibraryFiles LibraryFiles { get; private set; }
+
+        private class Alignment
         {
-            public LibraryAlignment(PiecewiseLinearMap forwardMap)
+            public Alignment(PiecewiseLinearMap forwardMap)
             {
                 ForwardMap = forwardMap;
                 ReverseMap = ForwardMap.ReverseMap();

@@ -2583,15 +2583,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public override Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
         {
-            var files = _librarySourceFiles.Cast<BiblioLiteSourceInfo?>().ToList();
-            IList<int> fileIds = null;
-            if (spectrumSourceFiles != null)
-            {
-                files = spectrumSourceFiles.Select(file =>
-                    files.FirstOrDefault(spectrumSourceFile => spectrumSourceFile?.FilePath == file)).ToList();
-                fileIds = files.Select(file => file?.Id).OfType<int>().OrderBy(i=>i).ToList();
-            }
-
+            var files = GetSourceInfos(spectrumSourceFiles, out var fileIds);
             var result = files.Select(file => new Dictionary<Target, double>()).ToArray();
             foreach (var grouping in _libraryEntries.GroupBy(entry => entry.Key.Target))
             {
@@ -2611,6 +2603,41 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return result;
+        }
+
+        public override IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
+            ICollection<Target> targets)
+        {
+            var files = GetSourceInfos(spectrumSourceFiles, out var fileIds);
+            var result = files.OfType<BiblioLiteSourceInfo>().ToDictionary(file => file.Id, file => new List<double>());
+            foreach (var entry in targets.SelectMany(target =>
+                         _libraryEntries.ItemsMatching(new LibKey(target, Adduct.EMPTY), false)))
+            {
+                foreach (var fileIdRetentionTimes in entry.RetentionTimesByFileId.GetRetentionTimes(fileIds))
+                {
+                    result[fileIdRetentionTimes.Key].AddRange(fileIdRetentionTimes.Value.Select(t=>(double) t));
+                }
+            }
+
+            return files.Select(file => file == null ? (IList<double>)Array.Empty<double>() : result[file.Value.Id])
+                .ToArray();
+        }
+
+        private IList<BiblioLiteSourceInfo?> GetSourceInfos(IEnumerable<string> spectrumSourceFiles,
+            out IList<int> orderedFileIds)
+        {
+            var files = _librarySourceFiles.Cast<BiblioLiteSourceInfo?>().ToList();
+            if (spectrumSourceFiles != null)
+            {
+                files = spectrumSourceFiles.Select(file => files.ElementAtOrDefault(LibraryFiles.IndexOfFilePath(file))).ToList();
+                orderedFileIds = files.Select(file => file?.Id).OfType<int>().OrderBy(i => i).ToList();
+            }
+            else
+            {
+                orderedFileIds = null;
+            }
+
+            return files;
         }
     }
 
@@ -2687,6 +2714,17 @@ namespace pwiz.Skyline.Model.Lib
 
         public IEnumerable<KeyValuePair<int, double>> GetMinRetentionTimes(IList<int> fileIds)
         {
+            foreach (var entry in GetRetentionTimes(fileIds))
+            {
+                if (entry.Value.Length > 0)
+                {
+                    yield return new KeyValuePair<int, double>(entry.Key, entry.Value.Min());
+                }
+            }
+        }
+
+        public IEnumerable<KeyValuePair<int, float[]>> GetRetentionTimes(IList<int> fileIds)
+        {
             if (_timesById == null)
             {
                 yield break;
@@ -2701,7 +2739,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (enFileIds == null || entry.Key == enFileIds.Current)
                 {
-                    yield return new KeyValuePair<int, double>(entry.Key, entry.Value.Min());
+                    yield return new KeyValuePair<int, float[]>(entry.Key, entry.Value);
                 }
 
                 if (enFileIds != null)
@@ -2716,7 +2754,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
         }
-      
+
         public void Write(Stream stream)
         {
             if (_timesById == null)

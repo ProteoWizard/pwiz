@@ -3485,20 +3485,17 @@ namespace pwiz.Skyline
                     };
                 items.Insert(iInsert++, menuItem);
             }
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+            if (null != chromFileInfoId && DocumentUI.Settings.HasResults && !DocumentUI.Settings.DocumentRetentionTimes.IsEmpty)
             {
                 foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
                 {
-                    var chromFileInfo = chromatogramSet.MSDataFileInfos
-                                                       .FirstOrDefault(
-                                                           chromFileInfoMatch =>
-                                                           ReferenceEquals(chromFileInfoMatch.FileId, chromFileInfoId));
+                    var chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
                     if (null == chromFileInfo)
                     {
                         continue;
                     }
-                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
+
+                    string fileItemName = chromFileInfo.FilePath.GetFileNameWithoutExtension();
                     var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
                     var alignToFileItem = new ToolStripMenuItem(menuItemText);
                     if (ReferenceEquals(chromFileInfoId, AlignToFile))

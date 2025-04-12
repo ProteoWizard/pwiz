@@ -306,6 +306,14 @@
           <xs:attribute name="shared_peptides" type="xs:string" />
         </xs:complexType>
       </xs:element>
+      <xs:element name="imputation" minOccurs="0" maxOccurs="1">
+        <xs:complexType>
+          <xs:attribute name="max_rt_shift" type="xs:double" />
+          <xs:attribute name="max_peak_width_var" type="xs:double" />
+          <xs:attribute name="rt_calc" type="xs:string" />
+          <xs:attribute name="regression_method" type="xs:string" />
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
   </xs:complexType>
   <!-- Transition Settings -->
@@ -805,6 +813,23 @@
             </xs:element>
           </xs:sequence>
           <xs:attribute name="name" />
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="alignments" maxOccurs="unbounded" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="alignment" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="measured" type="xs:base64Binary"/>
+                  <xs:element name="aligned" type="xs:base64Binary"/>
+                </xs:sequence>
+                <xs:attribute name="file" type="xs:string"/>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+          <xs:attribute name="library" type="xs:string"/>
+          <xs:attribute name="batch" type="xs:string"/>
         </xs:complexType>
       </xs:element>
     </xs:sequence>

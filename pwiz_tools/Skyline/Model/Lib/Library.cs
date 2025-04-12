@@ -805,7 +805,6 @@ namespace pwiz.Skyline.Model.Lib
             return new double[0];
         }
 
-
         /// <summary>
         /// Attempts to get ion mobility information for a specific
         /// (sequence, charge) pair and file.
@@ -985,6 +984,23 @@ namespace pwiz.Skyline.Model.Lib
         public virtual Dictionary<Target, double>[] GetAllRetentionTimes(IEnumerable<string> spectrumSourceFiles)
         {
             return null;
+        }
+
+        public virtual IList<double>[] GetRetentionTimesWithSequences(IEnumerable<string> spectrumSourceFiles,
+            ICollection<Target> targets)
+        {
+            return null;
+        }
+
+        public IList<double> GetRetentionTimes(MsDataFileUri fileUri, ICollection<Target> targets)
+        {
+            int index = LibraryFiles.FindIndexOf(fileUri);
+            if (index < 0)
+            {
+                return null;
+            }
+
+            return GetRetentionTimesWithSequences(new[] { LibraryFiles[index] }, targets)[0];
         }
 
         #region Implementation of IXmlSerializable

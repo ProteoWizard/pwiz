@@ -702,15 +702,12 @@ namespace pwiz.Skyline.Model.Results
                 return;
             }
             // N.B. No retention time prediction for small molecules (yet?), but may be able to pull from libraries
-            var lookupSequence = nodePep.SourceUnmodifiedTarget;
-            var lookupMods = nodePep.SourceExplicitMods;
-            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, lookupSequence, lookupMods);
-            bool isAlignedTimes = (retentionTimes.Length == 0);
+            var targets = _document.Settings.GetTargets(nodePep).ToList();
+            double[] retentionTimes = _document.Settings.GetRetentionTimes(MSDataFilePath, targets);
+            bool isAlignedTimes = retentionTimes.Length == 0;
             if (isAlignedTimes)
             {
-                retentionTimes = _document.Settings.GetAlignedRetentionTimes(FileAlignmentIndices,
-                                                                             lookupSequence,
-                                                                             lookupMods);
+                retentionTimes = _document.Settings.GetAlignedRetentionTimes(_chromatogramSet, MSDataFilePath, targets);
             }
             peptideChromDataSets.RetentionTimes = retentionTimes;
             peptideChromDataSets.IsAlignedTimes = isAlignedTimes;
@@ -729,7 +726,7 @@ namespace pwiz.Skyline.Model.Results
             if (prediction == null && isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
             {
                 if (retentionTimes.Length == 0)
-                    retentionTimes = _document.Settings.GetUnalignedRetentionTimes(lookupSequence, lookupMods);
+                    retentionTimes = _document.Settings.GetUnalignedRetentionTimes(targets);
                 if (retentionTimes.Length > 0)
                 {
                     var statTimes = new Statistics(retentionTimes);

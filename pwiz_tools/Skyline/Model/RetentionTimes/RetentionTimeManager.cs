@@ -99,11 +99,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
                 var loadMonitor = new LoadMonitor(this, container, alignmentParam);
                 IProgressStatus progressStatus = new ProgressStatus(string.Format("Performing alignment between library {0} and predictor {1}", alignmentParam.Key, alignmentTarget.Calculator.Name));
-                LibraryAlignments libraryAlignment;
+                Alignments alignment;
                 try
                 {
                     loadMonitor.UpdateProgress(progressStatus);
-                    libraryAlignment = DocumentRetentionTimes.
+                    alignment = DocumentRetentionTimes.
                         PerformAlignment(loadMonitor, ref progressStatus, alignmentParam);
 
                     loadMonitor.UpdateProgress(progressStatus.Complete());
@@ -118,13 +118,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     loadMonitor.UpdateProgress(progressStatus.ChangeErrorException(e));
                     return false;
                 }
-                if (libraryAlignment == null)
+                if (alignment == null)
                 {
                     return false;
                 }
 
                 newDocumentRetentionTimes =
-                    documentRetentionTimes.ChangeLibraryAlignments(alignmentParam, libraryAlignment);
+                    documentRetentionTimes.ChangeLibraryAlignments(alignmentParam, alignment);
             }
 
             SrmDocument docNew;

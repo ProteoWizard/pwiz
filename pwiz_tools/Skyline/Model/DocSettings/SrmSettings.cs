@@ -28,7 +28,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Crosslinking;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
@@ -43,6 +42,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Serialization;
+using SampleType = pwiz.Skyline.Model.DocSettings.AbsoluteQuantification.SampleType;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -1099,11 +1099,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return result ?? IonMobilityFilter.EMPTY;
         }
 
-        public bool TryGetRetentionTimes(Target sequence, Adduct adduct, ExplicitMods mods, MsDataFileUri filePath,
+        public bool TryGetRetentionTimes(PeptideDocNode peptideDocNode, Adduct precursorAdduct, MsDataFileUri filePath,
             out IsotopeLabelType type, out double[] retentionTimes)
         {
             var libraries = PeptideSettings.Libraries;
-            foreach (var typedSequence in GetTypedSequences(sequence, mods, adduct))
+            foreach (var typedSequence in GetTypedSequences(peptideDocNode.SourceUnmodifiedTarget, peptideDocNode.SourceExplicitMods, precursorAdduct))
             {
                 var key = new LibKey(typedSequence.ModifiedSequence, typedSequence.Adduct);
                 if (libraries.TryGetRetentionTimes(key, filePath, out retentionTimes))
@@ -1118,20 +1118,20 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public double[] GetBestRetentionTimes(PeptideDocNode nodePep, MsDataFileUri filePath)
+        public double[] GetBestRetentionTimes(PeptideDocNode nodePep, ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
-            var lookupSequence = nodePep.SourceUnmodifiedTarget;
-            var lookupMods = nodePep.SourceExplicitMods;
+            var targets = GetTargets(nodePep).ToList();
+            
             if (filePath != null)
             {
-                var times = GetRetentionTimes(filePath, lookupSequence, lookupMods);
+                var times = GetRetentionTimes(filePath, targets);
                 if (times.Length > 0)
                     return times;
-                times = GetAllRetentionTimes(filePath, lookupSequence, lookupMods);
+                times = GetAlignedRetentionTimes(chromatogramSet, filePath, targets);
                 if (times.Length > 0)
                     return times;
             }
-            return GetUnalignedRetentionTimes(lookupSequence, lookupMods);
+            return GetUnalignedRetentionTimes(targets);
         }
 
         /// <summary>
@@ -1171,67 +1171,51 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        public double[] GetRetentionTimes(string filePath, Target peptideSequence, ExplicitMods explicitMods,
-            RetentionTimeAlignmentIndex alignmentIndex = null)
+        public double[] GetRetentionTimes(MsDataFileUri filePath, IList<Target> targets)
         {
-            return GetRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods, alignmentIndex);
-        }
-
-        public double[] GetRetentionTimes(MsDataFileUri filePath, Target peptideSequence, ExplicitMods explicitMods,
-            RetentionTimeAlignmentIndex alignmentIndex = null)
-        {
-            string basename = filePath.GetFileNameWithoutExtension();
-            var source = DocumentRetentionTimes.RetentionTimeSources.Find(basename);
-            if (source == null)
+            foreach (var library in PeptideSettings.Libraries.Libraries.Where(lib => true == lib?.IsLoaded))
             {
-                return new double[0];
-            }
-            var library = PeptideSettings.Libraries.GetLibrary(source.Library);
-            if (library == null)
-            {
-                return new double[0];
-            }
-            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods, Adduct.EMPTY, true)
-                .Select(typedSequence => typedSequence.ModifiedSequence);
-
-            int? index = (alignmentIndex != null ? alignmentIndex.FileIndex : null);
-
-            var times = library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index).ToArray();
-
-            if (alignmentIndex != null)
-                alignmentIndex.FileIndex = index;
-            return times;
-        }
-
-        public double[] GetAlignedRetentionTimes(MsDataFileUri filePath, Target peptideSequence, ExplicitMods explicitMods)
-        {
-            return GetAlignedRetentionTimes(DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(filePath.GetFileNameWithoutExtension()), peptideSequence, explicitMods);
-        }
-
-        public double[] GetAlignedRetentionTimes(RetentionTimeAlignmentIndexes retentionTimeAlignmentIndexes, Target peptideSequence, ExplicitMods explicitMods)
-        {
-            if (retentionTimeAlignmentIndexes == null)
-            {
-                return Array.Empty<double>();
-            }
-            var times = new List<double>();
-            foreach (var alignmentIndex in retentionTimeAlignmentIndexes)
-            {
-                var unalignedTimes = GetRetentionTimes(MsDataFileUri.Parse(alignmentIndex.Name), peptideSequence, explicitMods, alignmentIndex);
-                foreach (var unalignedTime in unalignedTimes)
+                var times = library.GetRetentionTimes(filePath, targets);
+                if (times != null)
                 {
-                    var alignedTime = alignmentIndex.Alignment.GetY(unalignedTime);
-                    times.Add(alignedTime);
+                    return times as double[] ?? times.ToArray();
                 }
             }
-            return times.ToArray();
+
+            return Array.Empty<double>();
         }
 
-        public double[] GetUnalignedRetentionTimes(Target peptideSequence, ExplicitMods explicitMods)
+        public double[] GetAlignedRetentionTimes(ChromatogramSet chromatogramSet, MsDataFileUri filePath, IList<Target> targets)
+        {
+            var batchNames = new List<string> { null };
+            if (!string.IsNullOrEmpty(chromatogramSet?.BatchName))
+            {
+                batchNames.Insert(0, chromatogramSet.BatchName);
+            }
+
+            foreach (var batchName in batchNames)
+            {
+                foreach (var libraryAlignment in DocumentRetentionTimes.GetLibraryAlignments(batchName))
+                {
+                    var alignmentFunction = libraryAlignment.Alignments.GetAlignmentFunction(filePath, false);
+                    if (alignmentFunction != null)
+                    {
+                        var times = libraryAlignment.GetAlignedRetentionTimes(targets).Select(alignmentFunction.GetY)
+                            .ToArray();
+                        if (times.Length > 0)
+                        {
+                            return times;
+                        }
+
+                    }
+                }
+            }
+            return Array.Empty<double>();
+        }
+
+        public double[] GetUnalignedRetentionTimes(ICollection<Target> targets)
         {
             var times = new List<double>();
-            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods, Adduct.EMPTY, true)
-                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
             foreach (var library in PeptideSettings.Libraries.Libraries)
             {
                 if (null == library)
@@ -1241,64 +1225,54 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (var source in library.ListRetentionTimeSources())
                 {
                     int? index = null;
-                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref index));
+                    times.AddRange(library.GetRetentionTimesWithSequences(source.Name, targets, ref index));
                 }
             }
             return times.ToArray();
         }
 
-        public double[] GetRetentionTimesNotAlignedTo(MsDataFileUri fileNotAlignedTo, Target peptideSequence,
-            ExplicitMods explicitMods, SignedMz[] precursorMzs)
+        public double[] GetRetentionTimesNotAlignedTo(ChromatogramSet chromatogramSet, MsDataFileUri fileNotAlignedTo, ICollection<Target> targets, ICollection<SignedMz> precursorMzs)
         {
-            var times = new List<double>();
-            string basename = fileNotAlignedTo.GetFileNameWithoutExtension();
-            HashSet<string> alignedNames = new HashSet<string>();
-            var retentionTimeIndexes = DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
-            if (retentionTimeIndexes != null)
+            var result = new List<double>();
+            foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                alignedNames.UnionWith(retentionTimeIndexes.Select(f => f.Name));
-            }
+                if (true != library?.IsLoaded)
+                {
+                    continue;
+                }
 
-            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods, Adduct.EMPTY, true)
-                .Select(typedSequence => typedSequence.ModifiedSequence).ToArray();
-
-            foreach (var library in PeptideSettings.Libraries.Libraries.Where(library => library != null))
-            {
+                var key = new DocumentRetentionTimes.LibraryAlignmentKey(library.Name, chromatogramSet?.BatchName);
+                if (null != DocumentRetentionTimes.GetLibraryAlignments(key))
+                {
+                    continue;
+                }
+                result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
                 if (library is MidasLibrary)
                 {
                     foreach (var midasSpectra in precursorMzs.Select(precursorMz => GetMidasSpectra(precursorMz.Value)))
                     {
-                        times.AddRange(midasSpectra.Where(spectrum => spectrum.RetentionTime.HasValue && !Equals(spectrum.FileName, fileNotAlignedTo.GetFileName()))
+                        result.AddRange(midasSpectra.Where(spectrum => spectrum.RetentionTime.HasValue && !Equals(spectrum.FileName, fileNotAlignedTo.GetFileName()))
                             .Select(spectrum => spectrum.RetentionTime.GetValueOrDefault()));
                     }
                 }
-                else
-                {
-                    foreach (var source in library.ListRetentionTimeSources())
-                    {
-                        if (MeasuredResults.IsBaseNameMatch(source.Name, basename) || alignedNames.Contains(source.Name))
-                        {
-                            continue;
-                        }
-                        int? indexIgnore = null;
-                        times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences, ref indexIgnore));
-                    }
-                }
             }
-            return times.ToArray();
+
+            return result.ToArray();
         }
 
-        public double[] GetAllRetentionTimes(string filePath, Target peptideSequence, ExplicitMods explicitMods)
+        public IEnumerable<Target> GetTargets(PeptideDocNode peptideDocNode)
         {
-            return GetAllRetentionTimes(MsDataFileUri.Parse(filePath), peptideSequence, explicitMods);
+            if (peptideDocNode == null)
+            {
+                return Array.Empty<Target>();
+            }
+            return GetTargets(peptideDocNode.SourceUnmodifiedTarget, peptideDocNode.SourceExplicitMods);
         }
 
-        public double[] GetAllRetentionTimes(MsDataFileUri filePath, Target peptideSequence, ExplicitMods explicitMods)
+        public IEnumerable<Target> GetTargets(Target sequence, ExplicitMods mods)
         {
-            var times = new List<double>();
-            times.AddRange(GetRetentionTimes(filePath, peptideSequence, explicitMods));
-            times.AddRange(GetAlignedRetentionTimes(filePath, peptideSequence, explicitMods));
-            return times.ToArray();
+            return GetTypedSequences(sequence, mods, Adduct.EMPTY)
+                .Select(typedSequence => typedSequence.ModifiedSequence);
         }
 
         private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)
@@ -1413,17 +1387,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     : LibraryIonMobilityInfo.EMPTY;
             }
             return null;
-        }
-
-        /// <summary>
-        /// Returns the times at which a peptide was found in a particular file.
-        /// </summary>
-        public double[] GetRetentionTimes(LibraryRetentionTimes retentionTimes, Target sequence, ExplicitMods mods, Adduct adduct)
-        {
-            return (from typedSequence in GetTypedSequences(sequence, mods, adduct)
-                    from time in retentionTimes.GetRetentionTimes(typedSequence.ModifiedSequence)
-                    select time)
-                .ToArray();
         }
 
         /// <summary>
@@ -1973,9 +1936,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasAlignedTimes()
         {
-            return
-                DocumentRetentionTimes.FileAlignments.Values.Any(
-                    fileRetentionTimeAlignments => fileRetentionTimeAlignments.RetentionTimeAlignments.Count > 0);
+            return !DocumentRetentionTimes.IsEmpty;
         }
 
         /// <summary>

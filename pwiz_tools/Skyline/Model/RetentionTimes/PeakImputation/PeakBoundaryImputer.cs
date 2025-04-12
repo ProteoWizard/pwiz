@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
@@ -112,12 +113,12 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private class LibraryInfo
         {
-            private Dictionary<Target, ExemplaryPeak> _bestPeakBounds = new Dictionary<Target, ExemplaryPeak>();
-            public LibraryInfo(Library library, string batchName, LibraryAlignments libraryAlignment)
+            private Dictionary<ImmutableList<Target>, ExemplaryPeak> _bestPeakBounds = new Dictionary<ImmutableList<Target>, ExemplaryPeak>();
+            public LibraryInfo(Library library, string batchName, Alignments alignment)
             {
                 Library = library;
                 BatchName = batchName;
-                LibraryAlignments = libraryAlignment;
+                Alignments = alignment;
             }
 
             public Library Library { get; }
@@ -131,24 +132,24 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 }
             }
 
-            public LibraryAlignments LibraryAlignments { get; }
+            public Alignments Alignments { get; }
 
             public AlignmentFunction GetAlignmentFunction(CancellationToken cancellationToken, string spectrumSourceFile)
             {
-                return LibraryAlignments?.GetAlignmentFunction(spectrumSourceFile, true);
+                return Alignments?.GetAlignmentFunction(spectrumSourceFile, true);
             }
 
-            public ExemplaryPeak GetExemplaryPeak(CancellationToken cancellationToken, Target target)
+            public ExemplaryPeak GetExemplaryPeak(CancellationToken cancellationToken, ImmutableList<Target> targets)
             {
                 lock (this)
                 {
-                    if (_bestPeakBounds.TryGetValue(target, out var exemplaryPeak))
+                    if (_bestPeakBounds.TryGetValue(targets, out var exemplaryPeak))
                     {
                         return exemplaryPeak;
                     }
 
-                    exemplaryPeak = FindExemplaryPeak(cancellationToken, new[] { target });
-                    _bestPeakBounds[target] = exemplaryPeak;
+                    exemplaryPeak = FindExemplaryPeak(cancellationToken, targets);
+                    _bestPeakBounds[targets] = exemplaryPeak;
                     return exemplaryPeak;
                 }
             }
@@ -157,7 +158,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 foreach (var filePath in Library.LibraryFiles.FilePaths)
                 {
-                    if (false == LibraryAlignments?.ContainsFile(filePath))
+                    if (false == Alignments?.ContainsFile(filePath))
                     {
                         continue;
                     }
@@ -196,16 +197,16 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return new ExemplaryPeak(Library, bestFile, new PeakBounds(bestPeakBounds.StartTime, bestPeakBounds.EndTime));
             }
 
-            public LibraryInfo ChangeAlignment(LibraryAlignments libraryAlignment)
+            public LibraryInfo ChangeAlignment(Alignments alignment)
             {
-                if (Equals(libraryAlignment, LibraryAlignments))
+                if (Equals(alignment, Alignments))
                 {
                     return this;
                 }
 
                 lock (this)
                 {
-                    var newLibraryInfo = new LibraryInfo(Library, BatchName, libraryAlignment);
+                    var newLibraryInfo = new LibraryInfo(Library, BatchName, alignment);
                     foreach (var bestPeakBounds in _bestPeakBounds)
                     {
                         newLibraryInfo._bestPeakBounds.Add(bestPeakBounds.Key, bestPeakBounds.Value);
@@ -297,37 +298,55 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return null;
             }
 
-            foreach (var library in Document.Settings.PeptideSettings.Libraries.Libraries)
+            List<string> batchNames = new List<string>();
+            if (string.IsNullOrEmpty(chromatogramSet?.BatchName))
             {
-                if (library == null)
-                {
-                    continue;
-                }
-                if (!library.IsLoaded)
-                {
-                    return null;
-                }
-                if (!library.HasExplicitBounds || !library.UseExplicitPeakBounds)
-                {
-                    continue;
-                }
-                
-                var libraryInfo = GetLibraryInfo(library, chromatogramSet?.BatchName);
-                var exemplaryPeak = libraryInfo.GetExemplaryPeak(cancellationToken, peptideDocNode.ModifiedTarget);
-                if (exemplaryPeak == null)
-                {
-                    continue;
-                }
-
-                return GetImputedPeakFromLibraryPeak(cancellationToken, libraryInfo, exemplaryPeak, filePath);
+                batchNames.Add(null);
             }
-    
+            else
+            {
+                batchNames.Add(chromatogramSet.BatchName);
+                if (Document.Settings.PeptideSettings.Imputation.ImputeMissingPeaks)
+                {
+                    batchNames.Add(null);
+                }
+            }
+
+            foreach (var batchName in batchNames)
+            {
+                foreach (var library in Document.Settings.PeptideSettings.Libraries.Libraries)
+                {
+                    if (library == null)
+                    {
+                        continue;
+                    }
+                    if (!library.IsLoaded)
+                    {
+                        return null;
+                    }
+                    if (!library.HasExplicitBounds || !library.UseExplicitPeakBounds)
+                    {
+                        continue;
+                    }
+
+                    var libraryInfo = GetLibraryInfo(library, batchName);
+                    var targets = Document.Settings.GetTargets(peptideDocNode.Target, peptideDocNode.ExplicitMods).ToImmutable();
+                    var exemplaryPeak = libraryInfo.GetExemplaryPeak(cancellationToken, targets);
+                    if (exemplaryPeak == null)
+                    {
+                        continue;
+                    }
+
+                    return GetImputedPeakFromLibraryPeak(cancellationToken, libraryInfo, exemplaryPeak, filePath);
+                }
+            }
+
             if (explicitBoundsOnly)
             {
                 return null;
             }
 
-            return GetImputedPeakFromDocument(cancellationToken, identityPath, filePath);
+            return GetImputedPeakFromDocument(cancellationToken, batchNames, identityPath, filePath);
         }
 
         private ImputedPeak GetImputedPeakFromLibraryPeak(CancellationToken cancellationToken, LibraryInfo libraryInfo, ExemplaryPeak exemplaryPeak,
@@ -439,10 +458,10 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return true;
         }
 
-        private ImputedPeak GetImputedPeakFromDocument(CancellationToken cancellationToken, IdentityPath identityPath,
+        private ImputedPeak GetImputedPeakFromDocument(CancellationToken cancellationToken, List<string> batchNames, IdentityPath identityPath,
             MsDataFileUri filePath)
         {
-            var bestKeyValuePair = GetBestScoredPeak(identityPath);
+            var bestKeyValuePair = GetBestScoredPeak(identityPath, batchNames);
             var bestPeak = bestKeyValuePair.Value;
             if (bestPeak == null)
             {
@@ -471,26 +490,54 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return MakeImputedPeak(sourceAlignment, exemplaryPeak, targetAlignment);
         }
 
-        private KeyValuePair<MsDataFileUri, ScoredPeak> GetBestScoredPeak(IdentityPath identityPath)
+        private KeyValuePair<MsDataFileUri, ScoredPeak> GetBestScoredPeak(IdentityPath identityPath, IList<string> batchNames)
         {
             var scoredPeaks = GetScoredPeaks(identityPath);
             if (scoredPeaks == null)
             {
                 return default;
             }
-            ScoredPeak bestPeak = null;
-            MsDataFileUri bestFile = null;
-            foreach (var keyValuePair in scoredPeaks)
+
+            foreach (var batchName in batchNames)
             {
-                var peak = keyValuePair.Value;
-                if (bestPeak == null || peak.Score > bestPeak.Score)
+                HashSet<MsDataFileUri> filePaths = null;
+                if (batchName != null)
                 {
-                    bestPeak = peak;
-                    bestFile = keyValuePair.Key;
+                    filePaths = GetFilesInBatch(batchName).ToHashSet();
+                }
+                ScoredPeak bestPeak = null;
+                MsDataFileUri bestFile = null;
+                foreach (var keyValuePair in scoredPeaks)
+                {
+                    if (false == filePaths?.Contains(keyValuePair.Key))
+                    {
+                        continue;
+                    }
+                    var peak = keyValuePair.Value;
+                    if (bestPeak == null || peak.Score > bestPeak.Score)
+                    {
+                        bestPeak = peak;
+                        bestFile = keyValuePair.Key;
+                    }
+                }
+
+                if (bestPeak != null)
+                {
+                    return new KeyValuePair<MsDataFileUri, ScoredPeak>(bestFile, bestPeak);
                 }
             }
+            return default;
+        }
 
-            return new KeyValuePair<MsDataFileUri, ScoredPeak>(bestFile, bestPeak);
+        private IEnumerable<MsDataFileUri> GetFilesInBatch(string batch)
+        {
+            if (Document.MeasuredResults == null)
+            {
+                return Array.Empty<MsDataFileUri>();
+            }
+
+            return Document.Settings.MeasuredResults.Chromatograms.Where(chrom => batch == chrom.BatchName)
+                .SelectMany(chrom => chrom.MSDataFilePaths);
         }
 
         private Dictionary<MsDataFileUri, ScoredPeak> GetScoredPeaks(IdentityPath identityPath)

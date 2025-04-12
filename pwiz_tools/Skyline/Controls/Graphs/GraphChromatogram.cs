@@ -857,8 +857,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodeGroupTree = nodeTranTree.Parent as TransitionGroupTreeNode;
 
             PeptideDocNode[] nodePeps = null;
-            Target lookupSequence = null;
-            ExplicitMods lookupMods = null;
             TransitionGroupDocNode[] nodeGroups = null;
             IdentityPath[] groupPaths = null;
             PeptideTreeNode nodePepTree;
@@ -876,8 +874,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (nodePepTree != null)
                 {
                     nodePeps = new[] {nodePepTree.DocNode};
-                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTarget;
-                    lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
                 nodeGroups = new[] {nodeGroupTree.DocNode};
                 groupPaths = new[] {nodeGroupTree.Path};
@@ -899,8 +895,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         nodeGroups[i] = nodeGroup;
                         groupPaths[i] = new IdentityPath(pathParent, nodeGroup.Id);
                     }
-                    lookupSequence = nodePepTree.DocNode.SourceUnmodifiedTarget;
-                    lookupMods = nodePepTree.DocNode.SourceExplicitMods;
                 }
             }
 
@@ -953,12 +947,11 @@ namespace pwiz.Skyline.Controls.Graphs
                             out RetentionTimeValues bestPeakTimes);
                         firstBestPeak = lastBestPeak = bestPeakTimes;
 
-                        if (nodeGroups != null && lookupSequence != null)
+                        if (nodeGroups != null && nodePeps != null)
                         {
                             foreach (var chromGraphItem in _graphHelper.ListPrimaryGraphItems())
                             {
-                                SetRetentionTimeIdIndicators(chromGraphItem.Value, settings, nodeGroups,
-                                    lookupSequence, lookupMods);
+                                SetRetentionTimeIdIndicators(chromGraphItem.Value, settings, nodePeps, nodeGroups);
                             }
                         }
                     }
@@ -1109,8 +1102,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     foreach (var chromGraphItem in _graphHelper.ListPrimaryGraphItems())
                     {
-                        SetRetentionTimeIndicators(chromGraphItem.Value, settings, chromatograms, nodePeps, nodeGroups,
-                            lookupSequence, lookupMods);
+                        SetRetentionTimeIndicators(chromGraphItem.Value, settings, chromatograms, nodePeps, nodeGroups);
                     }
                 }
             }
@@ -2302,18 +2294,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 SrmSettings settings,
                                                 ChromatogramSet chromatograms,
                                                 PeptideDocNode[] nodePeps,
-                                                TransitionGroupDocNode[] nodeGroups,
-                                                Target lookupSequence,
-                                                ExplicitMods lookupMods)
+                                                TransitionGroupDocNode[] nodeGroups)
         {
-            if (lookupSequence == null)
-            {
-                return;
-            }
             SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms,
-                nodePeps, lookupSequence, lookupMods);
+                nodePeps);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
-                nodeGroups, lookupSequence, lookupMods);
+                nodePeps, nodeGroups);
             ShowImputedPeakBounds(chromGraphPrimary, nodePeps);
         }
 
@@ -2348,22 +2334,23 @@ namespace pwiz.Skyline.Controls.Graphs
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,
                                                                SrmSettings settings,
                                                                ChromatogramSet chromatograms,
-                                                               PeptideDocNode[] nodePeps,
-                                                               Target lookupSequence,
-                                                               ExplicitMods lookupMods)
+                                                               PeptideDocNode[] nodePeps)
         {
             // Set predicted retention time on the first graph item to make
             // line, label and shading show.
             var regression = settings.PeptideSettings.Prediction.RetentionTime;
             if (regression != null && Settings.Default.ShowRetentionTimePred)
             {
-                var modSeq = settings.GetModifiedSequence(lookupSequence, IsotopeLabelType.light, lookupMods);
-                var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram.GroupInfo);
-                double? predictedRT = regression.GetRetentionTime(modSeq, fileId);
-                double window = regression.TimeWindow;
-
-                chromGraphPrimary.RetentionPrediction = predictedRT;
-                chromGraphPrimary.RetentionWindow = window;
+                var nodePep = nodePeps?.FirstOrDefault();
+                if (nodePep != null)
+                {
+                    var modSeq = settings.GetModifiedSequence(nodePep.SourceUnmodifiedTarget, IsotopeLabelType.light, nodePep.ExplicitMods);
+                    var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram.GroupInfo);
+                    double? predictedRT = regression.GetRetentionTime(modSeq, fileId);
+                    double window = regression.TimeWindow;
+                    chromGraphPrimary.RetentionPrediction = predictedRT;
+                    chromGraphPrimary.RetentionWindow = window;
+                }
             }
             if (nodePeps != null && nodePeps.Any() && nodePeps.All(np => Equals(np.ExplicitRetentionTime, nodePeps[0].ExplicitRetentionTime)))
             {
@@ -2378,9 +2365,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void SetRetentionTimeIdIndicators(ChromGraphItem chromGraphPrimary,
                                                   SrmSettings settings,
-                                                  IEnumerable<TransitionGroupDocNode> nodeGroups,
-                                                  Target lookupSequence,
-                                                  ExplicitMods lookupMods)
+                                                  IList<PeptideDocNode> nodePeps,
+                                                  IList<TransitionGroupDocNode> nodeGroups)
         {
             bool fullScan = settings.TransitionSettings.FullScan.IsEnabled &&
                             !chromGraphPrimary.Chromatogram.GroupInfo.CachedFile.IsSrm;
@@ -2388,16 +2374,13 @@ namespace pwiz.Skyline.Controls.Graphs
             if (settings.PeptideSettings.Libraries.IsLoaded && 
                 (fullScan || settings.PeptideSettings.Libraries.HasMidasLibrary))
             {
-                var nodeGroupsArray = nodeGroups.ToArray();
-                var transitionGroups = nodeGroupsArray.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
                 if (Settings.Default.ShowPeptideIdTimes)
                 {
                     var listTimes = new List<double>();
-                    foreach (var group in transitionGroups)
+                    for (int iGroup = 0; iGroup < nodeGroups.Count;iGroup++)
                     {
                         double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(lookupSequence, group.PrecursorAdduct,
-                                                          lookupMods, FilePath, out _, out retentionTimes))
+                        if (settings.TryGetRetentionTimes(nodePeps[iGroup], nodeGroups[iGroup].PrecursorAdduct, FilePath, out _, out retentionTimes))
                         {
                             listTimes.AddRange(retentionTimes);
                         }
@@ -2435,9 +2418,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                 }
+
+                settings.MeasuredResults.TryGetChromatogramSet(_nameChromatogramSet, out var chromatogramSet, out _);
+                var targets = nodePeps.SelectMany(settings.GetTargets).Distinct().ToList();
                 if (Settings.Default.ShowAlignedPeptideIdTimes)
                 {
-                    var listTimes = new List<double>(settings.GetAlignedRetentionTimes(FilePath, lookupSequence, lookupMods));
+                    var listTimes = new List<double>(settings.GetAlignedRetentionTimes(chromatogramSet, FilePath, targets));
                     if (listTimes.Count > 0)
                     {
                         var sortedTimes = listTimes.Distinct().ToArray();
@@ -2447,8 +2433,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowUnalignedPeptideIdTimes)
                 {
-                    var precursorMzs = nodeGroupsArray.Select(nodeGroup => nodeGroup.PrecursorMz).ToArray();
-                    var listTimes = new List<double>(settings.GetRetentionTimesNotAlignedTo(FilePath, lookupSequence, lookupMods, precursorMzs));
+                    var precursorMzs = nodeGroups.Select(nodeGroup => nodeGroup.PrecursorMz).ToArray();
+                    var listTimes = new List<double>(settings.GetRetentionTimesNotAlignedTo(chromatogramSet, FilePath, targets, precursorMzs));
                     if (listTimes.Count > 0)
                     {
                         var sortedTimes = listTimes.Distinct().ToArray();
