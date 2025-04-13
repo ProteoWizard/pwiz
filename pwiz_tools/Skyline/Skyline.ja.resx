@@ -245,6 +245,21 @@
   <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
     <value>スペクトラムフィルタの編集...</value>
   </data>
+  <data name="expandSelectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -2290,6 +2305,36 @@
     <value>editSpectrumFilterContextMenuItem</value>
   </data>
   <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionNoneContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionProteinsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPeptidesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPrecursorsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;toggleQuantitativeContextMenuItem.Name" xml:space="preserve">

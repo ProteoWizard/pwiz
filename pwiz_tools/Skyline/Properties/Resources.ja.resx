@@ -3981,4 +3981,7 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
     <value>その変数ステータスを割り当てる前に、ペプチド修飾を追加する必要があります。</value>
   </data>
+  <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

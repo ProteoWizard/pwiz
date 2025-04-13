@@ -539,7 +539,7 @@
     <value>このデータファイルでは、{0}スペクトルは利用できません。代わりに{1}を表示しています。</value>
   </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
-    <value>dotp: {0:0.0000}</value>
+    <value>{0:0.0000}</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted" xml:space="preserve">
     <value>スペクトルの読み込みに失敗しました。ライブラリが破損している可能性があります。</value>
