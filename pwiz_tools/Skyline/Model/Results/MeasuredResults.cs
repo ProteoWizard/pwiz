@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -28,6 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using static pwiz.Skyline.Model.BackgroundLoader;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -241,6 +244,13 @@ namespace pwiz.Skyline.Model.Results
         {
             return (_cacheFinal != null && Equals(cachePath, _cacheFinal.CachePath)) ||
                 (_listPartialCaches != null && _listPartialCaches.Contains(cache => Equals(cachePath, cache.CachePath)));
+        }
+
+        public bool FinalCacheIncomplete { get; private set; }
+
+        public MeasuredResults ChangeFinalCacheIncomplete(bool value)
+        {
+            return ChangeProp(ImClone(this), im => im.FinalCacheIncomplete = value);
         }
 
         /// <summary>
@@ -1283,6 +1293,38 @@ namespace pwiz.Skyline.Model.Results
             SetClonedCacheState(null);
         }
 
+        public MeasuredResults LoadFinalCache(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
+        {
+            if (!File.Exists(cachePath))
+            {
+                return ChangeFinalCacheIncomplete(true);
+            }
+
+            using var stream = File.OpenRead(cachePath);
+            var cachedFilePaths = ChromatogramCache.GetCachedFilePaths(stream).ToHashSet();
+            if (!Chromatograms.SelectMany(chrom => chrom.MSDataFilePaths).All(cachedFilePaths.Contains))
+            {
+                return null;
+            }
+
+            ChromatogramCache chromatogramCache;
+            try
+            {
+                chromatogramCache = ChromatogramCache.Load(cachePath, status, loader, doc);
+            }
+            catch (Exception)
+            {
+                chromatogramCache = null;
+            }
+
+            if (chromatogramCache == null)
+            {
+                return ChangeFinalCacheIncomplete(true);
+            }
+
+            return ChangeProp(ImClone(this), im => im._cacheFinal = chromatogramCache);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1343,7 +1385,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj._chromatograms, _chromatograms);
+            return ArrayUtil.EqualsDeep(obj._chromatograms, _chromatograms) && obj.FinalCacheIncomplete == FinalCacheIncomplete;
         }
 
         public override bool Equals(object obj)
