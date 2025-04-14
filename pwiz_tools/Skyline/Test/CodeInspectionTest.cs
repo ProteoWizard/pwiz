@@ -1146,12 +1146,13 @@ namespace pwiz.SkylineTest
                 //       is difficult for one or more reasons including:
                 //        * Includes > 20 LOC modeling Win32 types
                 //        * Uses unsafe methods
+
                 @"Util\MemoryInfo.cs", 
                 @"Util\UtilIO.cs",
                 @"TestRunner\UnusedPortFinder.cs",
                 @"TestRunnerLib\RunTests.cs",
                 @"TestRunnerLib\MiniDump.cs",
-                @"TestUtil\FileLockingProcessFinder.cs",
+                @"SystemUtil\FileLockingProcessFinder.cs",
 
                 // Ignore 3rd party libraries
                 @"Executables"

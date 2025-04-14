@@ -76,7 +76,7 @@ public static class FileLockingProcessFinder
         public bool bRestartable;
     }
 
-   // [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
+    [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
     static extern int RmRegisterResources(uint pSessionHandle,
         UInt32 nFiles,
         string[] rgsFilenames,
@@ -85,13 +85,13 @@ public static class FileLockingProcessFinder
         UInt32 nServices,
         string[] rgsServiceNames);
 
-   // [DllImport("rstrtmgr.dll", CharSet = CharSet.Auto)]
+    [DllImport("rstrtmgr.dll", CharSet = CharSet.Auto)]
     static extern int RmStartSession(out uint pSessionHandle, int dwSessionFlags, string strSessionKey);
 
-   // [DllImport("rstrtmgr.dll")]
+    [DllImport("rstrtmgr.dll")]
     static extern int RmEndSession(uint pSessionHandle);
 
-   // [DllImport("rstrtmgr.dll")]
+    [DllImport("rstrtmgr.dll")]
     static extern int RmGetList(uint dwSessionHandle,
         out uint pnProcInfoNeeded,
         ref uint pnProcInfo,
