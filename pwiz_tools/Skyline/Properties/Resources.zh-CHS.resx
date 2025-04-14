@@ -3257,6 +3257,15 @@
   <data name="PasteDlg_UpdateMoleculeType_Note" xml:space="preserve">
     <value>注释</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_PrecursorNote" xml:space="preserve">
+    <value>母离子注释</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeNote" xml:space="preserve">
+    <value>分子注释</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeListNote" xml:space="preserve">
+    <value>分子列表注释</value>
+  </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>单击“添加文件”按钮来添加一个 FASTA 文件，并且创建一个新的蛋白质组文件。</value>
   </data>

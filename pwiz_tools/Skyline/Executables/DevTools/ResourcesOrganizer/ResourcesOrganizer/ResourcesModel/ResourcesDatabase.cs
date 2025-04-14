@@ -332,6 +332,8 @@ namespace ResourcesOrganizer.ResourcesModel
                 {
                     Value = string.Empty, File = entry.Invariant.IsLocalizableText ? null : entry.Invariant.File
                 });
+            var reviewedResourcesWithoutKey = reviewedDb.ResourcesFiles.Values.SelectMany(file => file.Entries)
+                .ToLookup(entry => entry.Invariant with { File = string.Empty, Name = string.Empty });
             var newFiles = new Dictionary<string, ResourcesFile>();
             foreach (var resourcesEntry in ResourcesFiles.ToList())
             {
@@ -348,7 +350,7 @@ namespace ResourcesOrganizer.ResourcesModel
                         {
                             if (!reviewedResources.TryGetValue(entry.Invariant, out reviewedEntries))
                             {
-                                reviewedEntries = [];
+                                reviewedEntries = reviewedResourcesWithoutKey[entry.Invariant with { Name = string.Empty, File = string.Empty }].ToList();
                             }
                         }
 

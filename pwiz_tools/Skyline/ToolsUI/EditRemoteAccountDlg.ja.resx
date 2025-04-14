@@ -624,6 +624,9 @@
   <data name="tabUnifiSettings.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
+  <data name="tabUnifiSettings.Text" xml:space="preserve">
+    <value>Unifi</value>
+  </data>
   <data name="&gt;&gt;tabUnifiSettings.Name" xml:space="preserve">
     <value>tabUnifiSettings</value>
   </data>
@@ -758,8 +761,7 @@
     <value>10</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>&amp;Server URL</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>サーバーURL(&amp;S)</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>

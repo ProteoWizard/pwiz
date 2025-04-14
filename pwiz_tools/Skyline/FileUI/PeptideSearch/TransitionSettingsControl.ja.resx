@@ -831,6 +831,9 @@
   <data name="btnEditSpectrumFilter.TabIndex" type="System.Int32, mscorlib">
     <value>19</value>
   </data>
+  <data name="btnEditSpectrumFilter.Text" xml:space="preserve">
+    <value>編集(&amp;E)...</value>
+  </data>
   <data name="&gt;&gt;btnEditSpectrumFilter.Name" xml:space="preserve">
     <value>btnEditSpectrumFilter</value>
   </data>

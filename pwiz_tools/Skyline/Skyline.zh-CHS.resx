@@ -251,14 +251,26 @@
   <data name="expandSelectionNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
+  <data name="expandSelectionNoneContextMenuItem.Text" xml:space="preserve">
+    <value>无</value>
+  </data>
   <data name="expandSelectionProteinsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Text" xml:space="preserve">
+    <value>蛋白质</value>
   </data>
   <data name="expandSelectionPeptidesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Text" xml:space="preserve">
+    <value>肽段</value>
+  </data>
   <data name="expandSelectionPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>母离子</value>
   </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -940,6 +952,9 @@
   </data>
   <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>对数尺度</value>
   </data>
   <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>

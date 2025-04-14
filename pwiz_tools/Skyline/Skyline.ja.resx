@@ -251,14 +251,26 @@
   <data name="expandSelectionNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
+  <data name="expandSelectionNoneContextMenuItem.Text" xml:space="preserve">
+    <value>なし</value>
+  </data>
   <data name="expandSelectionProteinsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Text" xml:space="preserve">
+    <value>タンパク質</value>
   </data>
   <data name="expandSelectionPeptidesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Text" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
   <data name="expandSelectionPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>プリカーサー</value>
   </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
@@ -940,6 +952,9 @@
   </data>
   <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>対数目盛り</value>
   </data>
   <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
