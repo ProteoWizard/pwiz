@@ -367,7 +367,7 @@ namespace ResourcesOrganizer.ResourcesModel
 
                         if (reviewedTranslations.Count > 1)
                         {
-                            currentValue = entry.LocalizedValueIssue(LocalizationIssue.InconsistentTranslation);
+                            currentValue = entry.LocalizedValueIssue(new InconsistentTranslation(reviewedTranslations));
                         }
                         else if (reviewedEntries.Any())
                         {
@@ -466,52 +466,73 @@ namespace ResourcesOrganizer.ResourcesModel
         public void ExportLocalizationCsv(string path, string language, out int entryCount)
         {
             var records = new List<LocalizationCsvRecord>();
-            foreach (var invariantEntry in GetInvariantResources().OrderBy(kvp=>kvp.Key))
+            foreach (var textGroup in GetInvariantResources().Values.SelectMany(list=>list)
+                         .Where(resourceEntry=>resourceEntry.Invariant.IsLocalizableText && NeedsLocalizationHelp(resourceEntry, language))
+                         .GroupBy(resourceEntry=>resourceEntry.Invariant with {File = string.Empty, Name = string.Empty}))
             {
-                var invariantKey = invariantEntry.Key;
-                if (!invariantKey.IsLocalizableText)
-                {
-                    continue;
-                }
+                var individualRecords =
+                    textGroup.Select(resourceEntry => MakeLocalizationCsvRecord(resourceEntry, language)).ToList();
 
-                var issues = invariantEntry.Value.Select(value => value.GetTranslation(language)?.Issue)
-                    .OfType<LocalizationIssue>().Distinct().ToList();
-                if (issues.Count > 1)
+                if (individualRecords.Count > 1)
                 {
-                    Console.Error.WriteLine("Multiple different localization issues found for {0}: {1}", invariantEntry.Key, TextUtil.LineSeparate(issues.Select(issue=>issue.GetIssueDetails(null))));
-                }
-
-                var issue = issues.FirstOrDefault();
-                var localizedValues = invariantEntry.Value.Select(value => value.GetTranslation(language))
-                    .OfType<LocalizedValue>().ToList();
-                var localizedText = localizedValues.Select(value => value.Value).FirstOrDefault();
-                if (localizedText == null || issue != null)
-                {
-                    var csvRecord = new LocalizationCsvRecord
+                    var uniqueIssues = textGroup.Select(entry => entry.GetTranslation(language)?.Issue)
+                        .OfType<LocalizationIssue>()
+                        .Where(issue => issue != LocalizationIssue.MissingTranslation).Distinct()
+                        .ToList();
+                    if (uniqueIssues.Count == 1)
                     {
-                        Name = invariantKey.Name!, 
-                        Comment = invariantKey.Comment!,
-                        English = invariantKey.Value,
-                        File = invariantEntry.Key.File ?? string.Empty,
-                        FileCount = invariantEntry.Value.Count
-                    };
-                    if (localizedText != invariantEntry.Key.Value)
-                    {
-                        csvRecord = csvRecord with { Translation = localizedText ?? string.Empty };
+                        individualRecords = individualRecords.Select(record => uniqueIssues[0].StoreInCsvRecord(record))
+                            .Distinct().ToList();
                     }
-
-                    if (issue != null)
+                    var unqualifiedRecords = individualRecords.Select(record => record with
                     {
-                        csvRecord = issue.StoreInCsvRecord(csvRecord);
+                        File = string.Empty,
+                        Name = string.Empty
+                    }).Distinct().ToList();
+                    if (unqualifiedRecords.Count == 1)
+                    {
+                        records.Add(unqualifiedRecords[0]);
+                        continue;
                     }
-                    records.Add(csvRecord);
                 }
+                records.AddRange(individualRecords);
             }
             using var stream = new FileStream(path, FileMode.Create);
             using var writer = new StreamWriter(stream, new UTF8Encoding(false));
             using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
             csvWriter.WriteRecords(records);
             entryCount = records.Count;
+        }
+
+        private bool NeedsLocalizationHelp(ResourceEntry resourceEntry, string language)
+        {
+            var translation = resourceEntry.GetTranslation(language);
+            return translation == null || translation.Issue != null;
+        }
+
+        private LocalizationCsvRecord MakeLocalizationCsvRecord(ResourceEntry resourceEntry, string language)
+        {
+            var translation = resourceEntry.GetTranslation(language);
+            var record = new LocalizationCsvRecord
+            {
+                Name = resourceEntry.Invariant.Name ?? string.Empty,
+                Comment = resourceEntry.Invariant.Comment ?? string.Empty,
+                English = resourceEntry.Invariant.Value,
+                File = resourceEntry.Invariant.File ?? string.Empty
+            };
+            if (translation?.Value != resourceEntry.Invariant.Value)
+            {
+                record = record with { Translation = translation?.Value ?? string.Empty };
+            }
+
+            var issue = translation?.Issue;
+
+            if (issue != null && issue != LocalizationIssue.MissingTranslation)
+            {
+                record = issue.StoreInCsvRecord(record);
+            }
+
+            return record;
         }
 
         public ResourcesDatabase ImportLocalizationCsv(LanguageFilePath languageFilePath, out int totalEntryCount, out int totalMatchCount, out int totalChangeCount)

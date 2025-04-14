@@ -1196,7 +1196,9 @@ Old Localized:N&amp;CE：</comment>
   </data>
   <data name="btnLearningDocBrowse.Text" xml:space="preserve">
     <value>&amp;Browse...</value>
-    <comment>Needs Review:Inconsistent translation</comment>
+    <comment>Needs Review:Inconsistent translation
+Candidate Translation:浏览(&amp;B)…
+Candidate Translation:浏览(&amp;O)…</comment>
   </data>
   <data name="textLearningDoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Left, Right</value>
