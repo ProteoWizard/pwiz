@@ -43,6 +43,7 @@ using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -634,6 +635,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     return false;
                 }
+
+                if (!settingsOld.MeasuredResults.CachePaths.SequenceEqual(settingsNew.MeasuredResults.CachePaths))
+                {
+                    return false;
+                }
             }
 
             // Check if any of the charted transition groups have changed
@@ -813,7 +819,8 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public void UpdateUI(bool selectionChanged = true)
-        {            
+        {         
+            Messages.Clear();
             IsCacheInvalidated = false;
 
             // Only worry about updates, if the graph is visible
@@ -1105,6 +1112,19 @@ namespace pwiz.Skyline.Controls.Graphs
                         SetRetentionTimeIndicators(chromGraphItem.Value, settings, chromatograms, nodePeps, nodeGroups);
                     }
                 }
+
+                if (Messages.Any())
+                {
+                    TextObj messageObj = new TextObj(TextUtil.LineSeparate(Messages.Distinct()), .01, 0,
+                        CoordType.ChartFraction, AlignH.Left, AlignV.Top)
+                    {
+                        IsClippedToChartRect = true,
+                        ZOrder = ZOrder.E_BehindCurves,
+                        FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+                    };
+                    graphControl.GraphPane.GraphObjList.Add(messageObj);
+
+                }
             }
             catch (InvalidDataException x)
             {
@@ -1220,6 +1240,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             return null;
         }
+
+        public List<String> Messages { get; } = new List<string>();
 
         private GraphPane GetScanSelectedPane()
         {
@@ -2370,6 +2392,24 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             bool fullScan = settings.TransitionSettings.FullScan.IsEnabled &&
                             !chromGraphPrimary.Chromatogram.GroupInfo.CachedFile.IsSrm;
+            if (fullScan)
+            {
+                if (!settings.PeptideSettings.Libraries.IsLoaded)
+                {
+                    if (Settings.Default.ShowPeptideIdTimes || Settings.Default.ShowAlignedPeptideIdTimes ||
+                        Settings.Default.ShowUnalignedPeptideIdTimes)
+                    {
+                        Messages.Add("Libraries are still loading");
+                    }
+                    return;
+                }
+
+                if (Settings.Default.ShowAlignedPeptideIdTimes &&
+                    !DocumentRetentionTimes.IsLoaded(_documentContainer.DocumentUI))
+                {
+                    Messages.Add("Waiting for retention time alignment");
+                }
+            }
             // Set any MS/MS IDs on the first graph item also
             if (settings.PeptideSettings.Libraries.IsLoaded && 
                 (fullScan || settings.PeptideSettings.Libraries.HasMidasLibrary))

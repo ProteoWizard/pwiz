@@ -61,7 +61,8 @@ namespace pwiz.Skyline.Model.Results
                                               ILoadMonitor loader)
             : base(fileInfo, status, startPercent, endPercent, loader)
         {
-            _cache = cache;
+            // Open a new stream for the cache so that we can do concurrent reads
+            _cache = cache = cache.ChangeReadStream(loader.StreamManager.CreatePooledStream(cache.CachePath, false));
 
             _fileIndex = cache.CachedFiles.IndexOf(f => Equals(f.FilePath, dataFilePath));
             _chromKeyIndices = cache.GetChromKeys(dataFilePath).OrderBy(v => v.LocationPoints).ToArray();

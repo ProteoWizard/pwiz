@@ -22,17 +22,20 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.DocSettings.MetadataExtraction;
 using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Util;
 
@@ -75,15 +78,21 @@ namespace pwiz.Skyline.Model.Results
 
         protected override string IsNotLoadedExplained(SrmDocument document)
         {
-            SrmSettings settings = document.Settings;
-            
-            // If using full-scan filtering, then the chromatograms may not be loaded
-            // until the libraries are loaded, since they are used for peak picking.
-            if (!IsReadyToLoad(document))
+            var measuredResults = document.MeasuredResults;
+            if (measuredResults == null)
             {
                 return null;
-            } 
-            if (!settings.HasResults)
+            }
+
+            if (!measuredResults.CachePaths.Any() && !measuredResults.FinalCacheIncomplete)
+            {
+                return @"Cache file not loaded";
+            }
+
+            SrmSettings settings = document.Settings;
+            // If using full-scan filtering, then the chromatograms may not be extracted
+            // until the libraries are loaded, since they are used for peak picking.
+            if (!IsReadyToLoad(document))
             {
                 return null;
             } 
@@ -133,13 +142,20 @@ namespace pwiz.Skyline.Model.Results
             if (!settings.HasResults || settings.MeasuredResults.IsLoaded)
                 return true;
 
-            var dataFilePath = tag as MsDataFileUri;
-            if (dataFilePath != null)
+            if (tag is MsDataFileUri dataFilePath)
             {
                 // Cancelled if file is no longer part of the document, or it is
                 // already loaded.
                 var res = settings.MeasuredResults;
                 return !res.IsDataFilePath(dataFilePath) || res.IsCachedFile(dataFilePath);
+            }
+
+            if (tag is MeasuredResults measuredResults)
+            {
+                if (!Equals(measuredResults, settings.MeasuredResults))
+                {
+                    return true;
+                }
             }
             return false;
         }
@@ -156,16 +172,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return false;
                 }
-                // if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
-                // {
-                //     return false;
-                // }
+                if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
+                {
+                    return false;
+                }
                 if (IonMobilityLibraryManager.IsNotLoadedDocumentExplained(document) != null)
                 {
                     return false; // Need to wait for imsdb file to load into memory
                 }
             }
-            // Make sure any iRT calculater gets loaded before starting to import
+            // Make sure any iRT calculator gets loaded before starting to import
             var rtPrediction = document.Settings.PeptideSettings.Prediction.RetentionTime;
             if (rtPrediction != null && !rtPrediction.Calculator.IsUsable)
                 return false;
@@ -186,14 +202,53 @@ namespace pwiz.Skyline.Model.Results
                     return false;
                 docCurrent = docInLock;
 
-                _multiFileLoader.InitializeThreadCount(LoadingThreads);
+                if (IsReadyToLoad(docCurrent))
+                {
+                    _multiFileLoader.InitializeThreadCount(LoadingThreads);
 
-                // The Thread.Sleep below caused many issues loading code, which were fixed
-                // This may still be good to keep around for periodic testing of synchronization logic
-//                Thread.Sleep(1000);
+                    // The Thread.Sleep below caused many issues loading code, which were fixed
+                    // This may still be good to keep around for periodic testing of synchronization logic
+                    //                Thread.Sleep(1000);
 
-                var loader = new Loader(this, container, document, docCurrent, _multiFileLoader);
-                loader.Load();
+                    var loader = new Loader(this, container, document, docCurrent, _multiFileLoader);
+                    loader.Load();
+                    return false;
+                }
+
+                var measuredResults = docCurrent.MeasuredResults;
+                if (measuredResults == null || measuredResults.FinalCacheIncomplete || measuredResults.CachePaths.Any())
+                {
+                    return false;
+                }
+
+                var cachePath = ChromatogramCache.FinalPathForName(container.DocumentFilePath, null);
+                IProgressStatus progressStatus = new ProgressStatus(string.Format("Loading {0}", Path.GetFileName(cachePath)));
+                var loadMonitor = new LoadMonitor(this, container, measuredResults);
+                try
+                {
+                    loadMonitor.UpdateProgress(progressStatus);
+                    var loadedMeasuredResults =
+                        measuredResults.LoadFinalCache(cachePath, progressStatus, loadMonitor, docCurrent);
+                    if (loadedMeasuredResults == null)
+                    {
+                        return false;
+                    }
+
+                    SrmDocument docNew;
+                    do
+                    {
+                        docCurrent = container.Document;
+                        if (!Equals(measuredResults, docCurrent.MeasuredResults))
+                        {
+                            return false;
+                        }
+                        docNew = docCurrent.ChangeSettingsNoDiff(docCurrent.Settings.ChangeMeasuredResults(loadedMeasuredResults));
+                    } while (!CompleteProcessing(container, docNew, docCurrent));
+                }
+                finally
+                {
+                    loadMonitor.UpdateProgress(progressStatus.Complete());
+                }
             }
 
             return false;
