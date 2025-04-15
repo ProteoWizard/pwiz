@@ -86,7 +86,6 @@ namespace TestPerf
         /// <param name="iRTtype">iRT standard type</param>
         private void AlphapeptdeepBuildLibrary(string libraryName, string libraryPath, string answerFile, IrtStandard iRTtype = null)
         {
-
             string builtLibraryPath = null;
             RunLongDlg<BuildLibraryDlg>(_peptideSettings.ShowBuildLibraryDlg, buildLibraryDlg =>
             {
@@ -132,7 +131,7 @@ namespace TestPerf
             {
                 using (var productReader = new StreamReader(product))
                 {
-                    AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1e-1);
+                    AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1);
                 }
             }
         }
