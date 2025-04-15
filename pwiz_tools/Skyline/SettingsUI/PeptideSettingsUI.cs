@@ -819,6 +819,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else if (status.IsCanceled)
                     {
+                        IsBuildingLibrary = false;
                         return;
                     }
 
