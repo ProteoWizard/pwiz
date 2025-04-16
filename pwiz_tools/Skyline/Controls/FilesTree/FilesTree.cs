@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Files;
 using pwiz.Skyline.Properties;
@@ -35,6 +36,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         private bool _inhibitOnAfterSelect;
         private FileSystemWatcher _fileSystemWatcher;
         private QueueWorker<Action> _fsWorkQueue = new QueueWorker<Action>(null, (a, i) => a());
+        private FilesTreeNode _triggerLabelEditForNode;
+        private TextBox _editTextBox;
+        private string _editedLabel;
 
         public FilesTree()
         {
@@ -140,12 +144,16 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             DocumentContainer = documentUIContainer;
 
-            DoubleBuffered = true;
-
-            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
-
             if (!IsHandleCreated)
                 CreateHandle();
+
+            DoubleBuffered = true;
+            SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint, true);
+
+            // Enable the OnNotifyMessage callback, which is used to improve LabelEdit handling per:
+            //      https://web.archive.org/web/20241113105420/https://www.codeproject.com/Articles/11931/Enhancing-TreeView-Customizing-LabelEdit
+            SetStyle(ControlStyles.EnableNotifyMessage, true);
+            LabelEdit = false;
 
             OnTextZoomChanged(); // Required to respect non-default fonts when initialized
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
@@ -367,6 +375,184 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             if (!_inhibitOnAfterSelect)
                 base.OnAfterSelect(e);
+        }
+
+        [Browsable(true)]
+        public event EventHandler<NodeLabelEditEventArgs> BeforeNodeEdit;
+
+        [Browsable(false)]
+        public event EventHandler<ValidateLabelEditEventArgs> ValidateLabelEdit;
+
+        [Browsable(false)]
+        public event EventHandler<NodeLabelEditEventArgs> AfterNodeEdit;
+
+        // TODO (label edit): long click on right side of TreeNode fails to trigger label editing text box
+        // CONSIDER (label edit): wrap textbox in new control derived from FormEx to vertically center text?
+        protected override void OnBeforeLabelEdit(NodeLabelEditEventArgs e)
+        {
+            e.CancelEdit = true;
+        }
+
+        protected override void OnNotifyMessage(Message m)
+        {
+            // Warning - brittle, order matters! WM_TIMER messages only sent if
+            // LabelEdit = false so be careful if re-ordering. This also affects
+            // which part of a TreeNode triggers label editing.
+            if (m.Msg == (int) User32.WinMessageType.WM_TIMER)
+            {
+                if (_triggerLabelEditForNode != null && !ReferenceEquals(_triggerLabelEditForNode, SelectedNode))
+                {
+                    // If the selected node has changed since the mouse edit,
+                    // then cancel the label edit trigger.
+                    _triggerLabelEditForNode = null;
+                }
+
+                if (_triggerLabelEditForNode != null)
+                {
+                    _triggerLabelEditForNode = null;
+                    StartLabelEdit();
+                }
+            }
+            base.OnNotifyMessage(m);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                var node = (FilesTreeNode)SelectedNode;
+                if (node == GetNodeAt(0, e.Y) && node.SupportsRename())
+                {
+                    _triggerLabelEditForNode = node;
+                }
+            }
+
+            base.OnMouseUp(e);
+        }
+
+        public void StartLabelEdit()
+        {
+            var node = SelectedNode;
+
+            BeforeNodeEdit?.Invoke(this, new NodeLabelEditEventArgs(node));
+
+            _editedLabel = node.Text;
+
+            LabelEdit = true;
+
+            BeginEditNode(node);
+        }
+
+        private void BeginEditNode(TreeNode node)
+        {
+            _editTextBox = new TextBox
+            {
+                Text = node.Text,
+                Bounds = ((FilesTreeNode)node).BoundsMS,
+                Font = Font,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            _editTextBox.KeyDown += LabelEditTextBox_KeyDown;
+            _editTextBox.LostFocus += LabelEditTextBox_LostFocus;
+
+            RepositionEditTextBox();
+
+            Parent.Controls.Add(_editTextBox);
+            Parent.Controls.SetChildIndex(_editTextBox, 0);
+
+            _editTextBox.SelectAll();
+            _editTextBox.Focus();
+        }
+
+        private void RepositionEditTextBox()
+        {
+            var node = ((TreeNodeMS)SelectedNode).BoundsMS;
+            _editTextBox.Location = new Point(Location.X + node.Location.X, Location.Y + node.Location.Y);
+
+            const int minWidth = 80;
+            var maxWidth = Bounds.Width - 1 - node.Left;
+
+            var size = TextRenderer.MeasureText(_editTextBox.Text, _editTextBox.Font, new Size(_editTextBox.Height, maxWidth));
+            var dx = size.Width + 8;
+            dx = Math.Max(dx, minWidth);
+            dx = Math.Min(dx, maxWidth);
+
+            _editTextBox.Width = dx;
+        }
+
+        protected void LabelEditTextBox_LostFocus(object sender, EventArgs e)
+        {
+            CommitEditBox(false);
+        }
+
+        protected void LabelEditTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Handled)
+                return;
+
+            if (e.KeyCode == Keys.Escape || e.KeyCode == Keys.Enter)
+            {
+                CommitEditBox(true);
+                e.Handled = e.SuppressKeyPress = true;
+            }
+        }
+
+        public void CommitEditBox(bool wasCancelled)
+        {
+            if (_editTextBox == null)
+                return;
+
+            var node = SelectedNode;
+            var label = _editTextBox.Text;
+
+            var editTextBox = _editTextBox;
+            _editTextBox = null;
+            editTextBox.Parent.Controls.Remove(editTextBox);
+            editTextBox.KeyDown -= LabelEditTextBox_KeyDown;
+            editTextBox.LostFocus -= LabelEditTextBox_LostFocus;
+            _triggerLabelEditForNode = null;
+
+            var nodeLabelEditEventArgs = new NodeLabelEditEventArgs(node, label)
+            {
+                CancelEdit = wasCancelled
+            };
+            OnAfterNodeEdit(nodeLabelEditEventArgs);
+        }
+
+        protected virtual void OnValidateLabelEdit(ValidateLabelEditEventArgs e)
+        {
+            ValidateLabelEdit?.Invoke(this, e);
+        }
+
+        protected void OnAfterNodeEdit(NodeLabelEditEventArgs e)
+        {
+            if (e.CancelEdit)
+            {
+                AfterNodeEdit?.Invoke(this, e);
+            }
+            else
+            {
+                LabelEdit = false;
+                e.CancelEdit = true;
+                if (e.Label == null)
+                    return;
+
+                var ea = new ValidateLabelEditEventArgs(e.Label);
+                OnValidateLabelEdit(ea);
+
+                if (ea.Cancel)
+                {
+                    e.Node.Text = _editedLabel;
+                    LabelEdit = true;
+                    BeginEditNode(e.Node);
+                }
+                else
+                {
+                    e.CancelEdit = false;
+                    AfterNodeEdit?.Invoke(this, e);
+                }
+            }
         }
 
         private void InitializeAllLocalFiles(FilesTreeNode node)

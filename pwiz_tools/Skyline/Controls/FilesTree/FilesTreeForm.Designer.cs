@@ -60,7 +60,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.filesTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.filesTree.HideSelection = false;
             this.filesTree.ItemHeight = 16;
-            this.filesTree.LabelEdit = true;
             this.filesTree.Name = "filesTree";
             this.filesTree.RestoredFromPersistentString = false;
             this.filesTree.UseKeysOverride = false;

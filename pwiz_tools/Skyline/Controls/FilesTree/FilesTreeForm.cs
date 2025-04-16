@@ -60,6 +60,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.LostFocus += FilesTree_LostFocus;
             filesTree.BeforeLabelEdit += FilesTree_BeforeLabelEdit;
             filesTree.AfterLabelEdit += FilesTree_AfterLabelEdit;
+            filesTree.AfterNodeEdit += FilesTree_AfterLabelEdit;
             filesTree.ItemDrag += FilesTree_ItemDrag;
             filesTree.DragEnter += FilesTree_DragEnter;
             filesTree.DragLeave += FilesTree_DragLeave;
@@ -713,7 +714,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
 
             // Re-paint as the mouse moves over drop targets so the insert line also repaints
-            // CONSIDER: may be more efficient to invalidate a more specific region
+            // CONSIDER: invalidate a more specific region
             filesTree.Invalidate();
 
             // CONSIDER: does setting AutoScroll on the form negate the need for this code?
@@ -829,15 +830,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        // TODO: de-select all items in tree when mouse enters a drop target. Possible
-        //       there's a bug in TreeNodeMS (?) keeping an item highlighted (light blue) 
-        //       despite clearing SelectedNode/Nodes, even after invalidating FilesTree
         private void DropTargetRemove_DragEnter(object sender, DragEventArgs e)
         {
             e.Effect = e.AllowedEffect;
 
             filesTree.SelectedNode = null;
             filesTree.SelectedNodes.Clear();
+
+            // CONSIDER: invalidate a more specific region
             filesTree.Invalidate();
 
             ShowRemoveDropTarget(true);
@@ -880,9 +880,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             FilesTree.IsDragAndDrop = false;
 
-            // CONSIDER: when drag-and-drop is canceled, repaint the tree to get rid
-            //           of the insertion highlight. Might be more efficient to 
-            //           invalidate a more specific region.
+            // CONSIDER: invalidate a more specific region
             FilesTree.Invalidate();
 
             _dropTargetRemove.Visible = false;
