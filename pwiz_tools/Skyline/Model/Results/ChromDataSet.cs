@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Util;

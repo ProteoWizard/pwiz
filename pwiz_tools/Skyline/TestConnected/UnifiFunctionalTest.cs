@@ -23,7 +23,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.ElementLocators;
-using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -67,6 +67,23 @@ namespace pwiz.SkylineTestConnected
             _testAccount = WatersConnectTestUtil.GetTestAccount();
             _skyFilepath = "SmallMolOptimization.sky";
             _dataPath = new[] { "Company", "Skyline", "SmallMolOptimization", "Scheduled",  };
+            _filenames = new[] { "ID33140_03a_WAA253_4814_092017", "ID33141_03a_WAA253_4814_092017" };
+            _selectItem = "Molecule:/Nucleotide metabolism/UDP";
+            _chromatogramPoint = null;
+            RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestWatersConnect2()
+        {
+            if (!WatersConnectTestUtil.EnableWatersConnectTests)
+            {
+                return;
+            }
+            TestFilesZip = @"TestConnected\RemoteApiFunctionalTest.data";
+            _testAccount = WatersConnectTestUtil.GetTestAccount();
+            _skyFilepath = "SmallMolOptimization.sky";
+            _dataPath = new[] { "Company", "Skyline", "SmallMolOptimization", "Scheduled", };
             _filenames = new[] { "ID33140_03a_WAA253_4814_092017", "ID33141_03a_WAA253_4814_092017" };
             _selectItem = "Molecule:/Nucleotide metabolism/UDP";
             _chromatogramPoint = null;

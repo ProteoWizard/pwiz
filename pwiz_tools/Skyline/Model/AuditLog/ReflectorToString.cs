@@ -23,7 +23,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
 {

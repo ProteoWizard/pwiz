@@ -25,9 +25,9 @@ using System.Windows.Forms;
 using System.IO;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -35,7 +35,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class BaseFileDialogNE : FormEx
+    public partial class BaseFileDialogNE : CommonFormEx
     {
         private readonly ListViewColumnSorter _listViewColumnSorter = new ListViewColumnSorter();
         private readonly Stack<MsDataFileUri> _previousDirectories = new Stack<MsDataFileUri>();

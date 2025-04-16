@@ -31,6 +31,7 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <RuntimeIdentifiers>win-x86;win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -78,12 +79,6 @@
     <CodeAnalysisFailOnMissingRules>false</CodeAnalysisFailOnMissingRules>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Platform)' == 'x86'">
-    <RuntimeIdentifiers>win-x86</RuntimeIdentifiers>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Platform)' == 'x64'">
-    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>

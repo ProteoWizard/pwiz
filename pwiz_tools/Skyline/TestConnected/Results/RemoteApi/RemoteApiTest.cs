@@ -23,11 +23,11 @@ using System.IO;
 using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
-using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestConnected.Results.RemoteApi
@@ -65,7 +65,7 @@ namespace pwiz.SkylineTestConnected.Results.RemoteApi
             };
 
             RemoteServerException exception = null;
-            Helpers.Try<Exception>(() =>
+            TryHelper.Try<Exception>(() =>
             {
                 while (!session.AsyncFetchContents(rootUrl, out exception) && exception == null)
                 {

@@ -27,7 +27,6 @@ using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {

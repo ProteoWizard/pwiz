@@ -270,6 +270,12 @@
       <Component Id="pwiz.Common.pdb">
         <File Source="$(var.Skyline.TargetDir)/pwiz.Common.pdb" KeyPath="yes"/>
       </Component>
+      <Component Id="pwiz.CommonMsData.dll">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonMsData.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="pwiz.CommonMsData.pdb">
+        <File Source="$(var.Skyline.TargetDir)/pwiz.CommonMsData.pdb" KeyPath="yes"/>
+      </Component>
       <Component Id="pwiz.CommonUtil.dll">
         <File Source="$(var.Skyline.TargetDir)/pwiz.CommonUtil.dll" KeyPath="yes"/>
       </Component>
@@ -427,6 +433,9 @@
       <Component Id="ja_pwiz.Common.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\pwiz.Common.resources.dll" Id="ja_pwiz.Common.resources.dll_file" KeyPath="yes"/>
       </Component>
+      <Component Id="ja_pwiz.CommonMsData.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/ja\pwiz.CommonMsData.resources.dll" Id="ja_pwiz.CommonMsData.resources.dll_file" KeyPath="yes"/>
+      </Component>
       <Component Id="ja_pwiz.CommonUtil.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/ja\pwiz.CommonUtil.resources.dll" Id="ja_pwiz.CommonUtil.resources.dll_file" KeyPath="yes"/>
       </Component>
@@ -480,6 +489,9 @@
       </Component>
       <Component Id="zh_CHS_pwiz.Common.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.Common.resources.dll" Id="zh_CHS_pwiz.Common.resources.dll_file" KeyPath="yes"/>
+      </Component>
+      <Component Id="zh_CHS_pwiz.CommonMsData.resources.dll">
+        <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.CommonMsData.resources.dll" Id="zh_CHS_pwiz.CommonMsData.resources.dll_file" KeyPath="yes"/>
       </Component>
       <Component Id="zh_CHS_pwiz.CommonUtil.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/zh-CHS\pwiz.CommonUtil.resources.dll" Id="zh_CHS_pwiz.CommonUtil.resources.dll_file" KeyPath="yes"/>

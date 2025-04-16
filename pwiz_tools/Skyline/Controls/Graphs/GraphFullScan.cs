@@ -27,6 +27,8 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;

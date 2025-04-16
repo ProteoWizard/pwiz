@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Irt;
