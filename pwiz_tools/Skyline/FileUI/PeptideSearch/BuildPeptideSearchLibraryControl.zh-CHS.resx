@@ -467,7 +467,7 @@ TPP pepXML、Mascot .dat、SEQUEST SQT 等现有结果文件建立新库。</val
     <value>gridSearchFiles</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=24.1.1.263, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>

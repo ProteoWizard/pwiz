@@ -139,7 +139,7 @@
     <value>calibrationGraphControl1</value>
   </data>
   <data name="&gt;&gt;calibrationGraphControl1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.Graphs.Calibration.CalibrationGraphControl, Skyline-daily, Version=22.2.1.448, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.Graphs.Calibration.CalibrationGraphControl, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;calibrationGraphControl1.Parent" xml:space="preserve">
     <value>$this</value>
@@ -169,12 +169,12 @@
     <value>ModeUIExtender</value>
   </data>
   <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=22.2.1.448, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>CalibrationForm</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.DockableFormEx, Skyline-daily, Version=22.2.1.448, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
