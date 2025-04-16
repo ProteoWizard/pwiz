@@ -1297,7 +1297,7 @@ Old Localized:時間ウィンドウ(&amp;W)：</comment>
     <value>ionMobilityFilteringControl</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
@@ -2711,7 +2711,7 @@ MSスペクトルライブラリのピークに基づいて選択されます。
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2723,6 +2723,6 @@ MSスペクトルライブラリのピークに基づいて選択されます。
     <value>TransitionSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>
