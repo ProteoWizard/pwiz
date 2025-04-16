@@ -385,9 +385,6 @@
   <data name="CommandLine_ImportSearch_Warning__Unable_to_locate_results_file___0__" xml:space="preserve">
     <value>警告： 結果ファイル'{0}'を特定できません</value>
   </data>
-  <data name="CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
-    <value>エラー：iRT標準は{0}に設定されていますが、複数のiRT標準が見つかりました。iRT標準は明示的に設定される必要があります。</value>
-  </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT標準名「{0}」は無効です。</value>
   </data>

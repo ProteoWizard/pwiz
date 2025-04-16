@@ -520,7 +520,11 @@
     <value>5</value>
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
-    <value>保持時間の正規化に使用する既知のiRT標準ペプチドセットを選択します。</value>
+    <value>Choose a set of known iRT standard peptides to use for retention time normalization.</value>
+    <comment>Needs Review:English text changed
+Old English:Choose a set of know iRT standard peptides to use for retention time normalization.
+Current English:Choose a set of known iRT standard peptides to use for retention time normalization.
+Old Localized:保持時間の正規化に使用する既知のiRT標準ペプチドセットを選択します。</comment>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
