@@ -365,7 +365,7 @@ void dumpFile(const string& filename, const string& outputFile,
         catch (exception& e)
         {
             cerr << "Error writing analysis " << (i+1)
-                 << " in " << fs::path(filename).leaf() << ":\n"
+                 << " in " << fs::path(filename).filename() << ":\n"
                  << e.what() << endl;
         }
     }

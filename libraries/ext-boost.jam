@@ -111,12 +111,18 @@ rule init ( version : location : options * )
         local version-tokens = [ regex.split $(version) \\. ] ;
         local boost-basename = "boost_$(version-tokens:J=_)" ;
 
-        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ]
+        local ext ;
+        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ] { ext = tar.bz2 ; }
+        else if [ path.exists $(location:D)/$(boost-basename).tbz2 ] { ext = tbz2 ; }
+        else if [ path.exists $(location:D)/$(boost-basename).tar.gz ] { ext = tar.gz ; }
+        else if [ path.exists $(location:D)/$(boost-basename).tgz ] { ext = tgz ; }
+
+        if [ path.exists $(location:D)/$(boost-basename).$(ext) ]
         {
             # extract boost tarball
             tar.extract
                   # tar filepath
-                    $(boost-basename).tar.bz2
+                    $(boost-basename).$(ext)
                 : # include patterns
                     $(boost-basename)/boost*.?pp
                     $(boost-basename)/boost*.h
@@ -193,7 +199,9 @@ rule init ( version : location : options * )
                 <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
                 <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
                 <define>BOOST_FILESYSTEM_NO_LIB=1
-				#<define>BOOST_FILESYSTEM_NO_DEPRECATED
+                <define>BOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
+                <define>BOOST_FILESYSTEM_ALLOW_DEPRECATED
+                #<define>BOOST_FILESYSTEM_NO_DEPRECATED
                 <conditional>@filesystem-requirements
                 <library>system
             :
@@ -201,8 +209,10 @@ rule init ( version : location : options * )
                 <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
                 <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
                 <link>shared:<define>BOOST_ALL_DYN_LINK=1
-				#<define>BOOST_FILESYSTEM_NO_DEPRECATED
-				<toolset>msvc:<define>BOOST_USE_WINAPI_VERSION=0x0501
+                <define>BOOST_FILESYSTEM_NO_CXX20_ATOMIC_REF
+                <define>BOOST_FILESYSTEM_ALLOW_DEPRECATED
+                #<define>BOOST_FILESYSTEM_NO_DEPRECATED
+                <toolset>msvc:<define>BOOST_USE_WINAPI_VERSION=0x0501
                 <library>system
             ;
 

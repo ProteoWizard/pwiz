@@ -368,11 +368,9 @@
   </data>
   <data name="lblGroupAtGeneLevel.Text" xml:space="preserve">
     <value>按基因水平分组(&amp;E)</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="lblGroupAtGeneLevel.ToolTip" xml:space="preserve">
     <value>肽段将按基因而非蛋白质进行关联和分组。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblGroupAtGeneLevel.Name" xml:space="preserve">
     <value>lblGroupAtGeneLevel</value>

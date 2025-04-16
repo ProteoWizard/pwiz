@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Controls.Editor;
@@ -50,6 +51,9 @@ namespace pwiz.Skyline.Controls.Databinding
 #else
             viewEditor.ShowSourceTab = false;
 #endif
+            if (CommonApplicationSettings.PauseSeconds != 0)
+                viewEditor.ShowSourceTab = false; // not when taking screenshots
+
             if (EnablePreview)
             {
                 viewEditor.PreviewButtonVisible = true;

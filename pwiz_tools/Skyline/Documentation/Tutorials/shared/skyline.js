@@ -16,30 +16,42 @@ function targetTop()
 });
 }
 
-function addFigureAltText()
-{
+function addFigureAltText() {
+    
+    // Helper function to wrap element with anchor
+    function wrapWithAnchor(element, id) {
+        const anchor = document.createElement('a');
+        anchor.setAttribute('name', id);
+        anchor.setAttribute('id', id);
+        
+        // Replace the element with the anchor
+        const parent = element.parentNode;
+        parent.replaceChild(anchor, element);
+        
+        // Add the element inside the anchor
+        anchor.appendChild(element);
+        
+        return anchor;
+    }
+
     const images = document.querySelectorAll('img');
     var figureCounter = 1;
+
     images.forEach((img) => {
         if (img.src.includes("/s-")) {
             img.title = `Figure ${figureCounter}`;
-
-            var anchor = document.createElement('a');
-            const anchorId = `figure${figureCounter}`
-            anchor.setAttribute('name', anchorId);
-            anchor.setAttribute('id', anchorId);
-            img.parentNode.parentNode.insertBefore(anchor, img.parentNode);
-
-            // If it is a screenshot path add a second bookmark anchor
+            
+            // Create figure number anchor
+            const figureAnchor = wrapWithAnchor(img, `figure${figureCounter}`);
+            
+            // Add screenshot ID anchor if available
             const match = img.src.match(/\/(s-\d+)/);
             if (match) {
-                anchor = document.createElement('a');
-                anchor.setAttribute('name', match[1]);
-                anchor.setAttribute('id', match[1]);
-                img.parentNode.parentNode.insertBefore(anchor, img.parentNode);
-            }            
-
-            figureCounter++
+                // For the second ID, we need to wrap the already wrapped image
+                wrapWithAnchor(figureAnchor, match[1]);
+            }
+            
+            figureCounter++;
         }
     });
 }
@@ -56,7 +68,7 @@ function addTableOfContents(){
 
         var headings = [].slice.call(document.body.querySelectorAll('h1, h2, h3, h4, h5, h6'));
         headings.forEach(function (heading, index) {
-            if(!heading.classList.contains("document-title")){
+        if(!heading.classList.contains("document-title")){
                 var headingTextContent = heading.textContent.trim();
                 //remove English and Chinese/Japanese colons
                 if (headingTextContent.endsWith(":") || headingTextContent.endsWith("：")){
@@ -91,6 +103,13 @@ function addTableOfContents(){
 
 function scrollToAnchor(){
     if(location.hash){
-        document.getElementById(location.hash.substring(1)).scrollIntoView();
+        const regex = /^#xpath:((\/[a-zA-Z0-9]+\[[0-9]+\])*)$/
+        var match = regex.exec(location.hash)    
+        if (match) {
+            var el = document.evaluate(match[1], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            el.scrollIntoView();
+        } else {
+            document.getElementById(location.hash.substring(1)).scrollIntoView();
+        }
     }
 }

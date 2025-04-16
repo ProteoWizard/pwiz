@@ -62,8 +62,8 @@ void appendSourceFile(const string& filename, MSData& msd)
 {
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(filename);
-    sourceFile->id = sourceFile->name = BFS_STRING(p.leaf());
-    sourceFile->location = "file:///" + BFS_COMPLETE(p.branch_path()).string();
+    sourceFile->id = sourceFile->name = BFS_STRING(p.filename());
+    sourceFile->location = "file:///" + BFS_COMPLETE(p.parent_path()).string();
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 }
 
@@ -394,8 +394,8 @@ PWIZ_API_DECL void Reader_BTDX::read(const string& filename,
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = "BTDX1";
     bfs::path p(filename);
-    sourceFile->name = BFS_STRING(p.leaf());
-    sourceFile->location = "file:///" + BFS_COMPLETE(p.branch_path()).string();
+    sourceFile->name = BFS_STRING(p.filename());
+    sourceFile->location = "file:///" + BFS_COMPLETE(p.parent_path()).string();
     result.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     result.id = result.run.id = bfs::basename(filename);

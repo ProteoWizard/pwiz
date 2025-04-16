@@ -51,7 +51,8 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class ExistingExperimentsTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestExistingExperimentsTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -77,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
             var excelBmp = new Bitmap(TestContext.GetProjectDirectory(@"TestTutorial\ExistingQuant_excel.png"));
-            var graph = Graphics.FromImage(bmp);
+            var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
             graph.DrawImageUnscaled(excelBmp, bmp.Width - excelBmp.Width, bmp.Height - excelBmp.Height);
             return bmp;
         }
@@ -131,7 +132,7 @@ namespace pwiz.SkylineTestTutorial
                 peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Library;
                 peptideSettingsUI.SetSelectedLibrary("Yeast_mini");
             });
-            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab", 4);
+            PauseForScreenShot<PeptideSettingsUI.LibraryTab>("Peptide Settings - Library tab");
 
             RunUI(() => peptideSettingsUI.SelectedTab = PeptideSettingsUI.TABS.Digest);
             RunDlg<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg,
@@ -141,7 +142,7 @@ namespace pwiz.SkylineTestTutorial
                     buildBackgroundProteomeDlg.BackgroundProteomePath = GetTestPath(@"MRMer\Yeast_MRMer_mini.protdb"); // Not L10N
                     buildBackgroundProteomeDlg.OkDialog();
                 });
-            PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab", 5);
+            PauseForScreenShot<PeptideSettingsUI.DigestionTab>("Peptide Settings - Digestion tab");
 
             var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15, // Not L10N
                                           RelativeRT.Matching, null, null, null);
@@ -161,13 +162,13 @@ namespace pwiz.SkylineTestTutorial
             {
                 var importDialog = ShowDialog<InsertTransitionListDlg>(SkylineWindow.ShowPasteTransitionListDlg);
                 RunUI(() => importDialog.Size = new Size(600, 300));
-                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form", 8);
+                PauseForScreenShot<InsertTransitionListDlg>("Insert Transition List form");
                 var filePath = GetTestPath(@"MRMer\silac_1_to_4.xls"); // Not L10N
                 string text1 = GetExcelFileText(filePath, "Fixed", 3, false); // Not L10N
                 var colDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => importDialog.TransitionListText = text1);
                 WaitForConditionUI(() => colDlg.AssociateProteinsPreviewCompleted); // Wait for associate proteins to complete
                 Assert.IsTrue(colDlg.checkBoxAssociateProteins.Checked);
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form", 9);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Insert Transition List column selection form");
                 OkDialog(colDlg, colDlg.OkDialog);
             }
 
@@ -180,7 +181,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Size = new Size(1035, 511);
             });
             FocusDocument();
-            PauseForScreenShot("Main window with transitions added", 10);
+            PauseForScreenShot("Main window with transitions added");
 
             FindNode("LWDVAT");
             RunUI(() =>
@@ -212,7 +213,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.TopNode = SkylineWindow.SequenceTree.Nodes[5];
             });
             FocusDocument();
-            PauseForScreenShot("Main window with data imported", 13);
+            PauseForScreenShot("Main window with data imported");
 
             RunUI(() =>
             {
@@ -226,7 +227,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.StateImageIndex,
                     (int)SequenceTree.StateImageId.no_peak));
             });
-            PauseForScreenShot("Main window", 14);
+            PauseForScreenShot("Main window");
 
             // Removing a Transition with Interference
             FindNode(string.Format("{0:F04}", 504.2664));   // I18N
@@ -280,7 +281,7 @@ namespace pwiz.SkylineTestTutorial
                 }
             });
             RestoreViewOnScreen(15);
-            PauseForScreenShot("Main window", 16);
+            PauseForScreenShot("Main window");
 
             FindNode("YVDP");
             RunUI(() =>
@@ -347,7 +348,7 @@ namespace pwiz.SkylineTestTutorial
             // We expect this to fail due to instrument settings rather than format issues eg "The product m/z 1519.78 is out of range for the instrument settings, in the peptide sequence YEVQGEVFTKPQLWP. Check the Instrument tab in the Transition Settings."
             {
                 var transitionSelectdgl = ShowDialog<ImportTransitionListColumnSelectDlg>(SkylineWindow.Paste);
-                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column list selection form", 20);
+                PauseForScreenShot<ImportTransitionListColumnSelectDlg>("Column list selection form");
 
                 var messageDlg = ShowDialog<ImportTransitionListErrorDlg>(transitionSelectdgl.AcceptButton.PerformClick);
                 AssertEx.AreComparableStrings(TextUtil.SpaceSeparate(Resources.MassListRowReader_CalcTransitionExplanations_The_product_m_z__0__is_out_of_range_for_the_instrument_settings__in_the_peptide_sequence__1_,
@@ -355,7 +356,7 @@ namespace pwiz.SkylineTestTutorial
                     messageDlg.ErrorList[0].ErrorMessage,
                     2);
                 RunUI(() => messageDlg.Size = new Size(838, 192));
-                PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)", 20);
+                PauseForScreenShot<ImportTransitionListErrorDlg>("Error message form (expected)");
                 OkDialog(messageDlg, messageDlg.CancelButton.PerformClick); // Acknowledge the error but decline to proceed with import
                 OkDialog(transitionSelectdgl, transitionSelectdgl.CancelDialog); // Cancel the import
 
@@ -370,12 +371,12 @@ namespace pwiz.SkylineTestTutorial
             });
             PasteTransitionListSkipColumnSelect();
             RunUI(SkylineWindow.CollapsePeptides);
-            PauseForScreenShot<SequenceTreeForm>("Targets tree (selected from main window)", 21, null,
+            PauseForScreenShot<SequenceTreeForm>("Targets tree (selected from main window)", null,
                 bmp => ClipTargets(bmp, 19));
 
             // Adjusting Modifications Manually, p. 19.
             AdjustModifications("AGLCQTFVYGGCR", true, 'V', 747.348);
-            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", 24, null,
+            PauseForScreenShot<SequenceTreeForm>("Targets tree clipped from main window", null,
                 bmp => ClipTargets(bmp, 21));
 
             AdjustModifications("IVGGWECEK", true, 'V', 541.763);
@@ -394,7 +395,7 @@ namespace pwiz.SkylineTestTutorial
             if (UseRawFilesOrFullData)
             {
                 var importResultsSamplesDlg = ShowDialog<ImportResultsSamplesDlg>(openDataSourceDialog1.Open);
-                PauseForScreenShot<ImportResultsSamplesDlg>("Choose Samples form", 25);
+                PauseForScreenShot<ImportResultsSamplesDlg>("Choose Samples form");
 
                 RunUI(() =>
                            {
@@ -437,7 +438,7 @@ namespace pwiz.SkylineTestTutorial
 
             {
                 var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg1.OkDialog);
-                PauseForScreenShot<ImportResultsNameDlg>("Import Results Common prefix form", 26);
+                PauseForScreenShot<ImportResultsNameDlg>("Import Results Common prefix form");
 
                 OkDialog(importResultsNameDlg, importResultsNameDlg.YesDialog);
             }
@@ -461,7 +462,7 @@ namespace pwiz.SkylineTestTutorial
 
             FocusDocument();
             JiggleSelection();
-            PauseForScreenShot("Main window with peaks and retention times showing", 27);
+            PauseForScreenShot("Main window with peaks and retention times showing");
             RunUI(SkylineWindow.EditDelete);
             FindNode("IVGGWECEK"); // Not L10N
 
@@ -504,14 +505,13 @@ namespace pwiz.SkylineTestTutorial
                     }
                 }
             });
-            PauseForScreenShot("Main window", 29);
+            PauseForScreenShot("Main window");
 
             // Data Inspection with Peak Areas View, p. 29.
             RestoreViewOnScreen(28);
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
             RunUI(NormalizeGraphToHeavy);
             PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
-            Settings.Default.PeakAreaDotpDisplay = DotProductDisplayOption.none.ToString();
             FindNode((564.7746).ToString(LocalizationHelper.CurrentCulture) + "++"); // ESDTSYVSLK - Not L10N
             WaitForGraphs();
             PauseForPeakAreaGraphScreenShot("Peak Areas graph metafile");
@@ -586,7 +586,7 @@ namespace pwiz.SkylineTestTutorial
                 }
             });
             WaitForGraphs();
-            PauseForScreenShot<DocumentGridForm>("Document grid filled (scrolled to the end)", 36);
+            PauseForScreenShot<DocumentGridForm>("Document grid filled (scrolled to the end)");
             RunUI(() => documentGrid.Close());
             
             FindNode("SSDLVALSGGHTFGK"); // Not L10N
@@ -643,6 +643,11 @@ namespace pwiz.SkylineTestTutorial
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Parent);
                 WaitForGraphs();
                 RunUI(() => SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SelectedNode.Nodes[0]);
+                RunUI(() =>
+                {
+                    SkylineWindow.SelectedResultsIndex += 1;
+                    SkylineWindow.SelectedResultsIndex -= 1;
+                });
                 RunUI(SkylineWindow.FocusDocument);
                 TakeCoverShot();
                 return;
@@ -697,12 +702,12 @@ namespace pwiz.SkylineTestTutorial
             {
                 var editStaticModDlg = ShowDialog<EditStaticModDlg>(() => editPepModsDlg.AddNewModification(sequence.IndexOf(aa13C), IsotopeLabelType.heavy));
                 RunUI(() => editStaticModDlg.Modification = new StaticMod("Label:13C", null, null, LabelAtoms.C13)); // Not L10N
-                PauseForScreenShot<EditStaticModDlg.IsotopeModView>("Edit Isotope Modification form", 22);
+                PauseForScreenShot<EditStaticModDlg.IsotopeModView>("Edit Isotope Modification form");
 
                 OkDialog(editStaticModDlg, editStaticModDlg.OkDialog);
                 // Make sure the right combo has the focus for the screen shot
                 RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), "Label:13C")); // Not L10N
-                PauseForScreenShot<EditPepModsDlg>("Edit Modifications form", 23);
+                PauseForScreenShot<EditPepModsDlg>("Edit Modifications form");
             }
             var doc = SkylineWindow.Document;
             OkDialog(editPepModsDlg, editPepModsDlg.OkDialog);

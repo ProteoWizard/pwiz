@@ -124,7 +124,7 @@ void fillInMetadata(const string& rawpath, Shimadzu::ShimadzuReaderPtr rawfile, 
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = p.filename().string(utf8);
     sourceFile->name = p.filename().string(utf8);
-    sourceFile->location = "file:///" + bfs::system_complete(p.branch_path()).string(utf8);
+    sourceFile->location = "file:///" + bfs::system_complete(p.parent_path()).string(utf8);
     sourceFile->set(MS_scan_number_only_nativeID_format);
     sourceFile->set(MS_mass_spectrometer_file_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);

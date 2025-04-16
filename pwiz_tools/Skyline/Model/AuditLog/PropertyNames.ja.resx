@@ -1108,7 +1108,6 @@
   </data>
   <data name="HardklorSettings_MinIntensityPPM" xml:space="preserve">
     <value>最小強度PPM</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="HardklorSettings_MinIdotP" xml:space="preserve">
     <value>最小同位体内積</value>
@@ -1151,7 +1150,6 @@
   </data>
   <data name="ImportPeptideSearchSettings_HardklorSearchSettings" xml:space="preserve">
     <value>Hardklor検索設定</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchSettings_ImportFastaSettings" xml:space="preserve">
     <value>FASTAをインポート</value>
@@ -1788,18 +1786,15 @@
   </data>
   <data name="ParsimonySettings_GeneLevelParsimony" xml:space="preserve">
     <value>遺伝子レベルでグループ化</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="DataSettings_RelativeAbundanceFormatting" xml:space="preserve">
     <value>相対的存在量のフォーマット</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RelativeAbundanceFormatting_ColorRows" xml:space="preserve">
     <value>フォーマット行</value>
   </data>
   <data name="CutoffScore_PERCOLATOR_QVALUE" xml:space="preserve">
     <value>最大q値</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="DdaSearchSettings_ScoreThreshold" xml:space="preserve">
     <value>スコアの閾値</value>

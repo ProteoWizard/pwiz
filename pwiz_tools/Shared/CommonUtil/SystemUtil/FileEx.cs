@@ -19,8 +19,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using pwiz.Common.Properties;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -158,15 +158,12 @@ namespace pwiz.Common.SystemUtil
             return deltaTicks + @" ticks";
         }
 
-        [DllImport("Kernel32.dll", CharSet = CharSet.Unicode)]
-        static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
-
         /// <summary>
         /// Tries to create a hard-link from sourceFilepath to destinationFilepath and returns true if the link was successfully created.
         /// </summary>
         public static bool CreateHardLink(string sourceFilepath, string destinationFilepath)
         {
-            return CreateHardLink(destinationFilepath, sourceFilepath, IntPtr.Zero);
+            return Kernel32.CreateHardLink(destinationFilepath, sourceFilepath, IntPtr.Zero);
         }
 
         /// <summary>

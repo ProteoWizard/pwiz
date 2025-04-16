@@ -21,9 +21,9 @@ Core code and libraries are under the Apache open source license; the vendor lib
 
 | OS      | Status |
 | ------- | ------ |
-| Windows | ![Windows status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt83.svg?label=VS%202022) |
-| Native Linux | ![Linux status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9) |
-| Wine Linux | ![Docker-Wine status](https://img.shields.io/teamcity/http/teamcity.labkey.org/s/ProteoWizardAndSkylineDockerContainerWineX8664.svg?label=Docker-Wine) |
+| Windows | ![Windows status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/bt83.svg?label=VS%202022) |
+| Native Linux | ![Linux status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/bt17.svg?label=GCC%204.9) |
+| Wine Linux | ![Docker-Wine status](https://img.shields.io/teamcity/https/teamcity.labkey.org/s/ProteoWizardAndSkylineDockerContainerWineX8664.svg?label=Docker-Wine) |
 
 Click [here](https://proteowizard.sourceforge.io/download.html) to visit the official download page.
 
@@ -31,5 +31,5 @@ Click [here](https://proteowizard.sourceforge.io/download.html) to visit the off
 ![Unofficial toolset build status](https://github.com/ProteoWizard/pwiz/actions/workflows/build_and_test.yml/badge.svg)
 | OS      | Toolset    |
 | ------- | -------    |
-| Linux   | GCC 9.3    |
-| OS X    | Clang 12   |
+| Linux   | GCC 13    |
+| ~~OS X~~    | ~~Clang 12~~   |

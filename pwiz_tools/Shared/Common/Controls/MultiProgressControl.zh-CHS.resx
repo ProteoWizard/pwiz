@@ -139,7 +139,6 @@
   </metadata>
   <data name="ProgressColumn.HeaderText" xml:space="preserve">
     <value>进度</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ProgressColumn.MinimumWidth" type="System.Int32, mscorlib">

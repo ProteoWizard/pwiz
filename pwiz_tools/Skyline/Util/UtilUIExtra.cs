@@ -24,6 +24,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 
 namespace pwiz.Skyline.Util
@@ -307,11 +308,6 @@ EndSelection:<<<<<<<3
 
     public static class ClipboardHelper
     {
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetOpenClipboardWindow();
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
         public static string GetPasteErrorMessage()
         {
             return GetOpenClipboardMessage(UtilResources.ClipboardHelper_GetPasteErrorMessage_Failed_getting_data_from_the_clipboard_);
@@ -326,11 +322,11 @@ EndSelection:<<<<<<<3
         {
             try
             {
-                IntPtr hwnd = GetOpenClipboardWindow();
+                IntPtr hwnd = User32.GetOpenClipboardWindow();
                 if (hwnd != IntPtr.Zero)
                 {
                     uint processId;
-                    GetWindowThreadProcessId(hwnd, out processId);
+                    User32.GetWindowThreadProcessId(hwnd, out processId);
                     var process = Process.GetProcessById((int)processId);
                     var message = prefix + Environment.NewLine;
                     message += string.Format(UtilResources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,

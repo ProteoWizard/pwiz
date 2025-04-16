@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestUtil
             {
                 var persistentFileInfos = persistentDirInfo.EnumerateFiles("*", SearchOption.AllDirectories).ToList();
                 PersistentFilesDirTotalSize = persistentFileInfos.Sum(f => f.Length);
-                PersistentFilesDirFileSet = persistentFileInfos.Select(f => PathEx.RemovePrefix(f.FullName, Path.GetDirectoryName(PersistentFilesDir) + "\\")).ToHashSet();
+                PersistentFilesDirFileSet = persistentFileInfos.Select(f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName)).ToHashSet();
             }
         }
 
@@ -312,7 +312,7 @@ namespace pwiz.SkylineTestUtil
             }
 
             long currentSize = currentFileInfos.Sum(f => f.Length);
-            var currentFiles = currentFileInfos.Select(f => PathEx.RemovePrefix(f.FullName, Path.GetDirectoryName(PersistentFilesDir) + "\\")).ToHashSet();
+            var currentFiles = currentFileInfos.Select(f => PathEx.GetRelativePath(Path.GetDirectoryName(PersistentFilesDir), f.FullName)).ToHashSet();
             var newFiles = new HashSet<string>(currentFiles);
             newFiles.ExceptWith(PersistentFilesDirFileSet);
             var deletedFiles = new HashSet<string>(PersistentFilesDirFileSet);

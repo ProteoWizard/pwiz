@@ -240,6 +240,11 @@ namespace pwiz.Skyline.Controls.Databinding.RowActions
                 deletedPaths.Add(identityPath);
                 return null;
             }
+
+            if (docNodeParent.AutoManageChildren && docNodeParent.Children.Count != newChildren.Count)
+            {
+                docNodeParent = docNodeParent.ChangeAutoManageChildren(false);
+            }
             return docNodeParent.ChangeChildren(newChildren);
         }
 

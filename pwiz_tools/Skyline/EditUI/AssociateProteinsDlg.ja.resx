@@ -368,11 +368,9 @@
   </data>
   <data name="lblGroupAtGeneLevel.Text" xml:space="preserve">
     <value>遺伝子レベルでグループ化(&amp;E)</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="lblGroupAtGeneLevel.ToolTip" xml:space="preserve">
     <value>ペプチドがタンパク質ではなく遺伝子ごとに関連付けられ、グループ化されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblGroupAtGeneLevel.Name" xml:space="preserve">
     <value>lblGroupAtGeneLevel</value>

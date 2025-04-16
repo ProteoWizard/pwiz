@@ -1,0 +1,106 @@
+import modules path feature ;
+
+rule build-properties ( targets + : sources * : properties * )
+{
+    local .msvcSetupScript = [ get-current-msvc-setup-script $(properties) ] ;
+
+    path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
+    path-constant CURRENT_DIR : $(SKYLINE_PATH)/Executables/DevTools/ResourcesOrganizer ;
+    path-constant OUTPUT_DIR : $(CURRENT_DIR)/ResourcesOrganizer/bin/Release ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    MSVC_CURRENT_SETUP_SCRIPT on $(targets) = $(.msvcSetupScript) ;
+}
+
+rule do_resources_organizer ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_resources_organizer
+{
+    $(MSVC_CURRENT_SETUP_SCRIPT)
+    echo Building $(current-dir) ResourcesOrganizer.exe
+    dotnet build $(CURRENT_DIR)\ResourcesOrganizer\ResourcesOrganizer.csproj /p:Configuration=Release;OutDir=$(OUTPUT_DIR) /nologo /verbosity:minimal
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+make ResourcesOrganizer.exe
+    : # sources
+    : # actions
+        @do_resources_organizer
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+;
+
+##############
+# IncrementalUpdateResxFiles
+# Should be run when user interface changes during the development cycle
+# Updates the .ja and .zh-CHS resx files by reverting to English all strings not found in "LastReleaseResources.db"
+##############
+
+rule do_IncrementalUpdateResxFiles ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_IncrementalUpdateResxFiles
+{
+    echo Updating localized resx files
+    call $(CURRENT_DIR)\scripts\UpdateResxFiles.bat incremental
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+
+make IncrementalUpdateResxFiles
+    : # sources
+    : # actions
+        @do_IncrementalUpdateResxFiles
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <dependency>ResourcesOrganizer.exe
+    ;
+
+explicit IncrementalUpdateResxFiles ;
+
+##############
+# FinalUpdateResxFiles
+# Should be run after visual freeze to update the .resx files by adding comments indicating which
+# strings have been added since LastReleaseResources.db
+# After running this, fixes can be manually applied to the resx files
+##############
+
+rule do_FinalizeResxFiles ( targets + : sources * : properties * )
+{
+    return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_FinalizeResxFiles
+{
+    echo Finalizing resx files
+    call $(CURRENT_DIR)\scripts\UpdateResxFiles.bat final
+    set status=%ERRORLEVEL%
+    exit %status%
+}
+
+
+make FinalizeResxFiles
+    : # sources
+    : # actions
+        @do_FinalizeResxFiles
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <dependency>ResourcesOrganizer.exe
+    ;
+
+explicit FinalizeResxFiles ;
+
+
+

@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Koina
         public static readonly int BATCH_SIZE = 1000;
         public static readonly int MIN_NCE = 18;
         public static readonly int MAX_NCE = 39;
-        public static readonly int MAX_THREADS = 4;
+        public static int MAX_THREADS = 4;
 
         public static bool CACHE_PREV_PREDICTION = true;
 

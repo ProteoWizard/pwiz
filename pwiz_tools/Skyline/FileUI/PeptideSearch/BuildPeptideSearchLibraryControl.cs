@@ -352,7 +352,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-            bool retry = false;
+            bool retry;
             do
             {
                 using (var longWaitDlg = new LongWaitDlg())
@@ -380,10 +380,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 var response = ShowLibraryMissingExternalSpectraError(WizardForm, status.ErrorException);
                                 if (response == UpdateProgressResponse.cancel)
                                     return false;
-                                else if (response == UpdateProgressResponse.normal)
-                                    builder.PreferEmbeddedSpectra = true;
+
+                                builder.PreferEmbeddedSpectra = response == UpdateProgressResponse.normal;
 
                                 retry = true;
+                                continue;
                             }
                             else
                             {
@@ -399,7 +400,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         return false;
                     }
                 }
-            } while (retry) ;
+
+                retry = false;
+
+            } while (retry);
 
             var docLibSpec = builder.LibrarySpec;
             BuildLibrarySettings.LibraryName = docLibSpec.Name;
@@ -419,7 +423,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
 
             IrtStandard outStandard = null;
-            var addedIrts = !isFeatureDetection && LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT,
+            var addedIrts = !isFeatureDetection && PeptideSettingsUI.AddIrts(IrtRegressionType.DEFAULT,
                 ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false, out outStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
@@ -476,6 +480,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
             {
                 return false;
+            }
+
+            if (DocumentContainer.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Contains(docLibSpec))
+            {
+                // No further work necessary.
+                return true;
             }
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);

@@ -47,7 +47,7 @@ class PWIZ_API_DECL IsotopeTable
 
     private:
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    std::unique_ptr<Impl> impl_;
 
     // no copying
     IsotopeTable(const IsotopeTable&);

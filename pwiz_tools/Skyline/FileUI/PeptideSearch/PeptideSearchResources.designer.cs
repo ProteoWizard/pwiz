@@ -776,6 +776,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot close wizard while the search is running. Do you want to cancel the search?.
+        /// </summary>
+        public static string SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_ {
+            get {
+                return ResourceManager.GetString("SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Additional Settings.
         /// </summary>
         public static string SearchSettingsControl_Additional_Settings {

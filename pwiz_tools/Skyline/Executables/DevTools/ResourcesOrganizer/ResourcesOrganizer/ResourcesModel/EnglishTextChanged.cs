@@ -43,7 +43,7 @@ public record EnglishTextChanged() : LocalizationIssue("English text changed")
         if (resourceEntry != null)
         {
             lines.Add(CurrentEnglish + resourceEntry.Invariant.Value);
-        };
+        }
         lines.Add(OldLocalized + ReviewedLocalizedValue);
         return TextUtil.LineSeparate(lines);
     }

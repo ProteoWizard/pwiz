@@ -129,7 +129,6 @@
   </data>
   <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
     <value>运行命令：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
     <value>路径为空</value>

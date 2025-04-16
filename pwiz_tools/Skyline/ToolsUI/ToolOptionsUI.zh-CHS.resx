@@ -563,7 +563,6 @@
   </data>
   <data name="koinaServerLabel.Text" xml:space="preserve">
     <value>服务器(&amp;S)：</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;koinaServerLabel.Name" xml:space="preserve">
     <value>koinaServerLabel</value>
@@ -789,7 +788,6 @@
   </data>
   <data name="lblSettingsPath.Text" xml:space="preserve">
     <value>设置存储位置:</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;lblSettingsPath.Name" xml:space="preserve">
     <value>lblSettingsPath</value>

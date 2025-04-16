@@ -123,14 +123,12 @@
   </data>
   <data name="Description_Adduct" xml:space="preserve">
     <value>所选离子的加合物</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Description_FileName" xml:space="preserve">
     <value>作为谱图源的文件的文件名和可能的完整路径</value>
   </data>
   <data name="Description_Formula" xml:space="preserve">
     <value>所选离子的中性化学式</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Description_IdFileName" xml:space="preserve">
     <value>目标离子与谱图相匹配的文件的文件名以及可能的完整路径</value>

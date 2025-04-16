@@ -99,6 +99,5 @@
   </resheader>
   <data name="AbstractAlertDlg_Message_truncated" xml:space="preserve">
     <value>メッセージが途切れています。Ctrl+Cを押してメッセージ全体をクリップボードにコピーしてください。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
 </root>

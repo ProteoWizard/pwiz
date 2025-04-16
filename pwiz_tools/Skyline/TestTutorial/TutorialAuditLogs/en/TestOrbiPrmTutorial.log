@@ -374,7 +374,7 @@ Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Control group 
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Value to compare against is "G2M"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Identity Annotation is "BioReplicate"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Normalization method is "Ratio to Heavy"
-Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Summary method is "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Summary method is "Sum of transition areas"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Confidence level is "95"
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Protein scope is True
 Settings > Document Settings -- Group Comparisons > "G2M-vs-G1" > Use zero for missing peaks is False
@@ -386,7 +386,7 @@ Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Control group va
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Value to compare against is "S"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Identity Annotation is "BioReplicate"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Normalization method is "Ratio to Heavy"
-Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Summary method is "Turkey's Median Polish"
+Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Summary method is "Sum of transition areas"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Confidence level is "95"
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Protein scope is True
 Settings > Document Settings -- Group Comparisons > "S-vs-G1" > Use zero for missing peaks is False

@@ -228,15 +228,8 @@ namespace pwiz.Skyline.Menus
 
         public void ShowAssociateProteinsDlg(IWin32Window owner = null)
         {
-            using (var associateProteinsDlg = new AssociateProteinsDlg(DocumentUI))
-            {
-                if (associateProteinsDlg.ShowDialog(owner ?? SkylineWindow) == DialogResult.OK)
-                {
-                    ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
-                        current => associateProteinsDlg.DocumentFinal,
-                        associateProteinsDlg.FormSettings.EntryCreator.Create);
-                }
-            }
+            using var associateProteinsDlg = new AssociateProteinsDlg(SkylineWindow);
+            associateProteinsDlg.ShowDialog(owner ?? SkylineWindow);
         }
 
         private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)

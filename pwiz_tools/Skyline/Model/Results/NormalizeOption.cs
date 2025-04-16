@@ -68,6 +68,19 @@ namespace pwiz.Skyline.Model.Results
             get { return NormalizationMethod is NormalizationMethod.RatioToLabel; }
         }
 
+        /// <summary>
+        /// Returns true if this normalization method can be displayed on an axis with a log scale.
+        /// </summary>
+        public bool AllowLogScale
+        {
+            get
+            {
+                // "MAXIMUM" and "TOTAL" cannot be displayed on a log scale because they always have to be displayed on a stacked bar plot
+                // and stacked bar plots do not make sense in a log scale.
+                return this != MAXIMUM && this != TOTAL;
+            }
+        }
+
         public override string ToString()
         {
             return Caption;

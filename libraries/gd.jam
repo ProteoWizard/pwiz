@@ -80,9 +80,9 @@ rule init ( version ? : location : options * )
         using ext-png : 1.5.6 : $(PNG_SOURCE) ;
 
         local freetype-src-location = [ feature.get-values <freetype-src-location> : $(options) ] ;
-        freetype-src-location ?= $(location)/../freetype-2.4.7 ;
+        freetype-src-location ?= $(location)/../freetype-2.13.3 ;
         path-constant FREETYPE_SOURCE : $(freetype-src-location[1]) ;
-        using freetype : 2.4.7 : $(FREETYPE_SOURCE) : $(options) ;
+        using freetype : 2.13.3 : $(FREETYPE_SOURCE) : $(options) ;
 
         if [ path.exists $(location).tar.bz2 ]
         {

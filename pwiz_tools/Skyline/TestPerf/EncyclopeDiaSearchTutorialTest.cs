@@ -47,7 +47,7 @@ namespace TestPerf
         private AnalysisValues _analysisValues;
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
-        public void TestEncyclopeDiaSearchTutorial()
+        public void TestEncyclopeDiaSearchTutorialDraft()
         {
             TestFilesZip = @"https://skyline.ms/tutorials/EncyclopeDiaSearchTutorial-24_1.zip";
 
@@ -73,12 +73,12 @@ namespace TestPerf
                     //"23aug2017_hela_serum_timecourse_wide_1f.mzML",
                 },
 
-                FinalTargetCounts = new[] { 368, 717, 717, 5050 },
+                FinalTargetCounts = new[] { 369, 719, 719, 5058 },
                 MassErrorStats = new[]
                 {
                     new[] {-0.2, 2.5},
                     new[] {-0.2, 2.5},
-                    new[] {-0.2, 2.5},
+                    new[] {-0.2, 2.4},
                 },
                 ChromatogramClickPoint = new PointF(32.2f, 12.5f)
             };
@@ -198,8 +198,7 @@ namespace TestPerf
             var searchDlg = ShowDialog<EncyclopeDiaSearchDlg>(SkylineWindow.ShowEncyclopeDiaSearchDlg);
             RunUI(() => searchDlg.ImportFastaControl.SetFastaContent(fastaFilepath));
 
-            var screenshotPage = 5;
-            PauseForScreenShot<EncyclopeDiaSearchDlg.FastaPage>("Fasta Settings page", screenshotPage++);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.FastaPage>("Fasta Settings page");
 
             // copy expected blib to actual blib path so it will be re-used and Koina won't be called
             string persistentBlibFilepath = TestFilesDir.GetTestPath(_analysisValues.BlibPath);
@@ -223,7 +222,7 @@ namespace TestPerf
                 //searchDlg.MaxMz = 551;
                 searchDlg.ImportFastaControl.MaxMissedCleavages = 2;
             });
-            PauseForScreenShot<EncyclopeDiaSearchDlg.KoinaPage>("Koina Settings page", screenshotPage++);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.KoinaPage>("Koina Settings page");
 
             RunUI(searchDlg.NextPage); // now on narrow fractions
             var browseNarrowDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.NarrowWindowResults.Browse());
@@ -232,9 +231,9 @@ namespace TestPerf
                 browseNarrowDlg.CurrentDirectory = new MsDataFilePath(workingDir);
                 browseNarrowDlg.SelectAllFileType("mzML", s => _analysisValues.NarrowWindowDiaFiles.Contains(s));
             });
-            PauseForScreenShot<OpenDataSourceDialog>("Narrow Window Results - Browse for Results Files form", screenshotPage++);
+            PauseForScreenShot<OpenDataSourceDialog>("Narrow Window Results - Browse for Results Files form");
             OkDialog(browseNarrowDlg, browseNarrowDlg.Open);
-            PauseForScreenShot<EncyclopeDiaSearchDlg.NarrowWindowPage>("Narrow Window Results page", screenshotPage++);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.NarrowWindowPage>("Narrow Window Results page");
             
             RunUI(searchDlg.NextPage); // now on wide fractions
             var browseWideDlg = ShowDialog<OpenDataSourceDialog>(() => searchDlg.WideWindowResults.Browse());
@@ -243,9 +242,9 @@ namespace TestPerf
                 browseWideDlg.CurrentDirectory = new MsDataFilePath(workingDir);
                 browseWideDlg.SelectAllFileType("mzML", s => _analysisValues.WideWindowDiaFiles.Contains(s));
             });
-            PauseForScreenShot<OpenDataSourceDialog>("Wide Window Results - Browse for Results Files form", screenshotPage++);
+            PauseForScreenShot<OpenDataSourceDialog>("Wide Window Results - Browse for Results Files form");
             OkDialog(browseWideDlg, browseWideDlg.Open);
-            PauseForScreenShot<EncyclopeDiaSearchDlg.WideWindowPage>("Wide Window Results page", screenshotPage++);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.WideWindowPage>("Wide Window Results page");
 
             RunUI(searchDlg.NextPage); // now on EncyclopeDia settings
             RunUI(() =>
@@ -259,7 +258,7 @@ namespace TestPerf
                 //searchDlg.SetAdditionalSetting("FilterPeaklists", "true");
                 //searchDlg.SetAdditionalSetting("NumberOfThreadsUsed", "16");
             });
-            PauseForScreenShot<EncyclopeDiaSearchDlg.SearchSettingsPage>("EncyclopeDIA Settings page", screenshotPage++);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.SearchSettingsPage>("EncyclopeDIA Settings page");
             RunUI(searchDlg.NextPage); // start search
 
             var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
@@ -275,7 +274,7 @@ namespace TestPerf
             bool? searchSucceeded = null;
             searchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
 
-            PauseForScreenShot<EncyclopeDiaSearchDlg.RunPage>("Search Progress page", screenshotPage++);
+            PauseForScreenShot<EncyclopeDiaSearchDlg.RunPage>("Search Progress page");
 
             try
             {
@@ -335,7 +334,6 @@ namespace TestPerf
 
             // Finish wizard and the associate proteins dialog is shown.
             var emptyProteinsDlg = ShowDialog<AssociateProteinsDlg>(importPeptideSearchDlg.ClickNextButtonNoCheck);
-
             WaitForConditionUI(() => emptyProteinsDlg.DocumentFinalCalculated);
 
             RunUI(() =>
@@ -374,14 +372,13 @@ namespace TestPerf
             });
             //RestoreViewOnScreenNoSelChange(18);
             WaitForGraphs();
-            screenshotPage++;   // Docking drag-drop image page
-            PauseForScreenShot("Manual review window layout with protein selected", screenshotPage++);
+            PauseForScreenShot("Manual review window layout with protein selected");
 
             try
             {
                 FindNode(peptideToSelect);
                 WaitForGraphs();
-                PauseForScreenShot("Manual review window layout with peptide selected", screenshotPage++);
+                PauseForScreenShot("Manual review window layout with peptide selected");
             }
             catch (AssertFailedException e)
             {
@@ -391,7 +388,7 @@ namespace TestPerf
 
             RunUI(SkylineWindow.AutoZoomBestPeak);
             WaitForGraphs();
-            PauseForScreenShot("Snip just one chromatogram pane", screenshotPage++);
+            PauseForScreenShot("Snip just one chromatogram pane");
 
             try
             {
@@ -406,12 +403,12 @@ namespace TestPerf
                     "Click on and record a new ChromatogramClickPoint at the peak of that chromatogram.", e);
             }
 
-            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed", screenshotPage++);
+            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - zoomed");
             
 
             RunUI(() => SkylineWindow.GraphFullScan.ZoomToSelection(false));
             WaitForGraphs();
-            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - unzoomed", screenshotPage++);
+            PauseForScreenShot<GraphFullScan>("Full-Scan graph window - unzoomed");
 
             RunUI(SkylineWindow.GraphFullScan.Close);
             RunUI(SkylineWindow.ShowMassErrorHistogramGraph);
@@ -427,7 +424,7 @@ namespace TestPerf
             ValidateMassErrors(massErrorPane, massErrorStatsIndex++);
 
             // CONSIDER: No way to specify mass error graph window in PauseForScreenShot or ShowDialog
-            PauseForScreenShot("Mass errors histogram graph window", screenshotPage++);
+            PauseForScreenShot("Mass errors histogram graph window");
 
             // Review single replicates
             RunUI(SkylineWindow.ShowSingleReplicate);

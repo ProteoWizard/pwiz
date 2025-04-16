@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using NHibernate.Criterion;
 using ResourcesOrganizer;
 using ResourcesOrganizer.ResourcesModel;
 

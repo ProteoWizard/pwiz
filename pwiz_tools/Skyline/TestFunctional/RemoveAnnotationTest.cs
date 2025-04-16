@@ -56,6 +56,9 @@ namespace pwiz.SkylineTestFunctional
             PropertyPath ppCarryoverProblem = ppPeptideResult.Property(AnnotationDef.ANNOTATION_PREFIX + "carryover problem");
             PropertyPath ppRtSchedulingProblem =
                 ppPeptideResult.Property(AnnotationDef.ANNOTATION_PREFIX + "RT scheduling problem");
+            WaitForConditionUI(() =>
+                documentGrid.FindColumn(ppCarryoverProblem) != null &&
+                documentGrid.FindColumn(ppRtSchedulingProblem) != null);
             RunUI(() =>
             {
                 var colCarryoverProblem = documentGrid.FindColumn(ppCarryoverProblem);

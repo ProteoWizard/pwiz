@@ -35,7 +35,6 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
-#include "boost/filesystem/convenience.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
 #include "pwiz/utility/misc/Std.hpp"

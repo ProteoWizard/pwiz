@@ -76,6 +76,16 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private void textImWindow_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    _parent.FocusDocument();
+                    break;
+            }
+        }
+
         /// <summary>
         /// Call before closing to stop the TextboxStreamWriter from writing to a disposed textbox.
         /// </summary>
@@ -210,7 +220,7 @@ namespace pwiz.Skyline.Controls
             var skylineWindow = _parent;
             if (skylineWindow != null)
             {
-                skylineWindow.ClipboardControlLostFocus(skylineWindow);
+                skylineWindow.ClipboardControlLostFocus(this);
             }
         }
     }
