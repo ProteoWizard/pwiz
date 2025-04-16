@@ -14,7 +14,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public Library Library { get; private set; }
         public Alignments Alignments { get; private set; }
 
-        public IEnumerable<double> GetAlignedRetentionTimes(IList<Target> targets)
+        public IEnumerable<double> GetAlignedRetentionTimes(ICollection<string> spectrumSourceFiles, IList<Target> targets)
         {
             var times = Library.GetRetentionTimesWithSequences(Alignments.LibraryFiles, targets);
             if (times == null)
@@ -24,6 +24,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             for (int iFile = 0; iFile < times.Length; iFile++)
             {
+                if (false == spectrumSourceFiles?.Contains(Library.LibraryFiles.FilePaths[iFile]))
+                {
+                    continue;
+                }
                 if (times[iFile].Count > 0)
                 {
                     var alignment = Alignments.GetAlignmentFunction(Alignments.LibraryFiles[iFile], true);

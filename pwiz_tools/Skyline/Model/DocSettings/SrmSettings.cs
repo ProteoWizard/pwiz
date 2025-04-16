@@ -1193,14 +1193,37 @@ namespace pwiz.Skyline.Model.DocSettings
                 batchNames.Insert(0, chromatogramSet.BatchName);
             }
 
-            foreach (var batchName in batchNames)
+            foreach (var library in PeptideSettings.Libraries.Libraries)
             {
-                foreach (var libraryAlignment in DocumentRetentionTimes.GetLibraryAlignments(batchName))
+                if (true != library?.IsLoaded)
                 {
+                    continue;
+                }
+
+                var libraryAlignment = DocumentRetentionTimes.GetLibraryAlignment(library.Name);
+                if (libraryAlignment == null)
+                {
+                    continue;
+                }
+
+                foreach (var batchName in batchNames)
+                {
+                    HashSet<string> spectrumSourceFiles = null;
+                    if (!string.IsNullOrEmpty(batchName))
+                    {
+                        spectrumSourceFiles =
+                            GetSpectrumSourceFilesInBatch(libraryAlignment.Library.LibraryFiles, batchName).ToHashSet();
+                        if (spectrumSourceFiles.Count == 0)
+                        {
+                            continue;
+                        }
+                    }
+
                     var alignmentFunction = libraryAlignment.Alignments.GetAlignmentFunction(filePath, false);
                     if (alignmentFunction != null)
                     {
-                        var times = libraryAlignment.GetAlignedRetentionTimes(targets).Select(alignmentFunction.GetY)
+                        var times = libraryAlignment.GetAlignedRetentionTimes(spectrumSourceFiles, targets)
+                            .Select(alignmentFunction.GetY)
                             .ToArray();
                         if (times.Length > 0)
                         {
@@ -1241,9 +1264,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
                 }
 
-                var key = new DocumentRetentionTimes.LibraryAlignmentKey(library.Name, chromatogramSet?.BatchName);
-                if (null != DocumentRetentionTimes.GetLibraryAlignments(key))
+                if (null != DocumentRetentionTimes.GetLibraryAlignment(library.Name))
                 {
+                    // TODO(nicksh): if there is a batch name, then potentially a subset of the times in this library should be returned.
                     continue;
                 }
                 result.AddRange(library.GetRetentionTimesWithSequences(null, targets).SelectMany(list=>list));
@@ -1258,6 +1281,18 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             return result.ToArray();
+        }
+
+        public IEnumerable<string> GetSpectrumSourceFilesInBatch(LibraryFiles libraryFiles, string batchName)
+        {
+            if (MeasuredResults == null)
+            {
+                return null;
+            }
+
+            return MeasuredResults.Chromatograms.Where(chromatogramSet => chromatogramSet.BatchName == batchName)
+                .SelectMany(chromatogramSet => chromatogramSet.MSDataFilePaths).Distinct()
+                .Select(libraryFiles.FindIndexOf).Distinct().Select(libraryFiles.FilePaths.ElementAtOrDefault);
         }
 
         public IEnumerable<Target> GetTargets(PeptideDocNode peptideDocNode)
@@ -1936,7 +1971,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasAlignedTimes()
         {
-            return !DocumentRetentionTimes.IsEmpty;
+            return !DocumentRetentionTimes.IsEmpty || null != DocumentRetentionTimes.IsNotLoadedExplained(this);
         }
 
         /// <summary>

@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return false;
                 }
                 var loadMonitor = new LoadMonitor(this, container, alignmentParam);
-                IProgressStatus progressStatus = new ProgressStatus(string.Format("Performing alignment between library {0} and predictor {1}", alignmentParam.Key, alignmentTarget.Calculator.Name));
+                IProgressStatus progressStatus = new ProgressStatus(GetAlignmentDescription(alignmentTarget, alignmentParam.LibraryName));
                 Alignments alignment;
                 try
                 {
@@ -145,6 +145,29 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
+        }
+
+        private static string GetAlignmentDescription(AlignmentTarget target, string libraryName)
+        {
+            if (target is AlignmentTarget.LibraryTarget libraryTarget)
+            {
+                if (libraryTarget.Library.Name == libraryName)
+                {
+                    return string.Format("Performing alignment between library {0} and itself",
+                        libraryName);
+                }
+
+                return string.Format("Performing alignment between libraries {0} and {1}", libraryName, libraryTarget.Library.Name);
+            }
+
+            if (target is AlignmentTarget.Irt irt)
+            {
+                return string.Format("Performing alignment between library {0} and calculator {1}",
+                    libraryName, irt.Calculator.Name);
+            }
+
+            return string.Format("Performing alignment on library {0}", libraryName);
+
         }
     }
 }

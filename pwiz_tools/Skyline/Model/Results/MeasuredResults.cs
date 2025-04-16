@@ -1322,7 +1322,11 @@ namespace pwiz.Skyline.Model.Results
                 return ChangeFinalCacheIncomplete(true);
             }
 
-            return ChangeProp(ImClone(this), im => im._cacheFinal = chromatogramCache);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.SetClonedCacheState(chromatogramCache);
+                im.Chromatograms = Chromatograms;
+            });
         }
 
         #endregion

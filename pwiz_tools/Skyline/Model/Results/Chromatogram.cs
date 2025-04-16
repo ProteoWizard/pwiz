@@ -227,12 +227,12 @@ namespace pwiz.Skyline.Model.Results
                 try
                 {
                     loadMonitor.UpdateProgress(progressStatus);
-                    var loadedMeasuredResults =
-                        measuredResults.LoadFinalCache(cachePath, progressStatus, loadMonitor, docCurrent);
+                    var loadedMeasuredResults = measuredResults.LoadFinalCache(cachePath, progressStatus, loadMonitor, docCurrent);
                     if (loadedMeasuredResults == null)
                     {
                         return false;
                     }
+                    loadedMeasuredResults = measuredResults.UpdateCaches(container.DocumentFilePath, loadedMeasuredResults);
 
                     SrmDocument docNew;
                     do

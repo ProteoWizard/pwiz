@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
     public class PeakBoundaryImputer
     {
         private static WeakReference<PeakBoundaryImputer> _sharedInstance;
-        private readonly Dictionary<DocumentRetentionTimes.LibraryAlignmentKey, LibraryInfo> _libraryInfos = new Dictionary<DocumentRetentionTimes.LibraryAlignmentKey, LibraryInfo>();
+        private readonly Dictionary<LibraryInfoKey, LibraryInfo> _libraryInfos = new Dictionary<LibraryInfoKey, LibraryInfo>();
         private readonly Dictionary<MsDataFileUri, AlignmentFunction> _alignmentFunctions =
             new Dictionary<MsDataFileUri, AlignmentFunction>();
         private readonly Dictionary<IdentityPath, Dictionary<MsDataFileUri, ScoredPeak>> _scoredPeaks =
@@ -71,19 +71,29 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             lock (this)
             {
                 var libraries = newDocument.Settings.PeptideSettings.Libraries;
-                foreach (var libraryInfo in _libraryInfos.Values)
+                foreach (var entry in _libraryInfos)
                 {
-                    
+                    var libraryInfo = entry.Value;
                     var newLibrary = libraries.Libraries.FirstOrDefault(lib => lib?.Name == libraryInfo.Library.Name);
-                    if (!Equals(newLibrary, libraryInfo.Library))
+                    if (newLibrary == null || !Equals(newLibrary, libraryInfo.Library))
                     {
                         continue;
                     }
 
-                    var newLibraryInfo = libraryInfo.ChangeAlignment(newDocument.Settings.DocumentRetentionTimes.GetLibraryAlignments(libraryInfo.Key));
+                    if (entry.Key.BatchName != null)
+                    {
+                        var newLibraryFiles = new LibraryFiles(newDocument.Settings.GetSpectrumSourceFilesInBatch(newLibrary.LibraryFiles, entry.Key.BatchName));
+                        if (!newLibraryFiles.SequenceEqual(entry.Value.LibraryFiles))
+                        {
+                            continue;
+                        }
+                    }
+
+                    var newLibraryInfo = libraryInfo.ChangeAlignment(newDocument.Settings.DocumentRetentionTimes
+                        .GetLibraryAlignment(libraryInfo.Library.Name)?.Alignments);
                     if (newLibraryInfo != null)
                     {
-                        result._libraryInfos.Add(newLibraryInfo.Key, newLibraryInfo);
+                        result._libraryInfos.Add(entry.Key, newLibraryInfo);
                     }
                 }
             }
@@ -114,23 +124,15 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         private class LibraryInfo
         {
             private Dictionary<ImmutableList<Target>, ExemplaryPeak> _bestPeakBounds = new Dictionary<ImmutableList<Target>, ExemplaryPeak>();
-            public LibraryInfo(Library library, string batchName, Alignments alignment)
+            public LibraryInfo(Library library, LibraryFiles libraryFiles, Alignments alignment)
             {
                 Library = library;
-                BatchName = batchName;
+                LibraryFiles = libraryFiles;
                 Alignments = alignment;
             }
 
             public Library Library { get; }
-            public string BatchName { get; }
-
-            public DocumentRetentionTimes.LibraryAlignmentKey Key
-            {
-                get
-                {
-                    return new DocumentRetentionTimes.LibraryAlignmentKey(Library.Name, BatchName);
-                }
-            }
+            public LibraryFiles LibraryFiles { get; private set; }
 
             public Alignments Alignments { get; }
 
@@ -156,7 +158,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             public IEnumerable<KeyValuePair<string, ExplicitPeakBounds>> GetAllExplicitPeakBounds(IList<Target> targets)
             {
-                foreach (var filePath in Library.LibraryFiles.FilePaths)
+                foreach (var filePath in LibraryFiles.FilePaths)
                 {
                     if (false == Alignments?.ContainsFile(filePath))
                     {
@@ -206,7 +208,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
                 lock (this)
                 {
-                    var newLibraryInfo = new LibraryInfo(Library, BatchName, alignment);
+                    var newLibraryInfo = new LibraryInfo(Library, LibraryFiles, alignment);
                     foreach (var bestPeakBounds in _bestPeakBounds)
                     {
                         newLibraryInfo._bestPeakBounds.Add(bestPeakBounds.Key, bestPeakBounds.Value);
@@ -267,7 +269,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         {
             lock (this)
             {
-                var key = new DocumentRetentionTimes.LibraryAlignmentKey(library.Name, batchName);
+                var key = new LibraryInfoKey(library.Name, batchName);
                 if (_libraryInfos.TryGetValue(key, out var libraryInfo))
                 {
                     if (Equals(library, libraryInfo.Library))
@@ -276,10 +278,20 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     }
                 }
 
-                libraryInfo = new LibraryInfo(library, batchName, Document.Settings.DocumentRetentionTimes.GetLibraryAlignments(key));
+                libraryInfo = new LibraryInfo(library, GetLibraryFilesForBatch(library, batchName), Document.Settings.DocumentRetentionTimes.GetLibraryAlignment(library.Name)?.Alignments);
                 _libraryInfos[key] = libraryInfo;
                 return libraryInfo;
             }
+        }
+
+        private LibraryFiles GetLibraryFilesForBatch(Library library, string batchName)
+        {
+            if (batchName == null)
+            {
+                return library.LibraryFiles;
+            }
+
+            return new LibraryFiles(Document.Settings.GetSpectrumSourceFilesInBatch(library.LibraryFiles, batchName));
         }
 
         public ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
@@ -940,6 +952,38 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return new ModifiedDocument(document.EndDeferSettingsChanges(originalDocument,
                 new SrmSettingsChangeMonitor(new SilentProgressMonitor(productionMonitor.CancellationToken),
                     string.Empty, new ProgressStatus()))).ChangeAuditLogEntry(auditLogEntry);
+        }
+
+        private class LibraryInfoKey
+        {
+            public LibraryInfoKey(string libraryName, string batchName)
+            {
+                LibraryName = libraryName;
+                BatchName = string.IsNullOrEmpty(batchName) ? null : batchName;
+            }
+            public string LibraryName { get; private set; }
+            public string BatchName { get; private set; }
+
+            protected bool Equals(LibraryInfoKey other)
+            {
+                return LibraryName == other.LibraryName && BatchName == other.BatchName;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is null) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((LibraryInfoKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((LibraryName != null ? LibraryName.GetHashCode() : 0) * 397) ^ (BatchName != null ? BatchName.GetHashCode() : 0);
+                }
+            }
         }
     }
 }
