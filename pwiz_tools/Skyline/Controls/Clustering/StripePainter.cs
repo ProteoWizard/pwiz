@@ -18,6 +18,7 @@
  */
 using System;
 using System.Drawing;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.Clustering

@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace pwiz.Common.SystemUtil
@@ -47,6 +49,21 @@ namespace pwiz.Common.SystemUtil
         public static string LineSeparate(params string[] lines)
         {
             return LineSeparate((IEnumerable<string>) lines);
+        }
+
+        /// <summary>
+        /// Encrypts a string. This encryption uses the user's (i.e. not machine) key, so it is 
+        /// appropriate for strings that are marked with the [UserScopedSetting].
+        /// It is not appropriate for any setting marked [ApplicationScopedSetting]
+        /// </summary>
+        public static string EncryptString(string str)
+        {
+            return Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(str), null, DataProtectionScope.CurrentUser));
+        }
+
+        public static string DecryptString(string str)
+        {
+            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(str), null, DataProtectionScope.CurrentUser));
         }
     }
 }

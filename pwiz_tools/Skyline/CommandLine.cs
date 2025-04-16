@@ -32,6 +32,7 @@ using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
@@ -912,7 +913,7 @@ namespace pwiz.Skyline
                 }
                 else
                 {
-                    sharedFileName = FileEx.GetTimeStampedFileName(_skylineFile);
+                    sharedFileName = FileTimeEx.GetTimeStampedFileName(_skylineFile);
                 }
                 var sharedFilePath = Path.Combine(sharedFileDir, sharedFileName);
                 if (!ShareDocument(_doc, _skylineFile, sharedFilePath, commandArgs.SharedFileType, _out, commandArgs))
@@ -4510,7 +4511,7 @@ namespace pwiz.Skyline
                 {
                     return false;
                 }
-                var zipFilePath = FileEx.GetTimeStampedFileName(documentPath);
+                var zipFilePath = FileTimeEx.GetTimeStampedFileName(documentPath);
                 var published = false;
                 if (ShareDocument(document, documentPath, zipFilePath, selectedShareType, _statusWriter, commandArgs))
                 {

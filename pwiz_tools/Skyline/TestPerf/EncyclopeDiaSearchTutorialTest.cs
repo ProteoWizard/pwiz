@@ -33,6 +33,8 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Util;
 using System;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.ToolsUI;
@@ -343,7 +345,7 @@ namespace TestPerf
                 ValidateTargets(ref _analysisValues.FinalTargetCounts, proteinCount, peptideCount, precursorCount, transitionCount, @"FinalTargetCounts");
                 //emptyProteinsDlg.CancelDialog();
             });
-
+            PauseTest();
             using (new WaitDocumentChange(null, true, 60000 * 120))
             {
                 OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);

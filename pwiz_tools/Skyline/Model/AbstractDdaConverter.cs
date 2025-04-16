@@ -17,6 +17,7 @@
  */
 
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model

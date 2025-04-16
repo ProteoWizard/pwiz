@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.XPath;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Serialization

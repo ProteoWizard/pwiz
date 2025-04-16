@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using Ionic.Zip;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;

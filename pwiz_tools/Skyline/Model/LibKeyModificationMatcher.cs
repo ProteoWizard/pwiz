@@ -23,6 +23,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model
 {

@@ -986,7 +986,7 @@ namespace TestRunner
                             for (int i = 0; i < normalWorkerCount; ++i)
                             {
                                 int i2 = i;
-                                Helpers.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, workerInfoByName, log, coverageSnapshots), 4, 3000);
+                                TryHelper.Try<Exception>(() => LaunchAndWaitForDockerWorker(i2, commandLineArgs, ref workerNames, false, perWorkerBytes, workerPort, workerInfoByName, log, coverageSnapshots), 4, 3000);
                             }
                         }
                         else

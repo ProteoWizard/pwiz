@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 
 namespace pwiz.Skyline.Model.Results
 {

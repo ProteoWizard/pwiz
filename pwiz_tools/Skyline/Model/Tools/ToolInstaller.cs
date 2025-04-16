@@ -26,6 +26,7 @@ using System.Xml.Serialization;
 using Ionic.Zip;
 using Kajabity.Tools.Java;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -424,7 +425,7 @@ namespace pwiz.Skyline.Model.Tools
 
                 if (retval.ValidToolsFound.Count != 0)
                 {
-                    Helpers.TryTwice(() => Directory.Move(tempToolPath, permToolPath),
+                    TryHelper.TryTwice(() => Directory.Move(tempToolPath, permToolPath),
                         $@"Directory.Move({tempToolPath}, {permToolPath})");
                 }
                 else if (retval.MessagesThrown.Count == 0)

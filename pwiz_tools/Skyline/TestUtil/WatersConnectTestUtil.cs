@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 
 namespace pwiz.SkylineTestUtil
 {

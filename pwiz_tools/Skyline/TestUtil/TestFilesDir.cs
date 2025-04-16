@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestUtil
             FullPath = TestContext.GetTestPath(DirectoryName);
             if (Directory.Exists(FullPath))
             {
-                Helpers.TryTwice(() => Directory.Delete(FullPath, true));
+                TryHelper.TryTwice(() => Directory.Delete(FullPath, true));
             }
             // where to place persistent (usually large, expensive to extract) files if any
             PersistentFiles = persistentFiles;
@@ -375,7 +375,7 @@ namespace pwiz.SkylineTestUtil
                 RemoveReadonlyFlags(path);
                 try
                 {
-                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                    TryHelper.TryTwice(() => Directory.Delete(path, true));
                 }
                 catch (Exception e)
                 {
@@ -392,14 +392,14 @@ namespace pwiz.SkylineTestUtil
 
             try
             {
-                Helpers.TryTwice(() => Directory.Move(path, guidName));
+                TryHelper.TryTwice(() => Directory.Move(path, guidName));
             }
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
                 try
                 {
-                    Helpers.TryTwice(() => Directory.Delete(path, true));
+                    TryHelper.TryTwice(() => Directory.Delete(path, true));
                     return; // If this succeeds then the lock was only temporary and we don't have a GUID folder to move back.
                 }
                 catch (Exception e)
@@ -411,14 +411,14 @@ namespace pwiz.SkylineTestUtil
             // Move the file back to where it was, and fail if this throws
             try
             {
-                Helpers.TryTwice(() => Directory.Move(guidName, path));
+                TryHelper.TryTwice(() => Directory.Move(guidName, path));
             }
             catch (IOException)
             {
                 try
                 {
                     // Useful for debugging. Exception names file that is locked.
-                    Helpers.TryTwice(() => Directory.Delete(guidName, true));
+                    TryHelper.TryTwice(() => Directory.Delete(guidName, true));
                 }
                 catch (Exception e)
                 {

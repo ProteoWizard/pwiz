@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.Controls;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;

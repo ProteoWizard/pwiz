@@ -30,6 +30,7 @@ using System.Xml.Serialization;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.CommonMsData;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;

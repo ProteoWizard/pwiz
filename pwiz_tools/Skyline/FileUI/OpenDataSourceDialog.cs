@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Util;
 
 
