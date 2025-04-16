@@ -655,4 +655,7 @@
   <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
     <value>从 {1} 下载 Skyline 文档 {0} 时出错。</value>
   </data>
+  <data name="OpenFileDialogNE_OpenFileDialogNE_Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
 </root>

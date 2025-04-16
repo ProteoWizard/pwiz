@@ -104,7 +104,7 @@
     <value>ファイル</value>
   </data>
   <data name="Category_MatchInfo" xml:space="preserve">
-    <value>検索</value>
+    <value>一致</value>
   </data>
   <data name="Category_PrecursorInfo" xml:space="preserve">
     <value>プリカーサー</value>

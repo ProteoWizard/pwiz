@@ -2493,6 +2493,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ArdiaLoginDlg.resx">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.ja.resx">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
@@ -2654,6 +2655,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.ja.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
@@ -2677,6 +2679,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.zh-CHS.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
@@ -2899,9 +2902,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.ja.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.zh-CHS.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
@@ -4302,6 +4307,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
