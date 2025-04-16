@@ -713,9 +713,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                 e.Effect = DragDropEffects.None;
             }
 
-            // Re-paint as the mouse moves over drop targets so the insert line also repaints
-            // CONSIDER: invalidate a more specific region
-            filesTree.Invalidate();
+            // Re-paint "current" and surrounding nodes as the mouse moves so
+            // selection and the insert line repaint correctly
+            filesTree.InvalidateNode((FilesTreeNode)node.PrevVisibleNode);
+            filesTree.InvalidateNode(node);
 
             // CONSIDER: does setting AutoScroll on the form negate the need for this code?
             // Scroll the tree if near the top or bottom edge
@@ -752,8 +753,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             _nodeTip.HideTip();
 
-            // Order matters! Do this first to either short-circuit if attempting to select an un-draggable
-            // node or collect nodes to drag
+            // Warning - order matters! Do this first to either short-circuit if attempting to
+            // select an un-draggable node or collect nodes to drag
             var draggedNodes = new List<FilesTreeNode>();
             foreach (var node in selectedNodes)
             {
@@ -834,11 +835,14 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             e.Effect = e.AllowedEffect;
 
+            // Save a ref to the currently selected node so it can repaint
+            // once selection is cleared
+            var tmp = filesTree.SelectedNode;
+
             filesTree.SelectedNode = null;
             filesTree.SelectedNodes.Clear();
 
-            // CONSIDER: invalidate a more specific region
-            filesTree.Invalidate();
+            filesTree.InvalidateNode((FilesTreeNode)tmp);
 
             ShowRemoveDropTarget(true);
         }
@@ -880,7 +884,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             FilesTree.IsDragAndDrop = false;
 
-            // CONSIDER: invalidate a more specific region
             FilesTree.Invalidate();
 
             _dropTargetRemove.Visible = false;

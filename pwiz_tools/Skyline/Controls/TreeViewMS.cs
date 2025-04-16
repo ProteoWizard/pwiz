@@ -338,8 +338,11 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        protected void InvalidateNode(TreeNodeMS node)
+        public void InvalidateNode(TreeNodeMS node)
         {
+            if (node == null || IsInUpdate)
+                return;
+
             Invalidate(new Rectangle(0, node.BoundsMS.Top, ClientRectangle.Width, node.BoundsMS.Height));
         }
 
