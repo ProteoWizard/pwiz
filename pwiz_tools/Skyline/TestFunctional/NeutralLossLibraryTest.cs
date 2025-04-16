@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     /// Summary description for LibraryExplorerTest
     /// </summary>
     [TestClass]
-    public class NeutralLossLibraryTest : AbstractFunctionalTest
+    public class NeutralLossLibraryTest : AbstractFunctionalTestEx
     {
         private const string TEXT_FASTA_SPROT =
             ">sp|P04075|ALDOA_HUMAN Fructose-bisphosphate aldolase A OS=Homo sapiens GN=ALDOA PE=1 SV=2\n" +
@@ -325,12 +325,29 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => { menuControl.Dispose(); });
 
+            TestGlycanLossAnnotationsControl();
         }
 
-        public static void AssertLossLabelCount(int lossLabelCount, int lossSpectrumPeaksCount)
+        private void TestGlycanLossAnnotationsControl()
+        {
+            OpenDocument(TestFilesDir.GetTestPath("CD166_neutral_loss_test_small.sky"));
+            RunUI(() => SkylineWindow.ShowPrecursorIon(true));  // Interesting losses are from the precursor
+            MenuControl<IonTypeSelectionPanel> menuControl = null;
+            WaitForGraphs();
+            RunUI(() =>
+            {
+                menuControl = new MenuControl<IonTypeSelectionPanel>(SkylineWindow.GraphSpectrumSettings,
+                    SkylineWindow.DocumentUI.Settings.PeptideSettings);
+                // Make sure losses are visible by default after the document load.
+                AssertLossLabelCount(4, 4, true);
+                AssertLossControlButtonCount(menuControl, 17, 9);
+            });
+        }
+
+        public static void AssertLossLabelCount(int lossLabelCount, int lossSpectrumPeaksCount, bool precursors = false)
         {
             //find all annotations with losses
-            var lossLabelMatch = new Regex(@"(\D)(\d+) -([^ +]+).*");
+            var lossLabelMatch = new Regex(precursors ? $"({IonType.precursor.GetLocalizedString()}) -([^ +]+).*" : @"(\D)(\d+) -([^ +]+).*");
             var ionLabelsWithLoss = SkylineWindow.GraphSpectrum.IonLabels
                 .Select(label => lossLabelMatch.Match(label)).ToList().FindAll(m => m.Success).ToList();
             Assert.AreEqual(lossLabelCount, ionLabelsWithLoss.Count);
@@ -349,8 +366,8 @@ namespace pwiz.SkylineTestFunctional
                 label,
                 ion = ionsWithLosses.Find(
                     ion => label.Groups[1].Value.Equals(ion.IonType.GetLocalizedString()) &&
-                           label.Groups[2].Value.Equals(ion.Ordinal.ToString()) &&
-                           Math.Abs(ion.Losses.Mass - double.Parse(label.Groups[3].Value)) < 0.1)
+                           (precursors || label.Groups[2].Value.Equals(ion.Ordinal.ToString())) &&
+                           Math.Abs(ion.Losses.Mass - double.Parse(label.Groups[label.Groups.Count - 1].Value)) < 0.1)
             });
 
             Assert.AreEqual(lossLabelCount, matchedList.Count());
