@@ -318,12 +318,9 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             else
             {
                 batchNames.Add(chromatogramSet.BatchName);
-                if (Document.Settings.PeptideSettings.Imputation.ImputeMissingPeaks)
-                {
-                    batchNames.Add(null);
-                }
             }
 
+            var targets = Document.Settings.GetTargets(peptideDocNode.Target, peptideDocNode.ExplicitMods).ToImmutable();
             foreach (var batchName in batchNames)
             {
                 foreach (var library in Document.Settings.PeptideSettings.Libraries.Libraries)
@@ -342,7 +339,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     }
 
                     var libraryInfo = GetLibraryInfo(library, batchName);
-                    var targets = Document.Settings.GetTargets(peptideDocNode.Target, peptideDocNode.ExplicitMods).ToImmutable();
                     var exemplaryPeak = libraryInfo.GetExemplaryPeak(cancellationToken, targets);
                     if (exemplaryPeak == null)
                     {
@@ -443,7 +439,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         {
             if (peakBounds == null)
             {
-                return false;
+                return !imputationSettings.ImputeMissingPeaks;
             }
             if (imputationSettings.MaxRtShift.HasValue)
             {

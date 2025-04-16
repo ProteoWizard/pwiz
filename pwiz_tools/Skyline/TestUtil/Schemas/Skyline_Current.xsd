@@ -310,8 +310,7 @@
         <xs:complexType>
           <xs:attribute name="max_rt_shift" type="xs:double" />
           <xs:attribute name="max_peak_width_var" type="xs:double" />
-          <xs:attribute name="rt_calc" type="xs:string" />
-          <xs:attribute name="regression_method" type="xs:string" />
+          <xs:attribute name="impute_missing" type="xs:boolean" />
         </xs:complexType>
       </xs:element>
     </xs:sequence>
