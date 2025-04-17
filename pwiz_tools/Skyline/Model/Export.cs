@@ -37,6 +37,8 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -4898,16 +4900,13 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            //  TODO   ZZZ   MUST Uncomment
-
-            // if(fileName != null)
-            //     EnsureLibraries();
+            if(fileName != null)
+                EnsureLibraries();
 
             if (!InitExport(fileName, progressMonitor))
             {
                 return;
             }
-
 
             var argv = new List<string>();
             if (Equals(MethodInstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
@@ -4978,6 +4977,43 @@ namespace pwiz.Skyline.Model
                 if (!File.Exists(destFile) || !Equals(File.GetLastWriteTime(destFile), File.GetLastWriteTime(srcFile)))
                     File.Copy(srcFile, destFile, true);
             }
+        }
+    }
+
+    public class WatersConnectMethodExporter : WatersMassListExporter
+    {
+        private RemoteSession _wcSession;
+        public WatersConnectMethodExporter(SrmDocument document, RemoteSession wcSession)
+            : base(document)
+        {
+            _wcSession = wcSession;
+        }
+        public void ExportMethod(string fileName, string fileFolderId, string templateId, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+        }
+
+        public WatersConnect.MethodModel ParseMethod(string outputLines)
+        {
+            var outputReader = new StringReader(outputLines);
+            var headerLine = outputReader.ReadLine();
+            var lines = outputReader.ReadToEnd()?.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            if (lines == null || lines.Length == 0)
+                return null;
+            var methodLines = lines.Select(line => line.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)).ToList();
+
+            var res = new WatersConnect.MethodModel();
+            foreach (var field in res.GetType().GetFields())
+            {
+                var columnAttribute = field.GetCustomAttributes(false).ToList().OfType<WatersConnect.ColumnNameAttribute>().FirstOrDefault();
+                if (columnAttribute != null)
+                {
+                    columnAttribute.InitIndex(headerLine);
+                }
+            }
+
+            return null;
         }
     }
 

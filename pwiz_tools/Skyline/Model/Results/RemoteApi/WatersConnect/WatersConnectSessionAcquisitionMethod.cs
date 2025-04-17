@@ -54,20 +54,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
 
-            if (response.StatusCode ==  HttpStatusCode.Forbidden) // 403
+            if (IsGetAcquisitionMethodsNotAllowed(response))
             {
-                if (!IsGetAcquisitionMethodsNotAllowed(response))
-                {
-                    response.EnsureSuccessStatusCode();
-                }
-
-                return ImmutableList<WatersConnectAcquisitionMethodObject>.EMPTY; // return empty when response message contains "NoFolderAccess"
+                return ImmutableList<WatersConnectAcquisitionMethodObject>.Singleton(WatersConnectAcquisitionMethodObject.NO_ACCESS_INDICATOR);
             }
-             
-            response.EnsureSuccessStatusCode();
-            
-            // 
+
             string responseBody = response.Content.ReadAsStringAsync().Result;
+            EnsureSuccess(response.StatusCode, responseBody);
+            
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
             {
@@ -146,14 +140,26 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
 
                 if (TryGetData(GetAcquisitionMethodsUrl(watersConnectUrl), out acquisitionMethods))
                 {
-                    foreach (var acquisitionMethod in acquisitionMethods)
+                    if (acquisitionMethods.Any(method =>
+                            method == WatersConnectAcquisitionMethodObject.NO_ACCESS_INDICATOR))
                     {
-                        var childUrl = watersConnectUrl.ChangeAcquisitionMethodId(acquisitionMethod.Id)
-                            .ChangeFolderOrSampleSetId(watersConnectUrl.FolderOrSampleSetId)
-                            .ChangeType(WatersConnectUrl.ItemType.acquisition_method)
-                            .ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] { acquisitionMethod.Name }))
-                            .ChangeModifiedTime(acquisitionMethod.ModifiedDateTime);
-                        yield return new RemoteItem(childUrl, acquisitionMethod.Name, DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD, null, 0);
+                        yield return
+                            new RemoteItem(null, "No access to acquisition methods in this folder.",
+                                DataSourceUtil.NO_ACCESS, DateTime.Now, Int64.MinValue);
+                    }
+                    else
+                    {
+                        foreach (var acquisitionMethod in acquisitionMethods)
+                        {
+                            var childUrl = watersConnectUrl.ChangeAcquisitionMethodId(acquisitionMethod.Id)
+                                .ChangeFolderOrSampleSetId(watersConnectUrl.FolderOrSampleSetId)
+                                .ChangeType(WatersConnectUrl.ItemType.acquisition_method)
+                                .ChangePathParts(watersConnectUrl.GetPathParts()
+                                    .Concat(new[] { acquisitionMethod.Name }))
+                                .ChangeModifiedTime(acquisitionMethod.ModifiedDateTime);
+                            yield return new RemoteItem(childUrl, acquisitionMethod.Name,
+                                DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD, null, 0);
+                        }
                     }
                 }
             }

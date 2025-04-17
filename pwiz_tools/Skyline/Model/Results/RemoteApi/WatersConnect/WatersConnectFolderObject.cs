@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 using Newtonsoft.Json.Linq;
+using pwiz.Skyline.FileUI;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
 {
@@ -61,6 +62,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             }
             // ReSharper restore LocalizableElement
             ParentId = parentId;
+        }
+
+        public override WatersConnectUrl ToUrl(WatersConnectUrl currentConnectUrl)
+        {
+            return (WatersConnectUrl)currentConnectUrl
+                .ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+                .ChangeFolderOrSampleSetId(Id)
+                .ChangePathParts(UrlPath.Split(Path));
         }
     }
 }

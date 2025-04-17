@@ -18,8 +18,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using IdentityModel.Client;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
@@ -74,11 +77,53 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             yield return new WatersConnectFolderObject(currentFolder, parentId, false);
         }
 
+        /// <summary>
+        /// Checks if an object (folder, data file, method etc.) exists on the remote server. If the path begins with a slash, 
+        /// it is assumed to be an absolute path. otherwise it is checked relative to the current directory.
+        /// </summary>
+        /// <param name="path">remote path to check.</param>
+        /// <param name="fullPath">absolute path built from the path and current directory</param>
+        /// <param name="currentDirectory">current directory on the remote server</param>
+        /// <returns>true if the folder exists.</returns>
+        public virtual bool PathExists(string path, out WatersConnectUrl fullPath, RemoteUrl currentDirectory)
+        {
+            if (!(currentDirectory is WatersConnectUrl watersCurrentDirectory))
+            {
+                fullPath = null;
+                return false;
+            }
+            if (!UrlPath.IsRooted(path))
+                path = UrlPath.Combine(currentDirectory.EncodedPath, path);
+
+            var foldersUrl = GetRootContentsUrl();
+            fullPath = null;
+            ImmutableList<WatersConnectFolderObject> folders;
+            if (TryGetData(foldersUrl, out folders))
+            {
+                var folder = folders.FirstOrDefault(folder => folder.Path.Equals(path));
+                if (folder != null)
+                {
+                    fullPath = folder.ToUrl(watersCurrentDirectory);
+                    return true;
+                }
+            }
+            var sampleSetsUrl = GetSampleSetsUrl(watersCurrentDirectory);
+            return false;
+        }
+
+        protected void EnsureSuccess(System.Net.HttpStatusCode status,  string responseBody)
+        {
+            if (status != System.Net.HttpStatusCode.OK)
+            {
+                throw new RemoteServerException(string.Format("Waters Connect server returnes an error: {0}", responseBody));
+            }
+        }
         protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
+            EnsureSuccess(response.StatusCode, responseBody);
             var jsonObject = JObject.Parse(responseBody);
 
             var foldersValue = jsonObject[@"children"] as JArray;
@@ -94,6 +139,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
+            EnsureSuccess(response.StatusCode, responseBody);
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
             {
@@ -109,6 +155,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
+            EnsureSuccess(response.StatusCode, responseBody);
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
             {

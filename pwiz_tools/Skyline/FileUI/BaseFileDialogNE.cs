@@ -473,9 +473,14 @@ namespace pwiz.Skyline.FileUI
                     {
                         //  TODO  ZZZ  Should the Image vary based on the file type?
 
-                        var imageIndex = DataSourceUtil.IsFolderType(item.Type)
-                            ? ImageIndex.Folder
-                            : ImageIndex.MassSpecFile;
+                        ImageIndex imageIndex = item.Type switch
+                        {
+                            DataSourceUtil.FOLDER_TYPE => ImageIndex.Folder,
+                            DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD => ImageIndex.MethodFile,
+                            DataSourceUtil.NO_ACCESS => ImageIndex.NoAccess,    
+                            _ => ImageIndex.MassSpecFile
+                        };
+
                         listSourceInfo.Add(new SourceInfo(item.MsDataFileUri)
                         {
                             name = item.Label,
@@ -591,10 +596,12 @@ namespace pwiz.Skyline.FileUI
 
                     ListViewItem item = new ListViewItem(sourceInfo.ToArray(), (int) sourceInfo.imageIndex)
                     {
-                        Tag = sourceInfo,
+                        Tag = sourceInfo
                     };
                     item.SubItems[2].Tag = sourceInfo.size;
                     item.SubItems[3].Tag = sourceInfo.dateModified;
+                    if (sourceInfo.imageIndex == ImageIndex.NoAccess)
+                        item.Font = new Font(listView.Font, FontStyle.Italic);
                         
                     items.Add(item);
                 }
@@ -773,12 +780,19 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private void sourcePathTextBox_GotFocus(object sender, EventArgs e)
+        {
+            listView.SelectedItems.Clear();
+        }
+
         private void listView_ItemActivate( object sender, EventArgs e )
         {
-            if (listView.SelectedItems.Count == 0)
+            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList()
+                .FindAll(item => item.ImageIndex != (int)ImageIndex.NoAccess);
+            if (selected.Count == 0)
                 return;
 
-            ListViewItem item = listView.SelectedItems[0];
+            ListViewItem item = selected[0];
             if( DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
             {
                 OpenFolderItem(item);
@@ -802,6 +816,33 @@ namespace pwiz.Skyline.FileUI
                 _previousDirectories.Push(_currentDirectory);
             CurrentDirectory = uri;
             _abortPopulateList = true;
+        }
+
+        protected void OpenFolderFromTextBox()
+        {
+            var fileOrDirName = sourcePathTextBox.Text;
+            bool exists;
+            bool triedAddingDirectory = false;
+            while (!(exists = ((File.Exists(fileOrDirName) || Directory.Exists(fileOrDirName)))))
+            {
+                if (triedAddingDirectory)
+                    break;
+                MsDataFilePath currentDirectoryPath = CurrentDirectory as MsDataFilePath;
+                if (null == currentDirectoryPath)
+                    break;
+                fileOrDirName = Path.Combine(currentDirectoryPath.FilePath, fileOrDirName);
+                triedAddingDirectory = true;
+            }
+            if (exists)
+            {
+                if (DataSourceUtil.IsDataSource(fileOrDirName))
+                {
+                    FileNames = new[] { MsDataFileUri.Parse(fileOrDirName) };
+                    DialogResult = DialogResult.OK;
+                }
+                else if (Directory.Exists(fileOrDirName))
+                    OpenFolder(new MsDataFilePath(fileOrDirName));
+            }
         }
 
         private void listView_ColumnClick( object sender, ColumnClickEventArgs e )
@@ -931,10 +972,13 @@ namespace pwiz.Skyline.FileUI
 
         private void listView_ItemSelectionChanged( object sender, ListViewItemSelectionChangedEventArgs e )
         {
-            if( listView.SelectedItems.Count > 1 )
+            var selected = listView.SelectedItems.OfType<ListViewItem>().ToList()
+                .FindAll(item => item.ImageIndex != (int)ImageIndex.NoAccess);
+
+            if (selected.Count > 1 )
             {
                 List<string> dataSourceList = new List<string>();
-                foreach( ListViewItem item in listView.SelectedItems )
+                foreach( ListViewItem item in selected)
                 {
                     if( !DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
                         // ReSharper disable LocalizableElement
@@ -1182,6 +1226,8 @@ namespace pwiz.Skyline.FileUI
             Folder,
             MassSpecFile,
             UnknownFile,
+            NoAccess,
+            MethodFile
         }
 
         private void EnsureRemoteAccount()

@@ -36,6 +36,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             return property.Value.ToString();
         }
 
+        public virtual WatersConnectUrl ToUrl(WatersConnectUrl currentConnectUrl)
+        {
+            return currentConnectUrl;
+
+        }
+
         public static DateTime? GetDateProperty(JObject jobject, string propertyName)
         {
             string value = GetProperty(jobject, propertyName);

@@ -165,6 +165,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                     data = default(T);
                     return false;
                 }
+                if (remoteResponse.Exception != null)
+                {
+                    data = default(T);
+                    return false;
+                }
                 data = (T) remoteResponse.Data;
                 return true;
             }
@@ -195,7 +200,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             public RemoteServerException Exception { get; private set; }
         }
 
-        private struct RequestKey
+        protected struct RequestKey
         {
             public RequestKey(Type type, Uri uri) : this()
             {

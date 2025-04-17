@@ -68,7 +68,7 @@ namespace pwiz.Skyline.FileUI
 
 
         //  TODO  ZZZ Save this to Settings.Default.ExportMethodTemplateList instead???
-        private WatersConnectUrl _watersConnectUrl_MethodTemplate;
+        private WatersConnectUrl _watersConnectTemplate;
 
         private readonly ExportDlgProperties _exportProperties;
 
@@ -838,20 +838,15 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog(string outputPath)
         {
-            MessageDlg.Show(this, @"ZZZ: HARD CODED:  outputPath.  HARD CODED parts so NOT final code");
-
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 //  Export to Waters Connect
-
-                if (_watersConnectUrl_MethodTemplate == null)
+                if (_watersConnectTemplate == null)
                 {
                     MessageDlg.Show(this, "Instrument Type is Waters Connect but Template file is not selected from Waters Connect");
-
                     return;
                 }
             }
-
 
             var helper = new MessageBoxHelper(this, true);
 
@@ -1139,14 +1134,10 @@ namespace pwiz.Skyline.FileUI
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 ExportToWatersConnect(documentExport);
-
-
             }
             else
             {
                 //  Export to Local File
-
-
                 if (outputPath == null)
                 {
                     string title = Text;
@@ -1278,22 +1269,25 @@ namespace pwiz.Skyline.FileUI
         /// 
         /// </summary>
         /// <param name="documentExport"></param>
-        private void ExportToWatersConnect(SrmDocument documentExport)
+        private bool ExportToWatersConnect(SrmDocument documentExport)
         {
-            var watersConnectUrl_MethodTemplate = _watersConnectUrl_MethodTemplate;
+            var watersConnectUrl_MethodTemplate = _watersConnectTemplate;
 
             //  Select Output Folder and Name
+            MsDataFileUri targetPath = null;
+            using (var saveDlg = new SaveWatersConnectMethodDialogNE(
+                       Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>().Select(a => a as RemoteAccount).ToList(), null))
+            {
+                saveDlg.InitialDirectory = _watersConnectTemplate.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+                    .ChangePathParts(UrlPath.GetFilePathParts(_watersConnectTemplate.EncodedPath)); ;
 
-            //  TODO  ZZZ  Replace this with "Save" dialog results
+                if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return false;
+                }
 
-
-            //  Hard code to same Folder as template and hard code output name to "Fake..."
-            var outputFolderPathPartsList = new List<string>();
-            outputFolderPathPartsList.Add("FakeExportName");
-
-            var watersConnectUrl_ExportMethod = (WatersConnectUrl)watersConnectUrl_MethodTemplate.ChangePathParts(outputFolderPathPartsList);
-
-
+                targetPath = saveDlg.FileNames.FirstOrDefault();
+            }
 
             //  Duplicated from "Export to local file" code
             _exportProperties.PolarityFilter = comboPolarityFilter.Enabled
@@ -1304,22 +1298,8 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.ExportDirectory = null;
 
 
-
-
-            //  Export to Waters Connect
-
-            //  TODO  ZZZ   NEED CODE HERE
-
-
-            //  Export to Waters Connect
-
-            //  TODO  ZZZ  Export Waters Connect Need Code
-
-
-            MessageDlg.Show(this, "ZZZ  Export Waters Connect Need Code for Webservice POST. AcquisitionMethodId: " + _watersConnectUrl_MethodTemplate.AcquisitionMethodId
-            + ", Exporting to folderId: " + watersConnectUrl_ExportMethod.FolderOrSampleSetId);
-
-            //  TODO First show Save Dialog to get folder id and name to export to
+            // TODO [RC]  Export Waters Connect Need Code for Webservice POST. AcquisitionMethodId: " + _watersConnectTemplate.AcquisitionMethodId+ ",
+            // Exporting to folderId: " + watersConnectUrl_ExportMethod.FolderOrSampleSetId);
 
             //  TODO  Next make webservice call to Waters Connect
 
@@ -1330,7 +1310,7 @@ namespace pwiz.Skyline.FileUI
             try
             {
 
-                var exporter = _exportProperties.InitExporter(new WatersMethodExporter(documentExport)
+                var exporter = _exportProperties.InitExporter(new WatersConnectMethodExporter(documentExport)
                 {
                     MethodInstrumentType = ExportInstrumentType.WATERS_QUATTRO_PREMIER
                 });
@@ -1343,16 +1323,6 @@ namespace pwiz.Skyline.FileUI
                 try
                 {
 
-                    //  TODO   ZZZ  Critical: MUST Uncomment code in 'public class WatersMethodExporter : WatersMassListExporter'
-
-                    MessageDlg.Show(this, "ZZZ  Critical: MUST Uncomment code in 'public class WatersMethodExporter : WatersMassListExporter'");
-
-                    //  Code in 'public class WatersMethodExporter : WatersMassListExporter':
-
-                    //  TODO   ZZZ   MUST Uncomment
-
-                    // if(fileName != null)
-                    //     EnsureLibraries();
 
                     MessageDlg.Show(this, "Before Call: exporter.ExportMethod(null /* fileName */, \"FakeTemplateNameUnused\" /* templateName */, null /* m */ );");
 
@@ -1513,9 +1483,9 @@ namespace pwiz.Skyline.FileUI
 
                 var watersConnect_WebserviceCall_Root = new WatersConnect_WebserviceCall_Root();
 
-                watersConnect_WebserviceCall_Root.name = watersConnectUrl_ExportMethod.GetFileName();
+                watersConnect_WebserviceCall_Root.name = watersConnectUrl_MethodTemplate.GetFileName();
                 watersConnect_WebserviceCall_Root.description = "Skyline Export Initial Testing with Hard Coding";
-                watersConnect_WebserviceCall_Root.destinationFolderId = watersConnectUrl_ExportMethod.FolderOrSampleSetId;
+                watersConnect_WebserviceCall_Root.destinationFolderId = _watersConnectTemplate.FolderOrSampleSetId;
                 watersConnect_WebserviceCall_Root.templateMethodId = watersConnectUrl_MethodTemplate.AcquisitionMethodId;
 
                 watersConnect_WebserviceCall_Root.targets = targets;
@@ -1565,13 +1535,13 @@ namespace pwiz.Skyline.FileUI
             {
                 MessageDlg.ShowException(this, x);
                 // _exportProperties.ShowMessages = wasShowMessageValue;
-                return;
+                return false;
             }
             catch (IOException x)
             {
                 MessageDlg.ShowException(this, x);
                 // _exportProperties.ShowMessages = wasShowMessageValue;
-                return;
+                return false;
             }
 
             //  memoryOutput_Local_MEMORY_KEY_ROOT_String contains:  "protein.name,peptide.seq,precursor.mz,precursor.retT,product.m_z,collision_energy,cone_voltage,peptide_unmod.seq,ion_name,library_rank\r\nMolecules,Reserpine.[M+],609.280658,15,609.280658,21,35,Reserpine,precursor,-1\r\nMolecules,C8H10N4O2.[M+H],195.087652,15,195.087652,6,35,C8H10N4O2,precursor,-1\r\nMolecules,Uracil.[M-H],111.020001,15,111.020001,3,35,Uracil,precursor,-1\r\n"
@@ -1586,7 +1556,7 @@ namespace pwiz.Skyline.FileUI
             //  So one option is to generate that string and parse it to create the objects for the JSON.
 
             //      This approach changes or removes any embedded ',' separators which is not needed for creating JSON so may be an undesirable side effect.
-
+            return true;
         }
 
         private class WatersConnect_WebserviceCall_Root
@@ -2113,7 +2083,7 @@ namespace pwiz.Skyline.FileUI
             {
                 //  Waters Connect - Always reset to empty since currently NOT storing _watersConnect_TemplateMethodId in Settings.Default.ExportMethodTemplateList
                 textTemplateFile.Text = string.Empty;
-                _watersConnectUrl_MethodTemplate = null;
+                _watersConnectTemplate = null;
             }
 
 
@@ -2498,54 +2468,31 @@ namespace pwiz.Skyline.FileUI
 
             if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
-                MessageDlg.Show(this, @"ZZZ: Browse for WATERS_CONNECT_INSTRUMENT Template.  Need to filter Settings.Default.RemoteAccountList to ONLY Waters Connect.  Preferable to only allow user to create Waters Connect connections.");
-
-                //  TODO  ZZZ  Need to filter Settings.Default.RemoteAccountList to ONLY Waters Connect
-                //  TODO  ZZZ  Preferable to only allow user to create Waters Connect connections
-
-                //  !!!  DOES NOT WORK to filter Settings.Default.RemoteAccountList and pass that in
-                //          since BaseFileDialogNE class expects only Settings.Default.RemoteAccountList to be passed in.
-                //          BaseFileDialogNE class interchangeably uses Settings.Default.RemoteAccountList with the private field it copies the passed in ctor param to.
-
-                // IList<RemoteAccount> remoteAccountsFiltered = null;
-                //
-                // if (Settings.Default.RemoteAccountList != null)
-                // {
-                //     remoteAccountsFiltered = new RemoteAccountList();
-                //     foreach (var remoteAccount in Settings.Default.RemoteAccountList)
-                //     {
-                //         if (remoteAccount.AccountType == RemoteAccountType.WATERS_CONNECT)
-                //         {
-                //             remoteAccountsFiltered.Add(remoteAccount);
-                //         }
-                //     }
-                // }
-
-                //   Remove 'remoteAccountTypeCreationRestriction' since not used
-
-                // IList<RemoteAccountType> remoteAccountTypeCreationRestriction = new List<RemoteAccountType>();
-                // remoteAccountTypeCreationRestriction.Add(RemoteAccountType.WATERS_CONNECT);
-
-                using (var dlgOpen = new OpenFileDialogNEWatersConnectMethod(Settings.Default.RemoteAccountList, null))
+                using (var dlgOpen = new OpenFileDialogNEWatersConnectMethod(
+                           Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>().Select(a => a as RemoteAccount).ToList(), null))
                 {
-                   dlgOpen.Text = "Select Template";
-                   // The dialog expects null to mean no directory was supplied, so don't assign
-                   // an empty string.
-                   string initialDir = null; // Settings.Default.Srm; // Path.GetDirectoryName(documentSavedPath) ?? Settings.Default.SrmResultsDirectory;
-                   if (string.IsNullOrEmpty(initialDir))
-                       initialDir = null;
+                    dlgOpen.Text = "Select Template";
 
-                   //  TODO  ZZZ   FAKE since not appears to properly use initialDir
-                   initialDir = null;
+                    if (_watersConnectTemplate != null)
+                    {   // if the template is already set, use its path as the initial directory
+                        dlgOpen.InitialDirectory = _watersConnectTemplate.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+                            .ChangePathParts(UrlPath.GetFilePathParts(_watersConnectTemplate.EncodedPath)); ;
+                    }
+                    else
+                    {
+                        var acctList = Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>().ToList();
+                        if (acctList.Count() == 1)  // if there is only one account, set the initial directory to its root path
+                            dlgOpen.InitialDirectory = acctList.First().GetRootUrl();
+                        else
+                            dlgOpen.InitialDirectory = RemoteUrl.EMPTY;
+                    }
+                    
+                    // Use saved source type, if there is one.
+                    string sourceType = null; // Settings.Default.SrmResultsSourceType;
+                    if (!string.IsNullOrEmpty(sourceType))
+                        dlgOpen.SourceTypeName = sourceType;
 
-
-                   dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
-                   // Use saved source type, if there is one.
-                   string sourceType = null; // Settings.Default.SrmResultsSourceType;
-                   if (!string.IsNullOrEmpty(sourceType))
-                       dlgOpen.SourceTypeName = sourceType;
-
-                   if (dlgOpen.ShowDialog(this) != DialogResult.OK)
+                    if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                        return;
 
 
@@ -2582,7 +2529,7 @@ namespace pwiz.Skyline.FileUI
 
 
 
-                    _watersConnectUrl_MethodTemplate = watersConnectUrl;
+                    _watersConnectTemplate = watersConnectUrl;
 
                     textTemplateFile.Text = watersConnectUrl.GetFilePath();
 
@@ -2593,7 +2540,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             //  Clear since not Waters Connect
-            _watersConnectUrl_MethodTemplate = null;
+            _watersConnectTemplate = null;
 
 
             string templateName = textTemplateFile.Text;

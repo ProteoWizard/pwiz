@@ -77,36 +77,8 @@ namespace pwiz.Skyline.FileUI
             try
             {
                 // perhaps the user has typed an entire filename into the text box - or just garbage
-                var fileOrDirName = sourcePathTextBox.Text;
-                bool exists;
-                bool triedAddingDirectory = false;
-                while (!(exists = ((File.Exists(fileOrDirName) || Directory.Exists(fileOrDirName)))))
-                {
-                    if (triedAddingDirectory)
-                        break;
-                    MsDataFilePath currentDirectoryPath = CurrentDirectory as MsDataFilePath;
-                    if (null == currentDirectoryPath)
-                    {
-                        break;
-                    }
-                    fileOrDirName = Path.Combine(currentDirectoryPath.FilePath, fileOrDirName);
-                    triedAddingDirectory = true;
-                }
-
-                if (exists)
-                {
-                    if (DataSourceUtil.IsDataSource(fileOrDirName))
-                    {
-                        FileNames = new[] { MsDataFileUri.Parse(fileOrDirName) };
-                        DialogResult = DialogResult.OK;
-                        return;
-                    }
-                    else if (Directory.Exists(fileOrDirName))
-                    {
-                        OpenFolder(new MsDataFilePath(fileOrDirName));
-                        return;
-                    }
-                }
+                OpenFolderFromTextBox();
+                // TODO: Make sure it can open the file from the text box remotely
             }
             // ReSharper disable once EmptyGeneralCatchClause
             catch { } // guard against user typed-in-garbage

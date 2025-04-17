@@ -38,5 +38,12 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         public DateTime? CreatedAt { get; private set; }
         public DateTime? ModifiedAt { get; private set; }
         public DateTime? AcquisitionDateTime { get; private set; }
+
+        public override WatersConnectUrl ToUrl(WatersConnectUrl currentConnectUrl)
+        {
+            return currentConnectUrl
+                .ChangeType(WatersConnectUrl.ItemType.acquisition_method)
+                .ChangeInjectionId(Id);
+        }
     }
 }

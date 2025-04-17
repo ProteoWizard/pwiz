@@ -65,6 +65,7 @@ namespace pwiz.Skyline.Util
         public const string TYPE_WATERS_ACQUISITION_METHOD = "Waters acquisition method";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
+        public const string NO_ACCESS = "No access to methods";
         // ReSharper restore LocalizableElement
 
         public static bool IsDataSource(string path)
