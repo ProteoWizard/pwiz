@@ -583,7 +583,7 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading Cuda software library....
+        ///   Looks up a localized string similar to Downloading Nvidia Cuda Toolkit and Deep Neural Network software..
         /// </summary>
         public static string PythonInstaller_Downloading_Cuda_Library {
             get {
@@ -601,7 +601,7 @@ namespace pwiz.Skyline.ToolsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Cuda software library....
+        ///   Looks up a localized string similar to Installing Nvidia Cuda Toolkit and Deep Neural Network software..
         /// </summary>
         public static string PythonInstaller_Installing_Cuda_Library {
             get {

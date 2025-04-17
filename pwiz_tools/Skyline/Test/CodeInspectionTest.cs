@@ -184,7 +184,7 @@ namespace pwiz.SkylineTest
                     numberToleratedAsWarnings); // Number of existing known failures that we'll tolerate as warnings instead of errors, so no more get added while we wait to fix the rest
             }
 
-            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 36);
+            AddForbiddenUIInspection(@"*.cs", @"namespace pwiz.Skyline.Model", @"Skyline model code must not depend on UI code", 37);
             // Looking for CommandLine.cs and CommandArgs.cs code depending on UI code
             AddForbiddenUIInspection(@"CommandLine.cs", @"namespace pwiz.Skyline", @"CommandLine code must not depend on UI code", 2);
             AddForbiddenUIInspection(@"CommandArgs.cs", @"namespace pwiz.Skyline", @"CommandArgs code must not depend on UI code");
@@ -849,6 +849,8 @@ namespace pwiz.SkylineTest
 
             InspectPInvokeApi(root, results);
 
+            InspectRedundantCsprojResourcesFromSolution(root, results); // Look for images in .csproj files that are redundant with the RESX entries
+
             var errorCounts = new Dictionary<PatternDetails, int>();
 
             foreach (var fileMask in allFileMasks)
@@ -1144,12 +1146,13 @@ namespace pwiz.SkylineTest
                 //       is difficult for one or more reasons including:
                 //        * Includes > 20 LOC modeling Win32 types
                 //        * Uses unsafe methods
+
                 @"Util\MemoryInfo.cs", 
                 @"Util\UtilIO.cs",
                 @"TestRunner\UnusedPortFinder.cs",
                 @"TestRunnerLib\RunTests.cs",
                 @"TestRunnerLib\MiniDump.cs",
-                @"TestUtil\FileLockingProcessFinder.cs",
+                @"SystemUtil\FileLockingProcessFinder.cs",
 
                 // Ignore 3rd party libraries
                 @"Executables"
@@ -1252,6 +1255,99 @@ namespace pwiz.SkylineTest
             if (numberToleratedAsWarnings > 0)
             {
                 patternsWithToleranceCounts.Add(patternDetails); // Track these so we know when more are tolerated than necessary
+            }
+        }
+
+        private void InspectRedundantCsprojResourcesFromSolution(string root, List<string> errors)
+        {
+            var redundancyExceptions = new Dictionary<string, HashSet<string>>
+            {
+                // The Skyline document icons need to be Content to be registered with the system
+                {"Skyline.csproj", new HashSet<string>{"Skyline_Daily.ico", "Skyline.ico", "SkylineData.ico", "SkylineDoc.ico"}}
+            };
+
+            string slnPath = Path.Combine(root, "Skyline.sln");
+            if (!File.Exists(slnPath))
+            {
+                errors.Add("Could not find Skyline.sln to inspect project resource redundancy.");
+                return;
+            }
+
+            var csprojPaths = File.ReadAllLines(slnPath)
+                .Where(line => line.Trim().StartsWith("Project(") && line.Contains(".csproj"))
+                .Select(line =>
+                {
+                    var parts = line.Split('"');
+                    return parts.Length >= 6 ? GetFullPath(root, parts[5].Replace('\\', Path.DirectorySeparatorChar)) : null;
+                })
+                .Where(File.Exists)
+                .ToList();
+
+            foreach (var csprojPath in csprojPaths)
+            {
+                var csprojName = Path.GetFileName(csprojPath);
+                var projectDir = Path.GetDirectoryName(csprojPath);
+                if (projectDir == null)
+                    continue;
+
+                var resxPath = Path.Combine(projectDir, "Properties", "Resources.resx");
+                if (!File.Exists(resxPath))
+                    continue;
+
+                var resxDoc = XDocument.Load(resxPath);
+                var resxDir = Path.GetDirectoryName(resxPath) ?? string.Empty;
+                var resxFiles = resxDoc.Descendants("data")
+                    .Where(d =>
+                        d.Attribute("type")?.Value.StartsWith("System.Resources.ResXFileRef") == true &&
+                        d.Element("value") != null)
+                    .Select(d =>
+                    {
+                        var relativePath = d.Element("value")!.Value.Split(';')[0].Trim();
+                        var absolutePath = GetFullPath(resxDir, relativePath);
+                        return absolutePath;
+                    })
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var csprojDoc = XDocument.Load(csprojPath);
+                var includedFiles = csprojDoc.Descendants()
+                    .Where(e =>
+                        // e.Name.LocalName == "None" ||    // Okay as a way to increase visibility in project files
+                        e.Name.LocalName == "Content" ||
+                        e.Name.LocalName == "EmbeddedResource")
+                    .Select(e => e.Attribute("Include")?.Value)
+                    .Where(path => !string.IsNullOrEmpty(path) && !path.Contains("*")) // Avoid wildcard paths like *.xsd
+                    .ToList();
+
+                var redundantItems = includedFiles
+                    .Select(path => new
+                    {
+                        Original = path,
+                        Absolute = GetFullPath(projectDir, path)
+                    })
+                    .Where(p => resxFiles.Contains(p.Absolute))
+                    .Select(p => p.Original)
+                    .ToList();
+
+                foreach (var item in redundantItems)
+                {
+                    if (redundancyExceptions.TryGetValue(csprojName, out var fileExceptions) && fileExceptions.Contains(item))
+                        continue;
+
+                    errors.Add($"Redundant resource declaration in {csprojName}: \"{item}\" is already embedded via Resources.resx.");
+                }
+            }
+        }
+
+        private string GetFullPath(string rootDir, string relativePath)
+        {
+            try
+            {
+                return Path.GetFullPath(Path.Combine(rootDir, relativePath));
+            }
+            catch (Exception e)
+            {
+                Assert.Fail($"Unexpected error creating full path from '{rootDir}' and relative path '{relativePath}'", e);
+                return null;
             }
         }
     }

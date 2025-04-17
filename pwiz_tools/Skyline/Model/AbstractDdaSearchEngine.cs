@@ -34,10 +34,22 @@ namespace pwiz.Skyline.Model
 {
     public abstract class AbstractDdaSearchEngine : IDisposable
     {
+        public class MzToleranceUnits
+        {
+            public MzToleranceUnits(string name, MzTolerance.Units unit)
+            {
+                Name = name;
+                Unit = unit;
+            }
+
+            public string Name { get; }
+            public MzTolerance.Units Unit { get; }
+        }
+
         public abstract string[] FragmentIons { get; }
         public abstract string[] Ms2Analyzers { get; }
-        public virtual MzTolerance.Units[] PrecursorIonToleranceUnitTypes { get; } = { MzTolerance.Units.mz, MzTolerance.Units.ppm };
-        public virtual MzTolerance.Units[] FragmentIonToleranceUnitTypes { get; } = { MzTolerance.Units.mz, MzTolerance.Units.ppm };
+        public virtual MzToleranceUnits[] PrecursorIonToleranceUnitTypes { get; } = { new MzToleranceUnits(@"Da", MzTolerance.Units.mz), new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm) };
+        public virtual MzToleranceUnits[] FragmentIonToleranceUnitTypes { get; } = { new MzToleranceUnits(@"Da", MzTolerance.Units.mz), new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm) };
         public abstract string EngineName { get; }
         public abstract string CutoffScoreName { get; }
         public abstract string CutoffScoreLabel { get; }
@@ -123,8 +135,8 @@ namespace pwiz.Skyline.Model
                     case string s:
                         if (ValidValues?.Any(o => o.Equals(value)) == false)
                             throw new ArgumentOutOfRangeException(string.Format(
-                                "The value {0} is not valid for the argument {1} which must one of: {2}",
-                                s, Name, string.Join(@", ", ValidValues)));
+                                Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
+                                value, Name, string.Join(@", ", ValidValues)));
                         return value;
 
                     case bool b:

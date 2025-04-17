@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Alerts
         /// If the (optional) validateValue action throws an exception, a message box will show the user
         /// the exception message and the invalid textbox value will be returned to its previous value.
         /// </summary>
+
         public static void Show<TValue>(string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
             Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null, 
             Func<TValue, string> keyToName = null)
@@ -48,6 +49,7 @@ namespace pwiz.Skyline.Alerts
         /// If the (optional) validateValue action throws an exception, a message box will show the user
         /// the exception message and the invalid textbox value will be returned to its previous value.
         /// </summary>
+
         public static void Show<TValue>(IWin32Window parent, string title, IDictionary<string, TValue> gridValues, Func<TValue, string> valueToString,
             Action<string, TValue> stringToValue, Action<string, TValue> validateValue = null, Func<TValue, IEnumerable<string>> validValuesForValue = null, 
             Func<TValue, string> keyToName = null)
@@ -89,7 +91,20 @@ namespace pwiz.Skyline.Alerts
                 
 
                 Control valueControl = null;
-                if (bool.TryParse(valueToString(kvp.Value), out bool b))
+                var validValues = validValuesForValue?.Invoke(kvp.Value)?.ToArray();
+                if (validValues != null && validValues.Length > 0)
+                {
+                    var comboBox = new ComboBox
+                    {
+                        Dock = DockStyle.Fill,
+                        Height = lbl.Height,
+                        DropDownStyle = ComboBoxStyle.DropDownList
+                    };
+                    comboBox.Items.AddRange(validValues.Cast<object>().ToArray());
+                    comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
+                    valueControl = comboBox;
+                }
+                else if (bool.TryParse(valueToString(kvp.Value), out bool b))
                 {
                     valueControl = new CheckBox
                     {
@@ -98,22 +113,6 @@ namespace pwiz.Skyline.Alerts
                         Height = lbl.Height
                     };
                     valueControl.Margin = new Padding(valueControl.Margin.Left, 0, 0, 0);
-                }
-                else
-                {
-                    var validValues = validValuesForValue?.Invoke(kvp.Value)?.ToArray();
-                    if (validValues != null && validValues.Length > 0)
-                    {
-                        var comboBox = new ComboBox
-                        {
-                            Dock = DockStyle.Fill,
-                            Height = lbl.Height,
-                            DropDownStyle = ComboBoxStyle.DropDownList
-                        };
-                        comboBox.Items.AddRange(validValues.Cast<object>().ToArray());
-                        comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
-                        valueControl = comboBox;
-                    }
                 }
 
                 if (valueControl == null)

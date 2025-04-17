@@ -837,6 +837,7 @@ namespace pwiz.Skyline.SettingsUI
                                 labelRT.Text = TextUtil.TextSeparate(@"  ", labelRT.Text, ccsText, imText);
                             }
 
+
                             // Generates the object that will go into the property sheet
                             _currentProperties = spectrumInfo.CreateProperties(pepInfo, transitionGroupDocNode, _matcher, _currentProperties); 
                         }

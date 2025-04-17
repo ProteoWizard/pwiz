@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model
             public string ShortName { get { return StaticMod.ShortName; } }
             public ParsedMolecule Formula { get; private set; }
             public int? UnimodId { get { return StaticMod.UnimodId; } }
-            public string UnimodIdAA { get { return StaticMod.UnimodId + @":" + StaticMod.Name; } }
+            public string UnimodIdWithName { get { return StaticMod.UnimodId + @":" + StaticMod.Name; } }
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }
 

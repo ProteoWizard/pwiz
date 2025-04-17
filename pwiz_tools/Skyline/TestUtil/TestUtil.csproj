@@ -170,7 +170,6 @@
     <Compile Include="DllFinderTestUtil.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
-    <Compile Include="FileLockingProcessFinder.cs" />
     <Compile Include="GitFileHelper.cs" />
     <Compile Include="KoinaTestUtil.cs" />
     <Compile Include="MultiFormActivator.cs" />
@@ -300,8 +299,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\DiskFailure.png" />
-    <EmbeddedResource Include="Resources\larrow-cur.bmp" />
+    <None Include="Resources\DiskFailure.png" />
+    <None Include="Resources\larrow-cur.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

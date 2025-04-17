@@ -313,7 +313,6 @@ namespace {
         public:
         static constexpr const TSVColumnTranslator requiredColumns[] =
         {
-            {"IonMobility", -1, TSVLine::insertIonMobility},
             {"StrippedPeptide", -1, TSVLine::insertStrippedSequence},
             {"FragmentCharge", -1, TSVLine::insertFragmentCharge},
             {"FragmentLossType", -1, TSVLine::insertFragmentLossType},
@@ -331,6 +330,9 @@ namespace {
         static constexpr const TSVColumnTranslator optionalColumns[] =
         {
             {"ProteinId", -1, TSVLine::insertProteinName},
+            {"IonMobility", -1, TSVLine::insertIonMobility},
+            {"IonMobilityUnits", -1, TSVLine::insertIonMobilityUnits},
+            {"CollisionalCrossSection", -1, TSVLine::insertCollisionalCrossSection},
             {"CollisionEnergy", -1, TSVLine::insertCE},
             {"PrecursorIonMobility", -1, TSVLine::insertIonMobility}
         };
@@ -442,7 +444,11 @@ namespace {
                 if (line.ionMobility > 0)
                 {
                     currentPsm->ionMobility = line.ionMobility;
-                    currentPsm->ionMobilityType = IONMOBILITY_DRIFTTIME_MSEC;
+                    currentPsm->ionMobilityType = line.ionMobilityUnits;
+                    currentPsm->ccs = line.collisionalCrossSectionSqA;
+                }
+                else if (line.collisionalCrossSectionSqA > 0) {
+                    currentPsm->ccs = line.collisionalCrossSectionSqA;
                 }
             }
 
@@ -1052,7 +1058,7 @@ std::shared_ptr<TSVReader> TSVReader::create(BlibBuilder& maker, const char* tsv
         return std::static_pointer_cast<TSVReader>(std::make_shared<OpenSwathResultReader>(maker, tsvName, parentProgress));
     if (OpenSwathAssayReader::hasExpectedColumns(headerLine))
         return std::make_shared<OpenSwathAssayReader>(maker, tsvName, parentProgress);
-    throw BlibException(false, "Did not find required columns. Only OpenSWATH result, OpenSWATH assay, and Paser .tsv files are supported.");
+    throw BlibException(false, "Did not find required columns. Only OpenSWATH result, OpenSWATH assay, AlphaPepDeep, and Paser .tsv files are supported.");
 }
 
 void TSVReader::parseHeader(LineParser& headerLine, vector<TSVColumnTranslator>& targetColumns, vector<TSVColumnTranslator>& optionalColumns) {
@@ -1205,6 +1211,7 @@ bool TSVReader::getSpectrum(PSM* psm, SPEC_ID_TYPE findBy, SpecData& returnData,
     returnData.startTime = ((TSVPSM*)psm)->leftWidth;
     returnData.endTime = ((TSVPSM*)psm)->rightWidth;
     returnData.mz = ((TSVPSM*)psm)->mz;
+    returnData.ccs = ((TSVPSM*)psm)->ccs;
     returnData.numPeaks = ((TSVPSM*)psm)->mzs.size();
 
     if (getPeaks) {

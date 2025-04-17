@@ -27,6 +27,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using JetBrains.Annotations;
 using log4net;
@@ -230,6 +231,52 @@ namespace TestRunnerLib
         public static bool WriteMiniDumps
         {
             get { return false; }
+        }
+
+        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
+        public void RetryAction([InstantHandle] Action act, int maxRetries = 100)
+        {
+            int retry = 0;
+
+            while (retry++ < maxRetries)
+            {
+                try
+                {
+                    act();
+                    break;
+                }
+                catch (Exception x)
+                {
+                    // if it's a file locking issue, wrap the exception to report the locking process
+                    if (x is IOException ioException && ioException.HResult == ERROR_SHARING_VIOLATION)
+                    {
+                        var match = Regex.Match(ioException.Message, "'(.*)'");
+                        if (match.Success)
+                        {
+                            string lockedFilepath = match.Captures[0].Value.Trim('\'');
+                            if (!File.Exists(lockedFilepath))
+                            {
+                                x = new IOException(
+                                    string.Format("file '{0}' was locked but has since been deleted", lockedFilepath),
+                                    x);
+                            }
+                            else
+                            {
+                                int currentProcessId = Process.GetCurrentProcess().Id;
+                                Func<int, string> pidOrThisProcess = pid =>
+                                    pid == currentProcessId ? "this process" : $"PID: {pid}";
+                                var processesLockingFile =
+                                    FileLockingProcessFinder.GetProcessesUsingFile(lockedFilepath);
+                                var names = string.Join(@", ",
+                                    processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                                x = new IOException(string.Format("file '{0}' locked by: {1}", lockedFilepath, names),
+                                    x);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public RunTests(
@@ -504,7 +551,7 @@ namespace TestRunnerLib
                 {
                     if (Directory.Exists(tmpTestDir))
                     {
-                        Directory.Delete(tmpTestDir, true);
+                        RetryAction(() => { Directory.Delete(tmpTestDir, true); });
                     }
                 }
                 catch (Exception deleteException)

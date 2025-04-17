@@ -696,7 +696,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return RTGraphItem.RetentionPrediction; }
         }
-
+        public double? PredictedCCS
+        {
+            get { return RTGraphItem.CCSPrediction; }
+        }
         private ChromGraphItem RTGraphItem
         {
             get { return GetGraphItems(graphControl.GraphPane).Last(); }
@@ -1149,6 +1152,12 @@ namespace pwiz.Skyline.Controls.Graphs
                             break;
                         case DisplayTypeChrom.qc:
                             message = GraphsResources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
+                            break;
+                        default:
+                            if (Settings.Default.ShowQuantitativeOnly)
+                            {
+                                message = GraphsResources.GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found;
+                            }
                             break;
                     }
                     SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
@@ -1640,7 +1649,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AlignmentFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
-            if (tranPeakInfo == null || chromatogramInfo == null)
+            if (tranPeakInfo == null || chromatogramInfo == null || tranPeakInfo.IsEmpty)
                 return; // Nothing to shade
             if (chromatogramInfo.TransformChrom.IsDerivative())
             {
@@ -2286,6 +2295,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodeGroups, lookupSequence, lookupMods);
+
+            
+            var libKey = nodeGroups[0].GetLibKey(settings, nodePeps[0]);
+            LibraryIonMobilityInfo libImInfo;
+
+            if (settings.PeptideSettings.Libraries.TryGetSpectralLibraryIonMobilities(new[] { libKey },
+                    chromGraphPrimary.Chromatogram.FilePath, out libImInfo))
+            {
+                var ccs = libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey);
+                if (ccs != null)
+                {
+                    chromGraphPrimary.CCSPrediction = ccs; 
+                }
+            }
+
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,

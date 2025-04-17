@@ -61,15 +61,6 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Building library....
-        /// </summary>
-        public static string BuildingPrecursorTable_Building_library {
-            get {
-                return ResourceManager.GetString("BuildingPrecursorTable_Building_library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Accession: {0}, Name: {1}, Comment: {2}.
         /// </summary>
         public static string BuildPrecursorTable_ModificationType {
@@ -79,7 +70,7 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case..
+        ///   Looks up a localized string similar to Warning: Peptide {0} has modification with Unimod accession {1}, which is not unique, Skyline will use modification {2} in this case..
         /// </summary>
         public static string BuildPrecursorTable_NonUnique_ModificationAccession {
             get {
@@ -88,7 +79,7 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by {2} LibraryBuilder. This peptide will be skipped!.
+        ///   Looks up a localized string similar to Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which is not yet supported by the {2} prediction tool. This peptide will be skipped!.
         /// </summary>
         public static string BuildPrecursorTable_Unimod_UnsupportedModification {
             get {
@@ -97,7 +88,7 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has Modification {1}, which is missing unimod ID and unknown to {2} LibraryBuilder. This peptide will be skipped!.
+        ///   Looks up a localized string similar to Warning: Peptide {0} has modification {1}, which is missing a Unimod ID and is unknown to the {2} prediction tool. This peptide will be skipped!.
         /// </summary>
         public static string BuildPrecursorTable_UnsupportedModification {
             get {

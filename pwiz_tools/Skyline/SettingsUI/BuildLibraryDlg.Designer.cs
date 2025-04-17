@@ -72,12 +72,13 @@
             this.label2 = new System.Windows.Forms.Label();
             this.tabControlMain = new pwiz.Skyline.Controls.WizardPages();
             this.tabLearn = new System.Windows.Forms.TabPage();
+            this.labelLearnFrom = new System.Windows.Forms.Label();
             this.tabControlLearning = new pwiz.Skyline.Controls.WizardPages();
             this.tabWithFiles = new System.Windows.Forms.TabPage();
-            this.buttonDoc = new System.Windows.Forms.Button();
+            this.buttonTrainingDoc = new System.Windows.Forms.Button();
             this.buttonMsMsData = new System.Windows.Forms.Button();
             this.labelDoc = new System.Windows.Forms.Label();
-            this.textBoxDoc = new System.Windows.Forms.TextBox();
+            this.textBoxTrainingDoc = new System.Windows.Forms.TextBox();
             this.labelMsMsData = new System.Windows.Forms.Label();
             this.textBoxMsMsData = new System.Windows.Forms.TextBox();
             this.tabPageDocument = new System.Windows.Forms.TabPage();
@@ -110,7 +111,6 @@
             this.checkedListBox1 = new System.Windows.Forms.CheckedListBox();
             this.label11 = new System.Windows.Forms.Label();
             this.comboLearnFrom = new System.Windows.Forms.ComboBox();
-            this.labelLearnFrom = new System.Windows.Forms.Label();
             this.comboBuildLibraryTarget = new System.Windows.Forms.ComboBox();
             this.labelBuildLibraryTarget = new System.Windows.Forms.Label();
             this.btnPrevious = new System.Windows.Forms.Button();
@@ -358,6 +358,7 @@
             resources.ApplyResources(this.carafeSettings, "carafeSettings");
             this.carafeSettings.Name = "carafeSettings";
             this.carafeSettings.TabStop = true;
+            this.carafeSettings.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.carafeSettings_LinkClicked);
             // 
             // radioCarafeSource
             // 
@@ -427,15 +428,20 @@
             // tabLearn
             // 
             this.tabLearn.BackColor = System.Drawing.SystemColors.Control;
+            this.tabLearn.Controls.Add(this.labelLearnFrom);
             this.tabLearn.Controls.Add(this.tabControlLearning);
             this.tabLearn.Controls.Add(this.tabControlBuildLibraryTarget);
             this.tabLearn.Controls.Add(this.wizardPages1);
             this.tabLearn.Controls.Add(this.comboLearnFrom);
-            this.tabLearn.Controls.Add(this.labelLearnFrom);
             this.tabLearn.Controls.Add(this.comboBuildLibraryTarget);
             this.tabLearn.Controls.Add(this.labelBuildLibraryTarget);
             resources.ApplyResources(this.tabLearn, "tabLearn");
             this.tabLearn.Name = "tabLearn";
+            // 
+            // labelLearnFrom
+            // 
+            resources.ApplyResources(this.labelLearnFrom, "labelLearnFrom");
+            this.labelLearnFrom.Name = "labelLearnFrom";
             // 
             // tabControlLearning
             // 
@@ -450,36 +456,38 @@
             // tabWithFiles
             // 
             this.tabWithFiles.BackColor = System.Drawing.SystemColors.Control;
-            this.tabWithFiles.Controls.Add(this.buttonDoc);
+            this.tabWithFiles.Controls.Add(this.buttonTrainingDoc);
             this.tabWithFiles.Controls.Add(this.buttonMsMsData);
             this.tabWithFiles.Controls.Add(this.labelDoc);
-            this.tabWithFiles.Controls.Add(this.textBoxDoc);
+            this.tabWithFiles.Controls.Add(this.textBoxTrainingDoc);
             this.tabWithFiles.Controls.Add(this.labelMsMsData);
             this.tabWithFiles.Controls.Add(this.textBoxMsMsData);
             resources.ApplyResources(this.tabWithFiles, "tabWithFiles");
             this.tabWithFiles.Name = "tabWithFiles";
             // 
-            // buttonDoc
+            // buttonTrainingDoc
             // 
-            resources.ApplyResources(this.buttonDoc, "buttonDoc");
-            this.buttonDoc.Name = "buttonDoc";
-            this.buttonDoc.UseVisualStyleBackColor = true;
+            resources.ApplyResources(this.buttonTrainingDoc, "buttonTrainingDoc");
+            this.buttonTrainingDoc.Name = "buttonTrainingDoc";
+            this.buttonTrainingDoc.UseVisualStyleBackColor = true;
+            this.buttonTrainingDoc.Click += new System.EventHandler(this.buttonTrainingDoc_Click);
             // 
             // buttonMsMsData
             // 
             resources.ApplyResources(this.buttonMsMsData, "buttonMsMsData");
             this.buttonMsMsData.Name = "buttonMsMsData";
             this.buttonMsMsData.UseVisualStyleBackColor = true;
+            this.buttonMsMsData.Click += new System.EventHandler(this.buttonMsMsData_Click);
             // 
             // labelDoc
             // 
             resources.ApplyResources(this.labelDoc, "labelDoc");
             this.labelDoc.Name = "labelDoc";
             // 
-            // textBoxDoc
+            // textBoxTrainingDoc
             // 
-            resources.ApplyResources(this.textBoxDoc, "textBoxDoc");
-            this.textBoxDoc.Name = "textBoxDoc";
+            resources.ApplyResources(this.textBoxTrainingDoc, "textBoxTrainingDoc");
+            this.textBoxTrainingDoc.Name = "textBoxTrainingDoc";
             // 
             // labelMsMsData
             // 
@@ -559,6 +567,7 @@
             resources.ApplyResources(this.buttonProteinDatabase, "buttonProteinDatabase");
             this.buttonProteinDatabase.Name = "buttonProteinDatabase";
             this.buttonProteinDatabase.UseVisualStyleBackColor = true;
+            this.buttonProteinDatabase.Click += new System.EventHandler(this.buttonProteinDatabase_Click);
             // 
             // labelProteinDatabase
             // 
@@ -577,9 +586,9 @@
             // 
             // tabPage1
             // 
+            this.tabPage1.BackColor = System.Drawing.SystemColors.Control;
             resources.ApplyResources(this.tabPage1, "tabPage1");
             this.tabPage1.Name = "tabPage1";
-            this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // wizardPages1
             // 
@@ -689,11 +698,7 @@
             resources.GetString("comboLearnFrom.Items2")});
             resources.ApplyResources(this.comboLearnFrom, "comboLearnFrom");
             this.comboLearnFrom.Name = "comboLearnFrom";
-            // 
-            // labelLearnFrom
-            // 
-            resources.ApplyResources(this.labelLearnFrom, "labelLearnFrom");
-            this.labelLearnFrom.Name = "labelLearnFrom";
+            this.comboLearnFrom.SelectedIndexChanged += new System.EventHandler(this.comboLearnFrom_SelectedIndexChanged);
             // 
             // comboBuildLibraryTarget
             // 
@@ -704,6 +709,7 @@
             resources.GetString("comboBuildLibraryTarget.Items1")});
             resources.ApplyResources(this.comboBuildLibraryTarget, "comboBuildLibraryTarget");
             this.comboBuildLibraryTarget.Name = "comboBuildLibraryTarget";
+            this.comboBuildLibraryTarget.SelectedIndexChanged += new System.EventHandler(this.comboBuildLibraryTarget_SelectedIndexChanged);
             // 
             // labelBuildLibraryTarget
             // 
@@ -719,11 +725,9 @@
             // btnNext
             // 
             resources.ApplyResources(this.btnNext, "btnNext");
-            this.btnNext.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnNext.Name = "btnNext";
             this.btnNext.UseVisualStyleBackColor = true;
             this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
-
             // 
             // btnCancel
             // 
@@ -731,7 +735,6 @@
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // BuildLibraryDlg
             // 
@@ -856,10 +859,10 @@
         private System.Windows.Forms.Button btnCancel;
         private Controls.WizardPages tabControlLearning;
         private System.Windows.Forms.TabPage tabWithFiles;
-        private System.Windows.Forms.Button buttonDoc;
+        private System.Windows.Forms.Button buttonTrainingDoc;
         private System.Windows.Forms.Button buttonMsMsData;
         private System.Windows.Forms.Label labelDoc;
-        private System.Windows.Forms.TextBox textBoxDoc;
+        private System.Windows.Forms.TextBox textBoxTrainingDoc;
         private System.Windows.Forms.Label labelMsMsData;
         private System.Windows.Forms.TextBox textBoxMsMsData;
         private System.Windows.Forms.TabPage tabPageDocument;
@@ -874,6 +877,21 @@
         {
             get => textBoxMsMsData.Text;
             set => textBoxMsMsData.Text = value;
+        }
+        internal string TextBoxProteinDatabase
+        {
+            get => textBoxProteinDatabase.Text;
+            set => textBoxProteinDatabase.Text = value;
+        }
+        internal string TextBoxTrainingDoc
+        {
+            get => textBoxTrainingDoc.Text;
+            set => textBoxTrainingDoc.Text = value;
+        }
+        internal LearningOptions ComboLearnFrom
+        {
+            get => (LearningOptions) comboLearnFrom.SelectedIndex;
+            set => comboLearnFrom.SelectedIndex = (int) value;
         }
     }
 }

@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
@@ -75,7 +74,8 @@ namespace pwiz.Skyline.Model.Koina
             _replaceLibrary = replaceLibrary;
             IrtStandard = irtStandard;
             _nce = nce;
-            ToolName = @"koina";
+            //Name of the tool presented to the user for Warning messages
+            ToolName = @"Koina";
             LibraryHelper = new LibraryHelper(ToolName);
 
         }

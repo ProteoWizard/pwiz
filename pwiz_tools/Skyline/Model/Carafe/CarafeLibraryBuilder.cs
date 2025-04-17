@@ -73,16 +73,7 @@ namespace pwiz.Skyline.Model.Carafe
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
 
-        private LibraryHelper _libraryHelper;
-
-        public LibraryHelper LibraryHelper
-        {
-            get { return _libraryHelper; }
-            private set
-            {
-                _libraryHelper = value;
-            }
-        }
+        public LibraryHelper LibraryHelper { get; private set; }
 
         public string AmbiguousMatchesMessage
         {
@@ -143,17 +134,10 @@ namespace pwiz.Skyline.Model.Carafe
 
 
         private string _rootDir;
-
         private string RootDir
         {
-            get
-            {
-                return _rootDir;
-            }
-            set
-            {
-                _rootDir = value;
-            }
+            get => _rootDir;
+            set => _rootDir = value;
         }
 
 
@@ -163,7 +147,7 @@ namespace pwiz.Skyline.Model.Carafe
         {
             get
             {
-                InitializeLibraryHelper();
+                InitializeLibraryHelper(RootDir);
                 return Path.Combine(RootDir, CARAFE);
             }
         }
@@ -458,10 +442,10 @@ namespace pwiz.Skyline.Model.Carafe
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
-            ToolName = @"carafe";
+            ToolName = @"Carafe";
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
 
-            if (Document.DocumentHash != null || DbInputFilePath != null) InitializeLibraryHelper();
+            if (Document.DocumentHash != null || DbInputFilePath != null) InitializeLibraryHelper(RootDir);
 
             //if (LibraryHelper == null)
             //{
@@ -519,13 +503,13 @@ namespace pwiz.Skyline.Model.Carafe
 
         }
 
-        private void InitializeLibraryHelper()
+        private void InitializeLibraryHelper(string rootDir)
         {
             if (LibraryHelper == null)
             {
-                LibraryHelper = new LibraryHelper(CARAFE);
+                LibraryHelper = new LibraryHelper(rootDir, CARAFE);
                 //LibraryHelper.StampDateTimeNow();
-                RootDir = LibraryHelper.GetRootDir(CARAFE);
+                RootDir = LibraryHelper.GetRootDir(rootDir, CARAFE);
                 LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, ExperimentDataFilePath);
             }
         }
@@ -534,7 +518,7 @@ namespace pwiz.Skyline.Model.Carafe
             IProgressStatus progressStatus = new ProgressStatus();
             try
             {
-                InitializeLibraryHelper();
+                InitializeLibraryHelper(RootDir);
                 
                 Directory.CreateDirectory(RootDir);
                 Directory.CreateDirectory(JavaDir);

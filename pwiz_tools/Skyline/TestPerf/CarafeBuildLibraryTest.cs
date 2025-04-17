@@ -151,7 +151,7 @@ namespace TestPerf
                 _buildLibraryDlg.Carafe = true;
                 _buildLibraryDlg.TextBoxMsMsDataFile = mzMLFile;
                 _buildLibraryDlg.TextBoxProteinDatabase = proteinDatabase;
-                _buildLibraryDlg.TextBoxDocumentFile = fineTuneFile;
+                _buildLibraryDlg.TextBoxTrainingDoc = fineTuneFile;
 
                 if (iRTtype != null) _buildLibraryDlg.IrtStandard = iRTtype;
             });

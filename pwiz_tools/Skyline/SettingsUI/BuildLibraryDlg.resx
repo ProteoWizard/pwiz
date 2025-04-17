@@ -486,7 +486,7 @@ of the redundant library data.</value>
     <value>gridInputFiles</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridInputFiles.Parent" xml:space="preserve">
     <value>tabFiles</value>
@@ -846,7 +846,7 @@ of the redundant library data.</value>
     <value>tabControlDataSource</value>
   </data>
   <data name="&gt;&gt;tabControlDataSource.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlDataSource.Parent" xml:space="preserve">
     <value>tabProperties</value>
@@ -1244,40 +1244,73 @@ of the redundant library data.</value>
   <data name="tabControlMain.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
+  <data name="labelLearnFrom.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelLearnFrom.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelLearnFrom.Location" type="System.Drawing.Point, System.Drawing">
+    <value>13, 193</value>
+  </data>
+  <data name="labelLearnFrom.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="labelLearnFrom.Size" type="System.Drawing.Size, System.Drawing">
+    <value>149, 20</value>
+  </data>
+  <data name="labelLearnFrom.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="labelLearnFrom.Text" xml:space="preserve">
+    <value>&amp;Tuning data source:</value>
+  </data>
+  <data name="&gt;&gt;labelLearnFrom.Name" xml:space="preserve">
+    <value>labelLearnFrom</value>
+  </data>
+  <data name="&gt;&gt;labelLearnFrom.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelLearnFrom.Parent" xml:space="preserve">
+    <value>tabLearn</value>
+  </data>
+  <data name="&gt;&gt;labelLearnFrom.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
   <data name="tabControlLearning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="buttonDoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+  <data name="buttonTrainingDoc.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
   </data>
-  <data name="buttonDoc.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+  <data name="buttonTrainingDoc.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
-  <data name="buttonDoc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>703, 99</value>
+  <data name="buttonTrainingDoc.Location" type="System.Drawing.Point, System.Drawing">
+    <value>703, 109</value>
   </data>
-  <data name="buttonDoc.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="buttonTrainingDoc.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 5, 4, 5</value>
   </data>
-  <data name="buttonDoc.Size" type="System.Drawing.Size, System.Drawing">
+  <data name="buttonTrainingDoc.Size" type="System.Drawing.Size, System.Drawing">
     <value>112, 35</value>
   </data>
-  <data name="buttonDoc.TabIndex" type="System.Int32, mscorlib">
+  <data name="buttonTrainingDoc.TabIndex" type="System.Int32, mscorlib">
     <value>15</value>
   </data>
-  <data name="buttonDoc.Text" xml:space="preserve">
+  <data name="buttonTrainingDoc.Text" xml:space="preserve">
     <value>&amp;Browse...</value>
   </data>
-  <data name="&gt;&gt;buttonDoc.Name" xml:space="preserve">
-    <value>buttonDoc</value>
+  <data name="&gt;&gt;buttonTrainingDoc.Name" xml:space="preserve">
+    <value>buttonTrainingDoc</value>
   </data>
-  <data name="&gt;&gt;buttonDoc.Type" xml:space="preserve">
+  <data name="&gt;&gt;buttonTrainingDoc.Type" xml:space="preserve">
     <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;buttonDoc.Parent" xml:space="preserve">
+  <data name="&gt;&gt;buttonTrainingDoc.Parent" xml:space="preserve">
     <value>tabWithFiles</value>
   </data>
-  <data name="&gt;&gt;buttonDoc.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;buttonTrainingDoc.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
   <data name="buttonMsMsData.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
@@ -1287,7 +1320,7 @@ of the redundant library data.</value>
     <value>NoControl</value>
   </data>
   <data name="buttonMsMsData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>703, 36</value>
+    <value>703, 46</value>
   </data>
   <data name="buttonMsMsData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 5, 4, 5</value>
@@ -1320,7 +1353,7 @@ of the redundant library data.</value>
     <value>NoControl</value>
   </data>
   <data name="labelDoc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 74</value>
+    <value>15, 84</value>
   </data>
   <data name="labelDoc.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
@@ -1346,28 +1379,28 @@ of the redundant library data.</value>
   <data name="&gt;&gt;labelDoc.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="textBoxDoc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 99</value>
+  <data name="textBoxTrainingDoc.Location" type="System.Drawing.Point, System.Drawing">
+    <value>15, 109</value>
   </data>
-  <data name="textBoxDoc.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+  <data name="textBoxTrainingDoc.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>4, 5, 4, 5</value>
   </data>
-  <data name="textBoxDoc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>652, 26</value>
+  <data name="textBoxTrainingDoc.Size" type="System.Drawing.Size, System.Drawing">
+    <value>670, 26</value>
   </data>
-  <data name="textBoxDoc.TabIndex" type="System.Int32, mscorlib">
+  <data name="textBoxTrainingDoc.TabIndex" type="System.Int32, mscorlib">
     <value>13</value>
   </data>
-  <data name="&gt;&gt;textBoxDoc.Name" xml:space="preserve">
-    <value>textBoxDoc</value>
+  <data name="&gt;&gt;textBoxTrainingDoc.Name" xml:space="preserve">
+    <value>textBoxTrainingDoc</value>
   </data>
-  <data name="&gt;&gt;textBoxDoc.Type" xml:space="preserve">
+  <data name="&gt;&gt;textBoxTrainingDoc.Type" xml:space="preserve">
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;textBoxDoc.Parent" xml:space="preserve">
+  <data name="&gt;&gt;textBoxTrainingDoc.Parent" xml:space="preserve">
     <value>tabWithFiles</value>
   </data>
-  <data name="&gt;&gt;textBoxDoc.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;textBoxTrainingDoc.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
   <data name="labelMsMsData.AutoSize" type="System.Boolean, mscorlib">
@@ -1377,7 +1410,7 @@ of the redundant library data.</value>
     <value>NoControl</value>
   </data>
   <data name="labelMsMsData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 12</value>
+    <value>14, 22</value>
   </data>
   <data name="labelMsMsData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 0, 6, 0</value>
@@ -1407,7 +1440,7 @@ of the redundant library data.</value>
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxMsMsData.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 40</value>
+    <value>15, 50</value>
   </data>
   <data name="textBoxMsMsData.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 8, 6, 8</value>
@@ -1674,7 +1707,7 @@ of the redundant library data.</value>
     <value>2</value>
   </data>
   <data name="tabControlLearning.Location" type="System.Drawing.Point, System.Drawing">
-    <value>10, 262</value>
+    <value>6, 279</value>
   </data>
   <data name="tabControlLearning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 8, 6, 8</value>
@@ -1689,13 +1722,13 @@ of the redundant library data.</value>
     <value>tabControlLearning</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.Parent" xml:space="preserve">
     <value>tabLearn</value>
   </data>
   <data name="&gt;&gt;tabControlLearning.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="tabControlBuildLibraryTarget.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -1770,7 +1803,7 @@ of the redundant library data.</value>
     <value>Top, Left, Right</value>
   </data>
   <data name="textBoxProteinDatabase.Location" type="System.Drawing.Point, System.Drawing">
-    <value>19, 37</value>
+    <value>15, 37</value>
   </data>
   <data name="textBoxProteinDatabase.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 8, 6, 8</value>
@@ -1899,13 +1932,13 @@ of the redundant library data.</value>
     <value>tabControlBuildLibraryTarget</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.Parent" xml:space="preserve">
     <value>tabLearn</value>
   </data>
   <data name="&gt;&gt;tabControlBuildLibraryTarget.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>2</value>
   </data>
   <data name="wizardPages1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -2352,13 +2385,13 @@ of the redundant library data.</value>
     <value>wizardPages1</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;wizardPages1.Parent" xml:space="preserve">
     <value>tabLearn</value>
   </data>
   <data name="&gt;&gt;wizardPages1.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>3</value>
   </data>
   <data name="comboLearnFrom.Items" xml:space="preserve">
     <value>Another Skyline Document</value>
@@ -2370,7 +2403,7 @@ of the redundant library data.</value>
     <value>DIA-NN Report Document</value>
   </data>
   <data name="comboLearnFrom.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 219</value>
+    <value>70, 219</value>
   </data>
   <data name="comboLearnFrom.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 8, 6, 8</value>
@@ -2391,39 +2424,6 @@ of the redundant library data.</value>
     <value>tabLearn</value>
   </data>
   <data name="&gt;&gt;comboLearnFrom.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
-  <data name="labelLearnFrom.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelLearnFrom.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelLearnFrom.Location" type="System.Drawing.Point, System.Drawing">
-    <value>13, 193</value>
-  </data>
-  <data name="labelLearnFrom.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>6, 0, 6, 0</value>
-  </data>
-  <data name="labelLearnFrom.Size" type="System.Drawing.Size, System.Drawing">
-    <value>149, 20</value>
-  </data>
-  <data name="labelLearnFrom.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="labelLearnFrom.Text" xml:space="preserve">
-    <value>&amp;Tuning data source:</value>
-  </data>
-  <data name="&gt;&gt;labelLearnFrom.Name" xml:space="preserve">
-    <value>labelLearnFrom</value>
-  </data>
-  <data name="&gt;&gt;labelLearnFrom.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelLearnFrom.Parent" xml:space="preserve">
-    <value>tabLearn</value>
-  </data>
-  <data name="&gt;&gt;labelLearnFrom.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="comboBuildLibraryTarget.Items" xml:space="preserve">
@@ -2433,7 +2433,7 @@ of the redundant library data.</value>
     <value>Current Skyline Document</value>
   </data>
   <data name="comboBuildLibraryTarget.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 38</value>
+    <value>70, 38</value>
   </data>
   <data name="comboBuildLibraryTarget.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
     <value>6, 8, 6, 8</value>
@@ -2532,7 +2532,7 @@ of the redundant library data.</value>
     <value>tabControlMain</value>
   </data>
   <data name="&gt;&gt;tabControlMain.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;tabControlMain.Parent" xml:space="preserve">
     <value>$this</value>
@@ -2664,7 +2664,7 @@ of the redundant library data.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2694,6 +2694,6 @@ of the redundant library data.</value>
     <value>BuildLibraryDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.471, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.472, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

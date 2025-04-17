@@ -333,7 +333,7 @@ It is recommended that you delete this file so that Skyline can create a new fil
     <value>Discarding chromatograms for '{0}' because the explicit retention time {1} is not between {2} and {3}</value>
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
-    <value>need a value for  Transition Settings  Ion mobility filtering  Window type</value>
+    <value>need a value for Transition Settings, Ion mobility filtering, Window type</value>
   </data>
   <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
     <value>mixed ion mobility types are not supported</value>

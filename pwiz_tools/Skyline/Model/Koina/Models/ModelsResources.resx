@@ -130,18 +130,15 @@
     <value>The charge {0} is not supported by Koina. The maximum supported charge is {1}.</value>
   </data>
   <data name="BuildPrecursorTable_UnsupportedModification" xml:space="preserve">
-    <value>Warning: Peptide {0} has Modification {1}, which is missing unimod ID and unknown to {2} LibraryBuilder. This peptide will be skipped!</value>
+    <value>Warning: Peptide {0} has modification {1}, which is missing a Unimod ID and is unknown to the {2} prediction tool. This peptide will be skipped!</value>
   </data>
   <data name="BuildPrecursorTable_Unimod_UnsupportedModification" xml:space="preserve">
-    <value>Warning: Peptide {0} has Modification {1} with unimod ID of UNIMOD:{2}, which is not yet supported by {2} LibraryBuilder. This peptide will be skipped!</value>
+    <value>Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which is not yet supported by the {2} prediction tool. This peptide will be skipped!</value>
   </data>
   <data name="BuildPrecursorTable_NonUnique_ModificationAccession" xml:space="preserve">
-    <value>Warning: Peptide {0} has Modification with UNIMOD Accession {1}, which is not unique, Skyline will use Modification {2} in this case.</value>
+    <value>Warning: Peptide {0} has modification with Unimod accession {1}, which is not unique, Skyline will use modification {2} in this case.</value>
   </data>
   <data name="BuildPrecursorTable_ModificationType" xml:space="preserve">
     <value>Accession: {0}, Name: {1}, Comment: {2}</value>
-  </data>
-  <data name="BuildingPrecursorTable_Building_library" xml:space="preserve">
-    <value>Building library...</value>
   </data>
 </root>

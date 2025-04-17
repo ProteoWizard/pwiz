@@ -78,20 +78,21 @@ namespace pwiz.Skyline.ToolsUI
                             {
                                 _userAnswerToCuda = @"Yes";
                                 pythonInstaller.WriteInstallNvidiaBatScript();
-                                AlertDlg adminMessageDlg =
-                                    new AlertDlg(
+                               
+                                MultiButtonMsgDlg adminMultiButtonMsgDlg = 
+                                    new MultiButtonMsgDlg(
                                         string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
-                                            PythonInstaller.InstallNvidiaLibrariesBat), MessageBoxButtons.OKCancel);
+                                            PythonInstaller.InstallNvidiaLibrariesBat), ModelResources.NvidiaInstaller_Install);
                                 
                                 //if (!PythonInstaller.IsRunningElevated())
                                  //   adminMessageDlg.FindButton(DialogResult.OK).Enabled = false;
 
-                                var nvidiaAdminChoice = adminMessageDlg.ShowDialog();
+                                var nvidiaAdminChoice = adminMultiButtonMsgDlg.ShowDialog();
                                 //Download
                                 if (nvidiaAdminChoice == DialogResult.Cancel)
                                 {
                                     _userAnswerToCuda = @"Cancel";
-                                    if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
+                                    if (!adminMultiButtonMsgDlg.IsDisposed) adminMultiButtonMsgDlg.Dispose();
                                     if (!EnableNvidiaGpuDlg.IsDisposed) EnableNvidiaGpuDlg.Dispose();
                                     if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                                     return nvidiaAdminChoice;
@@ -101,7 +102,7 @@ namespace pwiz.Skyline.ToolsUI
                                     // Attempt to run
                                     abortTask = !PerformTaskAction(parent, task);
                                 }
-                                if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
+                                if (!adminMultiButtonMsgDlg.IsDisposed) adminMultiButtonMsgDlg.Dispose();
                             }
                             if (!EnableNvidiaGpuDlg.IsDisposed) EnableNvidiaGpuDlg.Dispose();
 

@@ -32,7 +32,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Irt;
-using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
@@ -755,8 +754,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 Cursor.Current = Cursors.Default;
-
-                BuildLibrary(BuildLibraryDlg.Builder);
+                BuildLibrary(dlg.Builder);
             }
         }
 
@@ -785,13 +783,12 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            //_libraryManager.TestModifications();
             bool retry;
             do
             {
                 using (var longWaitDlg = new LongWaitDlg(_parent))
                 {
-                    longWaitDlg.Text = string.Format(ModelsResources.BuildingPrecursorTable_Building_library);
+                    longWaitDlg.Text = string.Format(ModelResources.BuildingPrecursorTable_Build_Library);
                     var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
                         _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
 
@@ -822,6 +819,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else if (status.IsCanceled)
                     {
+                        IsBuildingLibrary = false;
                         return;
                     }
 
