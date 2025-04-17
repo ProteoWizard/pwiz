@@ -26,7 +26,7 @@ namespace pwiz.SkylineTestFunctional
 {
     [TestClass]
     internal class FilesModelTest : AbstractFunctionalTest
-    {
+    { 
         [TestMethod]
         public void TestFilesModel()
         {
@@ -38,56 +38,78 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var documentPath = TestFilesDirs[0].GetTestPath("Rat_plasma.sky");
+
             RunUI(() => SkylineWindow.OpenFile(documentPath));
             WaitForOpenForm<SkylineWindow>();
             WaitForDocumentLoaded();
 
-            var settings = SkylineWindow.Document.Settings;
-            var files = new RootFileNode(SkylineWindow.Document, documentPath);
-            var originalChromatogram = settings.MeasuredResults.Chromatograms[0];
+            var docSettings = SkylineWindow.Document.Settings;
+            var modelFiles = new SkylineFile(SkylineWindow.Document, documentPath);
 
-            // <root>/replicates/
-            Assert.AreEqual(typeof(ReplicatesFolder), files.Files[0].GetType());
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms.Count, files.Files[0].Files.Count);
+            // <root>/
+            //      replicates/
+            var modelReplicatesFolder = modelFiles.Folder<ReplicatesFolder>();
+            Assert.IsTrue(ReferenceEquals(modelFiles.Files[0], modelReplicatesFolder));
+            Assert.AreEqual(typeof(ReplicatesFolder), modelReplicatesFolder.GetType());
+            Assert.AreEqual(docSettings.MeasuredResults.Chromatograms.Count, modelReplicatesFolder.Files.Count);
 
-            // <root>/replicates/replicate1/
-            //                                (reminder, replicate is a "folder" containing sample files)
-            Assert.AreEqual(typeof(Replicate), files.Files[0].Files[0].GetType());
-            Assert.IsTrue(ReferenceEquals(settings.MeasuredResults.Chromatograms[0], files.Files[0].Files[0].Immutable));
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].FileCount, files.Files[0].Files[0].Files.Count);
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].Id, files.Files[0].Files[0].IdentityPath.GetIdentity(0));
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].Name, files.Files[0].Files[0].Name);
-            Assert.AreEqual(Path.GetFileName(settings.MeasuredResults.Chromatograms[0].FilePath), files.Files[0].Files[0].FileName);
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].FilePath, files.Files[0].Files[0].FilePath);
+            // <root>/
+            //      replicates/
+            //          replicate1/
+            //          replicate2/
+            var docReplicate = docSettings.MeasuredResults.Chromatograms[0];
+            var modelReplicate = modelReplicatesFolder.Files[0];
+            Assert.AreEqual(typeof(Replicate), modelReplicate.GetType());
+            Assert.IsTrue(ReferenceEquals(docReplicate, modelReplicate.Immutable));
+            Assert.AreEqual(docReplicate.FileCount, modelReplicate.Files.Count);
+            Assert.AreEqual(docReplicate.Id, modelReplicate.IdentityPath.GetIdentity(0));
+            Assert.AreEqual(docReplicate.Name, modelReplicate.Name);
+            Assert.AreEqual(Path.GetFileName(docReplicate.FilePath), modelReplicate.FileName);
+            Assert.AreEqual(docSettings.MeasuredResults.Chromatograms[0].FilePath, modelReplicate.FilePath);
 
-            // <root>/replicates/replicate1/replicate-sample-file.raw
-            Assert.AreEqual(typeof(ReplicateSampleFile), files.Files[0].Files[0].Files[0].GetType());
-            Assert.IsTrue(ReferenceEquals(settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0], files.Files[0].Files[0].Files[0].Immutable));
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].Id, files.Files[0].Files[0].Files[0].IdentityPath.GetIdentity(1));
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].Name, files.Files[0].Files[0].Files[0].Name);
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath.GetFilePath(), files.Files[0].Files[0].Files[0].FilePath);
+            // <root>/
+            //      replicates/
+            //          replicate1/
+            //              replicate-sample-file.raw
+            var docSampleFile = docReplicate.MSDataFileInfos[0];
+            var modelSampleFile = modelReplicate.Files[0];
+            Assert.AreEqual(typeof(ReplicateSampleFile), modelSampleFile.GetType());
+            Assert.IsTrue(ReferenceEquals(docSampleFile, modelSampleFile.Immutable));
+            Assert.AreEqual(docSampleFile.Id, modelSampleFile.IdentityPath.GetIdentity(1));
+            Assert.AreEqual(docSampleFile.Name, modelSampleFile.Name);
+            Assert.AreEqual(docSampleFile.FilePath.GetFilePath(), modelSampleFile.FilePath);
 
-            // <root>/spectral-libraries/
-            Assert.AreEqual(typeof(SpectralLibrariesFolder), files.Files[1].GetType());
-            Assert.AreEqual(settings.PeptideSettings.Libraries.LibrarySpecs.Count, files.Files[1].Files.Count);
+            // <root>/
+            //      spectral-libraries/
+            var modelLibrariesFolder = modelFiles.Folder<SpectralLibrariesFolder>();
+            Assert.AreEqual(typeof(SpectralLibrariesFolder), modelLibrariesFolder.GetType());
+            Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs.Count, modelLibrariesFolder.Files.Count);
 
-            // <root>/spectral-libraries/library1.blib
-            Assert.AreEqual(typeof(SpectralLibrary), files.Files[1].Files[0].GetType());
-            Assert.IsTrue(ReferenceEquals(settings.PeptideSettings.Libraries.LibrarySpecs[0], files.Files[1].Files[0].Immutable));
-            Assert.AreEqual(settings.PeptideSettings.Libraries.LibrarySpecs[0].Id, files.Files[1].Files[0].IdentityPath.GetIdentity(0));
-            Assert.AreEqual(settings.PeptideSettings.Libraries.LibrarySpecs[0].Name, files.Files[1].Files[0].Name);
-            Assert.AreEqual(settings.PeptideSettings.Libraries.LibrarySpecs[0].FilePath, files.Files[1].Files[0].FilePath);
+            // <root>/
+            //      spectral-libraries/
+            //          library1.blib
+            var docLibrary = docSettings.PeptideSettings.Libraries.LibrarySpecs[0];
+            var modelLibrary = modelLibrariesFolder.Files[0];
+            Assert.AreEqual(typeof(SpectralLibrary), modelLibrary.GetType());
+            Assert.IsTrue(ReferenceEquals(docSettings.PeptideSettings.Libraries.LibrarySpecs[0], modelLibrary.Immutable));
+            Assert.AreEqual(docLibrary.Id, modelLibrary.IdentityPath.GetIdentity(0));
+            Assert.AreEqual(docLibrary.Name, modelLibrary.Name);
+            Assert.AreEqual(docLibrary.FilePath, modelLibrary.FilePath);
 
-            // <root>/spectral-libraries/library2.blib
-            Assert.IsTrue(ReferenceEquals(settings.PeptideSettings.Libraries.LibrarySpecs[1], files.Files[1].Files[1].Immutable));
-            Assert.AreEqual(settings.PeptideSettings.Libraries.LibrarySpecs[1].Id, files.Files[1].Files[1].IdentityPath.GetIdentity(0));
-            Assert.AreEqual(settings.PeptideSettings.Libraries.LibrarySpecs[1].Name, files.Files[1].Files[1].Name);
-            Assert.AreEqual(settings.PeptideSettings.Libraries.LibrarySpecs[1].FilePath, files.Files[1].Files[1].FilePath);
+            // <root>/
+            //      spectral-libraries/
+            //          library2.blib
+            docLibrary = docSettings.PeptideSettings.Libraries.LibrarySpecs[1];
+            modelLibrary = modelLibrariesFolder.Files[1];
+            Assert.IsTrue(ReferenceEquals(docLibrary, modelLibrary.Immutable));
+            Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Id, modelLibrary.IdentityPath.GetIdentity(0));
+            Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Name, modelLibrary.Name);
+            Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].FilePath, modelLibrary.FilePath);
 
             //
-            // Change property - make sure changed ChromSet's Id is the same but objects are not ReferenceEquals
+            // Change property - make sure changed ChromSet's ID is the same but objects are not ReferenceEquals
             //
-            const string newChromatogramName = "NEW CHROMATOGRAM SET NAME";
+            const string newChromatogramName = "NEW REPLICATE NAME";
             RunUI(() =>
             {
                 SkylineWindow.ModifyDocument("Rename replicate in unit test", srmDoc =>
@@ -102,22 +124,24 @@ namespace pwiz.SkylineTestFunctional
                 });
             });
 
-            settings = SkylineWindow.Document.Settings;
-            files = new RootFileNode(SkylineWindow.Document, documentPath);
+            docSettings = SkylineWindow.Document.Settings;
+            modelFiles = new SkylineFile(SkylineWindow.Document, documentPath);
 
-            Assert.AreEqual(typeof(Replicate), files.Files[0].Files[0].GetType());
+            var newDocReplicate = docSettings.MeasuredResults.Chromatograms[0];
+            var newModelReplicate = modelFiles.Files[0].Files[0];
 
-            Assert.AreEqual(originalChromatogram.Id, files.Files[0].Files[0].IdentityPath.GetIdentity(0));
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].Id, files.Files[0].Files[0].IdentityPath.GetIdentity(0));
+            Assert.AreEqual(typeof(Replicate), newModelReplicate.GetType());
+            Assert.AreEqual(docReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
+            Assert.AreEqual(newDocReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
 
-            Assert.IsFalse(ReferenceEquals(originalChromatogram, files.Files[0].Files[0].Immutable));
-            Assert.IsTrue(ReferenceEquals(settings.MeasuredResults.Chromatograms[0], files.Files[0].Files[0].Immutable));
+            Assert.IsFalse(ReferenceEquals(docReplicate, newModelReplicate.Immutable));
+            Assert.IsTrue(ReferenceEquals(newDocReplicate, newModelReplicate.Immutable));
 
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].FileCount, files.Files[0].Files[0].Files.Count);
-            Assert.AreEqual(newChromatogramName, settings.MeasuredResults.Chromatograms[0].Name);
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].Name, files.Files[0].Files[0].Name);
-            Assert.AreEqual(Path.GetFileName(settings.MeasuredResults.Chromatograms[0].FilePath), files.Files[0].Files[0].FileName);
-            Assert.AreEqual(settings.MeasuredResults.Chromatograms[0].FilePath, files.Files[0].Files[0].FilePath);
+            Assert.AreEqual(newDocReplicate.FileCount, newModelReplicate.Files.Count);
+            Assert.AreEqual(newChromatogramName, newDocReplicate.Name);
+            Assert.AreEqual(newDocReplicate.Name, newModelReplicate.Name);
+            Assert.AreEqual(Path.GetFileName(newDocReplicate.FilePath), newModelReplicate.FileName);
+            Assert.AreEqual(newDocReplicate.FilePath, newModelReplicate.FilePath);
         }
     }
 }

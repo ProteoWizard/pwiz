@@ -48,7 +48,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             this.openAuditLogMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             this.filesTreeContextMenu.SuspendLayout();
             this.SuspendLayout();
@@ -74,7 +73,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             // 
             this.filesTreeContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.libraryExplorerMenuItem,
-            this.importResultsMenuItem,
             this.manageResultsMenuItem,
             this.openContainingFolderMenuItem,
             this.openLibraryInLibraryExplorerMenuItem,
@@ -134,12 +132,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             resources.ApplyResources(this.removeMenuItem, "removeMenuItem");
             this.removeMenuItem.Click += new System.EventHandler(this.FilesTree_RemoveMenuItem);
             // 
-            // importResultsMenuItem
-            // 
-            this.importResultsMenuItem.Name = "importResultsMenuItem";
-            resources.ApplyResources(this.importResultsMenuItem, "importResultsMenuItem");
-            this.importResultsMenuItem.Click += new System.EventHandler(this.FilesTree_ImportResultsMenuItem);
-            // 
             // FilesTreeForm
             // 
             resources.ApplyResources(this, "$this");
@@ -169,6 +161,5 @@ namespace pwiz.Skyline.Controls.FilesTree
         private System.Windows.Forms.ToolStripMenuItem openAuditLogMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeAllMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem importResultsMenuItem;
     }
 }

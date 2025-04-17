@@ -90,6 +90,5 @@ namespace pwiz.Skyline.Model.Files
         public ImageId ImageMissing { get; }
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
-        public virtual bool HasFiles() => Files != null && Files.Count > 0;
     }
 }

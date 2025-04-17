@@ -594,7 +594,7 @@
     <Compile Include="Model\Files\Replicate.cs" />
     <Compile Include="Model\Files\ReplicateSampleFile.cs" />
     <Compile Include="Model\Files\ReplicatesFolder.cs" />
-    <Compile Include="Model\Files\RootFileNode.cs" />
+    <Compile Include="Model\Files\SkylineFile.cs" />
     <Compile Include="Model\Files\RTCalcFolder.cs" />
     <Compile Include="Model\Files\RTCalc.cs" />
     <Compile Include="Model\Files\SkylineAuditLog.cs" />

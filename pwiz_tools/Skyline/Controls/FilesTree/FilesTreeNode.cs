@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             Name = Model.Name;
             Text = Model.Name;
 
-            if (typeof(RootFileNode) == Model.GetType())
+            if (typeof(SkylineFile) == Model.GetType())
                 ImageIndex = FileState == FileState.missing ? (int)ImageMissing : (int)ImageAvailable;
             else
                 ImageIndex = IsAnyNodeMissingLocalFile(this) ? (int)ImageMissing : (int)ImageAvailable;

@@ -189,12 +189,6 @@
   <data name="libraryExplorerMenuItem.Text" xml:space="preserve">
     <value>Open Library Explorer</value>
   </data>
-  <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>201, 22</value>
-  </data>
-  <data name="importResultsMenuItem.Text" xml:space="preserve">
-    <value>Import Results</value>
-  </data>
   <data name="manageResultsMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
   </data>
@@ -343,12 +337,6 @@
     <value>removeMenuItem</value>
   </data>
   <data name="&gt;&gt;removeMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;importResultsMenuItem.Name" xml:space="preserve">
-    <value>importResultsMenuItem</value>
-  </data>
-  <data name="&gt;&gt;importResultsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">

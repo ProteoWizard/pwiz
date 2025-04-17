@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 BeginUpdateMS();
 
-                var files = new RootFileNode(document, DocumentContainer.DocumentFilePath);
+                var files = new SkylineFile(document, DocumentContainer.DocumentFilePath);
 
                 MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode);
 

@@ -163,11 +163,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ManageResults();
         }
 
-        private void OpenImportResultsDialog()
-        {
-            SkylineWindow.ImportResults();
-        }
-
         public void OpenLibraryExplorerDialog()
         {
             SkylineWindow.ViewSpectralLibraries();
@@ -520,7 +515,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             libraryExplorerMenuItem.Visible = false;
             manageResultsMenuItem.Visible = false;
-            importResultsMenuItem.Visible = false;
             openAuditLogMenuItem.Visible = false;
             openLibraryInLibraryExplorerMenuItem.Visible = false;
             openContainingFolderMenuItem.Visible = false;
@@ -546,7 +540,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 case ReplicatesFolder _:
                     manageResultsMenuItem.Visible = true;
-                    importResultsMenuItem.Visible = true;
                     return;
                 case Replicate _:
                 case ReplicateSampleFile _:
@@ -590,11 +583,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         private void FilesTree_ManageResultsMenuItem(object sender, EventArgs e)
         {
             OpenManageResultsDialog();
-        }
-
-        private void FilesTree_ImportResultsMenuItem(object sender, EventArgs e)
-        {
-            OpenImportResultsDialog();
         }
 
         private void FilesTree_OpenLibraryExplorerMenuItem(object sender, EventArgs e) 
