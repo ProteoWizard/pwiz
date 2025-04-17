@@ -423,12 +423,18 @@ namespace TestRunner
                     Console.WriteLine(e.StackTrace);
                 if (e.InnerException != null)
                 {
-                    Console.WriteLine("Inner exception:");
-                    Console.WriteLine(e.InnerException.Message);
-                    if (string.IsNullOrEmpty(e.InnerException.StackTrace))
-                        Console.WriteLine("No stacktrace");
-                    else
-                        Console.WriteLine(e.InnerException.StackTrace);
+                    var inner = e.InnerException;
+                    int i = 0;
+                    while (inner != null)
+                    {
+                        Console.WriteLine($"Inner exception {++i}:");
+                        Console.WriteLine(inner.Message);
+                        if (string.IsNullOrEmpty(inner.StackTrace))
+                            Console.WriteLine("No stacktrace");
+                        else
+                            Console.WriteLine(inner.StackTrace);
+                        inner = inner.InnerException;
+                    }
                 }
                 else
                 {
