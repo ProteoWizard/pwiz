@@ -1385,6 +1385,7 @@ namespace pwiz.Skyline.FileUI
 
             //  Select Output Folder and Name
             MsDataFileUri targetPath = null;
+            RemoteSession remoteSession;
             using (var saveDlg = new SaveWatersConnectMethodDialogNE(
                        Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>().Select(a => a as RemoteAccount).ToList(), null))
             {
@@ -1397,6 +1398,7 @@ namespace pwiz.Skyline.FileUI
                 }
 
                 targetPath = saveDlg.FileNames.FirstOrDefault();
+                remoteSession = saveDlg.RemoteSession;
             }
 
             //  Duplicated from "Export to local file" code
@@ -1420,10 +1422,12 @@ namespace pwiz.Skyline.FileUI
             try
             {
 
-                var exporter = _exportProperties.InitExporter(new WatersConnectMethodExporter(documentExport)
+                var exporter =
+                    _exportProperties.InitExporter(new WatersConnectMethodExporter(documentExport, remoteSession));
+ /*
                 {
                     MethodInstrumentType = ExportInstrumentType.WATERS_QUATTRO_PREMIER
-                });
+                });*/
                 if (MethodType == ExportMethodType.Standard)
                     exporter.RunLength = RunLength;
 
@@ -1437,7 +1441,7 @@ namespace pwiz.Skyline.FileUI
                     MessageDlg.Show(this, "Before Call: exporter.ExportMethod(null /* fileName */, \"FakeTemplateNameUnused\" /* templateName */, null /* m */ );");
 
 
-                    exporter.ExportMethod(null /* fileName */, "FakeTemplateNameUnused" /* templateName */, null /* m */ );
+                   // exporter.ExportMethod(null /* fileName */, "FakeTemplateNameUnused" /* templateName */, null /* m */ );
                 }
                 catch (Exception e)
                 {
