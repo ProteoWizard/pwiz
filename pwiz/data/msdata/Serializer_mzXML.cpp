@@ -270,7 +270,7 @@ void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
 
         string fileName, fileType, fileSha1;
 
-        fileName = sf.location + "/" + sf.name;
+        fileName = (bfs::path(sf.location) / sf.name).string();
         switch (nativeIdFormat)
         {
             // nativeID formats from processed data file types
@@ -440,13 +440,14 @@ struct PrecursorInfo
     string charge;
     string collisionEnergy;
     string activation;
+    string ccs;
     double windowWideness;
     
 
     bool empty() const 
     {
         return scanNum.empty() && mz.empty() && intensity.empty() && 
-               charge.empty() && collisionEnergy.empty() && activation.empty() && windowWideness == 0;
+               charge.empty() && collisionEnergy.empty() && activation.empty() && ccs.empty() && windowWideness == 0;
     }
 };
 
@@ -472,6 +473,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             info.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).value;
             info.intensity = it->selectedIons[0].cvParam(MS_peak_intensity).value;
             info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
+            info.ccs = it->selectedIons[0].cvParam(MS_collisional_cross_sectional_area).value;
         }
 
         if (!it->activation.empty())
@@ -535,6 +537,8 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
             attributes.add("activationMethod", it->activation);
         if (it->windowWideness != 0)
             attributes.add("windowWideness", it->windowWideness);
+        if (!it->ccs.empty())
+            attributes.add("CCS", it->ccs);
 
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz, false);

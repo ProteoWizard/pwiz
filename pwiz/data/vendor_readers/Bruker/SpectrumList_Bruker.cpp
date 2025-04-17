@@ -308,6 +308,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
                         if(isolationInfo[i].intensity>0)
                             selectedIon.set(MS_peak_intensity, isolationInfo[i].intensity, MS_number_of_detector_counts);
 
+                        if (oneOverK0 > 0 && charge > 0 && canConvertIonMobilityAndCCS())
+                            selectedIon.set(MS_collisional_cross_sectional_area, ionMobilityToCCS(oneOverK0, fragMZs[i], charge), UO_square_angstrom);
+
                         switch (fragModes[i])
                         {
                             case FragmentationMode_CID:
@@ -471,7 +474,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, DetailLeve
             else
             {
                 // N.B.: just getting the data size from the Bruker API is quite expensive.
-                if (msLevelsToCentroid.contains(msLevel) || (result->defaultArrayLength = spectrum->getProfileDataSize())==0)
+                bool getLineData = msLevelsToCentroid.contains(msLevel);
+                if (!getLineData)
+                    result->defaultArrayLength = spectrum->getProfileDataSize();
+
+                if (getLineData || result->defaultArrayLength == 0)
                 {
                     result->defaultArrayLength = spectrum->getLineDataSize();
                     result->set(MS_centroid_spectrum);

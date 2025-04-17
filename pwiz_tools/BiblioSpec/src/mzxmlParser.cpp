@@ -60,9 +60,11 @@ bool MzXMLParser::getSpectrum(int identifier, SpecData& returnData, SPEC_ID_TYPE
             }
         }
 
-        UserParam ccs = s->scanList.scans[0].userParam("CCS");
+        string ccs = s->precursors[0].selectedIons[0].cvParam(MS_collisional_cross_sectional_area).value;
+        if (ccs.empty())
+            ccs = s->scanList.scans[0].userParam("CCS").value;
         if (!ccs.empty())
-            returnData.ccs = ccs.valueAs<float>();
+            returnData.ccs = lexical_cast<float>(ccs);
     }
 
     returnData.mzs = new double[returnData.numPeaks];

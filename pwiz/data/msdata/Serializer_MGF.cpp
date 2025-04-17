@@ -120,6 +120,9 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
                 os << "TITLE=" << s->id;
 
             CVParam collisionalCrossSectionalArea = scan.cvParam(MS_collisional_cross_sectional_area);
+            if (collisionalCrossSectionalArea.empty())
+                collisionalCrossSectionalArea = si.cvParam(MS_collisional_cross_sectional_area);
+
             if (!collisionalCrossSectionalArea.empty())
             {
                 os << ", " << "ccs=" << collisionalCrossSectionalArea.valueFixedNotation() << '\n';
