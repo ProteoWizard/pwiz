@@ -9,6 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - uses: chambm/softfix@v2
+    - uses: chambm/softfix@v3
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

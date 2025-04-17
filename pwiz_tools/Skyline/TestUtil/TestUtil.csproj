@@ -166,6 +166,7 @@
     <Compile Include="AuditLogUtil.cs" />
     <Compile Include="CheckDocumentState.cs" />
     <Compile Include="CheckReportCompatibility.cs" />
+    <Compile Include="DllFinderTestUtil.cs" />
     <Compile Include="ExampleText.cs" />
     <Compile Include="ExtensionTestContext.cs" />
     <Compile Include="FileLockingProcessFinder.cs" />
@@ -298,8 +299,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\DiskFailure.png" />
-    <EmbeddedResource Include="Resources\larrow-cur.bmp" />
+    <None Include="Resources\DiskFailure.png" />
+    <None Include="Resources\larrow-cur.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

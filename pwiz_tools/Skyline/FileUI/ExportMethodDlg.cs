@@ -138,7 +138,8 @@ namespace pwiz.Skyline.FileUI
             // Select the last instrument if the CE predictor is the same as last time.
             if (!string.IsNullOrEmpty(lastCePredictorName) && Equals(lastCePredictorName, cePredictorName))
             {
-                InstrumentType = listTypes.FirstOrDefault(typeName => typeName.Equals(lastInstrument));
+                // Make sure the combo box can handle selecting this type without showing an error
+                SelectInstrumentTypeIfValid(lastInstrument, listTypes);
             }
 
             // Otherwise, set instrument type based on CE regression name for the document.
@@ -161,17 +162,21 @@ namespace pwiz.Skyline.FileUI
                     i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix));
                 }
                 if (i != -1)
-                    InstrumentType = listTypes[i];
+                    SelectInstrumentTypeIfValid(listTypes[i], listTypes);
             }
             // If nothing found based on CE regression name, just use the first instrument in the list
             if (InstrumentType == null)
             {
                 var instrumentTypeFirst = listTypes[0];
                 // Avoid defaulting to Agilent for DIA when we know it is not supported.
-                if (IsDiaFullScan && Equals(instrumentTypeFirst, ExportInstrumentType.AGILENT_TOF) && listTypes.Length > 1)
-                    InstrumentType = listTypes[1];
-                else
-                    InstrumentType = instrumentTypeFirst;
+                if (IsDiaFullScan && Equals(instrumentTypeFirst, ExportInstrumentType.AGILENT_TOF) &&
+                    listTypes.Length > 1)
+                {
+                    instrumentTypeFirst = listTypes[1];
+                }
+                // Assume this is still not an instrument type that fails validation (i.e. Thermo with no software installed)
+                Assume.IsNotNull(GetInstrumentTypeFromSelection(GetSelectedInstrument(instrumentTypeFirst), true));
+                InstrumentType = instrumentTypeFirst;
             }
 
             // Reset method type based on what was used last and what the chosen instrument is capable of
@@ -271,6 +276,26 @@ namespace pwiz.Skyline.FileUI
             UpdateInstrumentControls(MethodType);
         }
 
+        /// <summary>
+        /// Sets InstrumentType to a passed in value if it is valid based on
+        /// a list of types passed in and installed software on the local computer.
+        /// </summary>
+        /// <param name="instrumentType">An instrument type which may be long form, e.g. "Thermo Astral"</param>
+        /// <param name="listTypes">The list of type names used in the instrument type combo box</param>
+        private void SelectInstrumentTypeIfValid(string instrumentType, string[] listTypes)
+        {
+            // First get a valid type to select based on the starting type. This may convert
+            // a type like "Thermo Astral" stored in user.config to just "Thermo"
+            string selectionType = GetSelectedInstrument(instrumentType);
+            // If the resulting type is in the allowed list of types
+            if (listTypes.Contains(selectionType))
+            {
+                // Set the instrument type to a validated installed name which will set the combo box
+                // selection using GetSelectedInstrument as above.
+                InstrumentType ??= GetInstrumentTypeFromSelection(selectionType, true);
+            }
+        }
+
         protected override void OnHandleCreated(EventArgs e)
         {
             _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
@@ -288,7 +313,10 @@ namespace pwiz.Skyline.FileUI
 
         public string InstrumentType
         {
-            get { return _instrumentType; }
+            get
+            {
+                return _instrumentType;
+            }
             set
             {
                 _instrumentType = value;
@@ -303,8 +331,82 @@ namespace pwiz.Skyline.FileUI
                         MethodType = ExportMethodType.Standard;                        
 
                 }
-                comboInstrument.SelectedItem = _instrumentType;
+                comboInstrument.SelectedItem = GetSelectedInstrument(_instrumentType);
             }
+        }
+
+        public string InstrumentTypeSelectedText => comboInstrument.SelectedItem.ToString();
+
+        /// <summary>
+        /// Versions prior to March 7, 2025 and the export list types, user.config may have
+        /// saved explicit Thermo instrument types like "Thermo Stellar". For method export
+        /// we want to select just "Thermo" for these types and have Skyline figure out the
+        /// appropriate instrument type based on the Windows registry and DLLs on the disk.
+        /// </summary>
+        /// <param name="instrumentType">A saved instrument type name</param>
+        /// <returns>Either the saved instrument type name unchanged or for a Thermo method
+        /// export to an instrument supporting TNG XML API, then just "Thermo"</returns>
+        private string GetSelectedInstrument(string instrumentType)
+        {
+            // If this is method export and a Thermo instrument type that supports TNG XML API,
+            // then the combo box selection should be just "Thermo"
+            return _fileType == ExportFileType.Method &&
+                   instrumentType != null && ExportInstrumentType.ThermoInstallationType(instrumentType) != null
+                ? ExportInstrumentType.THERMO
+                : instrumentType;
+        }
+
+        /// <summary>
+        /// <para>Returns the long form of instrument type based on the selection in the instrument
+        /// type combo box. This only applies to "Thermo" in method export, where the full
+        /// instrument type name like "Thermo Astral" or "Thermo Stellar" is derived from
+        /// the Windows registry and files on disk.</para>
+        /// <para>This function will show a <see cref="MessageDlg"/> before returning null,
+        /// if the selection is "Thermo" but a valid installation for an explicit type cannot
+        /// be found.</para>
+        /// </summary>
+        /// <returns>A valid selection type or null if the passed in selection type is not valid.</returns>
+        private string GetInstrumentTypeFromSelection()
+        {
+            return GetInstrumentTypeFromSelection(comboInstrument.SelectedItem.ToString(), false);
+        }
+
+        /// <summary>
+        /// <para>Returns the long form of instrument type based a selection type string.
+        /// This only applies to "Thermo" in method export, where the full
+        /// instrument type name like "Thermo Astral" or "Thermo Stellar" is derived from
+        /// the Windows registry and files on disk.</para>
+        /// </summary>
+        /// <param name="selectionType">The starting selection type, which may be simply "Thermo" or any other instrument type</param>
+        /// <param name="silentMode">If false, this function will show a <see cref="MessageDlg"/> before returning null,
+        /// if the selection type is "Thermo" but a valid installation for an explicit type cannot be found.</param>
+        /// <returns>A valid selection type or null if the passed in selection type is not valid.</returns>
+        private string GetInstrumentTypeFromSelection(string selectionType, bool silentMode)
+        {
+            if (_fileType != ExportFileType.Method || !Equals(selectionType, ExportInstrumentType.THERMO))
+                return selectionType;
+
+            var dllFinder = new ThermoDllFinder();
+            var thermoSoftwareInfo = dllFinder.GetSoftwareInfo();   // CONSIDER: This behaves differently for tests on a computer with Thermo software installed
+            if (thermoSoftwareInfo.InstrumentType == null)
+            {
+                if (!silentMode)
+                {
+                    MessageDlg.Show(this, TextUtil.LineSeparate(
+                        ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_,
+                        thermoSoftwareInfo.FailureReason));
+                }
+                return null;
+            }
+
+            string thermoType = ExportInstrumentType.ThermoTypeFromInstallationType(thermoSoftwareInfo.InstrumentType);
+            if (thermoType == null && !silentMode)
+            {
+                MessageDlg.Show(this, string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Unknown_Thermo_instrument_type___0___installed_,
+                    thermoSoftwareInfo.InstrumentType));
+            }
+
+            return thermoType;
         }
 
         public bool IsSingleWindowInstrument
@@ -340,6 +442,8 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
                    Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
                    Equals(type, ExportInstrumentType.THERMO_STELLAR) ||
+                   Equals(type, ExportInstrumentType.THERMO_ASTRAL) ||
+                   Equals(type, ExportInstrumentType.THERMO_ASCEND) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -369,6 +473,9 @@ namespace pwiz.Skyline.FileUI
                        Equals(type, ExportInstrumentType.THERMO_ENDURA) ||
                        Equals(type, ExportInstrumentType.THERMO_EXPLORIS) ||
                        Equals(type, ExportInstrumentType.THERMO_FUSION_LUMOS) ||
+                       Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
+                       Equals(type, ExportInstrumentType.THERMO_ASTRAL) ||
+                       Equals(type, ExportInstrumentType.THERMO_ASCEND) ||
                        Equals(type, ExportInstrumentType.WATERS) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
                        Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRANSFER) ||
@@ -850,7 +957,10 @@ namespace pwiz.Skyline.FileUI
 
             var helper = new MessageBoxHelper(this, true);
 
-            _instrumentType = comboInstrument.SelectedItem.ToString();
+            var selectedInstrumentType = GetInstrumentTypeFromSelection();
+            if (selectedInstrumentType == null)
+                return;
+            _instrumentType = selectedInstrumentType;
 
             // Use variable for document to export, since code below may modify the document.
             SrmDocument documentExport = _document;
@@ -2047,7 +2157,14 @@ namespace pwiz.Skyline.FileUI
         {
             bool wasFullScanInstrument = IsFullScanInstrument;
 
-            _instrumentType = comboInstrument.SelectedItem.ToString();
+            var selectedInstrumentType = GetInstrumentTypeFromSelection();
+            if (selectedInstrumentType == null)
+            {
+                // No Thermo installation. Force the selection back to something valid
+                comboInstrument.SelectedIndex = 0;
+                return;
+            }
+            _instrumentType = selectedInstrumentType;
 
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
@@ -2785,10 +2902,7 @@ namespace pwiz.Skyline.FileUI
 
         public void SetInstrument(string instrument)
         {
-            if(ExportInstrumentType.TRANSITION_LIST_TYPES.ToList().Find(inst => Equals(inst, instrument)) == default(string))
-                return;
-
-            comboInstrument.SelectedText = instrument;
+            comboInstrument.SelectedItem = instrument;
         }
 
         public void SetMethodType(ExportMethodType type)

@@ -361,7 +361,7 @@ void PrideXmlReader::endData()
         }
 
         curSpec_->mzs = new double[decoded.size()];
-        copy(decoded.begin(), decoded.end(), curSpec_->mzs);
+        std::copy(decoded.begin(), decoded.end(), curSpec_->mzs);
 
         lastState();
     }

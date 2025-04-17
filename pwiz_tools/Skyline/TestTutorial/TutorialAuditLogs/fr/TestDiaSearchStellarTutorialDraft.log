@@ -45,6 +45,7 @@ Import Peptide Search > Extract Chromatograms > Files to import simultaneously i
 Import Peptide Search > Extract Chromatograms > Removed prefix is "P2_202405_neo_150uID_CSF_GPF_2ThDIA_"
 Import Peptide Search > Add Modifications > Added modifications : contains "Carbamidomethyl (C) = C[57] (fixed)"
 Import Peptide Search > Add Modifications > Added modifications : contains "Oxidation (M) = M[16] (variable)"
+Import Peptide Search > Configure Transition Settings > Spectrum Filter is "MS1: All OR MS2+: Isolation Window Width<50"
 Import Peptide Search > Import FASTA > Enzyme is "Trypsin [KR | P]"
 Import Peptide Search > Import FASTA > FASTA file is "20220721-uniprot-sprot-human.fasta"
 Import Peptide Search > Associate Proteins > Group proteins is False
@@ -52,11 +53,11 @@ Import Peptide Search > Associate Proteins > Find minimal protein list is False
 Import Peptide Search > Associate Proteins > Remove subset proteins is False
 Import Peptide Search > Associate Proteins > Shared peptides option is "Assigned to first protein"
 Import Peptide Search > Associate Proteins > Min peptides per protein is "1"
-Import Peptide Search > Associate Proteins > Proteins mapped is "136"
-Import Peptide Search > Associate Proteins > Peptides mapped is "143"
-Import Peptide Search > Associate Proteins > Proteins unmapped is "20235"
-Import Peptide Search > Associate Proteins > Protein targets is "107"
-Import Peptide Search > Associate Proteins > Peptide targets is "145"
+Import Peptide Search > Associate Proteins > Proteins mapped is "1055"
+Import Peptide Search > Associate Proteins > Peptides mapped is "3079"
+Import Peptide Search > Associate Proteins > Proteins unmapped is "19316"
+Import Peptide Search > Associate Proteins > Protein targets is "918"
+Import Peptide Search > Associate Proteins > Peptide targets is "3174"
 Import Peptide Search > DDA search settings > Search Engine is "MSFragger"
 Import Peptide Search > DDA search settings > Precursor tolerance is "3" m/z
 Import Peptide Search > DDA search settings > Fragment tolerance is "0,2" m/z
@@ -83,6 +84,10 @@ Add Modifications =
         "Oxidation (M) = M[16] (variable)"
     ]
 },
+Configure Transition Settings = 
+{
+    Spectrum Filter = "MS1: All OR MS2+: Isolation Window Width<50"
+},
 Import FASTA = 
 {
     Enzyme = "Trypsin [KR | P]",
@@ -95,11 +100,11 @@ Associate Proteins =
     Remove subset proteins = False,
     Shared peptides option = "Assigned to first protein",
     Min peptides per protein = "1",
-    Proteins mapped = "136",
-    Peptides mapped = "143",
-    Proteins unmapped = "20235",
-    Protein targets = "107",
-    Peptide targets = "145"
+    Proteins mapped = "1055",
+    Peptides mapped = "3079",
+    Proteins unmapped = "19316",
+    Protein targets = "918",
+    Peptide targets = "3174"
 },
 DDA search settings = 
 {
