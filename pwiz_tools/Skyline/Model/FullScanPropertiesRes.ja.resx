@@ -265,6 +265,9 @@
   <data name="Description_IonMobilityCount" xml:space="preserve">
     <value>このスペクトル内の一意のイオン移動度値の数。</value>
   </data>
+  <data name="TotalIonCurrent" xml:space="preserve">
+    <value>総イオン電流</value>
+  </data>
   <data name="InjectionTime" xml:space="preserve">
     <value>注入時間</value>
   </data>

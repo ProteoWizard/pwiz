@@ -724,6 +724,9 @@ Old Localized:DIA生データ (ライブラリのデコンボリューション�
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>Lightに対する比率</value>
   </data>
+  <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
+    <value>双線形</value>
+  </data>
   <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
     <value>ペプチドの最も多い遺伝子に割り当て</value>
   </data>
