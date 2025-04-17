@@ -29,7 +29,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AlphaPeptDeep;
-using pwiz.Skyline.Model.Carafe;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -39,9 +38,8 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
-using pwiz.Skyline.EditUI;
 using System.Runtime.CompilerServices;
-using System.Xml.Serialization;
+using File = System.IO.File;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 
@@ -98,33 +96,29 @@ namespace pwiz.Skyline.SettingsUI
 
         private const string PYTHON = @"Python";
         public const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.13";
-        private const string ALPHAPEPTDEEP = @"alphapeptdeep";
+        private const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
         internal const string CARAFE_PYTHON_VERSION = @"3.9.13";
-        private const string CARAFE = @"carafe";
-        private const string ALPHAPEPTDEEP_DIA_DIR = @"Documents/pwiz-CarafeSupport-Feb262025/"+ALPHAPEPTDEEP_DIA;
-        private const string PEPTDEEP = @"peptdeep";
+        private const string CARAFE = @"Carafe";
+        private const string WORKSPACES = @"workspaces";
+        private const string PEPTDEEP = @"PeptDeep";
 
         private static readonly IFormView[] TAB_PAGES =
         {
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
         public enum DataSourcePages { files, alpha, carafe, koina }
-        public enum BuildLibraryTargetOptions { fastaFile, currentSkylineDocument }
-        // TODO: After supporting LearningOptions.document, add "Skyline Document" option to the comboLearnFrom dropdown
-        // TODO: After supporting LearningOptions.libraries, add "Libraries" option to the comboLearnFrom dropdown
-        public enum LearningOptions { another_doc, this_doc, diann_report }
+        public enum BuildLibraryTargetOptions { currentSkylineDocument }
+        public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => true;
+        private bool IsCarafeEnabled => false;
         private string AlphapeptdeepPythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
         private string CarafePythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(CARAFE_PYTHON_VERSION, CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        // TODO(xgwang): update this to the ssh link to the remote repo
-        private string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0"; //@"https://github.com/wenbostar/alphapeptdeep_dia";
-        // TODO(xgwang): update this to user input value from the dlg
-        //private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
+        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
+        private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
         private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
 
@@ -139,7 +133,6 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
         private SettingsListBoxDriver<LibrarySpec> _driverLibrary;
 
-        private LearningOptions _currentLearningOption;
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
         public PythonInstaller pythonInstaller { get; private set; }
@@ -150,10 +143,7 @@ namespace pwiz.Skyline.SettingsUI
             Icon = Resources.Skyline;
 
             _skylineWindow = skylineWindow;
-            _currentLearningOption = LearningOptions.another_doc;
             _documentUiContainer = skylineWindow;
-
-            tabPage1.BackColor = tabPage1.Parent.BackColor;
 
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
@@ -170,12 +160,7 @@ namespace pwiz.Skyline.SettingsUI
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
-            comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
-            comboLearnFrom.SelectedIndex = (int)DataSourcePages.files;
 
-            toolTipProteinDatabase.SetToolTip(labelProteinDatabase, @"A protein database in FASTA format to build library for, this should be a superset of your experiment data samples.");
-      //      toolTipTrainingData.SetToolTip(labelTrainingData, @"Peptide detection result from DIA-NN (DIA-NN's main report).");
-            toolTipMsMsData.SetToolTip(labelMsMsData, @"DIA-MS data in mzML format used to generate the training data.");
 
             _helper = new MessageBoxHelper(this);
 
@@ -231,7 +216,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public static ILibraryBuilder Builder { get; internal set; }
+        public ILibraryBuilder Builder { get; internal set; }
 
         public IEnumerable<string> InputFileNames
         {
@@ -245,8 +230,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             get => _documentUiContainer.DocumentUI;
         }
-
-        internal SrmDocument _trainingDocument;
       
         private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false, bool newBuilder = false)
         {
@@ -328,108 +311,9 @@ namespace pwiz.Skyline.SettingsUI
                     if (Builder == null && newBuilder)
                     {
                         Builder = new AlphapeptdeepLibraryBuilder(name, outputPath,
-                            AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI);
+                            AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI, IrtStandard);
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }
-                }
-                else if (radioCarafeSource.Checked)
-                {
-                    if (!SetupPythonEnvironmentForCarafe(createDlg))
-                    {
-                        if (cleanUp) pythonInstaller.CleanUpPythonEnvironment(CARAFE);
-                        return false;
-
-                    }
-
-                    if (Builder == null && newBuilder)
-                    {
-                        string msMsDataFilePath = textBoxMsMsData.Text;
-                        if (!File.Exists(msMsDataFilePath))
-                        {
-                            _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
-                            return false;
-                        }
-                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, textBoxDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _skylineWindow.GetTextWriter(), _trainingDocument, labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document));
-                        TestLibFilepath = Builder.TestLibraryPath;
-                        BuilderLibFilepath = Builder.BuilderLibraryPath;
-                    }
-
-                    // handle options for comboBuildLibraryTarget dropdown 
-                    if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
-                    {
-                     //TODO   throw new NotImplementedException(@"Need to implement skyline document support.");
-                    }
-                    else if (comboBuildLibraryTarget.SelectedIndex != (int)BuildLibraryTargetOptions.currentSkylineDocument)
-                    {
-                   //     throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(
-                            @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-                    }
-
-
-                    /* ******************
-                    // handle options for comboLearnFrom dropdown 
-                    string learningDocPath = string.Empty;
-                    IList<LibrarySpec> learningLibraries = new List<LibrarySpec>();
-                    string trainingDataFilePath = string.Empty;
-                    string msMsDataFilePath = string.Empty;
-                    switch (comboLearnFrom.SelectedIndex)
-                    {
-                        case (int)LearningOptions.files:
-                            //trainingDataFilePath = 
-                            msMsDataFilePath = textBoxMsMsData.Text;
-                            //if (!File.Exists(trainingDataFilePath))
-                            //{
-                            //    _helper.ShowTextBoxError(textBoxTrainingData, @$"{trainingDataFilePath} does not exist.");
-                            //   return false;
-                            //}
-                            if (!File.Exists(msMsDataFilePath))
-                            {
-                                _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
-                                return false;
-                            }
-                            break;
-                    
-                        case (int)LearningOptions.libraries:
-                            learningLibraries.AddRange(_driverLibrary.GetChosen(null));
-                            // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
-                            goto default;
-                    
-                        case (int)LearningOptions.document:
-                            learningDocPath = textLearningDoc.Text;
-                            if (!PathEx.HasExtension(learningDocPath, SrmDocument.EXT) || !File.Exists(learningDocPath))
-                            {
-                                _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_, learningDocPath);
-                                return false;
-                            }
-                            // CONSIDER: Could also check for the ChromatogramCache.EXT file as a short-cut for full results checking
-                            // TODO: Probably need to load the document int memory with progress UI and validate that it has results
-                            goto default;
-                    
-                        default:
-                            throw new NotSupportedException(
-                                @$"Index {comboLearnFrom.SelectedIndex} of comboLearnFrom dropdown is not yet supported.");
-                    }
-
-                    if (!SetupPythonEnvironmentForCarafe(createDlg))
-                    {
-                        pythonInstaller.CleanUpPythonEnvironment(CARAFE);
-                        return false;
-                    }
-
-                    if (Builder == null && newBuilder)
-                    {
-                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, ProteinDatabaseFilePath, DocumentUI);
-                        BuilderLibFilepath = Builder.BuilderLibraryPath;
-
-                    }
-
-                    ****************** */
                 }
                 else
                 {
@@ -485,12 +369,6 @@ namespace pwiz.Skyline.SettingsUI
             set => _libFilepath = value;
         }
 
-        private string _testLibFilepath;
-        public string TestLibFilepath
-        {
-            get => _testLibFilepath;
-            set => _testLibFilepath = value;
-        }
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
         {
             // TODO: Need to figure out a better way to do this, use KoinaPeptidePrecursorPair?
@@ -527,7 +405,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
-                        peptidesPerPrecursor, precursors, nce);
+                    peptidesPerPrecursor, precursors, nce);
                 
                 BuilderLibFilepath = Builder.BuilderLibraryPath;
 
@@ -549,7 +427,10 @@ namespace pwiz.Skyline.SettingsUI
             var programPathContainer = new ProgramPathContainer(PYTHON, ALPHAPEPTDEEP_PYTHON_VERSION);
             var packages = new List<PythonPackage>()
             {
+               
+
                 new PythonPackage {Name = @"peptdeep", Version = null },
+                
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
@@ -594,11 +475,13 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
-                    if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
+                    if (!PythonDlg.IsDisposed) 
+                        PythonDlg.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;
                     return false;
                 }
+
             }
             else if (!pythonInstaller.IsNvidiaEnvironmentReady())
             {
@@ -613,78 +496,6 @@ namespace pwiz.Skyline.SettingsUI
             btnNext.Enabled = true;
             return true;
         }
-        private bool SetupPythonEnvironmentForCarafe(bool createDlg = true)
-        {
-            var programPathContainer = new ProgramPathContainer(PYTHON, CARAFE_PYTHON_VERSION);
-            var packages = new List<PythonPackage>()
-            {
-                new PythonPackage  { Name = AlphapeptdeepDiaRepo, Version = null},
-                  //  { Name = PEPTDEEP, Version = AlphapeptdeepDiaRepo },
-                new PythonPackage { Name = @"alphabase", Version = @"1.2.1" },
-                new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
-                new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
-                new PythonPackage { Name = @"torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null },
-                new PythonPackage { Name = @"wheel", Version = null }
-            };
-
-            if (pythonInstaller == null)
-                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(), CARAFE);
-            else
-                pythonInstaller.ClearPendingTasks();
-            Cursor = Cursors.WaitCursor;
-            btnNext.Enabled = false;
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                Cursor = Cursors.Default;
-                btnNext.Enabled = true;
-                return true;
-            }
-            else if (!createDlg)
-            {
-                Cursor = Cursors.Default;
-                btnNext.Enabled = true;
-                return false;
-            }
-
-            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
-            {
-
-                PythonDlg = new MultiButtonMsgDlg(
-                    string.Format(
-                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        CARAFE_PYTHON_VERSION, @"Carafe"), string.Format(Resources.OK));
-                if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-            }
-            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
-            {
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
-                {
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;
-                }
-            }
-            if (!PythonDlg.IsDisposed) PythonDlg.Dispose();
-            Cursor = Cursors.Default;
-            btnNext.Enabled = true;
-            return true;
-       
-        }
-
-
         private void textName_TextChanged(object sender, EventArgs e)
         {
             string name = textName.Text;
@@ -760,25 +571,7 @@ namespace pwiz.Skyline.SettingsUI
         public void OkWizardPage()
         {
             Cursor.Current = Cursors.WaitCursor;
-            if (tabControlMain.SelectedIndex == (int)Pages.learning && radioCarafeSource.Checked)
-            {
-                if (textBoxMsMsData.Text == "")
-                {
-                    btnNext.Enabled = false;
-                }
-                else
-                {
-                    btnNext.Enabled = true;
-
-                    if (ValidateBuilder(true, true, true, true))
-                    {
-                        Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
-                        Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
-                        DialogResult = DialogResult.OK;
-                    }
-                }
-            }
-            else if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
+            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
                 if (ValidateBuilder(true, true, true, true))
                 {
@@ -787,7 +580,6 @@ namespace pwiz.Skyline.SettingsUI
                     DialogResult = DialogResult.OK;
                 }
             }
-
             else if (ValidateBuilder(false, true, false, true))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
@@ -1267,84 +1059,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void comboLearnFrom_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var learningOption = (LearningOptions)comboLearnFrom.SelectedIndex;
-            comboLearnFrom_Update(learningOption);
-        }
-
-        private void comboLearnFrom_Update(LearningOptions learningOption)
-        {
-            comboLearnFrom.SelectedIndex = (int)learningOption;
-            switch (learningOption)
-            {
-                case LearningOptions.another_doc:
-                    labelDoc.Enabled = true;
-                    buttonDoc.Enabled = true;
-                    textBoxDoc.Enabled = true;
-                    labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
-                    //PopulateLibraries();
-                    break;
-
-                case LearningOptions.this_doc:
-                    if (_documentUiContainer.DocumentFilePath != null)
-                    {
-                        labelDoc.Enabled = false;
-                        buttonDoc.Enabled = false;
-                        textBoxDoc.Enabled = false;
-                        labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
-                        comboBuildLibraryTarget.SelectedIndex = (int) BuildLibraryTargetOptions.fastaFile;
-                        tabPage1.BackColor = tabPage1.Parent.BackColor;
-                    }
-                    else
-                    {
-                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_No_Skyline_document_is_currently_loaded);
-                        comboLearnFrom.SelectedIndex =  (int) _currentLearningOption;
-                    }
-                    break;
-
-                case LearningOptions.diann_report:
-                    labelDoc.Enabled = true;
-                    buttonDoc.Enabled = true;
-                    textBoxDoc.Enabled = true;
-                    labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document);
-                    break;
-            }
-
-            _currentLearningOption = (LearningOptions) comboLearnFrom.SelectedIndex;
-        }
-        private void comboBuildLibraryTarget_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            tabControlBuildLibraryTarget.SelectedIndex = comboBuildLibraryTarget.SelectedIndex;
-            comboBuildLibraryTarget_Update((BuildLibraryTargetOptions)tabControlBuildLibraryTarget.SelectedIndex);
-        }
-        private void comboBuildLibraryTarget_Update(BuildLibraryTargetOptions targetOption)
-        {
-            comboBuildLibraryTarget.SelectedIndex = (int)targetOption;
-            switch (targetOption)
-            {
-                case BuildLibraryTargetOptions.currentSkylineDocument:
-                    if (comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc)
-                    {
-                        comboLearnFrom.SelectedIndex = (int)LearningOptions.another_doc;
-                        labelDoc.Enabled = true;
-                        buttonDoc.Enabled = true;
-                        textBoxDoc.Enabled = true;
-                        labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
-                        tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
-                    }
-                    break;
-
-                case BuildLibraryTargetOptions.fastaFile:
-                    if (_documentUiContainer.DocumentFilePath != null)
-                    {
-                        tabControlLearning.SelectedIndex = (int)LearningOptions.another_doc;
-                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded);
-                        comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
-                    }
-                    break;
-            }
-        }
         private void PopulateLibraries()
         {
             if (_driverLibrary == null)
@@ -1367,122 +1081,19 @@ namespace pwiz.Skyline.SettingsUI
                 dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    textBoxDoc.Text = dlg.FileName;
+                    textLearningDoc.Text = dlg.FileName;
                 }
             }
 
         }
         private void buttonProteinDatabase_Click(object sender, EventArgs e)
         {
-            using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Protein Database File";
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true;
-            dlg.DefaultExt = DataSourceUtil.EXT_FASTA[0];
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(EditUIResources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA));
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                textBoxProteinDatabase.Text = dlg.FileName;
-            }
-            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "")
-                btnNext.Enabled = true;
+
         }
 
-        private void buttonTrainingData_Click(object sender, EventArgs e)
+        private void btnCancel_Click(object sender, EventArgs e)
         {
-            using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Training Data File";
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true;
-            dlg.DefaultExt = TextUtil.EXT_TSV;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                //textBoxTrainingData.Text = dlg.FileName;
-            }
-        }
 
-        private void buttonMsMsData_Click(object sender, EventArgs e)
-        {
-            using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Ms/Ms Data File";
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true;
-            dlg.DefaultExt = DataSourceUtil.EXT_MZML;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(@"mzML files", DataSourceUtil.EXT_MZML));
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                textBoxMsMsData.Text = dlg.FileName;
-            }
-            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "")
-                btnNext.Enabled = true;
-        }
-        private void buttonDoc_Click(object sender, EventArgs e)
-        {
-            using var dlg = new OpenFileDialog();
-
-            if (this.labelDoc.Text == SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document)
-            {
-                dlg.Title = SettingsUIResources.BuildLibraryDlg_Select_Skyline_document_file;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
-            }
-            else
-            {
-                dlg.Title = SettingsUIResources.BuildLibraryDlg_Select_DIANN_report_document;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
-            }
-            
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true; 
-            dlg.DefaultExt = DataSourceUtil.EXT_MZML;
-            
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                textBoxDoc.Text = dlg.FileName;
-
-                if (this.labelDoc.Text == SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document)
-                {
-                    LoadTrainingDocument(dlg.FileName);
-                    _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
-
-                    using (var reader = new StreamReader(PathEx.SafePath(dlg.FileName)))
-                    {
-                        XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                        _trainingDocument = (SrmDocument)ser.Deserialize(reader);
-                    }
-                }
-            }
-
-            if (textBoxProteinDatabase.Text != "" && textBoxDoc.Text != "")
-                btnNext.Enabled = true;
-        }
-
-        internal void UnloadTrainingDocument()
-        {
-            _trainingDocument = null;
-        }
-        internal void LoadTrainingDocument(string fileName)
-        {
-            _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
-
-            using (var reader = new StreamReader(PathEx.SafePath(fileName)))
-            {
-                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                _trainingDocument = (SrmDocument)ser.Deserialize(reader);
-            }
-        }
-
-        private void carafeSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Carafe);
         }
     }
 }
