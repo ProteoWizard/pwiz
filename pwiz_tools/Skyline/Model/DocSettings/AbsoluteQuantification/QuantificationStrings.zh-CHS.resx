@@ -332,6 +332,9 @@
   <data name="MsLevelOption_DEFAULT_Default" xml:space="preserve">
     <value>默认</value>
   </data>
+  <data name="LodCalculation_TURNING_POINT_STDERR_Bilinear_turning_point" xml:space="preserve">
+    <value>双线性转折点</value>
+  </data>
   <data name="CalibrationForm_DisplayCalibrationCurve_QualifiedSampleType" xml:space="preserve">
     <value>{0} ({1})</value>
     <comment>Example: Standard (MyMolecule)</comment>

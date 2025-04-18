@@ -104,7 +104,7 @@
     <value>文件</value>
   </data>
   <data name="Category_MatchInfo" xml:space="preserve">
-    <value>搜索</value>
+    <value>匹配</value>
   </data>
   <data name="Category_PrecursorInfo" xml:space="preserve">
     <value>母离子</value>

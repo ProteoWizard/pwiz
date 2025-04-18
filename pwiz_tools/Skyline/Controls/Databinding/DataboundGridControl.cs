@@ -1503,5 +1503,13 @@ namespace pwiz.Skyline.Controls.Databinding
                 }
             }
         }
+
+        public DataGridViewColumn ReplicatePropertyColumn
+        {
+            get
+            {
+                return colReplicateProperty;
+            }
+        }
     }
 }
