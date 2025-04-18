@@ -200,7 +200,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdateComboNormalizationMethod();
             cbxImputeMissingPeaks.Checked = _peptideSettings.Imputation.ImputeMissingPeaks;
             tbxMaxRtShift.Text = _peptideSettings.Imputation.MaxRtShift?.ToString() ?? string.Empty;
-            tbxMaxPeakWidthVariation.Text = _peptideSettings.Imputation.MaxPeakWidthVariation?.ToString() ?? string.Empty;
+            tbxMaxPeakWidthVariation.Text = (_peptideSettings.Imputation.MaxPeakWidthVariation * 100)?.ToString() ?? string.Empty;
         }
 
         /// <summary>
@@ -421,7 +421,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!helper.ValidateDecimalTextBox(tbxMaxPeakWidthVariation, 0, null, out var maxPeakWidthVariation))
                     return null;
-                imputation = imputation.ChangeMaxPeakWidthVariation(maxPeakWidthVariation);
+                imputation = imputation.ChangeMaxPeakWidthVariation(maxPeakWidthVariation / 100);
             }
 
             // Validate and hold filter settings
@@ -2210,5 +2210,6 @@ namespace pwiz.Skyline.SettingsUI
         {
             listLibraries.SelectedItem = name;
         }
+
     }
 }

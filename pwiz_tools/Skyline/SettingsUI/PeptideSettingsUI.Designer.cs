@@ -77,6 +77,12 @@ namespace pwiz.Skyline.SettingsUI
             this.comboWeighting = new System.Windows.Forms.ComboBox();
             this.tbxIonRatioThreshold = new System.Windows.Forms.TextBox();
             this.cbxSimpleRatios = new System.Windows.Forms.CheckBox();
+            this.groupBoxPeakImputation = new System.Windows.Forms.GroupBox();
+            this.cbxImputeMissingPeaks = new System.Windows.Forms.CheckBox();
+            this.tbxMaxRtShift = new System.Windows.Forms.TextBox();
+            this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
+            this.lblMaxRtShift = new System.Windows.Forms.Label();
+            this.lblMaxPeakWidthVariation = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.labelPeptideUniquenessConstraint = new System.Windows.Forms.Label();
@@ -84,12 +90,6 @@ namespace pwiz.Skyline.SettingsUI
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tabPrediction = new System.Windows.Forms.TabPage();
-            this.groupBoxPeakImputation = new System.Windows.Forms.GroupBox();
-            this.cbxImputeMissingPeaks = new System.Windows.Forms.CheckBox();
-            this.tbxMaxPeakWidthVariation = new System.Windows.Forms.TextBox();
-            this.lblMaxPeakWidthVariation = new System.Windows.Forms.Label();
-            this.tbxMaxRtShift = new System.Windows.Forms.TextBox();
-            this.lblMaxRtShift = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -137,11 +137,12 @@ namespace pwiz.Skyline.SettingsUI
             this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.flowLayoutPanelImputation = new System.Windows.Forms.FlowLayoutPanel();
+            this.lblRtDeltaMin = new System.Windows.Forms.Label();
+            this.lblPeakWidthVariationPercent = new System.Windows.Forms.Label();
+            this.groupBoxPeakImputation.SuspendLayout();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
-            this.groupBoxPeakImputation.SuspendLayout();
             this.tabFilter.SuspendLayout();
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
@@ -151,7 +152,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabQuantification.SuspendLayout();
             this.groupBoxFiguresOfMerit.SuspendLayout();
             this.contextMenuCalculator.SuspendLayout();
-            this.flowLayoutPanelImputation.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOk
@@ -517,6 +517,49 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.cbxSimpleRatios, resources.GetString("cbxSimpleRatios.ToolTip"));
             this.cbxSimpleRatios.UseVisualStyleBackColor = true;
             // 
+            // groupBoxPeakImputation
+            // 
+            resources.ApplyResources(this.groupBoxPeakImputation, "groupBoxPeakImputation");
+            this.groupBoxPeakImputation.Controls.Add(this.lblPeakWidthVariationPercent);
+            this.groupBoxPeakImputation.Controls.Add(this.tbxMaxPeakWidthVariation);
+            this.groupBoxPeakImputation.Controls.Add(this.lblMaxPeakWidthVariation);
+            this.groupBoxPeakImputation.Controls.Add(this.lblRtDeltaMin);
+            this.groupBoxPeakImputation.Controls.Add(this.tbxMaxRtShift);
+            this.groupBoxPeakImputation.Controls.Add(this.lblMaxRtShift);
+            this.groupBoxPeakImputation.Controls.Add(this.cbxImputeMissingPeaks);
+            this.groupBoxPeakImputation.Name = "groupBoxPeakImputation";
+            this.groupBoxPeakImputation.TabStop = false;
+            this.helpTip.SetToolTip(this.groupBoxPeakImputation, resources.GetString("groupBoxPeakImputation.ToolTip"));
+            // 
+            // cbxImputeMissingPeaks
+            // 
+            resources.ApplyResources(this.cbxImputeMissingPeaks, "cbxImputeMissingPeaks");
+            this.cbxImputeMissingPeaks.Name = "cbxImputeMissingPeaks";
+            this.helpTip.SetToolTip(this.cbxImputeMissingPeaks, resources.GetString("cbxImputeMissingPeaks.ToolTip"));
+            this.cbxImputeMissingPeaks.UseVisualStyleBackColor = true;
+            // 
+            // tbxMaxRtShift
+            // 
+            resources.ApplyResources(this.tbxMaxRtShift, "tbxMaxRtShift");
+            this.tbxMaxRtShift.Name = "tbxMaxRtShift";
+            this.helpTip.SetToolTip(this.tbxMaxRtShift, resources.GetString("tbxMaxRtShift.ToolTip"));
+            // 
+            // tbxMaxPeakWidthVariation
+            // 
+            resources.ApplyResources(this.tbxMaxPeakWidthVariation, "tbxMaxPeakWidthVariation");
+            this.tbxMaxPeakWidthVariation.Name = "tbxMaxPeakWidthVariation";
+            this.helpTip.SetToolTip(this.tbxMaxPeakWidthVariation, resources.GetString("tbxMaxPeakWidthVariation.ToolTip"));
+            // 
+            // lblMaxRtShift
+            // 
+            resources.ApplyResources(this.lblMaxRtShift, "lblMaxRtShift");
+            this.lblMaxRtShift.Name = "lblMaxRtShift";
+            // 
+            // lblMaxPeakWidthVariation
+            // 
+            resources.ApplyResources(this.lblMaxPeakWidthVariation, "lblMaxPeakWidthVariation");
+            this.lblMaxPeakWidthVariation.Name = "lblMaxPeakWidthVariation";
+            // 
             // tabControl1
             // 
             resources.ApplyResources(this.tabControl1, "tabControl1");
@@ -580,43 +623,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.tabPrediction, "tabPrediction");
             this.tabPrediction.Name = "tabPrediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
-            // 
-            // groupBoxPeakImputation
-            // 
-            resources.ApplyResources(this.groupBoxPeakImputation, "groupBoxPeakImputation");
-            this.groupBoxPeakImputation.Controls.Add(this.flowLayoutPanelImputation);
-            this.groupBoxPeakImputation.Name = "groupBoxPeakImputation";
-            this.groupBoxPeakImputation.TabStop = false;
-            this.helpTip.SetToolTip(this.groupBoxPeakImputation, resources.GetString("groupBoxPeakImputation.ToolTip"));
-            // 
-            // cbxImputeMissingPeaks
-            // 
-            resources.ApplyResources(this.cbxImputeMissingPeaks, "cbxImputeMissingPeaks");
-            this.cbxImputeMissingPeaks.Name = "cbxImputeMissingPeaks";
-            this.helpTip.SetToolTip(this.cbxImputeMissingPeaks, resources.GetString("cbxImputeMissingPeaks.ToolTip"));
-            this.cbxImputeMissingPeaks.UseVisualStyleBackColor = true;
-            // 
-            // tbxMaxPeakWidthVariation
-            // 
-            resources.ApplyResources(this.tbxMaxPeakWidthVariation, "tbxMaxPeakWidthVariation");
-            this.tbxMaxPeakWidthVariation.Name = "tbxMaxPeakWidthVariation";
-            this.helpTip.SetToolTip(this.tbxMaxPeakWidthVariation, resources.GetString("tbxMaxPeakWidthVariation.ToolTip"));
-            // 
-            // lblMaxPeakWidthVariation
-            // 
-            resources.ApplyResources(this.lblMaxPeakWidthVariation, "lblMaxPeakWidthVariation");
-            this.lblMaxPeakWidthVariation.Name = "lblMaxPeakWidthVariation";
-            // 
-            // tbxMaxRtShift
-            // 
-            resources.ApplyResources(this.tbxMaxRtShift, "tbxMaxRtShift");
-            this.tbxMaxRtShift.Name = "tbxMaxRtShift";
-            this.helpTip.SetToolTip(this.tbxMaxRtShift, resources.GetString("tbxMaxRtShift.ToolTip"));
-            // 
-            // lblMaxRtShift
-            // 
-            resources.ApplyResources(this.lblMaxRtShift, "lblMaxRtShift");
-            this.lblMaxRtShift.Name = "lblMaxRtShift";
             // 
             // label14
             // 
@@ -948,15 +954,15 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.editCalculatorListContextMenuItem, "editCalculatorListContextMenuItem");
             this.editCalculatorListContextMenuItem.Click += new System.EventHandler(this.editCalculatorListContextMenuItem_Click);
             // 
-            // flowLayoutPanelImputation
+            // lblRtDeltaMin
             // 
-            this.flowLayoutPanelImputation.Controls.Add(this.lblMaxRtShift);
-            this.flowLayoutPanelImputation.Controls.Add(this.tbxMaxRtShift);
-            this.flowLayoutPanelImputation.Controls.Add(this.lblMaxPeakWidthVariation);
-            this.flowLayoutPanelImputation.Controls.Add(this.tbxMaxPeakWidthVariation);
-            this.flowLayoutPanelImputation.Controls.Add(this.cbxImputeMissingPeaks);
-            resources.ApplyResources(this.flowLayoutPanelImputation, "flowLayoutPanelImputation");
-            this.flowLayoutPanelImputation.Name = "flowLayoutPanelImputation";
+            resources.ApplyResources(this.lblRtDeltaMin, "lblRtDeltaMin");
+            this.lblRtDeltaMin.Name = "lblRtDeltaMin";
+            // 
+            // lblPeakWidthVariationPercent
+            // 
+            resources.ApplyResources(this.lblPeakWidthVariationPercent, "lblPeakWidthVariationPercent");
+            this.lblPeakWidthVariationPercent.Name = "lblPeakWidthVariationPercent";
             // 
             // PeptideSettingsUI
             // 
@@ -972,12 +978,13 @@ namespace pwiz.Skyline.SettingsUI
             this.MinimizeBox = false;
             this.Name = "PeptideSettingsUI";
             this.ShowInTaskbar = false;
+            this.groupBoxPeakImputation.ResumeLayout(false);
+            this.groupBoxPeakImputation.PerformLayout();
             this.tabControl1.ResumeLayout(false);
             this.tabDigestion.ResumeLayout(false);
             this.tabDigestion.PerformLayout();
             this.tabPrediction.ResumeLayout(false);
             this.tabPrediction.PerformLayout();
-            this.groupBoxPeakImputation.ResumeLayout(false);
             this.tabFilter.ResumeLayout(false);
             this.tabFilter.PerformLayout();
             this.tabLibrary.ResumeLayout(false);
@@ -995,8 +1002,6 @@ namespace pwiz.Skyline.SettingsUI
             this.groupBoxFiguresOfMerit.ResumeLayout(false);
             this.groupBoxFiguresOfMerit.PerformLayout();
             this.contextMenuCalculator.ResumeLayout(false);
-            this.flowLayoutPanelImputation.ResumeLayout(false);
-            this.flowLayoutPanelImputation.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -1108,6 +1113,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.CheckBox cbxImputeMissingPeaks;
         private System.Windows.Forms.TextBox tbxMaxPeakWidthVariation;
         private System.Windows.Forms.Label lblMaxPeakWidthVariation;
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanelImputation;
+        private System.Windows.Forms.Label lblPeakWidthVariationPercent;
+        private System.Windows.Forms.Label lblRtDeltaMin;
     }
 }
