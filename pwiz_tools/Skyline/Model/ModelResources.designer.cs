@@ -213,24 +213,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to BlibBuilder completed ok.
-        /// </summary>
-        public static string Alphapeptdeep_Blib_completed_ok {
-            get {
-                return ResourceManager.GetString("Alphapeptdeep_Blib_completed_ok", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to BlibBuilder failed to complete.
-        /// </summary>
-        public static string Alphapeptdeep_Blib_failed_to_complete {
-            get {
-                return ResourceManager.GetString("Alphapeptdeep_Blib_failed_to_complete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
         ///{0}
         ///	
@@ -318,6 +300,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder completed ok.
+        /// </summary>
+        public static string Blib_completed_ok {
+            get {
+                return ResourceManager.GetString("Blib_completed_ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder failed to complete.
+        /// </summary>
+        public static string Blib_failed_to_complete {
+            get {
+                return ResourceManager.GetString("Blib_failed_to_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} ({1} - {2}).
         /// </summary>
         public static string BrukerTimsTofIsolationListExporter_CheckIonMobilities__0____1_____2__ {
@@ -362,6 +362,24 @@ namespace pwiz.Skyline.Model {
         public static string BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_ {
             get {
                 return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Build Library.
+        /// </summary>
+        public static string BuildingPrecursorTable_Build_Library {
+            get {
+                return ResourceManager.GetString("BuildingPrecursorTable_Build_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Carafe failed to complete.
+        /// </summary>
+        public static string Carafe_failed_to_complete {
+            get {
+                return ResourceManager.GetString("Carafe_failed_to_complete", resourceCulture);
             }
         }
         
@@ -877,24 +895,13 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("CarafeTraining_XIC_correlation_long", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to XIC Correlation.
         /// </summary>
-        public static string CarafeTraining_XIC_correlation_short
-        {
-            get
-            {
-                return ResourceManager.GetString("CarafeTraining_XIC_correlation_short", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Build Library.
-        /// </summary>
-        public static string BuildingPrecursorTable_Build_Library {
+        public static string CarafeTraining_XIC_correlation_short {
             get {
-                return ResourceManager.GetString("BuildingPrecursorTable_Build_Library", resourceCulture);
+                return ResourceManager.GetString("CarafeTraining_XIC_correlation_short", resourceCulture);
             }
         }
         

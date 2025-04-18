@@ -435,11 +435,9 @@ namespace pwiz.Skyline.SettingsUI
                             return false;
                         }
 
-                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE,
-                            CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI,
-                            _skylineWindow.GetTextWriter(), _trainingDocument,
-                            labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document));
+                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
+                            msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI,_skylineWindow.GetTextWriter(), _trainingDocument,
+                            labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard);
                         TestLibFilepath = Builder.TestLibraryPath;
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }

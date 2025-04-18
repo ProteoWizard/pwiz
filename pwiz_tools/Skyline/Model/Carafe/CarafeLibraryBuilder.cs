@@ -36,6 +36,7 @@ using System.Diagnostics;
 using pwiz.Common.Collections;
 using System.ComponentModel;
 using System.Linq;
+using pwiz.BiblioSpec;
 
 [assembly: InternalsVisibleTo("TestPerf")]
 
@@ -81,11 +82,7 @@ namespace pwiz.Skyline.Model.Carafe
             get { return null; }
         }
 
-        public IrtStandard IrtStandard
-        {
-            //TODO(xgwang): implement
-            get { return null; }
-        }
+        public IrtStandard IrtStandard { get; private set; }
 
         public string BuildCommandArgs
         {
@@ -431,9 +428,11 @@ namespace pwiz.Skyline.Model.Carafe
             SrmDocument document,
             TextWriter textWriter, 
             SrmDocument trainingDocument,
-            bool diann_training)
+            bool diann_training, 
+            IrtStandard irtStandard)
         {
             Document = document;
+            IrtStandard = irtStandard;
             Writer = textWriter;
             TrainingDocument = trainingDocument;
             DbInputFilePath = dbInputFilePath;
@@ -495,9 +494,12 @@ namespace pwiz.Skyline.Model.Carafe
             string experimentDataFilePath,
             string experimentDataTuningFilePath,
             SrmDocument document, 
-            SrmDocument trainingDocument, IDictionary<string, AbstractDdaSearchEngine.Setting> libraryParameters)
+            SrmDocument trainingDocument, 
+            IDictionary<string, AbstractDdaSearchEngine.Setting> libraryParameters,
+            IrtStandard irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+            IrtStandard = irtStandard;
             PythonVersion = pythonVersion;
             PythonVirtualEnvironmentName = pythonVirtualEnvironmentName;
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
@@ -729,7 +731,7 @@ namespace pwiz.Skyline.Model.Carafe
                 readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
 
-                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE);
+                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
                 LibraryHelper.PrepareTrainingInputFile(TrainingDocument, progress, ref progressStatus, CARAFE);
             }
             else if (_diann_training)
@@ -739,14 +741,14 @@ namespace pwiz.Skyline.Model.Carafe
                     readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
-                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE);
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
                 }
                 else
                 {
                     readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
-                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE);
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE, IrtStandard);
                 }
             }
             else
@@ -901,14 +903,7 @@ namespace pwiz.Skyline.Model.Carafe
 
             cmdBuilder.Append(args).Append(SPACE);
             
-        //     var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, "");
-           
-           
-        //    cmd += string.Format(
-        //        ToolsResources
-        //            .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
-        //        ECHO, TextUtil.AMPERSAND);
-        //    cmd += cmdBuilder;
+ 
 
             string batPath = Path.Combine(RootDir, "runCarafe.bat");
             File.WriteAllText(batPath, cmdBuilder.ToString());
@@ -929,7 +924,7 @@ namespace pwiz.Skyline.Model.Carafe
             }
             catch (Exception ex)
             {
-                throw new Exception(@"Failed to build library by executing carafe", ex);
+                throw new Exception(ModelResources.Carafe_failed_to_complete, ex);
             }
 
             progress.UpdateProgress(progressStatus = progressStatus
@@ -945,15 +940,19 @@ namespace pwiz.Skyline.Model.Carafe
 
             var source = CarafeOutputLibraryFilePath();
             var dest = LibrarySpec.FilePath;
-            try
+ 
+            BlibFilter blibFilter = new BlibFilter();
+            
+            // Build the final filtered library
+            bool completed = blibFilter.Filter(source,dest, progress, ref progressStatus);
+
+            if (completed)
             {
-                File.Copy(source, dest, true);
+                Messages.WriteAsyncUserMessage(ModelResources.Blib_completed_ok);
             }
-            catch (Exception ex)
+            else
             {
-                // TODO(xgwang): update this exception to an Carafe specific one
-                throw new Exception(
-                    @$"Failed to copy carafe output library file from {source} to {dest}", ex);
+                Messages.WriteAsyncUserMessage(ModelResources.Blib_failed_to_complete);
             }
             
             progress.UpdateProgress(progressStatus = progressStatus

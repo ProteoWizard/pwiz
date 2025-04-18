@@ -640,11 +640,14 @@
   <data name="MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries" xml:space="preserve">
     <value>Adjusting peak boundaries</value>
   </data>
-  <data name="Alphapeptdeep_Blib_completed_ok" xml:space="preserve">
+  <data name="Blib_completed_ok" xml:space="preserve">
     <value>BlibBuilder completed ok</value>
   </data>
-  <data name="Alphapeptdeep_Blib_failed_to_complete" xml:space="preserve">
+  <data name="Blib_failed_to_complete" xml:space="preserve">
     <value>BlibBuilder failed to complete</value>
+  </data>
+  <data name="Carafe_failed_to_complete" xml:space="preserve">
+    <value>Carafe failed to complete</value>
   </data>
   <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
     <value>Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 

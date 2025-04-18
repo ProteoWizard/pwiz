@@ -505,11 +505,11 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             if (completed)
             {
-                Messages.WriteAsyncUserMessage(ModelResources.Alphapeptdeep_Blib_completed_ok);
+                Messages.WriteAsyncUserMessage(ModelResources.Blib_completed_ok);
             }
             else
             {
-                Messages.WriteAsyncUserMessage(ModelResources.Alphapeptdeep_Blib_failed_to_complete);
+                Messages.WriteAsyncUserMessage(ModelResources.Blib_failed_to_complete);
             }
             File.Delete(incompleteBlibPath);
         }
