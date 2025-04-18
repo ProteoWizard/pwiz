@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model
 {
 
     /// <summary>
-    /// Holds an unmodified sequence and a list of explicit modifications (i.e. StatidMod and AminoAcid index).
+    /// Holds an unmodified sequence and a list of explicit modifications (i.e. StaticMod and AminoAcid index).
     /// This enables the sequence to be formatted in a number of ways, including mass deltas, or modification names.
     /// </summary>
     public class ModifiedSequence : ProteomicSequence
@@ -211,8 +211,6 @@ namespace pwiz.Skyline.Model
             return result.ToString();
         }
 
-
-
         public override string ToString()
         {
             return FormatDefault();
@@ -369,6 +367,7 @@ namespace pwiz.Skyline.Model
             public string ShortName { get { return StaticMod.ShortName; } }
             public ParsedMolecule Formula { get; private set; }
             public int? UnimodId { get { return StaticMod.UnimodId; } }
+            public string UnimodIdWithName { get { return StaticMod.UnimodId + @":" + StaticMod.Name; } }
             public double MonoisotopicMass { get; private set; }
             public double AverageMass { get; private set; }
 
