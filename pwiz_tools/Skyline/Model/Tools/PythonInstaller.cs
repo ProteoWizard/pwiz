@@ -32,7 +32,6 @@ using System.Threading;
 using Ionic.Zip;
 using JetBrains.Annotations;
 using Microsoft.Win32;
-using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
@@ -453,7 +452,8 @@ namespace pwiz.Skyline.Model.Tools
                 bool? isTaskValid = TaskValidator.Validate(taskNode.PythonTaskName, this);
                 if (hasSeenFailure)
                 {
-                    if ( (isTaskValid == true || isTaskValid == null) && null == taskNode.ParentNodes) { continue; }
+                    if ( (isTaskValid == true || isTaskValid == null) && null == taskNode.ParentNodes)  
+                        continue; 
                    
                     bool havePrerequisite = false;
 
@@ -481,7 +481,8 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else
                 {
-                    if (isTaskValid == true || isTaskValid == null) { continue; }
+                    if (isTaskValid == true || isTaskValid == null) 
+                        continue; 
                     hasSeenFailure = true;
                 }
 
@@ -1210,7 +1211,12 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     return null;
                 }
-                return signature == File.ReadAllText(filePath);
+                if (signature != File.ReadAllText(filePath))
+                {
+                    File.Delete(filePath);
+                    return false;
+                }
+                return true;
             }
 
         }
@@ -1770,23 +1776,53 @@ namespace pwiz.Skyline.Model.Tools
 
     public class PythonTask
     {
-        private OneOf<Action, Action<IProgressMonitor>, Action<ILongWaitBroker>> _action;
+        private Action _simpleAction;
+        private Action<IProgressMonitor> _progressAction;
+        private Action<ILongWaitBroker> _brokerAction;
+
+        // Method to set the action
+        public void SetAction(Action action)
+        {
+            _simpleAction = action;
+            _progressAction = null;
+            _brokerAction = null;
+        }
+
+        public void SetAction(Action<IProgressMonitor> action)
+        {
+            _simpleAction = null;
+            _progressAction = action;
+            _brokerAction = null;
+        }
+
+        public void SetAction(Action<ILongWaitBroker> action)
+        {
+            _simpleAction = null;
+            _progressAction = null;
+            _brokerAction = action;
+        }
         public bool IsAction => IsActionWithNoArg || IsActionWithProgressMonitor || IsActionWithLongWaitBroker;
-        public bool IsActionWithNoArg => _action.IsT0;
-        public bool IsActionWithProgressMonitor => _action.IsT1;
-        public bool IsActionWithLongWaitBroker => _action.IsT2;
-        public Action AsActionWithNoArg => _action.AsT0;
-        public Action<IProgressMonitor> AsActionWithProgressMonitor => _action.AsT1;
-        public Action<ILongWaitBroker> AsActionWithLongWaitBroker => _action.AsT2;
+        public bool IsActionWithNoArg => _simpleAction != null;
+        public bool IsActionWithProgressMonitor => _progressAction != null;
+        public bool IsActionWithLongWaitBroker => _brokerAction != null;
+
+        public Action AsActionWithNoArg => _simpleAction; // Returns null if not set
+        public Action<IProgressMonitor> AsActionWithProgressMonitor => _progressAction; // Returns null if not set
+        public Action<ILongWaitBroker> AsActionWithLongWaitBroker => _brokerAction; // Returns null if not set
 
         public Type ActionType
         {
             get
             {
-                return _action.Match(
-                    t0 => t0.GetType(),
-                    t1 => t1.GetType(),
-                    t2 => t2.GetType());
+                if (_simpleAction != null)
+                    return _simpleAction.GetType();
+                if (_progressAction != null)
+                    return _progressAction.GetType();
+                if (_brokerAction != null)
+                    return _brokerAction.GetType();
+
+                // Handle case where no action is set
+                return null; // Or throw new InvalidOperationException("No action set.");
             }
         }
 
@@ -1798,20 +1834,25 @@ namespace pwiz.Skyline.Model.Tools
 
         public PythonTask(Action action)
         {
-            _action = action;
+            _simpleAction = action;
+            _progressAction = null;
+            _brokerAction = null;
         }
 
         public PythonTask(Action<IProgressMonitor> action)
         {
-            _action = action;
+            _simpleAction = null;
+            _progressAction = action;
+            _brokerAction = null;
         }
 
         public PythonTask(Action<ILongWaitBroker> action)
         {
-            _action = action;
+            _simpleAction = null;
+            _progressAction = null;
+            _brokerAction = action;
         }
     }
-
     internal class PythonTaskNode
     {
         public PythonTaskName PythonTaskName { get; set; }
