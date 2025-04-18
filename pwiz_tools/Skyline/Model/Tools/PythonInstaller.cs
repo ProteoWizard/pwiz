@@ -32,6 +32,7 @@ using System.Threading;
 using Ionic.Zip;
 using JetBrains.Annotations;
 using Microsoft.Win32;
+using OneOf;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
@@ -426,6 +427,7 @@ namespace pwiz.Skyline.Model.Tools
         }
 
 
+        /* *******************************************************************************
         public List<PythonTask> ValidatePythonVirtualEnvironment()
         {
             var tasks = new List<PythonTask>();
@@ -484,7 +486,69 @@ namespace pwiz.Skyline.Model.Tools
             NumTotalTasks = PendingTasks.Count;
             return tasks;
         }
+        ************************************************************************************ */
 
+        public List<PythonTask> ValidatePythonVirtualEnvironment()
+        {
+            var tasks = new List<PythonTask>();
+            if (!TestPythonVirtualEnvironmentTaskNames.IsNullOrEmpty())
+            {
+                foreach (var taskName in TestPythonVirtualEnvironmentTaskNames)
+                {
+                    tasks.Add(GetPythonTask(taskName));
+                    return tasks;
+                }
+            }
+
+            var taskNodes = PythonInstallerUtil.GetPythonTaskNodes(this.NvidiaGpuAvailable);
+            var hasSeenFailure = false;
+            foreach (var taskNode in taskNodes)
+            {
+                bool? isTaskValid = TaskValidator.Validate(taskNode.PythonTaskName, this);
+                if (hasSeenFailure)
+                {
+                    if ((isTaskValid == true || isTaskValid == null) && null == taskNode.ParentNodes) 
+                        continue; 
+
+
+                    bool havePrerequisite = false;
+
+                    if (taskNode.ParentNodes == null)
+                    {
+                        tasks.Add(GetPythonTask(taskNode.PythonTaskName));
+                        continue;
+                    }
+                    else if (tasks.Count > 0)
+                    {
+                        foreach (var parentTask in taskNode.ParentNodes)
+                        {
+                            if (tasks.Count > 0 && tasks.Where(p => p.Name == parentTask.PythonTaskName).ToArray().Length > 0)
+                            {
+                                havePrerequisite = true;
+                                break;
+                            }
+                        }
+
+                    }
+
+                    if (!havePrerequisite)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (isTaskValid == true || isTaskValid == null)  
+                        continue; 
+                    hasSeenFailure = true;
+                }
+
+                PythonTask nextTask = GetPythonTask(taskNode.PythonTaskName);
+                if (nextTask != null) tasks.Add(nextTask);
+            }
+            PendingTasks = tasks;
+            return tasks;
+        }
         private PythonTask GetPythonTask(PythonTaskName pythonTaskName) 
         {
             switch (pythonTaskName)
@@ -540,7 +604,7 @@ namespace pwiz.Skyline.Model.Tools
                     task8.Name = pythonTaskName;
                     return task8;
                 case PythonTaskName.pip_install_packages:
-                    var task9= new PythonTask((longWaitBroker) => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages, longWaitBroker));
+                    var task9 = new PythonTask((longWaitBroker) => PipInstall(VirtualEnvironmentPythonExecutablePath, PythonPackages, longWaitBroker));
                     task9.InProgressMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task9.FailureMessage = string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, VirtualEnvironmentName);
                     task9.Name = pythonTaskName;
@@ -865,22 +929,20 @@ namespace pwiz.Skyline.Model.Tools
                     {
                         throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
                             cmdBuilder));
-    
+
                     }
 
                     if (cancelToken.IsCancellationRequested)
                         break;
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                string error = $@"Unexpected error: {ex.Message}";
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
-                    error));
+                return;
             }
 
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);
-            PythonInstallerUtil.SignFile(filePath+DOT_EXE);
+            PythonInstallerUtil.SignFile(filePath + DOT_EXE);
             PythonInstallerUtil.SignDirectory(VirtualEnvironmentDir);
 
         }
@@ -1205,7 +1267,14 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     return null;
                 }
-                return signature == File.ReadAllText(filePath);
+
+                if (signature != File.ReadAllText(filePath))
+                {
+                    File.Delete(filePath);
+                    return false;
+                }
+
+                return true;
             }
 
         }
@@ -1765,6 +1834,51 @@ namespace pwiz.Skyline.Model.Tools
 
     public class PythonTask
     {
+        private OneOf<Action, Action<IProgressMonitor>, Action<ILongWaitBroker>> _action;
+        public bool IsAction => IsActionWithNoArg || IsActionWithProgressMonitor || IsActionWithLongWaitBroker;
+        public bool IsActionWithNoArg => _action.IsT0;
+        public bool IsActionWithProgressMonitor => _action.IsT1;
+        public bool IsActionWithLongWaitBroker => _action.IsT2;
+        public Action AsActionWithNoArg => _action.AsT0;
+        public Action<IProgressMonitor> AsActionWithProgressMonitor => _action.AsT1;
+        public Action<ILongWaitBroker> AsActionWithLongWaitBroker => _action.AsT2;
+
+        public Type ActionType
+        {
+            get
+            {
+                return _action.Match(
+                    t0 => t0.GetType(),
+                    t1 => t1.GetType(),
+                    t2 => t2.GetType());
+            }
+        }
+
+        public PythonTaskName Name { get; set; }
+
+        public string InProgressMessage { get; set; }
+        public string SuccessMessage { get; set; }
+        public string FailureMessage { get; set; }
+
+        public PythonTask(Action action)
+        {
+            _action = action;
+        }
+
+        public PythonTask(Action<IProgressMonitor> action)
+        {
+            _action = action;
+        }
+
+        public PythonTask(Action<ILongWaitBroker> action)
+        {
+            _action = action;
+        }
+    }
+
+    /* ********************************************************************
+    public class PythonTask
+    {
         private Action _simpleAction;
         private Action<IProgressMonitor> _progressAction;
         private Action<ILongWaitBroker> _brokerAction;
@@ -1842,6 +1956,7 @@ namespace pwiz.Skyline.Model.Tools
             _brokerAction = action;
         }
     }
+    ********************************************************************** */
 
     internal class PythonTaskNode
     {

@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Model.Lib
 
             if (alphapeptDeepFormat)
                 header = string.Join(TAB, PrecursorTableColumnNames);
-            else if (toolName.Equals(@"carafe"))
+            else if (toolName.Equals(@"Carafe"))
             {
                 if (training)
                     header = string.Join(TAB, TrainingTableColumnNamesCarafe);

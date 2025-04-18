@@ -333,6 +333,15 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Currently open document is missing peptides..
+        /// </summary>
+        public static string BuildLibraryDlg_Currently_open_document_is_missing_peptides {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Currently_open_document_is_missing_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;DIA-NN report document:.
         /// </summary>
         public static string BuildLibraryDlg_DIANN_report_document {
@@ -430,6 +439,15 @@ namespace pwiz.Skyline.SettingsUI {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_speci" +
                         "fy_a_file_path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must fill out this form to continue..
+        /// </summary>
+        public static string BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue", resourceCulture);
             }
         }
         

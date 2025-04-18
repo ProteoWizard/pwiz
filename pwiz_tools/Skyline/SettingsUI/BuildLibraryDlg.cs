@@ -120,7 +120,9 @@ namespace pwiz.Skyline.SettingsUI
         private string CarafePythonVirtualEnvironmentDir =>
             PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(CARAFE_PYTHON_VERSION, CARAFE);
         private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
+
+        //        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
+        private string AlphapeptdeepDiaRepo = @"https://codeload.github.com/wenbostar/alphapeptdeep_dia/zip/refs/tags/v1.0";
         private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
         private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
         private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
@@ -164,7 +166,12 @@ namespace pwiz.Skyline.SettingsUI
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
-            comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
+            
+            if (_documentUiContainer.DocumentFilePath != null)
+                comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.currentSkylineDocument;
+            else
+                comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
+
             comboLearnFrom.SelectedIndex = (int)DataSourcePages.files;
 
             _helper = new MessageBoxHelper(this);
@@ -321,6 +328,8 @@ namespace pwiz.Skyline.SettingsUI
                             AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI, IrtStandard);
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
                     }
+
+
                 }
                 else if (radioCarafeSource.Checked)
                 {
@@ -399,6 +408,17 @@ namespace pwiz.Skyline.SettingsUI
                 
                     ************************************* */
 
+                    if (tabControlMain.SelectedIndex == (int)Pages.learning &&
+                        (textBoxMsMsData.Text == "" || textBoxTrainingDoc.Text == "" ||
+                         ((BuildLibraryTargetOptions)comboBuildLibraryTarget.SelectedIndex ==
+                             BuildLibraryTargetOptions.fastaFile && textBoxProteinDatabase.Text == "")))
+                    {
+                        AlertDlg alertDlg = new AlertDlg(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue, MessageBoxButtons.OK);
+                        alertDlg.ShowDialog();
+                        return false;
+
+                    }
+
                     if (!SetupPythonEnvironmentForCarafe(createDlg))
                     {
                         if (cleanUp) pythonInstaller.CleanUpPythonEnvironment(CARAFE);
@@ -438,6 +458,8 @@ namespace pwiz.Skyline.SettingsUI
                         throw new NotSupportedException(
                             @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
                     }
+
+
                 }
                 else
                 {
@@ -775,21 +797,19 @@ namespace pwiz.Skyline.SettingsUI
             Cursor.Current = Cursors.WaitCursor;
             if (tabControlMain.SelectedIndex == (int)Pages.learning && radioCarafeSource.Checked)
             {
-                if (textBoxMsMsData.Text == "")
+                if (ValidateBuilder(true, true, true, true))
                 {
+                    Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
+                    Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
+                    DialogResult = DialogResult.OK;
                     btnNext.Enabled = false;
+
                 }
                 else
                 {
                     btnNext.Enabled = true;
-
-                    if (ValidateBuilder(true, true, true, true))
-                    {
-                        Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
-                        Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
-                        DialogResult = DialogResult.OK;
-                    }
                 }
+
             }
             else if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
@@ -810,10 +830,7 @@ namespace pwiz.Skyline.SettingsUI
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
-                if (radioFilesSource.Checked)
-                    btnNext.Enabled = Grid.IsReady;
-                else
-                    btnNext.Enabled = true;
+
             }
             Cursor.Current = Cursors.Default;
         }
@@ -1337,7 +1354,12 @@ namespace pwiz.Skyline.SettingsUI
             switch (targetOption)
             {
                 case BuildLibraryTargetOptions.currentSkylineDocument:
-                    if (comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc)
+                    if (!_documentUiContainer.Document.HasPeptides)
+                    {
+                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Currently_open_document_is_missing_peptides);
+                        comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
+                    }
+                    else if (comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc)
                     {
                         comboLearnFrom.SelectedIndex = (int)LearningOptions.another_doc;
                         labelDoc.Enabled = true;

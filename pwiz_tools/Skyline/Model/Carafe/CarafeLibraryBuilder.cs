@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string BIN = @"bin";
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
-        private const string CARAFE = @"carafe";
+        private const string CARAFE = @"Carafe";
         private const string CARAFE_VERSION = @"0.0.1";
         private const string CARAFE_DEV = @"-dev";
         private const string CARAFE_DEV_VERSION = CARAFE_DEV + @"-20250304T224833Z-001";
@@ -442,8 +442,20 @@ namespace pwiz.Skyline.Model.Carafe
             PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
             ExperimentDataFilePath = experimentDataFilePath;
             ExperimentDataTuningFilePath = experimentDataTuningFilePath;
-            ToolName = @"Carafe";
+            ToolName = CARAFE;
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
+
+            if (RootDir == null)
+            {
+                RootDir = Path.GetDirectoryName(libOutPath);
+            }
+
+            if (RootDir != null)
+            {
+                RootDir = Path.Combine(RootDir, libName);
+                //Directory.CreateDirectory(RootDir);
+                InitializeLibraryHelper(RootDir);
+            }
 
             if (Document.DocumentHash != null || DbInputFilePath != null) InitializeLibraryHelper(RootDir);
 
@@ -452,7 +464,7 @@ namespace pwiz.Skyline.Model.Carafe
             //    LibraryHelper = new LibraryHelper();
             //    LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, experimentDataFilePath);
             //}
-            Directory.CreateDirectory(RootDir);
+            // Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeDir);
 
@@ -710,30 +722,31 @@ namespace pwiz.Skyline.Model.Carafe
                 }
             }
 
+  
             if (TrainingDocument != null)
             {
                 readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
 
-                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
-                LibraryHelper.PrepareTrainingInputFile(TrainingDocument, progress, ref progressStatus, @"carafe");
+                LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE);
+                LibraryHelper.PrepareTrainingInputFile(TrainingDocument, progress, ref progressStatus, CARAFE);
             }
             else if (_diann_training)
             {
-                if (DbInputFilePath != null && DbInputFilePath != "")
+                if (!DbInputFilePath.IsNullOrEmpty())
                 {
                     readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
-                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE);
                 }
                 else
                 {
                     readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                     readyArgs.Add(new ArgumentAndValue(@"se", @"DIA-NN", TextUtil.HYPHEN));
-                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"carafe");
+                    LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, CARAFE);
                 }
             }
             else
@@ -741,8 +754,7 @@ namespace pwiz.Skyline.Model.Carafe
                 readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
-
-                LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, @"carafe");
+                LibraryHelper.PrepareTrainingInputFile(Document, progress, ref progressStatus, CARAFE);
             }
             // progressStatus = progressStatus.NextSegment();
 
