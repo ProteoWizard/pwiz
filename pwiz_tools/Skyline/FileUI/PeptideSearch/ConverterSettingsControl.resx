@@ -448,7 +448,7 @@
     <value>converterTabControl</value>
   </data>
   <data name="&gt;&gt;converterTabControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Controls.WizardPages, Skyline-daily, Version=24.1.1.277, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Controls.WizardPages, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;converterTabControl.Parent" xml:space="preserve">
     <value>$this</value>

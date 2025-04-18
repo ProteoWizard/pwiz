@@ -134,9 +134,6 @@
   <data name="cbxLogXAxis.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
   </data>
-  <data name="cbxLogXAxis.Text" xml:space="preserve">
-    <value>Logarithmic X Axis</value>
-  </data>
   <data name="&gt;&gt;cbxLogXAxis.Name" xml:space="preserve">
     <value>cbxLogXAxis</value>
   </data>
@@ -161,9 +158,6 @@
   <data name="cbxLogYAxis.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
   </data>
-  <data name="cbxLogYAxis.Text" xml:space="preserve">
-    <value>Logarithmic Y Axis</value>
-  </data>
   <data name="&gt;&gt;cbxLogYAxis.Name" xml:space="preserve">
     <value>cbxLogYAxis</value>
   </data>
@@ -177,19 +171,19 @@
     <value>11</value>
   </data>
   <data name="textSizeComboBox.Items" xml:space="preserve">
-    <value>x-small</value>
+    <value>極小</value>
   </data>
   <data name="textSizeComboBox.Items1" xml:space="preserve">
-    <value>small</value>
+    <value>小</value>
   </data>
   <data name="textSizeComboBox.Items2" xml:space="preserve">
-    <value>normal</value>
+    <value>普通</value>
   </data>
   <data name="textSizeComboBox.Items3" xml:space="preserve">
-    <value>large</value>
+    <value>大</value>
   </data>
   <data name="textSizeComboBox.Items4" xml:space="preserve">
-    <value>x-large</value>
+    <value>極大</value>
   </data>
   <data name="textSizeComboBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>115, 28</value>
@@ -229,7 +223,7 @@
     <value>2</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Font size:</value>
+    <value>フォントサイズ(&amp;F)：</value>
   </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
@@ -259,7 +253,7 @@
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>&amp;Line width:</value>
+    <value>線の幅(&amp;L)：</value>
   </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
@@ -309,9 +303,6 @@
   <data name="lblShowSampleTypes.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
   </data>
-  <data name="lblShowSampleTypes.Text" xml:space="preserve">
-    <value>Show sample types:</value>
-  </data>
   <data name="&gt;&gt;lblShowSampleTypes.Name" xml:space="preserve">
     <value>lblShowSampleTypes</value>
   </data>
@@ -335,9 +326,6 @@
   </data>
   <data name="cbxSingleBatch.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
-  </data>
-  <data name="cbxSingleBatch.Text" xml:space="preserve">
-    <value>Show replicates from only one batch</value>
   </data>
   <data name="&gt;&gt;cbxSingleBatch.Name" xml:space="preserve">
     <value>cbxSingleBatch</value>
@@ -363,9 +351,6 @@
   <data name="cbxShowLegend.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
   </data>
-  <data name="cbxShowLegend.Text" xml:space="preserve">
-    <value>Show legend</value>
-  </data>
   <data name="&gt;&gt;cbxShowLegend.Name" xml:space="preserve">
     <value>cbxShowLegend</value>
   </data>
@@ -389,9 +374,6 @@
   </data>
   <data name="cbxShowFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
     <value>10</value>
-  </data>
-  <data name="cbxShowFiguresOfMerit.Text" xml:space="preserve">
-    <value>Show figures of merit</value>
   </data>
   <data name="&gt;&gt;cbxShowFiguresOfMerit.Name" xml:space="preserve">
     <value>cbxShowFiguresOfMerit</value>
@@ -421,7 +403,7 @@
     <value>13</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
-    <value>Cancel</value>
+    <value>キャンセル</value>
   </data>
   <data name="&gt;&gt;btnCancel.Name" xml:space="preserve">
     <value>btnCancel</value>
@@ -503,12 +485,13 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>Calibration Curve Display Options</value>
+    <comment>Needs Review:Missing translation</comment>
   </data>
   <data name="&gt;&gt;modeUIHandler.Name" xml:space="preserve">
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.355, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;toolTip1.Name" xml:space="preserve">
     <value>toolTip1</value>
@@ -520,6 +503,6 @@
     <value>CalibrationCurveOptionsDlg</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.355, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

@@ -22,8 +22,6 @@ namespace ResourcesOrganizer.ResourcesModel
     {
         public static readonly string NeedsReviewPrefix = "Needs Review:";
         public static readonly LocalizationIssue NewResource = new ("New resource");
-        public static readonly LocalizationIssue InconsistentTranslation =
-            new ("Inconsistent translation");
         public static readonly LocalizationIssue MissingTranslation =
             new ("Missing translation");
 
@@ -31,7 +29,7 @@ namespace ResourcesOrganizer.ResourcesModel
         {
             get
             {
-                return new[] { NewResource, new EnglishTextChanged(), InconsistentTranslation, MissingTranslation };
+                return new[] { NewResource, new EnglishTextChanged(), new InconsistentTranslation(), MissingTranslation };
             }
         }
         public static LocalizationIssue? FromName(string? name)

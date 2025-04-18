@@ -145,11 +145,11 @@ namespace pwiz.Skyline.Controls.Databinding
             // Count main grid columns to add spaces.
             var replicateVariablePropertyCounts = filteredColumnDescriptors.GroupBy(column => column.PivotKey ?? PivotKey.EMPTY)
                 .ToDictionary(grouping => grouping.Key, grouping => grouping.Count());
-
             // Create header line with property column and replicate headers.
+            var propertyCaption = LocalizationHelper.CallWithCulture(DataSchema.DataSchemaLocalizer.Language,
+                () => Model.Databinding.DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property);
             var headerLine = Enumerable.Repeat(string.Empty, replicateVariablePropertyCounts[PivotKey.EMPTY] - 1)
-                .Prepend(Model.Databinding.DatabindingResources.SkylineViewContext_WriteDataWithStatus_Property).ToList();
-
+                .Prepend(propertyCaption).ToList();
             var propertyLineDictionary = new Dictionary<PropertyPath, List<string>>();
             var propertyLines = new List<List<string>> { headerLine };
             var allRowItems = rowItemEnumerator.GetRowItems();

@@ -724,6 +724,9 @@ Old Localized:DIA 原始（去卷积、搜索和构建库）</comment>
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>相对于轻的比率</value>
   </data>
+  <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
+    <value>双线性</value>
+  </data>
   <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
     <value>已分配给肽段最多的基因 </value>
   </data>
