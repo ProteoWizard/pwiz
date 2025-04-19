@@ -87,6 +87,8 @@ namespace pwiz.Skyline.Menus
 
             originalPeakMenuItem.Checked = set.ShowOriginalPeak;
             menuStrip.Items.Insert(iInsert++, originalPeakMenuItem);
+            imputedPeakMenuItem.Checked = set.ShowImputedPeakBounds;
+            menuStrip.Items.Insert(iInsert++, imputedPeakMenuItem);
 
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
             if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
@@ -254,16 +256,13 @@ namespace pwiz.Skyline.Menus
                 };
                 items.Insert(iInsert++, menuItem);
             }
-            if (null != chromFileInfoId && DocumentUI.Settings.HasResults &&
-                !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+            if (null != chromFileInfoId && !DocumentUI.Settings.DocumentRetentionTimes.IsEmpty)
             {
-                foreach (var chromatogramSet in DocumentUI.Settings.MeasuredResults.Chromatograms)
+                var chromatogramSet = Document.MeasuredResults.Chromatograms.FirstOrDefault(chromSet =>
+                    chromSet.IndexOfId(chromFileInfoId) >= 0);
+                if (chromatogramSet != null)
                 {
                     var chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
-                    if (null == chromFileInfo)
-                    {
-                        continue;
-                    }
                     string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
                     var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
                     var alignToFileItem = new ToolStripMenuItem(menuItemText);
@@ -486,6 +485,11 @@ namespace pwiz.Skyline.Menus
         private void originalPeakContextMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.ShowOriginalPeak(originalPeakMenuItem.Checked);
+        }
+
+        private void imputedPeakMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.ShowImputedPeak(imputedPeakMenuItem.Checked);
         }
 
         private void massErrorContextMenuItem_Click(object sender, EventArgs e)

@@ -36,6 +36,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -71,6 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             Quantification = QuantificationSettings.DEFAULT;
             ProteinAssociationSettings = proteinAssociationSettings;
+            Imputation = ImputationSettings.DEFAULT;
         }
 
         [TrackChildren]
@@ -102,6 +104,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         [TrackChildren]
         public ProteinAssociation.ParsimonySettings ProteinAssociationSettings { get; private set; }
+
+        [TrackChildren]
+        public ImputationSettings Imputation { get; private set; }
 
         #region Property change methods
 
@@ -164,6 +169,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideSettings ChangeParsimonySettings(ProteinAssociation.ParsimonySettings prop)
         {
             return ChangeProp(ImClone(this), im => im.ProteinAssociationSettings = prop);
+        }
+
+        public PeptideSettings ChangeImputation(ImputationSettings imputation)
+        {
+            return ChangeProp(ImClone(this), im => im.Imputation = imputation);
         }
 
         public PeptideSettings MergeDefaults(PeptideSettings defPep)
@@ -230,10 +240,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 Integration = reader.DeserializeElement<PeptideIntegration>();
                 Quantification = reader.DeserializeElement<QuantificationSettings>();
                 ProteinAssociationSettings = reader.DeserializeElement<ProteinAssociation.ParsimonySettings>();
+                Imputation = reader.DeserializeElement<ImputationSettings>();
                 reader.ReadEndElement();
             }
 
-            Quantification = Quantification ?? QuantificationSettings.DEFAULT;
+            Quantification ??= QuantificationSettings.DEFAULT;
+            Imputation ??= ImputationSettings.DEFAULT;
             // Defer validation to the SrmSettings object
         }
 
@@ -254,6 +266,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteElement(Quantification);
             if (!Equals(ProteinAssociationSettings, ProteinAssociation.ParsimonySettings.DEFAULT))
                 writer.WriteElement(ProteinAssociationSettings);
+            if (!Equals(Imputation, ImputationSettings.DEFAULT))
+                writer.WriteElement(Imputation);
         }
 
         #endregion
@@ -273,7 +287,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Integration, Integration) &&
                    Equals(obj.BackgroundProteome, BackgroundProteome) &&
                    Equals(obj.Quantification, Quantification) &&
-                   Equals(obj.ProteinAssociationSettings, ProteinAssociationSettings);
+                   Equals(obj.ProteinAssociationSettings, ProteinAssociationSettings) &&
+                   Equals(obj.Imputation, Imputation);
         }
 
         public override bool Equals(object obj)
@@ -1926,7 +1941,6 @@ namespace pwiz.Skyline.Model.DocSettings
             HasDocumentLibrary = hasDocLib;
             LibrarySpecs = librarySpecs;
             Libraries = libraries;
-
             DoValidate();
         }
 
@@ -2297,7 +2311,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideLibraries ChangeLibraries(IList<Library> prop)
         {
-            return ChangeProp(ImClone(this), im => im.Libraries = prop);
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.Libraries = prop;
+            });
         }
 
         public PeptideLibraries ChangeLibraries(IList<LibrarySpec> specs, IList<Library> libs)
@@ -2748,7 +2765,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren]
         public PeakScoringModelSpec PeakScoringModel { get; private set; }
         public bool IsSerializable { get { return IsAutoTrain || PeakScoringModel.IsTrained; } }
-        public MProphetResultsHandler ResultsHandler { get; private set; }
+        public ReintegrateResultsHandler ResultsHandler { get; private set; }
 
         #region Property change methods
 
@@ -2765,12 +2782,12 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Changing this starts a peak reintegration when it is set on the document.
         /// </summary>
-        public PeptideIntegration ChangeResultsHandler(MProphetResultsHandler prop)
+        public PeptideIntegration ChangeResultsHandler(ReintegrateResultsHandler prop)
         {
             return ChangeProp(ImClone(this), im =>
             {
                 if (prop != null)
-                    im.PeakScoringModel = prop.ScoringModel;
+                    im.PeakScoringModel = prop.MProphetResultsHandler.ScoringModel;
                 im.ResultsHandler = prop;
             });
         }

@@ -26,6 +26,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -181,7 +182,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 var documentContainer = new MemoryDocumentContainer();
                 documentContainer.SetDocument(_skylineWindow.DocumentUI, documentContainer.Document);
-                dataSchema = new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer());
+                dataSchema = new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer(), PeakBoundaryImputer.GetInstance(_skylineWindow.DocumentUI));
             }
             else
             {

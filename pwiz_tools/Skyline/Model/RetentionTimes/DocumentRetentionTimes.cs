@@ -18,12 +18,13 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using JetBrains.Annotations;
+using NHibernate.Cfg.MappingSchema;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -31,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
@@ -40,10 +42,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
     /// Contains all the retention time alignments that are relevant for a <see cref="SrmDocument"/>
     /// </summary>
     [XmlRoot("doc_rt_alignments")]
-    public class DocumentRetentionTimes : IXmlSerializable
+    public class DocumentRetentionTimes : Immutable, IXmlSerializable
     {
         public static readonly DocumentRetentionTimes EMPTY =
-            new DocumentRetentionTimes(Array.Empty<RetentionTimeSource>(), Array.Empty<FileRetentionTimeAlignments>());
+            new DocumentRetentionTimes(Array.Empty<RetentionTimeSource>(), Array.Empty<FileRetentionTimeAlignments>())
+            {
+                _libraryAlignments = new Dictionary<string, LibraryAlignmentValue>(),
+                RetentionTimeSources = ResultNameMap<RetentionTimeSource>.EMPTY,
+                FileAlignments = ResultNameMap<FileRetentionTimeAlignments>.EMPTY
+            };
         public const double REFINEMENT_THRESHOLD = .99;
         public DocumentRetentionTimes(IEnumerable<RetentionTimeSource> sources, IEnumerable<FileRetentionTimeAlignments> fileAlignments)
             : this()
@@ -51,40 +58,34 @@ namespace pwiz.Skyline.Model.RetentionTimes
             RetentionTimeSources = ResultNameMap.FromNamedElements(sources);
             FileAlignments = ResultNameMap.FromNamedElements(fileAlignments);
         }
-        public DocumentRetentionTimes(SrmDocument document)
-            : this()
-        {
-            RetentionTimeSources = ListAvailableRetentionTimeSources(document.Settings);
-            FileAlignments = ResultNameMap<FileRetentionTimeAlignments>.EMPTY;
-        }
-
         public bool IsEmpty
         {
-            get { return RetentionTimeSources.IsEmpty && FileAlignments.IsEmpty; }
+            get { return RetentionTimeSources.IsEmpty && FileAlignments.IsEmpty && _libraryAlignments.Count == 0; }
         }
 
         public static string IsNotLoadedExplained(SrmSettings srmSettings)
         {
+            if (!AlignmentTarget.TryGetAlignmentTarget(srmSettings, out _))
+            {
+                return null;
+            }
             if (!srmSettings.PeptideSettings.Libraries.IsLoaded)
             {
                 return null;
             }
-            var documentRetentionTimes = srmSettings.DocumentRetentionTimes;
-            var availableSources = ListAvailableRetentionTimeSources(srmSettings);
-            var resultSources = ListSourcesForResults(srmSettings.MeasuredResults, availableSources);
-            if (!Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys))
+
+            if (srmSettings.DocumentRetentionTimes.UpdateFromLoadedSettings(srmSettings) != null)
             {
-                return @"DocumentRetentionTimes: !Equals(resultSources.Keys, documentRetentionTimes.FileAlignments.Keys)";
+                return nameof(DocumentRetentionTimes) + @" need to update from loaded settings";
             }
-            if (documentRetentionTimes.FileAlignments.IsEmpty)
+            var unloadedLibraries = srmSettings.DocumentRetentionTimes.GetMissingAlignments(srmSettings).Select(param => param.LibraryName).ToList();
+            if (unloadedLibraries.Count == 0)
             {
+                
                 return null;
             }
-            if (!Equals(availableSources, documentRetentionTimes.RetentionTimeSources))
-            {
-                return @"DocumentRetentionTimes: !Equals(availableSources, documentRetentionTimes.RetentionTimeSources)";
-            }
-            return null;
+
+            return nameof(DocumentRetentionTimes) + @": " + TextUtil.SpaceSeparate(unloadedLibraries);
         }
 
         public static string IsNotLoadedExplained(SrmDocument document)
@@ -97,90 +98,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return IsNotLoadedExplained(document) == null;
         }
 
-        public static SrmDocument RecalculateAlignments(SrmDocument document, IProgressMonitor progressMonitor)
-        {
-            var newSources = ListAvailableRetentionTimeSources(document.Settings);
-            var newResultsSources = ListSourcesForResults(document.Settings.MeasuredResults, newSources);
-            var allLibraryRetentionTimes = ReadAllRetentionTimes(document, newSources);
-            var newFileAlignments = new List<KeyValuePair<int, FileRetentionTimeAlignments>>();
-            var pairsToAlign = GetPairsToAlign(newResultsSources, document.MeasuredResults, newSources);
-            using var cancellationTokenSource = new PollingCancellationToken(() => progressMonitor.IsCanceled);
-            IProgressStatus progressStatus = new ProgressStatus(RetentionTimesResources.DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times);
-            ParallelEx.ForEach(newResultsSources.Values.Select(Tuple.Create<RetentionTimeSource, int>), tuple =>
-            {
-                {
-                    if (progressMonitor.IsCanceled)
-                    {
-                        return;
-                    }
-                    try
-                    {
-                        var retentionTimeSource = tuple.Item1;
-                        var fileAlignments = CalculateFileRetentionTimeAlignments(retentionTimeSource.Name,
-                            allLibraryRetentionTimes, pairsToAlign, cancellationTokenSource.Token);
-                        lock (newFileAlignments)
-                        {
-                            newFileAlignments.Add(new KeyValuePair<int, FileRetentionTimeAlignments>(tuple.Item2, fileAlignments));
-                            progressStatus =
-                                progressStatus.ChangePercentComplete(100 * newFileAlignments.Count / newResultsSources.Count);
-                            progressMonitor.UpdateProgress(progressStatus);
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        // ignore
-                    }
-                }
-            });
-            if (progressMonitor.IsCanceled)
-            {
-                return null;
-            }
-
-            var newDocRt = new DocumentRetentionTimes(newSources.Values,
-                newFileAlignments.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value));
-            var newDocument = document.ChangeSettings(document.Settings.ChangeDocumentRetentionTimes(newDocRt));
-            Debug.Assert(IsLoaded(newDocument));
-            progressMonitor.UpdateProgress(progressStatus.Complete());
-            return newDocument;
-        }
-
-        private static FileRetentionTimeAlignments CalculateFileRetentionTimeAlignments(
-            string dataFileName, ResultNameMap<IDictionary<Target, MeasuredRetentionTime>> libraryRetentionTimes, 
-            HashSet<Tuple<string, string>> pairsToAlign,
-            CancellationToken cancellationToken)
-        {
-            var targetTimes = libraryRetentionTimes.Find(dataFileName);
-            if (targetTimes == null)
-            {
-                return null;
-            }
-            var alignments = new List<RetentionTimeAlignment>();
-            foreach (var entry in libraryRetentionTimes)
-            {
-                if (dataFileName == entry.Key)
-                {
-                    continue;
-                }
-
-                if (!pairsToAlign.Contains(Tuple.Create(dataFileName, entry.Key)) &&
-                    !pairsToAlign.Contains(Tuple.Create(entry.Key, dataFileName)))
-                {
-                    continue;
-                }
-                var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value,
-                    REFINEMENT_THRESHOLD, RegressionMethodRT.linear, cancellationToken);
-                if (alignedFile == null || alignedFile.RegressionRefinedStatistics == null ||
-                    !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHOLD))
-                {
-                    continue;
-                }
-                var regressionLine = alignedFile.RegressionRefined.Conversion as RegressionLineElement;
-                if (regressionLine != null)
-                    alignments.Add(new RetentionTimeAlignment(entry.Key, regressionLine));
-            }
-            return new FileRetentionTimeAlignments(dataFileName, alignments);
-        }
 
         public ResultNameMap<FileRetentionTimeAlignments> FileAlignments { get; private set; }
         public ResultNameMap<RetentionTimeSource> RetentionTimeSources { get; private set; }
@@ -191,7 +108,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.RetentionTimeSources, RetentionTimeSources) &&
-                   Equals(other.FileAlignments, FileAlignments);
+                   Equals(other.FileAlignments, FileAlignments)
+                   && CollectionUtil.EqualsDeep(_libraryAlignments, other._libraryAlignments);
 
         }
 
@@ -209,6 +127,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 int result = FileAlignments.GetHashCode();
                 result = (result*397) ^ RetentionTimeSources.GetHashCode();
+                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(_libraryAlignments);
                 return result;
             }
         }
@@ -222,55 +141,88 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
         }
 
+        private enum EL
+        {
+            alignment_target,
+            alignments,
+            alignment,
+            measured,
+            aligned
+        }
+
+        private enum ATTR
+        {
+            calculator,
+            library,
+            file
+        }
+
+
+
         public static DocumentRetentionTimes Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new DocumentRetentionTimes());
         }
         public void ReadXml(XmlReader reader)
         {
-            if (RetentionTimeSources != null || FileAlignments != null)
+            if (_libraryAlignments != null)
             {
                 throw new InvalidOperationException();
             }
-            var sources = new List<RetentionTimeSource>();
-            var fileAlignments = new List<FileRetentionTimeAlignments>();
-            if (reader.IsEmptyElement)
+            var xElement = (XElement) XNode.ReadFrom(reader);
+            var libraryAlignments = new Dictionary<string, LibraryAlignmentValue>();
+            foreach (var elLibrary in xElement.Elements(EL.alignments))
             {
-                reader.Read();
+                var libraryName = elLibrary.Attribute(ATTR.library)?.Value;
+                if (libraryName == null)
+                {
+                    continue;
+                }
+                var alignments = new Dictionary<string, PiecewiseLinearMap>();
+                foreach (var elAlignment in elLibrary.Elements(EL.alignment))
+                {
+                    var elMeasured = elAlignment.Elements(EL.measured).FirstOrDefault();
+                    if (elMeasured != null)
+                    {
+                        var yValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elMeasured.Value));
+                        var xValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elAlignment.Elements(EL.aligned).First().Value));
+                        alignments.Add(elAlignment.Attribute(ATTR.file).Value, PiecewiseLinearMap.FromValues(xValues, yValues));
+                    }
+                }
+                libraryAlignments.Add(libraryName, new LibraryAlignmentValue(null, new Alignments(null, alignments)));
             }
-            else
-            {
-                reader.Read();
-                reader.ReadElements(sources);
-                reader.ReadElements(fileAlignments);
-                reader.ReadEndElement();
-            }
-            RetentionTimeSources = ResultNameMap.FromNamedElements(sources);
-            FileAlignments = ResultNameMap.FromNamedElements(fileAlignments);
+            _libraryAlignments = libraryAlignments;
+            FileAlignments = ResultNameMap<FileRetentionTimeAlignments>.EMPTY;
+            RetentionTimeSources = ResultNameMap<RetentionTimeSource>.EMPTY;
         }
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteElements(RetentionTimeSources.Values);
-            writer.WriteElements(FileAlignments.Values);
+            foreach (var entry in _libraryAlignments)
+            {
+                writer.WriteStartElement(EL.alignments);
+                writer.WriteAttribute(ATTR.library, entry.Key);
+                foreach (var alignment in entry.Value.Alignments.GetAllAlignmentFunctions().OrderBy(kvp=>kvp.Key))
+                {
+                    writer.WriteStartElement(EL.alignment);
+                    writer.WriteAttribute(ATTR.file, alignment.Key);
+                    var piecewiseLinearMap = alignment.Value;
+                    writer.WriteStartElement(EL.measured);
+                    writer.WriteValue(Convert.ToBase64String(PrimitiveArrays.ToBytes(piecewiseLinearMap.YValues.ToArray())));
+                    writer.WriteEndElement();
+                    writer.WriteStartElement(EL.aligned);
+                    writer.WriteValue(Convert.ToBase64String(PrimitiveArrays.ToBytes(piecewiseLinearMap.XValues.ToArray())));
+                    writer.WriteEndElement();
+                    writer.WriteEndElement();
+                }
+                writer.WriteEndElement();
+            }
         }
         public XmlSchema GetSchema()
         {
             return null;
         }
         #endregion
-
-        public static ResultNameMap<RetentionTimeSource> ListSourcesForResults(MeasuredResults results, ResultNameMap<RetentionTimeSource> availableSources)
-        {
-            if (results == null)
-            {
-                return ResultNameMap<RetentionTimeSource>.EMPTY;
-            }
-            var sourcesForResults = results.Chromatograms
-                .SelectMany(chromatogramSet => chromatogramSet.MSDataFileInfos)
-                .Select(availableSources.Find);
-            return ResultNameMap.FromNamedElements(sourcesForResults.Where(source => null != source));
-        }
 
         public static ResultNameMap<RetentionTimeSource> ListAvailableRetentionTimeSources(SrmSettings settings)
         {
@@ -488,6 +440,271 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             return AlignmentFunction.FromParts(regressionLines.Select(line =>
                 AlignmentFunction.Define(line.GetY, line.GetX)));
+        }
+
+        private Dictionary<string, LibraryAlignmentValue> _libraryAlignments;
+
+        public LibraryAlignment GetLibraryAlignment(string libraryName)
+        {
+            _libraryAlignments.TryGetValue(libraryName, out var alignmentValue);
+            return alignmentValue?.LibraryAlignment;
+        }
+
+        public DocumentRetentionTimes ChangeLibraryAlignments(LibraryAlignmentParam alignmentParam, Alignments alignments)
+        {
+            var newEntries = _libraryAlignments.Where(kvp => !alignmentParam.LibraryName.Equals(kvp.Key));
+            if (alignments != null)
+            {
+                newEntries = newEntries.Append(new KeyValuePair<string, LibraryAlignmentValue>(
+                    alignmentParam.LibraryName, new LibraryAlignmentValue(alignmentParam, alignments)));
+            }
+
+            return ChangeProp(ImClone(this),
+                im => im._libraryAlignments = newEntries.ToDictionary(kvp => kvp.Key, kvp => kvp.Value));
+        }
+
+        public DocumentRetentionTimes DumpStaleAlignments(SrmSettings settings)
+        {
+            if (_libraryAlignments.Count == 0)
+            {
+                return this;
+            }
+
+            var newParams = GetAlignmentParams(settings);
+            var newAlignments = _libraryAlignments.Where(kvp =>
+                    newParams.TryGetValue(kvp.Key, out var paramValue) && false != paramValue?.Equals(kvp.Value.Param))
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            if (newAlignments.Count == _libraryAlignments.Count)
+            {
+                return this;
+            }
+
+            return ChangeProp(ImClone(this), im => im._libraryAlignments = newAlignments);
+        }
+
+        public IEnumerable<LibraryAlignmentParam> GetMissingAlignments(SrmSettings settings)
+        {
+            var dictParams = GetAlignmentParams(settings);
+            if (dictParams == null)
+            {
+                yield break;
+            }
+
+            foreach (var kvp in dictParams)
+            {
+                if (kvp.Value != null && !_libraryAlignments.ContainsKey(kvp.Key))
+                {
+                    yield return kvp.Value;
+                }
+            }
+        }
+
+        public Dictionary<string, LibraryAlignmentParam> GetAlignmentParams(SrmSettings settings)
+        {
+            if (!AlignmentTarget.TryGetAlignmentTarget(settings, out var alignmentTarget))
+            {
+                return null;
+            }
+            var dict = new Dictionary<string, LibraryAlignmentParam>();
+            if (!settings.HasResults || alignmentTarget == null)
+            {
+                return dict;
+            }
+
+            var peptideLibraries = settings.PeptideSettings.Libraries;
+            if (peptideLibraries.Libraries.Count == 0)
+            {
+                return dict;
+            }
+            foreach (var grouping in settings.MeasuredResults.Chromatograms.GroupBy(chrom => chrom.BatchName))
+            {
+                for (int iLibrary = 0; iLibrary < peptideLibraries.Libraries.Count; iLibrary++)
+                {
+                    var library = peptideLibraries.Libraries[iLibrary];
+                    var libraryName = library?.Name ?? peptideLibraries.LibrarySpecs[iLibrary]?.Name;
+                    if (libraryName == null)
+                    {
+                        continue;
+                    }
+                    if (true != library?.IsLoaded)
+                    {
+                        dict.Add(libraryName, null);
+                        continue;
+                    }
+                    if (string.IsNullOrEmpty(grouping.Key))
+                    {
+                        dict.Add(libraryName, new LibraryAlignmentParam(alignmentTarget, library, null));
+                    }
+                    else
+                    {
+                        var spectrumSourceFiles = grouping.SelectMany(chrom => chrom.MSDataFilePaths)
+                            .Select(library.LibraryFiles.FindIndexOf).Where(i => i >= 0).OrderBy(i => i)
+                            .Select(i => library.LibraryFiles.FilePaths[i]).ToImmutable();
+                        dict.Add(libraryName, new LibraryAlignmentParam(alignmentTarget, library, spectrumSourceFiles));
+                    }
+                }
+            }
+
+            return dict;
+        }
+
+        public class LibraryAlignmentParam
+        {
+            public LibraryAlignmentParam(AlignmentTarget alignmentTarget, Library library, ImmutableList<string> spectrumSourceFileSubset)
+            {
+                AlignmentTarget = alignmentTarget;
+                Library = library;
+                SpectrumSourceFileSubset = spectrumSourceFileSubset;
+
+            }
+            public AlignmentTarget AlignmentTarget { get; }
+            public string LibraryName
+            {
+                get { return Library.Name; }
+            }
+            public Library Library { get; private set; }
+            [CanBeNull]
+            public ImmutableList<string> SpectrumSourceFileSubset { get; private set; }
+
+            protected bool Equals(LibraryAlignmentParam other)
+            {
+                return Equals(AlignmentTarget, other.AlignmentTarget) && Equals(Library, other.Library) && Equals(SpectrumSourceFileSubset, other.SpectrumSourceFileSubset);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is null) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((LibraryAlignmentParam)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    var hashCode = (AlignmentTarget != null ? AlignmentTarget.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Library != null ? Library.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (SpectrumSourceFileSubset != null ? SpectrumSourceFileSubset.GetHashCode() : 0);
+                    return hashCode;
+                }
+            }
+        }
+
+        private class LibraryAlignmentValue
+        {
+            public LibraryAlignmentValue(LibraryAlignmentParam alignmentParam, Alignments alignments)
+            {
+                Param = alignmentParam;
+                Alignments = alignments;
+            }
+
+            public LibraryAlignmentParam Param { get; }
+            public Alignments Alignments { get; }
+
+            public LibraryAlignment LibraryAlignment
+            {
+                get
+                {
+                    return Param == null ? null : new LibraryAlignment(Param.Library, Alignments);
+                }
+            }
+        }
+
+        public static Alignments PerformAlignment(ILoadMonitor loadMonitor, ref IProgressStatus progressStatus, LibraryAlignmentParam alignmentParam)
+        {
+            var library = alignmentParam.Library;
+            var spectrumSourceFiles = alignmentParam.SpectrumSourceFileSubset ?? library.LibraryFiles.FilePaths;
+            var allRetentionTimes = library.GetAllRetentionTimes(alignmentParam.SpectrumSourceFileSubset);
+            if (allRetentionTimes == null)
+            {
+                return Alignments.EMPTY;
+            }
+
+            using var pollingCancellationToken = new PollingCancellationToken(() => loadMonitor.IsCanceled) { PollingInterval = 1000 };
+            var alignmentFunctions = new KeyValuePair<string, PiecewiseLinearMap>[allRetentionTimes.Length];
+            int completedCount = 0;
+            IProgressStatus localProgressStatus = progressStatus;
+            ParallelEx.For(0, alignmentFunctions.Length, iFile =>
+            {
+                var alignment = alignmentParam.AlignmentTarget.PerformAlignment(allRetentionTimes[iFile], pollingCancellationToken.Token);
+                if (loadMonitor.IsCanceled)
+                {
+                    return;
+                }
+                lock (alignmentFunctions)
+                {
+                    alignmentFunctions[iFile] = new KeyValuePair<string, PiecewiseLinearMap>(spectrumSourceFiles[iFile], alignment);
+                    loadMonitor.UpdateProgress(localProgressStatus =
+                        localProgressStatus.ChangePercentComplete(100 * completedCount++ / alignmentFunctions.Length));
+                }
+            });
+            progressStatus = localProgressStatus;
+            return new Alignments(null, alignmentFunctions);
+        }
+
+        public DocumentRetentionTimes UpdateFromLoadedSettings(SrmSettings settings)
+        {
+            if (_libraryAlignments.Count == 0)
+            {
+                return null;
+            }
+            var newParams = GetAlignmentParams(settings);
+            if (newParams == null)
+            {
+                return null;
+            }
+            var newLibraries = new Dictionary<string, LibraryAlignmentValue>();
+            bool anyChanges = false;
+            foreach (var entry in _libraryAlignments)
+            {
+                var key = entry.Key;
+                if (!newParams.TryGetValue(key, out var param))
+                {
+                    anyChanges = true;
+                    continue;
+                }
+
+                if (Equals(entry.Value.Param, param))
+                {
+                    newLibraries.Add(key, entry.Value);
+                    continue;
+                }
+
+                anyChanges = true;
+                if (entry.Value.Param == null)
+                {
+                    newLibraries.Add(key, new LibraryAlignmentValue(param, entry.Value.Alignments));
+                }
+            }
+
+            if (anyChanges)
+            {
+                return ChangeProp(ImClone(this), im => im._libraryAlignments = newLibraries);
+            }
+
+            return null;
+        }
+
+        public AlignmentFunction GetAlignmentFunction(PeptideLibraries peptideLibraries, MsDataFileUri filePath,
+            string batchName, bool forward)
+        {
+            if (string.IsNullOrEmpty(batchName))
+            {
+                batchName = null;
+            }
+
+            foreach (var library in peptideLibraries.Libraries.Where(lib => true == lib?.IsLoaded))
+            {
+                if (!_libraryAlignments.TryGetValue(library.Name, out var value))
+                {
+                    continue;
+                }
+
+                return value.Alignments.GetAlignmentFunction(filePath, forward);
+            }
+
+            return null;
         }
     }
 }

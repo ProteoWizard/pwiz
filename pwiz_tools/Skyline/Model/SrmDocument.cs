@@ -1812,19 +1812,18 @@ namespace pwiz.Skyline.Model
                 var nodeGroup = (TransitionGroupDocNode) FindNode(groupPath);
                 if (nodeGroup == null)
                     throw new IdentityNotFoundException(groupPath.Child);
-                var lookupSequence = nodePep.SourceUnmodifiedTarget;
-                var lookupMods = nodePep.SourceExplicitMods;
-                double[] retentionTimes;
-                Settings.TryGetRetentionTimes(lookupSequence, nodeGroup.TransitionGroup.PrecursorAdduct, lookupMods,
-                                              filePath, out _, out retentionTimes);
+                var targets = Settings.GetTargets(nodePep).ToList();
+                var retentionTimes = Settings.GetRetentionTimes(filePath, targets);
+                Settings.TryGetRetentionTimes(nodePep, nodeGroup.TransitionGroup.PrecursorAdduct, filePath, out _, out retentionTimes);
                 if(ContainsTime(retentionTimes, startTime.Value, endTime.Value))
                 {
                     identified = PeakIdentification.TRUE;
                 }
                 else
                 {
-                    var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(filePath,
-                        lookupSequence, lookupMods);
+                    ChromatogramSet chromatogramSet = null;
+                    MeasuredResults?.TryGetChromatogramSet(nameSet, out chromatogramSet, out _);
+                    var alignedRetentionTimes = Settings.GetAlignedRetentionTimes(chromatogramSet, filePath, Settings.GetTargets(nodePep).ToList());
                     identified = ContainsTime(alignedRetentionTimes, startTime.Value, endTime.Value)
                         ? PeakIdentification.ALIGNED
                         : PeakIdentification.FALSE;

@@ -109,11 +109,12 @@ namespace pwiz.SkylineTestFunctional
 
 
             // Verify that the generated chromatogram is of the expected length around the actual or aligned ID's
-            var idTimes = document.Settings.GetRetentionTimes("S_1", seqWithOneId, peptideWithOneId.ExplicitMods);
+            var targets = document.Settings.GetTargets(peptideWithOneId).ToList();
+            var idTimes = document.Settings.GetRetentionTimes(new MsDataFilePath("S_1"), targets);
             VerifyStartEndTime(document, peptideWithOneId, precursorWithOneId, 0, 
                 idTimes.Min() - CHROMATOGRAM_WINDOW_LENGTH_MINUTES, 
                 idTimes.Max() + CHROMATOGRAM_WINDOW_LENGTH_MINUTES);
-            var alignedTimes = document.Settings.GetAllRetentionTimes("S_10", seqWithOneId, peptideWithOneId.ExplicitMods);
+            var alignedTimes = document.Settings.GetAlignedRetentionTimes(null, new MsDataFilePath("S_10"), targets);
             Assert.AreEqual(0, document.Settings.GetRetentionTimes("S_10").GetRetentionTimes(seqWithOneId).Length);
             VerifyStartEndTime(document, peptideWithOneId, precursorWithOneId, 1, 
                 alignedTimes.Min() - CHROMATOGRAM_WINDOW_LENGTH_MINUTES, 
