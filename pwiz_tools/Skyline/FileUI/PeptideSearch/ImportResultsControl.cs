@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;

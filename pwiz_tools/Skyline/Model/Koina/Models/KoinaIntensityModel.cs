@@ -26,6 +26,7 @@ using System.Text;
 using Google.Protobuf;
 using Inference;
 using pwiz.Common.Chemistry;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;

@@ -508,7 +508,7 @@ namespace pwiz.SkylineTestUtil
         /// <returns>true iff ReSharper code analysis is detected</returns>
         public static bool SkipForResharperAnalysis()
         {
-            if (Helpers.RunningResharperAnalysis)
+            if (TryHelper.RunningResharperAnalysis)
             {
                 Console.Write(MSG_SKIPPING_SLOW_RESHARPER_ANALYSIS_TEST); // Log this via console for TestRunner
                 return true;

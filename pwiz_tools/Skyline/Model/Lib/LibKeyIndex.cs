@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib

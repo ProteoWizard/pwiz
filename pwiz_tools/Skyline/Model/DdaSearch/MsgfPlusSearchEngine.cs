@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.BiblioSpec;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
 
 namespace pwiz.Skyline.Model.DdaSearch

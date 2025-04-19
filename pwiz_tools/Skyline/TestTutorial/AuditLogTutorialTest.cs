@@ -31,6 +31,7 @@ using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls.Editor;
+using pwiz.CommonMsData;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;

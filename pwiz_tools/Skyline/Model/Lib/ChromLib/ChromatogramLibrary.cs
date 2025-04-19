@@ -30,6 +30,7 @@ using NHibernate.Exceptions;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.ChromLib.Data;
 using pwiz.Skyline.Model.Results;

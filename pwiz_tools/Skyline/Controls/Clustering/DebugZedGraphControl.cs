@@ -19,6 +19,7 @@
 using pwiz.Skyline.Util;
 using System;
 using System.Runtime.CompilerServices;
+using pwiz.Common.SystemUtil;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Clustering

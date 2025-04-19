@@ -40,6 +40,7 @@ using pwiz.Skyline.Model.RetentionTimes;
 using Enzyme = pwiz.Skyline.Model.DocSettings.Enzyme;
 using pwiz.Common.Collections;
 using System.Text.RegularExpressions;
+using pwiz.CommonMsData;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {

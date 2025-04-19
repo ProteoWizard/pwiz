@@ -24,6 +24,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;

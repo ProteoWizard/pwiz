@@ -36,6 +36,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.Database;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Results;
 using BiblioSpecLiteLibrary = pwiz.Skyline.Model.Lib.BiblioSpecLiteLibrary;
 

@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 

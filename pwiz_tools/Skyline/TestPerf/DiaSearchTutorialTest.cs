@@ -25,6 +25,8 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -297,7 +299,7 @@ namespace TestPerf
                 if (_analysisValues.FragmentMzTolerance.Unit == MzTolerance.Units.mz)
                     importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = _analysisValues.FragmentMzTolerance.Value;
                 else
-                    importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 0.005;
+                importPeptideSearchDlg.TransitionSettingsControl.IonMatchTolerance = 0.005;
             });
 
             if (_analysisValues.IsGpfData)
@@ -351,19 +353,19 @@ namespace TestPerf
 
             try
             {
-                RunUI(() =>
+            RunUI(() =>
+            {
+                Assert.AreEqual(hasMargin, isolationScheme.SpecifyMargin);
+                int schemeRow = 0;
+                foreach (var isolationWindow in isolationScheme.GetIsolationWindows())
                 {
-                    Assert.AreEqual(hasMargin, isolationScheme.SpecifyMargin);
-                    int schemeRow = 0;
-                    foreach (var isolationWindow in isolationScheme.GetIsolationWindows())
-                    {
-                        var fields = windowFields[schemeRow++];
-                        Assert.AreEqual(double.Parse(fields[0], CultureInfo.InvariantCulture), isolationWindow.MethodStart, 0.01);
-                        Assert.AreEqual(double.Parse(fields[1], CultureInfo.InvariantCulture), isolationWindow.MethodEnd, 0.01);
-                        if (hasMargin)
-                            Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
-                    }
-                });
+                    var fields = windowFields[schemeRow++];
+                    Assert.AreEqual(double.Parse(fields[0], CultureInfo.InvariantCulture), isolationWindow.MethodStart, 0.01);
+                    Assert.AreEqual(double.Parse(fields[1], CultureInfo.InvariantCulture), isolationWindow.MethodEnd, 0.01);
+                    if (hasMargin)
+                        Assert.AreEqual(double.Parse(fields[2], CultureInfo.InvariantCulture), isolationWindow.StartMargin ?? 0, 0.01);
+                }
+            });
             }
             catch (Exception ex)
             {

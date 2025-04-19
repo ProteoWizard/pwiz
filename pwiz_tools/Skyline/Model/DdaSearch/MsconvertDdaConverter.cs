@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;

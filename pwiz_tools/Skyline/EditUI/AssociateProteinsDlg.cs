@@ -26,6 +26,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.Caching;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -245,10 +246,10 @@ namespace pwiz.Skyline.EditUI
 
             if (_document.PeptideCount == 0 && _overrideFastaPath == null)
             {
-                MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
-                Close();
-                return;
-            }
+                    MessageDlg.Show(this, Resources.ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_);
+                    Close();
+                    return;
+                }
             _receiver = AssociateProteinsResults.PRODUCER.RegisterCustomer(this, DisplayResults);
             _receiver.ProgressChange += ProgressChange;
 
@@ -266,25 +267,25 @@ namespace pwiz.Skyline.EditUI
         }
 
         private void SkylineWindowOnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
-        {
+            {
             _document = _skylineWindow.DocumentUI;
             UpdateParsimonyResults();
         }
         
         private AssociateProteinsResults.Parameters GetParameters()
-        {
+                {
             var parameters = new AssociateProteinsResults.Parameters(_document)
                 .ChangeIrtStandard(_irtStandard)
                 .ChangeDecoyGenerationMethod(_decoyGenerationMethod)
                 .ChangeDecoysPerTarget(_decoysPerTarget)
                 .ChangeSharedPeptides(SelectedSharedPeptides);
             if (rbFASTA.Checked)
-            {
+                    {
                 parameters = parameters.ChangeFastaFilePath(tbxFastaTargets.Text);
-            }
+                }
 
             if (rbBackgroundProteome.Checked)
-            {
+                {
                 var backgroundProteome = new BackgroundProteome(_driverBackgroundProteome.SelectedItem);
                 if (!backgroundProteome.Equals(BackgroundProteome.NONE))
                 {
@@ -297,7 +298,7 @@ namespace pwiz.Skyline.EditUI
             parameters = parameters.ChangeParsimonySettings(parsimonySettings);
             
             return parameters;
-        }
+            }
 
         public IEnumerable<KeyValuePair<ProteinAssociation.IProteinRecord, ProteinAssociation.PeptideAssociationGroup>> AssociatedProteins => _proteinAssociation?.AssociatedProteins;
         public IEnumerable<KeyValuePair<ProteinAssociation.IProteinRecord, ProteinAssociation.PeptideAssociationGroup>> ParsimoniousProteins => _proteinAssociation?.ParsimoniousProteins;
@@ -347,10 +348,10 @@ namespace pwiz.Skyline.EditUI
             {
                 dgvAssociateResults.Rows.Clear();
                 return;
-            }
+        }
 
             if (dgvAssociateResults.RowCount != 3)
-            {
+        {
                 dgvAssociateResults.Rows.Clear();
                 dgvAssociateResults.Rows.Add(3);
                 dgvAssociateResults.ClearSelection();
@@ -377,10 +378,10 @@ namespace pwiz.Skyline.EditUI
         }
 
         private void SetCellValue(DataGridViewCell cell, int value)
-        {
+            {
             cell.Value = value;
             cell.Style.Format = value >= 10_000 ? @"N0" : string.Empty;
-        }
+            }
 
         private void UpdateParsimonyResults()
         {
@@ -548,7 +549,7 @@ namespace pwiz.Skyline.EditUI
         {
             tbxFastaTargets.Text = file;
             DisplayResults();
-        }
+                }
 
         private SrmDocument CreateDocTree(SrmDocument current)
         {
@@ -611,10 +612,10 @@ namespace pwiz.Skyline.EditUI
                 if (_overrideFastaPath != null)
                 {
                     fastaPath = null;
-                }
+            }
                 return new AssociateProteinsSettings(_proteinAssociation, fastaPath,
                     parameters.BackgroundProteome?.DatabasePath);
-            }
+        }
         }
 
         public int MinPeptides
@@ -689,12 +690,12 @@ namespace pwiz.Skyline.EditUI
                     if (!ReferenceEquals(_skylineWindow.Document, _document) || DocumentFinal == null)
                     {
                         return false;
-                    }
+        }
                 }
 
                 _skylineWindow.ModifyDocument(Resources.AssociateProteinsDlg_ApplyChanges_Associated_proteins,
                     current =>
-                    {
+        {
                         Assume.IsTrue(ReferenceEquals(current, _document));
                         return DocumentFinal;
                     },
@@ -704,7 +705,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         private void WaitUntilDocumentCurrent(ILongWaitBroker longWaitBroker)
-        {
+            {
             object notifyObject = new object();
             Action progressChange = () => longWaitBroker.ProgressValue = _receiver.GetProgressValue();
             Action productAvailable = () =>
@@ -712,7 +713,7 @@ namespace pwiz.Skyline.EditUI
                 lock (notifyObject)
                 {
                     Monitor.Pulse(notifyObject);
-                }
+            }
             };
             try
             {
@@ -726,11 +727,11 @@ namespace pwiz.Skyline.EditUI
                         if (longWaitBroker.IsCanceled)
                         {
                             return;
-                        }
+            }
                         if (DocumentFinal != null && ReferenceEquals(_document, _skylineWindow.Document))
-                        {
+            {
                             return;
-                        }
+            }
                         Monitor.Wait(notifyObject);
                     }
                 }
@@ -864,7 +865,7 @@ namespace pwiz.Skyline.EditUI
             if (exception == null)
             {
                 return;
-            }
+    }
             MessageDlg.ShowWithException(this, ErrorMessage, exception);
         }
 

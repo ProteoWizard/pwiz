@@ -24,6 +24,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
 using pwiz.Common.Spectra;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 

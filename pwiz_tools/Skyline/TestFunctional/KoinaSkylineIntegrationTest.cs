@@ -24,6 +24,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
@@ -507,8 +510,8 @@ namespace pwiz.SkylineTestFunctional
                 var expectedProperties = new SpectrumProperties();
                 expectedProperties.Deserialize(expectedPropertiesDict[i-1]);
                 Assert.IsTrue(expectedProperties.IsSameAs(currentProperties));
-            }
-        }
     }
+    }
+        }
 
 }

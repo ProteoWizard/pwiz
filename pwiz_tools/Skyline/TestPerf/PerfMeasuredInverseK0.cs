@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
