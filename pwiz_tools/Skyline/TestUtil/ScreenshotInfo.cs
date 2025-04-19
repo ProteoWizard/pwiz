@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestUtil
 
     internal class ScreenshotFile
     {
-        private static readonly Regex PATTERN = new Regex(@"\\(\w+)\\(\w\w)\\s-(\d\d)\.png");
+        private static readonly Regex PATTERN = new Regex(@"\\([a-zA-Z0-9\-]+)\\(\w\w)\\s-(\d\d)\.png");
 
         public static bool IsMatch(string filePath)
         {
@@ -128,11 +128,11 @@ namespace pwiz.SkylineTestUtil
         public bool IsEmpty => string.IsNullOrEmpty(Name);
 
         private const string BASE_URL = "https://skyline.ms/tutorials/24-1";
-        public string UrlInTutorial => $"{BASE_URL}/{Name}/{Locale}/index.html#s-{Number}";
+        public string UrlInTutorial => $"{BASE_URL}/{Name}/{Locale}/index.html#s-{ScreenshotManager.PadScreenshotNum(Number)}";
         public string UrlToDownload => $"{BASE_URL}/{RelativePath}";
         // RelativePath is used for ComboBox display
         // ReSharper disable once MemberCanBePrivate.Local
-        public string RelativePath => $"{Name}/{Locale}/s-{Number}.png";
+        public string RelativePath => $"{Name}/{Locale}/s-{ScreenshotManager.PadScreenshotNum(Number)}.png";
 
         public string GetDescription(ImageSource source)
         {

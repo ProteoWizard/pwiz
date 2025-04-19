@@ -1443,15 +1443,6 @@ namespace pwiz.Skyline.FileUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Open.
-        /// </summary>
-        public static string OpenFileDialogNE_OpenFileDialogNE_Open {
-            get {
-                return ResourceManager.GetString("OpenFileDialogNE_OpenFileDialogNE_Open", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Continue peak boundary import ignoring these charge states?.
         /// </summary>
         public static string PeakBoundaryImporter_UnrecognizedPeptidesCancel_Continue_peak_boundary_import_ignoring_these_charge_states_ {

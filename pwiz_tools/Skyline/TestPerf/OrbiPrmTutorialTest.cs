@@ -86,6 +86,10 @@ namespace TestPerf
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestOrbiPrmTutorial()
         {
+            // Not yet translated
+            if (IsTranslationRequired)
+                return;
+
             InitPaths();
 
             //            IsPauseForScreenShots = true;

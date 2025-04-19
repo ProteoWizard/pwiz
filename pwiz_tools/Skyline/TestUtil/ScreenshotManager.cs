@@ -283,14 +283,12 @@ namespace pwiz.SkylineTestUtil
         {
             if (string.IsNullOrEmpty(_tutorialSourcePath))
                 return null;
-            return GetTutorialUrl("index.html") + "#s-" + screenshotNum;
+            return GetTutorialUrl("index.html") + "#s-" + PadScreenshotNum(screenshotNum);
         }
 
         public string ScreenshotImgUrl(int screenshotNum)
         {
-            return GetTutorialUrl("s-" + screenshotNum + ".png");
-            // Use this latter version once the website is updated
-            // return GetTutorialUrl("s-" + PadScreenshotNum(screenshotNum) + ".png");
+            return GetTutorialUrl("s-" + PadScreenshotNum(screenshotNum) + ".png");
         }
 
         private const string SCREENSHOT_URL_FOLDER = "24-1";
@@ -315,14 +313,14 @@ namespace pwiz.SkylineTestUtil
             return !string.IsNullOrEmpty(_tutorialDestPath) ? $"{Path.Combine(_tutorialDestPath, "s-" + PadScreenshotNum(screenshotNum))}.png" : null;
         }
 
-        private static string PadScreenshotNum(int screenshotNum)
+        public static string PadScreenshotNum(int screenshotNum)
         {
             return screenshotNum.ToString("D2");
         }
 
         public string ScreenshotDescription(int i, string description)
         {
-            return string.Format("s-{0}: {1}", i, description);
+            return string.Format("s-{0}: {1}", PadScreenshotNum(i), description);
         }
 
         public bool IsOverlappingScreenshot(Rectangle bounds)
