@@ -889,7 +889,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public RetentionTimeRegression ResidualsRegression
             {
-                get { return _regressionPredict ?? _regressionRefined ?? _regressionAll; }
+                get
+                {
+                    var regressions = new[]
+                    {
+                        _regressionPredict, _regressionRefined, _regressionAll
+                    };
+                    return regressions.Where(regression => null != regression.Conversion).Concat(regressions)
+                        .FirstOrDefault(regression => null != regression);
+                }
             }
 
             private string ResidualsLabel

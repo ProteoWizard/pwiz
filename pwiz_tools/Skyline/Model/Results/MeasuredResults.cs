@@ -18,10 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -30,7 +28,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-using static pwiz.Skyline.Model.BackgroundLoader;
 
 namespace pwiz.Skyline.Model.Results
 {

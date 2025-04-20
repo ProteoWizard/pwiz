@@ -73,6 +73,7 @@ namespace pwiz.Skyline.Model.Results
         {
             _document = document;
             _cacheRecalc = cacheRecalc;
+            _destinationStream = _cacheRecalc?.ReadStream;
             MSDataFilePath = msDataFilePath;
 
             // Initialize retention time prediction

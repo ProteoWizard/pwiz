@@ -68,33 +68,35 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
 
             var result = new PeakBoundaryImputer(newDocument);
-            lock (this)
+            IList<KeyValuePair<LibraryInfoKey, LibraryInfo>> libraryInfos;
+            lock (_libraryInfos)
             {
-                var libraries = newDocument.Settings.PeptideSettings.Libraries;
-                foreach (var entry in _libraryInfos)
+                libraryInfos = _libraryInfos.ToList();
+            }
+            var libraries = newDocument.Settings.PeptideSettings.Libraries;
+            foreach (var entry in libraryInfos)
+            {
+                var libraryInfo = entry.Value;
+                var newLibrary = libraries.Libraries.FirstOrDefault(lib => lib?.Name == libraryInfo.Library.Name);
+                if (newLibrary == null || !Equals(newLibrary, libraryInfo.Library))
                 {
-                    var libraryInfo = entry.Value;
-                    var newLibrary = libraries.Libraries.FirstOrDefault(lib => lib?.Name == libraryInfo.Library.Name);
-                    if (newLibrary == null || !Equals(newLibrary, libraryInfo.Library))
+                    continue;
+                }
+
+                if (entry.Key.BatchName != null)
+                {
+                    var newLibraryFiles = new LibraryFiles(newDocument.Settings.GetSpectrumSourceFilesInBatch(newLibrary.LibraryFiles, entry.Key.BatchName));
+                    if (!newLibraryFiles.SequenceEqual(entry.Value.LibraryFiles))
                     {
                         continue;
                     }
+                }
 
-                    if (entry.Key.BatchName != null)
-                    {
-                        var newLibraryFiles = new LibraryFiles(newDocument.Settings.GetSpectrumSourceFilesInBatch(newLibrary.LibraryFiles, entry.Key.BatchName));
-                        if (!newLibraryFiles.SequenceEqual(entry.Value.LibraryFiles))
-                        {
-                            continue;
-                        }
-                    }
-
-                    var newLibraryInfo = libraryInfo.ChangeAlignment(newDocument.Settings.DocumentRetentionTimes
-                        .GetLibraryAlignment(libraryInfo.Library.Name)?.Alignments);
-                    if (newLibraryInfo != null)
-                    {
-                        result._libraryInfos.Add(entry.Key, newLibraryInfo);
-                    }
+                var newLibraryInfo = libraryInfo.ChangeAlignment(newDocument.Settings.DocumentRetentionTimes
+                    .GetLibraryAlignment(libraryInfo.Library.Name)?.Alignments);
+                if (newLibraryInfo != null)
+                {
+                    result._libraryInfos.Add(entry.Key, newLibraryInfo);
                 }
             }
 
@@ -267,7 +269,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
         private LibraryInfo GetLibraryInfo(Library library, string batchName)
         {
-            lock (this)
+            lock (_libraryInfos)
             {
                 var key = new LibraryInfoKey(library.Name, batchName);
                 if (_libraryInfos.TryGetValue(key, out var libraryInfo))
@@ -570,7 +572,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return AlignmentFunction.IDENTITY;
             }
 
-            lock (this)
+            lock (_alignmentFunctions)
             {
                 if (_alignmentFunctions.TryGetValue(filePath, out var alignmentFunction))
                 {

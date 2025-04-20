@@ -1306,7 +1306,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IEnumerable<Target> GetTargets(Target sequence, ExplicitMods mods)
         {
-            return GetTypedSequences(sequence, mods, Adduct.EMPTY)
+            return GetTypedSequences(sequence, mods, Adduct.EMPTY, sequence.IsProteomic)
                 .Select(typedSequence => typedSequence.ModifiedSequence);
         }
 
