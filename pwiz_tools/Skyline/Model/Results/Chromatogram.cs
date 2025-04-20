@@ -232,7 +232,10 @@ namespace pwiz.Skyline.Model.Results
                     {
                         return false;
                     }
-                    loadedMeasuredResults = measuredResults.UpdateCaches(container.DocumentFilePath, loadedMeasuredResults);
+
+                    loadedMeasuredResults = measuredResults
+                        .UpdateCaches(container.DocumentFilePath, loadedMeasuredResults)
+                        .ChangeFinalCacheIncomplete(loadedMeasuredResults.FinalCacheIncomplete);
 
                     SrmDocument docNew;
                     do
