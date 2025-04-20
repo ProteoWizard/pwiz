@@ -557,7 +557,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // If the name is already set, and there are no measured results or document library
             // then this instance will do.
-            if (Equals(Name, saveName) && MeasuredResults == null && !PeptideSettings.Libraries.HasDocumentLibrary)
+            if (Equals(Name, saveName) && MeasuredResults == null && !PeptideSettings.Libraries.HasDocumentLibrary && DocumentRetentionTimes.IsEmpty)
                 return this;
 
             // Change the name, and remove results information which is document specific
@@ -566,6 +566,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var dataSettings = settingsSavable.DataSettings;
             dataSettings = dataSettings.ChangeListDefs(dataSettings.Lists.Select(list => list.DeleteAllRows()));
             settingsSavable = settingsSavable.ChangeDataSettings(dataSettings);
+            settingsSavable = settingsSavable.ChangeDocumentRetentionTimes(DocumentRetentionTimes.EMPTY);
             settingsSavable.MeasuredResults = null;
             return settingsSavable;
         }
