@@ -176,7 +176,7 @@ namespace TestPerf // This would be in TestTutorials if it didn't involve a 2GB 
 
                 if (IsPauseForScreenShots)
                 {
-                    RunUI(() => SkylineWindow.Height = 720);    // Taller for context menu
+                    RunUI(() => SkylineWindow.Height = 730);    // Taller for context menu
 
                     var sequenceTree = SkylineWindow.SequenceTree;
                     ToolStripDropDown menuStrip = null, subMenuStrip = null;
