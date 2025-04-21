@@ -3257,6 +3257,15 @@
   <data name="PasteDlg_UpdateMoleculeType_Note" xml:space="preserve">
     <value>注释</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_PrecursorNote" xml:space="preserve">
+    <value>母离子注释</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeNote" xml:space="preserve">
+    <value>分子注释</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeListNote" xml:space="preserve">
+    <value>分子列表注释</value>
+  </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>单击“添加文件”按钮来添加一个 FASTA 文件，并且创建一个新的蛋白质组文件。</value>
   </data>
@@ -3983,5 +3992,8 @@
   </data>
   <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
     <value>必须先添加肽段修饰，然后再指定其可变状态。</value>
+  </data>
+  <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
