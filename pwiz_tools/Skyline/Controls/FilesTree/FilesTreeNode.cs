@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
+using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.SeqNode;
@@ -34,9 +36,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     public class FilesTreeNode : TreeNodeMS, ITipProvider
     {
-        // ReSharper disable once LocalizableElement
-        private static string FILE_PATH_NOT_SET = "# local path #";
-
         private FileNode _model;
 
         internal static FilesTreeNode CreateNode(FileNode model)
@@ -44,12 +43,10 @@ namespace pwiz.Skyline.Controls.FilesTree
             return new FilesTreeNode(model, model.Name);
         }
 
-        internal FilesTreeNode(FileNode model, string label) : base(label)
+        private FilesTreeNode(FileNode model, string label) : base(label)
         {
             Model = model;
-
             FileState = FileState.not_initialized;
-            LocalFilePath = FILE_PATH_NOT_SET;
         }
 
         public FileNode Model
@@ -78,11 +75,10 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Initialize the path to a local file. This tries exactly once to find a file locally
         // matching the name of a file from the model.
         //
-        // Note, this accesses the file system (possibly more than once) so should
-        // not be executed on the UI thread.
+        // This accesses the file system (possibly more than once) and should not run on the UI thread.
         public void InitLocalFile()
         {
-            if (Model.IsBackedByFile && ReferenceEquals(LocalFilePath, FILE_PATH_NOT_SET))
+            if (Model.IsBackedByFile && FileState == FileState.not_initialized)
             {
                 LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, DocumentPath);
 
@@ -238,6 +234,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                    Model.GetType() == typeof(SpectralLibrariesFolder);
         }
 
+        public bool HasChildWithName(string name)
+        {
+            return Nodes.Cast<TreeNode>().Any(node => node.Text.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public FilesTreeNode NodeAt(int index)
+        {
+            return (FilesTreeNode)Nodes[index];
+        }
+
         ///
         /// LOOK FOR A FILE ON DISK
         ///
@@ -262,13 +268,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (node.Model.IsBackedByFile && node.FileState == FileState.missing)
                 return true;
 
-            foreach (FilesTreeNode child in node.Nodes)
-            {
-                if (IsAnyNodeMissingLocalFile(child))
-                    return true;
-            }
-
-            return false;
+            return node.Nodes.Cast<FilesTreeNode>().Any(IsAnyNodeMissingLocalFile);
         }
 
         // Update tree node images based on whether the local file is available.
@@ -286,6 +286,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                 filesTreeNode = (FilesTreeNode)filesTreeNode.Parent;
             }
             while (filesTreeNode.Parent != null);
+        }
+
+        public bool IsFileInitialized()
+        {
+            if (Model.IsBackedByFile)
+                return FileState != FileState.not_initialized;
+            else return true;
         }
     }
 }

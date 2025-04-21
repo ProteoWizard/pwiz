@@ -185,10 +185,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             return confirmDlg.ShowAndDispose(this);
         }
 
-        public void RemoveAll(FilesTreeNode node)
+        // Remove all child nodes contained in this folder.
+        public void RemoveAll(FilesTreeNode folderNode)
         {
-            var type = node.Model.GetType();
-            Assume.IsTrue(type == typeof(ReplicatesFolder) || type == typeof(SpectralLibrariesFolder));
+            if (!folderNode.SupportsRemoveAllItems())
+                return;
+
+            var type = folderNode.Model.GetType();
 
             var confirmMsg = type == typeof(ReplicatesFolder)
                 ? FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates
@@ -878,7 +881,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             _dropTargetRemove.BackColor = Color.WhiteSmoke;
         }
 
-        // CONSIDER: should this be laid out in the designer?
+        // CONSIDER: should the drop target be laid out in the designer?
         private static Panel CreateDropTarget(Image icon, DockStyle dockStyle)
         {
             var dropTarget = new Panel

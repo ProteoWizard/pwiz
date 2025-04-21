@@ -30,14 +30,15 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Files;
 using Peptide = pwiz.Skyline.Model.Peptide;
+using pwiz.Skyline.Alerts;
 
 // TODO: Replicate => verify right-click menu includes Open Containing Folder
 // TODO: Test Tooltips. See MethodEditTutorialTest.ShowNodeTip
 // TODO: add .sky file with imsdb / irtdb
 // TODO: add an Audit Log scenario
 // TODO: drag-and-drop disjoint selection
-// TODO: cannot drag non-draggable nodes
-// TODO: use non-local file paths in SrmSettings (ex: replicate sample files with paths to c:\brendanx\foo\bar
+// TODO: test tree disallows dragging non-draggable nodes
+// TODO: use non-local file paths in SrmSettings (example: replicate sample files where SrmSettings paths point to directories that don't exist locally)
 
 // ReSharper disable WrongIndentSize
 namespace pwiz.SkylineTestFunctional
@@ -60,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSyntheticDocument();
 
-            TestRealDocument();
+            TestRatPlasmaDocument();
         }
 
         protected void TestEmptyDocument()
@@ -72,11 +73,21 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
             Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
 
+            Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
             Assert.AreEqual(string.Empty, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, "savedFileName.sky");
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
-            WaitForCondition(() => SkylineWindow.FilesTree.IsMonitoringFileSystem());
+            // TODO: add the size of FilesTree's QueueWorker when fixing TODO below
+            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
+
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+            Assert.IsTrue(SkylineWindow.FilesTree.Root.IsFileInitialized()); 
+            
+            // TODO: enable this check after dealing with race condition between new doc and monitoring file system
+            //       for now, FilesTree is initialized prior to document being saved - so tree thinks file is missing
+            //       when it hasn't been saved yet. Possible fix: subscribe FilesTree to a new "doc saved" event
+            // Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.FileState);
 
             AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
 
@@ -84,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
         }
 
-        // CONSIDER: does this add value?
+        // CONSIDER: does this test scenario add value?
         protected void TestSyntheticDocument()
         {
             var emptyDocument = SrmDocumentHelper.MakeEmptyDocument();
@@ -98,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
             Assert.AreEqual(FileResources.FileModel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+            Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
 
             // FilesTree should only have one set of nodes after opening a new document
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
@@ -109,11 +121,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
         }
 
-        protected void TestRealDocument()
+        protected void TestRatPlasmaDocument()
         {
-            //
-            // SCENARIO - rat_plasma.sky
-            //
             var documentPath = TestFilesDir.GetTestPath("Rat_plasma.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
@@ -132,6 +141,8 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual("Rat_plasma.sky", SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(3, SkylineWindow.FilesTree.Nodes[0].Nodes.Count);
+            Assert.AreEqual(Path.GetDirectoryName(documentPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+            Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.FileState);
 
             // 
             // Restoring View State
@@ -304,8 +315,50 @@ namespace pwiz.SkylineTestFunctional
             });
 
             //
-            // TODO: Test Remove and Remove All
+            // Remove and Remove All
             // 
+            {
+                // Remove All replicates
+                doc = SkylineWindow.Document;
+                var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveAll(replicatesFolder));
+                OkDialog(confirmDlg, confirmDlg.ClickYes);
+            
+                replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                doc = WaitForDocumentChange(doc);
+                Assert.AreEqual(0, replicatesFolder.Nodes.Count);
+            
+                RunUI(() => SkylineWindow.Undo());
+                WaitForDocumentChange(doc);
+                CheckEquivalenceOfReplicates(42);
+
+                // Remove selected replicates
+                doc = SkylineWindow.Document;
+                replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var nodesToDelete = new List<FilesTreeNode>
+                {
+                    replicatesFolder.NodeAt(4),
+                    replicatesFolder.NodeAt(5),
+                    replicatesFolder.NodeAt(7),
+                };
+
+                confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveSelected(nodesToDelete));
+                OkDialog(confirmDlg, confirmDlg.ClickYes);
+                
+                replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                doc = WaitForDocumentChange(doc);
+
+                Assert.AreEqual(39, replicatesFolder.Nodes.Count);
+
+                // Deleted nodes should be gone
+                Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[0].Name));
+                Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[1].Name));
+                Assert.IsFalse(replicatesFolder.HasChildWithName(nodesToDelete[2].Name));
+
+                RunUI(() => SkylineWindow.Undo());
+                WaitForDocumentChange(doc);
+                CheckEquivalenceOfReplicates(42);
+            }
 
             //
             // Spectral Libraries
@@ -426,8 +479,8 @@ namespace pwiz.SkylineTestFunctional
 
             // and that parent nodes (replicate, replicate folder) changed their icons and sky file remains unchanged
             Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent).ImageMissing, sampleFileTreeNode.Parent.ImageIndex);
-            Assert.AreEqual((int)((FilesTreeNode)sampleFileTreeNode.Parent.Parent).ImageMissing, sampleFileTreeNode.Parent.Parent.ImageIndex);
-            Assert.AreEqual((int)ImageId.skyline, sampleFileTreeNode.Parent.Parent.Parent.ImageIndex);
+            Assert.AreEqual((int)SkylineWindow.FilesTree.Folder<ReplicatesFolder>().ImageMissing, sampleFileTreeNode.Parent.Parent.ImageIndex);
+            Assert.AreEqual((int)ImageId.skyline, SkylineWindow.FilesTree.Root.ImageIndex);
 
             CheckEquivalenceOfReplicates(42);
         }
@@ -435,7 +488,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestDragAndDrop()
         {
             {
-                // Re-open a clean document
+                // Start over with a clean document
                 var documentPath = TestFilesDir.GetTestPath("Rat_plasma.sky");
                 RunUI(() => {
                     SkylineWindow.OpenFile(documentPath);
@@ -557,7 +610,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Check SrmSettings changed after a DnD operation
             // CONSIDER: use a more precise check asserting change(s) to a specific part of SrmSettings
-            Assert.IsFalse(ReferenceEquals(d.OldDoc.Settings, d.NewDoc.Settings));
+            Assert.AreNotSame(d.OldDoc.Settings, d.NewDoc.Settings);
 
             // Verify document nodes match tree nodes
             callback(d.Folder.Nodes.Count);
@@ -625,8 +678,8 @@ namespace pwiz.SkylineTestFunctional
                 var filesTreeNode = (FilesTreeNode)treeNodes[i];
 
                 // Check immutables all refer to the same instance
-                Assert.IsTrue(ReferenceEquals(docNodes[i], modelNodes.Files[i].Immutable));
-                Assert.IsTrue(ReferenceEquals(docNodes[i], filesTreeNode.Model.Immutable));
+                Assert.AreSame(docNodes[i], modelNodes.Files[i].Immutable);
+                Assert.AreSame(docNodes[i], filesTreeNode.Model.Immutable);
 
                 // Check ID and Name attributes match
                 Assert.AreEqual(docNodes[i].Id, modelNodes.Files[i].IdentityPath.GetIdentity(0));
@@ -634,6 +687,8 @@ namespace pwiz.SkylineTestFunctional
 
                 Assert.AreEqual(docNodes[i].Name, modelNodes.Files[i].Name);
                 Assert.AreEqual(docNodes[i].Name, treeNodes[i].Name);
+
+                Assert.IsTrue(filesTreeNode.IsFileInitialized());
             }
         }
 
@@ -658,8 +713,8 @@ namespace pwiz.SkylineTestFunctional
             {
                 var filesTreeNode = (FilesTreeNode)treeNodes[i];
 
-                Assert.IsTrue(ReferenceEquals(docNodes[i], modelNodes.Files[i].Immutable));
-                Assert.IsTrue(ReferenceEquals(docNodes[i], filesTreeNode.Model.Immutable));
+                Assert.AreSame(docNodes[i], modelNodes.Files[i].Immutable);
+                Assert.AreSame(docNodes[i], filesTreeNode.Model.Immutable);
 
                 Assert.AreEqual(docNodes[i].Id, modelNodes.Files[i].IdentityPath.GetIdentity(0));
                 Assert.AreEqual(docNodes[i].Id, filesTreeNode.Model.IdentityPath.GetIdentity(0));

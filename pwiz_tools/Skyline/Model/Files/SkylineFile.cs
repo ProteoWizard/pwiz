@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -24,8 +24,6 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SkylineFile : FileNode
     {
-        private readonly IDictionary<Type, FileNode> _filesByFolder;
-
         public SkylineFile(SrmDocument document, string documentPath) :
             base(document, documentPath, IdentityPath.ROOT, ImageId.skyline)
         {
@@ -43,10 +41,7 @@ namespace pwiz.Skyline.Model.Files
                 FileName = Path.GetFileName(documentPath);
             }
 
-            BuildFileList(out var files, out var dict);
-
-            Files = ImmutableList.ValueOf(files);
-            _filesByFolder = new ImmutableDictionary<Type, FileNode>(dict);
+            Files = ImmutableList.ValueOf(BuildFileList());
         }
 
         public override bool IsBackedByFile => true;
@@ -58,57 +53,50 @@ namespace pwiz.Skyline.Model.Files
 
         public FileNode Folder<T>() where T : FileNode
         {
-            _filesByFolder.TryGetValue(typeof(T), out var files);
-            return files;
+            return Files.Where(fileNode => fileNode.GetType() == typeof(T)).Cast<T>().FirstOrDefault();
         } 
 
-        private void BuildFileList(out IList<FileNode> list, out IDictionary<Type, FileNode> dict)
+        private IEnumerable<FileNode> BuildFileList()
         {
-            list = new List<FileNode>();
-            dict = new Dictionary<Type, FileNode>();
+            var list = new List<FileNode>();
 
             FileNode files = new ReplicatesFolder(Document, DocumentPath);
-            dict[typeof(ReplicatesFolder)] = files;
             list.Add(files); // Always show the Replicates folder
 
             files = new SpectralLibrariesFolder(Document, DocumentPath);
             if (files.Files.Count > 0)
             {
-                dict[typeof(SpectralLibrariesFolder)] = files;
                 list.Add(files);
             }
 
             files = new BackgroundProteomeFolder(Document, DocumentPath);
             if (files.Files.Count > 0)
             {
-                dict[typeof(BackgroundProteomeFolder)] = files;
                 list.Add(files);
             }
 
             files = new RTCalcFolder(Document, DocumentPath);
             if (files.Files.Count > 0)
             {
-                dict[typeof(RTCalcFolder)] = files;
                 list.Add(files);
             }
 
             files = new IonMobilityLibraryFolder(Document, DocumentPath);
             if (files.Files.Count > 0)
             {
-                dict[typeof(IonMobilityLibraryFolder)] = files;
                 list.Add(files);
             }
 
             files = new OptimizationLibraryFolder(Document, DocumentPath);
             if (files.Files.Count > 0)
             {
-                dict[typeof(OptimizationLibraryFolder)] = files;
                 list.Add(files);
             }
 
             files = new ProjectFilesFolder(Document, DocumentPath);
-            dict[typeof(ProjectFilesFolder)] = files;
             list.Add(files); // Always show project files - .sky, .sky.view, etc
+
+            return list;
         }
     }
 }

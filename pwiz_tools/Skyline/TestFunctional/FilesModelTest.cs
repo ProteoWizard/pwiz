@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
             // <root>/
             //      replicates/
             var modelReplicatesFolder = modelFiles.Folder<ReplicatesFolder>();
-            Assert.IsTrue(ReferenceEquals(modelFiles.Files[0], modelReplicatesFolder));
+            Assert.AreSame(modelFiles.Files[0], modelReplicatesFolder);
             Assert.AreEqual(typeof(ReplicatesFolder), modelReplicatesFolder.GetType());
             Assert.AreEqual(docSettings.MeasuredResults.Chromatograms.Count, modelReplicatesFolder.Files.Count);
 
@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             var docReplicate = docSettings.MeasuredResults.Chromatograms[0];
             var modelReplicate = modelReplicatesFolder.Files[0];
             Assert.AreEqual(typeof(Replicate), modelReplicate.GetType());
-            Assert.IsTrue(ReferenceEquals(docReplicate, modelReplicate.Immutable));
+            Assert.AreSame(docReplicate, modelReplicate.Immutable);
             Assert.AreEqual(docReplicate.FileCount, modelReplicate.Files.Count);
             Assert.AreEqual(docReplicate.Id, modelReplicate.IdentityPath.GetIdentity(0));
             Assert.AreEqual(docReplicate.Name, modelReplicate.Name);
@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             var docSampleFile = docReplicate.MSDataFileInfos[0];
             var modelSampleFile = modelReplicate.Files[0];
             Assert.AreEqual(typeof(ReplicateSampleFile), modelSampleFile.GetType());
-            Assert.IsTrue(ReferenceEquals(docSampleFile, modelSampleFile.Immutable));
+            Assert.AreSame(docSampleFile, modelSampleFile.Immutable);
             Assert.AreEqual(docSampleFile.Id, modelSampleFile.IdentityPath.GetIdentity(1));
             Assert.AreEqual(docSampleFile.Name, modelSampleFile.Name);
             Assert.AreEqual(docSampleFile.FilePath.GetFilePath(), modelSampleFile.FilePath);
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
             var docLibrary = docSettings.PeptideSettings.Libraries.LibrarySpecs[0];
             var modelLibrary = modelLibrariesFolder.Files[0];
             Assert.AreEqual(typeof(SpectralLibrary), modelLibrary.GetType());
-            Assert.IsTrue(ReferenceEquals(docSettings.PeptideSettings.Libraries.LibrarySpecs[0], modelLibrary.Immutable));
+            Assert.AreSame(docSettings.PeptideSettings.Libraries.LibrarySpecs[0], modelLibrary.Immutable);
             Assert.AreEqual(docLibrary.Id, modelLibrary.IdentityPath.GetIdentity(0));
             Assert.AreEqual(docLibrary.Name, modelLibrary.Name);
             Assert.AreEqual(docLibrary.FilePath, modelLibrary.FilePath);
@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
             //          library2.blib
             docLibrary = docSettings.PeptideSettings.Libraries.LibrarySpecs[1];
             modelLibrary = modelLibrariesFolder.Files[1];
-            Assert.IsTrue(ReferenceEquals(docLibrary, modelLibrary.Immutable));
+            Assert.AreSame(docLibrary, modelLibrary.Immutable);
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Id, modelLibrary.IdentityPath.GetIdentity(0));
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Name, modelLibrary.Name);
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].FilePath, modelLibrary.FilePath);
@@ -134,8 +134,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(docReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
             Assert.AreEqual(newDocReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
 
-            Assert.IsFalse(ReferenceEquals(docReplicate, newModelReplicate.Immutable));
-            Assert.IsTrue(ReferenceEquals(newDocReplicate, newModelReplicate.Immutable));
+            Assert.AreNotSame(docReplicate, newModelReplicate.Immutable);
+            Assert.AreSame(newDocReplicate, newModelReplicate.Immutable);
 
             Assert.AreEqual(newDocReplicate.FileCount, newModelReplicate.Files.Count);
             Assert.AreEqual(newChromatogramName, newDocReplicate.Name);

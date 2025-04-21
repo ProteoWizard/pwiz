@@ -90,5 +90,8 @@ namespace pwiz.Skyline.Model.Files
         public ImageId ImageMissing { get; }
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
+
+        // ReSharper disable once LocalizableElement
+        public override string ToString() => "FileNode: " + (Name ?? string.Empty);
     }
 }

@@ -39,10 +39,12 @@ namespace pwiz.Skyline.Controls.FilesTree
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
+        private bool _monitoringFileSystem;
 
         public FilesTree()
         {
             _fileSystemWatcher = new FileSystemWatcher();
+            _monitoringFileSystem = false;
 
             ImageList = new ImageList
             {
@@ -91,7 +93,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Used for testing
         public bool IsMonitoringFileSystem()
         {
-            return _fileSystemWatcher?.Path != string.Empty;
+            return _monitoringFileSystem;
         }
 
         // Used for testing
@@ -206,6 +208,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                         // initialize local files now that DocumentFilePath is set
                         InitializeAllLocalFiles(Root);
+
+                        _monitoringFileSystem = true;
                     }
                 });
             }
@@ -314,13 +318,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (!remaining.TryGetValue(nodeDoc.IdentityPath, out nodeTree))
                 {
                     nodeTree = createTreeNodeFunc(nodeDoc);
-
                     nodesToInsert.Add(nodeTree);
                 }
                 else
                 {
                     nodesToInsert.Add(nodeTree);
                 }
+                localFileInitList.Add(nodeTree);
             }
 
             if (firstInsertPosition == treeNodes.Count)
@@ -655,6 +659,8 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             _fileSystemWatcher.Dispose();
             _fileSystemWatcher = null;
+
+            _monitoringFileSystem = false;
 
             _fsWorkQueue.Dispose();
             _fsWorkQueue = null;
