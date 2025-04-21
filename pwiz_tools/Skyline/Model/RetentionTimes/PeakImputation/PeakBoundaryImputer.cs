@@ -31,7 +31,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 {
@@ -42,7 +41,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         private readonly Dictionary<MsDataFileUri, AlignmentFunction> _alignmentFunctions =
             new Dictionary<MsDataFileUri, AlignmentFunction>();
         private readonly Dictionary<IdentityPath, Dictionary<MsDataFileUri, ScoredPeak>> _scoredPeaks =
-            new SerializableDictionary<IdentityPath, Dictionary<MsDataFileUri, ScoredPeak>>();
+            new Dictionary<IdentityPath, Dictionary<MsDataFileUri, ScoredPeak>>();
 
         public PeakBoundaryImputer(SrmDocument document) : this(document, null)
         {
@@ -299,12 +298,12 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         public ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
             ChromatogramSet chromatogramSet, MsDataFileUri filePath)
         {
-            return GetImputedPeakBounds(cancellationToken, identityPath, chromatogramSet, filePath, false);
+            return GetImputedPeakBounds(cancellationToken, identityPath, chromatogramSet, filePath, false, false);
         }
 
         private ImputedPeak GetImputedPeakBounds(CancellationToken cancellationToken, IdentityPath identityPath,
             ChromatogramSet chromatogramSet,
-            MsDataFileUri filePath, bool explicitBoundsOnly)
+            MsDataFileUri filePath, bool explicitBoundsOnly, bool noRecalculateScores)
         {
             var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
             if (peptideDocNode == null)
@@ -356,7 +355,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return null;
             }
 
-            return GetImputedPeakFromDocument(cancellationToken, batchNames, identityPath, filePath);
+            return GetImputedPeakFromDocument(cancellationToken, batchNames, identityPath, filePath, noRecalculateScores);
         }
 
         private ImputedPeak GetImputedPeakFromLibraryPeak(CancellationToken cancellationToken, LibraryInfo libraryInfo, ExemplaryPeak exemplaryPeak,
@@ -424,7 +423,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             {
                 return explicitPeakBounds;
             }
-            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, true);
+            var imputedPeak = GetImputedPeakBounds(CancellationToken.None, identityPath, chromatogramSet, filePath, true, false);
             if (imputedPeak == null)
             {
                 return explicitPeakBounds;
@@ -469,9 +468,9 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         }
 
         private ImputedPeak GetImputedPeakFromDocument(CancellationToken cancellationToken, List<string> batchNames, IdentityPath identityPath,
-            MsDataFileUri filePath)
+            MsDataFileUri filePath, bool noRecalculateScores)
         {
-            var bestKeyValuePair = GetBestScoredPeak(identityPath, batchNames);
+            var bestKeyValuePair = GetBestScoredPeak(identityPath, batchNames, noRecalculateScores);
             var bestPeak = bestKeyValuePair.Value;
             if (bestPeak == null)
             {
@@ -500,10 +499,18 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return MakeImputedPeak(sourceAlignment, exemplaryPeak, targetAlignment);
         }
 
-        private KeyValuePair<MsDataFileUri, ScoredPeak> GetBestScoredPeak(IdentityPath identityPath, IList<string> batchNames)
+        private KeyValuePair<MsDataFileUri, ScoredPeak> GetBestScoredPeak(IdentityPath identityPath, IList<string> batchNames, bool noRecalculateScores)
         {
-            var scoredPeaks = GetScoredPeaks(identityPath);
-            if (scoredPeaks == null)
+            Dictionary<MsDataFileUri, ScoredPeak> scoredPeaks;
+            if (noRecalculateScores)
+            {
+                scoredPeaks = GetScoredPeaksNoRecalculate(identityPath);
+            }
+            else
+            {
+                scoredPeaks = GetScoredPeaks(identityPath);
+            }
+            if (scoredPeaks == null || scoredPeaks.Count == 0)
             {
                 return default;
             }
@@ -565,6 +572,48 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
         }
 
+        private Dictionary<MsDataFileUri, ScoredPeak> GetScoredPeaksNoRecalculate(IdentityPath identityPath)
+        {
+            var result = new Dictionary<MsDataFileUri, ScoredPeak>();
+            var measuredResults = Document.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return result;
+            }
+
+            var peptideDocNode = (PeptideDocNode)Document.FindNode(identityPath);
+            if (peptideDocNode == null)
+            {
+                return result;
+            }
+
+            for (int iReplicate = 0; iReplicate < measuredResults.Chromatograms.Count; iReplicate++)
+            {
+                foreach (var chromFileInfo in measuredResults.Chromatograms[iReplicate].MSDataFileInfos)
+                {
+                    if (result.ContainsKey(chromFileInfo.FilePath))
+                    {
+                        continue;
+                    }
+                    foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
+                    {
+                        var transitionGroupChromInfo =
+                            transitionGroupDocNode.GetChromInfo(iReplicate, chromFileInfo.FileId);
+                        if (transitionGroupChromInfo is { ZScore: { }, StartRetentionTime: { }, EndRetentionTime: { } })
+                        {
+                            result.Add(chromFileInfo.FilePath, new ScoredPeak(
+                                new PeakBounds(transitionGroupChromInfo.StartRetentionTime.Value,
+                                    transitionGroupChromInfo.EndRetentionTime.Value),
+                                transitionGroupChromInfo.ZScore.Value));
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
         private AlignmentFunction GetAlignmentFunction(CancellationToken cancellationToken, MsDataFileUri filePath)
         {
             if (AlignmentTarget == null)
@@ -579,7 +628,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                     return alignmentFunction;
                 }
 
-                alignmentFunction = CalculateAlignmentFunction(cancellationToken, filePath);
+                alignmentFunction = CalculateAlignmentFunction(cancellationToken, filePath)?.ToAlignmentFunction();
                 _alignmentFunctions[filePath] = alignmentFunction;
                 return alignmentFunction;
             }
@@ -702,7 +751,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return result;
         }
 
-        private AlignmentFunction CalculateAlignmentFunction(CancellationToken cancellationToken, MsDataFileUri filePath)
+        private PiecewiseLinearMap CalculateAlignmentFunction(CancellationToken cancellationToken, MsDataFileUri filePath)
         {
             var replicateIndex = FindReplicateIndex(filePath, out var chromFileInfoId);
             if (replicateIndex < 0)
@@ -739,7 +788,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 }
             }
 
-            return AlignmentTarget.PerformAlignment(observedTimes, cancellationToken)?.ToAlignmentFunction();
+            return AlignmentTarget.PerformAlignment(observedTimes, cancellationToken);
         }
 
         private int FindReplicateIndex(MsDataFileUri filePath, out ChromFileInfoId fileId)
@@ -838,7 +887,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         public ImputedPeak GetImputedPeakIfQuick(IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, 
             MsDataFileUri filePath)
         {
-            return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, chromatogramSet, filePath, true);
+            return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, chromatogramSet, filePath, false, true);
         }
 
         public SrmDocument ImputePeak(CancellationToken cancellationToken, SrmDocument document, IdentityPath peptideIdentityPath)
