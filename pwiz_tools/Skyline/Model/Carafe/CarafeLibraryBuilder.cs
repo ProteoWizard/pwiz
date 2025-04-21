@@ -570,7 +570,7 @@ namespace pwiz.Skyline.Model.Carafe
             var readyArgs = new List<ArgumentAndValue>();
             foreach (var arg in CommandArguments)
             {
-                readyArgs.Add(new ArgumentAndValue(arg.Name, arg.Value, TextUtil.HYPHEN));
+               readyArgs.Add(new ArgumentAndValue(arg.Name, arg.Value, TextUtil.HYPHEN));
             }
 
             foreach (var dataParam in DataParameters)
@@ -842,6 +842,9 @@ namespace pwiz.Skyline.Model.Carafe
                 return false;
             }
             JavaExecutablePath = javaExecutablePath;
+            if (JavaExecutablePath.Any(char.IsWhiteSpace))
+                JavaExecutablePath = TextUtil.Quote(JavaExecutablePath);
+
             var signatureValid = PythonInstallerUtil.IsSignatureValid(JavaExecutablePath, PythonInstallerUtil.GetFileHash(JavaExecutablePath));
             if (signatureValid != true)
             {
@@ -880,31 +883,26 @@ namespace pwiz.Skyline.Model.Carafe
 
          
             // compose carafe cmd command arguments to build library
-            var args = new StringBuilder();
+            var args = TextUtil.SpaceSeparate(
+                TextUtil.Quote(PythonVirtualEnvironmentActivateScriptPath)
+                );
+
+            args += TextUtil.SpaceSeparate(CONDITIONAL_CMD_PROCEEDING_SYMBOL) + SPACE; 
+
+            args += TextUtil.SpaceSeparate(
+                TextUtil.Quote(JavaExecutablePath)
+                );
+
+            args += SPACE + TextUtil.SpaceSeparate(
+                commandArgs.Select(arg => 
+                    arg.ToString())
+                );
 
             var cmdBuilder = new StringBuilder();
             CancellationToken cancelToken = CancellationToken.None;
 
-            // add activate python virtual env command
-            args.Append(PythonVirtualEnvironmentActivateScriptPath);
-            args.Append(SPACE);
-            args.Append(CONDITIONAL_CMD_PROCEEDING_SYMBOL);
-            args.Append(SPACE);
-
-            // add java carafe command
-            args.Append(JavaExecutablePath);
-            args.Append(SPACE);
-
-            // add carafe args
-            foreach (var arg in commandArgs)
-            {
-                args.Append(arg).Append(SPACE);
-            }
-
             cmdBuilder.Append(args).Append(SPACE);
             
- 
-
             string batPath = Path.Combine(RootDir, "runCarafe.bat");
             File.WriteAllText(batPath, cmdBuilder.ToString());
 
@@ -920,6 +918,7 @@ namespace pwiz.Skyline.Model.Carafe
             try
             {
                 pr.EnableImmediateLog = true;
+                pr.EnableRunningTimeMessage = true;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, Writer, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
@@ -941,6 +940,9 @@ namespace pwiz.Skyline.Model.Carafe
             var source = CarafeOutputLibraryFilePath();
             var dest = LibrarySpec.FilePath;
  
+            File.Copy(source, dest);
+
+            /* **********************************************************************************
             BlibFilter blibFilter = new BlibFilter();
             
             // Build the final filtered library
@@ -954,6 +956,7 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 Messages.WriteAsyncUserMessage(ModelResources.Blib_failed_to_complete);
             }
+            ************************************************************************************* */
             
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));

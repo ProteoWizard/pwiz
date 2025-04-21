@@ -44,15 +44,20 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             Name = name;
             Value = value;
-            if (quoteValue)
-                Value = '"' + Value + '"';
+
+            if (Value.Any(char.IsWhiteSpace) || quoteValue)
+                Value = TextUtil.Quote(Value);
+
             Dash = dash;
         }
         public string Name { get; private set; }
         public string Value { get; private set; }
         public string Dash { get; set; }
 
-        public override string ToString() { return TextUtil.SpaceSeparate(Dash + Name, Value); }
+        public override string ToString()
+        {
+            return TextUtil.SpaceSeparate(Dash + Name, Value);
+        }
     }
 
     public class ModificationType
