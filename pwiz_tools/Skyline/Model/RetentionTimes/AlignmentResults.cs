@@ -10,11 +10,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
     {
         public static readonly Alignments EMPTY =
             new Alignments(LibraryFiles.EMPTY, Array.Empty<KeyValuePair<string, PiecewiseLinearMap>>());
-        private Dictionary<string, Alignment> _alignmentFunctions;
+        private Dictionary<string, ReversibleMap> _alignmentFunctions;
 
         public Alignments(LibraryFiles libraryFiles, IEnumerable<KeyValuePair<string, PiecewiseLinearMap>> alignmentFunctions)
         {
-            _alignmentFunctions = new Dictionary<string, Alignment>();
+            _alignmentFunctions = new Dictionary<string, ReversibleMap>();
             List<string> files = null;
             if (libraryFiles == null)
             {
@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 if (entry.Value != null)
                 {
-                    _alignmentFunctions.Add(entry.Key, new Alignment(entry.Value));
+                    _alignmentFunctions.Add(entry.Key, new ReversibleMap(entry.Value));
                     files?.Add(entry.Key);
                 }
             }
@@ -61,29 +61,5 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
 
         public LibraryFiles LibraryFiles { get; private set; }
-
-        private class Alignment
-        {
-            public Alignment(PiecewiseLinearMap forwardMap)
-            {
-                ForwardMap = forwardMap;
-                ReverseMap = ForwardMap.ReverseMap();
-            }
-
-            public PiecewiseLinearMap ForwardMap { get; }
-            public PiecewiseLinearMap ReverseMap { get; }
-
-            public AlignmentFunction GetAlignmentFunction(bool forward)
-            {
-                if (forward)
-                {
-                    return AlignmentFunction.Define(ForwardMap.GetY, ReverseMap.GetY);
-                }
-                else
-                {
-                    return AlignmentFunction.Define(ReverseMap.GetY, ForwardMap.GetY);
-                }
-            }
-        }
     }
 }

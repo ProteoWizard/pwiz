@@ -623,13 +623,13 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 
             lock (_alignmentFunctions)
             {
-                if (_alignmentFunctions.TryGetValue(filePath, out var alignmentFunction))
+                if (!_alignmentFunctions.TryGetValue(filePath, out var alignmentFunction))
                 {
-                    return alignmentFunction;
+                    alignmentFunction = Document.Settings.DocumentRetentionTimes.GetAlignmentFunction(
+                        Document.Settings.PeptideSettings.Libraries, filePath, null, true);
+                    _alignmentFunctions[filePath] = alignmentFunction;
                 }
 
-                alignmentFunction = CalculateAlignmentFunction(cancellationToken, filePath)?.ToAlignmentFunction();
-                _alignmentFunctions[filePath] = alignmentFunction;
                 return alignmentFunction;
             }
         }

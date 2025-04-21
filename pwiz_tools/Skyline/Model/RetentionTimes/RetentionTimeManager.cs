@@ -33,7 +33,15 @@ namespace pwiz.Skyline.Model.RetentionTimes
     {
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return true;
+            if (!Equals(AlignmentTarget.GetAlignmentTarget(document), AlignmentTarget.GetAlignmentTarget(previous)))
+            {
+                return true;
+            }
+            if (!Equals(IsNotLoadedExplained(document), IsNotLoadedExplained(previous)))
+            {
+                return true;
+            }
+            return false;
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
@@ -52,14 +60,18 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)
         {
-            var param = tag as DocumentRetentionTimes.LibraryAlignmentParam;
-            if (param == null)
+            if (tag is SrmDocument tagDocument)
             {
-                return false;
+                return !ReferenceEquals(tagDocument, container.Document);
             }
-            
-            var document = container.Document;
-            return !document.Settings.DocumentRetentionTimes.GetMissingAlignments(document.Settings).Contains(param);
+
+            if (tag is DocumentRetentionTimes.LibraryAlignmentParam param)
+            {
+                var document = container.Document;
+                return !document.Settings.DocumentRetentionTimes.GetMissingAlignments(document.Settings).Contains(param);
+            }
+
+            return false;
         }
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document,
@@ -93,38 +105,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
             if (newDocumentRetentionTimes == null)
             {
                 var alignmentParam = documentRetentionTimes.GetMissingAlignments(docCurrent.Settings).FirstOrDefault();
-                if (alignmentParam == null)
+                if (alignmentParam != null)
                 {
-                    return false;
+                    newDocumentRetentionTimes =
+                        PerformLibraryAlignment(container, documentRetentionTimes, alignmentParam);
                 }
-                var loadMonitor = new LoadMonitor(this, container, alignmentParam);
-                IProgressStatus progressStatus = new ProgressStatus(GetAlignmentDescription(alignmentTarget, alignmentParam.LibraryName));
-                Alignments alignment;
-                try
+                else
                 {
-                    loadMonitor.UpdateProgress(progressStatus);
-                    alignment = DocumentRetentionTimes.
-                        PerformAlignment(loadMonitor, ref progressStatus, alignmentParam);
-
-                    loadMonitor.UpdateProgress(progressStatus.Complete());
-                }
-                catch (Exception e)
-                {
-                    if (loadMonitor.IsCanceled)
-                    {
-                        loadMonitor.UpdateProgress(progressStatus.Cancel());
-                        return false;
-                    }
-                    loadMonitor.UpdateProgress(progressStatus.ChangeErrorException(e));
-                    return false;
-                }
-                if (alignment == null)
-                {
-                    return false;
+                    newDocumentRetentionTimes = UpdateResultFileAlignments(container, docCurrent);
                 }
 
-                newDocumentRetentionTimes =
-                    documentRetentionTimes.ChangeLibraryAlignments(alignmentParam, alignment);
+                if (newDocumentRetentionTimes == null)
+                {
+                    return false;
+                }
             }
 
             SrmDocument docNew;
@@ -145,6 +139,63 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             while (!CompleteProcessing(container, docNew, docCurrent));
             return true;
+        }
+
+        private DocumentRetentionTimes PerformLibraryAlignment(IDocumentContainer container,
+            DocumentRetentionTimes documentRetentionTimes,
+            DocumentRetentionTimes.LibraryAlignmentParam alignmentParam)
+        {
+            var loadMonitor = new LoadMonitor(this, container, alignmentParam);
+            IProgressStatus progressStatus = new ProgressStatus(GetAlignmentDescription(alignmentParam.AlignmentTarget, alignmentParam.LibraryName));
+            Alignments alignment;
+            try
+            {
+                loadMonitor.UpdateProgress(progressStatus);
+                alignment = DocumentRetentionTimes.
+                    PerformAlignment(loadMonitor, ref progressStatus, alignmentParam);
+
+                loadMonitor.UpdateProgress(progressStatus.Complete());
+            }
+            catch (Exception e)
+            {
+                if (loadMonitor.IsCanceled)
+                {
+                    loadMonitor.UpdateProgress(progressStatus.Cancel());
+                    return null;
+                }
+
+                loadMonitor.UpdateProgress(progressStatus.ChangeErrorException(e));
+                return null;
+            }
+
+            return documentRetentionTimes.ChangeLibraryAlignments(alignmentParam, alignment);
+        }
+
+        private DocumentRetentionTimes UpdateResultFileAlignments(IDocumentContainer container, SrmDocument docCurrent)
+        {
+            var loadMonitor = new LoadMonitor(this, container, docCurrent);
+            var documentRetentionTimes = docCurrent.Settings.DocumentRetentionTimes;
+            IProgressStatus progressStatus = new ProgressStatus("Performing replicate retention time alignments");
+            DocumentRetentionTimes result;
+            try
+            {
+                loadMonitor.UpdateProgress(progressStatus);
+                result = documentRetentionTimes.UpdateResultFileAlignments(loadMonitor, ref progressStatus, docCurrent);
+                loadMonitor.UpdateProgress(progressStatus.Complete());
+            }
+            catch (Exception e)
+            {
+                if (loadMonitor.IsCanceled)
+                {
+                    loadMonitor.UpdateProgress(progressStatus.Cancel());
+                    return null;
+                }
+
+                loadMonitor.UpdateProgress(progressStatus.ChangeErrorException(e));
+                return null;
+            }
+
+            return result;
         }
 
         private static string GetAlignmentDescription(AlignmentTarget target, string libraryName)

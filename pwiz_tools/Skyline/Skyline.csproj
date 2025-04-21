@@ -606,6 +606,7 @@
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentResults.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentTarget.cs" />
+    <Compile Include="Model\RetentionTimes\ResultFileAlignments.cs" />
     <Compile Include="Model\RetentionTimes\LibraryAlignment.cs" />
     <Compile Include="Model\RetentionTimes\PiecewiseLinearMap.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\ExemplaryPeak.cs" />

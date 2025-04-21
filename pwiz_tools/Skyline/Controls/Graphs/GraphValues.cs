@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using pwiz.Common.Collections;
 using ZedGraph;
 using pwiz.Skyline.Model.DocSettings;

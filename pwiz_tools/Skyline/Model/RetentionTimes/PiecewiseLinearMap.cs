@@ -123,9 +123,38 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
+        public ReversibleMap ToReversibleMap()
+        {
+            return new ReversibleMap(this);
+        }
+
         public AlignmentFunction ToAlignmentFunction()
         {
             return AlignmentFunction.Define(GetY, ReverseMap().GetY);
+        }
+    }
+
+    public class ReversibleMap
+    {
+        public ReversibleMap(PiecewiseLinearMap forwardMap)
+        {
+            ForwardMap = forwardMap;
+            ReverseMap = forwardMap.ReverseMap();
+        }
+
+        public PiecewiseLinearMap ForwardMap { get; }
+        public PiecewiseLinearMap ReverseMap { get; }
+
+        public AlignmentFunction GetAlignmentFunction(bool forward)
+        {
+            if (forward)
+            {
+                return AlignmentFunction.Define(ForwardMap.GetY, ReverseMap.GetY);
+            }
+            else
+            {
+                return AlignmentFunction.Define(ReverseMap.GetY, ForwardMap.GetY);
+            }
         }
     }
 }
