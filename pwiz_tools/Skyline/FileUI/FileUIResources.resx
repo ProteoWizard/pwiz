@@ -658,7 +658,4 @@ Would you like to remove some or all of this suffix to shorten the names used in
   <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
     <value>Unavailable: no matching iRT standards found</value>
   </data>
-  <data name="OpenFileDialogNE_OpenFileDialogNE_Open" xml:space="preserve">
-    <value>Open</value>
-  </data>
 </root>
