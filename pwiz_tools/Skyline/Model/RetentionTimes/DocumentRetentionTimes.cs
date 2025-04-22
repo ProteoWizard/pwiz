@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
         public bool IsEmpty
         {
-            get { return RetentionTimeSources.IsEmpty && FileAlignments.IsEmpty && _libraryAlignments.Count == 0; }
+            get { return _libraryAlignments.Count == 0 && ResultFileAlignments.IsEmpty;  }
         }
 
         public static string IsNotLoadedExplained(SrmSettings srmSettings)
@@ -681,7 +681,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     loadMonitor.UpdateProgress(localProgressStatus =
                         localProgressStatus.ChangePercentComplete(100 * completedCount++ / alignmentFunctions.Length));
                 }
-            });
+            }, threadName: nameof(PerformAlignment));
             progressStatus = localProgressStatus;
             return new Alignments(null, alignmentFunctions);
         }

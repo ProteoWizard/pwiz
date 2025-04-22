@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 var documentContainer = new MemoryDocumentContainer();
                 documentContainer.SetDocument(_skylineWindow.DocumentUI, documentContainer.Document);
-                dataSchema = new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer(), PeakBoundaryImputer.GetInstance(_skylineWindow.DocumentUI));
+                dataSchema = new SkylineDataSchema(documentContainer, GetDataSchemaLocalizer());
             }
             else
             {

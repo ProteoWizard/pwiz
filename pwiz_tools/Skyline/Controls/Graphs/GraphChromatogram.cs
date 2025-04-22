@@ -3648,13 +3648,7 @@ namespace pwiz.Skyline.Controls.Graphs
             PeakBoundaryImputer peakBoundaryImputer;
             lock (this)
             {
-                peakBoundaryImputer = _peakBoundaryImputer;
-                if (!ReferenceEquals(imputedBoundsParameter.Document, peakBoundaryImputer?.Document))
-                {
-                    peakBoundaryImputer = PeakBoundaryImputer.GetInstance(imputedBoundsParameter.Document);
-                }
-
-                _peakBoundaryImputer = peakBoundaryImputer;
+                peakBoundaryImputer = _peakBoundaryImputer = _peakBoundaryImputer?.ChangeDocument(imputedBoundsParameter.Document) ?? new PeakBoundaryImputer(imputedBoundsParameter.Document);
             }
 
             return peakBoundaryImputer!.GetImputedPeakBounds(productionMonitor.CancellationToken,

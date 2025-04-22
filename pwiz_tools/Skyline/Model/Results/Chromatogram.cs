@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     return false;
                 }
-                if (DocumentRetentionTimes.IsNotLoadedExplained(document) != null)
+                if (!DocumentRetentionTimes.IsReadyForChromatogramExtraction(document))
                 {
                     return false;
                 }

@@ -36,7 +36,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
 {
     public class PeakBoundaryImputer
     {
-        private static WeakReference<PeakBoundaryImputer> _sharedInstance;
         private readonly Dictionary<LibraryInfoKey, LibraryInfo> _libraryInfos = new Dictionary<LibraryInfoKey, LibraryInfo>();
         private readonly Dictionary<MsDataFileUri, AlignmentFunction> _alignmentFunctions =
             new Dictionary<MsDataFileUri, AlignmentFunction>();
@@ -100,26 +99,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
 
             return result;
-        }
-
-        public static PeakBoundaryImputer GetInstance(SrmDocument document)
-        {
-            lock (typeof(PeakBoundaryImputer))
-            {
-                PeakBoundaryImputer peakBoundaryImputer = null;
-                if (true == _sharedInstance?.TryGetTarget(out peakBoundaryImputer))
-                {
-                    if (ReferenceEquals(peakBoundaryImputer.Document, document))
-                    {
-                        return peakBoundaryImputer;
-                    }
-                }
-
-                peakBoundaryImputer =
-                    peakBoundaryImputer?.ChangeDocument(document) ?? new PeakBoundaryImputer(document);
-                _sharedInstance = new WeakReference<PeakBoundaryImputer>(peakBoundaryImputer);
-                return peakBoundaryImputer;
-            }
         }
 
         private class LibraryInfo

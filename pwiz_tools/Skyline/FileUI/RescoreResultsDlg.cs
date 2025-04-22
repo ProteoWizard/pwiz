@@ -89,9 +89,12 @@ namespace pwiz.Skyline.FileUI
         public void RescoreToFile(string targetFile)
         {
             var skylineWindow = (SkylineWindow)DocumentUIContainer;
-            if (!skylineWindow.SaveDocument(targetFile, false))
+            if (targetFile != skylineWindow.DocumentFilePath)
             {
-                return;
+                if (!skylineWindow.SaveDocument(targetFile, false))
+                {
+                    return;
+                }
             }
 
             // CONSIDER: Not possible to undo this operation.  Not sure this is the right way to handle it.

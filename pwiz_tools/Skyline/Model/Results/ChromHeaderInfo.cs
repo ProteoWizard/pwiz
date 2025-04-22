@@ -2820,6 +2820,15 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromPeak CalcPeak(PeakGroupIntegrator peakGroupIntegrator, float startTime, float endTime, ChromPeak.FlagValues flags)
         {
+            if (startTime == endTime)
+            {
+                return ChromPeak.EMPTY;
+            }
+            var existingPeak = Peaks.FirstOrDefault(peak => peak.StartTime == startTime && peak.EndTime == endTime);
+            if (!existingPeak.IsEmpty)
+            {
+                return existingPeak;
+            }
             var peakIntegrator = MakePeakIntegrator(peakGroupIntegrator);
             return peakIntegrator.IntegratePeak(startTime, endTime, flags);
         }

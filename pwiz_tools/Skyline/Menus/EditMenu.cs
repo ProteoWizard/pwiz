@@ -941,7 +941,7 @@ namespace pwiz.Skyline.Menus
                     return;
                 }
 
-                var peakImputer = PeakBoundaryImputer.GetInstance(originalDocument);
+                var peakImputer = new PeakBoundaryImputer(originalDocument);
                 using var longWait = new LongWaitDlg(SkylineWindow);
                 ModifiedDocument modifiedDocument = null;
                 longWait.Text = "Imputing peak boundaries";

@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Results
 
             string basename = MSDataFilePath.GetFileNameWithoutExtension();
             FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
-            _peakBoundaryImputer = PeakBoundaryImputer.GetInstance(document);
+            _peakBoundaryImputer = new PeakBoundaryImputer(document);
             _chromatogramSet =
                 document.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(chromSet =>
                     chromSet.IndexOfPath(msDataFilePath) >= 0);

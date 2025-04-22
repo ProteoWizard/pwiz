@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
@@ -66,6 +67,14 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     yield return new KeyValuePair<MsDataFileUri, ReversibleMap>(kvp.Key, alignmentFunction);
                 }
+            }
+        }
+
+        public bool IsEmpty
+        {
+            get
+            {
+                return !GetAlignmentFunctions().Any();
             }
         }
 
@@ -244,15 +253,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 PollingInterval = 1000
             };
-            for (int iSource = 0; iSource < missingSources.Count; iSource++)
+            int completedCount = 0;
+            var loopProgressStatus = status;
+            ParallelEx.For(0, missingSources.Count, iSource =>
             {
-                loadMonitor.UpdateProgress(status = status.ChangePercentComplete(iSource * 100 / missingSources.Count));
                 var source = missingSources[iSource];
                 var timesDict = source.GetTimesDictionary();
                 var alignmentFunction = target.PerformAlignment(timesDict, cancellationTokenSource.Token)?.ToReversibleMap();
-                newAlignmentFunctions[source] = alignmentFunction;
-            }
-
+                lock (newAlignmentFunctions)
+                {
+                    newAlignmentFunctions[source] = alignmentFunction;
+                    loadMonitor.UpdateProgress(loopProgressStatus = loopProgressStatus.ChangePercentComplete(completedCount * 100 / missingSources.Count));
+                    completedCount++;
+                }
+            }, threadName:nameof(ResultFileAlignments));
+            status = loopProgressStatus;
             return ChangeProp(ImClone(this), im =>
             {
                 im._alignmentSources = newSources;
