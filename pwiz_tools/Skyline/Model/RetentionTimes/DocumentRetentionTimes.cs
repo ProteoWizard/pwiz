@@ -559,33 +559,20 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return dict;
             }
-            foreach (var grouping in settings.MeasuredResults.Chromatograms.GroupBy(chrom => chrom.BatchName))
+            for (int iLibrary = 0; iLibrary < peptideLibraries.Libraries.Count; iLibrary++)
             {
-                for (int iLibrary = 0; iLibrary < peptideLibraries.Libraries.Count; iLibrary++)
+                var library = peptideLibraries.Libraries[iLibrary];
+                var libraryName = library?.Name ?? peptideLibraries.LibrarySpecs[iLibrary]?.Name;
+                if (libraryName == null)
                 {
-                    var library = peptideLibraries.Libraries[iLibrary];
-                    var libraryName = library?.Name ?? peptideLibraries.LibrarySpecs[iLibrary]?.Name;
-                    if (libraryName == null)
-                    {
-                        continue;
-                    }
-                    if (true != library?.IsLoaded)
-                    {
-                        dict.Add(libraryName, null);
-                        continue;
-                    }
-                    if (string.IsNullOrEmpty(grouping.Key))
-                    {
-                        dict.Add(libraryName, new LibraryAlignmentParam(alignmentTarget, library, null));
-                    }
-                    else
-                    {
-                        var spectrumSourceFiles = grouping.SelectMany(chrom => chrom.MSDataFilePaths)
-                            .Select(library.LibraryFiles.FindIndexOf).Where(i => i >= 0).OrderBy(i => i)
-                            .Select(i => library.LibraryFiles.FilePaths[i]).ToImmutable();
-                        dict.Add(libraryName, new LibraryAlignmentParam(alignmentTarget, library, spectrumSourceFiles));
-                    }
+                    continue;
                 }
+                if (true != library?.IsLoaded)
+                {
+                    dict.Add(libraryName, null);
+                    continue;
+                }
+                dict.Add(libraryName, new LibraryAlignmentParam(alignmentTarget, library, null));
             }
 
             return dict;
