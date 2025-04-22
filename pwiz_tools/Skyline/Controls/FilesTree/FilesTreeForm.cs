@@ -907,6 +907,12 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     internal class Utils
     {
+        // This should match the check in FileNode.IsDocumentSavedToDisk
+        internal static bool IsDocumentSavedToDisk(string documentPath)
+        {
+            return !string.IsNullOrEmpty(documentPath);
+        }
+
         internal static bool ContainsCheckReferenceEquals(IList<Identity> list, Identity item)
         {
             for (var i = 0; i < list.Count; i++)

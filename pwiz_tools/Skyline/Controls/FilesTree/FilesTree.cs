@@ -195,10 +195,11 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 RunUI(this, () => { 
 
-                    // Start the file system monitor if (1) not already running and (2) a Skyline document
-                    // is open and saved to disk. Do this async because when DocumentFilePath is not set 
-                    // for a newly saved document until after OnDocumentChanged is called.
-                    if (!IsMonitoringFileSystem() && DocumentContainer.DocumentFilePath != null)
+                    // Start the file system monitor if the document is already saved to disk but the
+                    // file system monitor is not already running. Do this work asynchronously because
+                    // when a doc is saved for the first time, DocumentFilePath is not set until after Skyline
+                    // finishes running OnDocumentChanged event handlers - e.g. this code
+                    if (Utils.IsDocumentSavedToDisk(DocumentContainer.DocumentFilePath) && !IsMonitoringFileSystem())
                     {
                         _fsWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
                         _fsWatcher.SynchronizingObject = this;
@@ -581,7 +582,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 // Do nothing if the path to a Skyline document is not set. For example, 
                 // before a new .sky file is saved for the first time.
-                if (node.DocumentPath == null)
+                if (!Utils.IsDocumentSavedToDisk(node.DocumentPath))
                     return;
 
                 node.InitLocalFile();

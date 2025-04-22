@@ -28,17 +28,16 @@ namespace pwiz.Skyline.Model.Files
             base(document, documentPath, IdentityPath.ROOT, ImageId.skyline)
         {
             // DocumentPath is null when a .sky document is new and has not been saved to disk yet
-            if (documentPath == null)
+            if (IsDocumentSavedToDisk())
+            {
+                Name = FileName = Path.GetFileName(documentPath);
+                FilePath = documentPath;
+            }
+            else
             {
                 Name = FileResources.FileModel_NewDocument;
                 FilePath = null;
                 FileName = null;
-            }
-            else
-            {
-                Name = Path.GetFileName(documentPath);
-                FilePath = documentPath;
-                FileName = Path.GetFileName(documentPath);
             }
 
             Files = ImmutableList.ValueOf(BuildFileList());
