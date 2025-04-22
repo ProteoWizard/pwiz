@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.FilesTree
     public class FilesTree : TreeViewMS
     {
         private bool _inhibitOnAfterSelect;
-        private FileSystemWatcher _fileSystemWatcher;
+        private FileSystemWatcher _fsWatcher;
         private QueueWorker<Action> _fsWorkQueue = new QueueWorker<Action>(null, (a, i) => a());
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
@@ -43,7 +43,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public FilesTree()
         {
-            _fileSystemWatcher = new FileSystemWatcher();
+            _fsWatcher = new FileSystemWatcher();
             _monitoringFileSystem = false;
 
             ImageList = new ImageList
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Used for testing
         public string PathMonitoredForFileSystemChanges()
         {
-            return _fileSystemWatcher?.Path;
+            return _fsWatcher?.Path;
         }
 
         // Used for testing
@@ -197,14 +197,14 @@ namespace pwiz.Skyline.Controls.FilesTree
                     // for a newly saved document until after OnDocumentChanged is called.
                     if (!IsMonitoringFileSystem() && DocumentContainer.DocumentFilePath != null)
                     {
-                        _fileSystemWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
-                        _fileSystemWatcher.SynchronizingObject = this;
-                        _fileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
-                        _fileSystemWatcher.IncludeSubdirectories = true;
-                        _fileSystemWatcher.EnableRaisingEvents = true;
-                        _fileSystemWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
-                        _fileSystemWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
-                        _fileSystemWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
+                        _fsWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
+                        _fsWatcher.SynchronizingObject = this;
+                        _fsWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
+                        _fsWatcher.IncludeSubdirectories = true;
+                        _fsWatcher.EnableRaisingEvents = true;
+                        _fsWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
+                        _fsWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
+                        _fsWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
 
                         // initialize local files now that DocumentFilePath is set
                         InitializeAllLocalFiles(Root);
@@ -657,8 +657,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         protected override void Dispose(bool disposing)
         {
-            _fileSystemWatcher.Dispose();
-            _fileSystemWatcher = null;
+            _fsWatcher.Dispose();
+            _fsWatcher = null;
 
             _monitoringFileSystem = false;
 
