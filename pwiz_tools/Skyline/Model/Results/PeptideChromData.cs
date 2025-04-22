@@ -27,7 +27,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 

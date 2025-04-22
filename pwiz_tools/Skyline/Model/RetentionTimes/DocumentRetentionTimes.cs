@@ -224,7 +224,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             WriteAlignments(writer, null,
                 ResultFileAlignments.GetAlignmentFunctions().Select(kvp =>
-                    new KeyValuePair<string, PiecewiseLinearMap>(kvp.Key.ToString(), kvp.Value.ForwardMap)));
+                    new KeyValuePair<string, PiecewiseLinearMap>(kvp.Key.ToString(), kvp.Value)));
             foreach (var entry in _libraryAlignments)
             {
                 WriteAlignments(writer, entry.Key, entry.Value.Alignments.GetAllAlignmentFunctions());
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         private void WriteAlignments(XmlWriter writer, string libraryName,
             IEnumerable<KeyValuePair<string, PiecewiseLinearMap>> alignments)
         {
-            var orderedAlignments = alignments.OrderBy(kvp => kvp.Key).ToList();
+            var orderedAlignments = alignments.OrderBy(kvp => kvp.Key).Where(kvp=>kvp.Value != null).ToList();
             if (orderedAlignments.Count == 0)
             {
                 return;
@@ -644,6 +644,27 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return Param == null ? null : new LibraryAlignment(Param.Library, Alignments);
                 }
             }
+
+            protected bool Equals(LibraryAlignmentValue other)
+            {
+                return Equals(Param, other.Param) && Equals(Alignments, other.Alignments);
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is null) return false;
+                if (ReferenceEquals(this, obj)) return true;
+                if (obj.GetType() != GetType()) return false;
+                return Equals((LibraryAlignmentValue)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((Param != null ? Param.GetHashCode() : 0) * 397) ^ (Alignments != null ? Alignments.GetHashCode() : 0);
+                }
+            }
         }
 
         public static Alignments PerformAlignment(ILoadMonitor loadMonitor, ref IProgressStatus progressStatus, LibraryAlignmentParam alignmentParam)
@@ -756,7 +777,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
 
-            return ResultFileAlignments.GetAlignmentFunction(filePath)?.GetAlignmentFunction(forward);
+            return ResultFileAlignments.GetAlignmentFunction(filePath)?.ToAlignmentFunction(forward);
         }
 
         public IEnumerable<MsDataFileUri> GetDataFilesWithoutLibraryAlignments(MeasuredResults measuredResults)

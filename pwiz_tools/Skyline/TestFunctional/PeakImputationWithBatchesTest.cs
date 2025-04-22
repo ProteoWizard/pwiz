@@ -81,8 +81,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     RunLongDlg<FilterMatchedPeptidesDlg>(viewLibraryDlg.AddAllPeptides, filterMatchedPeptidesDlg =>
                     {
-                        RunUI(filterMatchedPeptidesDlg.OkDialog);
-                        var alertDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                        var alertDlg = ShowDialog<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog);
                         OkDialog(alertDlg, alertDlg.OkDialog);
                     }, _ => { });
                 },
