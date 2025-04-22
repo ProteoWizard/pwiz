@@ -578,7 +578,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return dict;
         }
 
-        public class LibraryAlignmentParam
+        public class LibraryAlignmentParam : Immutable
         {
             public LibraryAlignmentParam(AlignmentTarget alignmentTarget, Library library, ImmutableList<string> spectrumSourceFileSubset)
             {
@@ -593,6 +593,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 get { return Library.Name; }
             }
             public Library Library { get; private set; }
+
+            public LibraryAlignmentParam ChangeLibrary(Library library)
+            {
+                return ChangeProp(ImClone(this), im => im.Library = library);
+            }
             [CanBeNull]
             public ImmutableList<string> SpectrumSourceFileSubset { get; private set; }
 
@@ -784,6 +789,25 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 im.ResultFileAlignments = newAlignments;
             });
+        }
+
+        /// <summary>
+        /// Replace the entries for a library with a new library. This is used when we know that a library has been
+        /// renamed but is otherwise unchanged.
+        /// </summary>
+        public DocumentRetentionTimes ChangeLibrary(Library oldLibrary, Library newLibrary)
+        {
+            if (!_libraryAlignments.TryGetValue(oldLibrary.Name, out var oldEntry))
+            {
+                return this;
+            }
+
+
+            var newLibraryAlignments = _libraryAlignments.Where(entry => entry.Key != oldLibrary.Name)
+                .ToDictionary(entry => entry.Key, entry => entry.Value);
+            newLibraryAlignments[newLibrary.Name] =
+                new LibraryAlignmentValue(oldEntry.Param.ChangeLibrary(newLibrary), oldEntry.Alignments);
+            return ChangeProp(ImClone(this), im => im._libraryAlignments = newLibraryAlignments);
         }
 
         private Dictionary<MsDataFileUri, PiecewiseLinearMap> _deserializedAlignmentFunctions;

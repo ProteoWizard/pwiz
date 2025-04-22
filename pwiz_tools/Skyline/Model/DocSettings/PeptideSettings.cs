@@ -2274,7 +2274,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.HasDocumentLibrary = prop);
         }
 
-        public PeptideLibraries ChangeDocumentLibraryPath(string path)
+        public PeptideLibraries ChangeDocumentLibraryPath(string path, ConnectionPool connectionPool)
         {
             var specs = new LibrarySpec[LibrarySpecs.Count];
             var libs = new Library[specs.Length];
@@ -2282,8 +2282,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (LibrarySpecs[i].IsDocumentLibrary)
                 {
-                    specs[i] = BiblioSpecLiteSpec.GetDocumentLibrarySpec(path);
-                    libs[i] = null;
+                    var newDocumentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(path);
+                    var newDocumentLibrary =
+                        (Libraries[i] as BiblioSpecLiteLibrary)?.ChangeLibrarySpec(newDocumentLibrarySpec, connectionPool);
+                    specs[i] = newDocumentLibrarySpec;
+                    libs[i] = newDocumentLibrary;
                 }
                 else
                 {

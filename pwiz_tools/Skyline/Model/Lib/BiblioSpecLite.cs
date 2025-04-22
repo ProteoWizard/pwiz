@@ -2639,6 +2639,14 @@ namespace pwiz.Skyline.Model.Lib
 
             return files;
         }
+        public BiblioSpecLiteLibrary ChangeLibrarySpec(BiblioSpecLiteSpec newSpec, ConnectionPool connectionPool)
+        {
+            return ChangeProp(ImClone((BiblioSpecLiteLibrary)ChangeName(newSpec.Name)), im =>
+            {
+                im.FilePath = newSpec.FilePath;
+                _sqliteConnection = new PooledSqliteConnection(connectionPool, newSpec.FilePath);
+            });
+        }
     }
 
     public sealed class SpectrumLiteKey : IEquatable<SpectrumLiteKey>

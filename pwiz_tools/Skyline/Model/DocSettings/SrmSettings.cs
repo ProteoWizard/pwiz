@@ -571,6 +571,44 @@ namespace pwiz.Skyline.Model.DocSettings
             return settingsSavable;
         }
 
+        public SrmSettings ChangeDocumentLibraryPath(string newPath)
+        {
+            var peptideLibraries = PeptideSettings.Libraries;
+            var specs = new LibrarySpec[peptideLibraries.LibrarySpecs.Count];
+            var libs = new Library[specs.Length];
+            BiblioSpecLiteLibrary oldDocumentLibrary = null;
+            BiblioSpecLiteLibrary newDocumentLibrary = null;
+            for (int i = 0; i < specs.Length; i++)
+            {
+                if (peptideLibraries.LibrarySpecs[i].IsDocumentLibrary)
+                {
+                    var newDocumentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newPath);
+                    specs[i] = newDocumentLibrarySpec;
+                    oldDocumentLibrary = libs[i] as BiblioSpecLiteLibrary;
+                    if (oldDocumentLibrary != null)
+                    {
+                        newDocumentLibrary = oldDocumentLibrary.ChangeLibrarySpec(newDocumentLibrarySpec, FileStreamManager.Default.ConnectionPool);
+                        libs[i] = newDocumentLibrary;
+                    }
+                }
+                else
+                {
+                    specs[i] = peptideLibraries.LibrarySpecs[i];
+                    libs[i] = peptideLibraries.Libraries[i];
+                }
+            }
+
+            var result = ChangePeptideSettings(PeptideSettings.ChangeLibraries(
+                peptideLibraries.ChangeLibraries(specs, libs)));
+            if (newDocumentLibrary != null)
+            {
+                result = result.ChangeDocumentRetentionTimes(
+                    result.DocumentRetentionTimes.ChangeLibrary(oldDocumentLibrary, newDocumentLibrary));
+            }
+
+            return result;
+        }
+
         #endregion
 
         private void CreatePrecursorMassCalcs()
