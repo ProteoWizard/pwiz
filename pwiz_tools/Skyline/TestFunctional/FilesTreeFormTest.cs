@@ -320,11 +320,14 @@ namespace pwiz.SkylineTestFunctional
             {
                 // Remove All replicates
                 doc = SkylineWindow.Document;
-                var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-                var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.FilesTreeForm.RemoveAll(replicatesFolder));
+                var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
+                {
+                    var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                    SkylineWindow.FilesTreeForm.RemoveAll(replicatesFolder);
+                });
                 OkDialog(confirmDlg, confirmDlg.ClickYes);
             
-                replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                var replicatesFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
                 doc = WaitForDocumentChange(doc);
                 Assert.AreEqual(0, replicatesFolder.Nodes.Count);
             
