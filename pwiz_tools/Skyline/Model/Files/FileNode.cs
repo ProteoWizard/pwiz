@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.Files
 
         internal bool IsDocumentSavedToDisk()
         {
-            return DocumentPath != null;
+            return !string.IsNullOrEmpty(DocumentPath);
         }
 
         // ReSharper disable once LocalizableElement
