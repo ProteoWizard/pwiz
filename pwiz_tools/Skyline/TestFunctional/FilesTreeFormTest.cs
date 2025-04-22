@@ -69,16 +69,24 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-            Assert.AreEqual(FileResources.FileModel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
             Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
+            Assert.IsInstanceOfType(SkylineWindow.FilesTree.Root.Model, typeof(SkylineFile));
+            Assert.AreEqual(FileResources.FileModel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
+
             Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
+            Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<SkylineFile>().NodeAt(0).Model, typeof(ReplicatesFolder));
+            Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<SkylineFile>().NodeAt(1).Model, typeof(ProjectFilesFolder));
+            
+            Assert.AreEqual(1, SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().Nodes.Count);
+            Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(0).Model, typeof(SkylineAuditLog));
 
             Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
             Assert.AreEqual(string.Empty, SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
 
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, "savedFileName.sky");
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
-            // TODO: add the size of FilesTree's QueueWorker when fixing TODO below
+
+            // TODO: wait on emptying FilesTree's FS work queue
             WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
 
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());

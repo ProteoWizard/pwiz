@@ -117,7 +117,7 @@
         <value>Project Files</value>
     </data>
     <data name="FileModel_ViewFile" xml:space="preserve">
-        <value>View File</value>
+        <value>Window Layout</value>
     </data>
     <data name="FileModel_ChromatogramCache" xml:space="preserve">
         <value>Chromatogram Cache</value>

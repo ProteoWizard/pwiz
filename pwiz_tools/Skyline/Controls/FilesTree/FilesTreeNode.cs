@@ -277,21 +277,18 @@ namespace pwiz.Skyline.Controls.FilesTree
         // from the given node.
         internal static void UpdateFileImages(FilesTreeNode filesTreeNode)
         {
-            if (filesTreeNode == null)
-                return;
-
-            do
+            while (filesTreeNode != null && filesTreeNode.Parent != null)
             {
                 filesTreeNode.OnModelChanged();
                 filesTreeNode = (FilesTreeNode)filesTreeNode.Parent;
             }
-            while (filesTreeNode.Parent != null);
         }
 
         public bool IsFileInitialized()
         {
             if (Model.IsBackedByFile)
                 return FileState != FileState.not_initialized;
+            // Consider nodes not backed by files as initialized
             else return true;
         }
     }

@@ -91,6 +91,11 @@ namespace pwiz.Skyline.Model.Files
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
+        internal bool IsDocumentSavedToDisk()
+        {
+            return DocumentPath != null;
+        }
+
         // ReSharper disable once LocalizableElement
         public override string ToString() => "FileNode: " + (Name ?? string.Empty);
     }

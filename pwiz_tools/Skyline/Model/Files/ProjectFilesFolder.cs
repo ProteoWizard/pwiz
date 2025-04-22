@@ -37,13 +37,13 @@ namespace pwiz.Skyline.Model.Files
         {
             get
             {
-                IList<FileNode> files = new List<FileNode>();
+                var files = new List<FileNode>();
 
                 if (Document.Settings.DataSettings.IsAuditLoggingEnabled) 
                     files.Add(new SkylineAuditLog(Document, DocumentPath));
 
-                // CONSIDER: does this need to check for whether the Skyline Document is saved to disk?
-                files.Add(new SkylineViewFile(Document, DocumentPath));
+                if(IsDocumentSavedToDisk())
+                    files.Add(new SkylineViewFile(Document, DocumentPath));
 
                 // Chromatogram Caches (.skyd)
                 // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
@@ -60,6 +60,5 @@ namespace pwiz.Skyline.Model.Files
                 return ImmutableList.ValueOf(files);
             }
         }
-
     }
 }

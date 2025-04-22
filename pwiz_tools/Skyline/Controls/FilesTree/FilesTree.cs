@@ -125,6 +125,9 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public FilesTreeNode Folder<T>() where T : FileNode
         {
+            if (Root.Model.GetType() == typeof(T))
+                return Root;
+
             foreach (TreeNode treeNode in Root.Nodes)
             {
                 var filesTreeNode = (FilesTreeNode)treeNode;

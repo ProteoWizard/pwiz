@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.Files {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to View File.
+        ///   Looks up a localized string similar to Window Layout.
         /// </summary>
         public static string FileModel_ViewFile {
             get {
