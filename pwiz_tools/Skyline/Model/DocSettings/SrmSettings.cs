@@ -2010,7 +2010,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool HasAlignedTimes()
         {
-            return !DocumentRetentionTimes.IsEmpty || null != DocumentRetentionTimes.IsNotLoadedExplained(this);
+            return AlignmentTarget.TryGetAlignmentTarget(this, out _);
         }
 
         /// <summary>

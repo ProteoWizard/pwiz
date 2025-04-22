@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             get { return _libraryAlignments.Count == 0 && ResultFileAlignments.IsEmpty;  }
         }
 
-        public static string IsNotLoadedExplained(SrmSettings srmSettings)
+        private static string IsNotLoadedExplained(SrmSettings srmSettings)
         {
             if (!AlignmentTarget.TryGetAlignmentTarget(srmSettings, out _))
             {
@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 return null;
             }
 
-            return nameof(DocumentRetentionTimes) + @": " + TextUtil.SpaceSeparate(unloadedLibraries);
+            return TextUtil.ColonSeparate(nameof(DocumentRetentionTimes), TextUtil.SpaceSeparate(unloadedLibraries));
         }
 
         public static string IsNotLoadedExplained(SrmDocument document)
@@ -94,9 +94,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 return notLoaded;
             }
-            if (!IsReadyForReintegration(document))
+            var documentRetentionTimes = document.Settings.DocumentRetentionTimes;
+            if (!documentRetentionTimes.ResultFileAlignments.IsUpToDate(document))
             {
-                return "ResultFileAlignments needs updating";
+                return nameof(ResultFileAlignments);
             }
 
             return null;
@@ -174,7 +175,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
         private enum ATTR
         {
             library,
-            file
+            file,
+            length
         }
 
 
@@ -197,10 +199,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 foreach (var elAlignment in elLibrary.Elements(EL.alignment))
                 {
                     var elMeasured = elAlignment.Elements(EL.measured).FirstOrDefault();
+                    var length = elAlignment.GetNullableInt(ATTR.length);
                     if (elMeasured != null)
                     {
-                        var yValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elMeasured.Value));
-                        var xValues = PrimitiveArrays.FromBytes<double>(Convert.FromBase64String(elAlignment.Elements(EL.aligned).First().Value));
+                        var yValues = BytesToDoubles(length, Convert.FromBase64String(elMeasured.Value));
+                        var xValues = BytesToDoubles(length, Convert.FromBase64String(elAlignment.Elements(EL.aligned).First().Value));
                         alignments.Add(elAlignment.Attribute(ATTR.file).Value, PiecewiseLinearMap.FromValues(xValues, yValues));
                     }
                 }
@@ -218,6 +221,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
             
             FileAlignments = ResultNameMap<FileRetentionTimeAlignments>.EMPTY;
             RetentionTimeSources = ResultNameMap<RetentionTimeSource>.EMPTY;
+        }
+
+        private double[] BytesToDoubles(int? length, byte[] bytes)
+        {
+            if (!length.HasValue || bytes.Length == length * sizeof(double))
+            {
+                return PrimitiveArrays.FromBytes<double>(bytes);
+            }
+
+            if (bytes.Length != length * sizeof(int))
+            {
+                throw new ArgumentException();
+            }
+
+            return PrimitiveArrays.FromBytes<float>(bytes).Select(f => (double)f).ToArray();
         }
 
         public void WriteXml(XmlWriter writer)
@@ -252,11 +270,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             writer.WriteStartElement(EL.alignment);
             writer.WriteAttribute(ATTR.file, key);
+            writer.WriteAttribute(ATTR.length, piecewiseLinearMap.Count);
             writer.WriteStartElement(EL.measured);
-            writer.WriteValue(Convert.ToBase64String(PrimitiveArrays.ToBytes(piecewiseLinearMap.YValues.ToArray())));
+            writer.WriteValue(Convert.ToBase64String(PrimitiveArrays.ToBytes(piecewiseLinearMap.YValues.Select(y=>(float) y).ToArray())));
             writer.WriteEndElement();
             writer.WriteStartElement(EL.aligned);
-            writer.WriteValue(Convert.ToBase64String(PrimitiveArrays.ToBytes(piecewiseLinearMap.XValues.ToArray())));
+            writer.WriteValue(Convert.ToBase64String(PrimitiveArrays.ToBytes(piecewiseLinearMap.XValues.Select(x => (float) x).ToArray())));
             writer.WriteEndElement();
             writer.WriteEndElement();
         }

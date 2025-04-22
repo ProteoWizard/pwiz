@@ -20,11 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes
 {
     public class PiecewiseLinearMap
     {
+        public static readonly PiecewiseLinearMap Empty =
+            new PiecewiseLinearMap(Array.Empty<double>(), Array.Empty<double>());
         private readonly double[] _x;
         private readonly double[] _y;
         private readonly double[] _xSortedByY;
@@ -47,7 +50,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             _x = x;
             _y = y;
-            if (Enumerable.Range(0, _y.Length - 1).All(i => _y[i] <= _y[i + 1]))
+            if (x.Length == 0 || Enumerable.Range(0, _y.Length - 1).All(i => _y[i] <= _y[i + 1]))
             {
                 _xSortedByY = _x;
                 _ySortedByY = _y;
@@ -127,6 +130,72 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return AlignmentFunction.Define(GetX, GetY);
         }
 
+        /// <summary>
+        /// Reduce the size of the map by removing the points which are most collinear with their
+        /// neighbors.
+        /// </summary>
+        public PiecewiseLinearMap ReducePointCount(int newCount)
+        {
+            if (newCount >= Count)
+            {
+                return this;
+            }
+
+            if (newCount <= 0)
+            {
+                return Empty;
+            }
+
+            if (newCount == 1)
+            {
+                return new PiecewiseLinearMap(new[] { (_x[0] + _x[_x.Length - 1]) / 2 },
+                    new[] { (_y[0] + _y[_y.Length - 1]) / 2 });
+            }
+
+            if (newCount == 2)
+            {
+                return new PiecewiseLinearMap(new[] { _x[0], _x[_x.Length - 1] }, new[] { _y[0], _y[_y.Length - 1] });
+            }
+
+            var points = _x.Zip(_y, Tuple.Create).ToList();
+            while (points.Count > newCount)
+            {
+                bool[] removed = new bool[points.Count];
+                int remainingCount = points.Count;
+                // Calculate the area of the triangle formed by each point with its two neighbors. Remove the points
+                // with the smallest areas because they are most collinear with their neighbors.
+                foreach (var areaTuple in Enumerable.Range(1, points.Count - 2).Select(index =>
+                                 Tuple.Create(TriangleArea(points[index - 1], points[index], points[index + 1]), index))
+                             .OrderBy(tuple => tuple.Item1))
+                {
+                    var index = areaTuple.Item2;
+                    if (removed[index - 1] || removed[index + 1])
+                    {
+                        // If we find a point where a neighbor has already been removed, we need to recalculate areas
+                        break;
+                    }
+                    removed[index] = true;
+                    remainingCount--;
+                    if (remainingCount <= newCount)
+                    {
+                        break;
+                    }
+                }
+
+                points = Enumerable.Range(0, points.Count).Where(index => !removed[index]).Select(i => points[i]).ToList();
+                Assume.AreEqual(remainingCount, points.Count);
+            }
+
+            return new PiecewiseLinearMap(points.Select(pt => pt.Item1).ToArray(),
+                points.Select(pt => pt.Item2).ToArray());
+        }
+
+        private static double TriangleArea(Tuple<double, double> a, Tuple<double, double> b, Tuple<double, double> c)
+        {
+            return Math.Abs(a.Item1 * (b.Item2 - c.Item2) + b.Item1 * (c.Item2 - a.Item2) +
+                            c.Item1 * (a.Item2 - b.Item2))/2;
+        }
+
         private static double Interpolate(double key, double[] keys, double[] values)
         {
             switch (keys.Length)
@@ -148,19 +217,23 @@ namespace pwiz.Skyline.Model.RetentionTimes
             int next = prev + 1;
             double xPrev = keys[prev];
             double xNext = keys[next];
-            if (xPrev == xNext)
+            var deltaX = xNext - xPrev;
+            if (deltaX == 0)
             {
-                if (xPrev == 0)
+                // This can only happen for keys that are before the first value or after the last value
+                if (prev == 0)
                 {
-                    return values[0];
+                    return values[prev];
                 }
                 else
                 {
-                    return values[values.Length - 1];
+                    Assume.AreEqual(next, values.Length - 1);
+                    return values[next];
                 }
             }
 
-            return (values[prev] * (key - xPrev) + values[next] * (xNext - key)) / (xNext - xPrev);
+            var slope = (values[next] - values[prev]) / deltaX;
+            return slope * (key - xPrev) + values[prev];
         }
     }
 }

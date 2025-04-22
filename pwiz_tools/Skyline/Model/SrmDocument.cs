@@ -618,7 +618,7 @@ namespace pwiz.Skyline.Model
                     yield return whyNot;
                 if ((whyNot = OptimizationDbManager.IsNotLoadedDocumentExplained(this)) != null)
                     yield return whyNot;
-                if ((whyNot = DocumentRetentionTimes.IsNotLoadedExplained(Settings)) != null)
+                if ((whyNot = DocumentRetentionTimes.IsNotLoadedExplained(this)) != null)
                     yield return whyNot;
                 if ((whyNot = IonMobilityLibraryManager.IsNotLoadedDocumentExplained(this)) != null)
                     yield return whyNot;

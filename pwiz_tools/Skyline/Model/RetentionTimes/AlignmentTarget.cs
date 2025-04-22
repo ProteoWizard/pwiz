@@ -81,11 +81,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     var stat = new Statistics(xValues);
                     var slope = statRT.Slope(stat);
                     var intercept = statRT.Intercept(stat);
-                    return PiecewiseLinearMap.FromValues(new Dictionary<double, double>
-                    {
-                        { 0, intercept },
-                        { 1, slope + intercept }
-                    });
+                    return CreatePiecewiseLinearMap(new[] { 0.0, 1 }, new[] { intercept, slope + intercept });
                 }
                 case RegressionMethodRT.kde:
                 {
@@ -97,7 +93,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     var kdeAligner = new KdeAligner(-1, -1);
                     kdeAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
                     kdeAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
-                    return PiecewiseLinearMap.FromValues(xSmoothed, ySmoothed);
+                    return CreatePiecewiseLinearMap(xSmoothed, ySmoothed);
                 }
                 case RegressionMethodRT.log:
                     // TODO
@@ -113,11 +109,18 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     var loessAligner = new LoessAligner(-1, -1, 0.4);
                     loessAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
                     loessAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
-                    return PiecewiseLinearMap.FromValues(xSmoothed, ySmoothed);
+                    return CreatePiecewiseLinearMap(xSmoothed, ySmoothed);
                 }
                 default:
                     return null;
             }
+        }
+
+        private static readonly int MAX_PIECEWISE_LINEAR_MAP_LENGTH = 1000;
+        public static PiecewiseLinearMap CreatePiecewiseLinearMap(IList<double> xValues, IList<double> yValues)
+        {
+            var piecewiseLinearMap = PiecewiseLinearMap.FromValues(xValues.Zip(yValues, (x,y)=>new KeyValuePair<double, double>((float) x, (float) y)));
+            return piecewiseLinearMap.ReducePointCount(MAX_PIECEWISE_LINEAR_MAP_LENGTH);
         }
 
         public static AlignmentTarget GetAlignmentTarget(SrmDocument document)
