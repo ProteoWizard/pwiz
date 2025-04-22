@@ -1084,7 +1084,6 @@ namespace pwiz.Skyline.SettingsUI
                     textLearningDoc.Text = dlg.FileName;
                 }
             }
-
         }
     }
 }

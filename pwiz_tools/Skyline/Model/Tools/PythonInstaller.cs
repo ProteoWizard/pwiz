@@ -655,7 +655,7 @@ namespace pwiz.Skyline.Model.Tools
             CancellationToken cancelToken = CancellationToken.None;
             if (broker != null) cancelToken = broker.CancellationToken;
 
-            if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
+            if (processRunner.RunProcess(cmd, true, Writer, false, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
         }
