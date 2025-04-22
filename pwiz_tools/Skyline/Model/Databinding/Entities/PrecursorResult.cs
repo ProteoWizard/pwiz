@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -283,11 +284,14 @@ namespace pwiz.Skyline.Model.Databinding.Entities
         }
 
         [ChildDisplayName("Imputed{0}")]
-        public PeakBounds ImputedPeak
+        [Format(Formats.RETENTION_TIME)]
+        public ImputedPeakBounds ImputedPeak
         {
             get
             {
-                return DataSchema.PeakBoundaryImputer.GetImputedPeakIfQuick(PeptideResult.Peptide.IdentityPath, GetResultFile().Replicate.ChromatogramSet, GetResultFile().ChromFileInfo.FilePath)?.PeakBounds;
+                return ImputedPeakBounds.FromPeakBounds(DataSchema.PeakBoundaryImputer
+                    .GetImputedPeakQuick(PeptideResult.Peptide.IdentityPath,
+                        GetResultFile().Replicate.ChromatogramSet, GetResultFile().ChromFileInfo.FilePath)?.PeakBounds);
             }
         }
 
@@ -541,6 +545,42 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             }
 
             return truncatedArea / totalArea;
+        }
+
+        
+        public class ImputedPeakBounds : IFormattable
+        {
+            public ImputedPeakBounds(double startTime, double endTime)
+            {
+                StartTime = startTime;
+                EndTime = endTime;
+            }
+
+            [Format(Formats.RETENTION_TIME)]
+            public double StartTime { get; }
+            [Format(Formats.RETENTION_TIME)]
+            public double EndTime { get; }
+
+            public string ToString(string format, IFormatProvider formatProvider)
+            {
+                return string.Format(EntitiesResources.CandidatePeakGroup_ToString___0___1__,
+                    StartTime.ToString(format, formatProvider), EndTime.ToString(format, formatProvider));
+            }
+
+            public static ImputedPeakBounds FromPeakBounds(PeakBounds peakBounds)
+            {
+                if (peakBounds == null)
+                {
+                    return null;
+                }
+
+                return new ImputedPeakBounds(peakBounds.StartTime, peakBounds.EndTime);
+            }
+
+            public override string ToString()
+            {
+                return ToString(null, CultureInfo.CurrentCulture);
+            }
         }
     }
 }

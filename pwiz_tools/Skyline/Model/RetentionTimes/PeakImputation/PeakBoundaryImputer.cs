@@ -863,7 +863,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return imputedPeak;
         }
 
-        public ImputedPeak GetImputedPeakIfQuick(IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, 
+        public ImputedPeak GetImputedPeakQuick(IdentityPath peptideIdentityPath, ChromatogramSet chromatogramSet, 
             MsDataFileUri filePath)
         {
             return GetImputedPeakBounds(CancellationToken.None, peptideIdentityPath, chromatogramSet, filePath, false, true);

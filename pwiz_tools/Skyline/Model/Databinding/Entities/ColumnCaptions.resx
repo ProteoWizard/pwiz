@@ -513,6 +513,15 @@
   <data name="Identified">
     <value>Identified</value>
   </data>
+  <data name="ImputedEndTime">
+    <value>Imputed End Time</value>
+  </data>
+  <data name="ImputedPeak">
+    <value>Imputed Peak</value>
+  </data>
+  <data name="ImputedStartTime">
+    <value>Imputed Start Time</value>
+  </data>
   <data name="InChI">
     <value>InChI</value>
   </data>

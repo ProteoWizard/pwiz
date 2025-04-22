@@ -1278,6 +1278,33 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to End time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate.
+        /// </summary>
+        public static string ImputedEndTime {
+            get {
+                return ResourceManager.GetString("ImputedEndTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Peak boundaries of the best-scoring replicate mapped using retention time alignment to this replicate.
+        /// </summary>
+        public static string ImputedPeak {
+            get {
+                return ResourceManager.GetString("ImputedPeak", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Start time of the peak from the best-scoring replicate mapped using retention time alignment to this replicate.
+        /// </summary>
+        public static string ImputedStartTime {
+            get {
+                return ResourceManager.GetString("ImputedStartTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Standardized molecular identifier.
         /// </summary>
         public static string InChI {
