@@ -2299,6 +2299,9 @@ namespace pwiz.Skyline.Controls.Graphs
             
             var libKey = nodeGroups[0].GetLibKey(settings, nodePeps[0]);
             LibraryIonMobilityInfo libImInfo;
+            
+            if (!settings.PeptideSettings.Libraries.IsLoaded)
+                return;
 
             if (settings.PeptideSettings.Libraries.TryGetSpectralLibraryIonMobilities(new[] { libKey },
                     chromGraphPrimary.Chromatogram.FilePath, out libImInfo))

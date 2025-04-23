@@ -36,7 +36,6 @@ using System.Diagnostics;
 using pwiz.Common.Collections;
 using System.ComponentModel;
 using System.Linq;
-using pwiz.BiblioSpec;
 
 [assembly: InternalsVisibleTo("TestPerf")]
 
@@ -78,7 +77,6 @@ namespace pwiz.Skyline.Model.Carafe
 
         public string AmbiguousMatchesMessage
         {
-            //TODO(xgwang): implement
             get { return null; }
         }
 
@@ -86,13 +84,11 @@ namespace pwiz.Skyline.Model.Carafe
 
         public string BuildCommandArgs
         {
-            //TODO(xgwang): implement
             get { return null; }
         }
 
         public string BuildOutput
         {
-            //TODO(xgwang): implement
             get { return null; }
         }
 
@@ -158,14 +154,14 @@ namespace pwiz.Skyline.Model.Carafe
         private Uri JavaSdkUri => new Uri(JAVA_SDK_DOWNLOAD_URL + JavaSdkDownloadFileName);
         private string JavaSdkDownloadPath => Path.Combine(JavaDir, JavaSdkDownloadFileName);
         private string JavaExecutablePath { get; set; }
-        private string CarafeFileBaseName => CARAFE + HYPHEN + CARAFE_VERSION;
+        private string CarafeFileBaseName => @"carafe" + HYPHEN + CARAFE_VERSION;
         private string CarafeJarZipFileName => CarafeFileBaseName + CARAFE_DEV_VERSION + DOT_ZIP;
         private string CarafeJarFileName => CarafeFileBaseName + DOT_JAR;
 
         private Uri CarafeJarZipDownloadUrl()
         {
             return new Uri(
-                @$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/{CARAFE}-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
+                @$"https://skyline.ms/_webdav/home/support/file%20sharing/%40files/carafe-{CARAFE_VERSION}{CARAFE_DEV_VERSION}{DOT_ZIP}");
         }
 
         //Uri(@$"https://github.com/Noble-Lab/Carafe/releases/download/v{CARAFE_VERSION}-dev/{CARAFE}-{CARAFE_VERSION}{DOT_ZIP}");

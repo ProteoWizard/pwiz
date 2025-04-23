@@ -186,7 +186,7 @@ namespace SkylineTester
             if (RootDir == null)
                 throw new ApplicationException("Can't find Skyline or SkylineTester directory");
 
-            _resultsDir = Path.Combine(RootDir, "SkylineTester Results");
+            _resultsDir = Path.Combine(RootDir, "SkylineTesterResults");
             DefaultLogFile = Path.Combine(RootDir, "SkylineTester.log");
             if (File.Exists(DefaultLogFile))
                 Try.Multi<Exception>(() => File.Delete(DefaultLogFile));
