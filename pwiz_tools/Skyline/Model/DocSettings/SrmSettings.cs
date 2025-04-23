@@ -2015,37 +2015,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         /// <summary>
         /// Returns true if there are any runs in this Document that have not been aligned against
-        /// all of the runs in the Libraries in this Document.
+        /// all the runs in the Libraries in this Document.
         /// </summary>
         public bool HasUnalignedTimes()
         {
-            if (!HasResults)
-            {
-                return false;
-            }
-            foreach (var chromatogramSet in MeasuredResults.Chromatograms)
-            {
-                foreach (var msDataFileInfo in chromatogramSet.MSDataFileInfos)
-                {
-                    var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(msDataFileInfo);
-                    if (fileAlignments == null)
-                    {
-                        return true;
-                    }
-                    foreach (var source in DocumentRetentionTimes.RetentionTimeSources.Values)
-                    {
-                        if (source.Name == fileAlignments.Name)
-                        {
-                            continue;
-                        }
-                        if (null == fileAlignments.RetentionTimeAlignments.Find(source.Name))
-                        {
-                            return true;
-                        }
-                    }
-                }
-            }
-            return false;
+            AlignmentTarget.TryGetAlignmentTarget(this, out var alignmentTarget);
+            return alignmentTarget == null;
         }
 
         /// <summary>

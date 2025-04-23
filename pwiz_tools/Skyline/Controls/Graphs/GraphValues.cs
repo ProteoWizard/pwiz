@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using pwiz.Common.Collections;
 using ZedGraph;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -46,7 +45,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         
         [Localizable(true)]
-        public static string ToLocalizedString(RTPeptideValue rtPeptideValue)
+        public static string ToLocalizedString(this RTPeptideValue rtPeptideValue)
         {
             switch (rtPeptideValue)
             {
@@ -139,131 +138,52 @@ namespace pwiz.Skyline.Controls.Graphs
             /// If successful, then this method returns true, and the regressionFunction is set 
             /// appropriately.
             /// </summary>
-            bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction);
+            bool TryGetRegressionFunction(MsDataFileUri filePath, out AlignmentFunction regressionFunction);
+
         }
 
-        public class RegressionUnconversion : IRetentionTimeTransformOp
+        public class RetentionTimeAlignmentTransformOp : IRetentionTimeTransformOp
         {
-            private readonly RetentionTimeRegression _retentionTimeRegression;
-            public RegressionUnconversion(RetentionTimeRegression retentionTimeRegression)
+            public RetentionTimeAlignmentTransformOp(SrmSettings settings)
             {
-                _retentionTimeRegression = retentionTimeRegression;
+                SrmSettings = settings;
+                if (AlignmentTarget.TryGetAlignmentTarget(settings, out var alignmentTarget))
+                {
+                    AlignmentTarget = alignmentTarget;
+                }
             }
+
+            public RetentionTimeAlignmentTransformOp(SrmSettings settings, AlignmentTarget alignmentTarget)
+            {
+                SrmSettings = settings;
+                AlignmentTarget = alignmentTarget;
+            }
+
+            public static IRetentionTimeTransformOp FromSettings(SrmSettings settings)
+            {
+                AlignmentTarget.TryGetAlignmentTarget(settings, out var target);
+                return target == null ? null : new RetentionTimeAlignmentTransformOp(settings, target);
+            }
+
+            public SrmSettings SrmSettings { get; }
+
+            public AlignmentTarget AlignmentTarget { get; }
 
             public string GetAxisTitle(RTPeptideValue rtPeptideValue)
             {
-                string calculatorName = _retentionTimeRegression.Calculator.Name;
-                if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
+                if (AlignmentTarget == null)
                 {
-                    return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreFormat, calculatorName);
+                    return ToLocalizedString(rtPeptideValue);
                 }
-                return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreValueFormat, calculatorName, ToLocalizedString(rtPeptideValue));
+
+                return AlignmentTarget.GetAxisTitle(rtPeptideValue);
             }
 
-            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction)
+            public bool TryGetRegressionFunction(MsDataFileUri filePath, out AlignmentFunction regressionFunction)
             {
-                var unconversion = _retentionTimeRegression.GetUnconversion(chromFileInfoId);
-                if (unconversion != null)
-                {
-                    regressionFunction = AlignmentFunction.Define(unconversion.GetY, unconversion.GetX);
-                    return true;
-                }
-
-                regressionFunction = null;
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Holds information about how to align retention times before displaying them in a graph.
-        /// </summary>
-        public class AlignToFileOp : IRetentionTimeTransformOp
-        {
-            public static AlignToFileOp GetAlignmentToFile(ChromFileInfoId chromFileInfoId, SrmSettings settings)
-            {
-                if (!settings.HasResults)
-                {
-                    return null;
-                }
-                var chromSetInfos = GetChromSetInfos(settings.MeasuredResults);
-                Tuple<ChromatogramSet, ChromFileInfo> chromSetInfo;
-                if (!chromSetInfos.TryGetValue(chromFileInfoId, out chromSetInfo))
-                {
-                    return null;
-                }
-
-                return new AlignToFileOp(settings.DocumentRetentionTimes, chromSetInfo.Item1, settings.PeptideSettings.Libraries, chromSetInfo.Item2.FilePath, chromSetInfos);
-            }
-
-            private static IDictionary<ReferenceValue<ChromFileInfoId>, Tuple<ChromatogramSet, ChromFileInfo>> GetChromSetInfos(
-                MeasuredResults measuredResults)
-            {
-                var dict =
-                    new Dictionary<ReferenceValue<ChromFileInfoId>, Tuple<ChromatogramSet, ChromFileInfo>>();
-                foreach (var chromatogramSet in measuredResults.Chromatograms)
-                {
-                    foreach (var chromFileInfo in chromatogramSet.MSDataFileInfos)
-                    {
-                        dict.Add(chromFileInfo.FileId, new Tuple<ChromatogramSet, ChromFileInfo>(chromatogramSet, chromFileInfo));
-                    }
-                }
-                return dict;
-            }
-
-            private readonly IDictionary<ReferenceValue<ChromFileInfoId>, Tuple<ChromatogramSet, ChromFileInfo>> _chromSetInfos;
-            private AlignToFileOp(DocumentRetentionTimes documentRetentionTimes,
-                ChromatogramSet chromatogramSet,
-                PeptideLibraries peptideLibraries,
-                MsDataFileUri alignTo,
-                IDictionary<ReferenceValue<ChromFileInfoId>, Tuple<ChromatogramSet, ChromFileInfo>> chromSetInfos)
-            {
-                DocumentRetentionTimes = documentRetentionTimes;
-                ChromatogramSet = chromatogramSet;
-                PeptideLibraries = peptideLibraries;
-                AlignTo = alignTo;
-                _chromSetInfos = chromSetInfos;
-            }
-            public ChromatogramSet ChromatogramSet { get; }
-            public PeptideLibraries PeptideLibraries { get; private set; }
-            public DocumentRetentionTimes DocumentRetentionTimes { get; private set; }
-            public MsDataFileUri AlignTo { get; private set; }
-            public bool TryGetRegressionFunction(ChromFileInfoId chromFileInfoId, out AlignmentFunction regressionFunction)
-            {
-                regressionFunction = null;
-                if (!_chromSetInfos.TryGetValue(chromFileInfoId, out var chromSetInfo))
-                {
-                    return false;
-                }
-
-                if (Equals(chromSetInfo.Item2.FilePath, AlignTo))
-                {
-                    return true;
-                }
-
-                var batchName = chromSetInfo.Item1.BatchName;
-                var source = DocumentRetentionTimes.GetAlignmentFunction(PeptideLibraries, chromSetInfo.Item2.FilePath,
-                    batchName, true);
-                if (source == null)
-                {
-                    return false;
-                }
-
-                var target = DocumentRetentionTimes.GetAlignmentFunction(PeptideLibraries, AlignTo, batchName, false);
-                if (target == null)
-                {
-                    return false;
-                }
-                regressionFunction = AlignmentFunction.FromParts(new []{source, target});
-                return true;
-            }
-
-            /// <summary>
-            /// If retention time alignment is being performed, append "aligned to {ReplicateName}" to the title.
-            /// </summary>
-            [Localizable(true)]
-            public string GetAxisTitle(RTPeptideValue rtPeptideValue)
-            {
-                return string.Format(GraphsResources.RtAlignment_AxisTitleAlignedTo, ToLocalizedString(rtPeptideValue), ChromatogramSet.Name);
+                regressionFunction = SrmSettings.DocumentRetentionTimes.GetAlignmentFunction(SrmSettings.PeptideSettings.Libraries, filePath,
+                    false);
+                return regressionFunction != null;
             }
         }
 

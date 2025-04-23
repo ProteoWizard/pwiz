@@ -44,19 +44,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
     public class DocumentRetentionTimes : Immutable, IXmlSerializable
     {
         public static readonly DocumentRetentionTimes EMPTY =
-            new DocumentRetentionTimes(Array.Empty<RetentionTimeSource>(), Array.Empty<FileRetentionTimeAlignments>())
+            new DocumentRetentionTimes()
             {
                 _libraryAlignments = new Dictionary<string, LibraryAlignmentValue>(),
-                RetentionTimeSources = ResultNameMap<RetentionTimeSource>.EMPTY,
-                FileAlignments = ResultNameMap<FileRetentionTimeAlignments>.EMPTY
             };
         public const double REFINEMENT_THRESHOLD = .99;
-        public DocumentRetentionTimes(IEnumerable<RetentionTimeSource> sources, IEnumerable<FileRetentionTimeAlignments> fileAlignments)
-            : this()
-        {
-            RetentionTimeSources = ResultNameMap.FromNamedElements(sources);
-            FileAlignments = ResultNameMap.FromNamedElements(fileAlignments);
-        }
         public bool IsEmpty
         {
             get { return _libraryAlignments.Count == 0 && ResultFileAlignments.IsEmpty;  }
@@ -119,8 +111,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return IsNotLoadedExplained(document) == null;
         }
 
-        public ResultNameMap<FileRetentionTimeAlignments> FileAlignments { get; private set; }
-        public ResultNameMap<RetentionTimeSource> RetentionTimeSources { get; private set; }
         public ResultFileAlignments ResultFileAlignments { get; private set; } = ResultFileAlignments.EMPTY;
 
         #region Object Overrides
@@ -128,9 +118,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.RetentionTimeSources, RetentionTimeSources) &&
-                   Equals(other.FileAlignments, FileAlignments)
-                   && CollectionUtil.EqualsDeep(_libraryAlignments, other._libraryAlignments)
+            return CollectionUtil.EqualsDeep(_libraryAlignments, other._libraryAlignments)
                    && Equals(ResultFileAlignments, other.ResultFileAlignments);
 
         }
@@ -147,8 +135,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             unchecked
             {
-                int result = FileAlignments.GetHashCode();
-                result = (result*397) ^ RetentionTimeSources.GetHashCode();
+                int result = ResultFileAlignments.GetHashCode();
                 result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(_libraryAlignments);
                 return result;
             }
@@ -165,7 +152,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         private enum EL
         {
-            alignment_target,
             alignments,
             alignment,
             measured,
@@ -218,9 +204,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
             _libraryAlignments = libraryAlignments;
-            
-            FileAlignments = ResultNameMap<FileRetentionTimeAlignments>.EMPTY;
-            RetentionTimeSources = ResultNameMap<RetentionTimeSource>.EMPTY;
         }
 
         private double[] BytesToDoubles(int? length, byte[] bytes)
@@ -428,74 +411,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {SampleType.DOUBLE_BLANK, 4},
             {SampleType.SOLVENT, 4}
         };
-
-        public AlignmentFunction GetMappingFunction(string alignTo, string alignFrom, int maxStopovers)
-        {
-            var queue = new Queue<ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>>();
-            queue.Enqueue(ImmutableList<KeyValuePair<string, RetentionTimeAlignment>>.EMPTY);
-            while (queue.Count > 0)
-            {
-                var list = queue.Dequeue();
-                var name = list.LastOrDefault().Key ?? alignTo;
-                var fileAlignment = FileAlignments.Find(name);
-                if (fileAlignment == null)
-                {
-                    continue;
-                }
-
-                var endAlignment = fileAlignment.RetentionTimeAlignments.Find(alignFrom);
-                if (endAlignment != null)
-                {
-                    return MakeAlignmentFunc(list.Select(tuple => tuple.Value.RegressionLine).Prepend(endAlignment.RegressionLine));
-                }
-
-                if (list.Count < maxStopovers)
-                {
-                    var excludeNames = list.Select(tuple => tuple.Key).ToHashSet();
-                    foreach (var availableAlignment in fileAlignment.RetentionTimeAlignments)
-                    {
-                        if (!excludeNames.Contains(availableAlignment.Key))
-                        {
-                            queue.Enqueue(ImmutableList.ValueOf(list.Prepend(availableAlignment)));
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public Dictionary<string, AlignmentFunction> GetAllMappingFunctions(FileRetentionTimeAlignments alignTo, int maxStopovers)
-        {
-            Dictionary<string, AlignmentFunction> alignmentFunctions = new Dictionary<string, AlignmentFunction>();
-            foreach (var source in RetentionTimeSources.Values)
-            {
-                if (alignTo.Name == source.Name)
-                {
-                    continue;
-                }
-
-                var alignmentFunction = GetMappingFunction(alignTo.Name, source.Name, maxStopovers);
-                if (alignmentFunction != null)
-                {
-                    alignmentFunctions[source.Name] = alignmentFunction;
-                }
-            }
-
-            return alignmentFunctions;
-        }
-
-        public RetentionTimeAlignmentIndexes GetRetentionTimeAlignmentIndexes(string name)
-        {
-            var file = FileAlignments.Find(name);
-            if (file == null)
-            {
-                return null;
-            }
-
-            return new RetentionTimeAlignmentIndexes(GetAllMappingFunctions(file, 3)
-                .Select(kvp => new RetentionTimeAlignmentIndex(kvp.Key, kvp.Value)));
-        }
 
         public static AlignmentFunction MakeAlignmentFunc(IEnumerable<RegressionLine> regressionLines)
         {
@@ -774,14 +689,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
             });
         }
 
-        public AlignmentFunction GetAlignmentFunction(PeptideLibraries peptideLibraries, MsDataFileUri filePath,
-            string batchName, bool forward)
+        public AlignmentFunction GetAlignmentFunction(PeptideLibraries peptideLibraries, MsDataFileUri filePath, bool forward)
         {
-            if (string.IsNullOrEmpty(batchName))
-            {
-                batchName = null;
-            }
-
             foreach (var library in peptideLibraries.Libraries.Where(lib => true == lib?.IsLoaded))
             {
                 if (!_libraryAlignments.TryGetValue(library.Name, out var value))

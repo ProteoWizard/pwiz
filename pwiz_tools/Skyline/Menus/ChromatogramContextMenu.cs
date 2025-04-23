@@ -26,6 +26,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -246,38 +247,16 @@ namespace pwiz.Skyline.Menus
         /// </summary>
         private int InsertAlignmentMenuItems(ToolStripItemCollection items, ChromFileInfoId chromFileInfoId, int iInsert)
         {
-            var predictRT = Document.Settings.PeptideSettings.Prediction.RetentionTime;
-            if (predictRT != null && predictRT.IsAutoCalculated)
+            var alignmentTarget = AlignmentTarget.GetAlignmentTarget(Document);
+
+            if (alignmentTarget != null)
             {
-                var menuItem = new ToolStripMenuItem(string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, predictRT.Calculator.Name), null,
+                var menuItem = new ToolStripMenuItem(alignmentTarget.GetAlignmentMenuItemText(), null,
                     (sender, eventArgs) => SkylineWindow.AlignToRtPrediction = !SkylineWindow.AlignToRtPrediction)
                 {
                     Checked = SkylineWindow.AlignToRtPrediction,
                 };
                 items.Insert(iInsert++, menuItem);
-            }
-            if (null != chromFileInfoId && !DocumentUI.Settings.DocumentRetentionTimes.IsEmpty)
-            {
-                var chromatogramSet = Document.MeasuredResults.Chromatograms.FirstOrDefault(chromSet =>
-                    chromSet.IndexOfId(chromFileInfoId) >= 0);
-                if (chromatogramSet != null)
-                {
-                    var chromFileInfo = chromatogramSet.GetFileInfo(chromFileInfoId);
-                    string fileItemName = Path.GetFileNameWithoutExtension(SampleHelp.GetFileName(chromFileInfo.FilePath));
-                    var menuItemText = string.Format(Resources.SkylineWindow_AlignTimesToFileFormat, fileItemName);
-                    var alignToFileItem = new ToolStripMenuItem(menuItemText);
-                    if (ReferenceEquals(chromFileInfoId, SkylineWindow.AlignToFile))
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => SkylineWindow.AlignToFile = null;
-                        alignToFileItem.Checked = true;
-                    }
-                    else
-                    {
-                        alignToFileItem.Click += (sender, eventArgs) => SkylineWindow.AlignToFile = chromFileInfoId;
-                        alignToFileItem.Checked = false;
-                    }
-                    items.Insert(iInsert++, alignToFileItem);
-                }
             }
             return iInsert;
         }

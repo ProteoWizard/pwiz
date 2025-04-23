@@ -316,6 +316,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public bool IsUpToDate(SrmDocument document)
         {
+            if (null == AlignmentTarget.GetAlignmentTarget(document))
+            {
+                return true;
+            }
             return Equals(new DocumentKey(document), _documentKey);
         }
 

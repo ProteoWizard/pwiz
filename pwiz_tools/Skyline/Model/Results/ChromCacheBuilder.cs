@@ -29,7 +29,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
-using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -98,8 +97,6 @@ namespace pwiz.Skyline.Model.Results
             DetailedPeakFeatureCalculators = new DetailedFeatureCalculators(calcEnum.Cast<DetailedPeakFeatureCalculator>());
             _listScoreTypes = DetailedPeakFeatureCalculators.FeatureNames;
 
-            string basename = MSDataFilePath.GetFileNameWithoutExtension();
-            FileAlignmentIndices = _document.Settings.DocumentRetentionTimes.GetRetentionTimeAlignmentIndexes(basename);
             _peakBoundaryImputer = new PeakBoundaryImputer(document);
             _chromatogramSet =
                 document.Settings.MeasuredResults?.Chromatograms.FirstOrDefault(chromSet =>
@@ -126,8 +123,6 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private MsDataFileUri MSDataFilePath { get; set; }
-        private RetentionTimeAlignmentIndexes FileAlignmentIndices { get; set; }
-
         private DetailedFeatureCalculators DetailedPeakFeatureCalculators { get; set; }
 
         public void BuildCache()

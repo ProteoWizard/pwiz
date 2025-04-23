@@ -22,9 +22,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.RetentionTimes
@@ -178,6 +180,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
             return true;
         }
 
+        public abstract string GetAxisTitle(RTPeptideValue rtValue);
+
+        public abstract string GetAlignmentMenuItemText();
+
         public class Irt : AlignmentTarget
         {
             public Irt(RegressionMethodRT regressionMethod, IRetentionScoreCalculator calculator) : base(
@@ -192,6 +198,24 @@ namespace pwiz.Skyline.Model.RetentionTimes
             protected override double? ScoreSequence(Target target)
             {
                 return Calculator.ScoreSequence(target);
+            }
+
+            public override string GetAxisTitle(RTPeptideValue rtPeptideValue)
+            {
+                if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
+                {
+                    return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreFormat,
+                        Calculator.Name);
+                }
+
+                return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreValueFormat,
+                    Calculator.Name, rtPeptideValue.ToLocalizedString());
+
+            }
+
+            public override string GetAlignmentMenuItemText()
+            {
+                return string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, Calculator.Name);
             }
         }
 
@@ -220,6 +244,21 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
 
                 return null;
+            }
+
+            public override string GetAxisTitle(RTPeptideValue rtPeptideValue)
+            {
+                if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
+                {
+                    return string.Format("Retention time aligned to library '{0}'", Library.Name);
+                }
+
+                return string.Format("{0} aligned to library '{1}'", rtPeptideValue.ToLocalizedString(), Library.Name);
+            }
+
+            public override string GetAlignmentMenuItemText()
+            {
+                return string.Format("Align to Library '{0}'", Library.Name);
             }
         }
 

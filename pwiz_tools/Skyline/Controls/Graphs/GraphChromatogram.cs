@@ -847,7 +847,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 Assume.IsNotNull(ChromGroupInfos, @"ChromGroupInfos");
                 if (ChromGroupInfos != null && ChromGroupInfos.Length > 0 && null != ChromGroupInfos[0])
                 {
-                    retentionTimeTransformOp.TryGetRegressionFunction(chromatograms.FindFile(ChromGroupInfos[0]), out timeRegressionFunction);
+                    retentionTimeTransformOp.TryGetRegressionFunction(ChromGroupInfos[0].FilePath, out timeRegressionFunction);
                 }
                 if (null != timeRegressionFunction)
                 {

@@ -605,7 +605,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 if (!_alignmentFunctions.TryGetValue(filePath, out var alignmentFunction))
                 {
                     alignmentFunction = Document.Settings.DocumentRetentionTimes.GetAlignmentFunction(
-                        Document.Settings.PeptideSettings.Libraries, filePath, null, true);
+                        Document.Settings.PeptideSettings.Libraries, filePath, true);
                     _alignmentFunctions[filePath] = alignmentFunction;
                 }
 
