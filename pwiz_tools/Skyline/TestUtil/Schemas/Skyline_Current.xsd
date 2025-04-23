@@ -824,6 +824,7 @@
                   <xs:element name="aligned" type="xs:base64Binary"/>
                 </xs:sequence>
                 <xs:attribute name="file" type="xs:string"/>
+                <xs:attribute name="length" type="xs:integer"/>
               </xs:complexType>
             </xs:element>
           </xs:sequence>

@@ -33,15 +33,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
     {
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            if (!Equals(AlignmentTarget.GetAlignmentTarget(document), AlignmentTarget.GetAlignmentTarget(previous)))
-            {
-                return true;
-            }
-            if (!Equals(IsNotLoadedExplained(document), IsNotLoadedExplained(previous)))
-            {
-                return true;
-            }
-            return false;
+            return !IsLoaded(document);
         }
 
         protected override string IsNotLoadedExplained(SrmDocument document)
