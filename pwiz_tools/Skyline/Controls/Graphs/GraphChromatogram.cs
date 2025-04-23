@@ -2296,7 +2296,12 @@ namespace pwiz.Skyline.Controls.Graphs
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodeGroups, lookupSequence, lookupMods);
 
-            
+            if (!settings.PeptideSettings.Libraries.IsLoaded)
+            {
+                // No reason to continue if the Library is still loading or exception will occur in call to TryGetSpectralLibraryIonMobilities
+                return;
+            }
+
             var libKey = nodeGroups[0].GetLibKey(settings, nodePeps[0]);
             LibraryIonMobilityInfo libImInfo;
 
