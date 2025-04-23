@@ -89,6 +89,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static string IsNotLoadedExplained(SrmDocument document)
         {
+            if (null == AlignmentTarget.GetAlignmentTarget(document))
+            {
+                return null;
+            }
             var notLoaded = IsNotLoadedExplained(document.Settings);
             if (notLoaded != null)
             {
