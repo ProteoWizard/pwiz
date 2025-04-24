@@ -368,7 +368,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             return MakeImputedPeak(libraryAlignment, exemplaryPeak, fileAlignment);
         }
 
-        private ImputedPeak MakeImputedPeak(AlignmentFunction sourceAlignmentFunction, ExemplaryPeak exemplaryPeak,
+        public static ImputedPeak MakeImputedPeak(AlignmentFunction sourceAlignmentFunction, ExemplaryPeak exemplaryPeak,
             AlignmentFunction targetAlignmentFunction)
         {
             var midTime = (exemplaryPeak.PeakBounds.StartTime + exemplaryPeak.PeakBounds.EndTime) / 2;

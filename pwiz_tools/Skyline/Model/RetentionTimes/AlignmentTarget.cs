@@ -21,9 +21,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -98,9 +100,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return CreatePiecewiseLinearMap(xSmoothed, ySmoothed);
                 }
                 case RegressionMethodRT.log:
+                {
                     // TODO
                     var x = "TODO";
                     return null;
+                }
                 case RegressionMethodRT.loess:
                 {
                     if (xValues.Count < 2)
@@ -108,24 +112,22 @@ namespace pwiz.Skyline.Model.RetentionTimes
                         return null;
                     }
 
+                    var weightedPoints = xValues.Zip(yValues, (x, y) => new WeightedPoint(x, y)).ToList();
+
                     int binCount = Settings.Default.RtRegressionBinCount;
-                    double[] xArray;
-                    double[] yArray;
                     if (binCount > 0)
                     {
-                        var binnedPoints = BinValues(xValues.Zip(yValues, Tuple.Create).ToList(), binCount);
-                        xArray = binnedPoints.Select(pt => pt.Item1).ToArray();
-                        yArray = binnedPoints.Select(pt => pt.Item2).ToArray();
+                        weightedPoints = DownsamplePoints(weightedPoints, binCount).ToList();
                     }
-                    else
-                    {
-                        xArray = xValues.ToArray();
-                        yArray = yValues.ToArray();
-                    }
-                    var loessAligner = new LoessAligner(-1, -1, 0.4);
-                    loessAligner.Train(xArray, yArray, cancellationToken);
-                    loessAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
-                    var map = CreatePiecewiseLinearMap(xSmoothed, ySmoothed);
+
+                    weightedPoints = weightedPoints.OrderBy(pt => pt.X).ToList();
+                    var loessInterpolator = new LoessInterpolator();
+                    var xArray = weightedPoints.Select(pt => pt.X).ToArray();
+                    var smoothedYValues = loessInterpolator.Smooth(xArray,
+                        weightedPoints.Select(pt => pt.Y).ToArray(), 
+                        weightedPoints.Select(pt => pt.Weight).ToArray(),
+                        cancellationToken);
+                    var map = CreatePiecewiseLinearMap(xArray, smoothedYValues);
                     int pointCount = Settings.Default.RtRegressionSegmentCount;
                     if (pointCount > 0)
                     {
@@ -140,23 +142,29 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
         }
 
-        private static IList<Tuple<double, double>> BinValues(IList<Tuple<double, double>> points, int binCount)
+        /// <summary>
+        /// Reduce the number of points by combining points that are near to each other.
+        /// The number of returned points will typically be greater than the number of bins
+        /// because the number of bins is along each coordinate axis and points must be
+        /// close to each other in both coordinates to be put in the same bin.
+        /// </summary>
+        public static IList<WeightedPoint> DownsamplePoints(IList<WeightedPoint> points, int binCount)
         {
             if (points.Count <= binCount)
             {
                 return points;
             }
 
-            double xMin = points.Min(pt => pt.Item1);
-            double xMax = points.Max(pt => pt.Item1);
-            double yMin = points.Min(pt => pt.Item2);
-            double yMax = points.Max(pt => pt.Item2);
+            double xMin = points.Min(pt => pt.X);
+            double xMax = points.Max(pt => pt.X);
+            double yMin = points.Min(pt => pt.Y);
+            double yMax = points.Max(pt => pt.Y);
             double dx = xMax - xMin;
             double dy = yMax - yMin;
-            var binnedPoints = new List<Tuple<double, double>>();
-            foreach (var group in points.GroupBy(pt=>Tuple.Create(Math.Round((pt.Item1 - xMin) * binCount / dx), Math.Round(pt.Item2 - yMin) * binCount / dy)))
+            var binnedPoints = new List<WeightedPoint>();
+            foreach (var group in points.GroupBy(pt=>Tuple.Create(Math.Round((pt.X - xMin) * binCount / dx), Math.Round(pt.Y - yMin) * binCount / dy)))
             {
-                binnedPoints.Add(Tuple.Create(group.Average(tuple=>tuple.Item1), group.Average(tuple=>tuple.Item2)));
+                binnedPoints.Add(new WeightedPoint(group.Average(tuple=>tuple.X), group.Average(tuple=>tuple.Y), group.Sum(tuple=>tuple.Weight)));
             }
 
             return binnedPoints;
