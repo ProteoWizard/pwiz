@@ -108,14 +108,58 @@ namespace pwiz.Skyline.Model.RetentionTimes
                         return null;
                     }
 
+                    int binCount = Settings.Default.RtRegressionBinCount;
+                    double[] xArray;
+                    double[] yArray;
+                    if (binCount > 0)
+                    {
+                        var binnedPoints = BinValues(xValues.Zip(yValues, Tuple.Create).ToList(), binCount);
+                        xArray = binnedPoints.Select(pt => pt.Item1).ToArray();
+                        yArray = binnedPoints.Select(pt => pt.Item2).ToArray();
+                    }
+                    else
+                    {
+                        xArray = xValues.ToArray();
+                        yArray = yValues.ToArray();
+                    }
                     var loessAligner = new LoessAligner(-1, -1, 0.4);
-                    loessAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
+                    loessAligner.Train(xArray, yArray, cancellationToken);
                     loessAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
-                    return CreatePiecewiseLinearMap(xSmoothed, ySmoothed);
+                    var map = CreatePiecewiseLinearMap(xSmoothed, ySmoothed);
+                    int pointCount = Settings.Default.RtRegressionSegmentCount;
+                    if (pointCount > 0)
+                    {
+                        map = map.ReducePointCount(pointCount);
+                        map = PiecewiseLinearMap.FromValues(map.XValues.Select(v=>(float) v).Select(v=>(double) v), map.YValues.Select(v=>(float) v).Select(v=>(double) v));
+
+                    }
+                    return map;
                 }
                 default:
                     return null;
             }
+        }
+
+        private static IList<Tuple<double, double>> BinValues(IList<Tuple<double, double>> points, int binCount)
+        {
+            if (points.Count <= binCount)
+            {
+                return points;
+            }
+
+            double xMin = points.Min(pt => pt.Item1);
+            double xMax = points.Max(pt => pt.Item1);
+            double yMin = points.Min(pt => pt.Item2);
+            double yMax = points.Max(pt => pt.Item2);
+            double dx = xMax - xMin;
+            double dy = yMax - yMin;
+            var binnedPoints = new List<Tuple<double, double>>();
+            foreach (var group in points.GroupBy(pt=>Tuple.Create(Math.Round((pt.Item1 - xMin) * binCount / dx), Math.Round(pt.Item2 - yMin) * binCount / dy)))
+            {
+                binnedPoints.Add(Tuple.Create(group.Average(tuple=>tuple.Item1), group.Average(tuple=>tuple.Item2)));
+            }
+
+            return binnedPoints;
         }
 
         private static readonly int MAX_PIECEWISE_LINEAR_MAP_LENGTH = 1000;

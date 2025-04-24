@@ -133,6 +133,10 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data.SQLite, Version=1.0.98.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\libraries\SQLite\x64\System.Data.SQLite.dll</HintPath>
+    </Reference>
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
@@ -184,6 +188,7 @@
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
+    <Compile Include="PeakImputationFromExplicitBoundsTest.cs" />
     <Compile Include="PeptideTest.cs" />
     <Compile Include="PiecewiseLinearMapTest.cs" />
     <Compile Include="ProteinAssociationTest.cs" />
