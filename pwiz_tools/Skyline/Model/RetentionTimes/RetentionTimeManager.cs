@@ -86,12 +86,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
         }
         private bool PerformNextAlignment(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
-            var alignmentTarget = AlignmentTarget.GetAlignmentTarget(docCurrent);
-            if (alignmentTarget == null)
+            if (!AlignmentTarget.TryGetAlignmentTarget(docCurrent.Settings, out var alignmentTarget))
             {
                 return false;
             }
-
             var documentRetentionTimes = docCurrent.Settings.DocumentRetentionTimes;
             var newDocumentRetentionTimes = documentRetentionTimes.UpdateFromLoadedSettings(docCurrent.Settings);
             if (newDocumentRetentionTimes == null)

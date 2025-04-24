@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         {
             private int _targetsHashCode;
             private int _timesHashCode;
-            public AlignmentSource(ImmutableList<Target> targets, ImmutableList<float> times)
+            public AlignmentSource(ImmutableList<ImmutableList<Target>> targets, ImmutableList<float> times)
             {
                 Targets = targets;
                 RetentionTimes = times;
@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 _timesHashCode = times.GetHashCode();
             }
 
-            public ImmutableList<Target> Targets { get; }
+            public ImmutableList<ImmutableList<Target>> Targets { get; }
             public ImmutableList<float> RetentionTimes { get; }
 
             protected bool Equals(AlignmentSource other)
@@ -125,10 +125,10 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
 
-            public Dictionary<Target, double> GetTimesDictionary()
+            public IEnumerable<KeyValuePair<IEnumerable<Target>, double>> GetTimesDictionary()
             {
-                return Targets.Zip(RetentionTimes, Tuple.Create)
-                    .ToDictionary(tuple => tuple.Item1, tuple => (double) tuple.Item2);
+                return Targets.Zip(RetentionTimes, (targets, time) =>
+                    new KeyValuePair<IEnumerable<Target>, double>(targets, time));
             }
         }
 
@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             var orderedMolecules = targets.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList();
-            var allFileTargets = new HashSet<ImmutableList<Target>>();
+            var allFileTargets = new HashSet<ImmutableList<ImmutableList<Target>>>();
             for (int iReplicate = 0; iReplicate < measuredResults.Chromatograms.Count; iReplicate++)
             {
                 foreach (var chromFileInfo in measuredResults.Chromatograms[iReplicate].MSDataFileInfos)
@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                         continue;
                     }
 
-                    var fileTargets = new List<Target>();
+                    var fileTargets = new List<ImmutableList<Target>>();
                     var retentionTimes = new List<float>();
                     foreach (var molecule in orderedMolecules)
                     {
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                                 transitionGroup.GetChromInfo(iReplicate, chromFileInfo.FileId);
                             if (null != transitionGroupChromInfo?.RetentionTime)
                             {
-                                fileTargets.Add(molecule.ModifiedTarget);
+                                fileTargets.Add(document.Settings.GetTargets(molecule).ToImmutable());
                                 retentionTimes.Add(transitionGroupChromInfo.RetentionTime.Value);
                                 break;
                             }
@@ -206,8 +206,8 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 im.AlignmentTarget = target;
                 im._documentKey = new DocumentKey(newDocument);
             });
-            var newSources = GetAlignmentSources(newDocument, dataFiles);
-            if (CollectionUtil.EqualsDeep(_alignmentSources, newSources))
+            var newSources = target == null ? new Dictionary<MsDataFileUri, AlignmentSource>() : GetAlignmentSources(newDocument, dataFiles);
+            if (Equals(target, AlignmentTarget) && CollectionUtil.EqualsDeep(_alignmentSources, newSources))
             {
                 return result;
             }
@@ -218,7 +218,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 missingSources.AddRange(newSources.Values.Distinct());
             }
-            else
+            else if (target != null)
             {
                 foreach (var newSource in newSources.Values.Distinct())
                 {
@@ -233,7 +233,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
 
-            if (missingSources.Count == 0)
+            if (missingSources.Count == 0 || target == null)
             {
                 return ChangeProp(result, im =>
                 {
@@ -316,7 +316,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public bool IsUpToDate(SrmDocument document)
         {
-            if (null == AlignmentTarget.GetAlignmentTarget(document))
+            var newAlignmentTarget = AlignmentTarget.GetAlignmentTarget(document);
+            if (!Equals(newAlignmentTarget, AlignmentTarget))
+            {
+                return false;
+            }
+
+            if (newAlignmentTarget == null)
             {
                 return true;
             }

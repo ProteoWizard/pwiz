@@ -1340,13 +1340,9 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return Array.Empty<Target>();
             }
-            return GetTargets(peptideDocNode.SourceUnmodifiedTarget, peptideDocNode.SourceExplicitMods);
-        }
 
-        public IEnumerable<Target> GetTargets(Target sequence, ExplicitMods mods)
-        {
-            return GetTypedSequences(sequence, mods, Adduct.EMPTY, sequence.IsProteomic)
-                .Select(typedSequence => typedSequence.ModifiedSequence);
+            return GetTypedSequences(peptideDocNode.SourceUnmodifiedTarget, peptideDocNode.SourceExplicitMods,
+                Adduct.EMPTY, peptideDocNode.IsProteomic).Select(typedSequence => typedSequence.ModifiedSequence);
         }
 
         private IEnumerable<TypedSequence> GetTypedSequences(Target sequence, ExplicitMods mods, Adduct adduct, bool assumeProteomicWhenEmpty = false)

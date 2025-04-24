@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 batchNames.Add(chromatogramSet.BatchName);
             }
 
-            var targets = Document.Settings.GetTargets(peptideDocNode.Target, peptideDocNode.ExplicitMods).ToImmutable();
+            var targets = Document.Settings.GetTargets(peptideDocNode).ToImmutable();
             foreach (var batchName in batchNames)
             {
                 foreach (var library in Document.Settings.PeptideSettings.Libraries.Libraries)
@@ -728,70 +728,6 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
             }
 
             return result;
-        }
-
-        private PiecewiseLinearMap CalculateAlignmentFunction(CancellationToken cancellationToken, MsDataFileUri filePath)
-        {
-            var replicateIndex = FindReplicateIndex(filePath, out var chromFileInfoId);
-            if (replicateIndex < 0)
-            {
-                return null;
-            }
-
-            var documentStandards = Document.Settings.GetPeptideStandards(StandardType.IRT);
-            IEnumerable<PeptideDocNode> peptideDocNodes;
-            if (documentStandards.Count == 0)
-            {
-                peptideDocNodes = Document.Molecules;
-            }
-            else
-            {
-                peptideDocNodes = documentStandards.Select(idPeptideDocNode => idPeptideDocNode.PeptideDocNode);
-            }
-
-            var observedTimes = new Dictionary<Target, double>();
-            foreach (var peptideDocNode in peptideDocNodes)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var target = peptideDocNode.ModifiedTarget;
-                if (observedTimes.ContainsKey(target))
-                {
-                    continue;
-                }
-
-                var peptideChromInfo = peptideDocNode.GetSafeChromInfo(replicateIndex)
-                    .FirstOrDefault(chromInfo => ReferenceEquals(chromInfo.FileId, chromFileInfoId));
-                if (peptideChromInfo?.RetentionTime != null)
-                {
-                    observedTimes.Add(target, peptideChromInfo.RetentionTime.Value);
-                }
-            }
-
-            return AlignmentTarget.PerformAlignment(observedTimes, cancellationToken);
-        }
-
-        private int FindReplicateIndex(MsDataFileUri filePath, out ChromFileInfoId fileId)
-        {
-            var measuredResults = Document.Settings.MeasuredResults;
-            if (measuredResults == null)
-            {
-                fileId = null;
-                return -1;
-            }
-
-            for (int replicateIndex = 0; replicateIndex < measuredResults.Chromatograms.Count; replicateIndex++)
-            {
-                var chromatogramSet = measuredResults.Chromatograms[replicateIndex];
-                var chromFileInfo = chromatogramSet.GetFileInfo(filePath);
-                if (chromFileInfo != null)
-                {
-                    fileId = chromFileInfo.FileId;
-                    return replicateIndex;
-                }
-            }
-
-            fileId = null;
-            return -1;
         }
 
         private PeakScoringModelSpec GetScoringModel()

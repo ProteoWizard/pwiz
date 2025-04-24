@@ -62,40 +62,68 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         protected abstract double? ScoreSequence(Target target);
 
-        public PiecewiseLinearMap PerformAlignment(Dictionary<Target, double> times,
+        public PiecewiseLinearMap PerformAlignment(IDictionary<Target, double> times,
             CancellationToken cancellationToken)
         {
-            var xValues = new List<double>();
-            var yValues = new List<double>();
+            var points = new List<WeightedPoint>();
             foreach (var kvp in times)
             {
                 var xValue = ScoreSequence(kvp.Key);
                 if (xValue.HasValue)
                 {
-                    xValues.Add(xValue.Value);
-                    yValues.Add(kvp.Value);
+                    points.Add(new WeightedPoint(xValue.Value, kvp.Value));
                 }
             }
 
+            return PerformAlignment(points, cancellationToken);
+        }
+
+        public PiecewiseLinearMap PerformAlignment(IEnumerable<KeyValuePair<IEnumerable<Target>, double>> times, CancellationToken cancellationToken)
+        {
+            var points = new List<WeightedPoint>();
+            foreach (var kvp in times)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                double? xValue = null;
+                foreach (var target in kvp.Key)
+                {
+                    xValue = ScoreSequence(target);
+                    if (xValue.HasValue)
+                    {
+                        break;
+                    }
+                }
+
+                if (xValue.HasValue)
+                {
+                    points.Add(new WeightedPoint(xValue.Value, kvp.Value));
+                }
+            }
+
+            return PerformAlignment(points, cancellationToken);
+        }
+
+        public PiecewiseLinearMap PerformAlignment(ICollection<WeightedPoint> points, CancellationToken cancellationToken)
+        {
             switch (RegressionMethod)
             {
                 case RegressionMethodRT.linear:
                 {
-                    var statRT = new Statistics(yValues);
-                    var stat = new Statistics(xValues);
+                    var statRT = new Statistics(points.Select(pt=>pt.Y));
+                    var stat = new Statistics(points.Select(pt=>pt.X));
                     var slope = statRT.Slope(stat);
                     var intercept = statRT.Intercept(stat);
                     return CreatePiecewiseLinearMap(new[] { 0.0, 1 }, new[] { intercept, slope + intercept });
                 }
                 case RegressionMethodRT.kde:
                 {
-                    if (xValues.Count <= 1)
+                    if (points.Count <= 1)
                     {
                         return null;
                     }
 
                     var kdeAligner = new KdeAligner(-1, -1);
-                    kdeAligner.Train(xValues.ToArray(), yValues.ToArray(), cancellationToken);
+                    kdeAligner.Train(points.Select(pt=>pt.X).ToArray(), points.Select(pt=>pt.Y).ToArray(), cancellationToken);
                     kdeAligner.GetSmoothedValues(out var xSmoothed, out var ySmoothed);
                     return CreatePiecewiseLinearMap(xSmoothed, ySmoothed);
                 }
@@ -107,12 +135,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
                 case RegressionMethodRT.loess:
                 {
-                    if (xValues.Count < 2)
+                    if (points.Count < 2)
                     {
                         return null;
                     }
 
-                    var weightedPoints = xValues.Zip(yValues, (x, y) => new WeightedPoint(x, y)).ToList();
+                    var weightedPoints = points as IList<WeightedPoint> ?? points.ToList();
 
                     int binCount = Settings.Default.RtRegressionBinCount;
                     if (binCount > 0)
