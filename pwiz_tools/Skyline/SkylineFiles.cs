@@ -1133,18 +1133,6 @@ namespace pwiz.Skyline
 
         public bool SaveDocument(String fileName, bool includingCacheFile = true)
         {
-            if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
-                !Equals(DocumentFilePath, fileName))
-            {
-                SrmDocument docOriginal;
-                SrmDocument docNew;
-                do
-                {
-                    docOriginal = Document;
-                    docNew = docOriginal.ChangeDocumentGuid();
-                } while (!SetDocument(docNew, docOriginal));
-            }
-
             SrmDocument document = Document;
 
             try
@@ -1208,6 +1196,19 @@ namespace pwiz.Skyline
                         longWaitDlg.PerformWork(this, 800, () =>
                             OptimizeCache(fileName, longWaitDlg));
                     }
+                }
+
+                // This loop fires DocumentUIChange events
+                if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
+                    !Equals(DocumentFilePath, fileName))
+                {
+                    SrmDocument docOriginal;
+                    SrmDocument docNew;
+                    do
+                    {
+                        docOriginal = Document;
+                        docNew = docOriginal.ChangeDocumentGuid();
+                    } while (!SetDocument(docNew, docOriginal));
                 }
             }
 
