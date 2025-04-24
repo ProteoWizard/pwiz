@@ -164,20 +164,34 @@ namespace pwiz.Skyline.Controls.FilesTree
             OnDocumentChanged(this, new DocumentChangedEventArgs(null));
         }
 
-        public void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
+        public void OnDocumentSaved(object sender, DocumentSavedEventArgs args)
         {
-            var document = DocumentContainer.DocumentUI;
-
-            if (document == null || e == null || ReferenceEquals(document.Settings, e.DocumentPrevious?.Settings))
+            if (args == null || 
+                DocumentContainer.DocumentUI == null)
                 return;
 
-            Document = document;
+            UpdateTree(args.DocumentFilePath, Document);
+        }
 
+        public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
+        {
+            Document = DocumentContainer.DocumentUI;
+
+            if (args == null || 
+                Document == null || 
+                ReferenceEquals(Document.Settings, args.DocumentPrevious?.Settings))
+                return;
+
+            UpdateTree(DocumentContainer.DocumentFilePath, Document);
+        }
+
+        internal void UpdateTree(string documentFilePath, SrmDocument document) 
+        {
             try
             {
                 BeginUpdateMS();
 
-                var files = new SkylineFile(document, DocumentContainer.DocumentFilePath);
+                var files = new SkylineFile(document, documentFilePath);
 
                 MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode);
 
@@ -193,29 +207,21 @@ namespace pwiz.Skyline.Controls.FilesTree
                     }
                 }
 
-                RunUI(this, () => { 
+                // Start the file system monitor if the document is saved to disk and the
+                // file system monitor is not running.
+                if (Utils.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
+                {
+                    _fsWatcher.Path = Path.GetDirectoryName(documentFilePath);
+                    _fsWatcher.SynchronizingObject = this;
+                    _fsWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
+                    _fsWatcher.IncludeSubdirectories = true;
+                    _fsWatcher.EnableRaisingEvents = true;
+                    _fsWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
+                    _fsWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
+                    _fsWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
 
-                    // Start the file system monitor if the document is already saved to disk but the
-                    // file system monitor is not already running. Do this work asynchronously because
-                    // when a doc is saved for the first time, DocumentFilePath is not set until after Skyline
-                    // finishes running OnDocumentChanged event handlers - e.g. this code
-                    if (Utils.IsDocumentSavedToDisk(DocumentContainer.DocumentFilePath) && !IsMonitoringFileSystem())
-                    {
-                        _fsWatcher.Path = Path.GetDirectoryName(DocumentContainer.DocumentFilePath);
-                        _fsWatcher.SynchronizingObject = this;
-                        _fsWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName;
-                        _fsWatcher.IncludeSubdirectories = true;
-                        _fsWatcher.EnableRaisingEvents = true;
-                        _fsWatcher.Renamed += FilesTree_ProjectDirectory_OnRenamed;
-                        _fsWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
-                        _fsWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
-
-                        // initialize local files now that DocumentFilePath is set
-                        InitializeAllLocalFiles(Root);
-
-                        _monitoringFileSystem = true;
-                    }
-                });
+                    _monitoringFileSystem = true;
+                }
             }
             finally
             {
@@ -223,7 +229,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        // CONSIDER: skip running MergeNodes on child nodes if the parent's model didn't change
         // CONSIDER: does FilesTree need to support selection like in SequenceTree / SrmTreeNode?
         // CONSIDER: refactor for more code reuse with SrmTreeNode
         internal void MergeNodes(IEnumerable<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc)
@@ -365,7 +370,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 QueueInitLocalFile(node);
             }
 
-            // finished merging latest data model for these nodes. Now, recursively update any nodes whose model has children
+            // Finished merging nodes at this level. Next, recursively merge nodes with child files
             for (i = 0; i < treeNodes.Count; i++)
             {
                 var treeNode = treeNodes[i] as FilesTreeNode;
@@ -560,16 +565,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                     e.CancelEdit = false;
                     AfterNodeEdit?.Invoke(this, e);
                 }
-            }
-        }
-
-        private void InitializeAllLocalFiles(FilesTreeNode node)
-        {
-            QueueInitLocalFile(node);
-
-            foreach (TreeNode child in node.Nodes)
-            {
-                InitializeAllLocalFiles((FilesTreeNode)child);
             }
         }
 

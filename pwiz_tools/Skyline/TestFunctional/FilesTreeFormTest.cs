@@ -73,6 +73,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsInstanceOfType(SkylineWindow.FilesTree.Root.Model, typeof(SkylineFile));
             Assert.AreEqual(FileResources.FileModel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
 
+            AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
+
             Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
             Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<SkylineFile>().NodeAt(0).Model, typeof(ReplicatesFolder));
             Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<SkylineFile>().NodeAt(1).Model, typeof(ProjectFilesFolder));
@@ -86,18 +88,27 @@ namespace pwiz.SkylineTestFunctional
             var monitoredPath = Path.Combine(TestFilesDir.FullPath, "savedFileName.sky");
             RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
 
-            // TODO: wait on emptying FilesTree's FS work queue
             WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
 
             Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
-            Assert.IsTrue(SkylineWindow.FilesTree.Root.IsFileInitialized()); 
-            
-            // TODO: enable this check after dealing with race condition between new doc and monitoring file system
-            //       for now, FilesTree is initialized prior to document being saved - so tree thinks file is missing
-            //       when it hasn't been saved yet. Possible fix: subscribe FilesTree to a new "doc saved" event
-            // Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.FileState);
 
-            AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
+            // Check all files created when an empty, new document saves for the first time
+            // Skyline File - .sky
+            Assert.IsTrue(SkylineWindow.FilesTree.Root.IsFileInitialized());
+            Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Root.FileState);
+
+            // Once saved, Project Files\ now contains 2 files
+            Assert.AreEqual(2, SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().Nodes.Count);
+
+            // Audit Log - .skyl
+            Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(0).Model, typeof(SkylineAuditLog));
+            Assert.IsTrue(SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(0).IsFileInitialized());
+            Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(0).FileState);
+
+            // Window Layout - .sky.view
+            Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(1).Model, typeof(SkylineViewFile));
+            Assert.IsTrue(SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(1).IsFileInitialized());
+            Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(1).FileState);
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });

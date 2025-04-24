@@ -69,6 +69,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.QueryContinueDrag += FilesTree_QueryContinueDrag;
             filesTree.KeyDown += FilesTree_KeyDown;
 
+            SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
+
             // FilesTree => context menu
             filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
             filesTree.ContextMenuStrip = filesTreeContextMenu;
@@ -96,6 +98,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SkylineWindow SkylineWindow { get; }
+
+        private void OnDocumentSavedEvent(object sender, DocumentSavedEventArgs args)
+        {
+            filesTree.OnDocumentSaved(sender, args);
+        }
 
         protected override string GetPersistentString()
         {

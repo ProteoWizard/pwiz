@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Files
         {
         }
 
-        public override Immutable Immutable => Document;
+        public override Immutable Immutable => new Immutable();
         public override string Name => FileResources.FileModel_ProjectFiles;
         public override string FilePath => string.Empty;
 

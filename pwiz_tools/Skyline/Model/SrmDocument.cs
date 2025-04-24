@@ -191,6 +191,31 @@ namespace pwiz.Skyline.Model
     }
 
     /// <summary>
+    /// EventArgs supplied with the <see cref="SkylineWindow.DocumentSavedEvent"/>.
+    /// The document path refers to the saved location. A boolean is supplied to
+    /// allow changing behavior if this document was saved for the first time.
+    /// </summary>
+    public class DocumentSavedEventArgs : EventArgs
+    {
+        public DocumentSavedEventArgs(string documentPath, bool isSaveAs = false)
+        {
+            DocumentFilePath = documentPath;
+            IsSaveAs = isSaveAs;
+        }
+
+        /// <summary>
+        /// Path where the document was saved.
+        /// </summary>
+        public string DocumentFilePath { get; }
+
+        /// <summary>
+        /// True when this document is saved to a new location. This happens when a new document
+        /// is saved for the first time or an existing document is saved to a new path.
+        /// </summary>
+        public bool IsSaveAs { get; }
+    }
+
+    /// <summary>
     /// Root <see cref="Identity"/> class for a document.
     /// </summary>
     public class SrmDocumentId : Identity

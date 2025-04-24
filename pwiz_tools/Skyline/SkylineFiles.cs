@@ -1105,12 +1105,16 @@ namespace pwiz.Skyline
 
             using (var dlg = new SaveFileDialog())
             {
+                var isSaveAs = false;
+
                 dlg.InitialDirectory = Settings.Default.ActiveDirectory;
                 dlg.OverwritePrompt = true;
                 dlg.DefaultExt = SrmDocument.EXT;
                 dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
                 if (!string.IsNullOrEmpty(DocumentFilePath))
                     dlg.FileName = Path.GetFileName(DocumentFilePath);
+                else
+                    isSaveAs = true;
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -1124,15 +1128,29 @@ namespace pwiz.Skyline
                         MessageDlg.ShowWithException(this, e.Message, e);
                         return false;
                     }
-                    if (SaveDocument(fileName))
+                    if (SaveDocument(fileName, isSaveAs:isSaveAs))
                         return true;
                 }
             }
             return false;
         }
 
-        public bool SaveDocument(String fileName, bool includingCacheFile = true)
+        public bool SaveDocument(String fileName, bool includingCacheFile = true, bool isSaveAs = false)
         {
+            if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
+                !Equals(DocumentFilePath, fileName))
+            {
+                SrmDocument docOriginal;
+                SrmDocument docNew;
+                do
+                {
+                    docOriginal = Document;
+                    docNew = docOriginal.ChangeDocumentGuid();
+                } while (!SetDocument(docNew, docOriginal));
+
+                isSaveAs = true;
+            }
+
             SrmDocument document = Document;
 
             try
@@ -1197,19 +1215,6 @@ namespace pwiz.Skyline
                             OptimizeCache(fileName, longWaitDlg));
                     }
                 }
-
-                // This loop fires DocumentUIChange events
-                if (string.IsNullOrEmpty(DocumentUI.Settings.DataSettings.DocumentGuid) ||
-                    !Equals(DocumentFilePath, fileName))
-                {
-                    SrmDocument docOriginal;
-                    SrmDocument docNew;
-                    do
-                    {
-                        docOriginal = Document;
-                        docNew = docOriginal.ChangeDocumentGuid();
-                    } while (!SetDocument(docNew, docOriginal));
-                }
             }
 
             // We allow silent failures because it is OK for the cache to remain unoptimized
@@ -1219,6 +1224,8 @@ namespace pwiz.Skyline
             catch (IOException) {}
             catch (OperationCanceledException) {}
             catch (TargetInvocationException) {}
+
+            DocumentSavedEvent?.Invoke(this, new DocumentSavedEventArgs(DocumentFilePath, isSaveAs));
 
             return true;
         }

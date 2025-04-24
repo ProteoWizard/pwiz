@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => Document.Settings;
+        public override Immutable Immutable => new Immutable();
         public override string Name => FileResources.FilesTree_AuditLog;
         public override string FilePath => SrmDocument.GetAuditLogPath(DocumentPath);
     }

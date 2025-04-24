@@ -125,6 +125,7 @@ namespace pwiz.Skyline
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
+        public event EventHandler<DocumentSavedEventArgs> DocumentSavedEvent;
 
         private readonly List<IProgressStatus> _listProgress;
         private readonly TaskbarProgress _taskbarProgress = new TaskbarProgress();
