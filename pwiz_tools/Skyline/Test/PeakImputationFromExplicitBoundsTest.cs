@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.Database.NHibernate;
 using pwiz.Common.PeakFinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.RetentionTimes;
@@ -81,14 +82,24 @@ namespace pwiz.SkylineTest
             var medianRetentionTimes = GetMedianRetentionTimes(dictionaries.Values);
             var fullAlignments = new Dictionary<string, PiecewiseLinearMap>();
             var downSampledAlignments = new Dictionary<string, PiecewiseLinearMap>();
-            foreach (var entry in dictionaries)
+            ParallelEx.ForEach(dictionaries.Select(entry=>Tuple.Create(entry.Key, entry.Value)), entry =>
             {
-                var allPoints = MakePoints(medianRetentionTimes, GetRetentionTimes(entry.Value)).ToList();
+                var data = entry.Item2;
+                var spectrumSourceFile = entry.Item1;
+                var allPoints = MakePoints(medianRetentionTimes, GetRetentionTimes(data)).ToList();
                 var downSampledPoints = AlignmentTarget.DownsamplePoints(allPoints, 2000);
                 var downSampledAlignment = PerformAlignment(downSampledPoints);
-                downSampledAlignments.Add(entry.Key, downSampledAlignment);
-                fullAlignments.Add(entry.Key, PerformAlignment(allPoints));
-            }
+                lock (downSampledAlignments)
+                {
+                    downSampledAlignments.Add(spectrumSourceFile, downSampledAlignment);
+                }
+
+                var fullAlignment = PerformAlignment(allPoints);
+                lock (fullAlignments)
+                {
+                    fullAlignments.Add(spectrumSourceFile, fullAlignment);
+                }
+            });
 
             var unalignedExemplaryPeaks = new Dictionary<Target, PeakBounds>();
             var fullExemplaryPeaks = new Dictionary<Target, PeakBounds>();
