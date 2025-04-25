@@ -429,9 +429,8 @@ namespace BuildThermoMethod
                             throw new UsageException(string.Format("Unknown instrument type {0}", InstrumentType));
                         break;
                     case 'v':
-                        float ver;
                         string verText = args[i++];
-                        if (!float.TryParse(verText, out ver))
+                        if (!float.TryParse(verText, NumberStyles.Float, CultureInfo.InvariantCulture, out var ver))
                             throw new UsageException(string.Format("Unrecognized instrument software version {0}", verText));
                         InstrumentSoftwareVersion = ver;
                         break;
