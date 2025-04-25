@@ -685,7 +685,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     pointInfos.Add(new PointInfo(identityPath, nodePeptide.ModifiedTarget, rtOrig, rtTarget));
                 }
 
-                var targetTimes = pointInfos.Where(pt => _regressionIncludesMissingValues || pt.Y.HasValue)
+                bool includeMissingValues = _regressionIncludesMissingValues &&
+                                            RegressionSettings.RegressionMethod == RegressionMethodRT.linear;
+                var targetTimes = pointInfos.Where(pt => includeMissingValues || pt.Y.HasValue)
                     .Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y ?? 0)).ToList();
 
                 if (IsRunToRun)
