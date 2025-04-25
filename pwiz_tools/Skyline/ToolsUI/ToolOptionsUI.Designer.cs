@@ -165,7 +165,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnCarafeLibraryGenerationSettings.Name = "btnCarafeLibraryGenerationSettings";
             this.btnCarafeLibraryGenerationSettings.UseVisualStyleBackColor = true;
             this.btnCarafeLibraryGenerationSettings.Click += new System.EventHandler(this.btnCarafeLibrarySettings_Click);
-
             // 
             // btnCarafeModelTrainingSettings
             // 
@@ -173,7 +172,6 @@ namespace pwiz.Skyline.ToolsUI
             this.btnCarafeModelTrainingSettings.Name = "btnCarafeModelTrainingSettings";
             this.btnCarafeModelTrainingSettings.UseVisualStyleBackColor = true;
             this.btnCarafeModelTrainingSettings.Click += new System.EventHandler(this.btnCarafeModelTrainingSettings_Click);
-
             // 
             // btnCarafeTrainingDataGenerationSettings
             // 

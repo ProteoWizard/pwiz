@@ -372,9 +372,6 @@
   <data name="&gt;&gt;tabRemote.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="btnCarafeLibraryGenerationSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
   <data name="btnCarafeLibraryGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -405,9 +402,6 @@
   <data name="&gt;&gt;btnCarafeLibraryGenerationSettings.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="btnCarafeModelTrainingSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
-  </data>
   <data name="btnCarafeModelTrainingSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
@@ -437,9 +431,6 @@
   </data>
   <data name="&gt;&gt;btnCarafeModelTrainingSettings.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="btnCarafeTrainingDataGenerationSettings.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Right</value>
   </data>
   <data name="btnCarafeTrainingDataGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
@@ -1360,12 +1351,12 @@ well as iRT prediction.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.478, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.449, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.478, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

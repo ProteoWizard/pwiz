@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Model.Carafe
         private const string CARAFE = @"Carafe";
         private const string CARAFE_VERSION = @"0.0.1";
         private const string CARAFE_DEV = @"-dev";
-        private const string CARAFE_DEV_VERSION = CARAFE_DEV + @"-20250304T224833Z-001";
+        private const string CARAFE_DEV_VERSION = @"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
         private const string CMD_ARG_C = @"/C";
         private const string CMD_EXECUTABLE = @"cmd.exe";
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.Model.Carafe
 
         //        public string BuilderLibraryPath;
 
-        private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName + CARAFE_DEV);
+        private string CarafeJarFileDir => Path.Combine(CarafeJavaDir, CarafeFileBaseName);
         private string CarafeJarFilePath => Path.Combine(CarafeJarFileDir, CarafeJarFileName);
 
         private string InputFileName =>
@@ -231,36 +231,18 @@ namespace pwiz.Skyline.Model.Carafe
                 new ArgumentAndValue(@"ms", ExperimentDataFilePath, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"o", CarafeOutputLibraryDir(), TextUtil.HYPHEN),
                 new ArgumentAndValue(@"c_ion_min", @"2", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"cor", @"0.8", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"device", @"gpu", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"enzyme", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"fixMod", @"1", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"itol", @"20", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"itolu", @"ppm", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"lf_frag_n_min", @"2", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"lf_top_n_frag", @"20", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"lf_type", @"skyline", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"max_pep_mz", @"1000", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"maxLength", @"35", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"maxVar", @"1", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"min_mz", @"200", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"min_pep_mz", @"400", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"minLength", @"7", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"miss_c", @"1", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"mode", @"general", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"n_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"na", @"0", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"nf", @"4", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"nm", string.Empty, TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"rf_rt_win", @"1", TextUtil.HYPHEN),
-                //new ArgumentAndValue(@"rf", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"seed", @"2000", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"skyline", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"tf", @"all", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"valid", string.Empty, TextUtil.HYPHEN)
-                //new ArgumentAndValue(@"varMod", @"0", TextUtil.HYPHEN)
             };
 
         public enum ToleranceUnits
@@ -938,22 +920,6 @@ namespace pwiz.Skyline.Model.Carafe
  
             File.Copy(source, dest);
 
-            /* **********************************************************************************
-            BlibFilter blibFilter = new BlibFilter();
-            
-            // Build the final filtered library
-            bool completed = blibFilter.Filter(source,dest, progress, ref progressStatus);
-
-            if (completed)
-            {
-                Messages.WriteAsyncUserMessage(ModelResources.Blib_completed_ok);
-            }
-            else
-            {
-                Messages.WriteAsyncUserMessage(ModelResources.Blib_failed_to_complete);
-            }
-            ************************************************************************************* */
-            
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangePercentComplete(100));
         }

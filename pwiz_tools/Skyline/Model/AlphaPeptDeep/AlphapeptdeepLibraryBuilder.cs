@@ -46,7 +46,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             Value = value;
 
             if (Value.Any(char.IsWhiteSpace) || quoteValue)
-                Value = TextUtil.Quote(Value);
+                if (!TextUtil.IsQuoted(Value))
+                    Value = TextUtil.Quote(Value);
 
             Dash = dash;
         }

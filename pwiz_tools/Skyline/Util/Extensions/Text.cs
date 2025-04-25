@@ -373,6 +373,15 @@ namespace pwiz.Skyline.Util.Extensions
         {
             return '"' + text + '"';
         }
+        /// <summary>
+        /// Check if input string has quotation marks
+        /// </summary>
+        public static bool IsQuoted(string input)
+        {
+            return !string.IsNullOrEmpty(input) && input.Length >= 2 && 
+                   input[0] == '"' &&
+                   input[input.Length - 1] == '"';
+        }
 
         /// <summary>
         /// This function can be used as a replacement for String.Join("\n", ...)
