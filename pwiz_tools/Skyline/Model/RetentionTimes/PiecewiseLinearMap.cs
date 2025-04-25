@@ -206,6 +206,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     return values[0];
             }
 
+            if (key < keys[0])
+            {
+                return GetValueForExtremeLeft(key, keys, values);
+            }
+
+            if (key > keys[values.Length - 1])
+            {
+                return GetValueForExtremeRight(key, keys, values);
+            }
+
             int i = Array.BinarySearch(keys, key);
             if (i >= 0)
             {
@@ -213,27 +223,37 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             i = ~i;
-            int prev = Math.Min(Math.Max(0, i - 1), keys.Length - 2);
-            int next = prev + 1;
-            double xPrev = keys[prev];
-            double xNext = keys[next];
-            var deltaX = xNext - xPrev;
-            if (deltaX == 0)
-            {
-                // This can only happen for keys that are before the first value or after the last value
-                if (prev == 0)
-                {
-                    return values[prev];
-                }
-                else
-                {
-                    Assume.AreEqual(next, values.Length - 1);
-                    return values[next];
-                }
-            }
+            return (values[i] * (key - keys[i - 1]) + values[i - 1] * (keys[i] - key)) / (keys[i] - keys[i - 1]);
+        }
 
-            var slope = (values[next] - values[prev]) / deltaX;
-            return slope * (key - xPrev) + values[prev];
+        private static double GetValueForExtremeLeft(double key, double[] keys, double[] values)
+        {
+            double min = keys[0];
+            var slope = -1.0;
+            for (var i = 1; i < keys.Length && slope < 0; i++)
+            {
+                if (keys[i] == min)
+                {
+                    continue;
+                }
+                slope = (values[i] - values[0]) / (keys[i] - min);
+            }
+            return values[0] - slope * (min - key);
+        }
+
+        private static double GetValueForExtremeRight(double key, double[] keys, double[] values)
+        {
+            double max = keys[keys.Length - 1];
+            var slope = -1.0;
+            for (int i = keys.Length - 2; i >= 0 && slope < 0; i--)
+            {
+                if (keys[i] == max)
+                {
+                    continue;
+                }
+                slope = (values[values.Length - 1] - values[i]) / (max - keys[i]);
+            }
+            return values[values.Length - 1] + slope * (key - max);
         }
     }
 }
