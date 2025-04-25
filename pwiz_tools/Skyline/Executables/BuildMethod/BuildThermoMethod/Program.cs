@@ -148,32 +148,17 @@ namespace BuildThermoMethod
 
     internal sealed class ListItem
     {
-        public string Compound { get; set; }
-        public string Polarity { get; set; }
-        public double? RetentionStart { get; set; }
-        public double? RetentionEnd { get; set; }
-        public double? PrecursorMz { get; set; }
-        public int? Charge { get; set; }
-        public double? ProductMz { get; set; }
-        public double? CollisionEnergy { get; set; }
-        public SureQuantInfo SureQuantInfo { get; set; }
-        public double? IntensityThreshold { get; set; }
-        public double? FaimsCv { get; set; }
-
-        public ListItem()
-        {
-            Compound = null;
-            Polarity = null;
-            RetentionStart = null;
-            RetentionEnd = null;
-            PrecursorMz = 0.0;
-            Charge = null;
-            ProductMz = null;
-            CollisionEnergy = 0.0;
-            SureQuantInfo = null;
-            IntensityThreshold = null;
-            FaimsCv = null;
-        }
+        public string Compound;
+        public string Polarity;
+        public double? RetentionStart;
+        public double? RetentionEnd;
+        public double? PrecursorMz;
+        public int? Charge;
+        public double? ProductMz;
+        public double? CollisionEnergy;
+        public SureQuantInfo SureQuantInfo;
+        public double? IntensityThreshold;
+        public double? FaimsCv;
 
         public static ListItem FromLine(int lineNum, string[] fields, Dictionary<int, string> columnMap)
         {
@@ -198,7 +183,6 @@ namespace BuildThermoMethod
 
             for (int i = 0; i < numFields; ++i)
             {
-                bool parseFail = false;
                 string curHeader = columnMap[i];
                 string curValue = fields[i];
 
@@ -211,30 +195,22 @@ namespace BuildThermoMethod
                 }
                 else if (curHeader.Equals("retention time (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var timeParse);
-                    if (!parseFail)
-                        time = timeParse;
+                    ParseValue(curHeader, lineNum, curValue, out time);
                 }
                 else if (curHeader.Equals("rt window (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var windowParse);
-                    if (!parseFail)
-                        window = windowParse;
+                    ParseValue(curHeader, lineNum, curValue, out window);
                 }
                 else if (curHeader.Equals("start time (min)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("t start (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var timeParse);
-                    if (!parseFail)
-                        item.RetentionStart = timeParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.RetentionStart);
                 }
                 else if (curHeader.Equals("end time (min)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("t end (min)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("t stop (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var timeParse);
-                    if (!parseFail)
-                        item.RetentionEnd = timeParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.RetentionEnd);
                 }
                 else if (curHeader.Equals("polarity", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -243,52 +219,33 @@ namespace BuildThermoMethod
                 else if (curHeader.Equals("precursor (m/z)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("m/z", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var mzParse);
-                    if (!parseFail)
-                        item.PrecursorMz = mzParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.PrecursorMz);
                 }
                 else if (curHeader.Equals("z", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !int.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var chargeParse);
-                    if (!parseFail)
-                        item.Charge = chargeParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.Charge);
                 }
                 else if (curHeader.Equals("product (m/z)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var mzParse);
-                    if (!parseFail)
-                        item.ProductMz = mzParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.ProductMz);
                 }
                 else if (curHeader.Equals("collision energy (v)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("cid collision energy (%)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("hcd collision energy/energies (%)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var ceParse);
-                    if (!parseFail)
-                        item.CollisionEnergy = ceParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.CollisionEnergy);
                 }
                 else if (curHeader.Equals("surequant info", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !SureQuantInfo.TryParse(curValue, out var info);
-                    if (!parseFail)
-                        item.SureQuantInfo = info;
+                    ParseValue(curHeader, lineNum, curValue, out item.SureQuantInfo);
                 }
                 else if (curHeader.Equals("intensity threshold", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, out var thresholdParse);
-                    if (!parseFail)
-                        item.IntensityThreshold = thresholdParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.IntensityThreshold);
                 }
-                else if (curHeader.Equals("FAIMS CV (V)", StringComparison.InvariantCultureIgnoreCase))
+                else if (curHeader.Equals("faims cv (v)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, out var faimsParse);
-                    if (!parseFail)
-                        item.FaimsCv = faimsParse;
-                }
-
-                if (parseFail)
-                {
-                    throw new SyntaxErrorException(string.Format("Error parsing value '{0}' for '{1}' on line {2}", curValue, curHeader, lineNum));
+                    ParseValue(curHeader, lineNum, curValue, out item.FaimsCv);
                 }
             }
 
@@ -300,6 +257,34 @@ namespace BuildThermoMethod
             }
 
             return item;
+        }
+
+        private static void ParseValue(string curHeader, int lineNum, string curValue, out double? value)
+        {
+            if (!double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var valueParse))
+                ThrowParseError(curValue, curHeader, lineNum);
+
+            value = valueParse;
+        }
+
+        private static void ParseValue(string curHeader, int lineNum, string curValue, out int? value)
+        {
+            if (!int.TryParse(curValue, out var valueParse))
+                ThrowParseError(curValue, curHeader, lineNum);
+
+            value = valueParse;
+        }
+        private static void ParseValue(string curHeader, int lineNum, string curValue, out SureQuantInfo value)
+        {
+            if (!SureQuantInfo.TryParse(curValue, out var valueParse))
+                ThrowParseError(curValue, curHeader, lineNum);
+
+            value = valueParse;
+        }
+        
+        private static void ThrowParseError(string curValue, string curHeader, int lineNum)
+        {
+            throw new SyntaxErrorException(string.Format("Error parsing value '{0}' for '{1}' on line {2}", curValue, curHeader, lineNum));
         }
     }
 
