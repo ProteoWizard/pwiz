@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using MathNet.Numerics.Statistics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -126,6 +127,65 @@ namespace pwiz.SkylineTest
                 Assert.IsFalse(unalignedDistance < downSampleAlignmentDistance, "{0} should not be less than {1} for {2}", unalignedDistance, downSampleAlignmentDistance, entry.Key);
                 Console.Out.WriteLine("Distances for {0}: Unaligned:{1} Full Alignment:{2} Down-Sampled Alignment:{3}", entry.Key, unalignedDistance, fullAlignmentDistance, downSampleAlignmentDistance);
             }
+        }
+
+        [TestMethod]
+        public void CompareImputingStartEndTimeToImputingMidTime()
+        {
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_PATH);
+            var dictionaries = ReadData(TestFilesDir.GetTestPath("plate4withScores.sql"));
+            var targets = dictionaries.Values.SelectMany(dictionary => dictionary.Keys).Distinct().ToList();
+            var medianRetentionTimes = GetMedianRetentionTimes(dictionaries.Values);
+            var alignments = new Dictionary<string, PiecewiseLinearMap>();
+            ParallelEx.ForEach(dictionaries.Select(entry => Tuple.Create(entry.Key, entry.Value)), entry =>
+            {
+                var data = entry.Item2;
+                var spectrumSourceFile = entry.Item1;
+                var allPoints = MakePoints(medianRetentionTimes, GetRetentionTimes(data)).ToList();
+                var downSampledPoints = AlignmentTarget.DownsamplePoints(allPoints, 2000);
+                var alignment = PerformAlignment(allPoints);
+                lock (alignments)
+                {
+                    alignments.Add(spectrumSourceFile, alignment);
+                }
+            });
+
+            var midTimeExemplaryPeaks = new Dictionary<Target, PeakBounds>();
+            var startEndExemplaryPeaks = new Dictionary<Target, PeakBounds>();
+            foreach (var target in targets)
+            {
+                var exemplaryPeak = GetExemplaryPeak(target, dictionaries);
+                var alignment = alignments[exemplaryPeak.SpectrumSourceFile];
+                var midTime = alignment.GetX((exemplaryPeak.PeakBounds.StartTime + exemplaryPeak.PeakBounds.EndTime) / 2);
+                var halfPeakWidth = (exemplaryPeak.PeakBounds.EndTime - exemplaryPeak.PeakBounds.StartTime) / 2;
+                midTimeExemplaryPeaks.Add(target, new PeakBounds(midTime - halfPeakWidth, midTime + halfPeakWidth));
+                startEndExemplaryPeaks.Add(target, new PeakBounds(alignment.GetX(exemplaryPeak.PeakBounds.StartTime), alignment.GetX(exemplaryPeak.PeakBounds.EndTime)));
+            }
+
+            var midTimeDifferences = new List<double>();
+            var startEndDifferences = new List<double>();
+            foreach (var entry in dictionaries)
+            {
+                var alignment = alignments[entry.Key];
+                var midTimeImputedPeaks = midTimeExemplaryPeaks.ToDictionary(kvp => kvp.Key, kvp =>
+                {
+                    var midTime = alignment.GetY((kvp.Value.StartTime + kvp.Value.EndTime)/2);
+                    var halfPeakWidth = (kvp.Value.EndTime - kvp.Value.StartTime) / 2;
+                    return new PeakBounds(midTime - halfPeakWidth, midTime + halfPeakWidth);
+                });
+                var midTimeDistance = GetAverageDistance(midTimeImputedPeaks, entry.Value, AlignmentFunction.IDENTITY);
+                var startEndImputedPeaks = startEndExemplaryPeaks.ToDictionary(kvp => kvp.Key, kvp =>
+                {
+                    return new PeakBounds(alignment.GetY(kvp.Value.StartTime), alignment.GetY(kvp.Value.EndTime));
+                });
+                var startEndTimeDifference =
+                    GetAverageDistance(startEndImputedPeaks, entry.Value, AlignmentFunction.IDENTITY);
+                Console.Out.WriteLine("Distances for {0} using mid-time of exemplary peak: {1} start/end times:{2}", entry.Key, midTimeDistance, startEndTimeDifference);
+                midTimeDifferences.Add(midTimeDistance);
+                startEndDifferences.Add(startEndTimeDifference);
+            }
+            Console.Out.WriteLine("Start/End Average:{0} Min:{1} Max:{2} StdDev:{3}", startEndDifferences.Average(), startEndDifferences.Min(), startEndDifferences.Max(), startEndDifferences.StandardDeviation());
+            Console.Out.WriteLine("Mid Time Average:{0} Min:{1} Max:{2} StdDev:{3}", midTimeDifferences.Average(), midTimeDifferences.Min(), midTimeDifferences.Max(), midTimeDifferences.StandardDeviation());
         }
 
         private double GetAverageDistance(Dictionary<Target, PeakBounds> exemplaryPeaks,
