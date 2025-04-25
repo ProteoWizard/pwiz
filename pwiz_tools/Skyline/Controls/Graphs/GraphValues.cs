@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using ZedGraph;
@@ -44,22 +43,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return string.Format(GraphsResources.GraphValues_Log_AxisTitle, title);
         }
         
-        [Localizable(true)]
-        public static string ToLocalizedString(this RTPeptideValue rtPeptideValue)
-        {
-            switch (rtPeptideValue)
-            {
-                case RTPeptideValue.All:
-                case RTPeptideValue.Retention:
-                    return GraphsResources.RtGraphValue_Retention_Time;
-                case RTPeptideValue.FWB:
-                    return GraphsResources.RtGraphValue_FWB_Time;
-                case RTPeptideValue.FWHM:
-                    return GraphsResources.RtGraphValue_FWHM_Time;
-            }
-            throw new ArgumentException(rtPeptideValue.ToString());
-        }
-
         /// <summary>
         /// Operations for combining values from multiple replicates that are displayed 
         /// at a single point on a graph.
@@ -173,7 +156,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (AlignmentTarget == null)
                 {
-                    return ToLocalizedString(rtPeptideValue);
+                    return rtPeptideValue.ToLocalizedString();
                 }
 
                 return AlignmentTarget.GetAxisTitle(rtPeptideValue);
@@ -210,7 +193,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    title = ToLocalizedString(RtPeptideValue);
+                    title = RtPeptideValue.ToLocalizedString();
                 }
                 title = AggregateOp.AnnotateTitle(title);
                 return title;

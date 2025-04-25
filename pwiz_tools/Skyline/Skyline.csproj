@@ -612,6 +612,7 @@
     <Compile Include="Model\RetentionTimes\PeakImputation\ExemplaryPeak.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\ImputedPeak.cs" />
     <Compile Include="Model\RetentionTimes\PeakImputation\PeakBoundaryImputer.cs" />
+    <Compile Include="Model\RetentionTimes\RTPeptideValue.cs" />
     <Compile Include="Model\SpectrumPropertiesResx.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

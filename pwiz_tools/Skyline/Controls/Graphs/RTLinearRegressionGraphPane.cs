@@ -226,6 +226,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        /// <summary>
+        /// Whether missing values should be included in linear regressions.
+        /// All versions of Skyline have included missing values as zeroes when performing the initial linear regression
+        /// before outliers are removed.
+        /// We will probably want to change this behavior.
+        /// </summary>
+        private static bool _regressionIncludesMissingValues = true;
         public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
             var regressionSettings = new RegressionSettings(document, -1, -1, bestResult, threshold, true,
@@ -237,8 +244,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return Array.Empty<PeptideDocNode>();
             }
-            return graphData.Outliers
-                .Select(pt => (PeptideDocNode) document.FindNode(pt.IdentityPath)).ToArray();
+            // Return all the outliers plus all the missing values.
+            return graphData.Outliers.Select(pt => pt.IdentityPath).Distinct().Select(document.FindNode)
+                .Cast<PeptideDocNode>().ToArray();
         }
 
         public RetentionTimeRegression RegressionRefined
@@ -616,7 +624,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     standards = document.GetRetentionTimeStandards();
                 
                 // Only used if we are comparing two runs
-                var modifiedTargets = IsRunToRun ? null : new HashSet<Target>();
+                var modifiedTargets = IsRunToRun ? new HashSet<Target>() : null;
                 int moleculeCount = document.MoleculeCount;
                 int iMolecule = 0;
                 foreach (var peptideGroupDocNode in document.MoleculeGroups)
@@ -676,8 +684,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     pointInfos.Add(new PointInfo(identityPath, nodePeptide.ModifiedTarget, rtOrig, rtTarget));
                 }
-                var targetTimes = pointInfos.Where(pt => pt.Y.HasValue)
-                    .Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y.Value)).ToList();
+
+                var targetTimes = pointInfos.Where(pt => _regressionIncludesMissingValues || pt.Y.HasValue)
+                    .Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y ?? 0)).ToList();
 
                 if (IsRunToRun)
                 {
@@ -835,13 +844,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         validPoints.Add(pt);
                     }
+                    else if (_regressionIncludesMissingValues)
+                    {
+                        validPoints.Add(pt.ChangeY(0));
+                    }
                     else
                     {
                         outlierPoints.Add(pt);
                     }
                 }
                 var variableTargetPeptides = validPoints.Select(pt =>
-                    new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y.Value, true)).ToList();
+                    new MeasuredRetentionTime(pt.ModifiedTarget, pt.Y ?? 0, true)).ToList();
                 var variableOrigPeptides =
                     validPoints.Select(pt => new MeasuredRetentionTime(pt.ModifiedTarget, pt.X.Value, true)).ToList();
 
@@ -1260,7 +1273,12 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return ChangeProp(ImClone(this), im => im.X = value);
             }
-            public double? Y { get; }
+
+            public double? Y { get; private set; }
+            public PointInfo ChangeY(double? value)
+            {
+                return ChangeProp(ImClone(this), im => im.Y = value);
+            }
         }
 
         private class RtRegressionResults : Immutable

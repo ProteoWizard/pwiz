@@ -23,7 +23,6 @@ using System.Linq;
 using System.Threading;
 using pwiz.Common.DataAnalysis;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Irt;
@@ -222,6 +221,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
         /// </summary>
         public static bool TryGetAlignmentTarget(SrmSettings settings, out AlignmentTarget alignmentTarget)
         {
+            if (!settings.HasResults)
+            {
+                alignmentTarget = null;
+                return true;
+            }
             var irtCalculator = settings.PeptideSettings.Prediction.RetentionTime?.Calculator as RCalcIrt;
             if (irtCalculator != null)
             {
@@ -284,11 +288,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
             {
                 if (rtPeptideValue == RTPeptideValue.Retention || rtPeptideValue == RTPeptideValue.All)
                 {
-                    return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreFormat,
+                    return string.Format(Controls.Graphs.GraphsResources.RegressionUnconversion_CalculatorScoreFormat,
                         Calculator.Name);
                 }
 
-                return string.Format(GraphsResources.RegressionUnconversion_CalculatorScoreValueFormat,
+                return string.Format(Controls.Graphs.GraphsResources.RegressionUnconversion_CalculatorScoreValueFormat,
                     Calculator.Name, rtPeptideValue.ToLocalizedString());
 
             }

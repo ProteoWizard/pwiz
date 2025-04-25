@@ -4,7 +4,6 @@ using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using MathNet.Numerics.Statistics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,12 +17,12 @@ using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace TestPerf
 {
     [TestClass]
     public class PeakImputationFromExplicitBoundsTest : AbstractUnitTest
     {
-        private const string ZIP_PATH = @"Test\PeakImputationFromExplicitBoundsTest.zip";
+        private const string ZIP_PATH = @"TestPerf\PeakImputationFromExplicitBoundsTest.zip";
         [TestMethod]
         public void TestPeakImputationFromExplicitBounds()
         {

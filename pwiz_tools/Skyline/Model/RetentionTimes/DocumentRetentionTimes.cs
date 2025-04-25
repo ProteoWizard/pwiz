@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public static string IsNotLoadedExplained(SrmDocument document)
         {
-            if (!AlignmentTarget.TryGetAlignmentTarget(document.Settings, out var alignmentTarget))
+            if (!AlignmentTarget.TryGetAlignmentTarget(document.Settings, out _))
             {
                 return null;
             }

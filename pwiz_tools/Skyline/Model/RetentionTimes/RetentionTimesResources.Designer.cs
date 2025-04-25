@@ -68,5 +68,32 @@ namespace pwiz.Skyline.Model.RetentionTimes {
                 return ResourceManager.GetString("DocumentRetentionTimes_RecalculateAlignments_Aligning_retention_times", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FWB Time.
+        /// </summary>
+        internal static string RtGraphValue_FWB_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_FWB_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FWHM Time.
+        /// </summary>
+        internal static string RtGraphValue_FWHM_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_FWHM_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time.
+        /// </summary>
+        internal static string RtGraphValue_Retention_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_Retention_Time", resourceCulture);
+            }
+        }
     }
 }

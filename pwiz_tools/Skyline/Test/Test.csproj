@@ -188,7 +188,6 @@
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
-    <Compile Include="PeakImputationFromExplicitBoundsTest.cs" />
     <Compile Include="PeptideTest.cs" />
     <Compile Include="PiecewiseLinearMapTest.cs" />
     <Compile Include="ProteinAssociationTest.cs" />

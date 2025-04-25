@@ -138,6 +138,7 @@
     <Compile Include="BullseyeSharpTest.cs" />
     <Compile Include="DiaSearchTutorialTest.cs" />
     <Compile Include="FeatureDetectionTest.cs" />
+    <Compile Include="PeakImputationFromExplicitBoundsTest.cs" />
     <Compile Include="PerfCreateLibraryFromSpectraTest.cs" />
     <Compile Include="PerfAssociateProteinsHugeTest.cs" />
     <Compile Include="DdaTutorialTest.cs" />

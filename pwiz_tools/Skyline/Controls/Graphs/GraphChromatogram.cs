@@ -838,7 +838,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!results.TryGetChromatogramSet(_nameChromatogramSet, out chromatograms, out _chromIndex))
                 return;
 
-            string xAxisTitle = GraphValues.ToLocalizedString(RTPeptideValue.Retention);
+            string xAxisTitle = RTPeptideValue.Retention.ToLocalizedString();
             AlignmentFunction timeRegressionFunction = null;
             var retentionTimeTransformOp = _stateProvider.GetRetentionTimeTransformOperation();
             if (null != retentionTimeTransformOp && null != _arrayChromInfo)
