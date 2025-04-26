@@ -229,7 +229,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 
                                 if (ccs >= 0)
                                 {
-                                    scan.cvParams.push_back(CVParam(MS_collisional_cross_sectional_area, ccs, UO_square_angstrom));
+                                    selectedIon.set(MS_collisional_cross_sectional_area, ccs, UO_square_angstrom);
                                 }
 
                                 spectrum.set(MS_spectrum_title, removeCCSFromTitle(value));
@@ -251,7 +251,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 bal::trim(value);
                                 size_t delim = value.find_last_of(' ');
 
-                                scan.cvParams.push_back(CVParam(MS_inverse_reduced_ion_mobility, value.substr(delim + 1, value.size() - delim - 1), MS_volt_second_per_square_centimeter));
+                                scan.set(MS_inverse_reduced_ion_mobility, value.substr(delim + 1, value.size() - delim - 1), MS_volt_second_per_square_centimeter);
                             }
                             else if (name == "CHARGE")
                             {
