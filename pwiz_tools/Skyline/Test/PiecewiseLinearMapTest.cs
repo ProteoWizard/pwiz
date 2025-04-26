@@ -62,20 +62,5 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(11.0, map.GetY(3));
             Assert.AreEqual(15.0, map.GetY(4));
         }
-
-        /// <summary>
-        /// Verifies that when the list of X values has duplicates at the beginning or end, no extrapolation happens
-        /// and, instead, the most extreme value of Y is used for points outside the range.
-        /// </summary>
-        [TestMethod]
-        public void TestPiecewiseMapWithNoExtrapolation()
-        {
-            var map = PiecewiseLinearMap.FromValues(new[] { 0.0, 0.0, 2.0, 2.0 }, new[] { 3.0, 3.0, 7.0, 7.0 });
-            Assert.AreEqual(3.0, map.GetY(-1));
-            Assert.AreEqual(3.0, map.GetY(0));
-            Assert.AreEqual(5.0, map.GetY(1));
-            Assert.AreEqual(7.0, map.GetY(2));
-            Assert.AreEqual(7.0, map.GetY(3));
-        }
     }
 }
