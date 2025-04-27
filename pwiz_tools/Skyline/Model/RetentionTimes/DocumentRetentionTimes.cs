@@ -27,7 +27,6 @@ using JetBrains.Annotations;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.DocSettings.AbsoluteQuantification;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
@@ -329,98 +328,6 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
 
             return dictionary;
-        }
-
-        /// <summary>
-        /// Returns the set of things that should be aligned against each other.
-        /// This function figures out the "Primary Replicate" which is the first replicate in
-        /// the document when ordered by <see cref="_alignmentPriorities"/>.
-        /// (That is, the first internal standard, or, if there are no internal standards then the first
-        /// ordinary replicate).
-        /// All retention times are aligned against the primary replicate.
-        /// In addition, within each <see cref="ChromatogramSet.BatchName"/>, all retention times within that
-        /// batch are aligned against the primary replicate of that batch.
-        /// </summary>
-        public static HashSet<Tuple<string, string>> GetPairsToAlign(ResultNameMap<RetentionTimeSource> sourcesInDocument,
-            MeasuredResults measuredResults, ResultNameMap<RetentionTimeSource> allSources)
-        {
-            var alignmentPairs = new HashSet<Tuple<string, string>>();
-            if (measuredResults == null)
-            {
-                return alignmentPairs;
-            }
-            var replicateRetentionTimeSources = measuredResults.Chromatograms.ToDictionary(
-                chromatogramSet => chromatogramSet,
-                chromatogramSet => chromatogramSet.MSDataFileInfos.Select(sourcesInDocument.Find)
-                    .Where(source => null != source)
-                    .ToList());
-            foreach (var tuple in GetReplicateAlignmentPairs(measuredResults.Chromatograms))
-            {
-                if (!replicateRetentionTimeSources.TryGetValue(tuple.Item1, out var sources1))
-                {
-                    continue;
-                }
-
-                if (!replicateRetentionTimeSources.TryGetValue(tuple.Item2, out var sources2))
-                {
-                    continue;
-                }
-                alignmentPairs.UnionWith(sources1.SelectMany(source1=>sources2.Select(source2=>Tuple.Create(source1.Name, source2.Name))));
-            }
-
-            // Also, align against the first replicate the things that are not in the document
-            var primaryReplicate = measuredResults.Chromatograms
-                .OrderBy(c => _alignmentPriorities[c.SampleType]).FirstOrDefault();
-            if (primaryReplicate != null)
-            {
-                alignmentPairs.UnionWith(replicateRetentionTimeSources[primaryReplicate].SelectMany(source1 =>
-                    allSources.Select(source2 => Tuple.Create(source1.Name, source2.Key))));
-            }
-
-            return alignmentPairs;
-        }
-
-        public static IEnumerable<Tuple<ChromatogramSet, ChromatogramSet>> GetReplicateAlignmentPairs(
-            IEnumerable<ChromatogramSet> chromatogramSets)
-        {
-            List<ChromatogramSet> batchLeaders = new List<ChromatogramSet>();
-            foreach (var batch in chromatogramSets.GroupBy(chromatogramSet => chromatogramSet.BatchName))
-            {
-                ChromatogramSet batchLeader = null;
-                foreach (var chromatogramSet in batch.OrderBy(chromatogramSet => _alignmentPriorities[chromatogramSet.SampleType]))
-                {
-                    if (batchLeader == null)
-                    {
-                        batchLeader = chromatogramSet;
-                        foreach (var otherLeader in batchLeaders)
-                        {
-                            yield return Tuple.Create(otherLeader, batchLeader);
-                        }
-                        batchLeaders.Add(batchLeader);
-                    }
-                    else
-                    {
-                        yield return Tuple.Create(batchLeader, chromatogramSet);
-                    }
-                }
-            }
-        }
-
-        private static readonly Dictionary<SampleType, int> _alignmentPriorities = new Dictionary<SampleType, int>
-        {
-            {SampleType.STANDARD, 1},
-            {SampleType.UNKNOWN, 2},
-            {SampleType.QC, 2},
-            {SampleType.BLANK, 3},
-            {SampleType.DOUBLE_BLANK, 4},
-            {SampleType.SOLVENT, 4}
-        };
-
-        public static AlignmentFunction MakeAlignmentFunc(IEnumerable<RegressionLine> regressionLines)
-        {
-
-            return AlignmentFunction.FromParts(regressionLines.Select(line =>
-                AlignmentFunction.Define(line.GetY, line.GetX)));
         }
 
         private Dictionary<string, LibraryAlignmentValue> _libraryAlignments;

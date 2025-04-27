@@ -1000,7 +1000,7 @@ namespace pwiz.Skyline.Model.Lib
                 return null;
             }
 
-            return GetRetentionTimesWithSequences(new[] { LibraryFiles[index] }, targets)[0];
+            return GetRetentionTimesWithSequences(new[] { LibraryFiles[index] }, targets)?[0];
         }
 
         #region Implementation of IXmlSerializable
