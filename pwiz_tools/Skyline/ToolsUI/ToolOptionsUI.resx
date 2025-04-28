@@ -127,20 +127,14 @@
   <data name="listboxServers.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="listboxServers.ItemHeight" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="listboxServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 35</value>
-  </data>
-  <data name="listboxServers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>9, 23</value>
   </data>
   <data name="listboxServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 304</value>
+    <value>293, 199</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="listboxServers.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
@@ -160,13 +154,10 @@
     <value>True</value>
   </data>
   <data name="lblServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 11</value>
-  </data>
-  <data name="lblServers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>6, 7</value>
   </data>
   <data name="lblServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>67, 20</value>
+    <value>46, 13</value>
   </data>
   <data name="lblServers.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -190,13 +181,10 @@
     <value>Top, Right</value>
   </data>
   <data name="btnEditServers.Location" type="System.Drawing.Point, System.Drawing">
-    <value>462, 35</value>
-  </data>
-  <data name="btnEditServers.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>308, 23</value>
   </data>
   <data name="btnEditServers.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnEditServers.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -217,16 +205,13 @@
     <value>2</value>
   </data>
   <data name="tabPanorama.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabPanorama.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabPanorama.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabPanorama.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 389</value>
+    <value>389, 248</value>
   </data>
   <data name="tabPanorama.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -249,17 +234,11 @@
   <data name="listBoxRemoteAccounts.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="listBoxRemoteAccounts.ItemHeight" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
   <data name="listBoxRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>14, 35</value>
-  </data>
-  <data name="listBoxRemoteAccounts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>9, 23</value>
   </data>
   <data name="listBoxRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>438, 304</value>
+    <value>293, 199</value>
   </data>
   <data name="listBoxRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -283,13 +262,10 @@
     <value>NoControl</value>
   </data>
   <data name="lblRemoteAccounts.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 11</value>
-  </data>
-  <data name="lblRemoteAccounts.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>6, 7</value>
   </data>
   <data name="lblRemoteAccounts.Size" type="System.Drawing.Size, System.Drawing">
-    <value>139, 20</value>
+    <value>94, 13</value>
   </data>
   <data name="lblRemoteAccounts.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -316,13 +292,10 @@
     <value>NoControl</value>
   </data>
   <data name="btnEditRemoteAccountList.Location" type="System.Drawing.Point, System.Drawing">
-    <value>462, 35</value>
-  </data>
-  <data name="btnEditRemoteAccountList.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>308, 23</value>
   </data>
   <data name="btnEditRemoteAccountList.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnEditRemoteAccountList.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -343,16 +316,13 @@
     <value>2</value>
   </data>
   <data name="tabRemote.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabRemote.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabRemote.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabRemote.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 389</value>
+    <value>389, 248</value>
   </data>
   <data name="tabRemote.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -372,17 +342,122 @@
   <data name="&gt;&gt;tabRemote.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="lnkCarafeLibraryHelp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 6pt</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>286, 169</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>11, 9</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lnkCarafeLibraryHelp.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.Name" xml:space="preserve">
+    <value>lnkCarafeLibraryHelp</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.Parent" xml:space="preserve">
+    <value>tabCarafe</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeLibraryHelp.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 6pt</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>286, 104</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>11, 9</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="lnkCarafeModelTrainingHelp.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Name" xml:space="preserve">
+    <value>lnkCarafeModelTrainingHelp</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.Parent" xml:space="preserve">
+    <value>tabCarafe</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeModelTrainingHelp.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.Font" type="System.Drawing.Font, System.Drawing">
+    <value>Microsoft Sans Serif, 6pt</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.Location" type="System.Drawing.Point, System.Drawing">
+    <value>286, 42</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>0, 0, 3, 0</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.Size" type="System.Drawing.Size, System.Drawing">
+    <value>11, 9</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="lnkCarafeTrainingDataHelp.Text" xml:space="preserve">
+    <value>? </value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.Name" xml:space="preserve">
+    <value>lnkCarafeTrainingDataHelp</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.Parent" xml:space="preserve">
+    <value>tabCarafe</value>
+  </data>
+  <data name="&gt;&gt;lnkCarafeTrainingDataHelp.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
   <data name="btnCarafeLibraryGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnCarafeLibraryGenerationSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>138, 260</value>
-  </data>
-  <data name="btnCarafeLibraryGenerationSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>92, 169</value>
   </data>
   <data name="btnCarafeLibraryGenerationSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>286, 35</value>
+    <value>191, 23</value>
   </data>
   <data name="btnCarafeLibraryGenerationSettings.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -400,19 +475,16 @@
     <value>tabCarafe</value>
   </data>
   <data name="&gt;&gt;btnCarafeLibraryGenerationSettings.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>3</value>
   </data>
   <data name="btnCarafeModelTrainingSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnCarafeModelTrainingSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>138, 160</value>
-  </data>
-  <data name="btnCarafeModelTrainingSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>92, 104</value>
   </data>
   <data name="btnCarafeModelTrainingSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>286, 35</value>
+    <value>191, 23</value>
   </data>
   <data name="btnCarafeModelTrainingSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -430,19 +502,16 @@
     <value>tabCarafe</value>
   </data>
   <data name="&gt;&gt;btnCarafeModelTrainingSettings.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>4</value>
   </data>
   <data name="btnCarafeTrainingDataGenerationSettings.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
     <value>NoControl</value>
   </data>
   <data name="btnCarafeTrainingDataGenerationSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>138, 64</value>
-  </data>
-  <data name="btnCarafeTrainingDataGenerationSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>92, 42</value>
   </data>
   <data name="btnCarafeTrainingDataGenerationSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>286, 35</value>
+    <value>191, 23</value>
   </data>
   <data name="btnCarafeTrainingDataGenerationSettings.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -460,13 +529,16 @@
     <value>tabCarafe</value>
   </data>
   <data name="&gt;&gt;btnCarafeTrainingDataGenerationSettings.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="tabCarafe.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
+    <value>4, 22</value>
+  </data>
+  <data name="tabCarafe.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
   </data>
   <data name="tabCarafe.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 389</value>
+    <value>389, 248</value>
   </data>
   <data name="tabCarafe.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -487,13 +559,10 @@
     <value>2</value>
   </data>
   <data name="tbxKoinaServer.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 166</value>
-  </data>
-  <data name="tbxKoinaServer.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>13, 108</value>
   </data>
   <data name="tbxKoinaServer.Size" type="System.Drawing.Size, System.Drawing">
-    <value>260, 26</value>
+    <value>175, 20</value>
   </data>
   <data name="tbxKoinaServer.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -517,13 +586,10 @@
     <value>NoControl</value>
   </data>
   <data name="ceLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>351, 145</value>
-  </data>
-  <data name="ceLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>234, 94</value>
   </data>
   <data name="ceLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 20</value>
+    <value>32, 13</value>
   </data>
   <data name="ceLabel.TabIndex" type="System.Int32, mscorlib">
     <value>8</value>
@@ -544,13 +610,10 @@
     <value>1</value>
   </data>
   <data name="ceCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>356, 166</value>
-  </data>
-  <data name="ceCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>237, 108</value>
   </data>
   <data name="ceCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>181, 28</value>
+    <value>122, 21</value>
   </data>
   <data name="ceCombo.TabIndex" type="System.Int32, mscorlib">
     <value>9</value>
@@ -571,13 +634,13 @@
     <value>True</value>
   </data>
   <data name="koinaServerStatusLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 202</value>
+    <value>10, 131</value>
   </data>
   <data name="koinaServerStatusLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>1, 0, 1, 0</value>
   </data>
   <data name="koinaServerStatusLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>144, 20</value>
+    <value>97, 13</value>
   </data>
   <data name="koinaServerStatusLabel.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -604,13 +667,10 @@
     <value>NoControl</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 302</value>
-  </data>
-  <data name="label3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>10, 196</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>84, 20</value>
+    <value>58, 13</value>
   </data>
   <data name="label3.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -631,13 +691,10 @@
     <value>4</value>
   </data>
   <data name="iRTModelCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 326</value>
-  </data>
-  <data name="iRTModelCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>13, 212</value>
   </data>
   <data name="iRTModelCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>260, 28</value>
+    <value>175, 21</value>
   </data>
   <data name="iRTModelCombo.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
@@ -661,13 +718,10 @@
     <value>NoControl</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 237</value>
-  </data>
-  <data name="label2.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>10, 154</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 20</value>
+    <value>80, 13</value>
   </data>
   <data name="label2.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -688,13 +742,10 @@
     <value>6</value>
   </data>
   <data name="intensityModelCombo.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 262</value>
-  </data>
-  <data name="intensityModelCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>13, 170</value>
   </data>
   <data name="intensityModelCombo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>260, 28</value>
+    <value>175, 21</value>
   </data>
   <data name="intensityModelCombo.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -718,13 +769,10 @@
     <value>NoControl</value>
   </data>
   <data name="koinaServerLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 145</value>
-  </data>
-  <data name="koinaServerLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>10, 94</value>
   </data>
   <data name="koinaServerLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>59, 20</value>
+    <value>41, 13</value>
   </data>
   <data name="koinaServerLabel.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -751,13 +799,13 @@
     <value>0, 6</value>
   </data>
   <data name="koinaDescrLabel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>108, 17</value>
+    <value>72, 11</value>
   </data>
   <data name="koinaDescrLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 0, 2, 0</value>
+    <value>1, 0, 1, 0</value>
   </data>
   <data name="koinaDescrLabel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>468, 78</value>
+    <value>322, 55</value>
   </data>
   <data name="koinaDescrLabel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -784,13 +832,13 @@ well as iRT prediction.</value>
     <value>NoControl</value>
   </data>
   <data name="pictureBox1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>20, 3</value>
+    <value>13, 2</value>
   </data>
   <data name="pictureBox1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>1, 1, 1, 1</value>
   </data>
   <data name="pictureBox1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>72, 112</value>
+    <value>48, 73</value>
   </data>
   <data name="pictureBox1.SizeMode" type="System.Windows.Forms.PictureBoxSizeMode, System.Windows.Forms">
     <value>StretchImage</value>
@@ -811,16 +859,16 @@ well as iRT prediction.</value>
     <value>10</value>
   </data>
   <data name="tabKoina.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
+    <value>4, 22</value>
   </data>
   <data name="tabKoina.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>1, 1, 1, 1</value>
   </data>
   <data name="tabKoina.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>2, 2, 2, 2</value>
+    <value>1, 1, 1, 1</value>
   </data>
   <data name="tabKoina.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 389</value>
+    <value>389, 248</value>
   </data>
   <data name="tabKoina.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -844,13 +892,10 @@ well as iRT prediction.</value>
     <value>Top, Left, Right</value>
   </data>
   <data name="labelDisplayLanguage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 5</value>
-  </data>
-  <data name="labelDisplayLanguage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>6, 3</value>
   </data>
   <data name="labelDisplayLanguage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>566, 60</value>
+    <value>377, 39</value>
   </data>
   <data name="labelDisplayLanguage.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -873,17 +918,11 @@ well as iRT prediction.</value>
   <data name="listBoxLanguages.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
   </data>
-  <data name="listBoxLanguages.ItemHeight" type="System.Int32, mscorlib">
-    <value>20</value>
-  </data>
   <data name="listBoxLanguages.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 69</value>
-  </data>
-  <data name="listBoxLanguages.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>6, 45</value>
   </data>
   <data name="listBoxLanguages.Size" type="System.Drawing.Size, System.Drawing">
-    <value>564, 304</value>
+    <value>377, 199</value>
   </data>
   <data name="listBoxLanguages.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -901,16 +940,13 @@ well as iRT prediction.</value>
     <value>1</value>
   </data>
   <data name="tabLanguage.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabLanguage.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabLanguage.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabLanguage.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 389</value>
+    <value>389, 248</value>
   </data>
   <data name="tabLanguage.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -934,13 +970,10 @@ well as iRT prediction.</value>
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxSettingsFilePath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 268</value>
-  </data>
-  <data name="tbxSettingsFilePath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>17, 174</value>
   </data>
   <data name="tbxSettingsFilePath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>534, 26</value>
+    <value>357, 20</value>
   </data>
   <data name="tbxSettingsFilePath.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -961,13 +994,10 @@ well as iRT prediction.</value>
     <value>True</value>
   </data>
   <data name="lblSettingsPath.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 243</value>
-  </data>
-  <data name="lblSettingsPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>15, 158</value>
   </data>
   <data name="lblSettingsPath.Size" type="System.Drawing.Size, System.Drawing">
-    <value>164, 20</value>
+    <value>109, 13</value>
   </data>
   <data name="lblSettingsPath.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -988,13 +1018,10 @@ well as iRT prediction.</value>
     <value>1</value>
   </data>
   <data name="btnResetSettings.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 308</value>
-  </data>
-  <data name="btnResetSettings.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>17, 200</value>
   </data>
   <data name="btnResetSettings.Size" type="System.Drawing.Size, System.Drawing">
-    <value>172, 57</value>
+    <value>115, 37</value>
   </data>
   <data name="btnResetSettings.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1015,13 +1042,10 @@ well as iRT prediction.</value>
     <value>2</value>
   </data>
   <data name="comboCompactFormatOption.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 49</value>
-  </data>
-  <data name="comboCompactFormatOption.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>17, 32</value>
   </data>
   <data name="comboCompactFormatOption.Size" type="System.Drawing.Size, System.Drawing">
-    <value>241, 28</value>
+    <value>162, 21</value>
   </data>
   <data name="comboCompactFormatOption.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -1042,13 +1066,10 @@ well as iRT prediction.</value>
     <value>True</value>
   </data>
   <data name="lblCompactDocumentFormat.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 25</value>
-  </data>
-  <data name="lblCompactDocumentFormat.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>14, 16</value>
   </data>
   <data name="lblCompactDocumentFormat.Size" type="System.Drawing.Size, System.Drawing">
-    <value>385, 20</value>
+    <value>260, 13</value>
   </data>
   <data name="lblCompactDocumentFormat.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1075,13 +1096,10 @@ well as iRT prediction.</value>
     <value>NoControl</value>
   </data>
   <data name="checkBoxShowWizard.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 140</value>
-  </data>
-  <data name="checkBoxShowWizard.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>17, 91</value>
   </data>
   <data name="checkBoxShowWizard.Size" type="System.Drawing.Size, System.Drawing">
-    <value>151, 24</value>
+    <value>103, 17</value>
   </data>
   <data name="checkBoxShowWizard.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1102,16 +1120,13 @@ well as iRT prediction.</value>
     <value>5</value>
   </data>
   <data name="tabMisc.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabMisc.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabMisc.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabMisc.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 389</value>
+    <value>389, 248</value>
   </data>
   <data name="tabMisc.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1132,13 +1147,10 @@ well as iRT prediction.</value>
     <value>5</value>
   </data>
   <data name="comboColorScheme.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 48</value>
-  </data>
-  <data name="comboColorScheme.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>17, 31</value>
   </data>
   <data name="comboColorScheme.Size" type="System.Drawing.Size, System.Drawing">
-    <value>236, 28</value>
+    <value>159, 21</value>
   </data>
   <data name="comboColorScheme.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1159,13 +1171,10 @@ well as iRT prediction.</value>
     <value>True</value>
   </data>
   <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>21, 23</value>
-  </data>
-  <data name="label1.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 0, 4, 0</value>
+    <value>14, 15</value>
   </data>
   <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>110, 20</value>
+    <value>74, 13</value>
   </data>
   <data name="label1.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1189,13 +1198,10 @@ well as iRT prediction.</value>
     <value>True</value>
   </data>
   <data name="powerOfTenCheckBox.Location" type="System.Drawing.Point, System.Drawing">
-    <value>26, 140</value>
-  </data>
-  <data name="powerOfTenCheckBox.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>17, 91</value>
   </data>
   <data name="powerOfTenCheckBox.Size" type="System.Drawing.Size, System.Drawing">
-    <value>316, 24</value>
+    <value>214, 17</value>
   </data>
   <data name="powerOfTenCheckBox.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1216,16 +1222,13 @@ well as iRT prediction.</value>
     <value>2</value>
   </data>
   <data name="tabDisplay.Location" type="System.Drawing.Point, System.Drawing">
-    <value>4, 29</value>
-  </data>
-  <data name="tabDisplay.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>4, 22</value>
   </data>
   <data name="tabDisplay.Padding" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>3, 3, 3, 3</value>
   </data>
   <data name="tabDisplay.Size" type="System.Drawing.Size, System.Drawing">
-    <value>588, 389</value>
+    <value>389, 248</value>
   </data>
   <data name="tabDisplay.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -1246,13 +1249,10 @@ well as iRT prediction.</value>
     <value>6</value>
   </data>
   <data name="tabControl.Location" type="System.Drawing.Point, System.Drawing">
-    <value>18, 18</value>
-  </data>
-  <data name="tabControl.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>12, 12</value>
   </data>
   <data name="tabControl.Size" type="System.Drawing.Size, System.Drawing">
-    <value>596, 422</value>
+    <value>397, 274</value>
   </data>
   <data name="tabControl.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
@@ -1273,13 +1273,10 @@ well as iRT prediction.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>501, 449</value>
-  </data>
-  <data name="btnCancel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>334, 292</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
@@ -1303,13 +1300,10 @@ well as iRT prediction.</value>
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>380, 449</value>
-  </data>
-  <data name="btnOK.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>253, 292</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 35</value>
+    <value>75, 23</value>
   </data>
   <data name="btnOK.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -1333,13 +1327,10 @@ well as iRT prediction.</value>
     <value>True</value>
   </metadata>
   <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
-    <value>9, 20</value>
+    <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>632, 492</value>
-  </data>
-  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
-    <value>4, 5, 4, 5</value>
+    <value>421, 320</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
@@ -1351,12 +1342,12 @@ well as iRT prediction.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.478, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.481, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>ToolOptionsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.478, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.481, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

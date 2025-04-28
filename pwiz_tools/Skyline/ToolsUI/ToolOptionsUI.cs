@@ -546,5 +546,23 @@ namespace pwiz.Skyline.ToolsUI
                 setting => setting.ValidValues,
                 setting => setting.Name);
         }
+
+        private void ToolsOptionsUI_CarafeHelpButtonClicked(object sender, EventArgs e)
+        {
+            const string proteinAssociationWikiPath = @"/wiki/home/software/Skyline/page.view?name=Carafe%20Options%20Help"; // CONSIDER: get version programatically
+            if (sender == lnkCarafeTrainingDataHelp)
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#training-data-generation");
+            else if (sender == lnkCarafeModelTrainingHelp)
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#model-training");
+            else if (sender == lnkCarafeLibraryHelp)
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath + @"#library-generation");
+            else
+                WebHelpers.OpenSkylineLink(this, proteinAssociationWikiPath);
+        }
+
+        private void lnkCarafeHelp_Clicked(object sender, EventArgs e)
+        {
+            ToolsOptionsUI_CarafeHelpButtonClicked(sender, e);
+        }
     }
 }

@@ -39,6 +39,9 @@ namespace pwiz.Skyline.ToolsUI
             this.lblRemoteAccounts = new System.Windows.Forms.Label();
             this.btnEditRemoteAccountList = new System.Windows.Forms.Button();
             this.tabCarafe = new System.Windows.Forms.TabPage();
+            this.lnkCarafeLibraryHelp = new System.Windows.Forms.LinkLabel();
+            this.lnkCarafeModelTrainingHelp = new System.Windows.Forms.LinkLabel();
+            this.lnkCarafeTrainingDataHelp = new System.Windows.Forms.LinkLabel();
             this.btnCarafeLibraryGenerationSettings = new System.Windows.Forms.Button();
             this.btnCarafeModelTrainingSettings = new System.Windows.Forms.Button();
             this.btnCarafeTrainingDataGenerationSettings = new System.Windows.Forms.Button();
@@ -152,12 +155,36 @@ namespace pwiz.Skyline.ToolsUI
             // 
             // tabCarafe
             // 
+            this.tabCarafe.Controls.Add(this.lnkCarafeLibraryHelp);
+            this.tabCarafe.Controls.Add(this.lnkCarafeModelTrainingHelp);
+            this.tabCarafe.Controls.Add(this.lnkCarafeTrainingDataHelp);
             this.tabCarafe.Controls.Add(this.btnCarafeLibraryGenerationSettings);
             this.tabCarafe.Controls.Add(this.btnCarafeModelTrainingSettings);
             this.tabCarafe.Controls.Add(this.btnCarafeTrainingDataGenerationSettings);
             resources.ApplyResources(this.tabCarafe, "tabCarafe");
             this.tabCarafe.Name = "tabCarafe";
             this.tabCarafe.UseVisualStyleBackColor = true;
+            // 
+            // lnkCarafeLibraryHelp
+            // 
+            resources.ApplyResources(this.lnkCarafeLibraryHelp, "lnkCarafeLibraryHelp");
+            this.lnkCarafeLibraryHelp.Name = "lnkCarafeLibraryHelp";
+            this.lnkCarafeLibraryHelp.TabStop = true;
+            this.lnkCarafeLibraryHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
+            // 
+            // lnkCarafeModelTrainingHelp
+            // 
+            resources.ApplyResources(this.lnkCarafeModelTrainingHelp, "lnkCarafeModelTrainingHelp");
+            this.lnkCarafeModelTrainingHelp.Name = "lnkCarafeModelTrainingHelp";
+            this.lnkCarafeModelTrainingHelp.TabStop = true;
+            this.lnkCarafeModelTrainingHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
+            // 
+            // lnkCarafeTrainingDataHelp
+            // 
+            resources.ApplyResources(this.lnkCarafeTrainingDataHelp, "lnkCarafeTrainingDataHelp");
+            this.lnkCarafeTrainingDataHelp.Name = "lnkCarafeTrainingDataHelp";
+            this.lnkCarafeTrainingDataHelp.TabStop = true;
+            this.lnkCarafeTrainingDataHelp.Click += new System.EventHandler(this.lnkCarafeHelp_Clicked);
             // 
             // btnCarafeLibraryGenerationSettings
             // 
@@ -395,6 +422,7 @@ namespace pwiz.Skyline.ToolsUI
             this.tabRemote.ResumeLayout(false);
             this.tabRemote.PerformLayout();
             this.tabCarafe.ResumeLayout(false);
+            this.tabCarafe.PerformLayout();
             this.tabKoina.ResumeLayout(false);
             this.tabKoina.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -450,5 +478,8 @@ namespace pwiz.Skyline.ToolsUI
         private System.Windows.Forms.Button btnCarafeTrainingDataGenerationSettings;
         private System.Windows.Forms.Button btnCarafeLibraryGenerationSettings;
         private System.Windows.Forms.Button btnCarafeModelTrainingSettings;
+        private System.Windows.Forms.LinkLabel lnkCarafeTrainingDataHelp;
+        private System.Windows.Forms.LinkLabel lnkCarafeModelTrainingHelp;
+        private System.Windows.Forms.LinkLabel lnkCarafeLibraryHelp;
     }
 }
