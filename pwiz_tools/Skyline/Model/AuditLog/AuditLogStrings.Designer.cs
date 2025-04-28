@@ -672,20 +672,38 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removed all spectral libraries in the Files window.
+        /// </summary>
+        public static string files_tree_libraries_remove_all {
+            get {
+                return ResourceManager.GetString("files_tree_libraries_remove_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed spectral library {0} in the Files window.
+        /// </summary>
+        public static string files_tree_libraries_remove_one {
+            get {
+                return ResourceManager.GetString("files_tree_libraries_remove_one", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} spectral libraries in the Files window.
+        /// </summary>
+        public static string files_tree_libraries_remove_several {
+            get {
+                return ResourceManager.GetString("files_tree_libraries_remove_several", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Drag and dropped {0} node to {1} in the Files window.
         /// </summary>
         public static string files_tree_node_drag_and_drop {
             get {
                 return ResourceManager.GetString("files_tree_node_drag_and_drop", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Removed replicate node {0} in the Files window.
-        /// </summary>
-        public static string files_tree_node_remove {
-            get {
-                return ResourceManager.GetString("files_tree_node_remove", resourceCulture);
             }
         }
         
@@ -708,11 +726,29 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Removed all replicate nodes in the Files window.
+        ///   Looks up a localized string similar to Removed all replicates in the Files window.
         /// </summary>
-        public static string files_tree_nodes_remove_all {
+        public static string files_tree_replicates_remove_all {
             get {
-                return ResourceManager.GetString("files_tree_nodes_remove_all", resourceCulture);
+                return ResourceManager.GetString("files_tree_replicates_remove_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed replicate {0} in the Files window.
+        /// </summary>
+        public static string files_tree_replicates_remove_one {
+            get {
+                return ResourceManager.GetString("files_tree_replicates_remove_one", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Removed {0} replicates in the Files window.
+        /// </summary>
+        public static string files_tree_replicates_remove_several {
+            get {
+                return ResourceManager.GetString("files_tree_replicates_remove_several", resourceCulture);
             }
         }
         

@@ -687,10 +687,22 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="files_tree_nodes_drag_and_drop" xml:space="preserve">
     <value>Drag and dropped {0} nodes to {1} in the Files window</value>
   </data>
-  <data name="files_tree_node_remove" xml:space="preserve">
-    <value>Removed replicate node {0} in the Files window</value>
+  <data name="files_tree_replicates_remove_one" xml:space="preserve">
+    <value>Removed replicate {0} in the Files window</value>
   </data>
-  <data name="files_tree_nodes_remove_all" xml:space="preserve">
-    <value>Removed all replicate nodes in the Files window</value>
+  <data name="files_tree_replicates_remove_several" xml:space="preserve">
+    <value>Removed {0} replicates in the Files window</value>
+  </data>
+  <data name="files_tree_replicates_remove_all" xml:space="preserve">
+    <value>Removed all replicates in the Files window</value>
+  </data>
+  <data name="files_tree_libraries_remove_one" xml:space="preserve">
+    <value>Removed spectral library {0} in the Files window</value>
+  </data>
+  <data name="files_tree_libraries_remove_several" xml:space="preserve">
+    <value>Removed {0} spectral libraries in the Files window</value>
+  </data>
+  <data name="files_tree_libraries_remove_all" xml:space="preserve">
+    <value>Removed all spectral libraries in the Files window</value>
   </data>
 </root>

@@ -216,8 +216,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                         newDoc.ValidateResults();
                         return newDoc;
                     },
-                    docPair =>
-                        AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_nodes_remove_all,
+                    docPair => AuditLogEntry.CreateSimpleEntry(
+                            MessageType.files_tree_replicates_remove_all,
                             docPair.NewDocumentType)
                 );
             }
@@ -233,8 +233,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                         var newDoc = document.ChangeSettings(newSettings);
                         return newDoc;
                     },
-                    docPair =>
-                        AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_nodes_remove_all, docPair.NewDocumentType)
+                    docPair => AuditLogEntry.CreateSimpleEntry(
+                        MessageType.files_tree_libraries_remove_all, 
+                        docPair.NewDocumentType)
                 );
             }
         }
@@ -266,6 +267,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 return;
 
             var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
+            var readableNamesForAuditLog = nodes.Select(item => item.Model.Name).ToList();
+
             if (type == typeof(Replicate))
             {
                 SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node,
@@ -289,7 +292,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                         newDoc.ValidateResults();
                         return newDoc;
                     },
-                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedIds)
+                    docPair =>
+                    {
+                        var entry = AuditLogEntry.CreateCountChangeEntry(
+                            MessageType.files_tree_replicates_remove_one,
+                            MessageType.files_tree_replicates_remove_several,
+                            docPair.NewDocumentType,
+                            readableNamesForAuditLog
+                        );
+                        return entry;
+                    }
                 );
             }
             else if (type == typeof(SpectralLibrary))
@@ -315,7 +327,17 @@ namespace pwiz.Skyline.Controls.FilesTree
                         var newDoc = document.ChangeSettings(newSettings);
                         return newDoc; 
                     },
-                    docPair => AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_remove, docPair.NewDocumentType, selectedIds));
+                    docPair =>
+                    {
+                        var entry = AuditLogEntry.CreateCountChangeEntry(
+                            MessageType.files_tree_libraries_remove_one,
+                            MessageType.files_tree_libraries_remove_several,
+                            docPair.NewDocumentType,
+                            readableNamesForAuditLog
+                        );
+                        return entry;
+                    }
+                );
             }
         }
 
@@ -354,7 +376,11 @@ namespace pwiz.Skyline.Controls.FilesTree
                     return newDoc;
                 },
                 docPair => 
-                    AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_node_renamed, docPair.NewDocumentType, oldName, newName)
+                    AuditLogEntry.CreateSimpleEntry(
+                        MessageType.files_tree_node_renamed, 
+                        docPair.NewDocumentType, 
+                        oldName, 
+                        newName)
             );
 
             return false;
@@ -415,9 +441,12 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                             if (draggedNodes.Count > 1)
                             {
-                                entry = entry.ChangeAllInfo(draggedNodes.Select(node =>
-                                    new MessageInfo(MessageType.files_tree_node_drag_and_drop, docPair.NewDocumentType,
-                                        node.Text, dropNode.Text)).ToList());
+                                entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(
+                                        MessageType.files_tree_node_drag_and_drop, 
+                                        docPair.NewDocumentType,
+                                        node.Text, 
+                                        dropNode.Text))
+                                    .ToList());
                             }
 
                             return entry;

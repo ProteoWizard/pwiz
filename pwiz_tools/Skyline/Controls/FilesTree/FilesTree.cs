@@ -76,33 +76,29 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public FilesTreeNode Root { get; private set; }
+        public FilesTreeNode Root => (FilesTreeNode)Nodes[0];
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public bool IsDragAndDrop { get; internal set; }
 
-        #region Testing helpers
+        #region Test helpers
 
-        // Used for testing
         public string RootNodeText()
         {
             return Root.Text;
         }
 
-        // Used for testing
         public bool IsMonitoringFileSystem()
         {
             return _monitoringFileSystem;
         }
 
-        // Used for testing
         public string PathMonitoredForFileSystemChanges()
         {
             return _fsWatcher?.Path;
         }
 
-        // Used for testing
         public void ScrollToFolder<T>() where T : FileNode
         {
             Folder<T>().EnsureVisible();
@@ -194,8 +190,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var files = new SkylineFile(document, documentFilePath);
 
                 MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode);
-
-                Root = (FilesTreeNode)Nodes[0]; // Set root node
 
                 var expandedNodes = IsAnyNodeExpanded(Root);
                 if (!expandedNodes)

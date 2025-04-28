@@ -77,7 +77,7 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public SrmDocument Document { get; }
-        public string DocumentPath { get; set; }
+        public string DocumentPath { get; }
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
