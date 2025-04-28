@@ -1225,6 +1225,12 @@ namespace pwiz.Skyline
             catch (OperationCanceledException) {}
             catch (TargetInvocationException) {}
 
+            // CONSIDER: it might be possible to remove the DocumentSaved event by moving DocumentFilePath into SrmSettings.
+            //           DocumentSaved lets subscribers know about a new DocumentFilePath. Example: FilesTree uses this event 
+            //           to start watching the file system. DocumentChange is not a viable alternative because it fires before
+            //           the new path is set. We might be able to remove this event if path becomes an SrmSettings property
+            //           so path changes simply are another document change. Changing this means tackling the hash code
+            //           dance between setting a new guid on the .sky / .skyl files, writing files to disk, and firing events.
             DocumentSavedEvent?.Invoke(this, new DocumentSavedEventArgs(DocumentFilePath, isSaveAs));
 
             return true;
