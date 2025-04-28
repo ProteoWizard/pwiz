@@ -323,6 +323,15 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot predict library for and tune from the same document..
+        /// </summary>
+        public static string BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot predict library for a FASTA file when a Skyline document is already loaded..
         /// </summary>
         public static string BuildLibraryDlg_Cannot_predict_library_for_FASTA_file_when_Skyline_document_is_loaded {
@@ -333,11 +342,11 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Currently open document is missing peptides..
+        ///   Looks up a localized string similar to Current Skyline document is missing peptides..
         /// </summary>
-        public static string BuildLibraryDlg_Currently_open_document_is_missing_peptides {
+        public static string BuildLibraryDlg_Current_Skyline_document_is_missing_peptides {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_Currently_open_document_is_missing_peptides", resourceCulture);
+                return ResourceManager.GetString("BuildLibraryDlg_Current_Skyline_document_is_missing_peptides", resourceCulture);
             }
         }
         

@@ -29,7 +29,7 @@
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
     <!-- Make the assembly name configurable -->
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
@@ -46,8 +46,8 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
-    <InstallUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview3/</InstallUrl>
-    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview2/</UpdateUrl>
+    <InstallUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview/</InstallUrl>
+    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline-Carafe-Preview-3</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
@@ -842,9 +842,11 @@
     </Compile>
     <Compile Include="SettingsUI\BuildLibraryDlg.cs">
       <SubType>Form</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Include="SettingsUI\BuildLibraryDlg.Designer.cs">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
     <Compile Include="SettingsUI\SettingsUIResources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -4313,12 +4315,16 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.ja.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>

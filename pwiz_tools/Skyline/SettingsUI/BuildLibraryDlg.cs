@@ -1321,12 +1321,14 @@ namespace pwiz.Skyline.SettingsUI
                         buttonTrainingDoc.Enabled = false;
                         textBoxTrainingDoc.Enabled = false;
                         labelDoc.Text = string.Format(SettingsUIResources.BuildLibraryDlg_Skyline_tuning_document);
-                        comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
+                        comboLearnFrom.SelectedIndex = (int)_currentLearningOption;
+                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Cannot_predict_library_for_and_tune_from_the_same_document);
                         tabPage1.BackColor = tabPage1.Parent.BackColor;
                     }
                     else
                     {
-                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_No_Skyline_document_is_currently_loaded);
+                        _helper.ShowTextBoxError(tabControlLearning,
+                            SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides); // SettingsUIResources.BuildLibraryDlg_No_Skyline_document_is_currently_loaded);
                         comboLearnFrom.SelectedIndex = (int)_currentLearningOption;
                     }
                     break;
@@ -1354,7 +1356,7 @@ namespace pwiz.Skyline.SettingsUI
                 case BuildLibraryTargetOptions.currentSkylineDocument:
                     if (!_documentUiContainer.Document.HasPeptides)
                     {
-                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Currently_open_document_is_missing_peptides);
+                        _helper.ShowTextBoxError(tabControlLearning, SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides);
                         comboBuildLibraryTarget.SelectedIndex = (int)BuildLibraryTargetOptions.fastaFile;
                     }
                     else if (comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc)
@@ -1465,41 +1467,6 @@ namespace pwiz.Skyline.SettingsUI
                 btnNext.Enabled = true;
         }
 
-        /* ********************************
-        private void buttonTrainingDoc_Click_1(object sender, EventArgs e)
-        {
-            using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Training Data File";
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true;
-            dlg.DefaultExt = TextUtil.EXT_TSV;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                //textBoxTrainingData.Text = dlg.FileName;
-            }
-        }
-        private void buttonTrainingDoc_Click_2(object sender, EventArgs e)
-        {
-            using (var dlg = new OpenFileDialog())
-            {
-                dlg.Title = SkylineResources.SkylineWindow_importDocumentMenuItem_Click_Import_Skyline_Document;
-                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-                dlg.CheckPathExists = true;
-                dlg.Multiselect = false;
-                dlg.SupportMultiDottedExtensions = true;
-                dlg.DefaultExt = SrmDocument.EXT;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    textBoxTrainingDoc.Text = dlg.FileName;
-                }
-            }
-
-        }
-        ****************************************** */
 
         internal void UnloadTrainingDocument()
         {
@@ -1520,120 +1487,5 @@ namespace pwiz.Skyline.SettingsUI
         {
             _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Carafe);
         }
-
-
-        /* ***************************************************************************************************
-        public IFormView ShowingFormView
-        {
-            get
-            {
-                return TAB_PAGES[tabControlMain.SelectedIndex];
-            }
-        }
-        private void comboLearnFrom_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            var learningOption = (LearningOptions)comboLearnFrom.SelectedIndex;
-            tabControlLearning.SelectedIndex = (int)learningOption;
-            switch (learningOption)
-            {
-                case LearningOptions.libraries:
-                    PopulateLibraries();
-                    break;
-            }
-        }
-
-        private void PopulateLibraries()
-        {
-            if (_driverLibrary == null)
-            {
-                _driverLibrary = new SettingsListBoxDriver<LibrarySpec>(listLibraries, Settings.Default.SpectralLibraryList);
-                _driverLibrary.LoadList(null, Array.Empty<LibrarySpec>());
-            }
-        }
-
-        private void comboLearnFrom_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            tabControlBuildLibraryTarget.SelectedIndex = comboBuildLibraryTarget.SelectedIndex;
-        }
-
-        private void buttonProteinDatabase_Click(object sender, EventArgs e)
-        {
-            using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Protein Database File";
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true;
-            dlg.DefaultExt = DataSourceUtil.EXT_FASTA[0];
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(EditUIResources.OpenFileDialog_FASTA_files, DataSourceUtil.EXT_FASTA));
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                textBoxProteinDatabase.Text = dlg.FileName;
-            }
-        }
-
-        private void buttonTrainingDoc_Click(object sender, EventArgs e)
-        {
-            using var dlg = new OpenFileDialog();
-            dlg.Title = SkylineResources.Select_Training_Document;
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true;
-
-            if (labelDoc.Text != string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document))
-            {
-                dlg.DefaultExt = SrmDocument.EXT;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
-            }
-            else
-            {
-                dlg.DefaultExt = TextUtil.EXT_TSV;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_TSV);
-            }
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                textLearningDoc.Text = dlg.FileName;
-            }
-        }
-
-        private void buttonMsMsData_Click(object sender, EventArgs e)
-        {
-            using var dlg = new OpenFileDialog();
-            dlg.Title = @"Select Ms/Ms Data File";
-            dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-            dlg.CheckPathExists = true;
-            dlg.Multiselect = false;
-            dlg.SupportMultiDottedExtensions = true;
-            dlg.DefaultExt = DataSourceUtil.EXT_MZML;
-            dlg.Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(@"mzML files", DataSourceUtil.EXT_MZML));
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                textBoxMsMsData.Text = dlg.FileName;
-            }
-        }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void carafeSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Carafe);
-        }
-
-        private void comboBuildLibraryTarget_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void comboLearnFrom_SelectedIndexChanged_1(object sender, EventArgs e)
-        {
-
-        }
-
-        *********************************************************************************************** */
     }
 }
