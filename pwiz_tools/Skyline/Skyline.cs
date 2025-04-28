@@ -4871,6 +4871,11 @@ namespace pwiz.Skyline
                 throw new ApplicationException(@"Crash Skyline Menu Item Clicked");
             }).Start();
         }
+
+        public int DocumentSavedEventSubscriberCount()
+        {
+            return DocumentSavedEvent != null ? DocumentSavedEvent.GetInvocationList().Length : 0;
+        }
     }
 }
 
