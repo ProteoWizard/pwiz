@@ -62,8 +62,6 @@ namespace pwiz.Common.DataBinding
             () => Resources.AggregateOperation_Cv_CV_Of__0_, 
             values => values.StandardDeviation() / values.Mean());
 
-        public static readonly AggregateOperation Single = new SingleImpl(); 
-
         public static readonly ImmutableList<AggregateOperation> ALL = ImmutableList.ValueOf(new[]
         {
             Sum,
@@ -79,7 +77,7 @@ namespace pwiz.Common.DataBinding
 
         public static AggregateOperation FromName(string name)
         {
-            return ALL.Append(Single).FirstOrDefault(op => op.Name == name);
+            return ALL.FirstOrDefault(op => op.Name == name);
         }
 
         private readonly Func<string> _getCaptionFormatStringFunc;
@@ -173,28 +171,6 @@ namespace pwiz.Common.DataBinding
             public override bool IsValidForType(DataSchema dataSchema, Type type)
             {
                 return true;
-            }
-        }
-
-        private class SingleImpl : AggregateOperation
-        {
-            public SingleImpl() : base("single", () => "Single", () => "{0}")
-            {
-            }
-
-            public override bool IsValidForType(DataSchema dataSchema, Type type)
-            {
-                return true;
-            }
-
-            public override Type GetPropertyType(Type originalPropertyType)
-            {
-                return originalPropertyType;
-            }
-
-            public override object CalculateValue(DataSchema dataSchema, IEnumerable<object> values)
-            {
-                return values.FirstOrDefault();
             }
         }
 
