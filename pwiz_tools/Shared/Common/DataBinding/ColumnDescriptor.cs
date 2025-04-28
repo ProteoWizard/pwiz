@@ -196,6 +196,18 @@ namespace pwiz.Common.DataBinding
                 return hashCode;
             }
         }
+
+        public ColumnDescriptor SetValueIndex(PropertyPath propertyPath, int valueIndex)
+        {
+            if (Equals(propertyPath, PropertyPath))
+            {
+                return new Grouped(this, valueIndex);
+            }
+
+            ColumnDescriptor clone = (ColumnDescriptor)MemberwiseClone();
+            clone.Parent = Parent.SetValueIndex(propertyPath, valueIndex);
+            return clone;
+        }
         #endregion
 
         private class Root : ColumnDescriptor
@@ -397,6 +409,27 @@ namespace pwiz.Common.DataBinding
                 {
                     return (base.GetHashCode()*397) ^ _collectionInfo.GetHashCode();
                 }
+            }
+        }
+
+        private class Grouped : ColumnDescriptor
+        {
+            private ColumnDescriptor _originalColumnDescriptor;
+            private int _valueIndex;
+            public Grouped(ColumnDescriptor originalColumnDescriptor, int valueIndex) : base(originalColumnDescriptor.Parent, originalColumnDescriptor.PropertyPath)
+            {
+                PropertyPath = originalColumnDescriptor.PropertyPath;
+                _originalColumnDescriptor = originalColumnDescriptor;
+                _valueIndex = valueIndex;
+            }
+
+            public override Type PropertyType
+            {
+                get { return _originalColumnDescriptor.PropertyType; }
+            }
+            public override object GetPropertyValue(RowItem rowItem, PivotKey pivotKey)
+            {
+                return (rowItem?.Value as IList<object>)?.ElementAtOrDefault(_valueIndex);
             }
         }
     }

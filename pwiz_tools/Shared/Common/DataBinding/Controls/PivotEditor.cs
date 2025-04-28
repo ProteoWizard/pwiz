@@ -35,6 +35,7 @@ namespace pwiz.Common.DataBinding.Controls
         private PivotSpec _pivotSpec = PivotSpec.EMPTY;
         private ImmutableList<DataPropertyDescriptor> _allProperties = ImmutableList<DataPropertyDescriptor>.EMPTY;
         private ImmutableList<DataPropertyDescriptor> _availableProperties = ImmutableList<DataPropertyDescriptor>.EMPTY;
+        private HashSet<PropertyPath> _headerPropertyPaths = new HashSet<PropertyPath>();
         public const int MAX_COLUMN_COUNT = 2000;
 
         private bool _inUpdateUi;
@@ -108,9 +109,25 @@ namespace pwiz.Common.DataBinding.Controls
                 columnHeadersList.ReplaceItems(PivotSpec.ColumnHeaders.Select(col => MakeListItem(col, caption=>caption)));
                 valuesList.ReplaceItems(
                     PivotSpec.Values.Select(col => MakeListItem(col, col.AggregateOperation.QualifyColumnCaption)));
-                _availableProperties = ImmutableList.ValueOf(_allProperties.Where(pd => PivotSpec.RowHeaders.Concat(PivotSpec.ColumnHeaders)
-                    .All(col => !Equals(col.SourceColumn, ColumnId.GetColumnId(pd)))));
-                availableColumnList.ReplaceItems(_availableProperties.Select(prop => new ListViewItem(prop.DisplayName)));
+                var headerColumns = PivotSpec.RowHeaders.Concat(PivotSpec.ColumnHeaders)
+                    .Select(column => column.SourceColumn).ToHashSet();
+                _headerPropertyPaths = _allProperties.OfType<ColumnPropertyDescriptor>()
+                    .Where(pd => null == pd.PivotKey && headerColumns.Contains(ColumnId.GetColumnId(pd))).Select(pd=>pd.PropertyPath).ToHashSet();
+                _availableProperties = ImmutableList.ValueOf(_allProperties.Where(pd 
+                    => !headerColumns.Contains(ColumnId.GetColumnId(pd))));
+                var availableListItems = new List<ListViewItem>();
+                Font boldFont = null;
+                foreach (var availableProperty in _availableProperties)
+                {
+                    var listViewItem = new ListViewItem(availableProperty.DisplayName);
+                    if (IsAncestorHeader(availableProperty))
+                    {
+                        boldFont ??= new Font(listViewItem.Font, FontStyle.Bold);
+                        listViewItem.Font = boldFont;
+                    }
+                    availableListItems.Add(listViewItem);
+                }
+                availableColumnList.ReplaceItems(availableListItems);
                 UpdateButtons();
             }
             finally
@@ -160,24 +177,32 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 btnAddColumnHeader.Enabled = btnAddRowHeader.Enabled = btnAddValue.Enabled = true;
                 var currentAggregateOp = comboAggregateOp.SelectedItem as AggregateOperation;
-                var selectedFieldTypes = availableColumnList.SelectedIndices.Cast<int>()
-                    .Select(i => _availableProperties[i].PropertyType).Distinct().ToArray();
-                var newOps = AggregateOperation.ALL.Where(op =>
-                    selectedFieldTypes.All(type => op.IsValidForType(DataSchema, type))).ToArray();
-                if (!newOps.SequenceEqual(comboAggregateOp.Items.OfType<AggregateOperation>()))
+                var selectedProperties = GetSelectedProperties().ToList();
+                if (selectedProperties.Count > 0 && selectedProperties.All(IsAncestorHeader))
                 {
-                    comboAggregateOp.Items.Clear();
-                    comboAggregateOp.Items.AddRange(newOps);
-                    if (comboAggregateOp.Items.Count > 0)
-                    {
-                        int selectedIndex = Array.IndexOf(newOps, currentAggregateOp);
-                        if (selectedIndex < 0)
-                        {
-                            selectedIndex = 0;
-                        }
-                        comboAggregateOp.SelectedIndex = selectedIndex;
-                    }
+                    comboAggregateOp.Enabled = false;
+                }
+                else
+                {
+                    comboAggregateOp.Enabled = true;
+                    var selectedFieldTypes = selectedProperties.Select(pd => pd.PropertyType).Distinct().ToArray();
 
+                    var newOps = AggregateOperation.ALL.Where(op =>
+                        selectedFieldTypes.All(type => op.IsValidForType(DataSchema, type))).ToArray();
+                    if (!newOps.SequenceEqual(comboAggregateOp.Items.OfType<AggregateOperation>()))
+                    {
+                        comboAggregateOp.Items.Clear();
+                        comboAggregateOp.Items.AddRange(newOps);
+                        if (comboAggregateOp.Items.Count > 0)
+                        {
+                            int selectedIndex = Array.IndexOf(newOps, currentAggregateOp);
+                            if (selectedIndex < 0)
+                            {
+                                selectedIndex = 0;
+                            }
+                            comboAggregateOp.SelectedIndex = selectedIndex;
+                        }
+                    }
                 }
             }
         }
@@ -259,7 +284,22 @@ namespace pwiz.Common.DataBinding.Controls
 
         public void AddValue()
         {
-            var aggregateOperation = comboAggregateOp.SelectedItem as AggregateOperation;
+            var selectedProperties = GetSelectedProperties().ToList();
+            if (selectedProperties.Count == 0)
+            {
+                return;
+            }
+
+            AggregateOperation aggregateOperation;
+            if (selectedProperties.All(IsAncestorHeader))
+            {
+                aggregateOperation = AggregateOperation.Any;
+            }
+            else
+            {
+                aggregateOperation = comboAggregateOp.SelectedItem as AggregateOperation;
+            }
+
             if (aggregateOperation == null)
             {
                 return;
@@ -343,6 +383,35 @@ namespace pwiz.Common.DataBinding.Controls
                     }
                 }
             }
+        }
+
+        private bool IsAncestorHeader(PropertyDescriptor propertyDescriptor)
+        {
+            if (!(propertyDescriptor is ColumnPropertyDescriptor columnPropertyDescriptor))
+            {
+                return false;
+            }
+
+            if (columnPropertyDescriptor.PivotKey != null)
+            {
+                return false;
+            }
+
+            for (var propertyPath = columnPropertyDescriptor.PropertyPath.Parent;
+                 propertyPath != null;
+                 propertyPath = propertyPath.Parent)
+            {
+                if (_headerPropertyPaths.Contains(propertyPath))
+                {
+                    return true;
+                }
+                if (propertyPath.IsUnboundLookup)
+                {
+                    return false;
+                }
+            }
+
+            return false;
         }
     }
 }

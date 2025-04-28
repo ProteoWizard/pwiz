@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
+using System.Web;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding.Layout;
 
@@ -135,6 +136,14 @@ namespace pwiz.Common.DataBinding.Internal
                     caption);
             }
             var attributes = DataSchema.GetAggregateAttributes(originalPropertyDescriptor, aggregateOperation).ToArray();
+            if (aggregateOperation == AggregateOperation.Single)
+            {
+                var columnPropertyDescriptor = originalPropertyDescriptor as ColumnPropertyDescriptor;
+                if (columnPropertyDescriptor != null) 
+                {
+
+                }
+            }
             return new IndexedPropertyDescriptor(DataSchema, index, aggregateOperation.GetPropertyType(originalPropertyDescriptor.PropertyType), 
                 qualifiedCaption, pivotedColumnId, attributes);
         }
@@ -151,5 +160,45 @@ namespace pwiz.Common.DataBinding.Internal
             var newRows = ImmutableList.ValueOf(groupAndTotaller.GroupAndTotal(input.RowItems, newProperties));
             return new ReportResults(newRows, newProperties);
         }
+
+        // public IEnumerable<DataPropertyDescriptor> GetRowHeaderPropertyDescriptors()
+        // {
+        //     Dictionary<PropertyPath, int> valueIndexes =
+        //         new Dictionary<PropertyPath, int>();
+        //     foreach (var tuple in RowHeaders.Select((tuple, index)=>Tuple.Create(tuple.Item1 as ColumnPropertyDescriptor, index)).Where(tuple=>tuple.Item1 != null && tuple.Item1.PivotKey == null))
+        //     {
+        //         var columnPropertyDescriptor = tuple.Item1;
+        //         var propertyPath = columnPropertyDescriptor.PropertyPath;
+        //         ColumnDescriptor indexedColumnDescriptor = null;
+        //         while (propertyPath != null)
+        //         {
+        //             if (indexedColumnDescriptors.TryGetValue(propertyPath, out indexedColumnDescriptor))
+        //             {
+        //                 break;
+        //             }
+        //
+        //             propertyPath = propertyPath.Parent;
+        //         }
+        //
+        //         if (indexedColumnDescriptor == null)
+        //         {
+        //             indexedColumnDescriptor =
+        //                 columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.SetValueIndex(propertyPath,
+        //                     tuple.Item2);
+        //             indexedColumnDescriptors.Add(columnPropertyDescriptor.PropertyPath, indexedColumnDescriptor);
+        //         }
+        //         else
+        //         {
+        //             indexedColumnDescriptors.Add(columnPropertyDescriptor.PropertyPath, columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.SetValueIndex(propertyPath, ));
+        //         }
+        //
+        //         if (indexedColumnDescriptor == null)
+        //         {
+        //             var oldDisplayColumn = columnPropertyDescriptor.DisplayColumn;
+        //             var newDisplayColumn = new DisplayColumn(oldDisplayColumn.ViewInfo, oldDisplayColumn.ColumnSpec, oldDisplayColumn.ColumnDescriptor.SetValueIndex())
+        //             indexedColumnDescriptors.Add(columnPropertyDescriptor.PropertyPath, new ColumnPropertyDescriptor(new DisplayColumn()));
+        //         }
+        //     }
+        // }
     }
 }
