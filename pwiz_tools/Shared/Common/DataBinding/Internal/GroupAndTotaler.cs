@@ -59,6 +59,7 @@ namespace pwiz.Common.DataBinding.Internal
                 CancellationToken.ThrowIfCancellationRequested();
                 return ImmutableList.ValueOf(independentRowHeaders.Select(pd=>pd.GetValue(row)));
             });
+            int indexedPropertyDescriptorCount = independentRowHeaders.Count;
             var columnHeaders = new Dictionary<ImmutableList<object>, int>();
             var resultRows = new List<RowItem>();
             List<List<object>> aggregateValues = new List<List<object>>();
@@ -79,7 +80,7 @@ namespace pwiz.Common.DataBinding.Internal
                         columnHeaders.Add(columnHeader, columnHeaderIndex);
                         foreach (var aggregateColumn in AggregateColumns)
                         {
-                            propertyDescriptors.Add(MakePropertyDescriptor(propertyDescriptors.Count, columnHeader,
+                            propertyDescriptors.Add(MakePropertyDescriptor(indexedPropertyDescriptorCount++, columnHeader,
                                 aggregateColumn.Item1, aggregateColumn.Item2, aggregateColumn.Item3));
                             aggregateValues.Add(new List<object>());
                         }
@@ -165,21 +166,25 @@ namespace pwiz.Common.DataBinding.Internal
                 }
             }
 
-            var parentColumnIndexes = new Tuple<int, ImmutableList<PropertyDescriptor>>[RowHeaders.Count];
+            var parentColumnIndexes = new Tuple<int, PropertyDescriptor>[RowHeaders.Count];
             foreach (var entry in propertyPathPivotKeys.OrderBy(kvp => kvp.Key.Item1.Length))
             {
                 var columnPropertyDescriptor = (ColumnPropertyDescriptor) RowHeaders[entry.Value].Item1;
                 var columnDescriptor = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor;
                 var pivotKey = entry.Key.Item2;
-                var reflectedPropertyDescriptors = new List<PropertyDescriptor>();
+                PropertyDescriptor childPropertyDescriptor = null;
                 while (columnDescriptor?.ReflectedPropertyDescriptor != null)
                 {
-                    reflectedPropertyDescriptors.Add(columnDescriptor.ReflectedPropertyDescriptor);
                     var parent = columnDescriptor.Parent;
                     var key = Tuple.Create(parent.PropertyPath, pivotKey);
+                    childPropertyDescriptor = childPropertyDescriptor == null
+                        ? columnDescriptor.ReflectedPropertyDescriptor
+                        : new ChainedPropertyDescriptor(columnDescriptor.Name,
+                            columnDescriptor.ReflectedPropertyDescriptor, childPropertyDescriptor);
                     if (propertyPathPivotKeys.TryGetValue(key, out var parentColumnIndex))
                     {
-                        parentColumnIndexes[entry.Value] = Tuple.Create(parentColumnIndex, reflectedPropertyDescriptors.AsEnumerable().Reverse().ToImmutable());
+
+                        parentColumnIndexes[entry.Value] = Tuple.Create(parentColumnIndex, childPropertyDescriptor);
                         break;
                     }
 
@@ -205,11 +210,9 @@ namespace pwiz.Common.DataBinding.Internal
                 if (parentColumnIndexes[i] != null)
                 {
                     var parentColumnIndex = parentColumnIndexes[i].Item1;
-                    var reflectedPropertyDescriptors = parentColumnIndexes[i].Item2;
+                    var childPropertyDescriptor = parentColumnIndexes[i].Item2;
                     var ancestor = allPropertyDescriptors[parentColumnIndex];
-                    allPropertyDescriptors[i] = new DescendantPropertyDescriptor(DataSchema, ancestor.Name + @"_" + i,
-                        RowHeaders[i].Item2, allPropertyDescriptors[parentColumnIndex], reflectedPropertyDescriptors,
-                        (ColumnPropertyDescriptor) RowHeaders[i].Item1);
+                    allPropertyDescriptors[i] = new WrappedDataPropertyDescriptor(DataSchema, ancestor.Name + @"_" + i, RowHeaders[i].Item2, new ChainedPropertyDescriptor(childPropertyDescriptor.Name, ancestor, childPropertyDescriptor));
                 }
             }
 

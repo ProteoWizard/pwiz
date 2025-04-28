@@ -97,5 +97,6 @@ namespace pwiz.Common.DataBinding.Internal
             return AttributeCollection.FromExisting(new AttributeCollection(existingAttributes.ToArray()), overrideAttributes)
                 .Cast<Attribute>().ToArray();
         }
+
     }
 }
