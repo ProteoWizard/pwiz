@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     }
 
                     weightedPoints = weightedPoints.OrderBy(pt => pt.X).ToList();
-                    var loessInterpolator = new LoessInterpolator(0.4, LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS);
+                    var loessInterpolator = new LoessInterpolator(Math.Max(LoessInterpolator.DEFAULT_BANDWIDTH, 2.0 / weightedPoints.Count), LoessInterpolator.DEFAULT_ROBUSTNESS_ITERS);
                     var xArray = weightedPoints.Select(pt => pt.X).ToArray();
                     var smoothedYValues = loessInterpolator.Smooth(xArray,
                         weightedPoints.Select(pt => pt.Y).ToArray(), 
