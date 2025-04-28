@@ -650,13 +650,31 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         protected override void Dispose(bool disposing)
         {
-            _fsWatcher.Dispose();
-            _fsWatcher = null;
-
             _monitoringFileSystem = false;
 
-            _fsWorkQueue.Dispose();
-            _fsWorkQueue = null;
+            if (_fsWatcher != null)
+            {
+                _fsWatcher.Renamed -= FilesTree_ProjectDirectory_OnRenamed;
+                _fsWatcher.Deleted -= FilesTree_ProjectDirectory_OnDeleted;
+                _fsWatcher.Created -= FilesTree_ProjectDirectory_OnCreated;
+
+                _fsWatcher.Dispose();
+                _fsWatcher = null;
+            }
+
+            if (_fsWorkQueue != null)
+            {
+                _fsWorkQueue.Dispose();
+                _fsWorkQueue = null;
+            }
+
+            if (_editTextBox != null)
+            {
+                _editTextBox.KeyDown -= LabelEditTextBox_KeyDown;
+                _editTextBox.LostFocus -= LabelEditTextBox_LostFocus;
+                _editTextBox.Dispose();
+                _editTextBox = null;
+            }
 
             base.Dispose(disposing);
         }

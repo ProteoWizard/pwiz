@@ -589,14 +589,7 @@ namespace pwiz.Skyline
                 _sequenceTreeForm.UpdateResultsUI(settingsNew, settingsOld);
                 _sequenceTreeForm.SequenceTree.OnDocumentChanged(this, e);
             }
-
-            // Update files tree 
-            // TODO (ekoneil): why isn't FilesTreeForm just registered as a listener for DocumentUIChangedEvent? Same question for SequenceTree above.
-            if (_filesTreeForm != null)
-            {
-                _filesTreeForm.FilesTree.OnDocumentChanged(this, e);
-            }
-
+            
             // Fire event to allow listeners to update.
             if (DocumentUIChangedEvent != null)
                 DocumentUIChangedEvent(this, e);

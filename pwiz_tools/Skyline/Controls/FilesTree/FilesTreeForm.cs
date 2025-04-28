@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             filesTree.KeyDown += FilesTree_KeyDown;
 
             SkylineWindow.DocumentSavedEvent += OnDocumentSavedEvent;
+            SkylineWindow.DocumentUIChangedEvent += OnDocumentUIChangedEvent;
 
             // FilesTree => context menu
             filesTreeContextMenu.Opening += FilesTree_ContextMenuStrip_Opening;
@@ -102,6 +103,11 @@ namespace pwiz.Skyline.Controls.FilesTree
         private void OnDocumentSavedEvent(object sender, DocumentSavedEventArgs args)
         {
             filesTree.OnDocumentSaved(sender, args);
+        }
+
+        private void OnDocumentUIChangedEvent(object sender, DocumentChangedEventArgs e)
+        {
+            filesTree.OnDocumentChanged(sender, e);
         }
 
         protected override string GetPersistentString()

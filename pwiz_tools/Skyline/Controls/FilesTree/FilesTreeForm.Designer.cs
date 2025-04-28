@@ -25,8 +25,37 @@ namespace pwiz.Skyline.Controls.FilesTree
                 _nodeTip = null;
             }
 
-            FilesTree.NodeMouseDoubleClick -= FilesTree_TreeNodeMouseDoubleClick;
-            FilesTree.MouseMove -= FilesTree_MouseMove;
+            if (FilesTree != null)
+            {
+                FilesTree.NodeMouseDoubleClick -= FilesTree_TreeNodeMouseDoubleClick;
+                FilesTree.MouseMove -= FilesTree_MouseMove;
+                FilesTree.LostFocus -= FilesTree_LostFocus;
+                FilesTree.BeforeLabelEdit -= FilesTree_BeforeLabelEdit;
+                FilesTree.AfterLabelEdit -= FilesTree_AfterLabelEdit;
+                FilesTree.AfterNodeEdit -= FilesTree_AfterLabelEdit;
+                FilesTree.ItemDrag -= FilesTree_ItemDrag;
+                FilesTree.DragEnter -= FilesTree_DragEnter;
+                FilesTree.DragLeave -= FilesTree_DragLeave;
+                FilesTree.DragOver -= FilesTree_DragOver;
+                FilesTree.DragDrop -= FilesTree_DragDrop;
+                FilesTree.QueryContinueDrag -= FilesTree_QueryContinueDrag;
+                FilesTree.KeyDown -= FilesTree_KeyDown;
+            }
+
+            SkylineWindow.DocumentSavedEvent -= OnDocumentSavedEvent;
+            SkylineWindow.DocumentUIChangedEvent -= OnDocumentUIChangedEvent;
+
+            if (filesTreeContextMenu != null)
+            {
+                filesTreeContextMenu.Opening -= FilesTree_ContextMenuStrip_Opening;
+            }
+
+            if (_dropTargetRemove != null)
+            {
+                _dropTargetRemove.DragEnter -= DropTargetRemove_DragEnter;
+                _dropTargetRemove.DragDrop -= DropTargetRemove_DragDrop;
+                _dropTargetRemove.QueryContinueDrag -= FilesTree_QueryContinueDrag;
+            }
 
             base.Dispose(disposing);
         }
