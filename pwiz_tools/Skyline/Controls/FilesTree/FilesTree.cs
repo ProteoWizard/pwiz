@@ -34,17 +34,23 @@ namespace pwiz.Skyline.Controls.FilesTree
     public class FilesTree : TreeViewMS
     {
         private bool _inhibitOnAfterSelect;
+        private bool _monitoringFileSystem;
+        private string _monitoredFilePath;
         private FileSystemWatcher _fsWatcher;
         private QueueWorker<Action> _fsWorkQueue = new QueueWorker<Action>(null, (a, i) => a());
         private FilesTreeNode _triggerLabelEditForNode;
         private TextBox _editTextBox;
         private string _editedLabel;
-        private bool _monitoringFileSystem;
 
         public FilesTree()
         {
-            _fsWatcher = new FileSystemWatcher();
             _monitoringFileSystem = false;
+            _monitoredFilePath = null;
+            _fsWatcher = new FileSystemWatcher();
+
+            // Set to zero to handle work items synchronously
+            var threadCount = ParallelEx.GetThreadCount();
+            _fsWorkQueue.RunAsync(threadCount, @"FilesTree file system work queue");
 
             ImageList = new ImageList
             {
@@ -63,11 +69,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             ImageList.Images.Add(Resources.AuditLog);
             ImageList.Images.Add(Resources.CacheFile);
             ImageList.Images.Add(Resources.ViewFile);
-
-            // Set to zero to synchronously handle file work items
-            var threadCount = ParallelEx.GetThreadCount();
-
-            _fsWorkQueue.RunAsync(threadCount, @"FilesTree file system work queue");
         }
 
         [Browsable(false)]
@@ -166,7 +167,18 @@ namespace pwiz.Skyline.Controls.FilesTree
                 DocumentContainer.DocumentUI == null)
                 return;
 
-            UpdateTree(args.DocumentFilePath, Document);
+            var newDocumentFilePath = args.DocumentFilePath;
+            var forceUpdateModels = false;
+
+            if (IsMonitoringFileSystem() && args.IsSaveAs && !_monitoredFilePath.Equals(newDocumentFilePath, StringComparison.OrdinalIgnoreCase))
+            {
+                _fsWatcher.Path = Path.GetDirectoryName(newDocumentFilePath);
+                _monitoredFilePath = newDocumentFilePath;
+                _monitoringFileSystem = true;
+                forceUpdateModels = true;
+            }
+
+            UpdateTree(newDocumentFilePath, Document, forceUpdateModels);
         }
 
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -181,7 +193,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             UpdateTree(DocumentContainer.DocumentFilePath, Document);
         }
 
-        internal void UpdateTree(string documentFilePath, SrmDocument document) 
+        internal void UpdateTree(string documentFilePath, SrmDocument document, bool forceModelUpdate = false) 
         {
             try
             {
@@ -189,7 +201,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 var files = new SkylineFile(document, documentFilePath);
 
-                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode);
+                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, forceModelUpdate);
 
                 var expandedNodes = IsAnyNodeExpanded(Root);
                 if (!expandedNodes)
@@ -201,8 +213,6 @@ namespace pwiz.Skyline.Controls.FilesTree
                     }
                 }
 
-                // Start the file system monitor if the document is saved to disk and the
-                // file system monitor is not running.
                 if (Utils.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
                 {
                     _fsWatcher.Path = Path.GetDirectoryName(documentFilePath);
@@ -214,6 +224,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     _fsWatcher.Deleted += FilesTree_ProjectDirectory_OnDeleted;
                     _fsWatcher.Created += FilesTree_ProjectDirectory_OnCreated;
 
+                    _monitoredFilePath = documentFilePath;
                     _monitoringFileSystem = true;
                 }
             }
@@ -223,9 +234,11 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
-        // CONSIDER: does FilesTree need to support selection like in SequenceTree / SrmTreeNode?
         // CONSIDER: refactor for more code reuse with SrmTreeNode
-        internal void MergeNodes(IEnumerable<FileNode> docFiles, TreeNodeCollection treeNodes, Func<FileNode, FilesTreeNode> createTreeNodeFunc)
+        internal void MergeNodes(IEnumerable<FileNode> docFiles, 
+                                 TreeNodeCollection treeNodes, 
+                                 Func<FileNode, FilesTreeNode> createTreeNodeFunc, 
+                                 bool changeAll = false)
         {
             if (docFiles == null)
                 return;
@@ -233,6 +246,15 @@ namespace pwiz.Skyline.Controls.FilesTree
             // need to look items up by index, so convert to list
             var docFilesList = docFiles.ToList();
             var localFileInitList = new List<FilesTreeNode>();
+
+            // Forces reset of the tree by creating all new tree nodes
+            if (changeAll)
+            {
+                for (var index = treeNodes.Count - 1; index >= 0; index--)
+                {
+                    treeNodes.RemoveAt(index);
+                }
+            }
 
             FileNode nodeDoc = null;
 
@@ -374,7 +396,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // models being up-to-date (since it was just merged with the document) and recursively
                 // create / update / delete TreeNodes associated with its children
                 if (model != null)
-                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc);
+                    MergeNodes(model.Files, treeNode.Nodes, createTreeNodeFunc, changeAll);
             }
         }
 
