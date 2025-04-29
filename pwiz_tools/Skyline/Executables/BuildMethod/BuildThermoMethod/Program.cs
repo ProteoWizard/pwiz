@@ -1,19 +1,36 @@
-﻿using System;
+﻿/*
+ * Original author: Kaipo Tamura <kaipot .at. uw dot edu>,
+ *                  Rita Chupalov <ritach .at. uw dot edu>,
+ *                  Brendan MacLean <brendanx .at. uw dot edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2020 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using Thermo.TNG.MethodXMLFactory;
 using Thermo.TNG.MethodXMLInterface;
-using XmlCalcium;
-using XmlExploris;
-using XmlFusion;
-using XmlTsq;
-using XmlStellar;
+
+// NOTE: Avoid adding using clauses for the classes generated from XSDs. Class names within these namespaces are highly redundant.
 
 namespace BuildThermoMethod
 {
@@ -28,6 +45,26 @@ namespace BuildThermoMethod
         }
     }
 
+    /// <summary>
+    /// Code for a BuildThermoMethod.exe which gets run by Skyline to merge
+    /// a transition or isolation list into a template Thermo method for any
+    /// of the modern Thermo mass spectrometers that support the XML method
+    /// modification interface defined in the GitHub project:
+    ///
+    /// https://github.com/thermofisherlsms/meth-modifications
+    ///
+    /// You can build this project and run XmlMethodChanger.exe against XML
+    /// from BuildThermoMethod.exe -x.
+    ///
+    /// This program uses classes generated from the .xsd files in the project
+    /// under:
+    ///
+    /// https://github.com/thermofisherlsms/meth-modifications/tree/master/xsds
+    ///
+    /// Using a VS Command Prompt and a command like:
+    ///
+    /// >xsd xsds\Calcium\4.3\MethodModifications.xsd /classes /namespace:XmlCalcium_4_2
+    /// </summary>
     class Program
     {
         static void Main(string[] args)
@@ -77,19 +114,20 @@ namespace BuildThermoMethod
                     "   Takes template Thermo method file and a Skyline generated Thermo\n" +
                     "   scheduled transition list as inputs, to generate a method file\n" +
                     "   as output.\n" +
-                    "   -t <inst type>   as in registry [default TSQAltis]\n" +
-                    "   -o <output file> New method is written to the specified output file\n" +
-                    "   -x               Export method XML to <basename>.xml file\n" +
-                    "   -s               Transition list is read from stdin.\n" +
-                    "                    e.g. cat TranList.csv | BuildThermoMethod -s -o new.ext temp.ext\n" +
+                    "   -t <inst type>    as in registry [default TSQAltis]\n" +
+                    "   -v <inst version> as in registry (e.g. 4.2)\n" +
+                    "   -o <output file>  New method is written to the specified output file\n" +
+                    "   -x                Export method XML to <basename>.xml file\n" +
+                    "   -s                Transition list is read from stdin.\n" +
+                    "                     e.g. cat TranList.csv | BuildThermoMethod -s -o new.ext temp.ext\n" +
                     "\n" +
-                    "   -m               Multiple lists concatenated in the format:\n" +
-                    "                    file1.ext\n" +
-                    "                    <transition list>\n" +
+                    "   -m                Multiple lists concatenated in the format:\n" +
+                    "                     file1.ext\n" +
+                    "                     <transition list>\n" +
                     "\n" +
-                    "                    file2.ext\n" +
-                    "                    <transition list>\n" +
-                    "                    ...\n";
+                    "                     file2.ext\n" +
+                    "                     <transition list>\n" +
+                    "                     ...\n";
             Console.Error.Write(usage);
         }
     }
@@ -110,32 +148,17 @@ namespace BuildThermoMethod
 
     internal sealed class ListItem
     {
-        public string Compound { get; set; }
-        public string Polarity { get; set; }
-        public double? RetentionStart { get; set; }
-        public double? RetentionEnd { get; set; }
-        public double? PrecursorMz { get; set; }
-        public int? Charge { get; set; }
-        public double? ProductMz { get; set; }
-        public double? CollisionEnergy { get; set; }
-        public SureQuantInfo SureQuantInfo { get; set; }
-        public double? IntensityThreshold { get; set; }
-        public double? FaimsCV { get; set; }
-
-        public ListItem()
-        {
-            Compound = null;
-            Polarity = null;
-            RetentionStart = null;
-            RetentionEnd = null;
-            PrecursorMz = 0.0;
-            Charge = null;
-            ProductMz = null;
-            CollisionEnergy = 0.0;
-            SureQuantInfo = null;
-            IntensityThreshold = null;
-            FaimsCV = null;
-        }
+        public string Compound;
+        public string Polarity;
+        public double? RetentionStart;
+        public double? RetentionEnd;
+        public double? PrecursorMz;
+        public int? Charge;
+        public double? ProductMz;
+        public double? CollisionEnergy;
+        public SureQuantInfo SureQuantInfo;
+        public double? IntensityThreshold;
+        public double? FaimsCv;
 
         public static ListItem FromLine(int lineNum, string[] fields, Dictionary<int, string> columnMap)
         {
@@ -160,7 +183,6 @@ namespace BuildThermoMethod
 
             for (int i = 0; i < numFields; ++i)
             {
-                bool parseFail = false;
                 string curHeader = columnMap[i];
                 string curValue = fields[i];
 
@@ -173,30 +195,22 @@ namespace BuildThermoMethod
                 }
                 else if (curHeader.Equals("retention time (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var timeParse);
-                    if (!parseFail)
-                        time = timeParse;
+                    ParseValue(curHeader, lineNum, curValue, out time);
                 }
                 else if (curHeader.Equals("rt window (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var windowParse);
-                    if (!parseFail)
-                        window = windowParse;
+                    ParseValue(curHeader, lineNum, curValue, out window);
                 }
                 else if (curHeader.Equals("start time (min)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("t start (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var timeParse);
-                    if (!parseFail)
-                        item.RetentionStart = timeParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.RetentionStart);
                 }
                 else if (curHeader.Equals("end time (min)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("t end (min)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("t stop (min)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var timeParse);
-                    if (!parseFail)
-                        item.RetentionEnd = timeParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.RetentionEnd);
                 }
                 else if (curHeader.Equals("polarity", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -205,52 +219,33 @@ namespace BuildThermoMethod
                 else if (curHeader.Equals("precursor (m/z)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("m/z", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var mzParse);
-                    if (!parseFail)
-                        item.PrecursorMz = mzParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.PrecursorMz);
                 }
                 else if (curHeader.Equals("z", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !int.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var chargeParse);
-                    if (!parseFail)
-                        item.Charge = chargeParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.Charge);
                 }
                 else if (curHeader.Equals("product (m/z)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var mzParse);
-                    if (!parseFail)
-                        item.ProductMz = mzParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.ProductMz);
                 }
                 else if (curHeader.Equals("collision energy (v)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("cid collision energy (%)", StringComparison.InvariantCultureIgnoreCase) ||
                          curHeader.Equals("hcd collision energy/energies (%)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var ceParse);
-                    if (!parseFail)
-                        item.CollisionEnergy = ceParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.CollisionEnergy);
                 }
                 else if (curHeader.Equals("surequant info", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !SureQuantInfo.TryParse(curValue, out var info);
-                    if (!parseFail)
-                        item.SureQuantInfo = info;
+                    ParseValue(curHeader, lineNum, curValue, out item.SureQuantInfo);
                 }
                 else if (curHeader.Equals("intensity threshold", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, out var thresholdParse);
-                    if (!parseFail)
-                        item.IntensityThreshold = thresholdParse;
+                    ParseValue(curHeader, lineNum, curValue, out item.IntensityThreshold);
                 }
-                else if (curHeader.Equals("FAIMS CV (V)", StringComparison.InvariantCultureIgnoreCase))
+                else if (curHeader.Equals("faims cv (v)", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    parseFail = !double.TryParse(curValue, out var faimsParse);
-                    if (!parseFail)
-                        item.FaimsCV = faimsParse;
-                }
-
-                if (parseFail)
-                {
-                    throw new SyntaxErrorException(string.Format("Error parsing value '{0}' for '{1}' on line {2}", curValue, curHeader, lineNum));
+                    ParseValue(curHeader, lineNum, curValue, out item.FaimsCv);
                 }
             }
 
@@ -262,6 +257,34 @@ namespace BuildThermoMethod
             }
 
             return item;
+        }
+
+        private static void ParseValue(string curHeader, int lineNum, string curValue, out double? value)
+        {
+            if (!double.TryParse(curValue, NumberStyles.Float, CultureInfo.InvariantCulture, out var valueParse))
+                ThrowParseError(curValue, curHeader, lineNum);
+
+            value = valueParse;
+        }
+
+        private static void ParseValue(string curHeader, int lineNum, string curValue, out int? value)
+        {
+            if (!int.TryParse(curValue, out var valueParse))
+                ThrowParseError(curValue, curHeader, lineNum);
+
+            value = valueParse;
+        }
+        private static void ParseValue(string curHeader, int lineNum, string curValue, out SureQuantInfo value)
+        {
+            if (!SureQuantInfo.TryParse(curValue, out var valueParse))
+                ThrowParseError(curValue, curHeader, lineNum);
+
+            value = valueParse;
+        }
+        
+        private static void ThrowParseError(string curValue, string curHeader, int lineNum)
+        {
+            throw new SyntaxErrorException(string.Format("Error parsing value '{0}' for '{1}' on line {2}", curValue, curHeader, lineNum));
         }
     }
 
@@ -340,6 +363,7 @@ namespace BuildThermoMethod
         private const string InstrumentEclipse = "OrbitrapEclipse";
         private const string InstrumentAscend = "OrbitrapAscend";
         private const string InstrumentAstral = "OrbitrapAstral";
+        private const string InstrumentAstralZoom = "OrbitrapAstralZoom";
         private const string InstrumentExploris = "OrbitrapExploris480";
         private const string InstrumentEndura = "TSQEndura";
         private const string InstrumentQuantiva = "TSQQuantiva";
@@ -349,13 +373,14 @@ namespace BuildThermoMethod
         private static readonly string[] KnownInstruments =
         {
             InstrumentFusion, InstrumentFusionLumos, InstrumentEclipse, InstrumentAscend,   // tribrids
-            InstrumentAstral, // tofs
+            InstrumentAstral, InstrumentAstralZoom, // tofs
             InstrumentExploris, // exactives
             InstrumentEndura, InstrumentQuantiva, InstrumentAltis,  // tsqs
             InstrumentStellar, // qits
         };
 
         private string InstrumentType { get; set; }
+        private float? InstrumentSoftwareVersion { get; set; }
         private string InstrumentVersion { get; set; }
         private string TemplateMethod { get; set; }
         private List<MethodTransitions> MethodTrans { get; set; }
@@ -387,6 +412,12 @@ namespace BuildThermoMethod
                         InstrumentType = args[i++];
                         if (!KnownInstruments.Contains(InstrumentType))
                             throw new UsageException(string.Format("Unknown instrument type {0}", InstrumentType));
+                        break;
+                    case 'v':
+                        string verText = args[i++];
+                        if (!float.TryParse(verText, NumberStyles.Float, CultureInfo.InvariantCulture, out var ver))
+                            throw new UsageException(string.Format("Unrecognized instrument software version {0}", verText));
+                        InstrumentSoftwareVersion = ver;
                         break;
                     case 'o':
                         if (i >= args.Length)
@@ -560,12 +591,13 @@ namespace BuildThermoMethod
                                 mx.ApplyMethodModificationsFromXML(GetFusionModificationXml(InstrumentType, listItems, outMeth));
                                 break;
                             case InstrumentAstral:
+                            case InstrumentAstralZoom:
                             case InstrumentExploris:
-                                mx.ApplyMethodModificationsFromXML(GetExplorisXml(InstrumentType, listItems, outMeth));
+                                ApplyExplorisModificationsXml(mx, InstrumentType, listItems, outMeth);
                                 break;
                             case InstrumentEclipse:
                             case InstrumentFusionLumos:
-                                mx.ApplyMethodModificationsFromXML(GetCalciumXml(InstrumentType, listItems, outMeth));
+                                ApplyCalciumModificationsXml(mx, InstrumentType, listItems, outMeth);
                                 break;
                             case InstrumentStellar:
                                 mx.ApplyMethodModificationsFromXML(GetStellarXml(listItems, outMeth));
@@ -603,10 +635,10 @@ namespace BuildThermoMethod
 
             var columnMap = new Dictionary<int, string>();
 
-            for (int i = 0; i < lines.Count(); ++i)
+            for (int i = 0; i < lines.Length; ++i)
             {
                 string[] fields = (lines[i].Contains('\t')) ? lines[i].Split('\t') : lines[i].Split(',');
-                int numFields = fields.Count();
+                int numFields = fields.Length;
                 if (i == 0)
                 {
                     // Get headers
@@ -627,13 +659,13 @@ namespace BuildThermoMethod
         // Get XML for Endura/Quantiva methods
         private string GetHyperionXml(IEnumerable<ListItem> items, string outMethod)
         {
-            var method = new Method
+            var method = new XmlTsq.Method
             {
                 Version = XmlTsq.Version.Item1,
                 Family = XmlTsq.Family.Hyperion,
-                Item = new SRMExp
+                Item = new XmlTsq.SRMExp
                 {
-                    MassList = items.Select(item => new SRMMassListListItem
+                    MassList = items.Select(item => new XmlTsq.SRMMassListListItem
                     {
                         Name = item.Compound,
                         PrecursorMass = item.PrecursorMz.GetValueOrDefault(),
@@ -641,8 +673,8 @@ namespace BuildThermoMethod
                         StartTime = item.RetentionStart.GetValueOrDefault(),
                         StopTime = item.RetentionEnd.GetValueOrDefault(),
                         Polarity = (item.Polarity.Equals("positive", StringComparison.InvariantCultureIgnoreCase)
-                            ? Polarity.positive
-                            : Polarity.negative),
+                            ? XmlTsq.Polarity.positive
+                            : XmlTsq.Polarity.negative),
                         CollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
                         SLensSpecified = false,
                         DwellTimeSpecified = false,
@@ -654,6 +686,52 @@ namespace BuildThermoMethod
             };
 
             return Serialize(method, outMethod);
+        }
+
+        private string GetStellarXml(IList<ListItem> items, string outMethod)
+        {
+            var records = new List<XmlStellar.MassListRecord>();
+            foreach (var item in items)
+            {
+                records.Add(new XmlStellar.MassListRecord
+                {
+                    MOverZ = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
+                    Z = item.Charge.GetValueOrDefault(),
+                    StartTime = item.RetentionStart.GetValueOrDefault(),
+                    EndTime = item.RetentionEnd.GetValueOrDefault(),
+                    CompoundName = item.Compound,
+                    CIDCollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
+                    FAIMSCV = item.FaimsCv.GetValueOrDefault(),
+                    ZSpecified = true,
+                    StartTimeSpecified = true,
+                    EndTimeSpecified = true,
+                    CIDCollisionEnergySpecified = true,
+                    FAIMSCVSpecified = true,
+                });
+            }
+
+            var xml = new XmlStellar.MethodModifications
+            {
+                Modification = new[] {new XmlStellar.Modification
+                    {
+                        Order = 1,
+                        Experiment = new []{new XmlStellar.Experiment
+                            {
+                                ExperimentIndex = 1,
+                                ExperimentIndexSpecified = true,
+                                TMSnScan = new XmlStellar.TMSnScan
+                                {
+                                    MassList = new XmlStellar.MassList
+                                    {
+                                        MassListRecord = records.ToArray(),
+                                    }
+                                }
+                            }
+                        }}
+                }
+            };
+
+            return Serialize(xml, outMethod);
         }
 
         // Get XML for Fusion methods
@@ -675,14 +753,14 @@ namespace BuildThermoMethod
                         {
                             new XmlFusion.Experiment
                             {
-                                ExperimentIndex = 1, // Assume that we should modify the 2nd experiment
+                                ExperimentIndex = 1, // Assume that we should modify the 2nd experiment (MS1, MSn)
                                 ExperimentIndexSpecified = true,
                                 TMSnScan = new XmlFusion.TMSnScan
                                 {
                                     MassList = new XmlFusion.MassList
                                     {
                                         StartEndTime = itemsEnumerated.Any(item => item.RetentionStart.HasValue),
-                                        CollisionEnergyCID = itemsEnumerated.Any(item => item.CollisionEnergy.HasValue), // TODO
+                                        CollisionEnergyHCD = itemsEnumerated.Any(item => item.CollisionEnergy.HasValue), // TODO
                                         MassListRecord = itemsEnumerated.Select(item => new XmlFusion.MassListRecord
                                         {
                                             MOverZ = item.PrecursorMz.GetValueOrDefault(),
@@ -693,8 +771,8 @@ namespace BuildThermoMethod
                                             StartTimeSpecified = item.RetentionStart.HasValue,
                                             EndTime = item.RetentionEnd.GetValueOrDefault(),
                                             EndTimeSpecified = item.RetentionEnd.HasValue,
-                                            CollisionEnergyCID = item.CollisionEnergy.GetValueOrDefault(), // TODO
-                                            CollisionEnergyCIDSpecified = item.CollisionEnergy.HasValue, // TODO
+                                            CollisionEnergyHCD = item.CollisionEnergy.GetValueOrDefault(), // TODO
+                                            CollisionEnergyHCDSpecified = item.CollisionEnergy.HasValue, // TODO
                                             CompoundName = item.Compound,
                                         }).ToArray()
                                     }
@@ -708,15 +786,122 @@ namespace BuildThermoMethod
             return Serialize(methodModifications, outMethod);
         }
 
-        // Get XML for Exploris methods
-        private string GetExplorisXml(string instrument, IList<ListItem> items, string outMethod)
+        // Apply XML for Exploris methods
+        private void ApplyExplorisModificationsXml(IMethodXML mx, string instrument, ListItem[] items, string outMethod)
         {
-            var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
+            bool isSchema44 = IsExplorisSchema4_4(instrument);
+            try
+            {
+                // First try to use a MassListFilter which will throw if one is not present in the first experiment
+                if (!isSchema44) 
+                    mx.ApplyMethodModificationsFromXML(GetExplorisFilterXml(instrument, items, outMethod));
+                else
+                    mx.ApplyMethodModificationsFromXML(GetExplorisFilterXml_4_4(instrument, items, outMethod));
+            }
+            catch (Exception e)
+            {
+                // If it is SureQuant or an unexpected error, just throw the exception
+                if (IsSureQuant(items) /*|| !e.Message.Contains("TargetedMassInclusion")*/)
+                    throw;
+                // If the installed software is older, changing a MassList table is not possible
+                if (!isSchema44)
+                    throw;
+
+                Console.Out.WriteLine("Failed writing to TargetedMassInclusion as filter in MS1 scan.");
+                Console.Out.WriteLine(e.ToString());
+                Console.Out.WriteLine();
+                Console.Out.WriteLine("Trying MassList table in MSn scan.");
+
+                // If it is not SureQuant, then try the Mass List Table found within a tMS2 OT CID experiment
+                mx.ApplyMethodModificationsFromXML(GetExplorisListXml_4_4(instrument, items, outMethod));
+            }
+        }
+
+        private bool IsExplorisSchema4_4(string instrument)
+        {
+            if (InstrumentSoftwareVersion.HasValue)
+            {
+                switch (instrument)
+                {
+                    case InstrumentExploris:
+                        return InstrumentSoftwareVersion >= 4.3;
+                    case InstrumentAstral:
+                    case InstrumentAstralZoom:
+                        Console.WriteLine("Instrument {0} version {1}", instrument, InstrumentSoftwareVersion);
+                        return InstrumentSoftwareVersion >= 2;
+                }
+            }
+
+            return false;
+        }
+
+        private string GetExplorisListXml_4_4(string instrument, IList<ListItem> items, string outMethod)
+        {
+            // Uses XmlExploris_4_4 in order to get access to TMSnScan
+            var itemsEnumerated = items.ToArray();
+            var methodModifications = new XmlExploris_4_4.MethodModifications
+            {
+                Version = XmlExploris_4_4.Version.Item1,
+                Model = instrument,
+                Family = XmlExploris_4_4.Family.Merkur,
+                Type = XmlExploris_4_4.Type.SL,
+                Modification = new[]
+                {
+                    new XmlExploris_4_4.Modification
+                    {
+                        Order = 1,
+                        Experiment = new[]
+                        {
+                            new XmlExploris_4_4.Experiment
+                            {
+                                ExperimentIndex = 1, // Assume that we should modify the 2nd experiment (MS1, MSn)
+                                ExperimentIndexSpecified = true,
+                                TMSnScan = new XmlExploris_4_4.TMSnScan
+                                {
+                                    MassList = new XmlExploris_4_4.MassList
+                                    {
+                                        StartEndTime = itemsEnumerated.Any(item => item.RetentionStart.HasValue),
+                                        CollisionEnergyTypeSpecified = itemsEnumerated.Any(item => item.CollisionEnergy.HasValue),
+                                        CollisionEnergyType = XmlExploris_4_4.CollisionEnergyType.Normalized,   // redundant because this is zero
+                                        MassListRecord = itemsEnumerated.Select(item => new XmlExploris_4_4.MassListRecord
+                                        {
+                                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                                            MOverZSpecified = item.PrecursorMz.HasValue,
+                                            Z = item.Charge.GetValueOrDefault(),
+                                            ZSpecified = item.Charge.HasValue,
+                                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                                            StartTimeSpecified = item.RetentionStart.HasValue,
+                                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                                            CollisionEnergies = item.CollisionEnergy?.ToString(CultureInfo.InvariantCulture),
+                                            CompoundName = item.Compound,
+                                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                                        }).ToArray()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            return Serialize(methodModifications, outMethod);
+        }
+
+        private bool IsSureQuant(IList<ListItem> items)
+        {
+            return items.Count > 0 && items[0].SureQuantInfo != null;
+        }
+
+        private string GetExplorisFilterXml(string instrument, IList<ListItem> items, string outMethod)
+        {
+            var sureQuant = IsSureQuant(items);
 
             var records = new Dictionary<Tuple<int, char>, List<ListItem>>();
             foreach (var item in items)
             {
-                var key = surequant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
+                var key = sureQuant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
                 if (!records.TryGetValue(key, out var list))
                 {
                     records[key] = new List<ListItem>();
@@ -725,7 +910,7 @@ namespace BuildThermoMethod
                 list.Add(item);
             }
 
-            const int experimentIndex = 0; // Assume that we should modify the 1st experiment
+            const int experimentIndex = 0; // Assume that we should modify the 1st experiment (MS1 -> Filter -> MS2)
 
             var modifications = new List<XmlExploris.Modification>();
             var recordIndex = 0;
@@ -739,9 +924,9 @@ namespace BuildThermoMethod
 
                 foreach (var item in record.Value)
                 {
-                    if (surequant)
+                    if (sureQuant)
                     {
-                        if (groupMz != item.PrecursorMz)
+                        if (!Equals(groupMz, item.PrecursorMz))
                         {
                             groupMz = item.PrecursorMz;
                             mass.Add(new XmlExploris.MassListRecord
@@ -814,7 +999,7 @@ namespace BuildThermoMethod
                     }
                 });
 
-                if (surequant)
+                if (sureQuant)
                 {
                     if (!massTrigger.Any())
                         throw new Exception("Targeted mass trigger list empty (only precursors?)");
@@ -855,60 +1040,14 @@ namespace BuildThermoMethod
             return Serialize(methodModifications, outMethod);
         }
 
-        private string GetStellarXml(IList<ListItem> items, string outMethod)
+        private string GetExplorisFilterXml_4_4(string instrument, IList<ListItem> items, string outMethod)
         {
-            var records = new List<XmlStellar.MassListRecord>();
-            foreach (var item in items)
-            {
-                records.Add(new XmlStellar.MassListRecord()
-                {
-                    MOverZ = item.PrecursorMz.GetValueOrDefault().ToString(CultureInfo.InvariantCulture),
-                    Z = item.Charge.GetValueOrDefault(),
-                    StartTime = item.RetentionStart.GetValueOrDefault(),
-                    EndTime = item.RetentionEnd.GetValueOrDefault(),
-                    CompoundName = item.Compound,
-                    CIDCollisionEnergy = item.CollisionEnergy.GetValueOrDefault(),
-                    FAIMSCV = item.FaimsCV.GetValueOrDefault(),
-                    ZSpecified = true,
-                    StartTimeSpecified = true,
-                    EndTimeSpecified = true,
-                    CIDCollisionEnergySpecified = true,
-                    FAIMSCVSpecified = true,
-                });
-            }
-
-            var xml = new XmlStellar.MethodModifications()
-            {
-                Modification = new[] {new XmlStellar.Modification()
-                {
-                    Order = 1,
-                    Experiment = new []{new XmlStellar.Experiment()
-                        {
-                            ExperimentIndex = 1,
-                            ExperimentIndexSpecified = true,
-                            TMSnScan = new XmlStellar.TMSnScan()
-                            {
-                                MassList = new XmlStellar.MassList()
-                                {
-                                    MassListRecord = records.ToArray(),
-                                }
-                            }
-                        }
-                }}
-            }};
-
-            return Serialize(xml, outMethod);
-        }
-
-        // Get XML for Calcium methods (Fusion, Fusion Lumos, Eclipse)
-        private string GetCalciumXml(string instrument, IList<ListItem> items, string outMethod)
-        {
-            var surequant = items.Count > 0 && items[0].SureQuantInfo != null;
+            var sureQuant = IsSureQuant(items);
 
             var records = new Dictionary<Tuple<int, char>, List<ListItem>>();
             foreach (var item in items)
             {
-                var key = surequant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
+                var key = sureQuant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
                 if (!records.TryGetValue(key, out var list))
                 {
                     records[key] = new List<ListItem>();
@@ -917,7 +1056,283 @@ namespace BuildThermoMethod
                 list.Add(item);
             }
 
-            const int experimentIndex = 0; // Assume that we should modify the 1st experiment
+            const int experimentIndex = 0; // Assume that we should modify the 1st experiment (MS1 -> Filter -> MS2)
+
+            var modifications = new List<XmlExploris_4_4.Modification>();
+            var recordIndex = 0;
+            var modIndex = 1;
+            foreach (var record in records)
+            {
+                var mass = new List<XmlExploris_4_4.MassListRecord>();
+                var massTrigger = new List<XmlExploris_4_4.MassListRecord>();
+
+                double? groupMz = null;
+
+                foreach (var item in record.Value)
+                {
+                    if (sureQuant)
+                    {
+                        if (!Equals(groupMz, item.PrecursorMz))
+                        {
+                            groupMz = item.PrecursorMz;
+                            mass.Add(new XmlExploris_4_4.MassListRecord
+                            {
+                                MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                                MOverZSpecified = item.PrecursorMz.HasValue,
+                                Z = item.SureQuantInfo.Charge,
+                                ZSpecified = true,
+                                StartTime = item.RetentionStart.GetValueOrDefault(),
+                                StartTimeSpecified = item.RetentionStart.HasValue,
+                                EndTime = item.RetentionEnd.GetValueOrDefault(),
+                                EndTimeSpecified = item.RetentionEnd.HasValue,
+                                CompoundName = item.Compound,
+                                IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                                IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                            });
+                        }
+                        if (!item.SureQuantInfo.IsPrecursor)
+                        {
+                            massTrigger.Add(new XmlExploris_4_4.MassListRecord
+                            {
+                                CollisionEnergies = item.CollisionEnergy?.ToString(CultureInfo.InvariantCulture),
+                                MOverZ = item.ProductMz.GetValueOrDefault(),
+                                MOverZSpecified = item.ProductMz.HasValue,
+                                CompoundName = item.SureQuantInfo.FragmentName,
+                                GroupID = item.PrecursorMz.GetValueOrDefault(),
+                                GroupIDSpecified = true,
+                            });
+                        }
+                    }
+                    else
+                    {
+                        mass.Add(new XmlExploris_4_4.MassListRecord
+                        {
+                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                            MOverZSpecified = item.PrecursorMz.HasValue,
+                            Z = item.Charge.GetValueOrDefault(),
+                            ZSpecified = item.Charge.HasValue,
+                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                            StartTimeSpecified = item.RetentionStart.HasValue,
+                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                            CollisionEnergies = item.CollisionEnergy?.ToString(CultureInfo.InvariantCulture),
+                            CompoundName = item.Compound,
+                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                        });
+                    }
+                }
+
+                modifications.Add(new XmlExploris_4_4.Modification
+                {
+                    Order = modIndex++,
+                    Experiment = new[]
+                    {
+                        new XmlExploris_4_4.Experiment
+                        {
+                            ExperimentIndex = experimentIndex,
+                            ExperimentIndexSpecified = true,
+                            MassListFilter = new XmlExploris_4_4.MassListFilter
+                            {
+                                MassListType = XmlExploris_4_4.MassListType.TargetedMassInclusion,
+                                Above = true,
+                                SourceNodePosition = new [] {recordIndex},
+                                MassList = new XmlExploris_4_4.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray()}
+                            }
+                        }
+                    }
+                });
+
+                if (sureQuant)
+                {
+                    if (!massTrigger.Any())
+                        throw new Exception("Targeted mass trigger list empty (only precursors?)");
+
+                    modifications.Add(new XmlExploris_4_4.Modification
+                    {
+                        Order = modIndex++,
+                        Experiment = new[]
+                        {
+                            new XmlExploris_4_4.Experiment
+                            {
+                                ExperimentIndex = experimentIndex,
+                                ExperimentIndexSpecified = true,
+                                MassListFilter = new XmlExploris_4_4.MassListFilter
+                                {
+                                    MassListType = XmlExploris_4_4.MassListType.TargetedMassTrigger,
+                                    Above = false,
+                                    SourceNodePosition = new[] {recordIndex},
+                                    MassList = new XmlExploris_4_4.MassList {MassListRecord = massTrigger.ToArray()}
+                                }
+                            }
+                        }
+                    });
+                }
+
+                recordIndex++;
+            }
+
+            var methodModifications = new XmlExploris_4_4.MethodModifications
+            {
+                Version = XmlExploris_4_4.Version.Item1,
+                Model = instrument,
+                Family = XmlExploris_4_4.Family.Merkur,
+                Type = XmlExploris_4_4.Type.SL,
+                Modification = modifications.ToArray()
+            };
+
+            return Serialize(methodModifications, outMethod);
+        }
+
+        private void ApplyCalciumModificationsXml(IMethodXML mx, string instrument, ListItem[] items, string outMethod)
+        {
+            try
+            {
+                // First try to use a MassListFilter if one is present
+                if (!InstrumentSoftwareVersion.HasValue || InstrumentSoftwareVersion.Value < 4.2)
+                    mx.ApplyMethodModificationsFromXML(GetCalciumFilterXml(instrument, items, outMethod));
+                else
+                    mx.ApplyMethodModificationsFromXML(GetCalciumFilterXml_4_2(instrument, items, outMethod));
+            }
+            catch (Exception e)
+            {
+                // If it is SureQuant or an unexpected error, just throw the exception
+                if (IsSureQuant(items) || !e.Message.Contains("TargetedMassInclusion"))
+                    throw;
+
+                Console.Out.WriteLine("Failed writing to TargetedMassInclusion as filter in MS1 scan.");
+                Console.Out.WriteLine(e.ToString());
+                Console.Out.WriteLine();
+                Console.Out.WriteLine("Trying MassList table in MSn scan.");
+
+                if (!InstrumentSoftwareVersion.HasValue || InstrumentSoftwareVersion.Value < 4.2)
+                    mx.ApplyMethodModificationsFromXML(GetCalciumListXml(instrument, items, outMethod));
+                else
+                    mx.ApplyMethodModificationsFromXML(GetCalciumListXml_4_2(instrument, items, outMethod));
+            }
+        }
+
+        // Get XML for Calcium methods (Fusion, Fusion Lumos, Eclipse)
+        private string GetCalciumListXml(string instrument, IList<ListItem> items, string outMethod)
+        {
+            var itemsEnumerated = items.ToArray();
+            var methodModifications = new XmlCalcium.MethodModifications
+            {
+                Version = XmlCalcium.Version.Item1,
+                Model = instrument,
+                Family = XmlCalcium.Family.Calcium,
+                Type = XmlCalcium.Type.SL,
+                Modification = new[]
+                {
+                    new XmlCalcium.Modification
+                    {
+                        Order = 1,
+                        Experiment = new[]
+                        {
+                            new XmlCalcium.Experiment
+                            {
+                                ExperimentIndex = 1, // Assume that we should modify the 2nd experiment (MS1, MSn)
+                                ExperimentIndexSpecified = true,
+                                TMSnScan = new XmlCalcium.TMSnScan
+                                {
+                                    MassList = new XmlCalcium.MassList
+                                    {
+                                        StartEndTime = itemsEnumerated.Any(item => item.RetentionStart.HasValue),
+                                        CollisionEnergyHCD = itemsEnumerated.Any(item => item.CollisionEnergy.HasValue),
+                                        MassListRecord = itemsEnumerated.Select(item => new XmlCalcium.MassListRecord
+                                        {
+                                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                                            MOverZSpecified = item.PrecursorMz.HasValue,
+                                            Z = item.Charge.GetValueOrDefault(),
+                                            ZSpecified = item.Charge.HasValue,
+                                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                                            StartTimeSpecified = item.RetentionStart.HasValue,
+                                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                                            CollisionEnergyHCD = item.CollisionEnergy.GetValueOrDefault(),
+                                            CollisionEnergyHCDSpecified = item.CollisionEnergy.HasValue,
+                                            CompoundName = item.Compound,
+                                        }).ToArray()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            return Serialize(methodModifications, outMethod);
+        }
+
+        // Get XML for Calcium methods (Fusion, Fusion Lumos, Eclipse)
+        private string GetCalciumListXml_4_2(string instrument, IList<ListItem> items, string outMethod)
+        {
+            var itemsEnumerated = items.ToArray();
+            var methodModifications = new XmlCalcium_4_2.MethodModifications
+            {
+                Version = XmlCalcium_4_2.Version.Item1,
+                Model = instrument,
+                Family = XmlCalcium_4_2.Family.Calcium,
+                Type = XmlCalcium_4_2.Type.SL,
+                Modification = new[]
+                {
+                    new XmlCalcium_4_2.Modification
+                    {
+                        Order = 1,
+                        Experiment = new[]
+                        {
+                            new XmlCalcium_4_2.Experiment
+                            {
+                                ExperimentIndex = 1, // Assume that we should modify the 2nd experiment (MS1, MSn)
+                                ExperimentIndexSpecified = true,
+                                TMSnScan = new XmlCalcium_4_2.TMSnScan
+                                {
+                                    MassList = new XmlCalcium_4_2.MassList
+                                    {
+                                        StartEndTime = itemsEnumerated.Any(item => item.RetentionStart.HasValue),
+                                        CollisionEnergyHCD = itemsEnumerated.Any(item => item.CollisionEnergy.HasValue),
+                                        MassListRecord = itemsEnumerated.Select(item => new XmlCalcium_4_2.MassListRecord
+                                        {
+                                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                                            MOverZSpecified = item.PrecursorMz.HasValue,
+                                            Z = item.Charge.GetValueOrDefault(),
+                                            ZSpecified = item.Charge.HasValue,
+                                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                                            StartTimeSpecified = item.RetentionStart.HasValue,
+                                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                                            CollisionEnergyHCD = item.CollisionEnergy.GetValueOrDefault(),
+                                            CollisionEnergyHCDSpecified = item.CollisionEnergy.HasValue,
+                                            CompoundName = item.Compound,
+                                        }).ToArray()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            return Serialize(methodModifications, outMethod);
+        }
+
+        private string GetCalciumFilterXml(string instrument, IList<ListItem> items, string outMethod)
+        {
+            var sureQuant = IsSureQuant(items);
+
+            var records = new Dictionary<Tuple<int, char>, List<ListItem>>();
+            foreach (var item in items)
+            {
+                var key = sureQuant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
+                if (!records.TryGetValue(key, out var list))
+                {
+                    records[key] = new List<ListItem>();
+                    list = records[key];
+                }
+                list.Add(item);
+            }
+
+            const int experimentIndex = 0; // Assume that we should modify the 1st experiment (MS1 -> Filter -> MS2)
 
             var modifications = new List<XmlCalcium.Modification>();
             var recordIndex = 0;
@@ -931,9 +1346,9 @@ namespace BuildThermoMethod
 
                 foreach (var item in record.Value)
                 {
-                    if (surequant)
+                    if (sureQuant)
                     {
-                        if (groupMz != item.PrecursorMz)
+                        if (Equals(groupMz, item.PrecursorMz))
                         {
                             groupMz = item.PrecursorMz;
                             mass.Add(new XmlCalcium.MassListRecord
@@ -975,8 +1390,8 @@ namespace BuildThermoMethod
                             StartTimeSpecified = item.RetentionStart.HasValue,
                             EndTime = item.RetentionEnd.GetValueOrDefault(),
                             EndTimeSpecified = item.RetentionEnd.HasValue,
-                            CollisionEnergyCID = item.CollisionEnergy.GetValueOrDefault(),
-                            CollisionEnergyCIDSpecified = item.CollisionEnergy.HasValue,
+                            CollisionEnergyHCD = item.CollisionEnergy.GetValueOrDefault(),
+                            CollisionEnergyHCDSpecified = item.CollisionEnergy.HasValue,
                             CompoundName = item.Compound,
                             IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
                             IntensityThresholdSpecified = item.IntensityThreshold.HasValue
@@ -995,13 +1410,16 @@ namespace BuildThermoMethod
                             ExperimentIndexSpecified = true,
                             TargetedInclusionMassListFilter = new XmlCalcium.TargetedInclusionMassListFilter
                             {
-                                MassList = new XmlCalcium.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray()}
+                                MassList = sureQuant 
+                                    ? new XmlCalcium.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray()}
+                                    : new XmlCalcium.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray(),
+                                        CollisionEnergyHCD = records.Values.SelectMany(list => list).Any(item => item.CollisionEnergy.HasValue)}
                             }
                         }
                     }
                 });
 
-                if (surequant)
+                if (sureQuant)
                 {
                     if (!massTrigger.Any())
                         throw new Exception("Targeted mass trigger list empty (only precursors?)");
@@ -1042,6 +1460,152 @@ namespace BuildThermoMethod
             return Serialize(methodModifications, outMethod);
         }
 
+        private string GetCalciumFilterXml_4_2(string instrument, IList<ListItem> items, string outMethod)
+        {
+            var sureQuant = IsSureQuant(items);
+
+            var records = new Dictionary<Tuple<int, char>, List<ListItem>>();
+            foreach (var item in items)
+            {
+                var key = sureQuant ? item.SureQuantInfo.Key : Tuple.Create(0, '\0');
+                if (!records.TryGetValue(key, out var list))
+                {
+                    records[key] = new List<ListItem>();
+                    list = records[key];
+                }
+                list.Add(item);
+            }
+
+            const int experimentIndex = 0; // Assume that we should modify the 1st experiment (MS1 -> Filter -> MS2)
+
+            var modifications = new List<XmlCalcium_4_2.Modification>();
+            var recordIndex = 0;
+            var modIndex = 1;
+            foreach (var record in records)
+            {
+                var mass = new List<XmlCalcium_4_2.MassListRecord>();
+                var massTrigger = new List<XmlCalcium_4_2.MassListRecord>();
+
+                double? groupMz = null;
+
+                foreach (var item in record.Value)
+                {
+                    if (sureQuant)
+                    {
+                        if (Equals(groupMz, item.PrecursorMz))
+                        {
+                            groupMz = item.PrecursorMz;
+                            mass.Add(new XmlCalcium_4_2.MassListRecord
+                            {
+                                MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                                MOverZSpecified = item.PrecursorMz.HasValue,
+                                Z = item.SureQuantInfo.Charge,
+                                ZSpecified = true,
+                                StartTime = item.RetentionStart.GetValueOrDefault(),
+                                StartTimeSpecified = item.RetentionStart.HasValue,
+                                EndTime = item.RetentionEnd.GetValueOrDefault(),
+                                EndTimeSpecified = item.RetentionEnd.HasValue,
+                                CompoundName = item.Compound,
+                                IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                                IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                            });
+                        }
+                        if (!item.SureQuantInfo.IsPrecursor)
+                        {
+                            massTrigger.Add(new XmlCalcium_4_2.MassListRecord
+                            {
+                                MOverZ = item.ProductMz.GetValueOrDefault(),
+                                MOverZSpecified = item.ProductMz.HasValue,
+                                CompoundName = item.SureQuantInfo.FragmentName,
+                                GroupID = item.PrecursorMz.GetValueOrDefault(),
+                                GroupIDSpecified = true,
+                            });
+                        }
+                    }
+                    else
+                    {
+                        mass.Add(new XmlCalcium_4_2.MassListRecord
+                        {
+                            MOverZ = item.PrecursorMz.GetValueOrDefault(),
+                            MOverZSpecified = item.PrecursorMz.HasValue,
+                            Z = item.Charge.GetValueOrDefault(),
+                            ZSpecified = item.Charge.HasValue,
+                            StartTime = item.RetentionStart.GetValueOrDefault(),
+                            StartTimeSpecified = item.RetentionStart.HasValue,
+                            EndTime = item.RetentionEnd.GetValueOrDefault(),
+                            EndTimeSpecified = item.RetentionEnd.HasValue,
+                            CollisionEnergyHCD = item.CollisionEnergy.GetValueOrDefault(),
+                            CollisionEnergyHCDSpecified = item.CollisionEnergy.HasValue,
+                            CompoundName = item.Compound,
+                            IntensityThreshold = item.IntensityThreshold.GetValueOrDefault(),
+                            IntensityThresholdSpecified = item.IntensityThreshold.HasValue
+                        });
+                    }
+                }
+
+                modifications.Add(new XmlCalcium_4_2.Modification
+                {
+                    Order = modIndex++,
+                    Experiment = new[]
+                    {
+                        new XmlCalcium_4_2.Experiment
+                        {
+                            ExperimentIndex = experimentIndex,
+                            ExperimentIndexSpecified = true,
+                            TargetedInclusionMassListFilter = new XmlCalcium_4_2.TargetedInclusionMassListFilter
+                            {
+                                MassList = sureQuant
+                                    ? new XmlCalcium_4_2.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray()}
+                                    : new XmlCalcium_4_2.MassList {IntensityThreshold = true, MassListRecord = mass.ToArray(),
+                                        CollisionEnergyHCD = records.Values.SelectMany(list => list).Any(item => item.CollisionEnergy.HasValue)}
+                            }
+                        }
+                    }
+                });
+
+                if (sureQuant)
+                {
+                    if (!massTrigger.Any())
+                        throw new Exception("Targeted mass trigger list empty (only precursors?)");
+
+                    modifications.Add(new XmlCalcium_4_2.Modification
+                    {
+                        Order = modIndex++,
+                        Experiment = new[]
+                        {
+                            new XmlCalcium_4_2.Experiment
+                            {
+                                ExperimentIndex = experimentIndex,
+                                ExperimentIndexSpecified = true,
+                                MassListFilter = new XmlCalcium_4_2.MassListFilter
+                                {
+                                    MassListType = XmlCalcium_4_2.MassListType.TargetedMassTrigger,
+                                    Above = false,
+                                    SourceNodePosition = new[] {recordIndex},
+                                    MassList = new XmlCalcium_4_2.MassList {MassListRecord = massTrigger.ToArray()}
+                                }
+                            }
+                        }
+                    });
+                }
+
+                recordIndex++;
+            }
+
+            var methodModifications = new XmlCalcium_4_2.MethodModifications
+            {
+                Version = XmlCalcium_4_2.Version.Item1,
+                Model = instrument,
+                Family = XmlCalcium_4_2.Family.Calcium,
+                Type = XmlCalcium_4_2.Type.SL,
+                Modification = modifications.ToArray()
+            };
+
+            return Serialize(methodModifications, outMethod);
+        }
+
+        private static int _tryCount;
+
         private string Serialize(object method, string outMethod)
         {
             var serializer = new XmlSerializer(method.GetType());
@@ -1050,7 +1614,8 @@ namespace BuildThermoMethod
             string xmlText = writer.ToString();
             if (ExportXml)
             {
-                string xmlPath = Path.ChangeExtension(outMethod, ".xml");
+                string extPrefix = _tryCount++ > 0 ? _tryCount.ToString() : string.Empty;
+                string xmlPath = Path.ChangeExtension(outMethod, extPrefix + ".xml");
                 if (xmlPath != null)
                     File.WriteAllText(xmlPath, xmlText);
             }
