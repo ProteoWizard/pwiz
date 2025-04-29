@@ -705,7 +705,15 @@ namespace pwiz.Skyline.Model.Carafe
   
             if (TrainingDocument != null)
             {
-                readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
+                if (!DbInputFilePath.IsNullOrEmpty())
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", DbInputFilePath, TextUtil.HYPHEN));
+                }
+                else
+                {
+                    readyArgs.Add(new ArgumentAndValue(@"db", InputFilePath, TextUtil.HYPHEN));
+                }
+
                 readyArgs.Add(new ArgumentAndValue(@"i", TrainingFilePath, TextUtil.HYPHEN));
                 readyArgs.Add(new ArgumentAndValue(@"se", @"skyline", TextUtil.HYPHEN));
 
