@@ -49,7 +49,11 @@ class PWIZ_API_DECL SpectrumListWrapper : public SpectrumListBase
 
     virtual size_t size() const {return inner_->size();}
     virtual bool empty() const {return size() == 0;}
-    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(index);} 
+    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(index);}
+    virtual size_t find(const std::string& id) const {return size() == inner_->size() ? inner_->find(id) : SpectrumList::find(id);}
+    virtual size_t findAbbreviated(const std::string& abbreviatedId, char delimiter = '.') const {return size() == inner_->size() ? inner_->findAbbreviated(abbreviatedId, delimiter) : SpectrumList::findAbbreviated(abbreviatedId, delimiter);}
+    virtual IndexList findNameValue(const std::string& name, const std::string& value) const {return size() == inner_->size() ? inner_->findNameValue(name, value) : SpectrumList::findNameValue(name, value);}
+    virtual IndexList findSpotID(const std::string& spotID) const {return size() == inner_->size() ? inner_->findSpotID(spotID) : SpectrumList::findSpotID(spotID);}
 
     // no default implementation, because otherwise subclasses could override the DetailLevel overload and the getBinaryData overload would be inconsistent
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const = 0;
