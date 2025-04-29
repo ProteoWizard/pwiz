@@ -43,6 +43,11 @@ namespace analysis {
         msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel) const;
         size_t size() const;
         const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const;
+        virtual size_t find(const std::string& id) const { return SpectrumList::find(id); }
+        virtual size_t findAbbreviated(const std::string& abbreviatedId, char delimiter = '.') const { return SpectrumList::findAbbreviated(abbreviatedId, delimiter); }
+        virtual msdata::IndexList findNameValue(const std::string& name, const std::string& value) const { return SpectrumList::findNameValue(name, value); }
+        virtual msdata::IndexList findSpotID(const std::string& spotID) const { return SpectrumList::findSpotID(spotID); }
+
         ///@}
 
         private:
