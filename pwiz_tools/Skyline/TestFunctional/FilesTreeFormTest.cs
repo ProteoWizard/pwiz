@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Files;
 using Peptide = pwiz.Skyline.Model.Peptide;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 
 // TODO: Replicate => verify right-click menu includes Open Containing Folder
 // TODO: Test Tooltips. See MethodEditTutorialTest.ShowNodeTip
@@ -66,6 +67,20 @@ namespace pwiz.SkylineTestFunctional
 
         protected void TestEmptyDocument()
         {
+            // Default Skyline appearance in a new, empty document
+            // FilesTree should exist and be visible but not active
+            Assert.IsNotNull(SkylineWindow.FilesTreeForm);
+            Assert.IsTrue(SkylineWindow.SequenceTreeFormIsVisible);
+            Assert.IsTrue(SkylineWindow.FilesTreeFormIsVisible);
+            Assert.IsFalse(SkylineWindow.FilesTreeFormIsActivated);
+
+            // FilesTree should be docked with SequenceTree with this order
+            var dockPane = (DigitalRune.Windows.Docking.DockPane)SkylineWindow.FilesTreeForm.Parent;
+            Assert.AreEqual(2, dockPane.DisplayingContents.Count);
+            Assert.IsInstanceOfType(dockPane.DisplayingContents[0], typeof(SequenceTreeForm));
+            Assert.IsInstanceOfType(dockPane.DisplayingContents[1], typeof(FilesTreeForm));
+
+            // Activate FilesTree
             RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
             WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 

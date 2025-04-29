@@ -224,7 +224,12 @@ namespace pwiz.Skyline
             if (maximize)
                 WindowState = FormWindowState.Maximized;
 
+            // As of April 2025, new Skyline projects are configured to:
+            //   1) Include tabs for Targets and Files trees
+            //   2) Make Targets tree active by default
             ShowSequenceTreeForm(true);
+            ShowFilesTreeForm(true);
+            _sequenceTreeForm.Activate();
 
             // Force the handle into existence before any background threads
             // are started by setting the initial document.  Otherwise, calls
@@ -3138,11 +3143,8 @@ namespace pwiz.Skyline
         #region FilesTree
 
         public FilesTreeForm FilesTreeForm => _filesTreeForm;
-
-        public bool FilesTreeFormIsVisible
-        {
-            get { return _filesTreeForm != null && _filesTreeForm.Visible; }
-        }
+        public bool FilesTreeFormIsVisible => _filesTreeForm is { Visible: true };
+        public bool FilesTreeFormIsActivated => _filesTreeForm is { IsActivated: true };
 
         public void ShowFilesTreeForm(bool show, string persistentState = null)
         {
