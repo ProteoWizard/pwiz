@@ -524,6 +524,9 @@
   <data name="removed_replicate" xml:space="preserve">
     <value>Removed replicate {0}</value>
   </data>
+  <data name="removed_library" xml:space="preserve">
+    <value>Removed library {0}</value>
+  </data>  
   <data name="accepted_peptide" xml:space="preserve">
     <value>Accepted peptide {0}</value>
   </data>

@@ -1403,6 +1403,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Removed library {0}.
+        /// </summary>
+        public static string removed_library {
+            get {
+                return ResourceManager.GetString("removed_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Removed library run &quot;{0}&quot;.
         /// </summary>
         public static string removed_library_run {

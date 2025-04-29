@@ -147,6 +147,7 @@ namespace pwiz.Skyline.Model.AuditLog
         removed_empty_peptides,
         removed_empty_protein,
         removed_empty_proteins,
+        removed_library,
         removed_library_run,
         removed_missing_results,
         removed_peak_from,

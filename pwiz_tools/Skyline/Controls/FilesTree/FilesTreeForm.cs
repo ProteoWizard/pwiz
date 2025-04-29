@@ -272,62 +272,60 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (ConfirmItemDeletion(confirmMsg) == DialogResult.No)
                 return;
 
-            var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
-            var readableNamesForAuditLog = nodes.Select(item => item.Model.Name).ToList();
-
             if (type == typeof(Replicate))
             {
+                // Filter out replicate sample files if any happened to be included in the selection
+                // so audit log messages are more consistent
+                nodes = nodes.Where(item => item.Model.GetType().IsAssignableFrom(typeof(Replicate))).ToList();
+
+                var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
+
                 SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node,
                     document =>
                     {
-                        var oldMeasuredResults = SkylineWindow.Document.MeasuredResults;
-                        var oldChromatograms = oldMeasuredResults.Chromatograms.ToArray();
+                        var remainingChromatograms=
+                            SkylineWindow.Document.MeasuredResults.Chromatograms.
+                                Where(chrom => !Utils.ContainsCheckReferenceEquals(selectedIds, chrom.Id)).ToList();
 
-                        var newChromatograms = new List<ChromatogramSet>(oldChromatograms.Length - selectedIds.Count);
-                        for (var i = 0; i < oldChromatograms.Length; i++)
-                        {
-                            // skip items selected for removal
-                            if (!Utils.ContainsCheckReferenceEquals(selectedIds, oldChromatograms[i].Id))
-                            {
-                                newChromatograms.Add(oldChromatograms[i]);
-                            }
-                        }
-
-                        var newMeasuredResults = oldMeasuredResults.ChangeChromatograms(newChromatograms);
+                        var newMeasuredResults = SkylineWindow.Document.MeasuredResults.ChangeChromatograms(remainingChromatograms);
                         var newDoc = document.ChangeMeasuredResults(newMeasuredResults);
                         newDoc.ValidateResults();
                         return newDoc;
                     },
                     docPair =>
                     {
+                        var readableNames = nodes.Select(item => item.Model.Name).ToList();
+
                         var entry = AuditLogEntry.CreateCountChangeEntry(
                             MessageType.files_tree_replicates_remove_one,
                             MessageType.files_tree_replicates_remove_several,
                             docPair.NewDocumentType,
-                            readableNamesForAuditLog
+                            readableNames
                         );
+
+                        if (readableNames.Count > 1)
+                        {
+                            entry = entry.AppendAllInfo(
+                                readableNames.Select(name => new MessageInfo(MessageType.removed_replicate, docPair.OldDocumentType, name))
+                                    .ToList());
+                        }
+
                         return entry;
                     }
                 );
             }
             else if (type == typeof(SpectralLibrary))
             {
+                var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
+
                 SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library_Node,
                     document =>
                     {
-                        var oldLibrarySpecs = document.Settings.PeptideSettings.Libraries.LibrarySpecs;
-                        var newLibrarySpecs = new List<LibrarySpec>();
+                        var remainingLibraries = 
+                            document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                                .Where(lib => !Utils.ContainsCheckReferenceEquals(selectedIds, lib.Id)).ToList();
 
-                        foreach (var librarySpec in oldLibrarySpecs)
-                        {
-                            // skip items selected for removal
-                            if (!Utils.ContainsCheckReferenceEquals(selectedIds, librarySpec.Id))
-                            {
-                                newLibrarySpecs.Add(librarySpec);
-                            }
-                        }
-
-                        var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(newLibrarySpecs);
+                        var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(remainingLibraries);
                         var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
                         var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
                         var newDoc = document.ChangeSettings(newSettings);
@@ -335,12 +333,21 @@ namespace pwiz.Skyline.Controls.FilesTree
                     },
                     docPair =>
                     {
+                        var readableNames= nodes.Select(item => item.Model.Name).ToList();
+
                         var entry = AuditLogEntry.CreateCountChangeEntry(
                             MessageType.files_tree_libraries_remove_one,
                             MessageType.files_tree_libraries_remove_several,
                             docPair.NewDocumentType,
-                            readableNamesForAuditLog
+                            readableNames
                         );
+
+                        if (readableNames.Count > 1)
+                        {
+                            entry = entry.AppendAllInfo(
+                                readableNames.Select(name => new MessageInfo(MessageType.removed_library, docPair.OldDocumentType, name)).ToList());
+                        }
+
                         return entry;
                     }
                 );
@@ -955,7 +962,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             return !string.IsNullOrEmpty(documentPath);
         }
 
-        internal static bool ContainsCheckReferenceEquals(IList<Identity> list, Identity item)
+        internal static bool ContainsCheckReferenceEquals<T>(IList<T> list, T item)
         {
             for (var i = 0; i < list.Count; i++)
             {
