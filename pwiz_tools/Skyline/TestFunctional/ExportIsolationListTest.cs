@@ -200,8 +200,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoUnscheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Standard,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce));
 
             // Export Thermo scheduled DDA list.
             if (!AsSmallMoleculesNegative) // .skyd file chromatograms are not useful in this conversion due to mass shift
@@ -209,8 +209,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoScheduledDda.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.None, ExportMethodType.Scheduled,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce));
 
             // Export Agilent unscheduled Targeted list.
             ExportIsolationList(
@@ -234,8 +234,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoUnscheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Standard,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, string.Empty, string.Empty, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, string.Empty, string.Empty, nce));
 
             // Export Thermo scheduled Targeted list.
             if (!AsSmallMoleculesNegative) // .skyd file chromatograms are not useful in this conversion due to mass shift
@@ -243,8 +243,8 @@ namespace pwiz.SkylineTestFunctional
                 "ThermoScheduledTargeted.csv", 
                 ExportInstrumentType.THERMO_Q_EXACTIVE, FullScanAcquisitionMethod.Targeted, ExportMethodType.Scheduled,
                 thermoQExactiveIsolationListExporter.GetHeader(_fieldSeparator),
-                FieldSeparate(mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce, peptideA),
-                FieldSeparate(mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce, peptideB));
+                FieldSeparate(peptideA, mzFirst, string.Empty, string.Empty, Math.Abs(zFirst), polarity, t46 - halfWin, t46 + halfWin, nce),
+                FieldSeparate(peptideB, mzLast, string.Empty, string.Empty, Math.Abs(zLast), polarity, t39 - halfWin, t39 + halfWin, nce));
 
             // Export Thermo Fusion unscheduled Targeted list.
             var thermoFusionMassListExporter = new ThermoFusionMassListExporter(SkylineWindow.Document);

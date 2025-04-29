@@ -1154,10 +1154,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public void FireSelectedScanChanged(double retentionTime)
         {
             IsLoaded = true;
+            var transitionId = _msDataFileScanHelper.CurrentTransition?.Id;
             SelectedScanChanged?.Invoke(this,
-                _msDataFileScanHelper.MsDataSpectra != null
-                    ? new SelectedScanEventArgs(_msDataFileScanHelper.ScanProvider.DataFilePath, retentionTime,
-                        _msDataFileScanHelper.ScanProvider.Transitions[_msDataFileScanHelper.TransitionIndex].Id,
+                _msDataFileScanHelper.MsDataSpectra != null && transitionId != null
+                    ? new SelectedScanEventArgs(_msDataFileScanHelper.ScanProvider.DataFilePath, retentionTime, transitionId,
                         _msDataFileScanHelper.OptStep)
                     : new SelectedScanEventArgs(null, 0, null, null));
         }

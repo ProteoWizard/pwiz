@@ -3254,6 +3254,15 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   <data name="PasteDlg_UpdateMoleculeType_Note" xml:space="preserve">
     <value>メモ</value>
   </data>
+  <data name="PasteDlg_UpdateMoleculeType_PrecursorNote" xml:space="preserve">
+    <value>プリカーサーメモ</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeNote" xml:space="preserve">
+    <value>分子メモ</value>
+  </data>
+  <data name="PasteDlg_UpdateMoleculeType_MoleculeListNote" xml:space="preserve">
+    <value>分子リストメモ</value>
+  </data>
   <data name="BuildBackgroundProteomeDlg_RefreshStatus_Click_the_Add_File_button_to_add_a_FASTA_file_and_create_a_new_proteome_file" xml:space="preserve">
     <value>「ファイルを追加」ボタンをクリックしてFASTAファイルを追加し、新しいプロテオームファイルを作成します。</value>
   </data>
@@ -3980,5 +3989,8 @@ Skylineでの列の順序は、列のヘッダーを左右にドラッグする�
   </data>
   <data name="PeptideMod_SetVariable_A_peptide_modification_must_be_added_before_assigning_its_variable_status_" xml:space="preserve">
     <value>その変数ステータスを割り当てる前に、ペプチド修飾を追加する必要があります。</value>
+  </data>
+  <data name="Error" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

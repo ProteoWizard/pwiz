@@ -166,7 +166,11 @@
     <value>如果为“true”，则 Skyline 将根据离子对设置筛选器、谱图库等自动添加或删除母离子中的离子对。</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>平均质量误差 PPM</value>
+    <value>The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
+    <comment>Needs Review:English text changed
+Old English:Average Mass Error PPM
+Current English:The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)
+Old Localized:平均质量误差 PPM</comment>
   </data>
   <data name="AverageMasses">
     <value>用其平均质量指定修饰的修饰序列，例如："C[+57.05162]"。</value>
@@ -290,9 +294,19 @@
     <value>用于确定对于倍数变化的置信区间的置信水平。</value>
   </data>
   <data name="CountTruncated">
-    <value>在采集时间区间的任意一端
+    <value>The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.</value>
+    <comment>Needs Review:English text changed
+Old English:The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 1% of the entire peak height higher than the other extent.
+Current English:The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.
+Old Localized:在采集时间区间的任意一端
 （即该端的强度大于高于其他范围的整个峰高的 1%），
-集成峰与边界的母离子的离子对数量。</value>
+集成峰与边界的母离子的离子对数量。</comment>
   </data>
   <data name="Cv">
     <value>变异系数</value>
@@ -1468,7 +1482,11 @@
 偏差。</value>
   </data>
   <data name="Strict">
-    <value>缺失的数据影响到重复测定之间的比较时，不可获取计算值。</value>
+    <value>Calculated value unavailable when missing data could impact comparisons between replicates.</value>
+    <comment>Needs Review:English text changed
+Old English:Calculated value unavailable when missing data could comparisons between replicates.
+Current English:Calculated value unavailable when missing data could impact comparisons between replicates.
+Old Localized:缺失的数据影响到重复测定之间的比较时，不可获取计算值。</comment>
   </data>
   <data name="SummaryMessage">
     <value>更改的描述</value>
@@ -1567,9 +1585,19 @@
     <value>离子对</value>
   </data>
   <data name="Truncated">
-    <value>若集成峰在采集时间区间的任一一端有边界，
+    <value>True if the integrate peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 25% of the background-subtracted peak height
+higher than the other extent.</value>
+    <comment>Needs Review:English text changed
+Old English:True if the integrated a peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 1% of the entire peak height
+higher than the other extent.
+Current English:True if the integrate peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 25% of the background-subtracted peak height
+higher than the other extent.
+Old Localized:若集成峰在采集时间区间的任一一端有边界，
 即该端的强度大于高于其他范围的整个峰高的 1%，
-则成立。</value>
+则成立。</comment>
   </data>
   <data name="TurningPoint">
     <value>对于双线性回归，两条线相交的 X 坐标。</value>
