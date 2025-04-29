@@ -16,12 +16,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -29,7 +25,6 @@ using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Files;
-using Peptide = pwiz.Skyline.Model.Peptide;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 
@@ -38,7 +33,7 @@ using pwiz.Skyline.Controls;
 // TODO: add .sky file with imsdb / irtdb
 // TODO: add an Audit Log scenario
 // TODO: drag-and-drop disjoint selection
-// TODO: test tree disallows dragging non-draggable nodes
+// TODO: tree disallows dragging non-draggable nodes
 // TODO: use non-local file paths in SrmSettings (example: replicate sample files where SrmSettings paths point to directories that don't exist locally)
 
 // ReSharper disable WrongIndentSize
@@ -59,8 +54,6 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             TestEmptyDocument();
-
-            TestSyntheticDocument();
 
             TestRatPlasmaDocument();
         }
@@ -124,32 +117,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsInstanceOfType(SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(1).Model, typeof(SkylineViewFile));
             Assert.IsTrue(SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(1).IsFileInitialized());
             Assert.AreEqual(FileState.available, SkylineWindow.FilesTree.Folder<ProjectFilesFolder>().NodeAt(1).FileState);
-
-            // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
-            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
-        }
-
-        // CONSIDER: does this test scenario add value?
-        protected void TestSyntheticDocument()
-        {
-            var emptyDocument = SrmDocumentHelper.MakeEmptyDocument();
-            SrmDocumentHelper.AddProteinsToDocument(emptyDocument, 50);
-
-            RunUI(() =>
-            {
-                SkylineWindow.SwitchDocument(emptyDocument, null);
-                SkylineWindow.ShowFilesTreeForm(true);
-            });
-            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
-
-            Assert.AreEqual(FileResources.FileModel_NewDocument, SkylineWindow.FilesTree.RootNodeText());
-            Assert.IsFalse(SkylineWindow.FilesTree.IsMonitoringFileSystem());
-
-            // FilesTree should only have one set of nodes after opening a new document
-            Assert.AreEqual(1, SkylineWindow.FilesTree.Nodes.Count);
-            Assert.AreEqual(2, SkylineWindow.FilesTree.Nodes[0].GetNodeCount(false));
-
-            AssertFilesTreeOnlyIncludesFilesTreeNodes(SkylineWindow.FilesTree.Root);
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
@@ -249,20 +216,21 @@ namespace pwiz.SkylineTestFunctional
             // Rename replicate by editing tree node's label
             //
             newName = "NEW REPLICATE NAME";
-            var treeNode = (FilesTreeNode)SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0];
+            var treeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().NodeAt(0);
             RunUI(() => SkylineWindow.FilesTreeForm.EditTreeNodeLabel(treeNode, newName));
             Assert.AreEqual(newName, SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[0].Name);
 
             //
             // Activating a replicate should update selected graphs
             //
-            var filesTreeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[4] as FilesTreeNode;
+            const int selectedIndex = 4;
+            var filesTreeNode = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[selectedIndex] as FilesTreeNode;
             RunUI(() =>
             {
                 SkylineWindow.FilesTreeForm.ActivateReplicate(filesTreeNode);
             });
             WaitForGraphs();
-            RunUI(() => Assert.AreEqual(4, SkylineWindow.SelectedResultsIndex));
+            RunUI(() => Assert.AreEqual(selectedIndex, SkylineWindow.SelectedResultsIndex));
 
             //
             // Reorder replicate by editing SkylineDocument directly - should trigger FilesTree update
@@ -316,9 +284,12 @@ namespace pwiz.SkylineTestFunctional
 
             CheckEquivalenceOfReplicates(42);
 
+            // 
+            // Hide FilesTree's tab and re-show making sure tree matches document and expected nodes are expanded
+            //
             RunUI(() =>
             {
-                SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
+                SkylineWindow.ShowFilesTreeForm(false);
 
                 var replicateNodes = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
                 replicateNodes.Nodes[1].Expand();
@@ -326,10 +297,8 @@ namespace pwiz.SkylineTestFunctional
                 replicateNodes.Nodes[11].Expand();
                 replicateNodes.Nodes[12].Expand();
             });
+            WaitForConditionUI(() => !SkylineWindow.FilesTreeFormIsVisible);
 
-            // 
-            // Hide tree and re-show FilesTree via View Menu making sure tree matches document and expected nodes are expanded
-            // 
             RunUI(() =>
             {
                 SkylineWindow.ShowFilesTreeForm(true);
@@ -349,10 +318,9 @@ namespace pwiz.SkylineTestFunctional
             });
 
             //
-            // Remove and Remove All
+            // Remove and Remove All Replicates
             // 
             {
-                // Remove All replicates
                 doc = SkylineWindow.Document;
                 var confirmDlg = ShowDialog<MultiButtonMsgDlg>(() =>
                 {
@@ -395,6 +363,9 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => SkylineWindow.Undo());
                 WaitForDocumentChange(doc);
                 CheckEquivalenceOfReplicates(42);
+                Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[0].Name));
+                Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[1].Name));
+                Assert.IsTrue(replicatesFolder.HasChildWithName(nodesToDelete[2].Name));
             }
 
             //
@@ -404,7 +375,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual("Rat (NIST) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name);
             Assert.AreEqual("Rat (GPM) (Rat_plasma2)", SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[1].Name);
 
-            var peptideLibraryTreeNode = (FilesTreeNode)SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.Nodes[0];
+            var peptideLibraryTreeNode = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>()?.NodeAt(0);
             var peptideLibraryModel = (SpectralLibrary)peptideLibraryTreeNode?.Model;
             Assert.AreEqual(SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs[0].Name, peptideLibraryModel?.Name);
 
@@ -458,11 +429,12 @@ namespace pwiz.SkylineTestFunctional
             // File Renamed
             //
             var replicateFolderModel = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-            var sampleFileTreeNode = (FilesTreeNode)replicateFolderModel.Nodes[0].Nodes[0];
+            var sampleFileTreeNode = replicateFolderModel.NodeAt(0).NodeAt(0);
             var sampleFileModel = sampleFileTreeNode.Model as ReplicateSampleFile;
 
             // Assert file exists and icons are set correctly
             Assert.IsNotNull(sampleFileModel);
+
             var filePath = sampleFileTreeNode.LocalFilePath;
             Assert.IsTrue(File.Exists(filePath));
             Assert.AreEqual(FileState.available, sampleFileTreeNode.FileState);
@@ -525,7 +497,7 @@ namespace pwiz.SkylineTestFunctional
         protected void TestDragAndDrop()
         {
             {
-                // Start over with a clean document
+                // Start with a clean document
                 var documentPath = TestFilesDir.GetTestPath("Rat_plasma.sky");
                 RunUI(() => {
                     SkylineWindow.OpenFile(documentPath);
@@ -533,7 +505,7 @@ namespace pwiz.SkylineTestFunctional
                 });
                 WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
 
-                var lastItemIndex = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
+                var indexOfLastReplicate = SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes.Count - 1;
 
                 // A,B,C,D => Drag A to B => A,B,C,D
                 var dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, 1, DragDirection.down);
@@ -548,11 +520,11 @@ namespace pwiz.SkylineTestFunctional
                 VerifyDragAndDrop(dnd, CheckEquivalenceOfReplicates);
 
                 // A,B,C,D => Drag A to D => B,C,A,D
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, lastItemIndex, DragDirection.down, true);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 0 }, indexOfLastReplicate, DragDirection.down, true);
                 VerifyDragAndDrop(dnd, CheckEquivalenceOfReplicates);
 
                 // B,C,A,D => Drag D to B => A,B,C,D
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { lastItemIndex }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { indexOfLastReplicate }, 0, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalenceOfReplicates);
 
                 // A,B,C,D,E => Drag A,B,C to E => D,A,B,C,E
@@ -563,10 +535,10 @@ namespace pwiz.SkylineTestFunctional
                 dnd = DragAndDrop<ReplicatesFolder>(new[] { 7, 8, 9 }, 3, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalenceOfReplicates);
 
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, lastItemIndex, DragDirection.down);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { 3, 4, 5 }, indexOfLastReplicate, DragDirection.down);
                 VerifyDragAndDrop(dnd, CheckEquivalenceOfReplicates);
 
-                dnd = DragAndDrop<ReplicatesFolder>(new[] { lastItemIndex - 2, lastItemIndex - 1, lastItemIndex }, 0, DragDirection.up);
+                dnd = DragAndDrop<ReplicatesFolder>(new[] { indexOfLastReplicate - 2, indexOfLastReplicate - 1, indexOfLastReplicate }, 0, DragDirection.up);
                 VerifyDragAndDrop(dnd, CheckEquivalenceOfReplicates);
             }
 
@@ -582,18 +554,22 @@ namespace pwiz.SkylineTestFunctional
             // Drag-and-drop internals 
             {
                 var replicateFolder = SkylineWindow.FilesTree.Folder<ReplicatesFolder>();
-                var replicateNode = (FilesTreeNode)replicateFolder.Nodes[0];
-
-                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode((FilesTreeNode)replicateFolder.Nodes[1], replicateNode));
-                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(replicateFolder, replicateNode));
+                var replicateNode = replicateFolder.NodeAt(0);
 
                 var libraryFolder = SkylineWindow.FilesTree.Folder<SpectralLibrariesFolder>();
-                Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode((FilesTreeNode)libraryFolder.Nodes[0], replicateNode));
+                var libraryNode = libraryFolder.NodeAt(0);
+
+                // Replicate can be dropped on another replicate or parent folder but not on spectral library or library folder
+                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(replicateFolder.NodeAt(1), replicateNode));
+                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(replicateFolder, replicateNode));
+                Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(libraryFolder.NodeAt(0), replicateNode));
                 Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(libraryFolder, replicateNode));
 
-                var libraryNode = (FilesTreeNode)libraryFolder.Nodes[0];
-                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode((FilesTreeNode)libraryFolder.Nodes[0], libraryNode));
+                // Spectral library can be dropped on another library or parent folder but not replicate / replicate folder
+                Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(libraryFolder.NodeAt(0), libraryNode));
                 Assert.IsTrue(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(libraryFolder, libraryNode));
+                Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(replicateFolder, libraryNode));
+                Assert.IsFalse(PrimarySelectedNode.DoesDropTargetAcceptDraggedNode(replicateNode, libraryNode));
             }
         }
 
@@ -787,73 +763,5 @@ namespace pwiz.SkylineTestFunctional
         internal IList<FilesTreeNode> DraggedNodes;
         internal FilesTreeNode DropNode;
         internal bool DropBelowLastNode;
-    }
-
-    // Borrowing for now from FindNodeCancelTest. Will consolidate if useful.
-    internal static class SrmDocumentHelper
-    {
-        private const string ALL_AMINO_ACIDS = "ACDEFGHIKLMNPQRSTVWY";
-
-        /// <summary>
-        /// List of three character combinations which are used as the Peptide Group names
-        /// in the test document and also the first three amino acids of all of the peptides
-        /// in that Peptide Group
-        /// </summary>
-        private static readonly List<string> PEPTIDE_GROUP_NAMES = 
-            ALL_AMINO_ACIDS.SelectMany(aa => ALL_AMINO_ACIDS.SelectMany(aa2 => ALL_AMINO_ACIDS.Select(aa3 => "" + aa + aa2 + aa3))).ToList();
-
-        internal static SrmDocument MakeEmptyDocument()
-        {
-            var srmSettings = SrmSettingsList.GetDefault();
-            var transitionSettings = srmSettings.TransitionSettings;
-            transitionSettings = transitionSettings
-                .ChangeInstrument(transitionSettings.Instrument.ChangeMinMz(50))
-                .ChangeFilter(transitionSettings.Filter
-                    .ChangePeptidePrecursorCharges(new[] { Adduct.SINGLY_PROTONATED })
-                    .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED })
-                    .ChangePeptideIonTypes(new[] { IonType.precursor, IonType.b, IonType.y }));
-            srmSettings = srmSettings.ChangeTransitionSettings(transitionSettings);
-            return new SrmDocument(srmSettings);
-        }
-
-        /// <summary>
-        /// Add Peptide Groups to the document so that it has the <paramref name="newProteinCount"/>.
-        /// The names of the Peptide Groups come from <see cref="PEPTIDE_GROUP_NAMES"/>.
-        /// </summary>
-        internal static SrmDocument AddProteinsToDocument(SrmDocument document, int newProteinCount)
-        {
-            var newProteins = new List<PeptideGroupDocNode>();
-            for (int i = document.MoleculeGroupCount; i < newProteinCount; i++)
-            {
-                newProteins.Add(MakePeptideGroup(document.Settings, PEPTIDE_GROUP_NAMES[i]));
-            }
-
-            return (SrmDocument)document.ChangeChildren(document.Children.Concat(newProteins).ToArray());
-        }
-
-        /// <summary>
-        /// Construct a Peptide Group whose name is <paramref name="prefix"/> and which has
-        /// 400 Peptides where the peptide sequences are the prefix plus two amino acids.
-        /// </summary>
-        static PeptideGroupDocNode MakePeptideGroup(SrmSettings settings, string prefix)
-        {
-            var peptideDocNodes = new List<PeptideDocNode>();
-            foreach (var firstAminoAcid in ALL_AMINO_ACIDS)
-            {
-                foreach (var secondAminoAcid in ALL_AMINO_ACIDS)
-                {
-                    var peptide = new Peptide(prefix + firstAminoAcid + secondAminoAcid);
-                    var peptideDocNode = new PeptideDocNode(peptide, settings, ExplicitMods.EMPTY, null, null,
-                        System.Array.Empty<TransitionGroupDocNode>(), true);
-                    // PeptideGroupDocNode.GenerateColors is slow, so it's faster to just tell the peptide what color it should be
-                    peptideDocNode = peptideDocNode.ChangeColor(Color.Black);
-                    peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL);
-                    peptideDocNodes.Add(peptideDocNode);
-                }
-            }
-            var peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), prefix, null, peptideDocNodes.ToArray());
-            peptideGroupDocNode = peptideGroupDocNode.ChangeProteinMetadata(peptideGroupDocNode.ProteinMetadata.SetWebSearchCompleted());
-            return peptideGroupDocNode;
-        }
     }
 }

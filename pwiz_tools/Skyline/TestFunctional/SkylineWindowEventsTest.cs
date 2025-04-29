@@ -16,6 +16,8 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using System.IO;
 
@@ -109,6 +111,24 @@ namespace pwiz.SkylineTestFunctional
                 isSaveAs = args.IsSaveAs;
                 testSavedPath = args.DocumentFilePath;
             }
+        }
+    }
+
+    // Borrowing for now from FindNodeCancelTest. Will consolidate if useful.
+    internal static class SrmDocumentHelper
+    {
+        internal static SrmDocument MakeEmptyDocument()
+        {
+            var srmSettings = SrmSettingsList.GetDefault();
+            var transitionSettings = srmSettings.TransitionSettings;
+            transitionSettings = transitionSettings
+                .ChangeInstrument(transitionSettings.Instrument.ChangeMinMz(50))
+                .ChangeFilter(transitionSettings.Filter
+                    .ChangePeptidePrecursorCharges(new[] { Adduct.SINGLY_PROTONATED })
+                    .ChangePeptideProductCharges(new[] { Adduct.SINGLY_PROTONATED })
+                    .ChangePeptideIonTypes(new[] { IonType.precursor, IonType.b, IonType.y }));
+            srmSettings = srmSettings.ChangeTransitionSettings(transitionSettings);
+            return new SrmDocument(srmSettings);
         }
     }
 }
