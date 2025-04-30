@@ -69,9 +69,11 @@ namespace pwiz.Common.Collections
         /// </summary>
         public static void Sort<TItem>(ArraySegment<TItem> array, params ArraySegment<TItem>?[] secondaryArrays)
         {
-            var sortIndexes=  new int[array.Count];
-            for (int i = 0; i < array.Count; i++)
-                sortIndexes[i] = i;
+            var sortIndexes = new int[array.Array!.Length];
+            for (var i = 0; i < array.Count; i++)
+            {
+                sortIndexes[array.Offset+i] = i;
+            }
             // ReSharper disable once AssignNullToNotNullAttribute
             Array.Sort(array.Array, sortIndexes, array.Offset, array.Count);
             var len = array.Count;
@@ -81,7 +83,7 @@ namespace pwiz.Common.Collections
                 var asList = secondaryArray.Value as IList<TItem>;
                 for (var i = 0; i <len; i++)
                 {
-                    buffer[i] = asList[sortIndexes[i]];
+                    buffer[i] = asList[sortIndexes[array.Offset + i]];
                 }
                 // ReSharper disable once AssignNullToNotNullAttribute
                 Array.Copy(buffer, 0, secondaryArray.Value.Array, secondaryArray.Value.Offset, len);
