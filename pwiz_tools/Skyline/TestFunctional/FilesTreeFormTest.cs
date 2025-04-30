@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].Expand());
             WaitForConditionUI(() => SkylineWindow.FilesTree.Folder<ReplicatesFolder>().Nodes[3].IsExpanded);
 
-            string newName = "Test this name";
+            var newName = "Test this name";
             RunUI(() =>
             {
                 SkylineWindow.ModifyDocument("Rename replicate in FilesTree test", srmDoc =>
@@ -581,11 +581,7 @@ namespace pwiz.SkylineTestFunctional
         {
             var folder = SkylineWindow.FilesTree.Folder<T>();
 
-            var dragNodes = new List<FilesTreeNode>();
-            foreach (var index in dragNodeIndexes)
-            {
-                dragNodes.Add((FilesTreeNode)folder.Nodes[index]);
-            }
+            var dragNodes = dragNodeIndexes.Select(index => folder.Nodes[index]).Cast<FilesTreeNode>().ToList();
 
             var selectedNode = dragNodes[0];
             var dropNode = (FilesTreeNode)folder.Nodes[dropNodeIndex];

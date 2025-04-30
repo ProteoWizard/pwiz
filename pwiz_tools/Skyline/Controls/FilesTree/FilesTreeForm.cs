@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 // Filter out replicate sample files if any happened to be included in the selection
                 // so audit log messages are more consistent
-                nodes = nodes.Where(item => item.Model.GetType().IsAssignableFrom(typeof(Replicate))).ToList();
+                nodes = nodes.Where(item => item.Model is Replicate).ToList();
 
                 var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
 
@@ -414,28 +414,27 @@ namespace pwiz.Skyline.Controls.FilesTree
                     SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
                         doc =>
                         {
-                            var draggedImmutables = draggedNodes.Select(item => (ChromatogramSet)item.Model.Immutable).ToList();
+                            var draggedImmutables = 
+                                draggedNodes.Select(item => item.Model.Immutable).Cast<ChromatogramSet>().ToList();
 
-                            var newChromatogramSets = new List<ChromatogramSet>(doc.MeasuredResults.Chromatograms);
-                            foreach (var item in draggedImmutables)
-                            {
-                                newChromatogramSets.Remove(item);
-                            }
+                            var newChromatograms =
+                                doc.MeasuredResults.Chromatograms.Except(draggedImmutables).ToList();
 
                             if (dropNode.Model.GetType() == typeof(ReplicatesFolder))
                             {
-                                newChromatogramSets.InsertRange(0, draggedImmutables);
+                                newChromatograms.InsertRange(0, draggedImmutables);
                             }
-                            else {
-                                var dropNodeIndex = newChromatogramSets.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
+                            else 
+                            {
+                                var dropNodeIndex = newChromatograms.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
 
                                 if (dropBelowLastNode)
-                                    newChromatogramSets.InsertRange(dropNodeIndex + 1, draggedImmutables);
+                                    newChromatograms.InsertRange(dropNodeIndex + 1, draggedImmutables);
                                 else
-                                    newChromatogramSets.InsertRange(dropNodeIndex, draggedImmutables);
+                                    newChromatograms.InsertRange(dropNodeIndex, draggedImmutables);
                             }
 
-                            var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatogramSets);
+                            var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatograms);
                             var newDoc = doc.ChangeMeasuredResults(newMeasuredResults);
                             newDoc.ValidateResults();
                             return newDoc;
@@ -469,14 +468,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                 else if (type == typeof(SpectralLibrary))
                 {
                     SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
-                        doc => {
-                            var draggedImmutables = draggedNodes.Select(item => (LibrarySpec)item.Model.Immutable).ToList();
+                        doc =>
+                        {
+                            var draggedImmutables =
+                                draggedNodes.Select(item => item.Model.Immutable).Cast<LibrarySpec>().ToList();
 
-                            var newLibSpecs = new List<LibrarySpec>(doc.Settings.PeptideSettings.Libraries.LibrarySpecs);
-                            foreach (var item in draggedImmutables)
-                            {
-                                newLibSpecs.Remove(item);
-                            }
+                            var newLibSpecs =
+                                doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Except(draggedImmutables).ToList();
 
                             if (dropNode.Model.GetType() == typeof(SpectralLibrariesFolder))
                             {
@@ -513,7 +511,12 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                             if (draggedNodes.Count > 1)
                             {
-                                entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, docPair.NewDocumentType, node.Text, dropNode.Text)).ToList());
+                                entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(
+                                    MessageType.files_tree_node_drag_and_drop, 
+                                    docPair.NewDocumentType, 
+                                    node.Text, 
+                                    dropNode.Text))
+                                    .ToList());
                             }
 
                             return entry;
