@@ -308,7 +308,13 @@ namespace pwiz.Skyline.SettingsUI
 
                     }
 
-                    if (Builder == null && newBuilder)
+                    if (!_documentUiContainer.Document.HasPeptides)
+                    {
+                        _helper.ShowTextBoxError(tabControlMain,
+                            SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides);
+                        return false;
+                    }
+                    else if (Builder == null && newBuilder)
                     {
                         Builder = new AlphapeptdeepLibraryBuilder(name, outputPath,
                             AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI, IrtStandard);

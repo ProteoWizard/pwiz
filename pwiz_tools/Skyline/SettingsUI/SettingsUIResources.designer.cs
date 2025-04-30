@@ -323,6 +323,15 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Current Skyline document is missing peptides..
+        /// </summary>
+        public static string BuildLibraryDlg_Current_Skyline_document_is_missing_peptides {
+            get {
+                return ResourceManager.GetString("BuildLibraryDlg_Current_Skyline_document_is_missing_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finding library input files in.
         /// </summary>
         public static string BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in {

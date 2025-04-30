@@ -157,23 +157,24 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         internal List<PythonTaskBase> GetPythonTasks(bool? haveNvidiaGpu = false)
         {
-
-            var task1 = new DownloadPythonEmbeddablePackageTask(this);
-            var task2 = new UnzipPythonEmbeddablePackageTask(this);
-            var task3 = new EnableSearchPathInPythonEmbeddablePackageTask(this); 
-            var task4 = new EnableLongPathsTask(this);
-            var task5 = new DownloadGetPipScriptTask(this); 
-            var task6 = new RunGetPipScriptTask(this); 
-            var task7 = new PipInstallVirtualEnvTask(this); 
-            var task8 = new CreateVirtualEnvironmentTask(this);
-            var task9 = new PipInstallPackagesTask(this); 
-            var task10 = new SetupNvidiaLibrariesTask(this); 
-
+            var tasks = new List<PythonTaskBase>
+            {
+                new DownloadPythonEmbeddablePackageTask(this),
+                new UnzipPythonEmbeddablePackageTask(this),
+                new EnableSearchPathInPythonEmbeddablePackageTask(this),
+                new EnableLongPathsTask(this),
+                new DownloadGetPipScriptTask(this),
+                new RunGetPipScriptTask(this),
+                new PipInstallVirtualEnvTask(this),
+                new CreateVirtualEnvironmentTask(this),
+                new PipInstallPackagesTask(this),
+            };
             if (haveNvidiaGpu == true)
-                return new List<PythonTaskBase>
-                    { task1, task2, task3, task4, task5, task6, task7, task8, task9, task10 };
+            {
+                tasks.Add(new SetupNvidiaLibrariesTask(this));
+            }
 
-            return new List<PythonTaskBase> { task1, task2, task3, task4, task5, task6, task7, task8, task9 };
+            return tasks;
         }
  
         public int NumTotalTasks { get; set; }
@@ -226,8 +227,6 @@ namespace pwiz.Skyline.Model.Tools
         }
         private string PythonRootDir { get; } = PythonInstallerUtil.PythonRootDir;
         internal TextWriter Writer { get; }
-      //  private IPythonInstallerTaskValidator TaskValidator { get; }
-
         public bool HavePythonTasks { get; private set;}
         public bool HaveNvidiaTasks { get; private set; }
 
@@ -410,7 +409,6 @@ namespace pwiz.Skyline.Model.Tools
            // SimulatedInstallationState = eSimulatedInstallationState.NONE;
             PythonVersion = pythonPathContainer.ProgramVersion;
             Writer = writer;
-            //TaskValidator = taskValidator;
             VirtualEnvironmentName = virtualEnvironmentName;
             PendingTasks = new List<PythonTaskBase>();
             Directory.CreateDirectory(PythonRootDir);
@@ -439,8 +437,7 @@ namespace pwiz.Skyline.Model.Tools
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
 
             if (abortedTasks != null && abortedTasks.Count > 0)
-                return !abortedTasks.Any(task =>
-                    (task.TaskName == PythonTaskName.setup_nvidia_libraries));
+                return !abortedTasks.Any(task => task.IsNvidiaTask);
             return true;
         }
 
@@ -458,8 +455,7 @@ namespace pwiz.Skyline.Model.Tools
             if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
                 return true;
 
-            return !tasks.Any(task =>
-                (task.TaskName != PythonTaskName.setup_nvidia_libraries));
+            return !tasks.Any(task => task.IsRequiredForPythonEnvironment);
         }
 
         public void ClearPendingTasks() 
@@ -473,14 +469,12 @@ namespace pwiz.Skyline.Model.Tools
             HavePythonTasks = false;
             HaveNvidiaTasks = false;
 
-            if (tasks.Any(task =>
-                    (task.TaskName != PythonTaskName.setup_nvidia_libraries)))
+            if (tasks.Any(task => task.IsRequiredForPythonEnvironment))
             {
                 HavePythonTasks = true;
             }
 
-            if (tasks.Any(task =>
-                    (task.TaskName == PythonTaskName.setup_nvidia_libraries)))
+            if (tasks.Any(task => task.IsNvidiaTask))
             {
                 HaveNvidiaTasks = true;
             }
@@ -1066,67 +1060,6 @@ namespace pwiz.Skyline.Model.Tools
         public string Name { get; set; }
         public string Version { get; set; }
     }
-
-    public class TestPythonInstallerTaskValidator : IPythonInstallerTaskValidator
-    {
-        public TestPythonInstallerTaskValidator(PythonInstaller installer)
-        {
-            Tasks = installer.GetPythonTasks();
-        }
-        private List<PythonTaskBase> Tasks { get; set; }
-        private Dictionary<PythonTaskName, bool> TaskValidationResult { get; } = new Dictionary<PythonTaskName, bool>
-        {
-            { PythonTaskName.download_python_embeddable_package, false },
-            { PythonTaskName.unzip_python_embeddable_package, false },
-            { PythonTaskName.enable_search_path_in_python_embeddable_package, false },
-            { PythonTaskName.enable_longpaths, false },
-            { PythonTaskName.download_getpip_script, false },
-            { PythonTaskName.run_getpip_script, false },
-            { PythonTaskName.pip_install_virtualenv, false },
-            { PythonTaskName.create_virtual_environment, false },
-            { PythonTaskName.pip_install_packages, false },
-            { PythonTaskName.download_cuda_library, false },
-            { PythonTaskName.install_cuda_library, false },
-            { PythonTaskName.download_cudnn_library, false },
-            { PythonTaskName.install_cudnn_library, false },
-            { PythonTaskName.setup_nvidia_libraries, false }
-
-        };
-
-
-        public void SetSuccessUntil(PythonTaskName pythonTaskName)
-        {
-            var seenTask = false;
-            foreach (var task in Tasks)
-            {
-                if (!seenTask)
-                {
-                    if (task.TaskName.Equals(pythonTaskName))
-                    {
-                        seenTask = true;
-                    }
-                    TaskValidationResult[task.TaskName] = true;
-                }
-                else
-                {
-                    TaskValidationResult[task.TaskName] = false;
-                }
-            }
-        }
-      
-        private bool GetTaskValidationResult(PythonTaskBase pythonTask)
-        {
-            return TaskValidationResult[pythonTask.TaskName];
-        }
-
-        public bool? Validate(PythonTaskBase pythonTask, PythonInstaller pythonInstaller)
-        {
-            return pythonTask.ValidateTask();
-
-        }
-    }
-
-
     internal class PythonInstallerException : Exception
     {
         public PythonInstallerException(string message, Exception inner = null) : base(message, inner)
@@ -1165,6 +1098,20 @@ namespace pwiz.Skyline.Model.Tools
         public abstract bool? ValidateTask(bool longValidate = false);
         public abstract void DoAction();
         public abstract void DoAction(ILongWaitBroker broker);
+        public virtual bool IsRequiredForPythonEnvironment
+        {
+            get { return true; }
+        }
+
+        public virtual bool IsNvidiaTask
+        {
+            get { return false;  }
+        }
+
+        public virtual bool IsEnableLongPathsTask
+        {
+            get { return false; }
+        }
     }
 
     public class DownloadPythonEmbeddablePackageTask : PythonTaskBase
@@ -1387,6 +1334,11 @@ namespace pwiz.Skyline.Model.Tools
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
             throw new NotImplementedException();
+        }
+
+        public override bool IsEnableLongPathsTask
+        {
+            get { return true; }
         }
     }
 
@@ -1777,6 +1729,15 @@ namespace pwiz.Skyline.Model.Tools
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
             throw new NotImplementedException();
+        }
+
+        public override bool IsRequiredForPythonEnvironment
+        {
+            get { return false; }
+        }
+        public override bool IsNvidiaTask
+        {
+            get { return true; }
         }
     }
 }

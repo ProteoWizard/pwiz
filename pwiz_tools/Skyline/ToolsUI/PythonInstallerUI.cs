@@ -53,7 +53,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 try
                 {
-                    if (task.TaskName == PythonTaskName.setup_nvidia_libraries)
+                    if (task.IsNvidiaTask)
                     {
                         if (_userAnswerToCuda != @"No")
                         {
@@ -116,7 +116,7 @@ namespace pwiz.Skyline.ToolsUI
                             abortTask = !PerformTaskAction(parent, task);
                         }
                     }
-                    else if (task.TaskName == PythonTaskName.enable_longpaths)
+                    else if (task.IsEnableLongPathsTask)
                     {
                         AlertDlg adminMessageDlg =
                             new AlertDlg(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), MessageBoxButtons.OKCancel);

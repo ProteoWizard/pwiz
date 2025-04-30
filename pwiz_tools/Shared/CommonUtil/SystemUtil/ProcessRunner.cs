@@ -53,6 +53,7 @@ namespace pwiz.Common.SystemUtil
         private string _tmpDirForCleanup;
 
         public bool EnableImmediateLog { get; set; }
+        public int ExpectedOutputLinesCount { get; set; }
         public string[] FilterStrings { get; set; }
 
         public bool EnableRunningTimeMessage { get; set; }
@@ -166,6 +167,7 @@ namespace pwiz.Common.SystemUtil
                 StringBuilder sbError = new StringBuilder();
                 int percentLast = 0;
                 string line;
+                int outputLinesCount = 0;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
                     if (EnableImmediateLog)
@@ -183,7 +185,10 @@ namespace pwiz.Common.SystemUtil
                     }
 
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
+                    {
                         writer.WriteLine(line);
+                        outputLinesCount++;
+                    }
 
                     string lineLower = line.ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
@@ -232,8 +237,19 @@ namespace pwiz.Common.SystemUtil
                                 status = status.ChangeMessage(Resources.ProcessRunner_Run_Working_);
                             else 
                                 status = status.ChangeMessage(line);
-                            
-                            progress.UpdateProgress(status);
+
+                            if (ExpectedOutputLinesCount > 0)
+                            {
+                                percentLast = outputLinesCount * 100 / ExpectedOutputLinesCount;
+                                status = status.ChangePercentComplete(percentLast);
+                                if (percentLast >= 100 && status.SegmentCount > 0)
+                                    status = status.NextSegment();
+                                progress.UpdateProgress(status);
+                            }
+                            else
+                            {
+                                progress.UpdateProgress(status);
+                            }
                         }
                     }
                 }

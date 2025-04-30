@@ -314,6 +314,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             {
                 pr.EnableImmediateLog = false;
                 pr.EnableRunningTimeMessage = false;
+                pr.ExpectedOutputLinesCount = 213;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
@@ -358,6 +359,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
                 pr.EnableImmediateLog = true;
                 pr.EnableRunningTimeMessage = true;
+                pr.ExpectedOutputLinesCount = 119;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
