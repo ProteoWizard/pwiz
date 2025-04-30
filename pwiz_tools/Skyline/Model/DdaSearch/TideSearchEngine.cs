@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"b,y",  // Tide-search generates only b- and y-ions. No options to change these
         };
 
-        static string CRUX_FILENAME = @"crux-4.3";
+        static string CRUX_FILENAME = @"crux-4.2";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
         public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
