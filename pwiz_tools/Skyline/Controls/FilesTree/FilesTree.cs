@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public bool IsDragAndDrop { get; internal set; }
+        public bool IsDuringDragAndDrop { get; internal set; }
 
         #region Test helpers
 

@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private bool IsCurrentDropTarget()
         {
-            return FilesTree.IsDragAndDrop && IsDraggable() && ReferenceEquals(FilesTree.SelectedNode, this);
+            return FilesTree.IsDuringDragAndDrop && IsDraggable() && ReferenceEquals(FilesTree.SelectedNode, this);
         }
 
         internal bool IsLastNodeInFolder()
@@ -138,8 +138,9 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // If dropping on the last node in this folder, move the insertion point *below* the current node
                 if (IsLastNodeInFolder() && IsMouseInLowerHalf())
                 {
-                    lineStart = new Point(BoundsMS.X, BoundsMS.Y + BoundsMS.Height);
-                    lineEnd = new Point(BoundsMS.X + BoundsMS.Width, BoundsMS.Y + BoundsMS.Height);
+                    const int yOffset = 1;
+                    lineStart = new Point(BoundsMS.X, BoundsMS.Y + BoundsMS.Height - yOffset);
+                    lineEnd = new Point(BoundsMS.X + BoundsMS.Width, BoundsMS.Y + BoundsMS.Height - yOffset);
                 }
                 // Otherwise, the insertion point is *above* the current node
                 else
@@ -148,17 +149,16 @@ namespace pwiz.Skyline.Controls.FilesTree
                     lineEnd = new Point(BoundsMS.X + BoundsMS.Width, BoundsMS.Y);
                 }
 
-                // TODO: does Pen need to be wrapped in using (pen) {...}
-                var pen = new Pen(SystemColors.Highlight) {
-                    Width = 2,
-                    DashStyle = DashStyle.Dash
-                };
+                using var pen = new Pen(SystemColors.Highlight);
+                pen.Width = 2;
+                pen.DashStyle = DashStyle.Dash;
 
                 g.DrawLine(pen, lineStart, lineEnd);
-                return;
             }
-
-            base.DrawFocus(g);
+            else
+            {
+                base.DrawFocus(g);
+            }
         }
 
         // CONSIDER: customize behavior in subclasses. Putting everything in FilesTreeNode won't work long-term.

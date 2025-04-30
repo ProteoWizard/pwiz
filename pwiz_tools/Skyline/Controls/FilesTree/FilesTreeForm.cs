@@ -750,10 +750,14 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 e.Effect = DragDropEffects.Move;
                 filesTree.SelectedNode = node;
+
+                ShowRemoveDropTarget();
             }
             else
             {
                 e.Effect = DragDropEffects.None;
+
+                HideRemoveDropTarget();
             }
 
             // Re-paint "current" and surrounding nodes as the mouse moves so
@@ -917,7 +921,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void ShowRemoveDropTarget(bool highlight = false)
         {
-            FilesTree.IsDragAndDrop = true;
+            FilesTree.IsDuringDragAndDrop = true;
 
             _dropTargetRemove.Visible = true;
             _dropTargetRemove.BackColor = highlight ? Color.LightYellow : Color.WhiteSmoke;
@@ -925,7 +929,12 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         private void HideRemoveDropTarget()
         {
-            FilesTree.IsDragAndDrop = false;
+            FilesTree.IsDuringDragAndDrop = false;
+
+            // Clear selection so the insert highlight line does not appear when mouse
+            // is not over a valid drop target
+            filesTree.SelectedNode = null;
+            filesTree.SelectedNodes.Clear();
 
             FilesTree.Invalidate();
 
