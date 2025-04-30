@@ -83,8 +83,8 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("use-flanking-peaks", false));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("use-neutral-loss-peaks", true));
             
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("precursor-window", 50));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("precursor-window-type", "ppm", "mass|mz|ppm".Split('|')));   // No support for 'mass' unit
+            //AddAdditionalSetting(TIDE_SETTINGS, new Setting("precursor-window", 50));
+            //AddAdditionalSetting(TIDE_SETTINGS, new Setting("precursor-window-type", "ppm", "mass|mz|ppm".Split('|')));   // No support for 'mass' unit
 
             // Add param-medic options.
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("pm-charges", "0,2,3,4"));
@@ -125,12 +125,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("max-mass", 7200, 1));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-length", 6, 1));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-mass", 200, 1));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("cterm-peptide-mods-spec", ""));
+            //AddAdditionalSetting(TIDE_SETTINGS, new Setting("cterm-peptide-mods-spec", ""));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("cterm-protein-mods-spec", ""));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("min-mods", 0, 0));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("mod-precision", 4, 0));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("mods-spec", ""));
-            AddAdditionalSetting(TIDE_SETTINGS, new Setting("nterm-peptide-mods-spec", ""));
+            //AddAdditionalSetting(TIDE_SETTINGS, new Setting("mods-spec", ""));
+            //AddAdditionalSetting(TIDE_SETTINGS, new Setting("nterm-peptide-mods-spec", ""));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("nterm-protein-mods-spec", ""));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("auto-modifications", false));
             AddAdditionalSetting(TIDE_SETTINGS, new Setting("allow-dups", false));
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"b,y",  // Tide-search generates only b- and y-ions. No options to change these
         };
 
-        static string CRUX_FILENAME = @"crux-4.2";
+        static string CRUX_FILENAME = @"crux-4.3";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
         public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 return new[]
                 {
-                    new MzToleranceUnits(@"mass", MzTolerance.Units.mz),    // No support for 'Units.mass' 
+                    //new MzToleranceUnits(@"mass", MzTolerance.Units.mz),    // No support for 'Units.mass' 
                     new MzToleranceUnits(@"mz", MzTolerance.Units.mz),
                     new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm)
                 };
@@ -245,7 +245,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 SetTideParam(paramsFileText, @"pin-output", "T");
                 SetTideParam(paramsFileText, @"txt-output", "T");
                 SetTideParam(paramsFileText, @"precursor-window", _precursorMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
-                SetTideParam(paramsFileText, @"precursor-window-type", AdditionalSettings[@"precursor-window-type"].ValueToString(CultureInfo.InvariantCulture));
+                SetTideParam(paramsFileText, @"precursor-window-type", _precursorMzTolerance.UnitName);
                 SetTideParam(paramsFileText, @"mz-bin-width", _fragmentMzTolerance.Value.ToString(CultureInfo.InvariantCulture));
                 SetTideParam(paramsFileText, @"missed-cleavages", _maxMissedCleavages);
                 SetTideParam(paramsFileText, @"max-mods", _maxVariableMods);
@@ -255,23 +255,24 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                 foreach (var settingName in TIDE_SETTINGS)
                 {
-                    if (settingName == "digestion")
-                        continue;
+                    //if (settingName == "digestion")
+                    //    continue;
                     SetTideParam(paramsFileText, settingName, AdditionalSettings[settingName].ValueToString(CultureInfo.InvariantCulture));
                 }
 
-                if (_enzyme.IsSemiCleaving == true)
-                {
-                    SetTideParam(paramsFileText, @"digestion", "partial-digest");
-                } else
-                {
-                    SetTideParam(paramsFileText, "digestion", AdditionalSettings["digestion"].ValueToString(CultureInfo.InvariantCulture));
-                }
+                //if (_enzyme.IsSemiCleaving == true)
+                //{
+                //    SetTideParam(paramsFileText, @"digestion", "partial-digest");
+                //} else
+                //{
+                //    SetTideParam(paramsFileText, "digestion", AdditionalSettings["digestion"].ValueToString(CultureInfo.InvariantCulture));
+                //}
 
                 switch (_enzyme.Name)
                     {
                         case "Trypsin (semi)":
                             SetTideParam(paramsFileText, @"enzyme", "trypsin");
+                            SetTideParam(paramsFileText, @"digestion", "partial-digest");
                             break;
                         case "Trypsin":
                             SetTideParam(paramsFileText, @"enzyme", "trypsin");
