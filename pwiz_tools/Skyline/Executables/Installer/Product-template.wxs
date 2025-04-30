@@ -157,8 +157,14 @@
       <Component Id="BlibBuild.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="BlibBuild.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe.config" KeyPath="yes"/>
+      </Component>
       <Component Id="BlibFilter.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="BlibFilter.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe.config" KeyPath="yes"/>
       </Component>
       <Component Id="BullseyeSharp.exe">
         <File Source="$(var.Skyline.TargetDir)/BullseyeSharp.exe" KeyPath="yes"/>
@@ -225,6 +231,9 @@
       </Component>
       <Component Id="msconvert.exe">
         <File Source="$(var.Skyline.TargetDir)/msconvert.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="msconvert.exe.config">
+        <File Source="$(var.Skyline.TargetDir)/msconvert.exe.config" KeyPath="yes"/>
       </Component>
       <Component Id="MSGraph.dll">
         <File Source="$(var.Skyline.TargetDir)/MSGraph.dll" KeyPath="yes"/>
@@ -377,12 +386,6 @@
       </Component>
       <Component Id="System.Interactive.Async.dll">
         <File Source="$(var.Skyline.TargetDir)/System.Interactive.Async.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="System.Memory.dll">
-        <File Source="$(var.Skyline.TargetDir)/System.Memory.dll" KeyPath="yes"/>
-      </Component>
-      <Component Id="System.Runtime.CompilerServices.Unsafe.dll">
-        <File Source="$(var.Skyline.TargetDir)/System.Runtime.CompilerServices.Unsafe.dll" KeyPath="yes"/>
       </Component>
       <Component Id="unimod.obo">
         <File Source="$(var.Skyline.TargetDir)/unimod.obo" KeyPath="yes"/>
