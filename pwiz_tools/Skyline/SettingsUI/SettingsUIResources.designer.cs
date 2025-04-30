@@ -473,15 +473,6 @@ namespace pwiz.Skyline.SettingsUI {
         /// <summary>
         ///   Looks up a localized string similar to You must specify an output file path..
         /// </summary>
-        public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu {
-            get {
-                return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to You must specify an output file path..
-        /// </summary>
         public static string BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path {
             get {
                 return ResourceManager.GetString("BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path", resourceCulture);

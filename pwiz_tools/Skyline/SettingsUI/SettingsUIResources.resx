@@ -232,7 +232,7 @@
   <data name="BuildLibraryDlg_No_Skyline_document_is_currently_loaded" xml:space="preserve">
     <value>No Skyline document is currently loaded. Please load a Skyline document for training.</value>
   </data>
-  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_outpu" xml:space="preserve">
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path" xml:space="preserve">
     <value>You must specify an output file path.</value>
   </data>
   <data name="BuildLibraryDlg_Current_Skyline_document_is_missing_peptides" xml:space="preserve">
