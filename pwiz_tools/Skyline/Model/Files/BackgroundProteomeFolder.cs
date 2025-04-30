@@ -38,12 +38,13 @@ namespace pwiz.Skyline.Model.Files
         {
             get
             {
-                if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasBackgroundProteome)
+                if (Document.Settings.PeptideSettings is { HasBackgroundProteome: true })
                 {
+                    return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, DocumentPath, Document.Settings.PeptideSettings.BackgroundProteome.Id));
+                }
+                else {
                     return ImmutableList.Empty<FileNode>();
                 }
-
-                return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, DocumentPath, Document.Settings.PeptideSettings.BackgroundProteome.Id));
             }
         }
     }

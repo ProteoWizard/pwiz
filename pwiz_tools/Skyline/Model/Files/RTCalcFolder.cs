@@ -38,12 +38,15 @@ namespace pwiz.Skyline.Model.Files
         {
             get
             {
-                if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasRTCalcPersisted)
+                if (Document.Settings.PeptideSettings is { HasRTCalcPersisted: true })
+                {
+                    var model = new RTCalc(Document, DocumentPath, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id);
+                    return ImmutableList<FileNode>.Singleton(model);
+                }
+                else
                 {
                     return ImmutableList.Empty<FileNode>();
                 }
-
-                return ImmutableList<FileNode>.Singleton(new RTCalc(Document, DocumentPath, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id));
             }
         }
     }

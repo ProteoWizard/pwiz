@@ -76,8 +76,8 @@ namespace pwiz.Skyline.Model.Files
             ImageMissing = missing;
         }
 
-        public SrmDocument Document { get; }
-        public string DocumentPath { get; }
+        protected SrmDocument Document { get; }
+        protected string DocumentPath { get; }
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
@@ -91,12 +91,12 @@ namespace pwiz.Skyline.Model.Files
 
         public virtual IList<FileNode> Files => ImmutableList.Empty<FileNode>();
 
+        // ReSharper disable once LocalizableElement
+        public override string ToString() => "FileNode: " + (Name ?? string.Empty);
+
         internal bool IsDocumentSavedToDisk()
         {
             return !string.IsNullOrEmpty(DocumentPath);
         }
-
-        // ReSharper disable once LocalizableElement
-        public override string ToString() => "FileNode: " + (Name ?? string.Empty);
     }
 }

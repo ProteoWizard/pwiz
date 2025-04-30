@@ -38,15 +38,19 @@ namespace pwiz.Skyline.Model.Files
         {
             get
             {
-                if (Document.Settings.PeptideSettings == null || !Document.Settings.PeptideSettings.HasLibraries)
+                if (Document.Settings.PeptideSettings is { HasLibraries: true })
+                {
+                    var model =
+                        Document.Settings.PeptideSettings.Libraries.LibrarySpecs.
+                            Select(library => new SpectralLibrary(Document, DocumentPath, library.Id)).
+                            ToList<FileNode>();
+
+                    return ImmutableList.ValueOf(model);
+                }
+                else
                 {
                     return ImmutableList.Empty<FileNode>();
                 }
-
-                var files = Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Select(library => 
-                    new SpectralLibrary(Document, DocumentPath, library.Id)).ToList<FileNode>();
-
-                return ImmutableList.ValueOf(files);
             }
         }
     }

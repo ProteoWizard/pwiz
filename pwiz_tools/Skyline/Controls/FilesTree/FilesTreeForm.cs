@@ -251,28 +251,31 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (nodes == null || nodes.Count == 0)
                 return;
 
-            var type = nodes.First().Model.GetType();
-            Assume.IsTrue(type == typeof(Replicate) || type == typeof(SpectralLibrary));
+            var model = nodes.First().Model;
+            Assume.IsTrue(model is Replicate || model is SpectralLibrary);
 
             string confirmMsg;
-            if (type == typeof(Replicate))
+            switch (model)
             {
-                confirmMsg = nodes.Count == 1
-                    ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Replicate
-                    : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates;
+                case Replicate _:
+                    confirmMsg = nodes.Count == 1
+                        ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Replicate
+                        : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates;
+                    break;
+                case SpectralLibrary _:
+                    confirmMsg = nodes.Count == 1
+                        ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library
+                        : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries;
+                    break;
+                default:
+                    return;
             }
-            else if (type == typeof(SpectralLibrary))
-            {
-                confirmMsg = nodes.Count == 1
-                    ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library
-                    : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries;
-            }
-            else return;
 
-            if (ConfirmItemDeletion(confirmMsg) == DialogResult.No)
+            var dialogResult = ConfirmItemDeletion(confirmMsg);
+            if (dialogResult == DialogResult.No)
                 return;
 
-            if (type == typeof(Replicate))
+            if (nodes.First().Model is Replicate)
             {
                 // Filter out replicate sample files if any happened to be included in the selection
                 // so audit log messages are more consistent
@@ -314,7 +317,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     }
                 );
             }
-            else if (type == typeof(SpectralLibrary))
+            else if (nodes.First().Model is SpectralLibrary)
             {
                 var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
 

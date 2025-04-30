@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Files
 
         public FileNode Folder<T>() where T : FileNode
         {
-            return Files.Where(fileNode => fileNode.GetType() == typeof(T)).Cast<T>().FirstOrDefault();
+            return Files.OfType<T>().FirstOrDefault();
         } 
 
         private IEnumerable<FileNode> BuildFileList()

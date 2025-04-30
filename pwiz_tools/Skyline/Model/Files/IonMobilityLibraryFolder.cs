@@ -38,12 +38,15 @@ namespace pwiz.Skyline.Model.Files
         {
             get
             {
-                if (Document.Settings.TransitionSettings == null || !Document.Settings.TransitionSettings.HasIonMobilityLibraryPersisted)
+                if (Document.Settings.TransitionSettings is { HasIonMobilityLibraryPersisted: true })
+                {
+                    var model = new IonMobilityLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id);
+                    return ImmutableList<FileNode>.Singleton(model);
+                }
+                else 
                 {
                     return ImmutableList.Empty<FileNode>();
                 }
-
-                return ImmutableList<FileNode>.Singleton(new IonMobilityLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id));
             }
         }
     }

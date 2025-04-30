@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 
@@ -51,10 +52,7 @@ namespace pwiz.Skyline.Model.Files
                 var cachePaths = Document.Settings.MeasuredResults?.CachePaths;
                 if (cachePaths != null)
                 {
-                    foreach (var _ in cachePaths)
-                    {
-                        files.Add(new SkylineChromatogramCache(Document, DocumentPath));
-                    }
+                    files.AddRange(cachePaths.Select(_ => new SkylineChromatogramCache(Document, DocumentPath)));
                 }
 
                 return ImmutableList.ValueOf(files);

@@ -44,11 +44,14 @@ namespace pwiz.Skyline.Model.Files
                 {
                     return ImmutableList.Empty<FileNode>(); 
                 }
+                else
+                {
+                    var files = Document.MeasuredResults.Chromatograms.
+                        Select(chromatogramSet => new Replicate(Document, DocumentPath, (ChromatogramSetId)chromatogramSet.Id)).
+                        ToList<FileNode>();
 
-                var files = Document.MeasuredResults.Chromatograms.Select(chromatogramSet => 
-                    new Replicate(Document, DocumentPath, (ChromatogramSetId)chromatogramSet.Id)).ToList<FileNode>();
-
-                return ImmutableList.ValueOf(files);
+                    return ImmutableList.ValueOf(files);
+                }
             }
         }
     }

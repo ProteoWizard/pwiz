@@ -38,12 +38,15 @@ namespace pwiz.Skyline.Model.Files
         {
             get
             {
-                if (Document.Settings.TransitionSettings == null || !Document.Settings.TransitionSettings.HasOptimizationLibraryPersisted)
+                if (Document.Settings.TransitionSettings is { HasOptimizationLibraryPersisted: true })
+                {
+                    var model = new OptimizationLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id);
+                    return ImmutableList.Singleton<FileNode>(model);
+                }
+                else
                 {
                     return ImmutableList.Empty<FileNode>();
                 }
-
-                return ImmutableList.Singleton<FileNode>(new OptimizationLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id));
             }
         }
     }
