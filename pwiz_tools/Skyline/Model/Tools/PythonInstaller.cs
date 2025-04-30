@@ -195,10 +195,6 @@ namespace pwiz.Skyline.Model.Tools
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
         public ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
-        /// <summary>
-        /// For testing purpose only. Setting this property will bypass the TaskValidator
-        /// </summary>
-        public List<PythonTaskBase> TestPythonVirtualEnvironmentTasks { get; set; }
         #endregion
         public string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
   
@@ -472,15 +468,6 @@ namespace pwiz.Skyline.Model.Tools
         public List<PythonTaskBase> ValidatePythonVirtualEnvironment()
         {
             var pendingTasks = new List<PythonTaskBase>();
-            if (!TestPythonVirtualEnvironmentTasks.IsNullOrEmpty())
-            {
-                foreach (var task in TestPythonVirtualEnvironmentTasks)
-                {
-                    pendingTasks.Add(task);
-                    return pendingTasks;
-                }
-            }
-
             var allTasks = GetPythonTasks(this.NvidiaGpuAvailable);
 
             var hasSeenFailure = false;
