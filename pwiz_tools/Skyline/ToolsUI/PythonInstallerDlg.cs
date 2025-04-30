@@ -36,6 +36,7 @@ namespace pwiz.Skyline.ToolsUI
                 try
                 {
                    using var waitDlg = new LongWaitDlg();
+                   waitDlg.ProgressValue = 0;
                    waitDlg.Message = task.InProgressMessage();
                    waitDlg.PerformWork(this, 50, progressMonitor => task.DoAction(progressMonitor));
                    Installer.NumCompletedTasks++;

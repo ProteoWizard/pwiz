@@ -80,15 +80,15 @@ namespace pwiz.SkylineTestUtil
         {
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-
+            var pythonInstaller = new PythonInstaller();
             //Test for LongPaths not set and admin
-            if (PythonInstaller.IsRunningElevated() && !PythonInstallerTaskValidator.ValidateEnableLongpaths())
+            if (PythonInstaller.IsRunningElevated() && !pythonInstaller.ValidateEnableLongpaths())
             {
                 AlertDlg adminDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect request for elevated privileges 
                 AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, adminDlg.Message);
                 AbstractFunctionalTest.OkDialog(adminDlg, adminDlg.OkDialog);
             }
-            else if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
+            else if (!pythonInstaller.ValidateEnableLongpaths())
             {
                 Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
             }
@@ -123,16 +123,16 @@ namespace pwiz.SkylineTestUtil
             bool havePythonPrerequisite = false;
 
             AbstractFunctionalTest.RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
-
+            var pythonInstaller = new PythonInstaller();
             if (!havePythonPrerequisite)
             {
                 AlertDlg confirmDlg = null;
                 AbstractFunctionalTest.RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
                 {
                     Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                            _pythonVersion, _toolName), pythonDlg.Message);
+                        _pythonVersion, _toolName), pythonDlg.Message);
 
-                    if (!PythonInstallerTaskValidator.ValidateEnableLongpaths())
+                    if (!pythonInstaller.ValidateEnableLongpaths())
                     {
                         AlertDlg longPathDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog);
 
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestUtil
                 });
                 if (_undoRegistry)
                 {
-                    PythonInstallerTaskValidator.DisableWindowsLongPaths();
+                    pythonInstaller.DisableWindowsLongPaths();
                 }
 
                 return true;

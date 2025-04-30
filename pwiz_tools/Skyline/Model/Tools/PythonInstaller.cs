@@ -357,6 +357,17 @@ namespace pwiz.Skyline.Model.Tools
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
+        internal bool ValidateEnableLongpaths()
+        {
+            var task = GetPythonTasks()[3]; //EnableLongPathsTask
+            bool? valid = task.ValidateTask();
+            if (valid != null)
+            {
+                return (bool)valid;
+            }
+            return false;
+        }
+
         /// <summary>
         /// False means NONVIDIA hardware, true means NVIDIA hardware, null means don't know
         /// </summary>
@@ -387,7 +398,12 @@ namespace pwiz.Skyline.Model.Tools
             }
             return nvidiaGpu;
         }
-        
+
+        public PythonInstaller()
+        {
+            NvidiaGpuAvailable = TestForNvidiaGPU();
+        }
+
         public PythonInstaller(ProgramPathContainer pythonPathContainer, IEnumerable<PythonPackage> packages,
             TextWriter writer, string virtualEnvironmentName)
         {
@@ -586,72 +602,6 @@ namespace pwiz.Skyline.Model.Tools
 
             if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
-
-        }
-        private void SetupNvidiaLibraries(ILongWaitBroker broker = null)
-        {
-            CancellationToken cancelToken = CancellationToken.None;
-            var cmdBuilder = new StringBuilder();
-            cmdBuilder.Append(InstallNvidiaLibrariesBat);
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
-            var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (broker != null) cancelToken = broker.CancellationToken;
-            if (pipedProcessRunner.RunProcess(cmd, true, Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
-        }
-
-        private void DownloadPythonEmbeddablePackage(IProgressMonitor progressMonitor)
-        {
-            using var webClient = TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            if (!webClient.DownloadFileAsync(PythonEmbeddablePackageUri, PythonEmbeddablePackageDownloadPath, out var downloadException))
-                throw new ToolExecutionException(
-                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
-        }
-
-        private void UnzipPythonEmbeddablePackage(IProgressMonitor progressMonitor)
-        {
-            //PythonInstallerUtil.UnblockFile(PythonEmbeddablePackageDownloadPath);
-            using var zipFile = ZipFile.Read(PythonEmbeddablePackageDownloadPath);
-            DirectoryEx.SafeDeleteLongPath(PythonEmbeddablePackageExtractDir);
-            zipFile.ExtractAll(PythonEmbeddablePackageExtractDir);
-        }
-
-        private void EnableSearchPathInPythonEmbeddablePackage()
-        {
-            var files = Directory.GetFiles(PythonEmbeddablePackageExtractDir, @"python*._pth");
-            Assume.IsTrue(files.Length == 1, ToolsResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected);
-            var oldFilePath = files[0];
-            var newFilePath = Path.ChangeExtension(oldFilePath, @".pth");
-            File.Move(oldFilePath, newFilePath);
-        }
-        private void DownloadGetPipScript(IProgressMonitor progressMonitor)
-        {
-            using var webClient = TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            if (!webClient.DownloadFileAsync(GetPipScriptDownloadUri, GetPipScriptDownloadPath, out var downloadException))
-            {
-                throw new ToolExecutionException(
-                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
-            }
-            PythonInstallerUtil.SignFile(GetPipScriptDownloadPath);
-        }
-
-        private void RunGetPipScript(ILongWaitBroker broker = null)
-        {
-            var cmdBuilder = new StringBuilder();
-            cmdBuilder.Append(BasePythonExecutablePath)
-                .Append(SPACE)
-                .Append(GetPipScriptDownloadPath);
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
-            var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
-            if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
-
-            var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, PIP_EXE);
-            PythonInstallerUtil.SignFile(filePath);
 
         }
 
@@ -919,8 +869,8 @@ namespace pwiz.Skyline.Model.Tools
         {
             CancellationToken cancelToken = CancellationToken.None;
             if (broker != null) cancelToken = broker.CancellationToken;
-            for (int i = 0; i < directories.Length; i++)
-           {
+            for (int i = 0; i < directories.Length; i++) 
+            {
                var directory = directories[i];
                if (Directory.Exists(directory)) 
                    continue;
@@ -1371,7 +1321,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-            throw new NotImplementedException();
+            DoAction();
         }
     }
 
@@ -1479,25 +1429,19 @@ namespace pwiz.Skyline.Model.Tools
 
         public override void DoAction(ILongWaitBroker broker)
         {
-            var cmdBuilder = new StringBuilder();
-            cmdBuilder.Append(PythonInstaller.BasePythonExecutablePath)
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.GetPipScriptDownloadPath);
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdBuilder, PythonInstaller.CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
-            var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
-            if (pipedProcessRunner.RunProcess(cmd, false, PythonInstaller.Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
-
-            var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
-            PythonInstallerUtil.SignFile(filePath);
+            var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
+            progressWaitBroker.PerformWork(broker);
         }
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-
+            using var webClient = PythonInstaller.TestPipDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
+            if (!webClient.DownloadFileAsync(PythonInstaller.GetPipScriptDownloadUri, PythonInstaller.GetPipScriptDownloadPath, out var downloadException))
+            {
+                throw new ToolExecutionException(
+                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
+            }
+            PythonInstallerUtil.SignFile(PythonInstaller.GetPipScriptDownloadPath);
         }
     }
 
@@ -1560,7 +1504,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-
+            throw new NotImplementedException();
         }
     }
     public class PipInstallVirtualEnvTask : PythonTaskBase
@@ -1611,7 +1555,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-
+            throw new NotImplementedException();
         }
     }
 
@@ -1661,7 +1605,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-
+            throw new NotImplementedException();
         }
     }
 
@@ -1783,7 +1727,7 @@ namespace pwiz.Skyline.Model.Tools
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-
+            throw new NotImplementedException();
         }
     }
     public class SetupNvidiaLibrariesTask : PythonTaskBase
@@ -1832,10 +1776,8 @@ namespace pwiz.Skyline.Model.Tools
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
-
+            throw new NotImplementedException();
         }
     }
-
-
 }
 
