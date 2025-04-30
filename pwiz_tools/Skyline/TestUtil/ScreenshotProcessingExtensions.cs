@@ -52,6 +52,11 @@ namespace pwiz.SkylineTestUtil
         public static int CornerForm => IsWindows11() ? CORNER_FORM_WINDOWS11 : 0;
         public static int CornerToolWindow => IsWindows11() ? CORNER_TOOL_WINDOW_WINDOWS11 : 0;
 
+        public static Rectangle GetToolWindowBorderRect(Rectangle rectWindow)
+        {
+            return IsWindows11() ? rectWindow : new Rectangle(rectWindow.Location, new Size(rectWindow.Width, 1));
+        }
+
         public static Bitmap CleanupBorder(this Bitmap bmp, bool toolWindow = false)
         {
             bool isWindows11 = IsWindows11();
