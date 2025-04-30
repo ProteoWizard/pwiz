@@ -29,7 +29,7 @@
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <!-- Make the assembly name configurable -->
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>

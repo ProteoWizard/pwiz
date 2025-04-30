@@ -161,12 +161,7 @@ public:
             _sampleSetId = queryVars[L"sampleSetId"] != nullptr ? queryVars[L"sampleSetId"] : throw gcnew ArgumentException("sampleSetId parameter is required");
             _injectionId = queryVars[L"injectionId"] != nullptr ? queryVars[L"injectionId"] : throw gcnew ArgumentException("injectionId parameter is required");
 
-            auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-            webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-            webRequestHandler->PreAuthenticate = true;
-
-            _httpClient = gcnew HttpClient(webRequestHandler);
-
+            initHttpClient();
             getAccessToken();
             getHttpClient();
 
@@ -215,7 +210,7 @@ public:
                 int perChannelReadahead = std::max(1, _chunkReadahead / static_cast<int>(_channelInfo.size()));
                 for (auto& ci : _channelInfo)
                 {
-                    ci.channelQueue = gcnew ParallelDownloadQueue(_baseUrl, _accessToken, _httpClient, ci.numSpectra, _binToDriftTime, _chunkSize, perChannelReadahead,
+                    ci.channelQueue = gcnew ParallelDownloadQueue(_baseUrl, _accessToken, _httpClientFactory, ci.numSpectra, _binToDriftTime, _chunkSize, perChannelReadahead,
                         acceptHeader, _spectrumEndpoint, _getSpectrumFromStream, gcnew IntPtr(this));
                 }
             }

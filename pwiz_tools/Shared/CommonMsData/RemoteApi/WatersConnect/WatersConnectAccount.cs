@@ -20,6 +20,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using IdentityModel.Client;
+using Microsoft.Extensions.DependencyInjection;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.CommonMsData.RemoteApi.WatersConnect
@@ -148,7 +149,20 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = new HttpClient();
+
+            var services = new ServiceCollection();
+            var builder = services.AddHttpClient("customClient");
+            builder.ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                var handler = new WebRequestHandler();
+                handler.UnsafeAuthenticatedConnectionSharing = true;
+                handler.PreAuthenticate = true;
+                return handler;
+            });
+            var provider = services.BuildServiceProvider();
+            var httpClientFactory = provider.GetService<IHttpClientFactory>();
+
+            var httpClient = httpClientFactory.CreateClient();
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");

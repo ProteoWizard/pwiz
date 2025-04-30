@@ -21,6 +21,7 @@ namespace util {
 using namespace System;
 using namespace System::Web;
 using namespace System::Net;
+using namespace System::Net::Http;
 using namespace System::Net::Http::Headers;
 using namespace Newtonsoft::Json;
 using namespace Newtonsoft::Json::Linq;
@@ -30,7 +31,6 @@ using namespace System::Collections::Concurrent;
 using System::Threading::Tasks::Task;
 using System::Threading::Tasks::TaskScheduler;
 using System::Threading::Tasks::Schedulers::QueuedTaskScheduler;
-using System::Net::Http::HttpClient;
 using System::Uri;
 
 ref class ParallelDownloadQueue
@@ -40,7 +40,7 @@ ref class ParallelDownloadQueue
 
     Uri^ _sampleResultUrl;
     System::String^ _accessToken;
-    HttpClient^ _httpClient;
+    IHttpClientFactory^ _clientFactory;
     int _numSpectra;
     cli::array<double>^ _binToDriftTime; // drift time for each of the 200 bins (0-base indexed) 
     ConcurrentDictionary<int, Task^>^ _tasksByIndexProfile;
@@ -92,7 +92,7 @@ ref class ParallelDownloadQueue
         System::String^ spectrumEndpoint;
     };
 
-    ParallelDownloadQueue(Uri^ url, System::String^ token, HttpClient^ client, int numSpectra, const std::vector<double>& binToDriftTime,
+    ParallelDownloadQueue(Uri^ url, System::String^ token, IHttpClientFactory^ clientFactory, int numSpectra, const std::vector<double>& binToDriftTime,
         int chunkSize, int concurrentTasks, String^ acceptHeader,
         Action<DownloadInfo^>^ spectrumEndpoint,
         Action<System::IO::Stream^ /*stream*/, DownloadInfo^ /*downloadInfo*/>^ getSpectraFromStream,
