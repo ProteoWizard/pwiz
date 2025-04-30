@@ -438,7 +438,7 @@ namespace pwiz.Skyline.SettingsUI
             };
 
             if (pythonInstaller == null)
-                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), new PythonInstallerTaskValidator(), ALPHAPEPTDEEP);
+                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), ALPHAPEPTDEEP);
             else
                 pythonInstaller.ClearPendingTasks();
 

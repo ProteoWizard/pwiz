@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             TestStartToFinishWithVirtualEnvironment_Success();
         }
 
-        private static void TestDownloadPythonEmbeddablePackage_Cancel()
+        private void TestDownloadPythonEmbeddablePackage_Cancel()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestDownloadPythonEmbeddablePackage_Fail()
+        private void TestDownloadPythonEmbeddablePackage_Fail()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -142,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestDownloadPythonEmbeddablePackage_Success()
+        private void TestDownloadPythonEmbeddablePackage_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -151,8 +151,8 @@ namespace pwiz.SkylineTestFunctional
                 CancelDownload = false,
                 DownloadSuccess = true
             };
-            pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                { PythonTaskName.download_python_embeddable_package };
+            pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                { new DownloadPythonEmbeddablePackageTask(pythonInstaller) };
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -171,12 +171,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestUnzipPythonEmbeddablePackage_Fail()
+        private void TestUnzipPythonEmbeddablePackage_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.download_python_embeddable_package);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestUnzipPythonEmbeddablePackage_Success()
+        private void TestUnzipPythonEmbeddablePackage_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -227,8 +227,8 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
             {
-                pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                    { PythonTaskName.unzip_python_embeddable_package };
+                pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                    { new UnzipPythonEmbeddablePackageTask(pythonInstaller) };
             });
 
             // Test
@@ -241,12 +241,13 @@ namespace pwiz.SkylineTestFunctional
             // Tear down
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
-        private static void TestEnableSearchPathInPythonEmbeddablePackage_NoSearchPathFile_Fail()
+        private void TestEnableSearchPathInPythonEmbeddablePackage_NoSearchPathFile_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+   
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.unzip_python_embeddable_package);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -282,12 +283,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestEnableSearchPathInPythonEmbeddablePackage_MoreThanOneSearchPathFile_Fail()
+        private void TestEnableSearchPathInPythonEmbeddablePackage_MoreThanOneSearchPathFile_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.unzip_python_embeddable_package);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -326,12 +327,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestEnableSearchPathInPythonEmbeddablePackage_Success()
+        private void TestEnableSearchPathInPythonEmbeddablePackage_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
-            pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                { PythonTaskName.enable_search_path_in_python_embeddable_package };
+            pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                { new EnableSearchPathInPythonEmbeddablePackageTask(pythonInstaller) };
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -361,12 +362,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestDownloadGetPipScript_Cancel()
+        private void TestDownloadGetPipScript_Cancel()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller); 
             taskValidator.SetSuccessUntil(PythonTaskName.enable_search_path_in_python_embeddable_package);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
             {
                 CancelDownload = true
@@ -397,12 +398,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestDownloadGetPipScript_Fail()
+        private void TestDownloadGetPipScript_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.enable_search_path_in_python_embeddable_package);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             pythonInstaller.TestPipDownloadClient = new TestAsynchronousDownloadClient
             {
                 CancelDownload = false,
@@ -434,7 +435,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestDownloadGetPipScript_Success()
+        private void TestDownloadGetPipScript_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -443,8 +444,8 @@ namespace pwiz.SkylineTestFunctional
                 CancelDownload = false,
                 DownloadSuccess = true
             };
-            pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                { PythonTaskName.download_getpip_script };
+            pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                { new DownloadGetPipScriptTask(pythonInstaller) };
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -463,12 +464,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestRunGetPipScript_Fail()
+        private void TestRunGetPipScript_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.download_getpip_script);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
             {
                 ConnectSuccess = true,
@@ -500,7 +501,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestRunGetPipScript_Success()
+        private void TestRunGetPipScript_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -509,8 +510,8 @@ namespace pwiz.SkylineTestFunctional
                 ConnectSuccess = true,
                 ExitCode = 0
             };
-            pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                { PythonTaskName.run_getpip_script };
+            pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                { new RunGetPipScriptTask(pythonInstaller) };
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -529,12 +530,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestPipInstallVirtualenv_Fail()
+        private void TestPipInstallVirtualenv_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.run_getpip_script);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
             {
                 ConnectSuccess = true,
@@ -566,7 +567,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestPipInstallVirtualenv_Success()
+        private void TestPipInstallVirtualenv_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -575,8 +576,8 @@ namespace pwiz.SkylineTestFunctional
                 ConnectSuccess = true,
                 ExitCode = 0
             };
-            pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                { PythonTaskName.pip_install_virtualenv };
+            pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                { new PipInstallVirtualEnvTask(pythonInstaller) };
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -595,12 +596,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestCreateVirtualEnvironment_Fail()
+        private void TestCreateVirtualEnvironment_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.pip_install_virtualenv);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
             {
                 ConnectSuccess = true,
@@ -633,7 +634,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestCreateVirtualEnvironment_Success()
+        private void TestCreateVirtualEnvironment_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -642,8 +643,8 @@ namespace pwiz.SkylineTestFunctional
                 ConnectSuccess = true,
                 ExitCode = 0
             };
-            pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                { PythonTaskName.create_virtual_environment };
+            pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                { new CreateVirtualEnvironmentTask(pythonInstaller) };
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -662,12 +663,12 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestPipInstallPackages_Fail()
+        private void TestPipInstallPackages_Fail()
         {
             // Set up
-            var taskValidator = new TestPythonInstallerTaskValidator();
+            var pythonInstaller = GetPythonInstaller();
+            var taskValidator = new TestPythonInstallerTaskValidator(pythonInstaller);
             taskValidator.SetSuccessUntil(PythonTaskName.create_virtual_environment);
-            var pythonInstaller = GetPythonInstaller(taskValidator);
             pythonInstaller.TestPipeSkylineProcessRunner = new TestSkylineProcessRunner
             {
                 ConnectSuccess = true,
@@ -700,7 +701,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestPipInstallPackages_Success()
+        private void TestPipInstallPackages_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -709,8 +710,8 @@ namespace pwiz.SkylineTestFunctional
                 ConnectSuccess = true,
                 ExitCode = 0
             };
-            pythonInstaller.TestPythonVirtualEnvironmentTaskNames = new List<PythonTaskName>
-                { PythonTaskName.pip_install_packages };
+            pythonInstaller.TestPythonVirtualEnvironmentTasks = new List<PythonTaskBase>
+                { new PipInstallPackagesTask(pythonInstaller) };
             var pythonInstallerDlg = ShowDialog<PythonInstallerDlg>(
                 () =>
                 {
@@ -729,7 +730,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static void TestStartToFinishWithVirtualEnvironment_Success()
+        private void TestStartToFinishWithVirtualEnvironment_Success()
         {
             // Set up
             var pythonInstaller = GetPythonInstaller();
@@ -774,12 +775,7 @@ namespace pwiz.SkylineTestFunctional
             CleanupDir(PythonInstallerUtil.PythonRootDir);
         }
 
-        private static PythonInstaller GetPythonInstaller()
-        {
-            return GetPythonInstaller(new TestPythonInstallerTaskValidator());
-        }
-
-        private static PythonInstaller GetPythonInstaller(IPythonInstallerTaskValidator taskValidator)
+        private PythonInstaller GetPythonInstaller()
         {
             var packages = new List<PythonPackage>()
             {
@@ -787,7 +783,7 @@ namespace pwiz.SkylineTestFunctional
                 new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
             };
             var programContainer = new ProgramPathContainer(PYTHON, VERSION);
-            return new PythonInstaller(programContainer, packages, new TextBoxStreamWriterHelper(), taskValidator, @"test");
+            return new PythonInstaller(programContainer, packages, new TextBoxStreamWriterHelper(), @"test");
         }
 
         private static string CreateFile(string dir, string fileName, string content = "")

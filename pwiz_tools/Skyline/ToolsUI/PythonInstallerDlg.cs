@@ -35,27 +35,14 @@ namespace pwiz.Skyline.ToolsUI
             {
                 try
                 {
-                    if (task.IsActionWithNoArg)
-                    {
-                        using var waitDlg = new LongWaitDlg();
-                        waitDlg.Message = task.InProgressMessage;
-                        waitDlg.PerformWork(this, 50, task.AsActionWithNoArg);
-                    }
-                    else if (task.IsActionWithProgressMonitor)
-                    {
-                        using var waitDlg = new LongWaitDlg();
-                        waitDlg.ProgressValue = 0;
-                        waitDlg.PerformWork(this, 50, task.AsActionWithProgressMonitor);
-                    }
-                    else
-                    {
-                        throw new PythonInstallerUnsupportedTaskException(task);
-                    }
-                    Installer.NumCompletedTasks++;
+                   using var waitDlg = new LongWaitDlg();
+                   waitDlg.Message = task.InProgressMessage();
+                   waitDlg.PerformWork(this, 50, progressMonitor => task.DoAction(progressMonitor));
+                   Installer.NumCompletedTasks++;
                 }
                 catch (Exception ex)
                 {
-                    MessageDlg.Show(this, task.FailureMessage);
+                    MessageDlg.Show(this, task.FailureMessage());
                     MessageDlg.ShowWithException(this, (ex.InnerException ?? ex).Message, ex);
                     break;
                 }

@@ -107,6 +107,15 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Successfully set up Nvidia GPU Libraries.
+        /// </summary>
+        public static string NvidiaInstaller_Successfully_Setup_Nvidia_Libraries {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Successfully_Setup_Nvidia_Libraries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ProgramPathCollectors must have a program name.
         /// </summary>
         public static string ProgramPathContainer_Validate_ProgramPathCollectors_must_have_a_program_name {
@@ -427,6 +436,90 @@ namespace pwiz.Skyline.Model.Tools {
         public static string PythonInstaller_GetPythonTask_Running_the_get_pip_py_script {
             get {
                 return ResourceManager.GetString("PythonInstaller_GetPythonTask_Running_the_get_pip_py_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully created virtual environment [{0}]..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_created_virtual_environment__0_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_created_virtual_environment__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully downloaded Python embeddable package..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_downloaded_Python_embeddable_package {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_downloaded_Python_embeddable_package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully downloaded the get-pip.py script..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_downloaded_the_get_pip_py_script {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_downloaded_the_get_pip_py_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully enabled Windows long paths for Python installation in virtual environment [{0}]..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_enabled_long_paths_Python_packages_in_virtual_environment__0_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_enabled_long_paths_Python_packages_in_" +
+                        "virtual_environment__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully enabled search path in Python embeddable package..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_enabled_search_path_in_Python_embeddable_package {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_enabled_search_path_in_Python_embeddab" +
+                        "le_package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully installed Python packages in virtual environment [{0}]..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_installed_Python_packages_in_virtual_environment__0_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_installed_Python_packages_in_virtual_e" +
+                        "nvironment__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully ran pip install [{0}]..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_ran_pip_install__0_ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_ran_pip_install__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully ran the get-pip.py script..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_ran_the_get_pip_py_script {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_ran_the_get_pip_py_script", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Successfully unzipped Python embeddable package..
+        /// </summary>
+        public static string PythonInstaller_GetPythonTask_Successfully_unzipped_Python_embeddable_package {
+            get {
+                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Successfully_unzipped_Python_embeddable_package", resourceCulture);
             }
         }
         

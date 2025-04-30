@@ -250,6 +250,9 @@
   <data name="NvidiaInstaller_Failed_Setup_Nvidia_Libraries" xml:space="preserve">
     <value>Failed setting up Nvidia GPU Libraries</value>
   </data>
+  <data name="NvidiaInstaller_Successfully_Setup_Nvidia_Libraries" xml:space="preserve">
+    <value>Successfully set up Nvidia GPU Libraries</value>
+  </data>
   <data name="PythonInstaller_GetPackages_Installing_Packages" xml:space="preserve">
     <value>Installing Packages</value>
   </data>
@@ -325,11 +328,17 @@
   <data name="PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package" xml:space="preserve">
     <value>Downloading Python embeddable package.</value>
   </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_downloaded_Python_embeddable_package" xml:space="preserve">
+    <value>Successfully downloaded Python embeddable package.</value>
+  </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package" xml:space="preserve">
     <value>Failed to download Python embeddable package.</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package" xml:space="preserve">
     <value>Unzipping Python embeddable package.</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_unzipped_Python_embeddable_package" xml:space="preserve">
+    <value>Successfully unzipped Python embeddable package.</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package" xml:space="preserve">
     <value>Failed to unzip Python embeddable package.</value>
@@ -340,11 +349,17 @@
   <data name="PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package" xml:space="preserve">
     <value>Failed to enable search path in Python embeddable package.</value>
   </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_enabled_search_path_in_Python_embeddable_package" xml:space="preserve">
+    <value>Successfully enabled search path in Python embeddable package.</value>
+  </data>
   <data name="PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script" xml:space="preserve">
     <value>Downloading the get-pip.py script.</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script" xml:space="preserve">
     <value>Failed to download the get-pip.py script.</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_downloaded_the_get_pip_py_script" xml:space="preserve">
+    <value>Successfully downloaded the get-pip.py script.</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Downloading_Cuda_Installer" xml:space="preserve">
     <value>Downloading Nvidia Cuda Toolkit installer.</value>
@@ -376,11 +391,17 @@
   <data name="PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script" xml:space="preserve">
     <value>Failed to run the get-pip.py script.</value>
   </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_ran_the_get_pip_py_script" xml:space="preserve">
+    <value>Successfully ran the get-pip.py script.</value>
+  </data>
   <data name="PythonInstaller_GetPythonTask_Running_pip_install__0_" xml:space="preserve">
     <value>Running pip install [{0}].</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_" xml:space="preserve">
     <value>Failed to run pip install [{0}].</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_ran_pip_install__0_" xml:space="preserve">
+    <value>Successfully ran pip install [{0}].</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Creating_virtual_environment__0_" xml:space="preserve">
     <value>Creating virtual environment [{0}].</value>
@@ -388,11 +409,17 @@
   <data name="PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_" xml:space="preserve">
     <value>Failed to create virtual environment [{0}].</value>
   </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_created_virtual_environment__0_" xml:space="preserve">
+    <value>Successfully created virtual environment [{0}].</value>
+  </data>
   <data name="PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_" xml:space="preserve">
     <value>Installing Python packages in virtual environment [{0}]. First installs can take up to 10-15 minutes, please be patient ...</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_" xml:space="preserve">
     <value>Failed to install Python packages in virtual environment [{0}].</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_installed_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+    <value>Successfully installed Python packages in virtual environment [{0}].</value>
   </data>
   <data name="PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected" xml:space="preserve">
     <value>Expecting one and only one file with _pth extension</value>
@@ -405,5 +432,8 @@
   </data>
   <data name="PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_" xml:space="preserve">
     <value>Failed to enable Windows long paths for Python installation in virtual environment [{0}].</value>
+  </data>
+  <data name="PythonInstaller_GetPythonTask_Successfully_enabled_long_paths_Python_packages_in_virtual_environment__0_" xml:space="preserve">
+    <value>Successfully enabled Windows long paths for Python installation in virtual environment [{0}].</value>
   </data>
 </root>

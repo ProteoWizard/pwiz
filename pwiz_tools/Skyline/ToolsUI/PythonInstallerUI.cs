@@ -35,26 +35,25 @@ namespace pwiz.Skyline.ToolsUI
         private static string _userAnswerToCuda;
         public static MultiButtonMsgDlg EnableNvidiaGpuDlg { get; set; }
 
-        private static IList<PythonTask> _tasks;
+        private static IList<PythonTaskBase> _tasks;
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
             var result = DialogResult.OK;
             
-            _tasks = new List<PythonTask>(pythonInstaller.PendingTasks.IsNullOrEmpty()
+            _tasks = new List<PythonTaskBase>(pythonInstaller.PendingTasks.IsNullOrEmpty()
                 ? pythonInstaller.ValidatePythonVirtualEnvironment()
                 : pythonInstaller.PendingTasks);
 
             _userAnswerToCuda = null;
             pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
-            List<PythonTask> abortedTasks = new List<PythonTask>();
+            List<PythonTaskBase> abortedTasks = new List<PythonTaskBase>();
             bool abortTask = false;
             foreach (var task in _tasks)
             {
                 try
                 {
-                    if (task.Name == PythonTaskName.setup_nvidia_libraries || task.Name == PythonTaskName.download_cuda_library || task.Name == PythonTaskName.install_cuda_library ||
-                        task.Name == PythonTaskName.download_cudnn_library || task.Name == PythonTaskName.install_cudnn_library)
+                    if (task.TaskName == PythonTaskName.setup_nvidia_libraries)
                     {
                         if (_userAnswerToCuda != @"No")
                         {
@@ -117,7 +116,7 @@ namespace pwiz.Skyline.ToolsUI
                             abortTask = !PerformTaskAction(parent, task);
                         }
                     }
-                    else if (task.Name == PythonTaskName.enable_longpaths)
+                    else if (task.TaskName == PythonTaskName.enable_longpaths)
                     {
                         AlertDlg adminMessageDlg =
                             new AlertDlg(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation), MessageBoxButtons.OKCancel);
@@ -135,14 +134,11 @@ namespace pwiz.Skyline.ToolsUI
                         }
                         if (!adminMessageDlg.IsDisposed) adminMessageDlg.Dispose();
                     }
-                    else if (task.IsAction)
+                    else 
                     {
                         abortTask = !PerformTaskAction(parent,task);
                     }
-                    else
-                    {
-                        throw new PythonInstallerUnsupportedTaskException(task);
-                    }
+
                     if (!abortTask)
                     {
                         pythonInstaller.NumCompletedTasks++;
@@ -239,26 +235,12 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
         private static AlertDlg _resultAlertDlg;
-        private static bool PerformTaskAction(Control parent, PythonTask task, int startProgress = 0)
+        private static bool PerformTaskAction(Control parent, PythonTaskBase task, int startProgress = 0)
         {
             //IProgressStatus proStatus = null;
             using var waitDlg = new LongWaitDlg();
-            if (task.IsActionWithNoArg)
-            {
-                waitDlg.Message = task.InProgressMessage;
-                waitDlg.PerformWork(parent, 50, task.AsActionWithNoArg);
-            }
-            else if (task.IsActionWithProgressMonitor)
-            {
-                waitDlg.Message = task.InProgressMessage;
-                waitDlg.ProgressValue = startProgress;
-                waitDlg.PerformWork(parent, 50, task.AsActionWithProgressMonitor);
-            }
-            else
-            {
-                waitDlg.Message = task.InProgressMessage;
-                waitDlg.PerformWork(parent, 50, task.AsActionWithLongWaitBroker);
-            }
+            waitDlg.Message = task.InProgressMessage();
+            waitDlg.PerformWork(parent, 50, progressMonitor => task.DoAction(progressMonitor));
             return !waitDlg.IsCanceled;
         }
     }
