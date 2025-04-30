@@ -139,19 +139,6 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-        internal IList<PythonTaskAndHash> TargetsAndHashes =>
-            new[]
-            {
-                new PythonTaskAndHash(PythonTaskName.download_python_embeddable_package, @"938a1f3b80d580320836260612084d74ce094a261e36f9ff3ac7b9463df5f5e4"),
-                new PythonTaskAndHash(PythonTaskName.unzip_python_embeddable_package, @"1ac00589117bc386ded40a44b99cb357c15f3f35443d3599370e4f750cdba678"),
-                new PythonTaskAndHash(PythonTaskName.enable_search_path_in_python_embeddable_package, @"95f29168dc5cf35585a501bf35ec865383300bfac0e2222c7ec7c02ca7bde475"),
-                new PythonTaskAndHash(PythonTaskName.download_getpip_script, @"96e58b5962f307566141ea9b393e136cbdf811db9f02968dc5bc88f43989345c"),
-                new PythonTaskAndHash(PythonTaskName.download_cuda_library, @"05cd1a726216d83d124b2139464e998520384585d4e9f45bd7ffd902635aab07"),
-                new PythonTaskAndHash(PythonTaskName.install_cuda_library, @"ABCD123"),
-                new PythonTaskAndHash(PythonTaskName.download_cudnn_library, @"65ca0f2d77a46de1def35e289780b8d8729ef2fa39cf8dd0c8448e381dd2978c"),
-                new PythonTaskAndHash(PythonTaskName.install_cudnn_library, @"ABCD123")
-
-            };
         /// <summary>
         /// Returns a list of Python installation tasks in topological order, with each task as a PythonTaskBase.
         /// </summary>
@@ -434,7 +421,8 @@ namespace pwiz.Skyline.Model.Tools
             if (abortedTasks == null && SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)
                 return false;
 
-            var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
+            if (PendingTasks.IsNullOrEmpty())
+                ValidatePythonVirtualEnvironment();
 
             if (abortedTasks != null && abortedTasks.Count > 0)
                 return !abortedTasks.Any(task => task.IsNvidiaTask);
@@ -1095,8 +1083,12 @@ namespace pwiz.Skyline.Model.Tools
             TaskName = name;
             ParentTask = parentTask;
         }
+        /// <summary>
+        /// Checks for presence (or hashes) of expected files and/or directories signifying that the given task completed successfully
+        /// </summary>
+        /// <param name="longValidate">Forces the function to compute file and/or directory hashes instead of just checking whether the files and/or directories exist. </param>
+        /// <returns></returns>
         public abstract bool? ValidateTask(bool longValidate = false);
-        public abstract void DoAction();
         public abstract void DoAction(ILongWaitBroker broker);
         public virtual bool IsRequiredForPythonEnvironment
         {
@@ -1116,6 +1108,7 @@ namespace pwiz.Skyline.Model.Tools
 
     public class DownloadPythonEmbeddablePackageTask : PythonTaskBase
     {
+        private string _storedHash = @"938a1f3b80d580320836260612084d74ce094a261e36f9ff3ac7b9463df5f5e4";
         public DownloadPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package)
         {
         }
@@ -1140,14 +1133,9 @@ namespace pwiz.Skyline.Model.Tools
             if (!File.Exists(pythonFilePath))
                 return false;
             var computeHash = PythonInstallerUtil.GetFileHash(pythonFilePath);
-            var storedHash = PythonInstaller.TargetsAndHashes.Where(m => m.Task == PythonTaskName.download_python_embeddable_package).ToArray()[0].Hash;
-            return computeHash == storedHash;
+         
+            return computeHash == _storedHash;
         }
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void DoAction(ILongWaitBroker broker)
         {
             var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
@@ -1196,12 +1184,6 @@ namespace pwiz.Skyline.Model.Tools
 
             return PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.PythonEmbeddablePackageExtractDir);
         }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void DoAction(ILongWaitBroker broker)
         {
             var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
@@ -1218,6 +1200,7 @@ namespace pwiz.Skyline.Model.Tools
 
     public class EnableSearchPathInPythonEmbeddablePackageTask : PythonTaskBase
     {
+        private string _storedHash = @"95f29168dc5cf35585a501bf35ec865383300bfac0e2222c7ec7c02ca7bde475";
         public EnableSearchPathInPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.unzip_python_embeddable_package, new UnzipPythonEmbeddablePackageTask(installer))
         {
         }
@@ -1245,11 +1228,9 @@ namespace pwiz.Skyline.Model.Tools
             var disabledPathFiles = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*._pth");
             var enabledPathFiles = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth");
             var computeHash = PythonInstallerUtil.GetFilesArrayHash(enabledPathFiles);
-            var storedHash = PythonInstaller.TargetsAndHashes.Where(m => m.Task == PythonTaskName.enable_search_path_in_python_embeddable_package).ToArray()[0].Hash;
-            return computeHash == storedHash;
+            return computeHash == _storedHash;
         }
-
-        public override void DoAction()
+        public override void DoAction(ILongWaitBroker broker)
         {
             var files = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*._pth");
             Assume.IsTrue(files.Length == 1,
@@ -1260,16 +1241,6 @@ namespace pwiz.Skyline.Model.Tools
             File.Move(oldFilePath, newFilePath);
         }
 
-        public override void DoAction(ILongWaitBroker broker)
-        {
-            var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
-            progressWaitBroker.PerformWork(broker);
-        }
-
-        private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
-        {
-            DoAction();
-        }
     }
 
     public class EnableLongPathsTask : PythonTaskBase
@@ -1298,12 +1269,6 @@ namespace pwiz.Skyline.Model.Tools
             return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE &&
                    (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
         }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void DoAction(ILongWaitBroker broker)
         {
             var cmdBuilder = new StringBuilder();
@@ -1373,12 +1338,6 @@ namespace pwiz.Skyline.Model.Tools
                 PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
 
         }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void DoAction(ILongWaitBroker broker)
         {
             var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
@@ -1429,12 +1388,6 @@ namespace pwiz.Skyline.Model.Tools
                 PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
 
         }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void DoAction(ILongWaitBroker broker)
         {
             var cmdBuilder = new StringBuilder();
@@ -1492,12 +1445,6 @@ namespace pwiz.Skyline.Model.Tools
                 PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
 
         }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
-        }
-
         public override void DoAction(ILongWaitBroker broker)
         {
             var virtualEnvPackage = new PythonPackage { Name = PythonInstaller.VIRTUALENV, Version = null };
@@ -1542,11 +1489,6 @@ namespace pwiz.Skyline.Model.Tools
                     PythonInstallerUtil.IsSignatureValid(PythonInstaller.VirtualEnvironmentDir, PythonInstallerUtil.GetDirectoryHash(PythonInstaller.VirtualEnvironmentDir));
             return true;
 
-        }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
         }
         public override void DoAction(ILongWaitBroker broker)
         {
@@ -1666,20 +1608,10 @@ namespace pwiz.Skyline.Model.Tools
             }
             return true;
         }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
-        }
         public override void DoAction(ILongWaitBroker broker)
         {
             string pythonExecutablePath = PythonInstaller.BasePythonExecutablePath;
             PythonInstaller.PipInstall(PythonInstaller.VirtualEnvironmentPythonExecutablePath, PythonInstaller.PythonPackages, broker);
-        }
-
-        private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
-        {
-            throw new NotImplementedException();
         }
     }
     public class SetupNvidiaLibrariesTask : PythonTaskBase
@@ -1707,11 +1639,6 @@ namespace pwiz.Skyline.Model.Tools
         public override bool? ValidateTask(bool longValidate = false)
         {
             return PythonInstaller.NvidiaLibrariesInstalled();
-        }
-
-        public override void DoAction()
-        {
-            throw new NotImplementedException();
         }
         public override void DoAction(ILongWaitBroker broker)
         {
