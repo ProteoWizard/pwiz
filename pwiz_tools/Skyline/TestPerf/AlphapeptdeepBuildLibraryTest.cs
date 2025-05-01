@@ -17,11 +17,14 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -57,7 +60,15 @@ namespace TestPerf
             _peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
             AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
-            
+       
+            var fileHash = PythonInstallerUtil.GetFileHash(new PythonInstaller().PythonEmbeddablePackageDownloadPath);
+            Console.WriteLine($@"Computed PythonEmbeddablePackageDownload  Hash: {fileHash}");
+            Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
+
+            fileHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles(new PythonInstaller().PythonEmbeddablePackageExtractDir, @"python*.pth"));
+            Console.WriteLine($@"Computed SearchPathInPythonEmbeddablePackageExtracted Hash: {fileHash}");
+            Assert.AreEqual(Settings.Default.SearchPathInPythonEmbeddableHash, fileHash);
+
             OkDialog(_peptideSettings, _peptideSettings.OkDialog);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);

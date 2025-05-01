@@ -227,7 +227,7 @@ namespace pwiz.Skyline.Model.Tools
             return cudaYes && cudnnYes != false;
         }
 
-        public static bool? CuDNNLibraryInstalled(bool longValidate = false)
+        public static bool? CuDNNLibraryInstalled()
         {
             if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD ||
                 SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT ||
@@ -246,54 +246,19 @@ namespace pwiz.Skyline.Model.Tools
                 Environment.SetEnvironmentVariable(@"PATH", newPath, EnvironmentVariableTarget.User);
             }
 
-
-            if (longValidate)
+            bool isValid = Directory.Exists(targetDirectory); 
+            if (isValid)
             {
-                var computeHash = PythonInstallerUtil.IsRunningElevated()
-                    ? PythonInstallerUtil.GetDirectoryHash(targetDirectory)
-                    : null;
-                bool? isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
-                if (isValid == true || isValid == null)
-                {
-                    targetDirectory = CuDNNInstallDir + @"\include";
-                    if (!Directory.Exists(targetDirectory)) return false;
-
-                    computeHash = PythonInstallerUtil.IsRunningElevated()
-                        ? PythonInstallerUtil.GetDirectoryHash(targetDirectory)
-                        : null;
-                    isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
-                    if (isValid == true || isValid == null)
-                    {
-                        targetDirectory = CuDNNInstallDir + @"\lib";
-                        if (!Directory.Exists(targetDirectory)) return false;
-
-                        computeHash = PythonInstallerUtil.IsRunningElevated()
-                            ? PythonInstallerUtil.GetDirectoryHash(targetDirectory)
-                            : null;
-                        isValid = PythonInstallerUtil.IsSignatureValid(targetDirectory, computeHash);
-                    }
-
-                }
-                return isValid;
-            }
-            else
-            {
-                bool isValid = Directory.Exists(targetDirectory); 
-                if (isValid)
-                {
-                    targetDirectory = CuDNNInstallDir + @"\include";
-                    if (!Directory.Exists(targetDirectory)) 
-                        return false;
-                    
-                    targetDirectory = CuDNNInstallDir + @"\lib";
-                    if (!Directory.Exists(targetDirectory)) 
-                        return false;
-
-                }
-                return isValid;
+                targetDirectory = CuDNNInstallDir + @"\include";
+                if (!Directory.Exists(targetDirectory)) 
+                    return false;
+                
+                targetDirectory = CuDNNInstallDir + @"\lib";
+                if (!Directory.Exists(targetDirectory)) 
+                    return false;
 
             }
-
+            return isValid;
         }
 
         public void WriteInstallNvidiaBatScript()
@@ -897,8 +862,8 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         /// <summary>
-        /// Return false if skysign file doesn't exist or it exists and is invalid, return true is skysign file matches provide signature,
-        /// return null if signature provided is null or when signature is not null but user not running as administrator
+        /// Return false if skysign file doesn't exist or it exists and is invalid, return true is skysign file matches provided signature,
+        /// return null if signature provided is null or when signature is not null, but user not running as administrator
         /// </summary>
         /// <param name="path">path to file or directory</param>
         /// <param name="signature">key</param>
@@ -1061,11 +1026,10 @@ namespace pwiz.Skyline.Model.Tools
             ParentTask = parentTask;
         }
         /// <summary>
-        /// Checks for presence (or hashes) of expected files and/or directories signifying that the given task completed successfully
+        /// Checks for presence of hashes or expected files and/or directories signifying completion of tasks
         /// </summary>
-        /// <param name="longValidate">Forces the function to compute file and/or directory hashes instead of just checking whether the files and/or directories exist. </param>
-        /// <returns></returns>
-        public abstract bool? ValidateTask(bool longValidate = false);
+
+        public abstract bool? ValidateTask();
         public abstract void DoAction(ILongWaitBroker broker);
         public virtual bool IsRequiredForPythonEnvironment
         {
@@ -1104,14 +1068,13 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_downloaded_Python_embeddable_package;
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             var pythonFilePath = PythonInstaller.PythonEmbeddablePackageDownloadPath;
             if (!File.Exists(pythonFilePath))
                 return false;
-            var computeHash = PythonInstallerUtil.GetFileHash(pythonFilePath);
-         
-            return computeHash == _storedHash;
+
+            return _storedHash == PythonInstallerUtil.GetFileHash(pythonFilePath);
         }
         public override void DoAction(ILongWaitBroker broker)
         {
@@ -1149,16 +1112,12 @@ namespace pwiz.Skyline.Model.Tools
         {
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_unzipped_Python_embeddable_package;
         }
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
 
-            if (longValidate)
-                return
-                    PythonInstallerUtil.IsSignatureValid(PythonInstaller.PythonEmbeddablePackageExtractDir,
-                        PythonInstallerUtil.GetDirectoryHash(PythonInstaller.PythonEmbeddablePackageExtractDir));
-
+           
             return PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.PythonEmbeddablePackageExtractDir);
         }
         public override void DoAction(ILongWaitBroker broker)
@@ -1197,14 +1156,12 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_enabled_search_path_in_Python_embeddable_package;
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
 
-            var disabledPathFiles = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*._pth");
-            var enabledPathFiles = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth");
-            var computeHash = PythonInstallerUtil.GetFilesArrayHash(enabledPathFiles);
+            var computeHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
             return computeHash == _storedHash;
         }
         public override void DoAction(ILongWaitBroker broker)
@@ -1241,7 +1198,7 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_enabled_long_paths_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE &&
                    (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
@@ -1304,7 +1261,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_downloaded_the_get_pip_py_script;
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             var filePath = PythonInstaller.GetPipScriptDownloadPath;
 
@@ -1354,7 +1311,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_ran_the_get_pip_py_script; 
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
 
@@ -1411,7 +1368,7 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_ran_pip_install__0_, PythonInstaller.VIRTUALENV);
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.VIRTUALENV_EXE);
 
@@ -1457,15 +1414,9 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_created_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
-            if (!Directory.Exists(PythonInstaller.VirtualEnvironmentDir))
-                return false;
-            if (longValidate)
-                return
-                    PythonInstallerUtil.IsSignatureValid(PythonInstaller.VirtualEnvironmentDir, PythonInstallerUtil.GetDirectoryHash(PythonInstaller.VirtualEnvironmentDir));
-            return true;
-
+            return Directory.Exists(PythonInstaller.VirtualEnvironmentDir);
         }
         public override void DoAction(ILongWaitBroker broker)
         {
@@ -1502,7 +1453,7 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_installed_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             if (!File.Exists(PythonInstaller.VirtualEnvironmentPythonExecutablePath))
             {
@@ -1512,15 +1463,7 @@ namespace pwiz.Skyline.Model.Tools
             if (!Directory.Exists(PythonInstaller.VirtualEnvironmentDir))
                 return false;
 
-            bool? signatureValid;
-
-            if (!longValidate)
-                signatureValid = PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.VirtualEnvironmentDir);
-            else
-                signatureValid = PythonInstallerUtil.IsSignatureValid(PythonInstaller.VirtualEnvironmentDir,
-                    PythonInstallerUtil.GetDirectoryHash(PythonInstaller.VirtualEnvironmentDir));
-
-            if (signatureValid == true || signatureValid == null)
+            if (PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.VirtualEnvironmentDir))
                 return true;
 
             var argumentsBuilder = new StringBuilder();
@@ -1613,7 +1556,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.NvidiaInstaller_Successfully_Setup_Nvidia_Libraries;
         }
 
-        public override bool? ValidateTask(bool longValidate = false)
+        public override bool? ValidateTask()
         {
             return PythonInstaller.NvidiaLibrariesInstalled();
         }
