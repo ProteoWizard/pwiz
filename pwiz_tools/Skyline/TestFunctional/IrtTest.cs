@@ -24,6 +24,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -1213,7 +1214,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Reset irtdb file to contain duplicates
-            Helpers.TryTwice(() => File.WriteAllBytes(dbPath, dbBytes));
+            TryHelper.TryTwice(() => File.WriteAllBytes(dbPath, dbBytes));
             CheckIrtDbFile(true, out _, out _, out _);
 
             // Open file and check that the duplicates get removed

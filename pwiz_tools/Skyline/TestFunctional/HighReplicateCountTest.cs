@@ -24,6 +24,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 using System.IO;
 using System.Linq;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Properties;
 
 

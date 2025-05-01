@@ -24,6 +24,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Util;

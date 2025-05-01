@@ -754,7 +754,7 @@ rule install-location ( properties * )
 
 rule install-type ( properties * )
 {
-    local result = <install-type>EXE ;
+    local result = <install-type>EXE <install-type>CONFIG ;
     if <link>shared in $(properties)
     {
         result += <install-dependencies>on <install-type>SHARED_LIB <install-type>MANIFEST ;

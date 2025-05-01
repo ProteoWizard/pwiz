@@ -104,6 +104,7 @@
     <Compile Include="Centroider.cs" />
     <Compile Include="DiaUmpire.cs" />
     <Compile Include="IterationListenerToMonitor.cs" />
+    <Compile Include="LockMassParameters.cs" />
     <Compile Include="MsDataFileImpl.cs" />
     <Compile Include="MsDataFileInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
