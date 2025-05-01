@@ -293,7 +293,7 @@ size_t TsfDataImpl::getSpectrumIndex(int frame, int scan) const
     auto findItr = frames_.find(frame);
     if (findItr == frames_.end())
         throw out_of_range("[TsfData::getSpectrumIndex] invalid frame index");
-    return findItr->second->frameId() - 1;
+    return findItr - frames_.begin();
 }
 
 
