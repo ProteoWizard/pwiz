@@ -101,12 +101,6 @@ namespace pwiz.SkylineTestFunctional
                 dlg.GroupBy = Resources.GroupByItem_ToString_Replicates;
                 toSync = dlg.TargetOptions.ToArray();
                 dlg.Targets = toSync;
-
-                // Test alignment to RT prediction
-                Assert.IsFalse(SkylineWindow.AlignToRtPrediction);
-                Assert.IsTrue(SkylineWindow.AlignToRtPrediction);
-                // Reset alignment
-                Assert.IsFalse(SkylineWindow.AlignToRtPrediction);
             });
             OkDialog(dlg, dlg.OkDialog);
 

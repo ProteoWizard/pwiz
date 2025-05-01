@@ -255,5 +255,55 @@ namespace pwiz.Skyline.Model.RetentionTimes
             }
             return values[values.Length - 1] + slope * (key - max);
         }
+
+        public PiecewiseLinearMap RemoveOutOfOrder()
+        {
+            if (ReferenceEquals(_x, _xSortedByY))
+            {
+                return this;
+            }
+
+            int n = _y.Length;
+            int[] dp = new int[n];
+            int[] prev = new int[n];
+
+            for (int i = 0; i < n; i++)
+            {
+                dp[i] = 1;
+                prev[i] = -1;
+            }
+
+            int maxLength = 0;
+            int bestEnd = -1;
+
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < i; j++)
+                {
+                    if (_y[j].CompareTo(_y[i]) <= 0 && dp[j] + 1 > dp[i])
+                    {
+                        dp[i] = dp[j] + 1;
+                        prev[i] = j;
+                    }
+                }
+
+                if (dp[i] > maxLength)
+                {
+                    maxLength = dp[i];
+                    bestEnd = i;
+                }
+            }
+
+            List<int> indexesToKeep = new List<int>();
+            int index = bestEnd;
+            while (index != -1)
+            {
+                indexesToKeep.Add(index);
+                index = prev[index];
+            }
+
+            indexesToKeep.Reverse();
+            return FromValues(indexesToKeep.Select(i => new KeyValuePair<double, double>(_x[i], _y[i])));
+        }
     }
 }

@@ -201,6 +201,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public static PiecewiseLinearMap CreatePiecewiseLinearMap(IList<double> xValues, IList<double> yValues)
         {
             var piecewiseLinearMap = PiecewiseLinearMap.FromValues(xValues.Zip(yValues, (x,y)=>new KeyValuePair<double, double>((float) x, (float) y)));
+            piecewiseLinearMap = piecewiseLinearMap.RemoveOutOfOrder();
             return piecewiseLinearMap.ReducePointCount(MAX_PIECEWISE_LINEAR_MAP_LENGTH);
         }
 
