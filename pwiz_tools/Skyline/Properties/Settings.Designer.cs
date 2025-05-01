@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.11.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.12.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -3531,6 +3531,33 @@ namespace pwiz.Skyline.Properties {
         public int KoinaRetryCount {
             get {
                 return ((int)(this["KoinaRetryCount"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3.9.13")]
+        public string PythonEmbeddableVersion {
+            get {
+                return ((string)(this["PythonEmbeddableVersion"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("938a1f3b80d580320836260612084d74ce094a261e36f9ff3ac7b9463df5f5e4")]
+        public string PythonEmbeddableHash {
+            get {
+                return ((string)(this["PythonEmbeddableHash"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("95f29168dc5cf35585a501bf35ec865383300bfac0e2222c7ec7c02ca7bde475")]
+        public string SearchPathInPythonEmbeddableHash {
+            get {
+                return ((string)(this["SearchPathInPythonEmbeddableHash"]));
             }
         }
     }

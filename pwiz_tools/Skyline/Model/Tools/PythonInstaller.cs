@@ -36,6 +36,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using Settings = pwiz.Skyline.Properties.Settings;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 [assembly: InternalsVisibleTo("TestUtil")]
@@ -43,17 +44,6 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Tools
 {
-    public class PythonTaskAndHash
-    {
-        public PythonTaskAndHash(PythonTaskName task, string hash)
-        {
-            Task = task;
-            Hash = hash;
-        }
-        public PythonTaskName Task { get; private set; }
-        public string Hash { get; private set; }
-        public override string ToString() { return TextUtil.ColonSeparate(Task.ToString(), Hash); }
-    }
     public class PythonInstaller
     {
         private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/";
@@ -1095,7 +1085,7 @@ namespace pwiz.Skyline.Model.Tools
 
     public class DownloadPythonEmbeddablePackageTask : PythonTaskBase
     {
-        private string _storedHash = @"938a1f3b80d580320836260612084d74ce094a261e36f9ff3ac7b9463df5f5e4";
+        private string _storedHash = Settings.Default.PythonEmbeddableHash;
         public DownloadPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package)
         {
         }
@@ -1187,7 +1177,7 @@ namespace pwiz.Skyline.Model.Tools
 
     public class EnableSearchPathInPythonEmbeddablePackageTask : PythonTaskBase
     {
-        private string _storedHash = @"95f29168dc5cf35585a501bf35ec865383300bfac0e2222c7ec7c02ca7bde475";
+        private string _storedHash = Settings.Default.SearchPathInPythonEmbeddableHash;
         public EnableSearchPathInPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.unzip_python_embeddable_package, new UnzipPythonEmbeddablePackageTask(installer))
         {
         }

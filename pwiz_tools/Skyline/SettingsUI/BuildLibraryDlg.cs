@@ -40,6 +40,8 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
 using System.Runtime.CompilerServices;
 using File = System.IO.File;
+using Settings = pwiz.Skyline.Properties.Settings;
+
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 
@@ -95,10 +97,10 @@ namespace pwiz.Skyline.SettingsUI
         public class LearningPage : IFormView { }
 
         private const string PYTHON = @"Python";
-        public const string ALPHAPEPTDEEP_PYTHON_VERSION = @"3.9.13";
+        public static readonly string ALPHAPEPTDEEP_PYTHON_VERSION = Settings.Default.PythonEmbeddableVersion;
         private const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
-        internal const string CARAFE_PYTHON_VERSION = @"3.9.13";
+        internal static readonly string CARAFE_PYTHON_VERSION = Settings.Default.PythonEmbeddableVersion;
         private const string CARAFE = @"Carafe";
         private const string WORKSPACES = @"workspaces";
         private const string PEPTDEEP = @"PeptDeep";
