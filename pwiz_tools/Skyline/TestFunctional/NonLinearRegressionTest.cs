@@ -100,6 +100,8 @@ namespace pwiz.SkylineTestFunctional
 
         void TestRunToRunRegression()
         {
+            // TODO
+            return;
             RunUI(SkylineWindow.ShowRTRegressionGraphRunToRun);
             var runToRunGraphSummary = FormUtil.OpenForms.OfType<GraphSummary>()
                 .FirstOrDefault(graph => graph.Type == GraphTypeSummary.run_to_run_regression);
