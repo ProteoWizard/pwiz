@@ -60,7 +60,7 @@ namespace TestPerf
             // Not yet translated
             if (IsTranslationRequired)
                 return;
-            RunPerfTests = true;
+            // RunPerfTests = true;
             CoverShotName = "AcquisitionComparison";
 
             TestFilesZipPaths = new[]
@@ -95,7 +95,7 @@ namespace TestPerf
         private const string PROCAL_LIBRARY = "PROCAL";
         private const string PROCAL_KOINA_LIBRARY = "PROCAL-Koina";
 
-        private bool IsConnected => false;
+        private bool IsConnected => IsPauseForScreenShots;
 
         protected override void DoTest()
         {
