@@ -1393,6 +1393,11 @@ namespace pwiz.SkylineTestUtil
 
         private int ScreenshotCounter = 1;
 
+        public void SkipScreenshots(int numToSkip)
+        {
+            ScreenshotCounter += numToSkip;
+        }
+
         public virtual bool AuditLogCompareLogs
         {
             get { return IsTutorial && !IsFullData; }   // Logs were recorded with partial data and not in Pass0
