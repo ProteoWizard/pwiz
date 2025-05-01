@@ -377,6 +377,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             {
                 return;
             }
+            LoadMassUnitEntries();
             LoadFragmentIonEntries();
             LoadMs2AnalyzerEntries();
 
@@ -393,8 +394,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void LoadMassUnitEntries()
         {
-            string[] entries = { @"Da", @"ppm" };
-
             void ClearAndRestoreComboBoxItems(ComboBox cb, string[] newEntries)
             {
                 string oldSelection = cb.SelectedItem as string;
@@ -404,10 +403,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     cb.SelectedIndex = newEntries.ToList().IndexOf(oldSelection);
             }
 
-            var ms1Entries = ImportPeptideSearch.SearchEngine.PrecursorIonToleranceUnitTypes.Select(t => entries[(int) t]).ToArray();
+            var ms1Entries = ImportPeptideSearch.SearchEngine.PrecursorIonToleranceUnitTypes.Select(t => t.Name).ToArray();
             ClearAndRestoreComboBoxItems(cbMS1TolUnit, ms1Entries);
 
-            var ms2Entries = ImportPeptideSearch.SearchEngine.FragmentIonToleranceUnitTypes.Select(t => entries[(int) t]).ToArray();
+            var ms2Entries = ImportPeptideSearch.SearchEngine.FragmentIonToleranceUnitTypes.Select(t => t.Name).ToArray();
             ClearAndRestoreComboBoxItems(cbMS2TolUnit, ms2Entries);
         }
 
@@ -670,11 +669,14 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             Assume.IsNotNull(ImportPeptideSearch.SearchEngine.AdditionalSettings);
 
-            KeyValueGridDlg.Show(PeptideSearchResources.SearchSettingsControl_Additional_Settings,
+            KeyValueGridDlg.Show(this, PeptideSearchResources.SearchSettingsControl_Additional_Settings,
                 ImportPeptideSearch.SearchEngine.AdditionalSettings,
                 (setting) => setting.Value.ToString(),
                 (value, setting) => setting.Value = value,
-                (value, setting) => setting.Validate(value));
+                (value, setting) => setting.Validate(value),
+                setting => setting.ValidValues);
+
+            InitializeControls();
         }
     }
 

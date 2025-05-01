@@ -73,12 +73,16 @@
             this.panelStatusBarResult = new System.Windows.Forms.FlowLayoutPanel();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.proteinSourcePanel = new System.Windows.Forms.Panel();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.btnError = new System.Windows.Forms.Button();
+            this.progressPanel = new System.Windows.Forms.Panel();
             this.gbParsimonyOptions.SuspendLayout();
             this.flowLayoutPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numMinPeptides)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAssociateResults)).BeginInit();
             this.panelStatusBarResult.SuspendLayout();
             this.proteinSourcePanel.SuspendLayout();
+            this.progressPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -114,7 +118,6 @@
             this.comboSharedPeptides.FormattingEnabled = true;
             resources.ApplyResources(this.comboSharedPeptides, "comboSharedPeptides");
             this.comboSharedPeptides.Name = "comboSharedPeptides";
-            this.comboSharedPeptides.SelectedIndexChanged += new System.EventHandler(this.comboParsimony_SelectedIndexChanged);
             // 
             // gbParsimonyOptions
             // 
@@ -346,8 +349,6 @@
             this.dgvAssociateResults.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders;
             this.dgvAssociateResults.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.dgvAssociateResults.ShowEditingIcon = false;
-            this.dgvAssociateResults.VirtualMode = true;
-            this.dgvAssociateResults.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.dgvAssociateResults_CellValueNeeded);
             // 
             // headerColumn
             // 
@@ -419,20 +420,43 @@
             this.proteinSourcePanel.Controls.Add(this.tbxFastaTargets);
             this.proteinSourcePanel.Name = "proteinSourcePanel";
             // 
+            // progressBar1
+            // 
+            resources.ApplyResources(this.progressBar1, "progressBar1");
+            this.progressBar1.Name = "progressBar1";
+            // 
+            // btnError
+            // 
+            this.btnError.Cursor = System.Windows.Forms.Cursors.Hand;
+            resources.ApplyResources(this.btnError, "btnError");
+            this.btnError.FlatAppearance.BorderSize = 0;
+            this.btnError.Image = global::pwiz.Skyline.Properties.Resources.Error;
+            this.btnError.Name = "btnError";
+            this.btnError.UseVisualStyleBackColor = true;
+            this.btnError.Click += new System.EventHandler(this.btnError_Click);
+            // 
+            // progressPanel
+            // 
+            resources.ApplyResources(this.progressPanel, "progressPanel");
+            this.progressPanel.Controls.Add(this.progressBar1);
+            this.progressPanel.Controls.Add(this.btnError);
+            this.progressPanel.Name = "progressPanel";
+            // 
             // AssociateProteinsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.progressPanel);
             this.Controls.Add(this.proteinSourcePanel);
             this.Controls.Add(this.panelStatusBarResult);
-            this.Controls.Add(this.lblResults);
             this.Controls.Add(this.dgvAssociateResults);
             this.Controls.Add(this.gbParsimonyOptions);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.lblDescription);
             this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.lblResults);
             this.HelpButton = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -449,6 +473,7 @@
             this.panelStatusBarResult.PerformLayout();
             this.proteinSourcePanel.ResumeLayout(false);
             this.proteinSourcePanel.PerformLayout();
+            this.progressPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -495,5 +520,8 @@
         private System.Windows.Forms.Panel proteinSourcePanel;
         private System.Windows.Forms.CheckBox cbGeneLevel;
         private System.Windows.Forms.Label lblGroupAtGeneLevel;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Button btnError;
+        private System.Windows.Forms.Panel progressPanel;
     }
 }

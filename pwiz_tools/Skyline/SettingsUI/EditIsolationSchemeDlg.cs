@@ -30,6 +30,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.SettingsUI
     {
         private IsolationScheme _isolationScheme;
         private readonly IEnumerable<IsolationScheme> _existing;
+        private readonly SpectrumClassFilter? _spectrumFilters;
         private readonly GridViewDriver _gridViewDriver;
         public const int COLUMN_START = 0;
         public const int COLUMN_END = 1;
@@ -107,9 +109,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public EditIsolationSchemeDlg(IEnumerable<IsolationScheme> existing)
+        public EditIsolationSchemeDlg(IEnumerable<IsolationScheme> existing, SrmSettings settings = null)
         {
             _existing = existing;
+            _spectrumFilters = settings?.TransitionSettings.FullScan.SpectrumClassFilter;
             InitializeComponent();
 
             Icon = Resources.Skyline;
@@ -1021,6 +1024,14 @@ namespace pwiz.Skyline.SettingsUI
             ImportRangesFromFiles(dataSources);
         }
 
+        private List<FilterSpec> GetIsolationWidthFilterSpecs()
+        {
+            if (_spectrumFilters == null)
+                return null;
+            var filterSpecs = _spectrumFilters.Value.Clauses.SelectMany(c => c.FilterSpecs);
+            return filterSpecs.Where(s => s.ColumnId.Equals(SpectrumClassColumn.IsolationWindowWidth.PropertyPath)).ToList();
+        }
+
         private void ImportRangesFromFiles(MsDataFileUri[] dataSources)
         {
             try
@@ -1035,6 +1046,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (isolationScheme != null)
                 {
+                    var filterSpecs = GetIsolationWidthFilterSpecs() ?? new List<FilterSpec>();
+                    var dataSchema = new DataSchema();
                     cbSpecifyMargin.Checked = isolationScheme.PrespecifiedIsolationWindows.Count(w => w.StartMargin.HasValue) > 1;
                     comboDeconvPre.SelectedItem = isolationScheme.SpecialHandling == IsolationScheme.SpecialHandlingType.OVERLAP_MULTIPLEXED
                         ? DeconvolutionMethod.OVERLAP
@@ -1042,6 +1055,20 @@ namespace pwiz.Skyline.SettingsUI
                     _gridViewDriver.Items.Clear();
                     foreach (var isolationWindow in isolationScheme.PrespecifiedIsolationWindows)
                     {
+                        double isolationWidth = isolationWindow.End - isolationWindow.Start;
+                        bool filterOut = false;
+                        foreach (var filterSpec in filterSpecs)
+                        {
+                            if (!filterSpec.Predicate.MakePredicate(dataSchema, typeof(double)).Invoke(isolationWidth))
+                            {
+                                filterOut = true;
+                                break;
+                            }
+                        }
+
+                        if (filterOut)
+                            continue;
+
                         _gridViewDriver.Items.Add(new EditIsolationWindow
                         {
                             Start = isolationWindow.Start,

@@ -140,7 +140,7 @@ namespace pwiz.Skyline.FileUI
                 if (document.Settings.TransitionSettings.FullScan.IsEnabled)
                 {
                     i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix) &&
-                        ExportInstrumentType.IsFullScanInstrumentType(typeName));
+                        ExportInstrumentType.IsFullScanInstrumentType(GetInstrumentTypeFromSelection(typeName, true)));
                 }
                 if (i == -1)
                 {
@@ -428,6 +428,7 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.THERMO_ECLIPSE) ||
                    Equals(type, ExportInstrumentType.THERMO_STELLAR) ||
                    Equals(type, ExportInstrumentType.THERMO_ASTRAL) ||
+                   Equals(type, ExportInstrumentType.THERMO_ASTRAL_ZOOM) ||
                    Equals(type, ExportInstrumentType.THERMO_ASCEND) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_SYNAPT_TRAP) ||
@@ -2414,10 +2415,7 @@ namespace pwiz.Skyline.FileUI
 
         public void SetInstrument(string instrument)
         {
-            if(ExportInstrumentType.TRANSITION_LIST_TYPES.ToList().Find(inst => Equals(inst, instrument)) == default(string))
-                return;
-
-            comboInstrument.SelectedText = instrument;
+            comboInstrument.SelectedItem = instrument;
         }
 
         public void SetMethodType(ExportMethodType type)

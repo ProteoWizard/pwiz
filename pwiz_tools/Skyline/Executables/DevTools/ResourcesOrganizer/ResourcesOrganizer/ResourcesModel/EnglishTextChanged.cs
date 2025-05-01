@@ -98,7 +98,7 @@ public record EnglishTextChanged() : LocalizationIssue("English text changed")
     {
         return csvRecord with
         {
-            Issue = Name, OldEnglish = ReviewedInvariantValue, OldLocalized = ReviewedLocalizedValue
+            Issue = Name, OldEnglish = ReviewedInvariantValue ?? string.Empty, OldLocalized = ReviewedLocalizedValue ?? string.Empty,
         };
     }
 }

@@ -161,4 +161,7 @@
   <data name="SkylineDataSchema_GetTypeDescription_Item_in_list___0__" xml:space="preserve">
     <value>リスト「{0}」のアイテム</value>
   </data>
+  <data name="SkylineViewContext_WriteDataWithStatus_Property" xml:space="preserve">
+    <value>プロパティ</value>
+  </data>
 </root>
