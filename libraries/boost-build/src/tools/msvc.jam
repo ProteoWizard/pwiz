@@ -2109,7 +2109,7 @@ class msvc-linking-generator : linking-generator
             {
                 if $(name-main:S) = ".exe"
                 {
-                    local exe-path = [ path.join [ $(result).path ] $(name-main:G=) ] ;
+                    local exe-path = [ path.join [ $(result[1]).path ] $(name-main:G=) ] ;
                     local exe-config = $(exe-path).config ;
                     local cmd = "BindingRedirectGenerator.exe $(exe-config) " ;
                     for local assembly in $(assemblies)
@@ -2120,7 +2120,7 @@ class msvc-linking-generator : linking-generator
 
                     echo [ SHELL "$(cmd:J= )" : strip-eol ] ;
                     #SHELL "$(cmd:J= )" ;
-                    #RESCAN ;
+                    RESCAN ;
 
                     if [ path.exists $(exe-config) ]
                     {
