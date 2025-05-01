@@ -736,9 +736,7 @@ namespace pwiz.Skyline.SettingsUI
             dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-
                 Cursor.Current = Cursors.WaitCursor;
-
 
                 if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                 {
@@ -770,15 +768,17 @@ namespace pwiz.Skyline.SettingsUI
                 if (warningMods?.Count > 0)
                 {
                     string warningModString = string.Join(Environment.NewLine, warningMods);
-                    AlertDlg warnMessageDlg =
-                        new AlertDlg(
-                            string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
-                                warningModString), MessageBoxButtons.OKCancel);
-                    var warnModChoice = warnMessageDlg.ShowDialog();
 
-                    if (warnModChoice == DialogResult.Cancel)
+                    using (AlertDlg warnMessageDlg =
+                           new AlertDlg(string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                                   warningModString), MessageBoxButtons.OKCancel))
                     {
-                        return;
+                        var warnModChoice = warnMessageDlg.ShowDialog();
+
+                        if (warnModChoice == DialogResult.Cancel)
+                        {
+                            return;
+                        }
                     }
                 }
             }

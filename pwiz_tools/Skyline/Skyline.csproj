@@ -895,12 +895,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>FileUIResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="ToolsUI\PythonInstallerDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ToolsUI\PythonInstallerDlg.Designer.cs">
-      <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="ToolsUI\PythonInstallerUI.cs" />
     <Compile Include="ToolsUI\ToolsUIResources.Designer.cs">
       <DesignTime>True</DesignTime>
@@ -4925,9 +4919,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\EditServerDlg.zh-CHS.resx">
       <DependentUpon>EditServerDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ToolsUI\PythonInstallerDlg.resx">
-      <DependentUpon>PythonInstallerDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ToolsUI\PythonInstallerLegacyDlg.ja.resx">
       <DependentUpon>PythonInstallerLegacyDlg.cs</DependentUpon>

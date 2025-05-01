@@ -394,11 +394,11 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Function to help with filtering lines of output, return true if line contains one of possible filters provided, false otherwise
+        /// Function to help with filtering lines of output.
         /// </summary>
-        /// <param name="line">line considered for filtering</param>
-        /// <param name="filters">array of string filters being considered</param>
-        /// <returns>true when filter matches, false otherwise</returns>
+        /// <param name="line">Line of text considered for filtering.</param>
+        /// <param name="filters">Set of text values used to test the line.</param>
+        /// <returns>Return true if the provided line of text contains any of the provided filters of text, false otherwise.</returns>
         private bool FilterOutputLine(string line, string[] filters)
         {
             return filters.Any(filter => line.Contains(filter));
