@@ -62,11 +62,11 @@ namespace TestPerf
             AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
        
             var fileHash = PythonInstallerUtil.GetFileHash(new PythonInstaller().PythonEmbeddablePackageDownloadPath);
-            Console.WriteLine($@"Computed PythonEmbeddablePackageDownload  Hash: {fileHash}");
+            Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
 
             fileHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles(new PythonInstaller().PythonEmbeddablePackageExtractDir, @"python*.pth"));
-            Console.WriteLine($@"Computed SearchPathInPythonEmbeddablePackageExtracted Hash: {fileHash}");
+            Console.WriteLine($@"Computed SearchPathInPythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.SearchPathInPythonEmbeddableHash, fileHash);
 
             OkDialog(_peptideSettings, _peptideSettings.OkDialog);
