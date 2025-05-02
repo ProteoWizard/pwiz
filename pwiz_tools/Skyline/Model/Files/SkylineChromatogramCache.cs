@@ -23,8 +23,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private class ChromatogramCacheId : Identity { }
 
-        public SkylineChromatogramCache(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(new ChromatogramCacheId()), ImageId.cache_file)
+        public SkylineChromatogramCache(IDocumentContainer documentContainer) : 
+            base(documentContainer, new IdentityPath(new ChromatogramCacheId()), ImageId.cache_file)
         {
         }
 

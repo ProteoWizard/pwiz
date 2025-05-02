@@ -24,14 +24,14 @@ namespace pwiz.Skyline.Model.Files
 {
     public class SkylineFile : FileNode
     {
-        public SkylineFile(SrmDocument document, string documentPath) :
-            base(document, documentPath, IdentityPath.ROOT, ImageId.skyline)
+        public SkylineFile(IDocumentContainer documentContainer) :
+            base(documentContainer, IdentityPath.ROOT, ImageId.skyline)
         {
             // DocumentPath is null when a .sky document is new and has not been saved to disk yet
             if (IsDocumentSavedToDisk())
             {
-                Name = FileName = Path.GetFileName(documentPath);
-                FilePath = documentPath;
+                Name = FileName = Path.GetFileName(documentContainer.DocumentFilePath);
+                FilePath = documentContainer.DocumentFilePath;
             }
             else
             {
@@ -59,40 +59,40 @@ namespace pwiz.Skyline.Model.Files
         {
             var list = new List<FileNode>();
 
-            FileNode files = new ReplicatesFolder(Document, DocumentPath);
+            FileNode files = new ReplicatesFolder(DocumentContainer);
             list.Add(files); // Always show the Replicates folder
 
-            files = new SpectralLibrariesFolder(Document, DocumentPath);
+            files = new SpectralLibrariesFolder(DocumentContainer);
             if (files.Files.Count > 0)
             {
                 list.Add(files);
             }
 
-            files = new BackgroundProteomeFolder(Document, DocumentPath);
+            files = new BackgroundProteomeFolder(DocumentContainer);
             if (files.Files.Count > 0)
             {
                 list.Add(files);
             }
 
-            files = new RTCalcFolder(Document, DocumentPath);
+            files = new RTCalcFolder(DocumentContainer);
             if (files.Files.Count > 0)
             {
                 list.Add(files);
             }
 
-            files = new IonMobilityLibraryFolder(Document, DocumentPath);
+            files = new IonMobilityLibraryFolder(DocumentContainer);
             if (files.Files.Count > 0)
             {
                 list.Add(files);
             }
 
-            files = new OptimizationLibraryFolder(Document, DocumentPath);
+            files = new OptimizationLibraryFolder(DocumentContainer);
             if (files.Files.Count > 0)
             {
                 list.Add(files);
             }
 
-            files = new ProjectFilesFolder(Document, DocumentPath);
+            files = new ProjectFilesFolder(DocumentContainer);
             list.Add(files); // Always show project files - .sky, .sky.view, etc
 
             return list;

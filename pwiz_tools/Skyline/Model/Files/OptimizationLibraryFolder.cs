@@ -25,8 +25,8 @@ namespace pwiz.Skyline.Model.Files
         // ReSharper disable once IdentifierTypo
         private static readonly Identity OPTDB_FOLDER = new StaticFolderId();
 
-        public OptimizationLibraryFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(OPTDB_FOLDER), ImageId.folder)
+        public OptimizationLibraryFolder(IDocumentContainer documentContainer) : 
+            base(documentContainer, new IdentityPath(OPTDB_FOLDER), ImageId.folder)
         {
         }
 
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.TransitionSettings is { HasOptimizationLibraryPersisted: true })
                 {
-                    var model = new OptimizationLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id);
+                    var model = new OptimizationLibrary(DocumentContainer, Document.Settings.TransitionSettings.Prediction.OptimizedLibrary.Id);
                     return ImmutableList.Singleton<FileNode>(model);
                 }
                 else

@@ -66,18 +66,18 @@ namespace pwiz.Skyline.Model.Files
 
     public abstract class FileNode
     {
-        protected FileNode(SrmDocument document, string documentPath, IdentityPath identityPath,
+        protected FileNode(IDocumentContainer documentContainer, IdentityPath identityPath,
                            ImageId available = ImageId.file, ImageId missing = ImageId.file_missing)
         {
-            Document = document;
-            DocumentPath = documentPath;
+            DocumentContainer = documentContainer;
             IdentityPath = identityPath;
             ImageAvailable = available;
             ImageMissing = missing;
         }
 
-        protected SrmDocument Document { get; }
-        protected string DocumentPath { get; }
+        protected IDocumentContainer DocumentContainer { get; }
+        protected SrmDocument Document => DocumentContainer.Document;
+        protected string DocumentPath => DocumentContainer.DocumentFilePath;
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
@@ -97,6 +97,17 @@ namespace pwiz.Skyline.Model.Files
         internal bool IsDocumentSavedToDisk()
         {
             return !string.IsNullOrEmpty(DocumentPath);
+        }
+
+        public static IDocumentContainer CreateDocumentContainer(SrmDocument document, string documentFilePath)
+        {
+            var documentContainer = new MemoryDocumentContainer
+            {
+                DocumentFilePath = documentFilePath
+            };
+            documentContainer.SetDocument(document, documentContainer.Document);
+
+            return documentContainer;
         }
     }
 }

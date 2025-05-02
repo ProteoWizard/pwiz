@@ -14,29 +14,23 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class OptimizationLibrary : FileNode
     {
-        private readonly Lazy<Optimization.OptimizationLibrary> _lazy;
-
-        public OptimizationLibrary(SrmDocument document, string documentPath, Identity optimizedLibraryId) : 
-            base(document, documentPath, new IdentityPath(optimizedLibraryId))
+        public OptimizationLibrary(IDocumentContainer documentContainer, Identity optimizedLibraryId) : 
+            base(documentContainer, new IdentityPath(optimizedLibraryId))
         {
-            _lazy = new Lazy<Optimization.OptimizationLibrary>(FindOptimizationLibrary);
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => _lazy.Value;
-        public override string Name => _lazy.Value.Name;
-        public override string FilePath => _lazy.Value.FilePath;
+        public override Immutable Immutable => OptLibrary;
+        public override string Name => OptLibrary.Name;
+        public override string FilePath => OptLibrary.FilePath;
 
-        private Optimization.OptimizationLibrary FindOptimizationLibrary()
-        {
-            return Document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
-        }
+        private Optimization.OptimizationLibrary OptLibrary => 
+            Document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
     }
 }

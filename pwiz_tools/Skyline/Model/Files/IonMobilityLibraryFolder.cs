@@ -25,8 +25,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity IMSDB_FOLDER = new StaticFolderId();
 
-        public IonMobilityLibraryFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(IMSDB_FOLDER), ImageId.folder)
+        public IonMobilityLibraryFolder(IDocumentContainer documentContainer) : 
+            base(documentContainer, new IdentityPath(IMSDB_FOLDER), ImageId.folder)
         {
         }
 
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.TransitionSettings is { HasIonMobilityLibraryPersisted: true })
                 {
-                    var model = new IonMobilityLibrary(Document, DocumentPath, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id);
+                    var model = new IonMobilityLibrary(DocumentContainer, Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary.Id);
                     return ImmutableList<FileNode>.Singleton(model);
                 }
                 else 

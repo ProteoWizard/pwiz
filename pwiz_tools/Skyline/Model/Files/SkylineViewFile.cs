@@ -22,8 +22,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity VIEW_FILE = new StaticFolderId();
 
-        public SkylineViewFile(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(VIEW_FILE), ImageId.view_file)
+        public SkylineViewFile(IDocumentContainer documentContainer) : 
+            base(documentContainer, new IdentityPath(VIEW_FILE), ImageId.view_file)
         { 
         }
 

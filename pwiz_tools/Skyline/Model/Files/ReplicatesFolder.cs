@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Files
@@ -26,8 +27,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity REPLICATES = new StaticFolderId();
 
-        public ReplicatesFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(REPLICATES), ImageId.folder)
+        public ReplicatesFolder(IDocumentContainer documentContainer) : 
+            base(documentContainer, new IdentityPath(REPLICATES), ImageId.folder)
         {
         }
 
@@ -46,13 +47,22 @@ namespace pwiz.Skyline.Model.Files
                 }
                 else
                 {
-                    var files = Document.MeasuredResults.Chromatograms.
-                        Select(chromatogramSet => new Replicate(Document, DocumentPath, (ChromatogramSetId)chromatogramSet.Id)).
-                        ToList<FileNode>();
+                    var files = 
+                        Document.MeasuredResults.Chromatograms.Select(chromatogramSet => new Replicate(DocumentContainer, (ChromatogramSetId)chromatogramSet.Id));
 
-                    return ImmutableList.ValueOf(files);
+                    return ImmutableList.ValueOf(files.ToList<FileNode>());
                 }
             }
+        }
+
+        public ModifiedDocument DeleteAll(SrmDocument document)
+        {
+            var newDocument = document.ChangeMeasuredResults(null);
+            newDocument.ValidateResults();
+
+            var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_replicates_remove_all, document.DocumentType);
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
     }
 }

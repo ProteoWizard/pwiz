@@ -25,8 +25,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity PROJECT_FILES_FOLDER = new StaticFolderId();
 
-        public ProjectFilesFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(PROJECT_FILES_FOLDER), ImageId.folder)
+        public ProjectFilesFolder(IDocumentContainer documentContainer) :
+            base(documentContainer, new IdentityPath(PROJECT_FILES_FOLDER), ImageId.folder)
         {
         }
 
@@ -41,10 +41,10 @@ namespace pwiz.Skyline.Model.Files
                 var files = new List<FileNode>();
 
                 if (Document.Settings.DataSettings.IsAuditLoggingEnabled) 
-                    files.Add(new SkylineAuditLog(Document, DocumentPath));
+                    files.Add(new SkylineAuditLog(DocumentContainer));
 
                 if(IsDocumentSavedToDisk())
-                    files.Add(new SkylineViewFile(Document, DocumentPath));
+                    files.Add(new SkylineViewFile(DocumentContainer));
 
                 // Chromatogram Caches (.skyd)
                 // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Files
                 var cachePaths = Document.Settings.MeasuredResults?.CachePaths;
                 if (cachePaths != null)
                 {
-                    files.AddRange(cachePaths.Select(_ => new SkylineChromatogramCache(Document, DocumentPath)));
+                    files.AddRange(cachePaths.Select(_ => new SkylineChromatogramCache(DocumentContainer)));
                 }
 
                 return ImmutableList.ValueOf(files);

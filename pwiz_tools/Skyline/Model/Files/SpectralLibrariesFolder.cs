@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Files
 {
@@ -25,8 +28,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity SPECTRAL_LIBRARIES = new StaticFolderId();
 
-        public SpectralLibrariesFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder)
+        public SpectralLibrariesFolder(IDocumentContainer documentContainer) :
+            base(documentContainer, new IdentityPath(SPECTRAL_LIBRARIES), ImageId.folder)
         {
         }
 
@@ -42,7 +45,7 @@ namespace pwiz.Skyline.Model.Files
                 {
                     var model =
                         Document.Settings.PeptideSettings.Libraries.LibrarySpecs.
-                            Select(library => new SpectralLibrary(Document, DocumentPath, library.Id)).
+                            Select(library => new SpectralLibrary(DocumentContainer, library.Id)).
                             ToList<FileNode>();
 
                     return ImmutableList.ValueOf(model);
@@ -52,6 +55,18 @@ namespace pwiz.Skyline.Model.Files
                     return ImmutableList.Empty<FileNode>();
                 }
             }
+        }
+
+        public ModifiedDocument DeleteAll(SrmDocument document)
+        {
+            var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibraries(Array.Empty<LibrarySpec>(), Array.Empty<Library>());
+            var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
+            var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
+            var newDocument = document.ChangeSettings(newSettings);
+
+            var entry = AuditLogEntry.CreateSimpleEntry(MessageType.files_tree_libraries_remove_all, document.DocumentType);
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
     }
 }

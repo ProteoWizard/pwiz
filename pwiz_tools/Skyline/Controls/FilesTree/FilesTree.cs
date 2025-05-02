@@ -199,7 +199,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 BeginUpdateMS();
 
-                var files = new SkylineFile(document, documentFilePath);
+                var documentContainer = FileNode.CreateDocumentContainer(document, documentFilePath);
+                var files = new SkylineFile(documentContainer);
 
                 MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, forceModelUpdate);
 
@@ -674,28 +675,24 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             _monitoringFileSystem = false;
 
-            if (_fsWatcher != null)
+            if (disposing)
             {
-                _fsWatcher.Renamed -= FilesTree_ProjectDirectory_OnRenamed;
-                _fsWatcher.Deleted -= FilesTree_ProjectDirectory_OnDeleted;
-                _fsWatcher.Created -= FilesTree_ProjectDirectory_OnCreated;
-
-                _fsWatcher.Dispose();
+                _fsWatcher?.Dispose();
                 _fsWatcher = null;
+                _fsWorkQueue?.Dispose();
+                _fsWorkQueue = null;
+                _editTextBox?.Dispose();
+                _editTextBox = null;
             }
 
             if (_fsWorkQueue != null)
             {
-                _fsWorkQueue.Dispose();
-                _fsWorkQueue = null;
             }
 
             if (_editTextBox != null)
             {
                 _editTextBox.KeyDown -= LabelEditTextBox_KeyDown;
                 _editTextBox.LostFocus -= LabelEditTextBox_LostFocus;
-                _editTextBox.Dispose();
-                _editTextBox = null;
             }
 
             base.Dispose(disposing);

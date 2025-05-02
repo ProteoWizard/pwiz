@@ -14,30 +14,24 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Files
 {
-    // .irtdb
     public class RTCalc : FileNode
     {
-        private readonly Lazy<RetentionScoreCalculatorSpec> _lazy;
-
-        public RTCalc(SrmDocument document, string documentPath, Identity id) : base(document, documentPath, new IdentityPath(id))
+        public RTCalc(IDocumentContainer documentContainer, Identity id) : 
+            base(documentContainer, new IdentityPath(id))
         {
-            _lazy = new Lazy<RetentionScoreCalculatorSpec>(FindRTCalcSpec);
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => _lazy.Value;
-        public override string Name => _lazy.Value.Name;
-        public override string FilePath => _lazy.Value.FilePath;
+        public override Immutable Immutable => IrtDb;
+        public override string Name => IrtDb.Name;
+        public override string FilePath => IrtDb.FilePath;
 
-        private RetentionScoreCalculatorSpec FindRTCalcSpec()
-        {
-            return Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
-        }
+        private RetentionScoreCalculatorSpec IrtDb => 
+            Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator;
     }
 }

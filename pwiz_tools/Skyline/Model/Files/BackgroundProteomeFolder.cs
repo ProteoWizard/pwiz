@@ -24,8 +24,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity BACKGROUND_PROTEOME = new StaticFolderId();
 
-        public BackgroundProteomeFolder(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder)
+        public BackgroundProteomeFolder(IDocumentContainer documentContainer) : 
+            base(documentContainer, new IdentityPath(BACKGROUND_PROTEOME), ImageId.folder)
         {
         }
 
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.PeptideSettings is { HasBackgroundProteome: true })
                 {
-                    return ImmutableList<FileNode>.Singleton(new BackgroundProteome(Document, DocumentPath, Document.Settings.PeptideSettings.BackgroundProteome.Id));
+                    return ImmutableList<FileNode>.Singleton(new BackgroundProteome(DocumentContainer, Document.Settings.PeptideSettings.BackgroundProteome.Id));
                 }
                 else {
                     return ImmutableList.Empty<FileNode>();

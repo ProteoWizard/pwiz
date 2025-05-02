@@ -14,30 +14,23 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class BackgroundProteome : FileNode
     {
-        private readonly Lazy<Proteome.BackgroundProteome> _backgroundProteome;
-
-        public BackgroundProteome(SrmDocument document, string documentPath, Identity backgroundProteomeId) : 
-            base(document, documentPath, new IdentityPath(backgroundProteomeId))
+        public BackgroundProteome(IDocumentContainer documentContainer, Identity backgroundProteomeId) : 
+            base(documentContainer, new IdentityPath(backgroundProteomeId))
         {
-            _backgroundProteome = new Lazy<Proteome.BackgroundProteome>(FindBackgroundProteome);
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => _backgroundProteome.Value;
-        public override string Name => _backgroundProteome.Value.Name;
-        public override string FilePath => _backgroundProteome.Value.FilePath;
-        public override string FileName => _backgroundProteome.Value.FileName;
+        public override Immutable Immutable => BgProteome;
+        public override string Name => BgProteome.Name;
+        public override string FilePath => BgProteome.FilePath;
+        public override string FileName => BgProteome.FileName;
 
-        private Proteome.BackgroundProteome FindBackgroundProteome()
-        {
-            return Document.Settings.PeptideSettings.BackgroundProteome;
-        }
+        private Proteome.BackgroundProteome BgProteome => Document.Settings.PeptideSettings.BackgroundProteome;
     }
 }

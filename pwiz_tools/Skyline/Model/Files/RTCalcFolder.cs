@@ -25,8 +25,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity RT_CALC_FOLDER = new StaticFolderId();
 
-        public RTCalcFolder(SrmDocument document, string documentPath) :
-            base(document, documentPath, new IdentityPath(RT_CALC_FOLDER), ImageId.folder)
+        public RTCalcFolder(IDocumentContainer documentContainer) :
+            base(documentContainer, new IdentityPath(RT_CALC_FOLDER), ImageId.folder)
         {
         }
 
@@ -40,7 +40,7 @@ namespace pwiz.Skyline.Model.Files
             {
                 if (Document.Settings.PeptideSettings is { HasRTCalcPersisted: true })
                 {
-                    var model = new RTCalc(Document, DocumentPath, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id);
+                    var model = new RTCalc(DocumentContainer, Document.Settings.PeptideSettings.Prediction.RetentionTime.Calculator.Id);
                     return ImmutableList<FileNode>.Singleton(model);
                 }
                 else

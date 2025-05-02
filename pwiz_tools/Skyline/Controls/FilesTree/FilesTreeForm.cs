@@ -181,7 +181,13 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ViewSpectralLibraries();
         }
 
-        private DialogResult ConfirmItemDeletion(string confirmMsg)
+        private DialogResult ConfirmDelete(int items, string oneItem, string manyItems)
+        {
+            var msg = items == 1 ? oneItem : manyItems;
+            return ConfirmDelete(msg);
+        } 
+
+        private DialogResult ConfirmDelete(string confirmMsg)
         {
             var confirmDlg = new MultiButtonMsgDlg(confirmMsg, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
 
@@ -201,48 +207,24 @@ namespace pwiz.Skyline.Controls.FilesTree
         // Remove all child nodes contained in this folder.
         public void RemoveAll(FilesTreeNode folderNode)
         {
-            if (!folderNode.SupportsRemoveAllItems())
+            if (folderNode == null || !folderNode.SupportsRemoveAllItems())
                 return;
 
-            var type = folderNode.Model.GetType();
-
-            var confirmMsg = type == typeof(ReplicatesFolder)
-                ? FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates
-                : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries;
-
-            if (ConfirmItemDeletion(confirmMsg) == DialogResult.No)
-                return;
-
-            if (type == typeof(ReplicatesFolder))
+            if (folderNode.Model is ReplicatesFolder replicates)
             {
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicate_Nodes,
-                    document =>
-                    {
-                        var newDoc = document.ChangeMeasuredResults(null);
-                        newDoc.ValidateResults();
-                        return newDoc;
-                    },
-                    docPair => AuditLogEntry.CreateSimpleEntry(
-                            MessageType.files_tree_replicates_remove_all,
-                            docPair.NewDocumentType)
-                );
+                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates);
+                if (dialogResult == DialogResult.No)
+                    return;
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Replicate_Nodes, DocumentModifier.Create(doc => replicates.DeleteAll(doc)));
             }
-            else if (type == typeof(SpectralLibrariesFolder))
+            else if (folderNode.Model is SpectralLibrariesFolder libraries)
             {
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Spectral_Library_Nodes,
-                    document =>
-                    {
-                        var newPepLibraries =
-                            document.Settings.PeptideSettings.Libraries.ChangeLibraries(Array.Empty<LibrarySpec>(), Array.Empty<Library>());
-                        var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
-                        var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
-                        var newDoc = document.ChangeSettings(newSettings);
-                        return newDoc;
-                    },
-                    docPair => AuditLogEntry.CreateSimpleEntry(
-                        MessageType.files_tree_libraries_remove_all, 
-                        docPair.NewDocumentType)
-                );
+                var dialogResult = ConfirmDelete(FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries);
+                if (dialogResult == DialogResult.No)
+                    return;
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_All_Spectral_Library_Nodes, DocumentModifier.Create(doc => libraries.DeleteAll(doc)));
             }
         }
 
@@ -254,150 +236,41 @@ namespace pwiz.Skyline.Controls.FilesTree
             var model = nodes.First().Model;
             Assume.IsTrue(model is Replicate || model is SpectralLibrary);
 
-            string confirmMsg;
-            switch (model)
+            if (nodes.First().Model is Replicate replicate)
             {
-                case Replicate _:
-                    confirmMsg = nodes.Count == 1
-                        ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Replicate
-                        : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates;
-                    break;
-                case SpectralLibrary _:
-                    confirmMsg = nodes.Count == 1
-                        ? FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library
-                        : FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries;
-                    break;
-                default:
+                var dialogResult = ConfirmDelete(nodes.Count, 
+                        FilesTreeResources.FilesTreeForm_ConfirmRemove_Replicate, 
+                        FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Replicates);
+
+                if (dialogResult == DialogResult.No)
                     return;
+
+                // Filter out replicate sample files if any happened to be selected, which makes the audit log messages more consistent
+                var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
+
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node, DocumentModifier.Create(doc => replicate.Delete(doc, deletedModels)));
             }
-
-            var dialogResult = ConfirmItemDeletion(confirmMsg);
-            if (dialogResult == DialogResult.No)
-                return;
-
-            if (nodes.First().Model is Replicate)
+            else if (nodes.First().Model is SpectralLibrary library)
             {
-                // Filter out replicate sample files if any happened to be included in the selection
-                // so audit log messages are more consistent
-                nodes = nodes.Where(item => item.Model is Replicate).ToList();
+                var dialogResult = ConfirmDelete(nodes.Count, 
+                    FilesTreeResources.FilesTreeForm_ConfirmRemove_Spectral_Library, 
+                    FilesTreeResources.FilesTreeForm_ConfirmRemoveMany_Spectral_Libraries);
 
-                var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
+                if (dialogResult == DialogResult.No)
+                    return;
 
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node,
-                    document =>
-                    {
-                        var remainingChromatograms=
-                            SkylineWindow.Document.MeasuredResults.Chromatograms.
-                                Where(chrom => !Utils.ContainsCheckReferenceEquals(selectedIds, chrom.Id)).ToList();
+                var deletedModels = nodes.Select(item => item.Model).ToList();
 
-                        var newMeasuredResults = SkylineWindow.Document.MeasuredResults.ChangeChromatograms(remainingChromatograms);
-                        var newDoc = document.ChangeMeasuredResults(newMeasuredResults);
-                        newDoc.ValidateResults();
-                        return newDoc;
-                    },
-                    docPair =>
-                    {
-                        var readableNames = nodes.Select(item => item.Model.Name).ToList();
-
-                        var entry = AuditLogEntry.CreateCountChangeEntry(
-                            MessageType.files_tree_replicates_remove_one,
-                            MessageType.files_tree_replicates_remove_several,
-                            docPair.NewDocumentType,
-                            readableNames
-                        );
-
-                        if (readableNames.Count > 1)
-                        {
-                            entry = entry.AppendAllInfo(
-                                readableNames.Select(name => new MessageInfo(MessageType.removed_replicate, docPair.OldDocumentType, name))
-                                    .ToList());
-                        }
-
-                        return entry;
-                    }
-                );
-            }
-            else if (nodes.First().Model is SpectralLibrary)
-            {
-                var selectedIds = nodes.Select(item => item.Model.IdentityPath.Child).ToList();
-
-                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library_Node,
-                    document =>
-                    {
-                        var remainingLibraries = 
-                            document.Settings.PeptideSettings.Libraries.LibrarySpecs
-                                .Where(lib => !Utils.ContainsCheckReferenceEquals(selectedIds, lib.Id)).ToList();
-
-                        var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(remainingLibraries);
-                        var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
-                        var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
-                        var newDoc = document.ChangeSettings(newSettings);
-                        return newDoc; 
-                    },
-                    docPair =>
-                    {
-                        var readableNames= nodes.Select(item => item.Model.Name).ToList();
-
-                        var entry = AuditLogEntry.CreateCountChangeEntry(
-                            MessageType.files_tree_libraries_remove_one,
-                            MessageType.files_tree_libraries_remove_several,
-                            docPair.NewDocumentType,
-                            readableNames
-                        );
-
-                        if (readableNames.Count > 1)
-                        {
-                            entry = entry.AppendAllInfo(
-                                readableNames.Select(name => new MessageInfo(MessageType.removed_library, docPair.OldDocumentType, name)).ToList());
-                        }
-
-                        return entry;
-                    }
-                );
+                SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Spectral_Library_Node, DocumentModifier.Create(doc => library.Delete(doc, deletedModels)));
             }
         }
 
         public bool EditTreeNodeLabel(FilesTreeNode node, string newLabel)
         {
-            if (string.IsNullOrEmpty(newLabel))
+            if (string.IsNullOrEmpty(newLabel) || !(node.Model is Replicate replicate))
                 return false;
 
-            var chromatogramSetId = (ChromatogramSetId)node.Model.IdentityPath.GetIdentity(0);
-            var chromatogram = SkylineWindow.Document.MeasuredResults.FindChromatogramSet(chromatogramSetId);
-
-            if (chromatogram == null)
-                return true;
-
-            var oldName = chromatogram.Name;
-            var newName = newLabel;
-
-            SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, 
-                doc =>
-                {
-                    var newChromatogram = (ChromatogramSet)chromatogram.ChangeName(newName);
-                    var measuredResults = SkylineWindow.Document.MeasuredResults;
-
-                    var chromatograms = measuredResults.Chromatograms.ToArray();
-                    for (var i = 0; i < chromatograms.Length; i++)
-                    {
-                        if (ReferenceEquals(chromatograms[i].Id, newChromatogram.Id))
-                        {
-                            chromatograms[i] = newChromatogram;
-                        }
-                    }
-
-                    measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-                    var newDoc = doc.ChangeMeasuredResults(measuredResults);
-                    newDoc.ValidateResults();
-                    return newDoc;
-                },
-                docPair => 
-                    AuditLogEntry.CreateSimpleEntry(
-                        MessageType.files_tree_node_renamed, 
-                        docPair.NewDocumentType, 
-                        oldName, 
-                        newName)
-            );
+            SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName, DocumentModifier.Create(doc => replicate.ChangeName(doc, newLabel)));
 
             return false;
         }
@@ -411,8 +284,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (effect != DragDropEffects.Move || dropNode == null || !dropNode.IsDroppable() || draggedNodes.Count == 0 || draggedNodes.Contains(dropNode))
                     return;
 
-                var type = primaryDraggedNode.Model.GetType();
-                if (type == typeof(Replicate))
+                if (primaryDraggedNode.Model is Replicate)
                 {
                     SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
                         doc =>
@@ -468,7 +340,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                         }
                     );
                 }
-                else if (type == typeof(SpectralLibrary))
+                else if (primaryDraggedNode.Model is SpectralLibrary)
                 {
                     SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
                         doc =>
@@ -547,7 +419,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
             finally
             {
-                HideRemoveDropTarget();
+                HideRemoveDropTarget(false);
             }
         }
 
@@ -930,14 +802,17 @@ namespace pwiz.Skyline.Controls.FilesTree
             _dropTargetRemove.BackColor = highlight ? Color.LightYellow : Color.WhiteSmoke;
         }
 
-        private void HideRemoveDropTarget()
+        private void HideRemoveDropTarget(bool clearSelection = true)
         {
             FilesTree.IsDuringDragAndDrop = false;
 
             // Clear selection so the insert highlight line does not appear when mouse
             // is not over a valid drop target
-            filesTree.SelectedNode = null;
-            filesTree.SelectedNodes.Clear();
+            if (clearSelection)
+            {
+                filesTree.SelectedNode = null;
+                filesTree.SelectedNodes.Clear();
+            }
 
             FilesTree.Invalidate();
 
@@ -945,7 +820,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             _dropTargetRemove.BackColor = Color.WhiteSmoke;
         }
 
-        // CONSIDER: should the drop target be laid out in the designer?
         private static Panel CreateDropTarget(Image icon, DockStyle dockStyle)
         {
             var dropTarget = new Panel
@@ -977,16 +851,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             return !string.IsNullOrEmpty(documentPath);
         }
 
-        internal static bool ContainsCheckReferenceEquals<T>(IList<T> list, T item)
-        {
-            for (var i = 0; i < list.Count; i++)
-            {
-                if (ReferenceEquals(list[i], item))
-                    return true;
-            }
-            return false;
-        }
-
         internal static bool IsPointInRectangle(Point point, Rectangle rectangle)
         {
             return point.X >= rectangle.X && 
@@ -1004,7 +868,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             if (primaryDraggedNode == null)
                 return false;
             else return possibleDropTarget.Model.GetType() == primaryDraggedNode.Model.GetType() || 
-                        possibleDropTarget.Model.GetType() == ((FilesTreeNode)primaryDraggedNode.Parent).Model.GetType();
+                        possibleDropTarget.Model.GetType() == primaryDraggedNode.ParentFTN.Model.GetType();
         }
     }
 }

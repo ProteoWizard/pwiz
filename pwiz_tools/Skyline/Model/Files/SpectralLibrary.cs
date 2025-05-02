@@ -14,30 +14,55 @@
  * limitations under the License.
  */
 
-using System;
+using System.Collections.Generic;
+using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Files
 {
     public class SpectralLibrary : FileNode
     {
-        private readonly Lazy<LibrarySpec> _librarySpec;
-
-        public SpectralLibrary(SrmDocument document, string documentPath, Identity libraryId) : 
-            base(document, documentPath, new IdentityPath(libraryId), ImageId.peptide)
+        public SpectralLibrary(IDocumentContainer documentContainer, Identity libraryId) : 
+            base(documentContainer, new IdentityPath(libraryId), ImageId.peptide)
         {
-            _librarySpec = new Lazy<LibrarySpec>(FindLibrarySpec);
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => _librarySpec.Value;
-        public override string Name => _librarySpec.Value.Name;
-        public override string FilePath => _librarySpec.Value.FilePath;
+        public override Immutable Immutable => LibrarySpec;
+        public override string Name => LibrarySpec?.Name ?? string.Empty;
+        public override string FilePath => LibrarySpec?.FilePath ?? string.Empty;
 
-        private LibrarySpec FindLibrarySpec()
+        public ModifiedDocument Delete(SrmDocument document, List<FileNode> models)
         {
-            return Document.Settings.PeptideSettings.Libraries.FindLibrarySpec(IdentityPath.GetIdentity(0));
+            var deleteIds = models.Select(model => ReferenceValue.Of(model.IdentityPath.Child)).ToHashSet();
+            var deleteNames = models.Select(item => item.Name).ToList();
+
+            var remainingLibraries = 
+                document.Settings.PeptideSettings.Libraries.LibrarySpecs.Where(lib => !deleteIds.Contains(lib.Id));
+
+            var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibrarySpecs(remainingLibraries.ToList());
+            var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
+            var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
+            var newDocument = document.ChangeSettings(newSettings);
+
+            var entry = AuditLogEntry.CreateCountChangeEntry(
+                MessageType.files_tree_libraries_remove_one,
+                MessageType.files_tree_libraries_remove_several,
+                document.DocumentType,
+                deleteNames
+            );
+
+            if (deleteNames.Count > 1)
+            {
+                entry = entry.AppendAllInfo(deleteNames.Select(name => new MessageInfo(MessageType.removed_library, document.DocumentType, name)).ToList());
+            }
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
+
+        private LibrarySpec LibrarySpec => Document.Settings.PeptideSettings.Libraries.FindLibrarySpec(IdentityPath.GetIdentity(0));
     }
 }

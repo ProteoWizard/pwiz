@@ -22,8 +22,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private static readonly Identity AUDIT_LOG_FILE = new StaticFolderId();
 
-        public SkylineAuditLog(SrmDocument document, string documentPath) : 
-            base(document, documentPath, new IdentityPath(AUDIT_LOG_FILE), ImageId.audit_log)
+        public SkylineAuditLog(IDocumentContainer documentContainer) : 
+            base(documentContainer, new IdentityPath(AUDIT_LOG_FILE), ImageId.audit_log)
         {
         }
 

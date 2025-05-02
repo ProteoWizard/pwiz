@@ -244,6 +244,8 @@ namespace pwiz.Skyline.Controls.FilesTree
             return (FilesTreeNode)Nodes[index];
         }
 
+        public FilesTreeNode ParentFTN => (FilesTreeNode)Parent;
+
         ///
         /// LOOK FOR A FILE ON DISK
         ///

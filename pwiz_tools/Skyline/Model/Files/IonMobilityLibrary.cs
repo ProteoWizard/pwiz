@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
@@ -22,21 +21,16 @@ namespace pwiz.Skyline.Model.Files
     // .imsdb
     public class IonMobilityLibrary : FileNode
     {
-        private readonly Lazy<IonMobility.IonMobilityLibrary> _lazy;
-
-        public IonMobilityLibrary(SrmDocument document, string documentPath, Identity id) : base(document, documentPath, new IdentityPath(id))
+        public IonMobilityLibrary(IDocumentContainer documentContainer, Identity id) : 
+            base(documentContainer, new IdentityPath(id))
         {
-            _lazy = new Lazy<IonMobility.IonMobilityLibrary>(FindIonMobilityLibrary);
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => _lazy.Value;
-        public override string Name => _lazy.Value.Name;
-        public override string FilePath => _lazy.Value.FilePath;
+        public override Immutable Immutable => Imsdb;
+        public override string Name => Imsdb.Name;
+        public override string FilePath => Imsdb.FilePath;
 
-        private IonMobility.IonMobilityLibrary FindIonMobilityLibrary()
-        {
-            return Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
-        }
+        private IonMobility.IonMobilityLibrary Imsdb => Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
     }
 }

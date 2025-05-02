@@ -24,8 +24,8 @@ namespace pwiz.Skyline.Model.Files
     {
         private readonly Lazy<ChromFileInfo> _chromFileInfo;
 
-        public ReplicateSampleFile(SrmDocument document, string documentPath, ChromatogramSetId chromatogramSetId, ChromFileInfoId chromFileInfoId)
-            : base(document, documentPath, new IdentityPath(chromatogramSetId, chromFileInfoId), ImageId.replicate_sample_file)
+        public ReplicateSampleFile(IDocumentContainer documentContainer, ChromatogramSetId chromatogramSetId, ChromFileInfoId chromFileInfoId)
+            : base(documentContainer, new IdentityPath(chromatogramSetId, chromFileInfoId), ImageId.replicate_sample_file)
         {
             _chromFileInfo = new Lazy<ChromFileInfo>(FindChromFileInfo);
         }
