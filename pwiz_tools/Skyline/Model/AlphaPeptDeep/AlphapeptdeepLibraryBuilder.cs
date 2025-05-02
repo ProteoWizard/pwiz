@@ -274,23 +274,18 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            // CONSIDER: These segments don't seem well-balanced. Maybe give each a defined range instead.
-            // DSHTEYN:  These should be better balanced as of May 1st 2025
-            progressStatus = progressStatus.ChangeSegments(0, 3);
-
-            LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep", IrtStandard, 50);
+            // DSHTEYN:  These should be better balanced as of May 2nd 2025
+            var segmentEndPercentages = new[] { 5, 10, 85, 100 };
+            progressStatus = progressStatus.ChangeSegments(0, segmentEndPercentages);
+            LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep",
+                IrtStandard);
+            progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
-            
-            if (progressStatus.Segment == 0)
-                progressStatus = progressStatus.NextSegment();
-
             ExecutePeptdeep(progress, ref progressStatus);
             TransformPeptdeepOutput(progress, ref progressStatus);
-
-            if (progressStatus.Segment == 1)
-                progressStatus = progressStatus.NextSegment();
-
+            progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
+            progressStatus = progressStatus.NextSegment();
         }
 
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
@@ -354,7 +349,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 pr.EnableImmediateLog = true;
                 pr.EnableRunningTimeMessage = true;
                 pr.ExpectedOutputLinesCount = 119;
-                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true, 50);
+                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {
@@ -420,9 +415,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
             // write to new file
             File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
         }
 
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)

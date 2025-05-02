@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace pwiz.Common.SystemUtil
@@ -43,6 +44,7 @@ namespace pwiz.Common.SystemUtil
         IProgressStatus Cancel();
         IProgressStatus ChangeErrorException(Exception prop);
         IProgressStatus ChangeSegments(int segment, int segmentCount);
+        IProgressStatus ChangeSegments(int segment, int[] segmentEndPercentages);
         IProgressStatus NextSegment();
         IProgressStatus ChangeSegmentName(string prop); // Changes progress bar text for controls that allow it, otherwise just changes message
         IProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor, long currentCount,
@@ -109,6 +111,7 @@ namespace pwiz.Common.SystemUtil
         public int PercentZoomStart { get; private set; }
         public int PercentZoomEnd { get; private set; }
         public int SegmentCount { get; private set; }
+        public int[] SegmentEnds { get; private set; }
         public string SegmentName { get; private set; }
         public int Segment { get; private set; }
         public Exception ErrorException { get; private set; }
@@ -208,10 +211,29 @@ namespace pwiz.Common.SystemUtil
                     {
                         s.PercentComplete = s.PercentZoomStart = segment*100/segmentCount;
                         s.PercentZoomEnd = (segment + 1)*100/segmentCount;
+                        s.SegmentEnds ??= Enumerable.Range(0, segmentCount)
+                            .Select(index => (index + 1) * 100 / segmentCount).ToArray();
                     }
                     s.SegmentCount = segmentCount;
                     s.Segment = segment;
                 });
+        }
+
+        public IProgressStatus ChangeSegments(int segment, int[] segmentPercentageEnds)
+        {
+            int segmentCount = segmentPercentageEnds.Length; 
+            return ChangeProp(ImClone(this), s =>
+            {
+                if (segmentCount == 0)
+                    s.PercentZoomStart = s.PercentZoomEnd = 0;
+                else
+                {
+                    s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segment-1] : 0;
+                    s.PercentZoomEnd = segmentPercentageEnds[segment]; 
+                }
+                s.SegmentCount = segmentCount;
+                s.Segment = segment;
+            });
         }
 
         public IProgressStatus NextSegment()
