@@ -33,12 +33,12 @@ namespace pwiz.Common.SystemUtil
         string StatusPrefix { get; set; }
         string HideLinePrefix { get; set; }
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false, int maxPercentComplete = 100);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
                  TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-                 bool forceTempfilesCleanup = false,
+                 bool forceTempfilesCleanup = false, 
                  Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
-                 bool updateProgressPercentage = true);
+                 bool updateProgressPercentage = true, int maxPercentComplete = 100);
     }
 
     public class ProcessRunner : IProcessRunner
@@ -79,17 +79,18 @@ namespace pwiz.Common.SystemUtil
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
-            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
+            ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false, int maxCompletePct = 100)
         {
-            Run(psi, stdin, progress,ref status, null, priorityClass, forceTempfilesCleanup);
+            Run(psi, stdin, progress, ref status, null, priorityClass, forceTempfilesCleanup, null, true, maxCompletePct);
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-            bool forceTempfilesCleanup = false,
+            bool forceTempfilesCleanup = false, 
             Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
-            bool updateProgressPercentage = true)
+            bool updateProgressPercentage = true, int maxCompletePercentage = 100)
         {
+            maxCompletePercentage = Math.Min(maxCompletePercentage, 100);
             _timer = new Stopwatch();
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
@@ -221,8 +222,8 @@ namespace pwiz.Common.SystemUtil
                             if (double.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
                             {
                                 percentLast = (int)percent;
-                                status = status.ChangePercentComplete(percentLast);
-                                if (percent >= 100 && status.SegmentCount > 0)
+                                status = status.ChangePercentComplete(Math.Min(maxCompletePercentage,percentLast));
+                                if (percent >= 100 && maxCompletePercentage == 100 && status.SegmentCount > 0)
                                     status = status.NextSegment();
                                 progress.UpdateProgress(status);
                             }
@@ -238,17 +239,19 @@ namespace pwiz.Common.SystemUtil
                             else 
                                 status = status.ChangeMessage(line);
 
-                            if (ExpectedOutputLinesCount > 0)
+                            if (updateProgressPercentage)
                             {
-                                percentLast = outputLinesCount * 100 / ExpectedOutputLinesCount;
-                                status = status.ChangePercentComplete(percentLast);
-                                if (percentLast >= 100 && status.SegmentCount > 0)
-                                    status = status.NextSegment();
-                                progress.UpdateProgress(status);
-                            }
-                            else
-                            {
-                                progress.UpdateProgress(status);
+                                if (ExpectedOutputLinesCount > 0)
+                                {
+                                    percentLast = Math.Min(maxCompletePercentage,
+                                        outputLinesCount * 100 / ExpectedOutputLinesCount);
+                                    status = status.ChangePercentComplete(percentLast);
+                                    progress.UpdateProgress(status);
+                                }
+                                else
+                                {
+                                    progress.UpdateProgress(status);
+                                }
                             }
                         }
                     }
@@ -290,10 +293,10 @@ namespace pwiz.Common.SystemUtil
 
                 // Make to complete the status, if the process succeeded, but never
                 // printed 100% to the console
-                if (updateProgressPercentage && percentLast < 100)
+                if (updateProgressPercentage && percentLast < 100 )
                 {
-                    status = status.ChangePercentComplete(100);
-                    if (status.SegmentCount > 0)
+                    status = status.ChangePercentComplete(Math.Min(percentLast, maxCompletePercentage));
+                    if (status.SegmentCount > 0 && maxCompletePercentage == 100)
                         status = status.NextSegment();
                     if (progress != null)
                         progress.UpdateProgress(status);

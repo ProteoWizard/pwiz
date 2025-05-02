@@ -214,7 +214,9 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 { @"ModifiedPeptide", @"ModifiedPeptideSequence" },
                 { @"FragmentMz", @"ProductMz" },
                 { @"RelativeIntensity", @"LibraryIntensity" },
-                { @"FragmentNumber", @"FragmentSeriesNumber" }
+                { @"FragmentNumber", @"FragmentSeriesNumber" },
+                { CCS, COLLISIONAL_CROSS_SECTION},
+                { ION_MOBILITY, null}
             };
 
         public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir,
@@ -273,23 +275,20 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // CONSIDER: These segments don't seem well-balanced. Maybe give each a defined range instead.
-            progressStatus = progressStatus.ChangeSegments(0, 5);
+            // DSHTEYN:  These should be better balanced as of May 1st 2025
+            progressStatus = progressStatus.ChangeSegments(0, 3);
 
-            LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep", IrtStandard);
-
-            progressStatus = progressStatus.NextSegment();
-
+            LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep", IrtStandard, 50);
             PrepareSettingsFile(progress, ref progressStatus);
-
-            progressStatus = progressStatus.NextSegment();
+            
+            if (progressStatus.Segment == 0)
+                progressStatus = progressStatus.NextSegment();
 
             ExecutePeptdeep(progress, ref progressStatus);
-
-            progressStatus = progressStatus.NextSegment();
-
             TransformPeptdeepOutput(progress, ref progressStatus);
 
-            progressStatus = progressStatus.NextSegment();
+            if (progressStatus.Segment == 1)
+                progressStatus = progressStatus.NextSegment();
 
             ImportSpectralLibrary(progress, ref progressStatus);
         }
@@ -297,8 +296,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file)
-                .ChangePercentComplete(0));
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file));
 
             // generate template settings.yaml file
             var pr = new ProcessRunner();
@@ -321,17 +319,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             {
                 throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_, ex);
             }
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
         }
 
         private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep)
-                .ChangePercentComplete(0));
-
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep));
+            progressStatus.ChangePercentComplete(0);
             // compose peptdeep cmd-flow command arguments to build library
             var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
 
@@ -360,22 +354,19 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 pr.EnableImmediateLog = true;
                 pr.EnableRunningTimeMessage = true;
                 pr.ExpectedOutputLinesCount = 119;
-                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true, 50);
             }
             catch (Exception ex)
             {
                 throw new IOException(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_, ex);
             }
 
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
         }
 
         private void TransformPeptdeepOutput(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library)
-                .ChangePercentComplete(0));
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library));
 
             var result = new List<string>();
             var reader = new DsvFileReader(OutputSpectraLibFilepath, TextUtil.SEPARATOR_TSV);
@@ -390,22 +381,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 {
                     newColName = colName;
                 }
-                if (newColName == ION_MOBILITY)
-                { 
-                    // Skip this and keep CCS
-                    // newColNames.Add(newColName);
-                    // newColName = ION_MOBILITY_UNITS;
-                    // newColNames.Add(newColName);
-                    // newColName = COLLISIONAL_CROSS_SECTION;
-                    // newColNames.Add(newColName);
-                }
-                else if (newColName == CCS)
-                {
-                    //Rename column name from CCS to CollisionalCrossSection
-                    newColName = COLLISIONAL_CROSS_SECTION;
-                    newColNames.Add(newColName);
-                }
-                else
+                if (newColName != null)
                 {
                     newColNames.Add(newColName);
                 }
@@ -417,20 +393,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             while (null != reader.ReadLine())
             {
                 var line = new List<string>();
-                double charge = 0;
-                double mz = 0;
-                foreach (var colName in colNames)
-                {
-                    if (colName != PREC_CHARGE && colName != PREC_MZ)
-                        continue;
-    
-                    var cell = reader.GetFieldByName(colName);
-                    if (colName == PREC_CHARGE)
-                        charge = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
-                    if (colName == PREC_MZ)
-                        mz = double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
-                }
-
+                
                 foreach (var colName in colNames)
                 {
                     var cell = reader.GetFieldByName(colName);
@@ -447,20 +410,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                             CultureInfo.InvariantCulture);// * 100;
                         line.Add(transformedCell.ToString(CultureInfo.InvariantCulture));
                     }
-                    else if (colName == ION_MOBILITY)
-                    {
-                        // As of 4/4/25 CCS is reported correctly by AlphaPeptDeep, keep CollisionalCrossSection and not IonMobility
-                        // Compute CCS below and report that until AlphaPeptDeep can be coerced to report CCS as advertised
-                        // line.Add(cell);
-                        // line.Add(@"2"); // These are the IonMobilityUnits column, 2 => 1/K0
-
-                        // double ccs =
-                        //    double.Parse(cell.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture) *
-                        //    CCS_IM_COEFF * charge / Math.Sqrt(N2_MASS*(mz * charge)/(N2_MASS+(mz*charge)));
-                        // line.Add(ccs.ToString(CultureInfo.InvariantCulture));
-
-                    }
-                    else
+                    else if (colName != ION_MOBILITY)
                     {
                         line.Add(cell);
                     }
@@ -483,8 +433,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
 
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library)
-                .ChangePercentComplete(0));
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library));
 
             string[] ambiguous;
             bool completed = build.BuildLibrary(LibraryBuildAction.Create, progress, ref progressStatus, out ambiguous);

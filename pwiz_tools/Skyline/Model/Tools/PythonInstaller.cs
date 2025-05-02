@@ -40,6 +40,7 @@ using Settings = pwiz.Skyline.Properties.Settings;
 
 [assembly: InternalsVisibleTo("TestFunctional")]
 [assembly: InternalsVisibleTo("TestUtil")]
+[assembly: InternalsVisibleTo("TestPerf")]
 
 
 namespace pwiz.Skyline.Model.Tools
@@ -80,7 +81,7 @@ namespace pwiz.Skyline.Model.Tools
         internal const string REG_LONGPATH_VALUE = @"/d 0x00000001";
         internal const string REG_LONGPATH_ZERO = @"/d 0x00000000";
         internal const string REG_LONGPATH_FORCE = @"/f";
-        internal string REG_LONGPATH_NAME = $@"/v {REG_LONGPATHS_ENABLED}";
+        internal static string REG_LONGPATH_NAME = $@"/v {REG_LONGPATHS_ENABLED}";
 
         private static string CUDA_VERSION = @"12.6.3";
         private static string CUDNN_VERSION = @"9.6.0.74_cuda12";
@@ -184,7 +185,7 @@ namespace pwiz.Skyline.Model.Tools
         public static eSimulatedInstallationState SimulatedInstallationState { get; set; }
         public IAsynchronousDownloadClient TestDownloadClient { get; set; }
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
-        public ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
+        public static ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
         #endregion
         public string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
   
@@ -199,7 +200,7 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
         private string PythonRootDir { get; } = PythonInstallerUtil.PythonRootDir;
-        internal TextWriter Writer { get; }
+        internal static TextWriter Writer { get; set; }
         public bool HavePythonTasks { get; private set;}
         public bool HaveNvidiaTasks { get; private set; }
 
@@ -294,9 +295,9 @@ namespace pwiz.Skyline.Model.Tools
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
         }
 
-        internal bool ValidateEnableLongpaths()
+        public static bool ValidateEnableLongpaths()
         {
-            var task = GetPythonTasks()[3]; //EnableLongPathsTask
+            var task = new EnableLongPathsTask(new PythonInstaller()); 
             bool? valid = task.ValidateTask();
             if (valid != null)
             {
@@ -500,7 +501,7 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
         }
-        public void DisableWindowsLongPaths(ILongWaitBroker broker = null)
+        public static void DisableWindowsLongPaths(ILongWaitBroker broker = null)
         {
             var cmdBuilder = new StringBuilder();
             cmdBuilder.Append(REG_ADD_COMMAND)

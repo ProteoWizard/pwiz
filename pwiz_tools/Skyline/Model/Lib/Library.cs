@@ -176,33 +176,29 @@ namespace pwiz.Skyline.Model.Lib
                 return string.Empty;
             return Path.GetFileName(DataFilePath);
         }
-        public void PreparePrecursorInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName, IrtStandard standard = null)
+        public void PreparePrecursorInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName, IrtStandard standard = null, int maxPercentComplete = 100)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file)
                 .ChangePercentComplete(0));
 
             var warningMods = GetWarningMods(Document, toolName);
-
             var precursorTable = GetPrecursorTable(Document, toolName, warningMods, false, standard);
             File.WriteAllLines(InputFilePath, precursorTable);
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
+
+            progress.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(maxPercentComplete));
         }
 
-        public void PrepareTrainingInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName)
+        public void PrepareTrainingInputFile(SrmDocument Document, IProgressMonitor progress, ref IProgressStatus progressStatus, string toolName, int maxPercentComplete = 100)
         {
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file)
                 .ChangePercentComplete(0));
 
             var warningMods = GetWarningMods(Document, toolName);
-
             var trainingTable = GetPrecursorTable(Document, toolName, warningMods, true);
             File.WriteAllLines(TrainingFilePath, trainingTable);
-
-            progress.UpdateProgress(progressStatus = progressStatus
-                .ChangePercentComplete(100));
+            progress.UpdateProgress(progressStatus = progressStatus.ChangePercentComplete(maxPercentComplete));
         }
 
         public static IEnumerable<Tuple<ModifiedSequence, int>> GetPrecursors(SrmDocument document)
