@@ -19,6 +19,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.SystemUtil
 {
@@ -111,7 +112,7 @@ namespace pwiz.Common.SystemUtil
         public int PercentZoomStart { get; private set; }
         public int PercentZoomEnd { get; private set; }
         public int SegmentCount { get; private set; }
-        public int[] SegmentEnds { get; private set; }
+        public int[] SegmentPercentEnds { get; private set; }
         public string SegmentName { get; private set; }
         public int Segment { get; private set; }
         public Exception ErrorException { get; private set; }
@@ -211,7 +212,7 @@ namespace pwiz.Common.SystemUtil
                     {
                         s.PercentComplete = s.PercentZoomStart = segment*100/segmentCount;
                         s.PercentZoomEnd = (segment + 1)*100/segmentCount;
-                        s.SegmentEnds ??= Enumerable.Range(0, segmentCount)
+                        s.SegmentPercentEnds ??= Enumerable.Range(0, segmentCount)
                             .Select(index => (index + 1) * 100 / segmentCount).ToArray();
                     }
                     s.SegmentCount = segmentCount;
@@ -231,6 +232,8 @@ namespace pwiz.Common.SystemUtil
                     s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segment-1] : 0;
                     s.PercentZoomEnd = segmentPercentageEnds[segment]; 
                 }
+
+                s.SegmentPercentEnds = segmentPercentageEnds;
                 s.SegmentCount = segmentCount;
                 s.Segment = segment;
             });
@@ -241,7 +244,9 @@ namespace pwiz.Common.SystemUtil
             int segment = Segment + 1;
             if (segment >= SegmentCount)
                 return this;
-            return ChangeSegments(segment, SegmentCount);
+            if (SegmentPercentEnds.IsNullOrEmpty())
+                return ChangeSegments(segment, SegmentCount);
+            return ChangeSegments(segment, SegmentPercentEnds);
         }
 
         public IProgressStatus ChangeErrorException(Exception prop)
