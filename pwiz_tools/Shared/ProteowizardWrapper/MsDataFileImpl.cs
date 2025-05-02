@@ -2078,13 +2078,12 @@ namespace pwiz.ProteowizardWrapper
         public void SortByMz()
         {
             // ReSharper disable once PossibleNullReferenceException
-            if (MzValues.Count != MzValues.Array.Length)
-                return; // This is a slice of a diagonal PASEF frame - assume already sorted
             ArraySortUtil.Sort(MzValues, IntensityValues, _ionMobilities);
         }
 
         // For dealing with Diagonal PASEF, where we get the entire frame at once -
-        // slice it up into individual spectra so the general code base can handle it
+        // slice it up into groups of spectra sharing the same isolation window,
+        // so the general code base can handle it
         public MsDataSpectrum CreateSlice(int offset, int length, MsDataFileImpl dataFile)
         {
             var slice = (MsDataSpectrum)MemberwiseClone();
@@ -2101,19 +2100,16 @@ namespace pwiz.ProteowizardWrapper
                 // For diagonal DIA these will all be the same, will vary for regular diaPASEF
                 var im = IonMobilities[offset];
                 var singleIM = true;
-                if (!dataFile.IsCombinedDiagonalPASEF)
+                for (var i = 1; i < length; i++)
                 {
-                    for (var i = 1; i < length; i++)
+                    if (IonMobilities[offset + i] != im)
                     {
-                        if (IonMobilities[offset + i] != im)
-                        {
-                            // Multiple IM values (regular diaPASEF)
-                            slice._ionMobilities = new ArraySegment<double>(_ionMobilities.Value.Array, offset, length);
-                            slice.IonMobilityMeasurementRangeLow = slice._ionMobilities.Min();
-                            slice.IonMobilityMeasurementRangeHigh = slice._ionMobilities.Max();
-                            singleIM = false;
-                            break;
-                        }
+                        // Multiple IM values (regular diaPASEF)
+                        slice._ionMobilities = new ArraySegment<double>(_ionMobilities.Value.Array, offset, length);
+                        slice.IonMobilityMeasurementRangeLow = slice._ionMobilities.Min();
+                        slice.IonMobilityMeasurementRangeHigh = slice._ionMobilities.Max();
+                        singleIM = false;
+                        break;
                     }
                 }
                 if (singleIM)
@@ -2129,10 +2125,14 @@ namespace pwiz.ProteowizardWrapper
             }
             // ReSharper restore AssignNullToNotNullAttribute
 
-            if (IsDiagonalPASEF)
+            if (_scanningQuadMzHighs != null) // As in diagonalPASEF
             {
                 // Diagonal PASEF
                 var isolationWidth = (_scanningQuadMzHighs[offset] - _scanningQuadMzLows[offset]) / 2;
+                if (_scanningQuadMzHighs[offset] != _scanningQuadMzHighs[offset + length - 1])
+                {
+                    throw new InvalidDataException(@"Diagonal PASEF slice has multiple isolation windows. This should not happen.");
+                }
                 var precursor = new MsPrecursor()
                 {
                     IsolationWindowLower = isolationWidth,

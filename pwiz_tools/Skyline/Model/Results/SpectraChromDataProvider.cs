@@ -1029,8 +1029,10 @@ namespace pwiz.Skyline.Model.Results
 
             private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
-                var spectrum = spectrumInfo.DataSpectrum;
-                spectrum.SortByMz();
+                foreach (var spectrum in spectrumInfo.AllSpectra)
+                {
+                    spectrum.SortByMz();
+                }
                 spectrumInfo.SortEvent.Set();
             }
 

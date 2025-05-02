@@ -65,25 +65,41 @@ namespace pwiz.Common.Collections
         }
 
         /// <summary>
-        /// Use when you have more than just one other ArraySegment to sort.
+        /// Use when you have more than just one ArraySegment to sort.
         /// </summary>
-        public static void Sort<TItem>(ArraySegment<TItem> array, params ArraySegment<TItem>?[] secondaryArrays)
+        public static void Sort<TItem>(ArraySegment<TItem> arraySegment, params ArraySegment<TItem>?[] secondaryArrays) where TItem : IComparable<TItem>
         {
-            var sortIndexes = new int[array.Array!.Length];
-            for (var i = 0; i < array.Count; i++)
+            // Check for presorted
+            var presorted = true;
+            var end = arraySegment.Offset + arraySegment.Count;
+            for (var i = arraySegment.Offset+1; i < end; i++)
             {
-                sortIndexes[array.Offset+i] = i;
+                // ReSharper disable once PossibleNullReferenceException
+                if (arraySegment.Array[i-1].CompareTo(arraySegment.Array[i]) > 0)
+                {
+                    presorted = false;
+                    break;
+                }
             }
-            // ReSharper disable once AssignNullToNotNullAttribute
-            Array.Sort(array.Array, sortIndexes, array.Offset, array.Count);
-            var len = array.Count;
+            if (presorted)
+            {
+                return;
+            }
+                
+            var sortIndexes = new int[arraySegment.Array!.Length];
+            for (var i = 0; i < arraySegment.Count; i++)
+            {
+                sortIndexes[arraySegment.Offset+i] = i;
+            }
+            Array.Sort(arraySegment.Array, sortIndexes, arraySegment.Offset, arraySegment.Count);
+            var len = arraySegment.Count;
             var buffer = new TItem[len];
             foreach (var secondaryArray in secondaryArrays.Where(a => a?.Array != null))
             {
                 var asList = secondaryArray.Value as IList<TItem>;
                 for (var i = 0; i <len; i++)
                 {
-                    buffer[i] = asList[sortIndexes[array.Offset + i]];
+                    buffer[i] = asList[sortIndexes[arraySegment.Offset + i]];
                 }
                 // ReSharper disable once AssignNullToNotNullAttribute
                 Array.Copy(buffer, 0, secondaryArray.Value.Array, secondaryArray.Value.Offset, len);
