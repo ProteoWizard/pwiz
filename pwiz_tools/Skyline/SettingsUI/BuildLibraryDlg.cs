@@ -40,7 +40,6 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
 using System.Runtime.CompilerServices;
 using File = System.IO.File;
-using Settings = pwiz.Skyline.Properties.Settings;
 
 
 [assembly: InternalsVisibleTo("TestFunctional")]
@@ -96,14 +95,12 @@ namespace pwiz.Skyline.SettingsUI
         public class FilesPage : IFormView { }
         public class LearningPage : IFormView { }
 
-        private const string PYTHON = @"Python";
         public static readonly string ALPHAPEPTDEEP_PYTHON_VERSION = Settings.Default.PythonEmbeddableVersion;
         private const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
         private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
         internal static readonly string CARAFE_PYTHON_VERSION = Settings.Default.PythonEmbeddableVersion;
         private const string CARAFE = @"Carafe";
         private const string WORKSPACES = @"workspaces";
-        private const string PEPTDEEP = @"PeptDeep";
 
         private static readonly IFormView[] TAB_PAGES =
         {
@@ -432,7 +429,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
-            var programPathContainer = new ProgramPathContainer(PYTHON, ALPHAPEPTDEEP_PYTHON_VERSION);
+            
             var packages = new List<PythonPackage>()
             {
                
@@ -446,7 +443,7 @@ namespace pwiz.Skyline.SettingsUI
             };
 
             if (pythonInstaller == null)
-                pythonInstaller = new PythonInstaller(programPathContainer, packages, new TextBoxStreamWriterHelper(), ALPHAPEPTDEEP);
+                pythonInstaller = new PythonInstaller(packages, new TextBoxStreamWriterHelper(), ALPHAPEPTDEEP);
             else
                 pythonInstaller.ClearPendingTasks();
 

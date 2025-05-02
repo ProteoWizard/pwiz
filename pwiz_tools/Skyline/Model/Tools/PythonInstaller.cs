@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model.Tools
 {
     public class PythonInstaller
     {
+        private const string PYTHON = @"Python";
         private const string BOOTSTRAP_PYPA_URL = @"https://bootstrap.pypa.io/";
         private const string CD = @"cd";
         private const string CMD_ESCAPE_SYMBOL = TextUtil.CARET;
@@ -157,13 +158,19 @@ namespace pwiz.Skyline.Model.Tools
  
         public int NumTotalTasks { get; set; }
         public int NumCompletedTasks { get; set; }
-        public string PythonVersion { get; }
+
+        public static ProgramPathContainer PythonPathContainer = new ProgramPathContainer(PYTHON, Settings.Default.PythonEmbeddableVersion);
+        public static string PythonVersion
+        {
+            get => PythonPathContainer.ProgramVersion;
+        }
+
         public List<PythonPackage> PythonPackages { get; }
-        public string PythonEmbeddablePackageFileName => PythonEmbeddablePackageFileBaseName + DOT_ZIP;
+        public static string PythonEmbeddablePackageFileName => PythonEmbeddablePackageFileBaseName + DOT_ZIP;
         public Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
-        public string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
+        public static string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
+        public static string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
         public Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
         public string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
         public string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
@@ -187,9 +194,9 @@ namespace pwiz.Skyline.Model.Tools
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
         public static ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
         #endregion
-        public string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
+        public static string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
   
-        private string PythonEmbeddablePackageFileBaseName
+        private static string PythonEmbeddablePackageFileBaseName
         {
             get
             {
@@ -199,7 +206,7 @@ namespace pwiz.Skyline.Model.Tools
                 return fileBaseName;
             }
         }
-        private string PythonRootDir { get; } = PythonInstallerUtil.PythonRootDir;
+        private static string PythonRootDir { get; } = PythonInstallerUtil.PythonRootDir;
         internal static TextWriter Writer { get; set; }
         public bool HavePythonTasks { get; private set;}
         public bool HaveNvidiaTasks { get; private set; }
@@ -342,11 +349,10 @@ namespace pwiz.Skyline.Model.Tools
             NvidiaGpuAvailable = TestForNvidiaGPU();
         }
 
-        public PythonInstaller(ProgramPathContainer pythonPathContainer, IEnumerable<PythonPackage> packages,
+        public PythonInstaller(IEnumerable<PythonPackage> packages,
             TextWriter writer, string virtualEnvironmentName)
         {
            // SimulatedInstallationState = eSimulatedInstallationState.NONE;
-            PythonVersion = pythonPathContainer.ProgramVersion;
             Writer = writer;
             VirtualEnvironmentName = virtualEnvironmentName;
             PendingTasks = new List<PythonTaskBase>();

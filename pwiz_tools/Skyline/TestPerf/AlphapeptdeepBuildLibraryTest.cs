@@ -40,7 +40,6 @@ namespace TestPerf
         [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
         {
-            //_pythonTestUtil = new PythonTestUtil(BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep", true);
             AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
             TestFilesZip = "TestPerf/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
@@ -68,11 +67,11 @@ namespace TestPerf
 
             AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
        
-            var fileHash = PythonInstallerUtil.GetFileHash(new PythonInstaller().PythonEmbeddablePackageDownloadPath);
+            var fileHash = PythonInstallerUtil.GetFileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
             Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
 
-            fileHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles(new PythonInstaller().PythonEmbeddablePackageExtractDir, @"python*.pth"));
+            fileHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles( PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
             Console.WriteLine($@"Computed SearchPathInPythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.SearchPathInPythonEmbeddableHash, fileHash);
 
