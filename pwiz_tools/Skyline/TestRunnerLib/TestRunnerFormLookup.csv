@@ -180,7 +180,6 @@ PermuteIsotopeModificationsDlg,TestModificationPermuter
 PivotEditor,TestPivotEditor
 PopupPickList,TestPrecursorIon
 PublishDocumentDlg,TestAccessServer
-PythonInstallerDlg, TestPythonInstaller
 PythonInstallerLegacyDlg,TestPythonInstallerLegacyDlg
 QuickFilterForm,TestLiveReportsFilter
 RefineDlg.ConsistencyTab,TestMethodRefinementTutorial
