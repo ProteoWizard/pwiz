@@ -225,14 +225,11 @@ namespace pwiz.Common.SystemUtil
             int segmentCount = segmentPercentageEnds.Length; 
             return ChangeProp(ImClone(this), s =>
             {
-                if (segmentCount == 0)
-                    s.PercentZoomStart = s.PercentZoomEnd = 0;
-                else
-                {
-                    s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segment-1] : 0;
-                    s.PercentZoomEnd = segmentPercentageEnds[segment]; 
-                }
+                if (segmentCount == 0) 
+                    throw new ArgumentException();
 
+                s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segment-1] : 0;
+                s.PercentZoomEnd = segmentPercentageEnds[segment]; 
                 s.SegmentPercentEnds = segmentPercentageEnds;
                 s.SegmentCount = segmentCount;
                 s.Segment = segment;
