@@ -5,10 +5,10 @@ All Info  :
 设置 > 肽段设置 -- 库 > 库 : "PROCAL" 已添加
 设置 > 肽段设置 -- 库 > 库 > "PROCAL" > 路径 是 "PROCAL.blib"
 
-Undo Redo : 已从“C:\proj\pwiz\pwiz_tools\Skyline\SkylineTester Results\AcquisitionComparisonMzml\AcquisitionComparisonMzml\1_PRM\PROCAL.FASTA”导入 FASTA
-Summary   : 已从“C:\proj\pwiz\pwiz_tools\Skyline\SkylineTester Results\AcquisitionComparisonMzml\AcquisitionComparisonMzml\1_PRM\PROCAL.FASTA”导入 FASTA
+Undo Redo : 已从“PROCAL.FASTA”导入 FASTA
+Summary   : 已从“PROCAL.FASTA”导入 FASTA
 All Info  :
-已从“C:\proj\pwiz\pwiz_tools\Skyline\SkylineTester Results\AcquisitionComparisonMzml\AcquisitionComparisonMzml\1_PRM\PROCAL.FASTA”导入 FASTA
+已从“PROCAL.FASTA”导入 FASTA
 
 Undo Redo : 离子对设置 已更改
 Summary   : 设置 > 离子对设置 已更改
