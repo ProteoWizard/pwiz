@@ -248,7 +248,7 @@ namespace TestPerf
          NoNightlyTesting(TestExclusionReason.EXCESSIVE_TIME)] // do not run full filesets for nightly tests
         public void TestDiaQeDiaUmpireTutorialFullFileset()
         {
-Console.WriteLine("Disabled for now, needs fixing"); // TODO(MattC?) fix this
+Console.WriteLine(@"# Disabled for now, needs fixing"); // TODO(MattC?) fix this
 /* TODO(MattC?) restore this
             _analysisValues = new AnalysisValues
             {
