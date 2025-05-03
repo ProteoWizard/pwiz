@@ -5,10 +5,10 @@ Peptide Settings -- Library > Libraries : "PROCAL" was added
 Settings > Peptide Settings -- Library > Libraries : "PROCAL" was added
 Settings > Peptide Settings -- Library > Libraries > "PROCAL" > Path is "PROCAL.blib"
 
-Undo Redo : Imported FASTA from "C:\proj\pwiz\pwiz_tools\Skyline\SkylineTester Results\AcquisitionComparisonMzml\AcquisitionComparisonMzml\1_PRM\PROCAL.FASTA"
-Summary   : Imported FASTA from "C:\proj\pwiz\pwiz_tools\Skyline\SkylineTester Results\AcquisitionComparisonMzml\AcquisitionComparisonMzml\1_PRM\PROCAL.FASTA"
+Undo Redo : Imported FASTA from "PROCAL.FASTA"
+Summary   : Imported FASTA from "PROCAL.FASTA"
 All Info  :
-Imported FASTA from "C:\proj\pwiz\pwiz_tools\Skyline\SkylineTester Results\AcquisitionComparisonMzml\AcquisitionComparisonMzml\1_PRM\PROCAL.FASTA"
+Imported FASTA from "PROCAL.FASTA"
 
 Undo Redo : Transition Settings changed
 Summary   : Settings > Transition Settings changed
