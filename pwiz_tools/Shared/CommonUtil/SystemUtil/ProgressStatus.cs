@@ -156,7 +156,20 @@ namespace pwiz.Common.SystemUtil
                 return (PercentComplete == percent);
             return (ZoomedPercentComplete == percent);
         }
-
+        /// <summary>
+        /// Tests whether values in an array are strictly increasing.
+        /// </summary>
+        /// <param name="array">array of integers</param>
+        /// <returns></returns>
+        private bool IsArrayStriclyIncreasing(int[] array)
+        {
+            for (int i = 0; i+1 < array.Length; i++)
+            {
+                if (array[i] >= array[i + 1])
+                    return false;
+            }
+            return true;
+        }
         private int ZoomedToPercent(int percent)
         {
             return PercentZoomStart + percent*(PercentZoomEnd - PercentZoomStart)/100;
@@ -220,13 +233,27 @@ namespace pwiz.Common.SystemUtil
                 });
         }
 
+        /// <summary>
+        /// Defines percentage ends (of the total) for the segments
+        /// </summary>
+        /// <param name="segment">current segment index</param>
+        /// <param name="segmentPercentageEnds">strictly increasing non-empty array of percentage ends for each segment, numbers should be in the range [1,100]</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public IProgressStatus ChangeSegments(int segment, int[] segmentPercentageEnds)
         {
             int segmentCount = segmentPercentageEnds.Length; 
             return ChangeProp(ImClone(this), s =>
             {
                 if (segmentCount == 0) 
-                    throw new ArgumentException();
+                    throw new ArgumentException(@"ChangeSegments was passed an empty array of segment ends.");
+
+                if (!IsArrayStriclyIncreasing(segmentPercentageEnds))
+                    throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that is not strictly increasing.");
+
+                if (segmentPercentageEnds[0] < 1 || segmentPercentageEnds[segmentCount-1] > 100)
+                    throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100]");
+
 
                 s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segment-1] : 0;
                 s.PercentZoomEnd = segmentPercentageEnds[segment]; 
