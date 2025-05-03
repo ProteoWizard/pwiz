@@ -1256,15 +1256,71 @@ namespace SkylineNightly
             return message;
         }
 
+        private static string LastLogMessage { get; set; }
+        private static List<string> _repeatedLogMessageTimes = new List<string>();
+        public static bool AreLogMessagesIdenticalExcludingTimestamps(string str1, string str2)
+        {
+            // Looks for timestamps in various formats and ignores them for comparison purposes, e.g.
+            // Assert.IsTrue(Nightly.AreLogMessagesIdenticalExcludingTimestamps("backup-2024-02-11.db", "backup-2024-02-10.db"));
+            // Assert.IsTrue(Nightly.AreLogMessagesIdenticalExcludingTimestamps("report_14:35:22.txt", "report_14:36:10.txt"));
+            // Assert.IsTrue(Nightly.AreLogMessagesIdenticalExcludingTimestamps("log_2/12/2025 12:00 PM.txt", "log_2/11/2025 12:00 PM.txt"));
+            // Assert.IsTrue(Nightly.AreLogMessagesIdenticalExcludingTimestamps("backup_02/12/25 14:00.db", "backup_02/11/25 14:00.db"));
+            // Assert.IsTrue(Nightly.AreLogMessagesIdenticalExcludingTimestamps("snapshot 12/31/2024 11:59 PM", "snapshot 12/30/2024 11:59 PM"));
+            // Assert.IsFalse(Nightly.AreLogMessagesIdenticalExcludingTimestamps("summary_12/31/2024.pdf", "summary_final.pdf"));
+
+            if (str1 == str2) return true; // Exact match
+
+            // Extended regex pattern to detect different timestamp formats
+            var timestampPattern = @"\b(\d{2,4}([\-_:/.]?\d{1,4})+|\d{1,2}/\d{1,2}/\d{2,4}(\s+\d{1,2}:\d{2}(:\d{2})?\s?(AM|PM)?)?)\b";
+            var timestampMarker = "<_TIMESTAMP_>";
+
+            // Replace all timestamps with a placeholder
+            var normalized1 = Regex.Replace(str1, timestampPattern, timestampMarker, RegexOptions.IgnoreCase);
+            var normalized2 = Regex.Replace(str2, timestampPattern, timestampMarker, RegexOptions.IgnoreCase);
+
+            return normalized1 == normalized2;
+        }
+
+        // Write a summary of any repeated messages
+        private static string SummarizeRepeatedLogMessages()
+        {
+            if (_repeatedLogMessageTimes.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            // If the number of repeated messages isn't too great, specify the times of each
+            var result = _repeatedLogMessageTimes.Count < 5
+                ? $"Message repeated {_repeatedLogMessageTimes.Count} times at {string.Join(", ", _repeatedLogMessageTimes)}"
+                : $"Message repeated {_repeatedLogMessageTimes.Count} times between {_repeatedLogMessageTimes.First()} and {_repeatedLogMessageTimes.Last()}";
+
+            _repeatedLogMessageTimes.Clear();
+            return result + Environment.NewLine;
+        }
+
         public static string Log(string logFileName, string message)
         {
             var time = DateTime.Now;
-            var timestampedMessage = string.Format(
-                "[{0}:{1}:{2}] {3}",
+            var timestamp = string.Format(
+                "{0}:{1}:{2}",
                 time.Hour.ToString("D2"),
                 time.Minute.ToString("D2"),
-                time.Second.ToString("D2"),
-                message);
+                time.Second.ToString("D2"));
+            var timestampedMessage = $"[{timestamp}] {message}";
+
+            if (AreLogMessagesIdenticalExcludingTimestamps(LastLogMessage, message))
+            {
+                // A repeat, don't log - just summarize when message changes
+                _repeatedLogMessageTimes.Add(timestamp);
+                return timestampedMessage; 
+            }
+            else
+            {
+                // Not a repeat, but include the summary of any current repeats
+                timestampedMessage = SummarizeRepeatedLogMessages() + timestampedMessage;
+                LastLogMessage = message;
+            }
+
             if (!string.IsNullOrEmpty(logFileName))
                 File.AppendAllText(logFileName, timestampedMessage + Environment.NewLine);
             return timestampedMessage;
