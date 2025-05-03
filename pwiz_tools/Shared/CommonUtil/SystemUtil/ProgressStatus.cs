@@ -254,9 +254,20 @@ namespace pwiz.Common.SystemUtil
                 if (segmentPercentageEnds[0] < 1 || segmentPercentageEnds[segmentCount-1] > 100)
                     throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100]");
 
+                if (segment < 0)
+                    throw new ArgumentException(@"ChangeSegments was passed a negative segment");
 
-                s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segment-1] : 0;
-                s.PercentZoomEnd = segmentPercentageEnds[segment]; 
+                if (segment >= segmentCount)
+                {
+                    s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segmentCount - 1] : 0;
+                    s.PercentZoomEnd = 100;
+                }
+                else
+                {
+                    s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segment - 1] : 0;
+                    s.PercentZoomEnd = segmentPercentageEnds[segment];
+                }
+
                 s.SegmentPercentEnds = segmentPercentageEnds;
                 s.SegmentCount = segmentCount;
                 s.Segment = segment;
