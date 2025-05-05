@@ -97,15 +97,12 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ChangeSegments_SegmentBeyondCount_DoesNotThrowAndSetsMaxValues()
         {
-            // Arrange
             var progress = new ProgressStatus();
             var segmentPercentageEnds = new[] { 20, 40, 60 };
             int segment = 5; // Beyond segmentCount (3)
 
-            // Act
             var result = progress.ChangeSegments(segment, segmentPercentageEnds);
 
-            // Assert
             Assert.AreNotEqual(result, null);
             Assert.AreEqual(60, result.PercentComplete); // Last end
             Assert.AreEqual(60, result.PercentZoomStart); // Last end
