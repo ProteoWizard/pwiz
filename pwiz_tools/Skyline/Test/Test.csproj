@@ -185,6 +185,7 @@
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="ProgressStatusChangeSegmentsEndPercentageTest.cs" />
     <Compile Include="ProteinAssociationTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />

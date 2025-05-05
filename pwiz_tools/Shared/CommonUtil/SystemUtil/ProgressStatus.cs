@@ -33,8 +33,11 @@ namespace pwiz.Common.SystemUtil
         string Message { get; }
         string WarningMessage { get; }
         int PercentComplete { get; }
+        int PercentZoomStart { get; }
+        int PercentZoomEnd { get; }
         int ZoomedPercentComplete { get; }
         int Segment { get; }
+        int[] SegmentPercentEnds { get; }
         string SegmentName { get; }
         bool ProgressEqual(IProgressStatus status);
         Exception ErrorException { get; }
@@ -252,10 +255,10 @@ namespace pwiz.Common.SystemUtil
                     throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that is not strictly increasing.");
 
                 if (segmentPercentageEnds[0] < 1 || segmentPercentageEnds[segmentCount-1] > 100)
-                    throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100]");
+                    throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100].");
 
                 if (segment < 0)
-                    throw new ArgumentException(@"ChangeSegments was passed a negative segment");
+                    throw new ArgumentException(@"ChangeSegments was passed a negative segment.");
 
                 if (segment >= segmentCount)
                 {
