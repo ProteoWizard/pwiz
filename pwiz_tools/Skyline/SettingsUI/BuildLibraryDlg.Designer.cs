@@ -488,6 +488,7 @@
             // 
             resources.ApplyResources(this.textBoxTrainingDoc, "textBoxTrainingDoc");
             this.textBoxTrainingDoc.Name = "textBoxTrainingDoc";
+            this.textBoxTrainingDoc.TextChanged += new System.EventHandler(this.textBoxTrainingDoc_TextChanged);
             // 
             // labelMsMsData
             // 
@@ -498,6 +499,7 @@
             // 
             resources.ApplyResources(this.textBoxMsMsData, "textBoxMsMsData");
             this.textBoxMsMsData.Name = "textBoxMsMsData";
+            this.textBoxMsMsData.TextChanged += new System.EventHandler(this.textBoxMsMsData_TextChanged);
             // 
             // tabPageDocument
             // 
@@ -578,6 +580,7 @@
             // 
             resources.ApplyResources(this.textBoxProteinDatabase, "textBoxProteinDatabase");
             this.textBoxProteinDatabase.Name = "textBoxProteinDatabase";
+            this.textBoxProteinDatabase.TextChanged += new System.EventHandler(this.textBoxProteinDatabase_TextChanged);
             // 
             // label6
             // 

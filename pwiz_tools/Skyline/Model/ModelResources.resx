@@ -357,11 +357,11 @@
   <data name="CarafeLibrary_topN_fragments_long" xml:space="preserve">
     <value>Maximum Number of Fragment Ions (of highest intensity) to consider for library generation.</value>
   </data>
-  <data name="CarafeLibrary_library_file_format_short" xml:space="preserve">
-    <value>Spectral Library File Format</value>
+  <data name="CarafeLibrary_library_format_short" xml:space="preserve">
+    <value>Spectral Library Format</value>
   </data>
-  <data name="CarafeLibrary_library_file_format_long" xml:space="preserve">
-    <value>Spectral Library File Format for library generation.</value>
+  <data name="CarafeLibrary_library_format_long" xml:space="preserve">
+    <value>Spectral Library Format for library generation.</value>
   </data>
   <data name="ChromatogramExporter_Export_Bad_chromatogram_data_for_charge__0__state_of_peptide__1_" xml:space="preserve">
     <value>Bad chromatogram data for charge {0} state of peptide {1}</value>

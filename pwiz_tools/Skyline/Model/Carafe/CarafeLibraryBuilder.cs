@@ -48,9 +48,9 @@ namespace pwiz.Skyline.Model.Carafe
         private const string INPUT = @"input";
         private const string TRAIN = @"train";
         private const string CARAFE = @"Carafe";
-        private const string CARAFE_VERSION = @"0.0.1";
+        private const string CARAFE_VERSION = @"1.0.0";
         private const string CARAFE_DEV = @"-dev";
-        private const string CARAFE_DEV_VERSION = @"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
+        private const string CARAFE_DEV_VERSION = ""; //@"-beta"; //CARAFE_DEV + @"-20250304T224833Z-001";
         private const string CMD_ARG_C = @"/C";
         private const string CMD_EXECUTABLE = @"cmd.exe";
         private const string CONDITIONAL_CMD_PROCEEDING_SYMBOL = TextUtil.AMPERSAND + TextUtil.AMPERSAND;
@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model.Carafe
                 new ArgumentAndValue(@"ez", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"fast", string.Empty, TextUtil.HYPHEN),
                 new ArgumentAndValue(@"lf_frag_n_min", @"2", TextUtil.HYPHEN),
-                new ArgumentAndValue(@"lf_type", @"skyline", TextUtil.HYPHEN),
+                //new ArgumentAndValue(@"lf_type", @"skyline", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"n_ion_min", @"2", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"na", @"0", TextUtil.HYPHEN),
                 new ArgumentAndValue(@"nf", @"4", TextUtil.HYPHEN),
@@ -264,12 +264,20 @@ namespace pwiz.Skyline.Model.Carafe
         };
 
 
-        public enum LibraryFileTypes
-        {
-            tsv,
-            parquet
-        };
+        //public enum LibraryFileTypes
+        //{
+        //    tsv,
+        //    parquet
+        //};
 
+
+        public enum LibraryFormats
+        {
+            [Description("Skyline")] skyline,
+            [Description("DIA-NN")] diann,
+            [Description("EncyclopeDIA")] encyclopedia
+
+        };
         //Carafe enzymes
         // 0:Non enzyme, 1:Trypsin (default), 2:Trypsin (no P rule), 3:Arg-C, 4:Arg-C (no P rule), 5:Arg-N, 6:Glu-C, 7:Lys-C.
         public enum SupportedEnzymeTypes
@@ -304,9 +312,9 @@ namespace pwiz.Skyline.Model.Carafe
                         ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_short,
                         new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_fragment_ion_mass_tolerance_units_long, "ppm", Enum.GetNames(typeof(ToleranceUnits)))
                     },
-                    { ModelResources.CarafeTraining_refine_peak_detection_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_refine_peak_detection_long, false) },
+                    { ModelResources.CarafeTraining_refine_peak_detection_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_refine_peak_detection_long, true) },
                     { ModelResources.CarafeTraining_RT_window_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_RT_window_long, 3, 0) },
-                    { ModelResources.CarafeTraining_XIC_correlation_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_XIC_correlation_long, 0.75, 0, 1) }, 
+                    { ModelResources.CarafeTraining_XIC_correlation_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_XIC_correlation_long, 0.80, 0, 1) }, 
                     { ModelResources.CarafeTraining_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeTraining_min_fragment_mz_long, 200.0, 0.0) }
                 });
 
@@ -340,7 +348,8 @@ namespace pwiz.Skyline.Model.Carafe
                     { ModelResources.CarafeLibrary_min_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_fragment_mz_long, 200.0, 0.0 ) },
                     { ModelResources.CarafeLibrary_max_fragment_mz_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_fragment_mz_long, 1800.0, 0.0 ) },
                     { ModelResources.CarafeLibrary_topN_fragments_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_topN_fragments_long, 20, 1 ) },
-                    { ModelResources.CarafeLibrary_library_file_format_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_library_file_format_long, "tsv", Enum.GetNames(typeof(LibraryFileTypes)) ) }
+                    { ModelResources.CarafeLibrary_library_format_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_library_format_long, GetDescription( LibraryFormats.skyline), Enum.GetValues(typeof(LibraryFormats)).
+                        Cast<LibraryFormats>().Select(e => GetDescription(e))) }
 
                 });
 
@@ -696,9 +705,12 @@ namespace pwiz.Skyline.Model.Carafe
                 {
                     readyArgs.Add(new ArgumentAndValue(@"lf_top_n_frag", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
                 }
-                else if (dataParam.Key == ModelResources.CarafeLibrary_library_file_format_short)
+                else if (dataParam.Key == ModelResources.CarafeLibrary_library_format_short)
                 {
-                    readyArgs.Add(new ArgumentAndValue(@"lf_format", dataParam.Value.Value.ToString(), TextUtil.HYPHEN));
+                    var format = GetDescription(LibraryFormats.skyline);
+                    if (format != dataParam.Value.Value.ToString())
+                        format += @$",{dataParam.Value.Value.ToString()}";
+                    readyArgs.Add(new ArgumentAndValue(@"lf_type", format, TextUtil.HYPHEN));
                 }
             }
 

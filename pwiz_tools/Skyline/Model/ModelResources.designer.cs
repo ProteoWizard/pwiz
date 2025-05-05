@@ -438,20 +438,20 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Spectral Library File Format for library generation..
+        ///   Looks up a localized string similar to Spectral Library Format for library generation..
         /// </summary>
-        public static string CarafeLibrary_library_file_format_long {
+        public static string CarafeLibrary_library_format_long {
             get {
-                return ResourceManager.GetString("CarafeLibrary_library_file_format_long", resourceCulture);
+                return ResourceManager.GetString("CarafeLibrary_library_format_long", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Spectral Library File Format.
+        ///   Looks up a localized string similar to Spectral Library Format.
         /// </summary>
-        public static string CarafeLibrary_library_file_format_short {
+        public static string CarafeLibrary_library_format_short {
             get {
-                return ResourceManager.GetString("CarafeLibrary_library_file_format_short", resourceCulture);
+                return ResourceManager.GetString("CarafeLibrary_library_format_short", resourceCulture);
             }
         }
         

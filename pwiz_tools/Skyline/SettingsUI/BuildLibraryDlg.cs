@@ -333,90 +333,14 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioCarafeSource.Checked)
                 {
-                    /* ******************************************************************************************
-                    // handle options for comboBuildLibraryTarget dropdown
-                    if (comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument)
-                    {
-                        //TODO   throw new NotImplementedException(@"Need to implement skyline document support.");
-                    }
-                    else if (comboBuildLibraryTarget.SelectedIndex != (int)BuildLibraryTargetOptions.currentSkylineDocument)
-                    {
-                        throw new NotSupportedException(@$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-                    }
-                    else
-                    {
-                        throw new NotSupportedException(
-                            @$"Index {comboBuildLibraryTarget.SelectedIndex} of comboBuildLibraryTarget is not yet supported.");
-                    }
-
-                    // handle options for comboLearnFrom dropdown
-                    string learningDocPath = string.Empty;
-                    IList<LibrarySpec> learningLibraries = new List<LibrarySpec>();
-                    string trainingDataFilePath = string.Empty;
-                    string msMsDataFilePath = string.Empty;
-                    switch (comboLearnFrom.SelectedIndex)
-                    {
-                        case (int)LearningOptions.files:
-                            trainingDataFilePath = textBoxTrainingDoc.Text;
-                            msMsDataFilePath = textBoxMsMsData.Text;
-                            if (!File.Exists(trainingDataFilePath))
-                            {
-                                _helper.ShowTextBoxError(textBoxTrainingDoc, @$"{trainingDataFilePath} does not exist.");
-                                return false;
-                            }
-                            if (!File.Exists(msMsDataFilePath))
-                            {
-                                _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
-                                return false;
-                            }
-                            break;
-
-                        case (int)LearningOptions.libraries:
-                            learningLibraries.AddRange(_driverLibrary.GetChosen(null));
-                            // TODO: Probably need to validate that all the libraries can be loaded into memory with progress UI
-                            goto default;
-
-                        case (int)LearningOptions.document:
-                            learningDocPath = textLearningDoc.Text;
-                            if (!PathEx.HasExtension(learningDocPath, SrmDocument.EXT) || !File.Exists(learningDocPath))
-                            {
-                                _helper.ShowTextBoxError(textPath, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_, learningDocPath);
-                                return false;
-                            }
-                            // CONSIDER: Could also check for the ChromatogramCache.EXT file as a short-cut for full results checking
-                            // TODO: Probably need to load the document int memory with progress UI and validate that it has results
-                            goto default;
-
-                        default:
-                            throw new NotSupportedException(
-                                @$"Index {comboLearnFrom.SelectedIndex} of comboLearnFrom dropdown is not yet supported.");
-                    }
-
-                    if (!SetupPythonEnvironmentForCarafe(createDlg))
-                    {
-                        pythonInstaller.CleanUpPythonEnvironment(CARAFE);
-                        return false;
-                    }
-
-                    if (Builder == null && newBuilder)
-                    {
-                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE,
-                            msMsDataFilePath, trainingDataFilePath, DocumentUI);
-                        BuilderLibFilepath = Builder.BuilderLibraryPath;
-
-                    }
-                
-                    ************************************* */
 
                     if (tabControlMain.SelectedIndex == (int)Pages.learning &&
                         (textBoxMsMsData.Text == "" || textBoxTrainingDoc.Text == "" ||
                          ((BuildLibraryTargetOptions)comboBuildLibraryTarget.SelectedIndex ==
                              BuildLibraryTargetOptions.fastaFile && textBoxProteinDatabase.Text == "")))
                     {
-                        AlertDlg alertDlg = new AlertDlg(SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue, MessageBoxButtons.OK);
-                        alertDlg.ShowDialog();
+                        MessageDlg.Show(this, SettingsUIResources.BuildLibraryDlg_ValidateBuilder_You_must_fill_out_this_form_to_continue);
                         return false;
-
                     }
 
                     if (!SetupPythonEnvironmentForCarafe(createDlg))
@@ -434,12 +358,12 @@ namespace pwiz.Skyline.SettingsUI
                             _helper.ShowTextBoxError(textBoxMsMsData, @$"{msMsDataFilePath} does not exist.");
                             return false;
                         }
-
-                        Builder = new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
+                        Builder ??= new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
                             msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI,_skylineWindow.GetTextWriter(), _trainingDocument,
                             labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard);
                         TestLibFilepath = Builder.TestLibraryPath;
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
+                        btnNext.Enabled = true;
                     }
 
                     // handle options for comboBuildLibraryTarget dropdown 
@@ -828,6 +752,11 @@ namespace pwiz.Skyline.SettingsUI
                 btnPrevious.Enabled = true;
                 btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
+                btnNext.Enabled = false;
+                if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
+                    textBoxMsMsData.Text != "" &&
+                    textBoxTrainingDoc.Text != "")
+                    btnNext.Enabled = true;
 
             }
             Cursor.Current = Cursors.Default;
@@ -916,9 +845,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (Exception x)
                 {
-                    var message = TextUtil.LineSeparate(string.Format(SettingsUIResources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
-                                                                      dirPath),
-                                                        x.Message);
+                    var message = 
+                        TextUtil.LineSeparate(string.Format(SettingsUIResources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__, dirPath), x.Message);
                     MessageDlg.ShowWithException(this, message, x);
                 }
             }
@@ -1351,6 +1279,10 @@ namespace pwiz.Skyline.SettingsUI
         private void comboBuildLibraryTarget_Update(BuildLibraryTargetOptions targetOption)
         {
             comboBuildLibraryTarget.SelectedIndex = (int)targetOption;
+            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
+                textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "")
+                btnNext.Enabled = true;
+
             switch (targetOption)
             {
                 case BuildLibraryTargetOptions.currentSkylineDocument:
@@ -1404,7 +1336,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textBoxProteinDatabase.Text = dlg.FileName;
             }
-            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "")
+            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "" && Builder != null)
                 btnNext.Enabled = true;
         }
 
@@ -1422,7 +1354,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textBoxMsMsData.Text = dlg.FileName;
             }
-            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "")
+            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "" && Builder != null)
                 btnNext.Enabled = true;
         }
         private void buttonTrainingDoc_Click(object sender, EventArgs e)
@@ -1463,7 +1395,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            if (textBoxProteinDatabase.Text != "" && textBoxTrainingDoc.Text != "")
+            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) && 
+                textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "" && Builder != null)
                 btnNext.Enabled = true;
         }
 
@@ -1474,6 +1407,7 @@ namespace pwiz.Skyline.SettingsUI
         }
         internal void LoadTrainingDocument(string fileName)
         {
+            btnNext.Enabled = false;
             _trainingDocument = new SrmDocument(SrmSettingsList.GetDefault());
 
             using (var reader = new StreamReader(PathEx.SafePath(fileName)))
@@ -1481,11 +1415,38 @@ namespace pwiz.Skyline.SettingsUI
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                 _trainingDocument = (SrmDocument)ser.Deserialize(reader);
             }
+            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
+                textBoxMsMsData.Text != "" &&
+                textBoxTrainingDoc.Text != "")
+                btnNext.Enabled = true;
         }
 
         private void carafeSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             _skylineWindow.ShowToolOptionsUI(ToolOptionsUI.TABS.Carafe);
+        }
+
+        private void textBoxTrainingDoc_TextChanged(object sender, EventArgs e)
+        {
+            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) && 
+                textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "")
+                btnNext.Enabled = true;
+        }
+
+        private void textBoxMsMsData_TextChanged(object sender, EventArgs e)
+        {
+            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) && 
+                textBoxMsMsData.Text != "" &&
+                textBoxTrainingDoc.Text != "")
+                btnNext.Enabled = true;
+        }
+
+        private void textBoxProteinDatabase_TextChanged(object sender, EventArgs e)
+        {
+            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
+                textBoxMsMsData.Text != "" &&
+                textBoxTrainingDoc.Text != "")
+                btnNext.Enabled = true;
         }
     }
 }
