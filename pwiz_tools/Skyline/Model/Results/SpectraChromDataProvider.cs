@@ -1029,8 +1029,10 @@ namespace pwiz.Skyline.Model.Results
 
             private void SortSpectrum(SpectrumInfo spectrumInfo, int i)
             {
-                var spectrum = spectrumInfo.DataSpectrum;
-                spectrum.SortByMz();
+                foreach (var spectrum in spectrumInfo.AllSpectra)
+                {
+                    spectrum.SortByMz();
+                }
                 spectrumInfo.SortEvent.Set();
             }
 
@@ -1535,27 +1537,7 @@ namespace pwiz.Skyline.Model.Results
                 else if (_lookAheadDataSpectrum.IsDiagonalPASEF)
                 {
                     // Diagonal PASEF - pick apart the frame into constituent scans
-                    var sliceStart = 0;
-                    var currentMzQuadLow = double.MinValue;
-                    var i = 0;
-                    for (i = 0; i < _lookAheadDataSpectrum.ScanningQuadMzLows.Length; i++)
-                    {
-                        if (_lookAheadDataSpectrum.ScanningQuadMzLows[i] != currentMzQuadLow)
-                        {
-                            if (i != sliceStart)
-                            {
-                                var slice = _lookAheadDataSpectrum.CreateSlice(sliceStart, i - sliceStart, _dataFile);
-                                spectrumList.Add(slice);
-                                sliceStart = i;
-                            }
-                            currentMzQuadLow = _lookAheadDataSpectrum.ScanningQuadMzLows[i];
-                        }
-                    }
-                    // Last slice
-                    if (i != sliceStart)
-                    {
-                        spectrumList.Add(_lookAheadDataSpectrum.CreateSlice(sliceStart, i - sliceStart, _dataFile));
-                    }
+                    spectrumList.AddRange(_lookAheadDataSpectrum.GetVirtualSpectra(_dataFile));
                     rtReported = _lookAheadDataSpectrum.RetentionTime;
                 }
                 else

@@ -69,7 +69,7 @@ make IncrementalUpdateResxFiles
 explicit IncrementalUpdateResxFiles ;
 
 ##############
-# FinalUpdateResxFiles
+# FinalizeResxFiles
 # Should be run after visual freeze to update the .resx files by adding comments indicating which
 # strings have been added since LastReleaseResources.db
 # After running this, fixes can be manually applied to the resx files

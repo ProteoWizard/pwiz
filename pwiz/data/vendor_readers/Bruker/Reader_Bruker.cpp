@@ -233,7 +233,7 @@ void Reader_Bruker::read(const string& filename,
         rootpath = rootpath.parent_path();
 
     CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, 
-        config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.isolationMzAndMobilityFilter));
+        config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.singleFrameDiaPASEF, config.isolationMzAndMobilityFilter));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
     ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr, config);

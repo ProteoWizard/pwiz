@@ -99,12 +99,13 @@ namespace pwiz.Skyline.Model.Results
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
         public int BestWindowGroup { get; private set; }  // For DIA PASEF
-        public double BestWindowGroupDistance { get; private set; }  // For DIA PASEF
+        public float BestWindowGroupMatchArea { get; private set; }  // For DIA PASEF
+        public float BestWindowGroupMatchDistance { get; private set; }  // For DIA PASEF
         private int _knownWindowGroupsBitField; // For DIA PASEF
         public int? OptStep { get; }
         private double? CollisionEnergy { get; }
         private IonMobilityFilter IonMobilityInfo { get; set; }
-        private SpectrumProductFilter[] Ms1ProductFilters { get; set; }
+        public SpectrumProductFilter[] Ms1ProductFilters { get; set; }
         private SpectrumProductFilter[] SimProductFilters { get; set; }
         public SpectrumProductFilter[] Ms2ProductFilters { get; set; }
 
@@ -227,8 +228,7 @@ namespace pwiz.Skyline.Model.Results
                     spectrumCount++; // Our flag to process this as zero rather than null
                 }
             }
-//            if (spectra.Length > 1)
-//                Console.Write(string.Empty);
+ 
             for (int specIndex = imRangeHelper.IndexFirst; specIndex < spectra.Length; specIndex++)
             {
                 var spectrum = spectra[specIndex];
@@ -460,15 +460,28 @@ namespace pwiz.Skyline.Model.Results
             return windowGroup == BestWindowGroup;
         }
 
-        public bool ProposeBestWindowGroup(int proposedBestWindowGroup, double distance)
+        public bool ProposeBestWindowGroup(int proposedBestWindowGroup, double area, double distance)
         {
-            if (BestWindowGroup >= 0)
+            // We look at how much of the target mz x IM search area overlaps that in the window group
+            // In a tie, we go for the window that is most centered on the target
+            if (BestWindowGroup > 0)
             {
-                if (distance > BestWindowGroupDistance)
+                // We have identified at least one window that hits - update?
+                if (area < BestWindowGroupMatchArea)
                 {
-                    // Distance to proposed window is not closer, but note that we checked this window
+                    // Proposed window is not better than current winner, but note that we checked this window
                     SetIsKnownWindowGroup(proposedBestWindowGroup);
                     return false;
+                }
+                if (area >= BestWindowGroupMatchArea || // Better coverage
+                    distance < BestWindowGroupMatchDistance) // Same coverage, take the one closest to center
+                {
+                    BestWindowGroupMatchArea = (float)area;
+                    BestWindowGroupMatchDistance = (float)distance;
+                    BestWindowGroup = proposedBestWindowGroup;
+                    
+//Console.WriteLine($"u{BestWindowGroup} {this.Q1} {distance:F3}");
+                    return true;
                 }
                 // Already have a best window and this is it
                 if (BestWindowGroup == proposedBestWindowGroup)
@@ -476,9 +489,15 @@ namespace pwiz.Skyline.Model.Results
                     return true;
                 }
             }
+            else if (area <= 0)
+            {
+                // No hit on this window, nor any other yet - reserve judgment, don't mark as known
+                return false;
+            }
             BestWindowGroup = proposedBestWindowGroup;
-            BestWindowGroupDistance = distance;
-
+            BestWindowGroupMatchArea = (float)area;
+            BestWindowGroupMatchDistance = (float)distance;
+//Console.WriteLine($"{BestWindowGroup} {this.Q1} {distance:F3}");
             SetIsKnownWindowGroup(BestWindowGroup);
             return true;
         }

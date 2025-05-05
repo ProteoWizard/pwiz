@@ -208,6 +208,8 @@ namespace pwiz.Skyline.Model
         public const string THERMO_ECLIPSE_REG = "OrbitrapEclipse";
         public const string THERMO_ASTRAL = "Thermo Astral";        // q-orbi/tof
         public const string THERMO_ASTRAL_REG = "OrbitrapAstral";
+        public const string THERMO_ASTRAL_ZOOM = "Thermo Astral Zoom";        // q-orbi/tof
+        public const string THERMO_ASTRAL_ZOOM_REG = "OrbitrapAstralZoom";
         public const string WATERS = "Waters";
         public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
@@ -299,6 +301,7 @@ namespace pwiz.Skyline.Model
                 { THERMO_FUSION_LUMOS, EXT_THERMO },
                 { THERMO_ECLIPSE, EXT_THERMO },
                 { THERMO_ASTRAL, EXT_THERMO },
+                { THERMO_ASTRAL_ZOOM, EXT_THERMO },
                 { WATERS_XEVO_TQ, EXT_WATERS },
                 { WATERS_QUATTRO_PREMIER, EXT_WATERS }
             };
@@ -314,6 +317,7 @@ namespace pwiz.Skyline.Model
                 { THERMO_FUSION_LUMOS, THERMO_FUSION_LUMOS_REG },
                 { THERMO_ECLIPSE, THERMO_ECLIPSE_REG },
                 { THERMO_ASTRAL, THERMO_ASTRAL_REG },
+                { THERMO_ASTRAL_ZOOM, THERMO_ASTRAL_ZOOM_REG },
                 { THERMO_ASCEND, THERMO_ASCEND_REG },
             };
         }
@@ -378,9 +382,15 @@ namespace pwiz.Skyline.Model
         public static bool IsFullScanInstrumentType(string type)
         {
             return Equals(type, THERMO_LTQ) ||
-                   Equals(type, THERMO_Q_EXACTIVE) ||
-                   Equals(type, THERMO_FUSION) ||
                    Equals(type, THERMO_STELLAR) ||
+                   Equals(type, THERMO_Q_EXACTIVE) ||
+                   Equals(type, THERMO_EXPLORIS) ||
+                   Equals(type, THERMO_ASCEND) ||
+                   Equals(type, THERMO_FUSION) ||
+                   Equals(type, THERMO_FUSION_LUMOS) ||
+                   Equals(type, THERMO_ECLIPSE) ||
+                   Equals(type, THERMO_ASTRAL) ||
+                   Equals(type, THERMO_ASTRAL_ZOOM) ||
                    Equals(type, AGILENT_TOF) ||
                    Equals(type, WATERS_SYNAPT_TRAP) ||
                    Equals(type, WATERS_SYNAPT_TRANSFER) ||
@@ -418,10 +428,9 @@ namespace pwiz.Skyline.Model
                    Equals(type, AGILENT_MASSHUNTER_12_6495C) ||
                    Equals(type, THERMO) ||
                    Equals(type, ABI_QTRAP) ||
-                   Equals(type, ABI)
-                // TODO: TSQ Method writing API does not yet support triggered methods
-                // || Equals(type, THERMO_TSQ)
-                   ;
+                   Equals(type, ABI);
+            // TSQ Method writing API does not support triggered methods
+            // || Equals(type, THERMO_TSQ)
         }
 
         public static bool CanTrigger(string instrumentType, SrmDocument document, int? replicateIndex)
@@ -590,6 +599,7 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.THERMO_EXPLORIS:
                 case ExportInstrumentType.THERMO_FUSION_LUMOS:
                 case ExportInstrumentType.THERMO_ASTRAL:
+                case ExportInstrumentType.THERMO_ASTRAL_ZOOM:
                 case ExportInstrumentType.THERMO_ASCEND:
                     return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.SHIMADZU:
@@ -1243,6 +1253,19 @@ namespace pwiz.Skyline.Model
                     instrumentType, expectedInstrumentType));
             }
             return true;
+        }
+
+        protected List<string> GetTypeAndVersionArguments()
+        {
+            var softwareInfo = Finder.GetSoftwareInfo();
+            Assume.IsNotNull(softwareInfo.InstrumentType, @"Missing instrument type running Thermo method export");
+            var argv = new List<string> { @"-t",  softwareInfo.InstrumentType };
+            double registryInstrumentVer = Finder.GetSoftwareInfo().Version;
+            if (registryInstrumentVer > 0)
+                argv.AddRange(new[] { @"-v", registryInstrumentVer.ToString(CultureInfo.InvariantCulture) });
+            // For debugging: export method update XML to a file
+            // argv.Add(@"-x");
+            return argv;
         }
     }
 
@@ -1913,7 +1936,7 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string> { @"-t", registryInstrumentType };
+            var argv = GetTypeAndVersionArguments();
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -1931,7 +1954,7 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string> { @"-t", registryInstrumentType };
+            var argv = GetTypeAndVersionArguments();
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -2148,7 +2171,7 @@ namespace pwiz.Skyline.Model
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string> { @"-t", registryInstrumentType };
+            var argv = GetTypeAndVersionArguments();
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -4143,10 +4166,10 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = @"Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE,";
+            var hdr = @"Compound,Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE";
             if (UseSlens)
-                hdr += @"S-lens,";
-            return (hdr+@"Comment").Replace(',', fieldSeparator);
+                hdr += @",S-lens";
+            return hdr.Replace(',', fieldSeparator);
         }
 
         protected override void WriteTransition(TextWriter writer,
@@ -4158,6 +4181,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            string compound = GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement);
             string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
 
             string start = string.Empty;
@@ -4194,19 +4218,15 @@ namespace pwiz.Skyline.Model
                      ?? (wideWindowDia ? WIDE_NCE : NARROW_NCE); // Normalized CE, not a real voltage
             var ceString = ce.ToString(CultureInfo);
 
-            string comment = string.Format(@"{0} ({1})",
-                GetCompound(nodePep, nodeTranGroup),
-                nodeTranGroup.TransitionGroup.LabelType).ToDsvField(FieldSeparator);
-
             var polarity = (nodeTranGroup.PrecursorCharge > 0) ? @"Positive" : @"Negative";
             if (UseSlens)
             {
                 var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);  
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, slens, comment);
+                Write(writer, compound, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, slens);
             }
             else
             {
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, comment);
+                Write(writer, compound, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString);
             }
         }
     }
@@ -4227,6 +4247,8 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
+            writer.Write(@"Compound");
+            writer.Write(FieldSeparator);
             writer.Write(@"m/z");
             writer.Write(FieldSeparator);
             writer.Write(@"z");
@@ -4257,6 +4279,8 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
             int step)
         {
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
+            writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
@@ -4316,7 +4340,7 @@ namespace pwiz.Skyline.Model
         public string GetHeader(char fieldSeparator)
         {
             var hdr = !Tune3Columns
-                ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
+                ? @"Compound,m/z,z,t start (min),t end (min),CID Collision Energy (%)"
                 : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
                 hdr += @",S-lens";
@@ -4339,12 +4363,11 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
+            writer.Write(FieldSeparator);
+
             if (Tune3Columns)
             {
-                writer.Write(@"{0} ({1})",
-                    nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
-                    nodeTranGroup.TransitionGroup.LabelType);
-                writer.Write(FieldSeparator);
                 writer.Write(string.Empty);
                 writer.Write(FieldSeparator);
                 writer.Write(string.Empty);

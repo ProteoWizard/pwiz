@@ -193,7 +193,8 @@ namespace pwiz.ProteowizardWrapper
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
                     ignoreCalibrationScans = true, // For Waters, we don't need to hear about lockmass values
                     reportSonarBins = true, // For Waters SONAR data, report bin number instead of false drift time
-                    globalChromatogramsAreMs1Only = true
+                    globalChromatogramsAreMs1Only = true,
+                    singleFrameDiaPASEF = false
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -2077,13 +2078,12 @@ namespace pwiz.ProteowizardWrapper
         public void SortByMz()
         {
             // ReSharper disable once PossibleNullReferenceException
-            if (MzValues.Count != MzValues.Array.Length)
-                return; // This is a slice of a diagonal PASEF frame - assume already sorted
             ArraySortUtil.Sort(MzValues, IntensityValues, _ionMobilities);
         }
 
         // For dealing with Diagonal PASEF, where we get the entire frame at once -
-        // slice it up into individual spectra so the general code base can handle it
+        // slice it up into groups of spectra sharing the same isolation window,
+        // so the general code base can handle it
         public MsDataSpectrum CreateSlice(int offset, int length, MsDataFileImpl dataFile)
         {
             var slice = (MsDataSpectrum)MemberwiseClone();
@@ -2100,19 +2100,16 @@ namespace pwiz.ProteowizardWrapper
                 // For diagonal DIA these will all be the same, will vary for regular diaPASEF
                 var im = IonMobilities[offset];
                 var singleIM = true;
-                if (!dataFile.IsCombinedDiagonalPASEF)
+                for (var i = 1; i < length; i++)
                 {
-                    for (var i = 1; i < length; i++)
+                    if (IonMobilities[offset + i] != im)
                     {
-                        if (IonMobilities[offset + i] != im)
-                        {
-                            // Multiple IM values (regular diaPASEF)
-                            slice._ionMobilities = new ArraySegment<double>(_ionMobilities.Value.Array, offset, length);
-                            slice.IonMobilityMeasurementRangeLow = slice._ionMobilities.Min();
-                            slice.IonMobilityMeasurementRangeHigh = slice._ionMobilities.Max();
-                            singleIM = false;
-                            break;
-                        }
+                        // Multiple IM values (regular diaPASEF)
+                        slice._ionMobilities = new ArraySegment<double>(_ionMobilities.Value.Array, offset, length);
+                        slice.IonMobilityMeasurementRangeLow = slice._ionMobilities.Min();
+                        slice.IonMobilityMeasurementRangeHigh = slice._ionMobilities.Max();
+                        singleIM = false;
+                        break;
                     }
                 }
                 if (singleIM)
@@ -2128,10 +2125,14 @@ namespace pwiz.ProteowizardWrapper
             }
             // ReSharper restore AssignNullToNotNullAttribute
 
-            if (IsDiagonalPASEF)
+            if (_scanningQuadMzHighs != null) // As in diagonalPASEF
             {
                 // Diagonal PASEF
                 var isolationWidth = (_scanningQuadMzHighs[offset] - _scanningQuadMzLows[offset]) / 2;
+                if (_scanningQuadMzHighs[offset] != _scanningQuadMzHighs[offset + length - 1])
+                {
+                    throw new InvalidDataException(@"Diagonal PASEF slice has multiple isolation windows. This should not happen.");
+                }
                 var precursor = new MsPrecursor()
                 {
                     IsolationWindowLower = isolationWidth,
@@ -2154,6 +2155,34 @@ namespace pwiz.ProteowizardWrapper
             return slice;
         }
 
+        /// <summary>
+        /// Split a diagonalPASEF spectrum with scanning quadruple arrays into a list of virtual spectra:
+        /// each virtual spectrum will have the same scanning quadrupole value as its isolation info.
+        /// </summary>
+        public IEnumerable<MsDataSpectrum> GetVirtualSpectra(MsDataFileImpl dataFile)
+        {
+            var sliceStart = 0;
+            var currentMzQuadLow = double.MinValue;
+            int i;
+            for (i = 0; i < ScanningQuadMzLows.Length; i++)
+            {
+                if (ScanningQuadMzLows[i] != currentMzQuadLow)
+                {
+                    if (i != sliceStart)
+                    {
+                        var slice = CreateSlice(sliceStart, i - sliceStart, dataFile);
+                        yield return slice;
+                        sliceStart = i;
+                    }
+                    currentMzQuadLow = ScanningQuadMzLows[i];
+                }
+            }
+            // Last slice
+            if (i != sliceStart)
+            {
+                yield return CreateSlice(sliceStart, i - sliceStart, dataFile);
+            }
+        }
 
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)

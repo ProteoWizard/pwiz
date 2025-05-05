@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("clip_nterm_methionine", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("digest_mass_range", "600.0 5000.0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("equal_I_and_L", 1, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("explicit_deltacn", "0"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("explicit_deltacn", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("fragment_bin_offset", 0.4, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("isotope_error", 0, 0, 5)); // 0=off, 1=0/1 (C13 error), 2=0/1/2, 3=0/1/2/3, 4=--8/-4/0/4/8 (for +4/+8 labeling), 5=-1/0/1/2/3.
             AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_offsets", ""));
@@ -78,9 +78,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("mass_type_parent", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_duplicate_proteins", 20, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_fragment_charge", 3, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_index_runtime", "0"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("max_index_runtime", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("max_precursor_charge", 6, 1, 9));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("max_variable_mods_in_peptide", 5, 0));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("max_variable_mods_in_peptide", 5, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_intensity", 0.0, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("minimum_peaks", 10, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("ms_level", 2, 2));
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("num_output_lines", 5, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("num_results", 50, 1));
             //AddAdditionalSetting(COMET_SETTINGS, new Setting("num_threads", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("old_mods_encoding", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("old_mods_encoding", 0, 0, 1));
             /*AddAdditionalSetting(COMET_SETTINGS, new Setting("output_mzidentmlfile", "0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_pepxmlfile", "1"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_percolatorfile", "0"));
@@ -97,30 +97,30 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_suffix", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("output_txtfile", "1"));*/
             AddAdditionalSetting(COMET_SETTINGS, new Setting("override_charge", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_format", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_obo", ""));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_verbose_output", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_length_range", "1 63"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_tolerance", 3.0, 0));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_units", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_format", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_obo", ""));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peff_verbose_output", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_length_range", "6 50"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_tolerance", 3.0, 0));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("peptide_mass_units", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_NL_ions", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_charge", "0 0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_tolerance_type", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("print_expect_score", "1"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("precursor_tolerance_type", 1, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("print_expect_score", "1"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_peak", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("remove_precursor_tolerance", 1.5, 0.0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("require_variable_mod", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("scan_range", "0 0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("search_enzyme2_number", "0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", 1, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("search_enzyme2_number", "0"));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("show_fragment_ions", 0, 0, 1));
+            //AddAdditionalSetting(COMET_SETTINGS, new Setting("skip_researching", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("spectrum_batch_size", 0, 0));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("text_file_extension", ""));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("theoretical_fragment_ions", 1, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_A_ions", 0, 0, 1));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", "1", new []{ "0", "1" }));
+            /*AddAdditionalSetting(COMET_SETTINGS, new Setting("use_A_ions", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_B_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_C_ions", 0, 0, 1));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("use_NL_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_X_ions", 0, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Y_ions", 1, 0, 1));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("use_Z1_ions", 0, 0, 1));
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod06", "0.0 null 0 4 -1 0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod07", "0.0 null 0 4 -1 0 0"));
             AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod08", "0.0 null 0 4 -1 0 0"));
-            AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod09", "0.0 null 0 4 -1 0 0"));
+            AddAdditionalSetting(COMET_SETTINGS, new Setting("variable_mod09", "0.0 null 0 4 -1 0 0"));*/
             // ReSharper restore LocalizableElement
         }
 
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"c,z1",
         };
 
-        static string CRUX_FILENAME = @"crux-4.2";
+        static string CRUX_FILENAME = @"crux-4.3";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
         public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
@@ -193,7 +193,21 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public override string[] FragmentIons => FRAGMENTATION_METHODS;
         public override string[] Ms2Analyzers => new [] { @"Default" };
-        public override MzTolerance.Units[] FragmentIonToleranceUnitTypes => new[] { MzTolerance.Units.mz };
+
+        public override MzToleranceUnits[] PrecursorIonToleranceUnitTypes
+        {
+            get
+            {
+                string mzName = (int) AdditionalSettings[@"precursor_tolerance_type"].Value == 0 ? @"Da" : @"m/z";
+                return new[]
+                {
+                    new MzToleranceUnits(mzName, MzTolerance.Units.mz),
+                    new MzToleranceUnits(@"ppm", MzTolerance.Units.ppm)
+                };
+            }
+        }
+
+        public override MzToleranceUnits[] FragmentIonToleranceUnitTypes => new[] { new MzToleranceUnits(@"m/z", MzTolerance.Units.mz) };
         public override string EngineName => @"Comet";
         public override Bitmap SearchEngineLogo => null;
         public override string CutoffScoreName => _cutoffScoreName;
@@ -234,15 +248,28 @@ namespace pwiz.Skyline.Model.DdaSearch
                 SetCometParam(paramsFileText, @"max_variable_mods_in_peptide", _maxVariableMods);
                 foreach (var settingName in COMET_SETTINGS)
                     SetCometParam(paramsFileText, settingName, AdditionalSettings[settingName].ValueToString(CultureInfo.InvariantCulture));
+
+                // ReSharper disable LocalizableElement
+                string[] possibleIonTypes = { "a", "b", "c", "x", "y", "z", "z1" };
+                // ReSharper restore LocalizableElement
+                foreach (var ionType in possibleIonTypes)
+                {
+                    if (_fragmentIons.Contains(ionType))
+                        SetCometParam(paramsFileText, @"use_" + ionType.ToUpperInvariant() + @"_ions", 1);
+                    else
+                        SetCometParam(paramsFileText, @"use_" + ionType.ToUpperInvariant() + @"_ions", 0);
+                }
+
                 paramsFileText.Append(_modParams);
 
                 paramsFileText.Append(enzymeParameterInfo);
                 // 1. Trypsin             1      KR P
-                paramsFileText.AppendFormat(@"1. {0} {1} {2} {3}\r\n",
+                paramsFileText.AppendFormat(@"1. {0} {1} {2} {3}{4}",
                     _enzyme.Name ?? @"unnamed",
                     _enzyme.IsCTerm ? 1 : 0,
                     _enzyme.CleavageC ?? _enzyme.CleavageN,
-                    _enzyme.RestrictC ?? _enzyme.RestrictN);
+                    _enzyme.RestrictC ?? _enzyme.RestrictN,
+                    Environment.NewLine);
 
                 string defaultOutputDirectory = Path.GetDirectoryName(SpectrumFileNames[0].GetFilePath()) ?? Path.Combine(Environment.CurrentDirectory, "comet-output");
 
@@ -665,17 +692,6 @@ namespace pwiz.Skyline.Model.DdaSearch
         public override void SetFragmentIons(string ions)
         {
             _fragmentIons = new SortedSet<string>(ions.Split(','));
-            // ReSharper disable LocalizableElement
-            string[] possibleIonTypes = { "a", "b", "c", "x", "y", "z", "z1" };
-            // ReSharper restore LocalizableElement
-            foreach (var ionType in possibleIonTypes)
-            {
-                if (_fragmentIons.Contains(ionType))
-                    AdditionalSettings[@"use_" + ionType.ToUpperInvariant() + @"_ions"].Value = 1;
-                else
-                    AdditionalSettings[@"use_" + ionType.ToUpperInvariant() + @"_ions"].Value = 0;
-            }
-
         }
 
         public override void SetMs2Analyzer(string ms2Analyzer)
@@ -701,8 +717,16 @@ namespace pwiz.Skyline.Model.DdaSearch
         }
         private string GetCometSearchResultFilepath(MsDataFileUri searchFilepath, string extension = ".pep.xml")
         {
-            return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
-                @"comet." + Path.ChangeExtension(searchFilepath.GetFileName(), extension));
+            if (SpectrumFileNames.Length > 1)
+            {
+                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
+                    @"comet." + Path.ChangeExtension(searchFilepath.GetFileName(), extension));
+            }
+            else
+            {
+                return Path.Combine(Path.GetDirectoryName(searchFilepath.GetFilePath()) ?? "",
+                    Path.ChangeExtension(@"comet", extension));
+            }
         }
 
         private string[] SupportedExtensions = { @".mzml", @".mzxml", @".raw" };
@@ -718,6 +742,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         public bool IsCanceled => _cancelToken?.IsCancellationRequested ?? false;
         public UpdateProgressResponse UpdateProgress(IProgressStatus status)
         {
+            // trim INFO: prefix
+            status = status.ChangeMessage(status.Message.Replace(@"INFO: ", @""));
+
             SearchProgressChanged?.Invoke(this, status);
             return IsCanceled ? UpdateProgressResponse.cancel : UpdateProgressResponse.normal;
         }

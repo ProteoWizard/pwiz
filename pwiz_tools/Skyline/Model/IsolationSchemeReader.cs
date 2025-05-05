@@ -160,8 +160,21 @@ namespace pwiz.Skyline.Model
                     if (dataFile.GetMsLevel(i) != 2)
                         continue;
 
-                    var spectrum = dataFile.GetSpectrum(i);
-                    isPasef = isPasef && spectrum.IonMobilities != null;
+                    var rawSpectrum = dataFile.GetSpectrum(i);
+                    var spectrumList = new List<MsDataSpectrum>();
+
+                    isPasef = isPasef && rawSpectrum.IonMobilities != null;
+                    if(rawSpectrum.IsDiagonalPASEF)
+                    {
+                        // Diagonal PASEF - pick apart the frame into constituent scans
+                        spectrumList.AddRange(rawSpectrum.GetVirtualSpectra(dataFile));
+                    }
+                    else
+                    {
+                        spectrumList.Add(rawSpectrum);
+                    }
+
+                    foreach (var spectrum in spectrumList)
                     foreach (var precursor in spectrum.Precursors)
                     {
                         if (!precursor.IsolationWindowLower.HasValue || !precursor.IsolationWindowUpper.HasValue)
