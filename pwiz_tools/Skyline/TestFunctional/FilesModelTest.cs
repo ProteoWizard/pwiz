@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            var documentPath = TestFilesDirs[0].GetTestPath("Rat_plasma.sky");
+            var documentPath = TestFilesDirs[0].GetTestPath(FilesTreeFormTest.RAT_PLASMA_FILE_NAME);
 
             RunUI(() => SkylineWindow.OpenFile(documentPath));
             WaitForOpenForm<SkylineWindow>();
@@ -51,8 +51,9 @@ namespace pwiz.SkylineTestFunctional
             // <root>/
             //      replicates/
             var modelReplicatesFolder = modelFiles.Folder<ReplicatesFolder>();
-            Assert.AreSame(modelFiles.Files[0], modelReplicatesFolder);
-            Assert.AreEqual(typeof(ReplicatesFolder), modelReplicatesFolder.GetType());
+            Assert.AreSame(modelFiles.Files[1], modelReplicatesFolder);
+
+            Assert.IsInstanceOfType(modelReplicatesFolder, typeof(ReplicatesFolder));
             Assert.AreEqual(docSettings.MeasuredResults.Chromatograms.Count, modelReplicatesFolder.Files.Count);
 
             // <root>/
@@ -61,7 +62,8 @@ namespace pwiz.SkylineTestFunctional
             //          replicate2/
             var docReplicate = docSettings.MeasuredResults.Chromatograms[0];
             var modelReplicate = modelReplicatesFolder.Files[0];
-            Assert.AreEqual(typeof(Replicate), modelReplicate.GetType());
+
+            Assert.IsInstanceOfType(modelReplicate, typeof(Replicate));
             Assert.AreSame(docReplicate, modelReplicate.Immutable);
             Assert.AreEqual(docReplicate.FileCount, modelReplicate.Files.Count);
             Assert.AreEqual(docReplicate.Id, modelReplicate.IdentityPath.GetIdentity(0));
@@ -75,7 +77,8 @@ namespace pwiz.SkylineTestFunctional
             //              replicate-sample-file.raw
             var docSampleFile = docReplicate.MSDataFileInfos[0];
             var modelSampleFile = modelReplicate.Files[0];
-            Assert.AreEqual(typeof(ReplicateSampleFile), modelSampleFile.GetType());
+
+            Assert.IsInstanceOfType(modelSampleFile, typeof(ReplicateSampleFile));
             Assert.AreSame(docSampleFile, modelSampleFile.Immutable);
             Assert.AreEqual(docSampleFile.Id, modelSampleFile.IdentityPath.GetIdentity(1));
             Assert.AreEqual(docSampleFile.Name, modelSampleFile.Name);
@@ -84,7 +87,8 @@ namespace pwiz.SkylineTestFunctional
             // <root>/
             //      spectral-libraries/
             var modelLibrariesFolder = modelFiles.Folder<SpectralLibrariesFolder>();
-            Assert.AreEqual(typeof(SpectralLibrariesFolder), modelLibrariesFolder.GetType());
+
+            Assert.IsInstanceOfType(modelLibrariesFolder, typeof(SpectralLibrariesFolder));
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs.Count, modelLibrariesFolder.Files.Count);
 
             // <root>/
@@ -92,7 +96,8 @@ namespace pwiz.SkylineTestFunctional
             //          library1.blib
             var docLibrary = docSettings.PeptideSettings.Libraries.LibrarySpecs[0];
             var modelLibrary = modelLibrariesFolder.Files[0];
-            Assert.AreEqual(typeof(SpectralLibrary), modelLibrary.GetType());
+
+            Assert.IsInstanceOfType(modelLibrary, typeof(SpectralLibrary));
             Assert.AreSame(docSettings.PeptideSettings.Libraries.LibrarySpecs[0], modelLibrary.Immutable);
             Assert.AreEqual(docLibrary.Id, modelLibrary.IdentityPath.GetIdentity(0));
             Assert.AreEqual(docLibrary.Name, modelLibrary.Name);
@@ -103,6 +108,7 @@ namespace pwiz.SkylineTestFunctional
             //          library2.blib
             docLibrary = docSettings.PeptideSettings.Libraries.LibrarySpecs[1];
             modelLibrary = modelLibrariesFolder.Files[1];
+
             Assert.AreSame(docLibrary, modelLibrary.Immutable);
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Id, modelLibrary.IdentityPath.GetIdentity(0));
             Assert.AreEqual(docSettings.PeptideSettings.Libraries.LibrarySpecs[1].Name, modelLibrary.Name);
@@ -132,9 +138,9 @@ namespace pwiz.SkylineTestFunctional
             modelFiles = new SkylineFile(documentContainer);
 
             var newDocReplicate = docSettings.MeasuredResults.Chromatograms[0];
-            var newModelReplicate = modelFiles.Files[0].Files[0];
+            var newModelReplicate = modelFiles.Files[1].Files[0];
 
-            Assert.AreEqual(typeof(Replicate), newModelReplicate.GetType());
+            Assert.IsInstanceOfType(newModelReplicate, typeof(Replicate));
             Assert.AreEqual(docReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
             Assert.AreEqual(newDocReplicate.Id, newModelReplicate.IdentityPath.GetIdentity(0));
 

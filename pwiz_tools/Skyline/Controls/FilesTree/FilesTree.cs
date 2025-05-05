@@ -85,11 +85,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         #region Test helpers
 
-        public string RootNodeText()
-        {
-            return Root.Text;
-        }
-
         public bool IsMonitoringFileSystem()
         {
             return _monitoringFileSystem;
@@ -98,11 +93,6 @@ namespace pwiz.Skyline.Controls.FilesTree
         public string PathMonitoredForFileSystemChanges()
         {
             return _fsWatcher?.Path;
-        }
-
-        public void ScrollToFolder<T>() where T : FileNode
-        {
-            Folder<T>().EnsureVisible();
         }
         #endregion
 
@@ -120,19 +110,12 @@ namespace pwiz.Skyline.Controls.FilesTree
             }
         }
 
+        // CONSIDER: does the model need a way to distinguish "folders" from other node types? Ex: with a marker interface?
         public FilesTreeNode Folder<T>() where T : FileNode
         {
-            if (Root.Model.GetType() == typeof(T))
-                return Root;
-
-            foreach (TreeNode treeNode in Root.Nodes)
-            {
-                var filesTreeNode = (FilesTreeNode)treeNode;
-                if (filesTreeNode.Model.GetType() == typeof(T))
-                    return filesTreeNode;
-            }
-            
-            return null;
+            return Root.Model is T ? 
+                Root : 
+                Root.Nodes.Cast<FilesTreeNode>().FirstOrDefault(filesTreeNode => filesTreeNode.Model is T);
         }
 
         public void SelectNodeWithoutResettingSelection(FilesTreeNode node)

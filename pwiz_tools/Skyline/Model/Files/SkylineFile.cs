@@ -59,6 +59,22 @@ namespace pwiz.Skyline.Model.Files
         {
             var list = new List<FileNode>();
 
+            if (Document.Settings.DataSettings.IsAuditLoggingEnabled)
+                list.Add(new SkylineAuditLog(DocumentContainer));
+            
+            if (IsDocumentSavedToDisk())
+                list.Add(new SkylineViewFile(DocumentContainer));
+
+            // TODO: put Chromatogram Cache (.skyd) back in the tree - maybe in the Replicates\ folder?
+            // CONSIDER: is this correct? See more where Cache files are created in MeasuredResults @ line 1640
+            // CONSIDER: does this also need to check if the file exists?
+            // Chromatogram Caches (.skyd)
+            // var cachePaths = Document.Settings.MeasuredResults?.CachePaths;
+            // if (cachePaths != null)
+            // {
+            //     list.AddRange(cachePaths.Select(_ => new SkylineChromatogramCache(DocumentContainer)));
+            // }
+
             FileNode files = new ReplicatesFolder(DocumentContainer);
             list.Add(files); // Always show the Replicates folder
 
@@ -91,9 +107,6 @@ namespace pwiz.Skyline.Model.Files
             {
                 list.Add(files);
             }
-
-            files = new ProjectFilesFolder(DocumentContainer);
-            list.Add(files); // Always show project files - .sky, .sky.view, etc
 
             return list;
         }

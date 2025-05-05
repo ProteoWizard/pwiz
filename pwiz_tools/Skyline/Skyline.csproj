@@ -590,7 +590,6 @@
     <Compile Include="Model\Files\IonMobilityLibraryFolder.cs" />
     <Compile Include="Model\Files\OptimizationLibraryFolder.cs" />
     <Compile Include="Model\Files\OptimizationLibrary.cs" />
-    <Compile Include="Model\Files\ProjectFilesFolder.cs" />
     <Compile Include="Model\Files\Replicate.cs" />
     <Compile Include="Model\Files\ReplicateSampleFile.cs" />
     <Compile Include="Model\Files\ReplicatesFolder.cs" />
