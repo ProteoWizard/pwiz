@@ -84,6 +84,20 @@ namespace pwiz.Skyline.Util
         public static bool IsAutomatedBuild { get; private set; }
         public static bool IsRunningOnWine { get; }
 
+        public static bool IsRunningOnWindows11
+        {
+            get
+            {
+                var osVersion = Environment.OSVersion;
+                if (osVersion.Platform == PlatformID.Win32NT && osVersion.Version.Major == 10)
+                {
+                    // Windows 11 has version 10.0 with a build number >= 22000
+                    return osVersion.Version.Build >= 22000;
+                }
+                return false;
+            }
+        }
+
         public static bool Is64Bit
         {
             get

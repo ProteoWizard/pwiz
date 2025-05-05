@@ -106,6 +106,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod,
          NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
          NoUnicodeTesting(TestExclusionReason.MSGFPLUS_UNICODE_ISSUES),
+         NoNightlyTestingAttribute(TestExclusionReason.MSAMANDA_MEMORY_ISSUES),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestDiaSearchVariableWindows()
         {
@@ -167,7 +168,8 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES)]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE), NoUnicodeTesting(TestExclusionReason.MSFRAGGER_UNICODE_ISSUES),
+         NoNightlyTestingAttribute(TestExclusionReason.MSAMANDA_MEMORY_ISSUES)]
         public void TestDiaSearchFixedWindows()
         {
             TestFilesZip = @"TestFunctional\DiaSearchTest.zip";
