@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -175,8 +176,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double? RetentionPrediction { get; set; }
         
-        //Collisional Cross Sections
-        public double? CCSPrediction { get; set; }
+        //Collisional Cross Sections indexed by (precursor charge)-1
+        public double?[] CCSPrediction { get; set; }
         public ExplicitRetentionTimeInfo RetentionExplicit { get; set; }
         public double RetentionWindow { get; set; }
 
@@ -537,11 +538,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            double? ccs = null;
-            if (CCSPrediction.HasValue)
-            {
-                ccs = CCSPrediction.Value;
-            }
             // If explicit retention time is in use, show that instead of predicted since it overrides
             if (RetentionExplicit != null)
             {
@@ -556,7 +552,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         GraphsResources.ChromGraphItem_AddAnnotations_Explicit,
                         GraphObjType.predicted_rt_window,
                         COLOR_RETENTION_TIME,
-                        ScaleRetentionTime(time), ccs);
+                        ScaleRetentionTime(time), 
+                        !CCSPrediction.IsNullOrEmpty() ? CCSPrediction : null);
                 }
                 // Draw background for retention time window
                 if ((RetentionExplicit.RetentionTimeWindow??0) > 0.0)
@@ -590,7 +587,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                GraphsResources.ChromGraphItem_AddAnnotations_Predicted,
                                                GraphObjType.predicted_rt_window,
                                                COLOR_RETENTION_TIME,
-                                               ScaleRetentionTime(time), ccs);
+                                               ScaleRetentionTime(time),
+                                               !CCSPrediction.IsNullOrEmpty() ? CCSPrediction : null);
                 }
 
                 // Draw background for retention time window
@@ -625,16 +623,24 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
-            PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime, double? ccs = null)
+            PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime,
+            double?[] ccs = null)
         {
             // ReSharper disable LocalizableElement
             string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
-            if (ccs != null)
-            {
-                string Asq = "\u00C5\u00B2";
-                label += string.Format("\n{0} {1:F02} {2}", FullScanPropertiesRes.CCS, ccs, Asq);
+
+            if (ccs != null) {
+                for (int chargeIndex = 0; chargeIndex < ccs.Length; chargeIndex++)
+                {
+                    if (ccs[chargeIndex] != null)
+                    {
+                        string Asq = "\u00C5\u00B2";
+                        label += string.Format("\n{0} ({1}+): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeIndex +1,  ccs[chargeIndex], Asq);
+                    }
+                }
             }
-            // ReSharper restore LocalizableElement
+
+        // ReSharper restore LocalizableElement
             FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);
             SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
             PointF realTopPoint = ptTop;

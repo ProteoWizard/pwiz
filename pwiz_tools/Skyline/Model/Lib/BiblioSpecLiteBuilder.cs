@@ -84,7 +84,7 @@ namespace pwiz.Skyline.Model.Lib
            
             Document = null;
             ToolName = @"bibliospeclite";
-            LibraryHelper = new LibraryHelper(ToolName);
+            LibraryHelper = null;
             // FUTURE(bspratt) small molecule workflows
             if (targetSequences != null)
                 TargetSequences = targetSequences.Where(t => t.IsProteomic).Select(t => t.Sequence).ToList();

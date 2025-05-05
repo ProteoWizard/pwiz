@@ -92,11 +92,8 @@ namespace pwiz.Skyline.Model.Lib
 
         public string GetRootDir(string path, string tool)
         {
-            if (_rootDir == null)
-            {
-                _rootDir = Path.Combine(path, tool, TimeStamp);
-                Directory.CreateDirectory(_rootDir);
-            }
+            _rootDir ??= Path.Combine(path, tool, TimeStamp);
+            Directory.CreateDirectory(_rootDir);
 
             return _rootDir;
         }
