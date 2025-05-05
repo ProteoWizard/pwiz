@@ -71,9 +71,8 @@ namespace pwiz.SkylineTest
         public void ChangeSegments_NegativeSegment_ThrowsArgumentException()
         {
             var progress = new ProgressStatus();
-            AssertEx.ThrowsException<ArgumentException>(() =>
-               progress.ChangeSegments(-1, new[] { 20, 40, 60 }), 
-               "ChangeSegments was passed a negative segment.");
+            AssertEx.ThrowsException<ArgumentException>(() => 
+                progress.ChangeSegments(-1, new[] { 20, 40, 60 }), "ChangeSegments was passed a negative segment.");
         }
 
         [TestMethod]
