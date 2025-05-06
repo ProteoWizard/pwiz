@@ -117,21 +117,109 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="label1.Text" xml:space="preserve">
+    <value>在下方登录 Ardia 网站</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="ElementLocator_Parse__0__is_not_a_valid_element_locator_" xml:space="preserve">
-    <value>{0}は有効な要素ロケーターではありません。</value>
-    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
+  <data name="tabTestWebview.Text" xml:space="preserve">
+    <value>tabTestWebview</value>
   </data>
-  <data name="ElementLocator_ReadQuotedString_End_of_text" xml:space="preserve">
-    <value>テキスト終了</value>
+  <data name="label2.Text" xml:space="preserve">
+    <value>正在加载数据...</value>
   </data>
-  <data name="ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__" xml:space="preserve">
-    <value>位置{2}にある「{1}」では{0}はあり得ません。</value>
+  <data name="tabMainLoading.Text" xml:space="preserve">
+    <value>正在加载</value>
   </data>
-  <data name="DocumentAnnotations_GetWarningMessage_The_following_element_could_not_be_found_" xml:space="preserve">
-    <value>以下の要素が見つかりませんでした:</value>
+  <data name="btnRegisterSkyline.Text" xml:space="preserve">
+    <value>注册 Skyline</value>
   </data>
-  <data name="DocumentAnnotations_GetWarningMessage_The_following__0__elements_could_not_be_found_" xml:space="preserve">
-    <value>以下の{0}個の要素が見つかりませんでした:</value>
+  <data name="tabRegisterButton.Text" xml:space="preserve">
+    <value>tabRegisterButton</value>
+  </data>
+  <data name="label12.Text" xml:space="preserve">
+    <value>如果取消注册，请关闭浏览器标签页</value>
+  </data>
+  <data name="label10.Text" xml:space="preserve">
+    <value>正在注册 Skyline...</value>
+  </data>
+  <data name="tabRegisterInProgress.Text" xml:space="preserve">
+    <value>tabRegisterInProgress</value>
+  </data>
+  <data name="btnRegisterSkyline_InErrorBlock.Text" xml:space="preserve">
+    <value>注册 Skyline</value>
+  </data>
+  <data name="btnViewAccount.Text" xml:space="preserve">
+    <value>查看帐户</value>
+  </data>
+  <data name="label8.Text" xml:space="preserve">
+    <value> 请先在浏览器中退出 Ardia 帐户。</value>
+  </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>使用的 Ardia 帐户必须具备注册客户端的角色/权限。</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>使用另一个 Ardia 帐户。</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>使用的 Ardia 帐户不具备注册客户端的角色/权限。</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>  使用的 Ardia 帐户必须具备注册客户端的角色/权限。</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>在 Ardia 服务器上注册 Skyline 实例。</value>
+  </data>
+  <data name="tabMainRegisterSkyline.Text" xml:space="preserve">
+    <value>注册 Skyline</value>
+  </data>
+  <data name="label16.Text" xml:space="preserve">
+    <value>如需使用其他 Ardia 帐户（非注册帐户）登录，请先在浏览器中退出当前 Ardia 帐户。</value>
+  </data>
+  <data name="btnShowLoginTab.Text" xml:space="preserve">
+    <value>转至登录页面</value>
+  </data>
+  <data name="label15.Text" xml:space="preserve">
+    <value>继续登录 Ardia 帐户，以在 Skyline 中使用。</value>
+  </data>
+  <data name="btnViewAccount_2.Text" xml:space="preserve">
+    <value>查看帐户</value>
+  </data>
+  <data name="label14.Text" xml:space="preserve">
+    <value>已在 Ardia 服务器上注册 Skyline 实例。</value>
+  </data>
+  <data name="tabMainRegisterComplete.Text" xml:space="preserve">
+    <value>注册完成</value>
+  </data>
+  <data name="btnLogin.Text" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="tabLoginButton.Text" xml:space="preserve">
+    <value>tabLoginButton</value>
+  </data>
+  <data name="label13.Text" xml:space="preserve">
+    <value>如果取消登录，请关闭浏览器标签页</value>
+  </data>
+  <data name="label9.Text" xml:space="preserve">
+    <value>正在登录...</value>
+  </data>
+  <data name="tabLoginInProgress.Text" xml:space="preserve">
+    <value>tabLoginInProgress</value>
+  </data>
+  <data name="label11.Text" xml:space="preserve">
+    <value>登录 Ardia 服务器。</value>
+  </data>
+  <data name="tabMainLogin.Text" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.Text" xml:space="preserve">
+    <value>登录 Ardia</value>
   </data>
 </root>
