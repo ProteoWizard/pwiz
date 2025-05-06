@@ -671,38 +671,27 @@ namespace pwiz.Skyline.Model.Lib
 
                 // First get header information
                 select.CommandText = @"SELECT * FROM [LibInfo]";
-                try
+                using (SQLiteDataReader reader = select.ExecuteReader())
                 {
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        if (!reader.Read())
-                            throw new IOException(string.Format(
-                                LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
-                                FilePath));
+                    if (!reader.Read())
+                        throw new IOException(string.Format(
+                            LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
+                            FilePath));
 
-                        rows = reader.GetInt32(LibInfo.numSpecs);
+                    rows = reader.GetInt32(LibInfo.numSpecs);
 
-                        lsid = reader.GetString(LibInfo.libLSID);
+                    lsid = reader.GetString(LibInfo.libLSID);
 
-                        dataRev = reader.GetInt32(LibInfo.majorVersion);
-                        schemaVer = reader.GetInt32(LibInfo.minorVersion);
+                    dataRev = reader.GetInt32(LibInfo.majorVersion);
+                    schemaVer = reader.GetInt32(LibInfo.minorVersion);
 
-                        // Set these now, in case we encounter an error further in
-                        Lsid = lsid;
-                        SetRevision(dataRev, schemaVer);
-                    }
-
-                }
-                catch (Exception)
-                {
-                    // test if file is empty
-                    FileInfo fileInfo = new FileInfo(FilePath);
-                    if (fileInfo.Exists && fileInfo.Length == 0)
-                        return false;
-                    // Console.Out.WriteLine($@"Exception caught: {ex}");
-                    throw;
+                    // Set these now, in case we encounter an error further in
+                    Lsid = lsid;
+                    SetRevision(dataRev, schemaVer);
                 }
 
+
+ 
                 // Corrupted library without a valid row count, but try to compensate
                 // by using count(*)
                 if (rows == 0)

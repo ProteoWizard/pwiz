@@ -24,6 +24,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.BiblioSpec;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
@@ -176,7 +177,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         }
 
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
-        private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; //Convert.ToBase64String(Encoding.ASCII.GetBytes(Document.DocumentHash)) + EXT_TSV;
+        private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; 
         private string InputFilePath => Path.Combine(RootDir, InputFileName);
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
@@ -276,7 +277,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             // DSHTEYN:  These should be better balanced as of May 2nd 2025
             var segmentEndPercentages = new[] { 5, 10, 85, 100 };
-            progressStatus = progressStatus.ChangeSegments(0, segmentEndPercentages);
+            progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf( segmentEndPercentages));
             LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep",
                 IrtStandard);
             progressStatus = progressStatus.NextSegment();
@@ -318,6 +319,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
 
         private void ExecutePeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
+            Stopwatch timer = new Stopwatch();
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep));
             progressStatus.ChangePercentComplete(0);
@@ -336,7 +338,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             };
             try
             {
-                pr.FilterStrings = new[]
+                var filterStrings = new[]
                 {
                     @"     ____             __  ____",
                     @"    / __ \___  ____  / /_/ __ \___  ___  ____",
@@ -347,9 +349,13 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 };
 
                 pr.EnableImmediateLog = true;
-                pr.EnableRunningTimeMessage = true;
                 pr.ExpectedOutputLinesCount = 119;
-                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+                timer.Start();
+                pr.Run(psi, string.Empty, progress, ref progressStatus, new FilteredStringWriter(ImmutableList<string>.ValueOf(filterStrings), pr.EnableImmediateLog), ProcessPriorityClass.BelowNormal, true);
+                timer.Stop();
+                string message = string.Format(ModelResources.Alphapeptdeep_Process_Finished_in_time, timer.Elapsed.Minutes, timer.Elapsed.Seconds);
+                Messages.WriteAsyncUserMessage(message);
+
             }
             catch (Exception ex)
             {
@@ -420,7 +426,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             string[] inputFile = { TransformedOutputSpectraLibFilepath };
-            string incompleteBlibPath = String.Concat( LibrarySpec.FilePath , @"_incomplete.blib" );
+            string incompleteBlibPath = BiblioSpecLiteSpec.GetRedundantName(LibrarySpec.FilePath);
             var build = new BlibBuild(incompleteBlibPath, inputFile);
 
 

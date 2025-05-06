@@ -52,18 +52,9 @@ namespace pwiz.Common.SystemUtil
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
 
+        public int ExpectedOutputLinesCount { get; set; } 
         public bool EnableImmediateLog { get; set; }
-        public int ExpectedOutputLinesCount { get; set; }
-        public string[] FilterStrings { get; set; }
-
         public bool EnableRunningTimeMessage { get; set; }
-
-        private Stopwatch _timer;
-
-        public TimeSpan ElapsedRunningTime()
-        {
-            return _timer.Elapsed;
-        }
 
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
@@ -90,7 +81,6 @@ namespace pwiz.Common.SystemUtil
             Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
             bool updateProgressPercentage = true)
         {
-            _timer = new Stopwatch();
             // Make sure required streams are redirected.
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
@@ -108,7 +98,6 @@ namespace pwiz.Common.SystemUtil
 
             Process proc = null;
             var msgFailureStartingCommand = $@"Failure starting command ""{cmd}"".";
-            _timer.Start();
             try
             {
                 proc = Process.Start(psi);
@@ -170,20 +159,6 @@ namespace pwiz.Common.SystemUtil
                 int outputLinesCount = 0;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
-                    if (EnableImmediateLog)
-                    {
-                        string adjustedLine = line;
-                        bool skip_line = false;
-                        
-                        if (line.Contains(@"DiaNN/Spectronaut"))
-                            adjustedLine = line.Replace(@"DiaNN/Spectronaut", @"Skyline");
-                        else
-                            skip_line = FilterOutputLine(line, FilterStrings);
-                          
-                        if (!skip_line)
-                            Messages.WriteAsyncUserMessage(adjustedLine);
-                    }
-
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                     {
                         writer.WriteLine(line);
@@ -205,7 +180,6 @@ namespace pwiz.Common.SystemUtil
                             }
                             progress.UpdateProgress(status = status.Cancel());
                             CleanupTmpDir(psi); // Clean out any tempfiles left behind, if forceTempfilesCleanup was set
-                            _timer.Stop();
                             return;
                         }
 
@@ -256,18 +230,8 @@ namespace pwiz.Common.SystemUtil
                     }
                 }
                 proc.WaitForExit();
-                _timer.Stop();
 
                 int exit = proc.ExitCode;
-                if (EnableRunningTimeMessage)
-                {
-                    string message = string.Format(Resources.ProcessRunner_Process_Finished_in_time,
-                        ElapsedRunningTime().Minutes, ElapsedRunningTime().Seconds);
-                    Messages.WriteAsyncUserMessage(message);
-                }
-
-                _timer = null;
-
                 if (!outputAndExitCodeAreGoodFunc(reader.GetErrorLines(), exit))
                 {
                     line = proc.StandardError.ReadLine();

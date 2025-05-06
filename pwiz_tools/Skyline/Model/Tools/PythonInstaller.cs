@@ -823,12 +823,8 @@ namespace pwiz.Skyline.Model.Tools
 
                 RetryAction(() =>
                 {
-
-                    using (var stream = File.OpenRead($@"\\?\{fullPath}"))
-                    {
-                        hash = sha256.ComputeHash(stream);
-
-                    }
+                    using var stream = File.OpenRead($@"\\?\{fullPath}");
+                    hash = sha256.ComputeHash(stream);
                 });
 
                 if (!hash.IsNullOrEmpty())
@@ -840,19 +836,13 @@ namespace pwiz.Skyline.Model.Tools
 
         public static void RetryAction([InstantHandle] Action act, int maxRetries = 100)
         {
-            int retry = 0;
-
-            while (retry++ < maxRetries)
+            try
             {
-                try
-                {
-                    act();
-                    break;
-                }
-                catch (IOException)
-                {
+                Helpers.TryTwice(act, maxRetries);
+            }
+            catch (IOException)
+            {
 
-                }
             }
         }
 
@@ -947,16 +937,15 @@ namespace pwiz.Skyline.Model.Tools
                     for (fileCount = 0; fileCount < Math.Min(filesArray.Length, maxFilesToCheck); fileCount++)
                     {
                         //Sometimes the file is locked by another process so we retry up to 100 times
-                        RetryAction(() => {
-                            using (var fileStream = new FileStream($@"\\?\{filesArray[fileCount]}", FileMode.Open))
-                            {
-                                // Copy file contents to the combined stream
-                                fileStream.CopyTo(combinedStream);
-                                // Add a separator or file name to differentiate between files
+                        RetryAction(() =>
+                        {
+                            using var fileStream = new FileStream($@"\\?\{filesArray[fileCount]}", FileMode.Open);
+                            // Copy file contents to the combined stream
+                            fileStream.CopyTo(combinedStream);
 
-                                var separator = Encoding.UTF8.GetBytes(Path.GetFileName(filesArray[fileCount]) ?? string.Empty);
-                                combinedStream.Write(separator, 0, separator.Length);
-                            }
+                            // Add a separator or file name to differentiate between files
+                            var separator = Encoding.UTF8.GetBytes(Path.GetFileName(filesArray[fileCount]) ?? string.Empty);
+                            combinedStream.Write(separator, 0, separator.Length);
                         });
                     }
 

@@ -231,6 +231,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AlphaPeptDeep Finished in {0} minutes {1} seconds.
+        /// </summary>
+        public static string Alphapeptdeep_Process_Finished_in_time {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Process_Finished_in_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
         ///{0}
         ///	

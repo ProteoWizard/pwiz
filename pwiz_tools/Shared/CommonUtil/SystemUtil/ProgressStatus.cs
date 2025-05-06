@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.Collections;
@@ -37,7 +38,7 @@ namespace pwiz.Common.SystemUtil
         int PercentZoomEnd { get; }
         int ZoomedPercentComplete { get; }
         int Segment { get; }
-        int[] SegmentPercentEnds { get; }
+        IList<int> SegmentPercentEnds { get; }
         string SegmentName { get; }
         bool ProgressEqual(IProgressStatus status);
         Exception ErrorException { get; }
@@ -48,7 +49,7 @@ namespace pwiz.Common.SystemUtil
         IProgressStatus Cancel();
         IProgressStatus ChangeErrorException(Exception prop);
         IProgressStatus ChangeSegments(int segment, int segmentCount);
-        IProgressStatus ChangeSegments(int segment, int[] segmentEndPercentages);
+        IProgressStatus ChangeSegments(int segment, ImmutableList<int> segmentEndPercentages);
         IProgressStatus NextSegment();
         IProgressStatus ChangeSegmentName(string prop); // Changes progress bar text for controls that allow it, otherwise just changes message
         IProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor, long currentCount,
@@ -115,7 +116,7 @@ namespace pwiz.Common.SystemUtil
         public int PercentZoomStart { get; private set; }
         public int PercentZoomEnd { get; private set; }
         public int SegmentCount { get; private set; }
-        public int[] SegmentPercentEnds { get; private set; }
+        public IList<int> SegmentPercentEnds { get; private set; }
         public string SegmentName { get; private set; }
         public int Segment { get; private set; }
         public Exception ErrorException { get; private set; }
@@ -158,20 +159,6 @@ namespace pwiz.Common.SystemUtil
             if (PercentZoomEnd == 0)
                 return (PercentComplete == percent);
             return (ZoomedPercentComplete == percent);
-        }
-        /// <summary>
-        /// Tests whether values in an array are strictly increasing.
-        /// </summary>
-        /// <param name="array">array of integers</param>
-        /// <returns></returns>
-        private bool IsArrayStriclyIncreasing(int[] array)
-        {
-            for (int i = 0; i+1 < array.Length; i++)
-            {
-                if (array[i] >= array[i + 1])
-                    return false;
-            }
-            return true;
         }
         private int ZoomedToPercent(int percent)
         {
@@ -243,23 +230,24 @@ namespace pwiz.Common.SystemUtil
         /// <param name="segmentPercentageEnds">strictly increasing non-empty array of percentage ends for each segment, numbers should be in the range [1,100]</param>
         /// <returns></returns>
         /// <exception cref="ArgumentException"></exception>
-        public IProgressStatus ChangeSegments(int segment, int[] segmentPercentageEnds)
+        public IProgressStatus ChangeSegments(int segment, ImmutableList<int> segmentPercentageEnds)
         {
-            int segmentCount = segmentPercentageEnds.Length; 
+            int segmentCount = segmentPercentageEnds.Count;
+            
+            if (segmentCount == 0)
+                throw new ArgumentException(@"ChangeSegments was passed an empty array of segment ends.");
+
+            if (Enumerable.Range(0, segmentPercentageEnds.Count - 1).Any(i => segmentPercentageEnds[i] >= segmentPercentageEnds[i + 1]))
+                throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that is not strictly increasing.");
+
+            if (segmentPercentageEnds[0] < 1 || segmentPercentageEnds[segmentCount - 1] > 100)
+                throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100].");
+
+            if (segment < 0)
+                throw new ArgumentException(@"ChangeSegments was passed a negative segment.");
+
             return ChangeProp(ImClone(this), s =>
             {
-                if (segmentCount == 0) 
-                    throw new ArgumentException(@"ChangeSegments was passed an empty array of segment ends.");
-
-                if (!IsArrayStriclyIncreasing(segmentPercentageEnds))
-                    throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that is not strictly increasing.");
-
-                if (segmentPercentageEnds[0] < 1 || segmentPercentageEnds[segmentCount-1] > 100)
-                    throw new ArgumentException(@"ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100].");
-
-                if (segment < 0)
-                    throw new ArgumentException(@"ChangeSegments was passed a negative segment.");
-
                 if (segment >= segmentCount)
                 {
                     s.PercentComplete = s.PercentZoomStart = segment > 0 ? segmentPercentageEnds[segmentCount - 1] : 0;
@@ -284,7 +272,7 @@ namespace pwiz.Common.SystemUtil
                 return this;
             if (SegmentPercentEnds.IsNullOrEmpty())
                 return ChangeSegments(segment, SegmentCount);
-            return ChangeSegments(segment, SegmentPercentEnds);
+            return ChangeSegments(segment, SegmentPercentEnds as ImmutableList<int>);
         }
 
         public IProgressStatus ChangeErrorException(Exception prop)

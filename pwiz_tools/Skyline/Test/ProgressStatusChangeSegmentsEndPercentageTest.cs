@@ -18,6 +18,7 @@
  */
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.SkylineTestUtil;
 
@@ -37,24 +38,27 @@ namespace pwiz.SkylineTest
         public void ChangeSegments_EmptySegmentPercentageEnds_ThrowsArgumentException()
         {
             var progress = new ProgressStatus();
+            var percents = Array.Empty<int>();
             AssertEx.ThrowsException<ArgumentException>(() =>
-                progress.ChangeSegments(0, new int[0]), "ChangeSegments was passed an empty array of segment ends.");
+                progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)), "ChangeSegments was passed an empty array of segment ends.");
         }
 
         [TestMethod]
         public void ChangeSegments_NonStrictlyIncreasingArray_ThrowsArgumentException()
         {
             var progress = new ProgressStatus();
+            var percents = new[] { 20, 40, 40, 80, 100 };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                progress.ChangeSegments(0, new[] { 20, 40, 40, 80, 100 }), "ChangeSegments was passed an array of segment ends that is not strictly increasing.");
+                progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)), "ChangeSegments was passed an array of segment ends that is not strictly increasing.");
         }
 
         [TestMethod]
         public void ChangeSegments_OutOfRangeFirstElement_ThrowsArgumentException()
         {
             var progress = new ProgressStatus();
+            var percents = new[] { 0, 50, 100 };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                    progress.ChangeSegments(0, new[] { 0, 50, 100 }),
+                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)),
                 "ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100].");
         }
 
@@ -62,8 +66,9 @@ namespace pwiz.SkylineTest
         public void ChangeSegments_OutOfRangeLastElement_ThrowsArgumentException()
         {
             var progress = new ProgressStatus();
+            var percents = new[] { 0, 50, 100 };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                    progress.ChangeSegments(0, new[] { 0, 50, 100 }),
+                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)),
                 "ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100].");
         }
 
@@ -71,8 +76,9 @@ namespace pwiz.SkylineTest
         public void ChangeSegments_NegativeSegment_ThrowsArgumentException()
         {
             var progress = new ProgressStatus();
+            var percents = new[] { 20, 40, 60 };
             AssertEx.ThrowsException<ArgumentException>(() => 
-                progress.ChangeSegments(-1, new[] { 20, 40, 60 }), "ChangeSegments was passed a negative segment.");
+                progress.ChangeSegments(-1, ImmutableList<int>.ValueOf(percents) ), "ChangeSegments was passed a negative segment.");
         }
 
         [TestMethod]
@@ -82,8 +88,7 @@ namespace pwiz.SkylineTest
             var segmentPercentageEnds = new[] { 20, 40, 60, 80, 100 };
             int segment = 2;
 
-            var result = progress.ChangeSegments(segment, segmentPercentageEnds);
-
+            var result = progress.ChangeSegments(segment, ImmutableList<int>.ValueOf(segmentPercentageEnds));
             Assert.AreNotEqual(result, null);
             Assert.AreEqual(40, result.PercentComplete); // segment - 1 = 40
             Assert.AreEqual(40, result.PercentZoomStart); // segment - 1 = 40  
@@ -100,7 +105,7 @@ namespace pwiz.SkylineTest
             var segmentPercentageEnds = new[] { 20, 40, 60 };
             int segment = 5; // Beyond segmentCount (3)
 
-            var result = progress.ChangeSegments(segment, segmentPercentageEnds);
+            var result = progress.ChangeSegments(segment, ImmutableList<int>.ValueOf(segmentPercentageEnds));
 
             Assert.AreNotEqual(result, null);
             Assert.AreEqual(60, result.PercentComplete); // Last end

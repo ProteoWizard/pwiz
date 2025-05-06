@@ -32,7 +32,6 @@ namespace pwiz.Skyline.ToolsUI
     
     public static class PythonInstallerUI
     {
-        private static string _userAnswerToCuda;
         private static IList<PythonTaskBase> _tasks;
         public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
@@ -42,7 +41,7 @@ namespace pwiz.Skyline.ToolsUI
                 ? pythonInstaller.ValidatePythonVirtualEnvironment()
                 : pythonInstaller.PendingTasks);
 
-            _userAnswerToCuda = null;
+            string userAnswerToCuda = null;
             pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
             List<PythonTaskBase> abortedTasks = new List<PythonTaskBase>();
@@ -53,12 +52,12 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     if (task.IsNvidiaTask)
                     {
-                        if (_userAnswerToCuda != @"No")
+                        if (userAnswerToCuda != @"No")
                         {
                             var choice = MessageDlg.Show(parent, string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), false, MessageBoxButtons.YesNoCancel);
                             if (choice == DialogResult.No)
                             {
-                                _userAnswerToCuda = @"No";
+                                userAnswerToCuda = @"No";
                                 if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                                 abortTask = true;
                             }
@@ -69,7 +68,7 @@ namespace pwiz.Skyline.ToolsUI
                             }
                             else if (choice == DialogResult.Yes)
                             {
-                                _userAnswerToCuda = @"Yes";
+                                userAnswerToCuda = @"Yes";
                                 pythonInstaller.WriteInstallNvidiaBatScript();
                                 
                                 var nvidiaAdminChoice = MessageDlg.Show(parent, string.Format(
@@ -79,7 +78,7 @@ namespace pwiz.Skyline.ToolsUI
                                 //Download
                                 if (nvidiaAdminChoice == DialogResult.Cancel)
                                 {
-                                    _userAnswerToCuda = @"Cancel";
+                                    userAnswerToCuda = @"Cancel";
                                     if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                                     return nvidiaAdminChoice;
                                 }
@@ -90,7 +89,7 @@ namespace pwiz.Skyline.ToolsUI
                                 }
                             }
                         }
-                        else if (_userAnswerToCuda == @"No")
+                        else if (userAnswerToCuda == @"No")
                         {
                             if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
                             abortTask = true;
@@ -126,7 +125,7 @@ namespace pwiz.Skyline.ToolsUI
                     else
                     {
                         abortedTasks.Add(task);
-                        if (_userAnswerToCuda == @"No" && abortedTasks.Count == 1)
+                        if (userAnswerToCuda == @"No" && abortedTasks.Count == 1)
                             return DialogResult.No;
                         return DialogResult.Cancel;
                     }
@@ -169,7 +168,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (PythonInstaller.TestForNvidiaGPU() == true)
                 {
-                    if (_userAnswerToCuda == @"Yes")
+                    if (userAnswerToCuda == @"Yes")
                     {
                         if (pythonInstaller.IsNvidiaEnvironmentReady(abortedTasks))
                         {

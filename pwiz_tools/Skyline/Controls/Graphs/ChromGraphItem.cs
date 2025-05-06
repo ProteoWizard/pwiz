@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.MSGraph;
@@ -175,9 +176,35 @@ namespace pwiz.Skyline.Controls.Graphs
         public int? OptimizationStep { get; }
 
         public double? RetentionPrediction { get; set; }
-        
-        //Collisional Cross Sections indexed by (precursor charge)-1
-        public double?[] CCSPrediction { get; set; }
+
+        //Collisional Cross Sections
+
+
+        public class ChargeAndCollisionalCrossSection
+        {
+            public ChargeAndCollisionalCrossSection(int charge, double? ccs)
+            {
+                Charge = charge;
+                CCS = ccs;
+            }
+
+            public int Charge { get; private set; }
+            public double? CCS { get; private set; }
+        }
+
+        public class ChargeAndCcsIndex
+        {
+            public ChargeAndCcsIndex(int index, ChargeAndCollisionalCrossSection chargeAndCcs)
+            {
+                Index = index;
+                ChargeAndCcs = chargeAndCcs;
+            }
+
+            public ChargeAndCollisionalCrossSection ChargeAndCcs { get; private set; }
+            public int Index { get; private set; }
+        }
+
+        [CanBeNull] public IList <ChargeAndCcsIndex> CCSPredictions { get; set; }
         public ExplicitRetentionTimeInfo RetentionExplicit { get; set; }
         public double RetentionWindow { get; set; }
 
@@ -553,7 +580,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         GraphObjType.predicted_rt_window,
                         COLOR_RETENTION_TIME,
                         ScaleRetentionTime(time), 
-                        !CCSPrediction.IsNullOrEmpty() ? CCSPrediction : null);
+                        CCSPredictions != null ? CCSPredictions : null);
                 }
                 // Draw background for retention time window
                 if ((RetentionExplicit.RetentionTimeWindow??0) > 0.0)
@@ -588,7 +615,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                GraphObjType.predicted_rt_window,
                                                COLOR_RETENTION_TIME,
                                                ScaleRetentionTime(time),
-                                               !CCSPrediction.IsNullOrEmpty() ? CCSPrediction : null);
+                                               CCSPredictions != null ? CCSPredictions : null);
                 }
 
                 // Draw background for retention time window
@@ -624,19 +651,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
             PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime,
-            double?[] ccs = null)
+            [CanBeNull] IList<ChargeAndCcsIndex> ccs = null)
         {
             // ReSharper disable LocalizableElement
             string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
 
             if (ccs != null)
             {
-                var chargeIndex = TransitionGroupNode.PrecursorCharge - 1;
-                if (ccs[chargeIndex] != null)
-                { 
-                    string Asq = "\u00C5\u00B2";
-                    label += string.Format("\n{0} ({1}+): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeIndex +1,  ccs[chargeIndex], Asq);
-                }
+                var matchingCcs = ccs.Where(z => z.ChargeAndCcs.Charge == TransitionGroupNode.PrecursorCharge);
+                string Asq = "\u00C5\u00B2";
+
+                matchingCcs.ForEach(chargeAndCcsIndex => 
+                    label += string.Format("\n{0} ({1}): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeAndCcsIndex.ChargeAndCcs.Charge, chargeAndCcsIndex.ChargeAndCcs.CCS, Asq));
             }
 
         // ReSharper restore LocalizableElement

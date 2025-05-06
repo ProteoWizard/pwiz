@@ -472,6 +472,9 @@
   <data name="Alphapeptdeep_Blib_failed_to_complete" xml:space="preserve">
     <value>BlibBuilder failed to complete</value>
   </data>
+  <data name="Alphapeptdeep_Process_Finished_in_time" xml:space="preserve">
+    <value>AlphaPeptDeep Finished in {0} minutes {1} seconds</value>
+  </data>
   <data name="Alphapeptdeep_Warn_unknown_modification" xml:space="preserve">
     <value>Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
 {0}

@@ -26,6 +26,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
@@ -696,9 +697,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return RTGraphItem.RetentionPrediction; }
         }
-        public double?[] PredictedCCS
+        [CanBeNull]
+        public IList<ChromGraphItem.ChargeAndCcsIndex> PredictedCCS
         {
-            get { return RTGraphItem.CCSPrediction; }
+            get { return RTGraphItem.CCSPredictions; }
         }
         private ChromGraphItem RTGraphItem
         {
@@ -2312,12 +2314,26 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey) != null)
                     {
-                        chromGraphPrimary.CCSPrediction[nodeGroups[index].PrecursorCharge-1] =
-                            libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey);
+                        if (chromGraphPrimary.CCSPredictions == null)
+                        {
+                            chromGraphPrimary.CCSPredictions = new [] {                           
+                                new ChromGraphItem.ChargeAndCcsIndex(0,
+                                    new ChromGraphItem.ChargeAndCollisionalCrossSection(
+                                        nodeGroups[index].PrecursorCharge,
+                                        libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey)))
+                            };
+                        }
+                        else
+                        {
+                            chromGraphPrimary.CCSPredictions[chromGraphPrimary.CCSPredictions.Count] =
+                                new ChromGraphItem.ChargeAndCcsIndex(chromGraphPrimary.CCSPredictions.Count,
+                                    new ChromGraphItem.ChargeAndCollisionalCrossSection(
+                                        nodeGroups[index].PrecursorCharge,
+                                        libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey)));
+                        }
                     }
                 }
             }
-
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,
