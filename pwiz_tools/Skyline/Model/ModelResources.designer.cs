@@ -1624,6 +1624,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Working....
+        /// </summary>
+        public static string PeptideSettingsUI_working {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_working", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to External Tools.
         /// </summary>
         public static string PersistedViews_ExternalToolsGroup_External_Tools {

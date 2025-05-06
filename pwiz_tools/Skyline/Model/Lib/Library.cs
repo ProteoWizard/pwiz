@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
                     var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : @"#N/A";
-                    var note = docNode.Annotations.Note != null ? docNode.Annotations.Note : @"#N/A";
+                    var note = docNode.Annotations.Note != null ? TextUtil.Quote(docNode.Annotations.Note) : @"#N/A";
                     var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : @"#N/A";
                     var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : @"#N/A";
                     var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : @"#N/A";

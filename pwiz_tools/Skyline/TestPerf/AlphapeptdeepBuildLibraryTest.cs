@@ -28,7 +28,6 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -54,7 +53,6 @@ namespace TestPerf
         private string LibraryPathWithIrt =>
             TestContext.GetTestPath($"{TestFilesDir.FullPath}\\LibraryWithIrt.blib");
 
-        private PeptideSettingsUI _peptideSettings;
         protected override void DoTest()
         {
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
@@ -63,9 +61,9 @@ namespace TestPerf
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
             const string libraryWithIrt = "AlphaPeptDeepLibraryWithIrt";
 
-            _peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            PeptideSettingsUI peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
-            AlphapeptdeepBuildLibrary(libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
+            AlphapeptdeepBuildLibrary(peptideSettings,libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
        
             var fileHash = PythonInstallerUtil.GetFileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
             Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
@@ -75,7 +73,7 @@ namespace TestPerf
             Console.WriteLine($@"Computed SearchPathInPythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.SearchPathInPythonEmbeddableHash, fileHash);
 
-            OkDialog(_peptideSettings, _peptideSettings.OkDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
@@ -97,14 +95,15 @@ namespace TestPerf
         /// <summary>
         /// Test goes through building of a Library by AlphaPeptDeep with or without iRT
         /// </summary>
+        /// <param name="peptideSettings">Open PeptideSettingsUI Dialog object</param>
         /// <param name="libraryName">Name of the library to build</param>
         /// <param name="libraryPath">Path of the library to build</param>
         /// <param name="answerFile">Path to library answersheet</param>
         /// <param name="iRTtype">iRT standard type</param>
-        private void AlphapeptdeepBuildLibrary(string libraryName, string libraryPath, string answerFile, IrtStandard iRTtype = null)
+        private void AlphapeptdeepBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName, string libraryPath, string answerFile, IrtStandard iRTtype = null)
         {
             string builtLibraryPath = null;
-            RunLongDlg<BuildLibraryDlg>(_peptideSettings.ShowBuildLibraryDlg, buildLibraryDlg =>
+            RunLongDlg<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg, buildLibraryDlg =>
             {
                 RunUI(() =>
                 {
@@ -130,18 +129,7 @@ namespace TestPerf
 
             TestResultingLibByValues(builtLibraryPath, TestFilesDir.GetTestPath(answerFile));
         }
-
-        protected override void Cleanup()
-        {
-            TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
-
-            DirectoryEx.SafeDelete(TestFilesDir.FullPath);
-
-            TestFilesDir.CheckForFileLocks("TestAlphapeptdeepBuildLibrary");
-
-            DirectoryEx.SafeDelete("TestAlphapeptdeepBuildLibrary");
-        }
-
+        
         private void TestResultingLibByValues(string product, string answer)
         {
             using (var answerReader = new StreamReader(answer))

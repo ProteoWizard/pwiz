@@ -39,75 +39,6 @@ using Exception = System.Exception;
 
 namespace TestRunnerLib
 {
-    public static class FileChecker
-    {
-        public static List<string> CheckLockedFiles(string directoryPath)
-        {
-            List<string> lockedFiles = new List<string>();
-
-            // Check if directory exists
-            if (!Directory.Exists(directoryPath))
-            {
-                throw new DirectoryNotFoundException($"Directory not found: {directoryPath}");
-            }
-
-            // Get all files in the directory
-            string[] files = Directory.GetFiles(directoryPath, "*.*", SearchOption.AllDirectories);
-
-            foreach (string filePath in files)
-            {
-                if (IsFileLocked(filePath))
-                {
-                    lockedFiles.Add(filePath);
-                }
-            }
-           
-
-
-            if (lockedFiles.Count > 0)
-            {
-                string message = $@"Unable to remove temp directory {directoryPath}, LOCKED FILES: ";
-                foreach (string file in lockedFiles)
-                {
-                    message += $@"{file} ";
-                }
-                throw new IOException($@"{message}");
-            }
-            return lockedFiles;
-        }
-
-        public static bool IsFileLocked(string filePath)
-        {
-            FileStream stream = null;
-
-            try
-            {
-                // Attempt to open the file with read/write access
-                stream = File.Open(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            }
-            catch (IOException)
-            {
-                // File is locked if we get an IOException
-                return true;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                // File might be inaccessible due to permissions
-                return true;
-            }
-            finally
-            {
-                if (stream != null)
-                {
-                    stream.Close();
-                    stream.Dispose();
-                }
-            }
-
-            return false;
-        }
-    }
-
     public class TestInfo
     {
         private bool? _isAuditLogTest;
@@ -556,8 +487,6 @@ namespace TestRunnerLib
                 }
                 catch (Exception deleteException)
                 {
-                    FileChecker.CheckLockedFiles(tmpTestDir.ToString(CultureInfo.InvariantCulture));
-
                     throw new IOException($"Unable to remove temp directory \"{tmpTestDir}\"", deleteException);
                 }
                 // Get rid of the parent directory we created as testdir/"~&TMP ^"

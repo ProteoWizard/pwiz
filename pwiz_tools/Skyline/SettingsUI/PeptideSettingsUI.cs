@@ -736,22 +736,23 @@ namespace pwiz.Skyline.SettingsUI
             dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                Cursor.Current = Cursors.WaitCursor;
-
-                if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                using (var longWaitDlg = new LongWaitDlg(_parent,false))
                 {
-                    using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
-                    editLibDlg.LibraryPath = dlg.AddLibraryFile;
-                    if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+                    longWaitDlg.Text = string.Format(ModelResources.PeptideSettingsUI_working);
+                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                     {
-                        _driverLibrary.List.Add(editLibDlg.LibrarySpec);
-                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
+                        using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
+                        editLibDlg.LibraryPath = dlg.AddLibraryFile;
+                        if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+                        {
+                            _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                            _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] { editLibDlg.LibrarySpec }).ToArray());
+                        }
+
+                        return;
                     }
 
-                    return;
                 }
-
-                Cursor.Current = Cursors.Default;
                 BuildLibrary(dlg.Builder);
             }
         }

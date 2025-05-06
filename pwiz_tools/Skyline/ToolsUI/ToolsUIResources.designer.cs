@@ -8,6 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
+using System.Windows.Forms;
+
 namespace pwiz.Skyline.ToolsUI {
     using System;
     
