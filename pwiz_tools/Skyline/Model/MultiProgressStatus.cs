@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model
         {
             throw new NotImplementedException();
         }
-        public IProgressStatus ChangeSegments(int segment, int[] segmentEndPercentages)
+        public IProgressStatus ChangeSegments(int segment, ImmutableList<int> segmentEndPercentages)
         {
             throw new NotImplementedException();
         }
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Model
         }
 
         public string Message { get { return string.Empty; } }
-        public int[] SegmentPercentEnds { get; }
+        public IList<int> SegmentPercentEnds { get; }
         public string SegmentName { get { return string.Empty; } }
         public ImmutableList<ChromatogramLoadingStatus> ProgressList { get; private set; }
 
