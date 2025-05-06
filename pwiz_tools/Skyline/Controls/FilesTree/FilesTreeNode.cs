@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public bool SupportsRename()
         {
-            return Model.GetType() == typeof(Replicate);
+            return Model is Replicate;
         }
 
         public bool SupportsOpenContainingFolder()
@@ -208,28 +208,25 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         public bool SupportsRemoveItem()
         {
-            return Model.GetType() == typeof(Replicate) || 
-                   Model.GetType() == typeof(SpectralLibrary);
+            return Model is Replicate || Model is SpectralLibrary;
         }
 
         public bool SupportsRemoveAllItems()
         {
-            return Model.GetType() == typeof(ReplicatesFolder) || 
-                   Model.GetType() == typeof(SpectralLibrariesFolder);
+            return Model is ReplicatesFolder || Model is SpectralLibrariesFolder;
         }
 
         public bool IsDraggable()
         {
-            return Model.GetType() == typeof(Replicate) ||
-                   Model.GetType() == typeof(SpectralLibrary);
+            return Model is Replicate || Model is SpectralLibrary;
         }
 
         public bool IsDroppable()
         {
-            return Model.GetType() == typeof(Replicate) ||
-                   Model.GetType() == typeof(ReplicatesFolder) ||
-                   Model.GetType() == typeof(SpectralLibrary) ||
-                   Model.GetType() == typeof(SpectralLibrariesFolder);
+            return Model is Replicate || 
+                   Model is ReplicatesFolder ||
+                   Model is SpectralLibrary || 
+                   Model is SpectralLibrariesFolder;
         }
 
         public bool HasChildWithName(string name)

@@ -318,12 +318,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     nodeTree = createTreeNodeFunc(nodeDoc);
                     nodesToInsert.Add(nodeTree);
+
+                    localFileInitList.Add(nodeTree);
                 }
                 else
                 {
                     nodesToInsert.Add(nodeTree);
                 }
-                localFileInitList.Add(nodeTree);
             }
 
             if (firstInsertPosition == treeNodes.Count)
@@ -560,6 +561,9 @@ namespace pwiz.Skyline.Controls.FilesTree
         // slow if the file is on a network drive / etc.
         private void QueueInitLocalFile(FilesTreeNode node)
         {
+            if(!node.Model.IsBackedByFile) 
+                return;
+
             _fsWorkQueue.Add(() =>
             {
                 // Do nothing if the path to a Skyline document is not set. For example, 
