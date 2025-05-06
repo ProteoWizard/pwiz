@@ -257,23 +257,24 @@ namespace pwiz.Skyline.Controls.FilesTree
                 while (i < count)
                 {
                     nodeDoc = docFilesList[i];
-                    var nodeTree = treeNodes[i] as FilesTreeNode;
+                    var nodeTree = (FilesTreeNode)treeNodes[i];
+
                     if (nodeTree == null)
                         break;
+
                     if (!ReferenceEquals(nodeTree.Model.Immutable, nodeDoc.Immutable))
                     {
                         if(nodeTree.Model.IdentityPath.Equals(nodeDoc.IdentityPath))
                         {
                             nodeTree.Model = nodeDoc;
 
-                            // queue model's file initialization
+                            // queue work to initialize model's file
                             localFileInitList.Add(nodeTree);
                         }
                         else
                         {
                             // If no usable equality, and not in the map of nodes already
                             // removed, then this loop cannot continue.
-                            
                             if(!remaining.TryGetValue(nodeDoc.IdentityPath, out nodeTree))
                                 break;
 
@@ -283,7 +284,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                             {
                                 nodeTree.Model = nodeDoc;
 
-                                // queue model's file initialization
+                                // queue work to initialize model's file
                                 localFileInitList.Add(nodeTree);
                             }
                             treeNodes.Insert(i, nodeTree);
@@ -296,11 +297,13 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // document node is encountered, or all remaining nodes have been
                 // added.
                 var remove = new Dictionary<IdentityPath, FilesTreeNode>();
-                for (int iRemove = i; iRemove < treeNodes.Count; iRemove++)
+                for (var iRemove = i; iRemove < treeNodes.Count; iRemove++)
                 {
-                    FilesTreeNode nodeTree = treeNodes[iRemove] as FilesTreeNode;
+                    var nodeTree = (FilesTreeNode)treeNodes[iRemove];
+
                     if (nodeTree == null)
                         break;
+
                     // Stop removing, if the next node in the document is encountered.
                     if (nodeDoc != null && nodeTree.Model.IdentityPath.Equals(nodeDoc.IdentityPath))
                         break;
@@ -323,8 +326,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             for (; i < docFilesList.Count; i++)
             {
                 nodeDoc = docFilesList[i];
-                FilesTreeNode nodeTree;
-                if (!remaining.TryGetValue(nodeDoc.IdentityPath, out nodeTree))
+                if (!remaining.TryGetValue(nodeDoc.IdentityPath, out var nodeTree))
                 {
                     nodeTree = createTreeNodeFunc(nodeDoc);
                     nodesToInsert.Add(nodeTree);
@@ -359,21 +361,18 @@ namespace pwiz.Skyline.Controls.FilesTree
                 {
                     nodeTree.Model = docNode;
 
-                    // queue model's file initialization
+                    // queue work to initialize model's file
                     localFileInitList.Add(nodeTree);
                 }
             }
 
             // queue tasks to initialize the local file for a node
-            foreach (var node in localFileInitList)
-            {
-                QueueInitLocalFile(node);
-            }
+            localFileInitList.ForEach(QueueInitLocalFile);
 
             // Finished merging nodes at this level. Next, recursively merge nodes with child files
             for (i = 0; i < treeNodes.Count; i++)
             {
-                var treeNode = treeNodes[i] as FilesTreeNode;
+                var treeNode = (FilesTreeNode)treeNodes[i];
                 var model = treeNode?.Model;
 
                 // Look for TreeNodes whose model represent a file group. If any are found, rely on their

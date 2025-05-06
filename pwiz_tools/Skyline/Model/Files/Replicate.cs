@@ -78,8 +78,51 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        private ChromatogramSet ChromatogramSet =>
-            DocumentContainer.Document.MeasuredResults.FindChromatogramSet((ChromatogramSetId)IdentityPath.GetIdentity(0));
+        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropNodeModel, bool insertFirst, bool insertLast)
+        {
+            var draggedChromSets = draggedModels.Cast<Replicate>().Select(model => model.ChromatogramSet).ToList();
+
+            var newChromatograms = document.MeasuredResults.Chromatograms.Except(draggedChromSets).ToList();
+            var insertAt = newChromatograms.IndexOf(((Replicate)dropNodeModel).ChromatogramSet);
+
+            if (insertFirst)
+            {
+                newChromatograms.InsertRange(0, draggedChromSets);
+            }
+            else if (insertLast)
+            {
+                newChromatograms.InsertRange(insertAt + 1, draggedChromSets);
+            }
+            else
+            {
+                newChromatograms.InsertRange(insertAt, draggedChromSets);
+            }
+
+            var newMeasuredResults = document.MeasuredResults.ChangeChromatograms(newChromatograms);
+            var newDocument = document.ChangeMeasuredResults(newMeasuredResults);
+            newDocument.ValidateResults();
+
+            var readableNames = draggedChromSets.Select(item => item.Name).ToList();
+
+            var entry = AuditLogEntry.CreateCountChangeEntry(
+                MessageType.files_tree_node_drag_and_drop,
+                MessageType.files_tree_nodes_drag_and_drop,
+                Document.DocumentType, 
+                readableNames,
+                readableNames.Count,
+                str => MessageArgs.Create(str, dropNodeModel.Name),
+                MessageArgs.Create(readableNames.Count, dropNodeModel.Name)
+            );
+            
+            if (readableNames.Count > 1)
+            {
+                entry = entry.ChangeAllInfo(readableNames.
+                    Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, newDocument.DocumentType, node, dropNodeModel.Name)).
+                    ToList());
+            }
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
 
         public ModifiedDocument ChangeName(SrmDocument document, string newName)
         {
@@ -107,33 +150,9 @@ namespace pwiz.Skyline.Model.Files
                 newName);
 
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
-
-            // var oldName = chromatogram.Name;
-            // var newName = newLabel;
-            //
-            // SkylineWindow.ModifyDocument(FilesTreeResources.Change_ReplicateName,
-            //     doc =>
-            //     {
-            //         var newChromatogram = (ChromatogramSet)chromatogram.ChangeName(newName);
-            //         var measuredResults = SkylineWindow.Document.MeasuredResults;
-            //
-            //         var chromatograms = measuredResults.Chromatograms.ToArray();
-            //         for (var i = 0; i < chromatograms.Length; i++)
-            //         {
-            //             if (ReferenceEquals(chromatograms[i].Id, newChromatogram.Id))
-            //             {
-            //                 chromatograms[i] = newChromatogram;
-            //             }
-            //         }
-            //
-            //         measuredResults = measuredResults.ChangeChromatograms(chromatograms);
-            //         var newDoc = doc.ChangeMeasuredResults(measuredResults);
-            //         newDoc.ValidateResults();
-            //         return newDoc;
-            //     },
-            //     docPair =>
-            //        
-            // );
         }
+
+        private ChromatogramSet ChromatogramSet =>
+            DocumentContainer.Document.MeasuredResults.FindChromatogramSet((ChromatogramSetId)IdentityPath.GetIdentity(0));
     }
 }

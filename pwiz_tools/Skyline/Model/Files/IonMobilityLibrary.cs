@@ -27,10 +27,10 @@ namespace pwiz.Skyline.Model.Files
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => Imsdb;
-        public override string Name => Imsdb.Name;
-        public override string FilePath => Imsdb.FilePath;
+        public override Immutable Immutable => ImsDb;
+        public override string Name => ImsDb.Name;
+        public override string FilePath => ImsDb.FilePath;
 
-        private IonMobility.IonMobilityLibrary Imsdb => Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
+        private IonMobility.IonMobilityLibrary ImsDb => Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
     }
 }

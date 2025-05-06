@@ -23,10 +23,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Files;
-using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using Process = System.Diagnostics.Process;
@@ -181,29 +178,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             SkylineWindow.ViewSpectralLibraries();
         }
 
-        private DialogResult ConfirmDelete(int items, string oneItem, string manyItems)
-        {
-            var msg = items == 1 ? oneItem : manyItems;
-            return ConfirmDelete(msg);
-        } 
-
-        private DialogResult ConfirmDelete(string confirmMsg)
-        {
-            var confirmDlg = new MultiButtonMsgDlg(confirmMsg, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
-
-            // Activate the "No" button
-            confirmDlg.ActiveControl = confirmDlg.VisibleButtons.Last();
-            confirmDlg.KeyUp += (sender, e) =>
-            {
-                if (e.KeyCode == Keys.Escape)
-                {
-                    confirmDlg.BtnCancelClick();
-                }
-            };
-
-            return confirmDlg.ShowAndDispose(this);
-        }
-
         // Remove all child nodes contained in this folder.
         public void RemoveAll(FilesTreeNode folderNode)
         {
@@ -284,122 +258,25 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (effect != DragDropEffects.Move || dropNode == null || !dropNode.IsDroppable() || draggedNodes.Count == 0 || draggedNodes.Contains(dropNode))
                     return;
 
-                if (primaryDraggedNode.Model is Replicate)
+                var draggedModels = draggedNodes.Select(item => item.Model).ToList();
+
+                if (primaryDraggedNode.Model is Replicate replicate)
                 {
-                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
-                        doc =>
-                        {
-                            var draggedImmutables = 
-                                draggedNodes.Select(item => item.Model.Immutable).Cast<ChromatogramSet>().ToList();
+                    var insertFirst = dropNode.Model is ReplicatesFolder;
 
-                            var newChromatograms =
-                                doc.MeasuredResults.Chromatograms.Except(draggedImmutables).ToList();
-
-                            if (dropNode.Model.GetType() == typeof(ReplicatesFolder))
-                            {
-                                newChromatograms.InsertRange(0, draggedImmutables);
-                            }
-                            else 
-                            {
-                                var dropNodeIndex = newChromatograms.IndexOf((ChromatogramSet)dropNode.Model.Immutable);
-
-                                if (dropBelowLastNode)
-                                    newChromatograms.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                                else
-                                    newChromatograms.InsertRange(dropNodeIndex, draggedImmutables);
-                            }
-
-                            var newMeasuredResults = doc.MeasuredResults.ChangeChromatograms(newChromatograms);
-                            var newDoc = doc.ChangeMeasuredResults(newMeasuredResults);
-                            newDoc.ValidateResults();
-                            return newDoc;
-                        },
-                        docPair =>
-                        {
-                            var entry = AuditLogEntry.CreateCountChangeEntry(
-                                MessageType.files_tree_node_drag_and_drop,
-                                MessageType.files_tree_nodes_drag_and_drop,
-                                docPair.NewDocumentType,
-                                draggedNodes.Select(node => node.Text),
-                                draggedNodes.Count,
-                                str => MessageArgs.Create(str, dropNode.Text),
-                                MessageArgs.Create(draggedNodes.Count, dropNode.Text)
-                            );
-
-                            if (draggedNodes.Count > 1)
-                            {
-                                entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(
-                                        MessageType.files_tree_node_drag_and_drop, 
-                                        docPair.NewDocumentType,
-                                        node.Text, 
-                                        dropNode.Text))
-                                    .ToList());
-                            }
-
-                            return entry;
-                        }
-                    );
+                    SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes, 
+                        DocumentModifier.Create(doc => replicate.Rearrange(doc, draggedModels, dropNode.Model, insertFirst, insertLast:dropBelowLastNode)));
                 }
-                else if (primaryDraggedNode.Model is SpectralLibrary)
+                else if (primaryDraggedNode.Model is SpectralLibrary library)
                 {
+                    var insertFirst = dropNode.Model is SpectralLibrariesFolder;
+
                     SkylineWindow.ModifyDocument(FilesTreeResources.Drag_and_Drop_Nodes,
-                        doc =>
-                        {
-                            var draggedImmutables =
-                                draggedNodes.Select(item => item.Model.Immutable).Cast<LibrarySpec>().ToList();
+                        DocumentModifier.Create(doc => library.Rearrange(doc, draggedModels, dropNode.Model, insertFirst, insertLast: dropBelowLastNode)));
 
-                            var newLibSpecs =
-                                doc.Settings.PeptideSettings.Libraries.LibrarySpecs.Except(draggedImmutables).ToList();
-
-                            if (dropNode.Model.GetType() == typeof(SpectralLibrariesFolder))
-                            {
-                                newLibSpecs.InsertRange(0, draggedImmutables);
-                            }
-                            else
-                            {
-                                var dropNodeIndex = newLibSpecs.IndexOf((LibrarySpec)dropNode.Model.Immutable);
-
-                                if (dropBelowLastNode)
-                                    newLibSpecs.InsertRange(dropNodeIndex + 1, draggedImmutables);
-                                else
-                                    newLibSpecs.InsertRange(dropNodeIndex, draggedImmutables);
-                            }
-
-                            var newLibs = new Library[newLibSpecs.Count]; // Required by PeptideSettings.Validate() 
-                            var newPepLibraries = doc.Settings.PeptideSettings.Libraries.ChangeLibraries(newLibSpecs, newLibs);
-                            var newPepSettings = doc.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
-                            var newSettings = doc.Settings.ChangePeptideSettings(newPepSettings);
-                            var newDoc = doc.ChangeSettings(newSettings);
-                            return newDoc;
-                        },
-                        docPair =>
-                        {
-                            var entry = AuditLogEntry.CreateCountChangeEntry(
-                                MessageType.files_tree_node_drag_and_drop,
-                                MessageType.files_tree_nodes_drag_and_drop,
-                                docPair.NewDocumentType,
-                                draggedNodes.Select(node => node.Text),
-                                draggedNodes.Count,
-                                str => MessageArgs.Create(str, dropNode.Text),
-                                MessageArgs.Create(draggedNodes.Count, dropNode.Text)
-                            );
-
-                            if (draggedNodes.Count > 1)
-                            {
-                                entry = entry.ChangeAllInfo(draggedNodes.Select(node => new MessageInfo(
-                                    MessageType.files_tree_node_drag_and_drop, 
-                                    docPair.NewDocumentType, 
-                                    node.Text, 
-                                    dropNode.Text))
-                                    .ToList());
-                            }
-
-                            return entry;
-                        }
-                    );
                 }
 
-                // After the drop, reset selection so dragged nodes are blue
+                // After the drop, reset selection so the dragged nodes appear bloe
                 filesTree.SelectedNodes.Clear();
 
                 foreach (var node in draggedNodes)
@@ -818,6 +695,29 @@ namespace pwiz.Skyline.Controls.FilesTree
 
             _dropTargetRemove.Visible = false;
             _dropTargetRemove.BackColor = Color.WhiteSmoke;
+        }
+
+        private DialogResult ConfirmDelete(int items, string oneItem, string manyItems)
+        {
+            var msg = items == 1 ? oneItem : manyItems;
+            return ConfirmDelete(msg);
+        }
+
+        private DialogResult ConfirmDelete(string confirmMsg)
+        {
+            var confirmDlg = new MultiButtonMsgDlg(confirmMsg, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, false);
+
+            // Activate the "No" button
+            confirmDlg.ActiveControl = confirmDlg.VisibleButtons.Last();
+            confirmDlg.KeyUp += (sender, e) =>
+            {
+                if (e.KeyCode == Keys.Escape)
+                {
+                    confirmDlg.BtnCancelClick();
+                }
+            };
+
+            return confirmDlg.ShowAndDispose(this);
         }
 
         private static Panel CreateDropTarget(Image icon, DockStyle dockStyle)

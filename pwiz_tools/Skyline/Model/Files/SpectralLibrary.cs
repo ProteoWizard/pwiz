@@ -63,6 +63,54 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
+        public ModifiedDocument Rearrange(SrmDocument document, List<FileNode> draggedModels, FileNode dropNodeModel, bool insertFirst, bool insertLast)
+        {
+            var draggedLibraries = draggedModels.Cast<SpectralLibrary>().Select(model => model.LibrarySpec).ToList();
+
+            var newLibraries = document.Settings.PeptideSettings.Libraries.LibrarySpecs.Except(draggedLibraries).ToList();
+
+            if (insertFirst)
+            {
+                newLibraries.InsertRange(0, draggedLibraries);
+            }
+            else if (insertLast)
+            {
+                newLibraries.AddRange(draggedLibraries);
+            }
+            else
+            {
+                var insertAt = newLibraries.IndexOf(((SpectralLibrary)dropNodeModel).LibrarySpec);
+                newLibraries.InsertRange(insertAt, draggedLibraries);
+            }
+
+            var newLibs = new Library[newLibraries.Count]; // Required by PeptideSettings.Validate() 
+            var newPepLibraries = document.Settings.PeptideSettings.Libraries.ChangeLibraries(newLibraries, newLibs);
+            var newPepSettings = document.Settings.PeptideSettings.ChangeLibraries(newPepLibraries);
+            var newSettings = document.Settings.ChangePeptideSettings(newPepSettings);
+            var newDocument = document.ChangeSettings(newSettings);
+
+            var readableNames = draggedLibraries.Select(item => item.Name).ToList();
+
+            var entry = AuditLogEntry.CreateCountChangeEntry(
+                MessageType.files_tree_node_drag_and_drop,
+                MessageType.files_tree_nodes_drag_and_drop,
+                Document.DocumentType,
+                readableNames,
+                readableNames.Count,
+                str => MessageArgs.Create(str, dropNodeModel.Name),
+                MessageArgs.Create(readableNames.Count, dropNodeModel.Name)
+            );
+
+            if (readableNames.Count > 1)
+            {
+                entry = entry.ChangeAllInfo(readableNames.
+                    Select(node => new MessageInfo(MessageType.files_tree_node_drag_and_drop, newDocument.DocumentType, node, dropNodeModel.Name)).
+                    ToList());
+            }
+
+            return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
+        }
+
         private LibrarySpec LibrarySpec => Document.Settings.PeptideSettings.Libraries.FindLibrarySpec(IdentityPath.GetIdentity(0));
     }
 }

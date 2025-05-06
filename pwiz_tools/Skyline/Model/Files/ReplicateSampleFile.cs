@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-using System;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
@@ -22,25 +21,19 @@ namespace pwiz.Skyline.Model.Files
 {
     public class ReplicateSampleFile : FileNode
     {
-        private readonly Lazy<ChromFileInfo> _chromFileInfo;
-
         public ReplicateSampleFile(IDocumentContainer documentContainer, ChromatogramSetId chromatogramSetId, ChromFileInfoId chromFileInfoId)
             : base(documentContainer, new IdentityPath(chromatogramSetId, chromFileInfoId), ImageId.replicate_sample_file)
         {
-            _chromFileInfo = new Lazy<ChromFileInfo>(FindChromFileInfo);
         }
 
         public override bool IsBackedByFile => true;
-        public override Immutable Immutable => _chromFileInfo.Value;
-        public override string Name => _chromFileInfo.Value.Name;
-        public override string FilePath => _chromFileInfo.Value.FilePath.GetFilePath();
-        public override string FileName => _chromFileInfo.Value.FilePath.GetFileName();
+        public override Immutable Immutable => ChromFileInfo;
+        public override string Name => ChromFileInfo.Name;
+        public override string FilePath => ChromFileInfo.FilePath.GetFilePath();
+        public override string FileName => ChromFileInfo.FilePath.GetFileName();
 
-        private ChromFileInfo FindChromFileInfo()
-        {
-            return Document.MeasuredResults?.FindChromatogramSet(
-                (ChromatogramSetId)IdentityPath.GetIdentity(0)).FindChromFileInfo(
-                (ChromFileInfoId)  IdentityPath.GetIdentity(1));
-        }
+        private ChromFileInfo ChromFileInfo => Document.MeasuredResults?.
+            FindChromatogramSet((ChromatogramSetId)IdentityPath.GetIdentity(0)).
+            FindChromFileInfo((ChromFileInfoId)IdentityPath.GetIdentity(1));
     }
 }
