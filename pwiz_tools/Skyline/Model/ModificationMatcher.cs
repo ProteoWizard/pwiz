@@ -469,6 +469,11 @@ namespace pwiz.Skyline.Model
                    throw new ArgumentException(ModelResources.ModificationMatcher_GetStaticMod_no_UniMod_match);
         }
 
+        /// <summary>
+        /// Replaces the brackets around unimod modification identifiers (e.g. "unimod:4")
+        /// and SCIEX short names (e.g. "CAM") with square brackets or curly braces to indicate
+        /// whether the modification is light or heavy.
+        /// </summary>
         public string SimplifyUnimodSequence(string seq)
         {
             var sb = new StringBuilder(seq);
@@ -497,15 +502,13 @@ namespace pwiz.Skyline.Model
                     if (TryGetIdFromUnimod(mod, out uniModId))
                     {
                         var staticMod = GetStaticMod(uniModId, aa, modTerminus);
-                        if (staticMod == null)
+                        if (staticMod != null)
                         {
-                            ThrowUnimodException(seq, uniModId, indexAA, indexBracket, indexClose);
-                            return null;    // Keep ReSharper happy
+                            string name = staticMod.Name;
+                            bool isHeavy = !UniMod.DictStructuralModNames.ContainsKey(name);
+                            sb[indexBracket] = isHeavy ? '{' : '[';
+                            sb[indexClose] = isHeavy ? '}' : ']';
                         }
-                        string name = staticMod.Name;
-                        bool isHeavy = !UniMod.DictStructuralModNames.ContainsKey(name);
-                        sb[indexBracket] = isHeavy ? '{' : '[';
-                        sb[indexClose] = isHeavy ? '}' : ']';
                     }
                 }
                 // If the next character is a bracket, continue using the same amino

@@ -61,9 +61,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="XmlCalcium\MethodModifications.cs" />
+    <Compile Include="XmlCalcium\MethodModifications_4_2.cs" />
     <Compile Include="XmlExploris\MethodModifications.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="XmlExploris\MethodModifications_4_4.cs" />
     <Compile Include="XmlFusion\MethodModifications.cs" />
     <Compile Include="XmlStellar\MethodModifications.cs" />
     <Compile Include="XmlTsq\HyperionMethod.cs" />

@@ -45,6 +45,7 @@ namespace pwiz.Common.DataBinding
     {
         
         public const string DefaultViewName = "default";
+        public static readonly Color DefaultReadOnlyCellColor = Color.FromArgb(245, 245, 245);
         private IList<RowSourceInfo> _rowSources;
 
         protected AbstractViewContext(DataSchema dataSchema, IEnumerable<RowSourceInfo> rowSources)
@@ -187,11 +188,17 @@ namespace pwiz.Common.DataBinding
 
         public Icon ApplicationIcon { get; protected set; }
 
-        protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+        protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
             BindingListSource bindingListSource, char separator)
         {
-            IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, bindingListSource.Count));
-            WriteDataWithStatus(progressMonitor, ref status, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
+            WriteData(progressMonitor, writer, RowItemEnumerator.FromBindingListSource(bindingListSource), separator);
+        }
+
+        protected void WriteData(IProgressMonitor progressMonitor, TextWriter writer,
+            RowItemEnumerator rowItemEnumerator, char separator)
+        {
+            IProgressStatus status = new ProgressStatus(string.Format(Resources.AbstractViewContext_WriteData_Writing__0__rows, rowItemEnumerator.Count));
+            WriteDataWithStatus(progressMonitor, ref status, writer, rowItemEnumerator, separator);
         }
 
         protected virtual void WriteDataWithStatus(IProgressMonitor progressMonitor, ref IProgressStatus status, TextWriter writer, RowItemEnumerator rowItemEnumerator, char separator)
@@ -542,7 +549,7 @@ namespace pwiz.Common.DataBinding
             column.DefaultCellStyle.FormatProvider = DataSchema.DataSchemaLocalizer.FormatProvider;
             if (propertyDescriptor.IsReadOnly)
             {
-                column.DefaultCellStyle.BackColor = Color.FromArgb(245, 245, 245); // Lighter than Color.LightGray, which is still pretty dark actually
+                column.DefaultCellStyle.BackColor = DefaultReadOnlyCellColor;
             }
             if (!string.IsNullOrEmpty(propertyDescriptor.Description))
             {

@@ -1150,6 +1150,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         case DisplayTypeChrom.qc:
                             message = GraphsResources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
                             break;
+                        default:
+                            if (Settings.Default.ShowQuantitativeOnly)
+                            {
+                                message = GraphsResources.GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found;
+                            }
+                            break;
                     }
                     SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
                 }
@@ -1640,7 +1646,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AlignmentFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
-            if (tranPeakInfo == null || chromatogramInfo == null)
+            if (tranPeakInfo == null || chromatogramInfo == null || tranPeakInfo.IsEmpty)
                 return; // Nothing to shade
             if (chromatogramInfo.TransformChrom.IsDerivative())
             {

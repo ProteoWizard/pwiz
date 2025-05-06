@@ -152,6 +152,7 @@ namespace pwiz.SkylineTestUtil
         public const string MZ5_UNICODE_ISSUES = "mz5 doesn't handle unicode paths";
         public const string MSGFPLUS_UNICODE_ISSUES = "MsgfPlus doesn't handle unicode paths";
         public const string MSFRAGGER_UNICODE_ISSUES = "MsFragger doesn't handle unicode paths";
+        public const string COMET_UNICODE_ISSUES = "Comet doesn't handle unicode paths";
         public const string JAVA_UNICODE_ISSUES = "Running Java processes with wild unicode temp paths is problematic";
         public const string HARDKLOR_UNICODE_ISSUES = "Hardklor doesn't handle unicode paths";
         public const string ZIP_INSIDE_ZIP = "ZIP inside ZIP does not seem to work on MACS2";
@@ -168,6 +169,22 @@ namespace pwiz.SkylineTestUtil
         public string Reason { get; private set; } // Reason for declaring test as unsuitable for Nightly
 
         public NoNightlyTestingAttribute(string reason)
+        {
+            Reason = reason; // Usually one of the strings in TestExclusionReason
+        }
+
+    }
+
+    /// <summary>
+    /// Test method attribute which specifies a test is not suitable for automated nightly leak testing
+    /// (e.g. memory hungry or excessively time consuming given that it has to be run many times for leak detection)
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+    public sealed class NoLeakTestingAttribute : Attribute
+    {
+        public string Reason { get; private set; } // Reason for declaring test as unsuitable for Nightly
+
+        public NoLeakTestingAttribute(string reason)
         {
             Reason = reason; // Usually one of the strings in TestExclusionReason
         }

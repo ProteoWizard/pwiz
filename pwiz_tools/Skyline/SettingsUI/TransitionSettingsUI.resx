@@ -589,16 +589,16 @@
     <value>Top, Right</value>
   </data>
   <data name="btnEditSpectrumFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>283, 294</value>
+    <value>273, 310</value>
   </data>
   <data name="btnEditSpectrumFilter.Size" type="System.Drawing.Size, System.Drawing">
     <value>66, 23</value>
   </data>
   <data name="btnEditSpectrumFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>22</value>
   </data>
   <data name="btnEditSpectrumFilter.Text" xml:space="preserve">
-    <value>Edit...</value>
+    <value>&amp;Edit...</value>
   </data>
   <data name="&gt;&gt;btnEditSpectrumFilter.Name" xml:space="preserve">
     <value>btnEditSpectrumFilter</value>
@@ -616,16 +616,16 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxSpectrumFilter.Location" type="System.Drawing.Point, System.Drawing">
-    <value>27, 294</value>
+    <value>27, 310</value>
   </data>
   <data name="tbxSpectrumFilter.Multiline" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="tbxSpectrumFilter.Size" type="System.Drawing.Size, System.Drawing">
-    <value>250, 23</value>
+    <value>240, 23</value>
   </data>
   <data name="tbxSpectrumFilter.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>21</value>
   </data>
   <data name="&gt;&gt;tbxSpectrumFilter.Name" xml:space="preserve">
     <value>tbxSpectrumFilter</value>
@@ -643,16 +643,16 @@
     <value>True</value>
   </data>
   <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 278</value>
+    <value>24, 294</value>
   </data>
   <data name="label13.Size" type="System.Drawing.Size, System.Drawing">
     <value>95, 13</value>
   </data>
   <data name="label13.TabIndex" type="System.Int32, mscorlib">
-    <value>24</value>
+    <value>20</value>
   </data>
   <data name="label13.Text" xml:space="preserve">
-    <value>Advanced filtering:</value>
+    <value>Ad&amp;vanced filtering:</value>
   </data>
   <data name="&gt;&gt;label13.Name" xml:space="preserve">
     <value>label13</value>
@@ -673,13 +673,13 @@
     <value>True</value>
   </data>
   <data name="cbxTriggeredAcquisition.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 349</value>
+    <value>27, 367</value>
   </data>
   <data name="cbxTriggeredAcquisition.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 17</value>
   </data>
   <data name="cbxTriggeredAcquisition.TabIndex" type="System.Int32, mscorlib">
-    <value>20</value>
+    <value>23</value>
   </data>
   <data name="cbxTriggeredAcquisition.Text" xml:space="preserve">
     <value>Triggered &amp;chromatogram acquisition</value>
@@ -1296,7 +1296,7 @@ with predicted transition m/z values.
     <value>ionMobilityFilteringControl</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Type" xml:space="preserve">
-    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.SettingsUI.IonMobility.IonMobilityFilteringUserControl, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;ionMobilityFilteringControl.Parent" xml:space="preserve">
     <value>tabIonMobility</value>
@@ -2722,7 +2722,7 @@ whenever peptides are matched to library spectrum.</value>
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2734,6 +2734,6 @@ whenever peptides are matched to library spectrum.</value>
     <value>TransitionSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=24.1.1.229, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

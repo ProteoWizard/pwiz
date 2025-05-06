@@ -333,7 +333,11 @@
     <value>由于明确保留时间 {1} 不介于 {2} 和 {3} 之间，因此丢弃“{0}”的色谱图</value>
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
-    <value>需要提供离子对设置离子迁移过滤窗口类型值</value>
+    <value>need a value for Transition Settings, Ion mobility filtering, Window type</value>
+    <comment>Needs Review:English text changed
+Old English:need a value for  Transition Settings  Ion mobility filtering  Window type
+Current English:need a value for Transition Settings, Ion mobility filtering, Window type
+Old Localized:需要提供离子对设置离子迁移过滤窗口类型值</comment>
   </data>
   <data name="IonMobilityFinder_FindIonMobilityPeaks_mixed_ion_mobility_types_are_not_supported" xml:space="preserve">
     <value>不支持混合离子迁移类型</value>

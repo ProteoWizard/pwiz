@@ -4494,7 +4494,6 @@ namespace pwiz.Skyline
 
         public void ShowPeakAreaRelativeAbundanceGraph()
         {
-            ShowTotalTransitions();
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.abundance);
             ShowGraphPeakArea(true, GraphTypeSummary.abundance);
             UpdatePeakAreaGraph();

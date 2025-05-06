@@ -84,7 +84,10 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            TestMsFraggerSearch();
+            var searchEngine = IsRecordingScreenShots
+                ? SearchSettingsControl.SearchEngine.MSAmanda
+                : SearchSettingsControl.SearchEngine.MSFragger;
+            TestSearch(searchEngine);
         }
 
         /// <summary>
@@ -107,7 +110,7 @@ namespace TestPerf
         /// <summary>
         /// Test that the "Match Modifications" page of the Import Peptide Search wizard gets skipped.
         /// </summary>
-        private void TestMsFraggerSearch()
+        private void TestSearch(SearchSettingsControl.SearchEngine searchEngine)
         {
             PrepareDocument("TestDdaTutorial.sky");
 
@@ -214,22 +217,33 @@ namespace TestPerf
             bool? searchSucceeded = null;
             RunUI(() => Assert.IsTrue(importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page));
 
-            bool useMsFragger = !IsPauseForScreenShots; // Tutorial still uses MSAmanda
+            bool useMsAmanda = IsPauseForScreenShots; // Tutorial still uses MSAmanda
 
             // Switch search engine
-            if (useMsFragger)
-                SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = SearchSettingsControl.SearchEngine.MSFragger));
+            if (!useMsAmanda)
+                SkylineWindow.BeginInvoke(new Action(() => importPeptideSearchDlg.SearchSettingsControl.SelectedSearchEngine = searchEngine));
 
             RunUI(() =>
             {
                 importPeptideSearchDlg.SearchSettingsControl.PrecursorTolerance = new MzTolerance(5, MzTolerance.Units.ppm);
-                importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
                 // Using the default q value of 0.01 (FDR 1%) is best for teaching and requires less explaining
                 // importPeptideSearchDlg.SearchSettingsControl.CutoffScore = 0.05;
-                if (useMsFragger)
+                if (searchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {
+                    importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
                     importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("check_spectral_files", "0");
                     //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
+                }
+                else if (searchEngine == SearchSettingsControl.SearchEngine.Comet)
+                {
+                    importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(0.02);
+                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("auto_peptide_mass_tolerance", "fail");
+                    importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("auto_fragment_bin_tol", "fail");
+                    //importPeptideSearchDlg.SearchSettingsControl.SetAdditionalSetting("keep-intermediate-files", "True");
+                }
+                else
+                {
+                    importPeptideSearchDlg.SearchSettingsControl.FragmentTolerance = new MzTolerance(10, MzTolerance.Units.ppm);
                 }
 
                 importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
@@ -253,9 +267,9 @@ namespace TestPerf
             SkylineWindow.BeginInvoke(new Action(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton())));
 
             // Handle download dialogs if necessary
-            if (useMsFragger)
+            if (RedownloadTools || HasMissingDependencies)
             {
-                if (RedownloadTools || HasMissingDependencies)
+                if (searchEngine == SearchSettingsControl.SearchEngine.MSFragger)
                 {
                     var msfraggerDownloaderDlg = TryWaitForOpenForm<MsFraggerDownloadDlg>(2000);
                     if (msfraggerDownloaderDlg != null)
@@ -264,7 +278,10 @@ namespace TestPerf
                         RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)", "matt.chambers42@gmail.com", "UW"));
                         OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                     }
+                }
 
+                if (searchEngine != SearchSettingsControl.SearchEngine.MSAmanda)
+                {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
                     {
@@ -364,10 +381,10 @@ namespace TestPerf
                     }
                     else
                     {
-                        Assert.AreEqual(2637, proteinCount);
-                        Assert.AreEqual(5299, peptideCount);
-                        Assert.AreEqual(10461, precursorCount);
-                        Assert.AreEqual(31383, transitionCount);
+                        Assert.AreEqual(2624, proteinCount);
+                        Assert.AreEqual(5273, peptideCount);
+                        Assert.AreEqual(10411, precursorCount);
+                        Assert.AreEqual(31233, transitionCount);
                     }
                 }
             });
