@@ -185,11 +185,11 @@ namespace TestPerf
                 Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
             }
 
-            MultiButtonMsgDlg installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect the offer to installNvidia
+            MessageDlg installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect the offer to installNvidia
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.CancelDialog(installNvidiaDlg, installNvidiaDlg.CancelDialog);
-            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
+            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.OkDialog(installNvidiaDlg, installNvidiaDlg.ClickYes);
@@ -197,7 +197,7 @@ namespace TestPerf
             AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                 needAdminDlg.Message);
             AbstractFunctionalTest.CancelDialog(needAdminDlg, () => needAdminDlg.CancelDialog()); // Expect the offer to installNvidia
-            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
+            installNvidiaDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
