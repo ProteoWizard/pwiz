@@ -160,8 +160,7 @@ namespace TestPerf
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
 
             AbstractFunctionalTest.OkDialog(installPythonDlg, installPythonDlg.OkDialog);
-            var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>(); // Cannot open AlertDlg when another AlertDlg is open, must close first then wait to open another
-
+            var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>(); 
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, needAdminDlg.Message);
             AbstractFunctionalTest.CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
 
@@ -177,7 +176,7 @@ namespace TestPerf
             //Test for LongPaths not set and admin
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
             {
-                AlertDlg adminDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect request for elevated privileges 
+                MessageDlg adminDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect request for elevated privileges 
                 AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, adminDlg.Message);
                 AbstractFunctionalTest.OkDialog(adminDlg, adminDlg.OkDialog);
             }
@@ -194,7 +193,7 @@ namespace TestPerf
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
                 installNvidiaDlg.Message);
             AbstractFunctionalTest.OkDialog(installNvidiaDlg, installNvidiaDlg.ClickYes);
-            var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
+            var needAdminDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>();
             AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                 needAdminDlg.Message);
             AbstractFunctionalTest.CancelDialog(needAdminDlg, () => needAdminDlg.CancelDialog()); // Expect the offer to installNvidia
@@ -218,7 +217,7 @@ namespace TestPerf
             AbstractFunctionalTest.RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
             if (!havePythonPrerequisite)
             {
-                AlertDlg confirmDlg = null;
+                MessageDlg confirmDlg = null;
                 AbstractFunctionalTest.RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
                 {
                     Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
@@ -226,14 +225,14 @@ namespace TestPerf
 
                     if (!PythonInstaller.ValidateEnableLongpaths())
                     {
-                        AlertDlg longPathDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog);
+                        MessageDlg longPathDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog);
 
                         Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
                             longPathDlg.Message);
 
                         if (PythonInstaller.IsRunningElevated())
                         {
-                            confirmDlg = AbstractFunctionalTest.ShowDialog<AlertDlg>(pythonDlg.OkDialog, WAIT_TIME);
+                            confirmDlg = AbstractFunctionalTest.ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
                             ConfirmPythonSuccess(confirmDlg);
 
                         }
@@ -246,7 +245,7 @@ namespace TestPerf
                     {
                         Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
                         AbstractFunctionalTest.OkDialog(pythonDlg, pythonDlg.OkDialog);
-                        confirmDlg = AbstractFunctionalTest.WaitForOpenForm<AlertDlg>();
+                        confirmDlg = AbstractFunctionalTest.WaitForOpenForm<MessageDlg>();
                         ConfirmPythonSuccess(confirmDlg);
 
                     }
