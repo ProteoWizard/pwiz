@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model.Proteome
     /// as well as a path to the file on disk.
     /// </summary>
     [XmlRoot("background_proteome")]
-    public class BackgroundProteomeSpec : XmlNamedElement, IFileModel
+    public class BackgroundProteomeSpec : XmlNamedElement, IFile
     {
         public BackgroundProteomeSpec(string name, string databasePath)
             : base(name)
@@ -70,10 +70,7 @@ namespace pwiz.Skyline.Model.Proteome
         public string DatabasePath { get; private set; }
 
         public Identity Id { get; private set; }
-        public string FileName { get => Name; }
-        public string FilePath { get => DatabasePath; }
-        public FileType Type { get => FileType.background_proteome; }
-        public IList<IFileModel> Files => null;
+        public string FilePath => DatabasePath;
 
         public bool IsNone
         {

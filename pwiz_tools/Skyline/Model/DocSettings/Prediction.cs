@@ -1152,7 +1152,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// </summary>
     public sealed class RetentionScoreCalculatorSpecId : Identity { }
 
-    public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator, IFileModel
+    public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator, IFile
     {
         protected RetentionScoreCalculatorSpec(string name)
             : base(name)
@@ -1213,9 +1213,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         public Identity Id { get; }
-        public FileType Type { get => FileType.retention_score_calculator; }
-        public string FilePath { get => PersistencePath; }
-        public IList<IFileModel> Files => null;
+        public string FilePath => PersistencePath;
     }
 
     public interface IRetentionScoreSource

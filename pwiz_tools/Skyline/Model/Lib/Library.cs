@@ -1505,7 +1505,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription, IFileModel
+    public abstract class LibrarySpec : XmlNamedElement, IHasItemDescription, IFile
     {
         /// <summary>
         /// Identity class to allow identity equality on <see cref="LibrarySpec"/>.
@@ -1555,10 +1555,7 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public Identity Id { get; }
-        public FileType Type => FileType.peptide_library;
-        public string FileName => Name;
         public string FilePath { get; private set; }
-        public IList<IFileModel> Files => null;
 
         /// <summary>
         /// Returns the filter string to be used for finding a library of this type.

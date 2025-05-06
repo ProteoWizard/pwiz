@@ -25,7 +25,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -33,7 +32,7 @@ using pwiz.Skyline.Util.Extensions;
 namespace pwiz.Skyline.Model.Results
 {
     [XmlRoot("measured_results")]
-    public sealed class MeasuredResults : Immutable, IXmlSerializable, IValidating, IFileProvider
+    public sealed class MeasuredResults : Immutable, IXmlSerializable
     {
         public static readonly MeasuredResults EMPTY = new MeasuredResults(new ChromatogramSet[0]);
 
@@ -62,8 +61,6 @@ namespace pwiz.Skyline.Model.Results
             // The only way to get peaks with areas not normalized by
             // time is to load an older document that was created this way.
             IsTimeNormalArea = true;
-
-            UpdateFiles();
         }
 
         public bool IsEmpty
@@ -970,31 +967,6 @@ namespace pwiz.Skyline.Model.Results
             return new ChromCacheMinimizer(document, _cacheFinal);
         }
 
-        private static Identity _replicateFolderId = new StaticFolderId();
-
-        public IList<IFileModel> Files { get; private set; }
-
-        public void Validate()
-        {
-            UpdateFiles();
-        }
-
-        private void UpdateFiles()
-        {
-            if (IsEmpty)
-                return;
-
-            var newChromatogramSetList = Chromatograms?.Select(item => item).Cast<IFileModel>().ToList();
-
-            var oldReplicatesFolder = Files?.FirstOrDefault();
-            var oldChromatogramSetList = oldReplicatesFolder?.Files;
-            if (!ArrayUtil.ReferencesEqual(newChromatogramSetList, oldChromatogramSetList))
-            {
-                IFileModel folder = new FolderModel(_replicateFolderId, FileType.folder_replicates, newChromatogramSetList);
-                Files = ImmutableList.Singleton(folder);
-            }
-        }
-
         #region Property change methods
 
         public MeasuredResults ClearDeserialized()
@@ -1319,7 +1291,6 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private MeasuredResults()
         {
-            UpdateFiles();
         }
 
         private enum ATTR

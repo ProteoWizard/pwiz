@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.DocSettings
     /// helper classes.
     /// </summary>
     [XmlRoot("settings_summary")]
-    public class SrmSettings : XmlNamedElement, IPeptideFilter, IValidating
+    public class SrmSettings : XmlNamedElement, IPeptideFilter
     {
         public SrmSettings(string name, PeptideSettings peptideSettings, TransitionSettings transitionSettings, DataSettings dataSettings, DocumentRetentionTimes documentRetentionTimes)
             : base(name)
@@ -75,7 +75,6 @@ namespace pwiz.Skyline.Model.DocSettings
             // Create cached calculator instances
             CreatePrecursorMassCalcs();
             CreateFragmentMassCalcs();
-            UpdateFileLists();
         }
 
         [TrackChildren]
@@ -2170,8 +2169,6 @@ namespace pwiz.Skyline.Model.DocSettings
             // Initialize mass calculators
             CreatePrecursorMassCalcs();
             CreateFragmentMassCalcs();
-
-            Validate();
         }
 
         public static SrmSettings Deserialize(XmlReader reader)
@@ -2266,47 +2263,6 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
-
-        public IFileModel Files { get; private set; }
-
-        public void Validate()
-        {
-            UpdateFileLists();
-        }
-
-        private static Identity _rootFolderId = new StaticFolderId();
-
-        private void UpdateFileLists()
-        {
-            // Order matters! FilesTree shows items in the order returned by SrmSettings.
-            var folders = new List<IFileModel>();
-
-            if (MeasuredResults != null)
-            {
-                var files = MeasuredResults.Files;
-                if (files != null && files.Count > 0)
-                    folders.AddRange(files);
-            }
-
-            if (PeptideSettings != null)
-            {
-                var files = PeptideSettings.Files;
-                if (files != null && files.Count > 0)
-                    folders.AddRange(files);
-            }
-
-            if (TransitionSettings != null)
-            {
-                var files = TransitionSettings.Files;
-                if (files != null && files.Count > 0)
-                    folders.AddRange(files);
-            }
-
-            if (!ArrayUtil.ReferencesEqual(folders, Files?.Files))
-            {
-                Files = new FolderModel(_rootFolderId, FileType.folder, folders);
-            }
-        }
     }
 
     /// <summary>

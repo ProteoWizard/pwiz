@@ -219,7 +219,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 if (dialogResult == DialogResult.No)
                     return;
 
-                // Filter out replicate sample files if any happened to be selected, which makes the audit log messages more consistent
+                // Replicate sample files could be included in the selection so filter the list so it only includes Replicate models.
+                // This makes Audit Log messages more consistent.
                 var deletedModels = nodes.Select(item => item.Model).OfType<Replicate>().Cast<FileNode>().ToList();
 
                 SkylineWindow.ModifyDocument(FilesTreeResources.Remove_Replicate_Node, DocumentModifier.Create(doc => replicate.Delete(doc, deletedModels)));
@@ -276,7 +277,8 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 }
 
-                // After the drop, reset selection so the dragged nodes appear bloe
+                // After the drop, re-select the dragged nodes to paint the nodes blue and maintain the user's selection.
+                // This is a tricky process which must be done in a specific order.
                 filesTree.SelectedNodes.Clear();
 
                 foreach (var node in draggedNodes)
@@ -287,8 +289,8 @@ namespace pwiz.Skyline.Controls.FilesTree
                 // DO NOT MOVE
                 //
                 // Set the SelectedNode without clearing already selected items. This trickery is necessary
-                // because setting SelectedNode directly clears already selected items and setting before calling
-                // SelectNode(...) mis-orders the dropped items.
+                // because the usual way of setting the SelectedNode clears out other selected items and setting SelectedNode prior to
+                // calling SelectNode(...) mis-orders dropped items.
                 filesTree.SelectNodeWithoutResettingSelection(primaryDraggedNode);
 
                 filesTree.Invalidate();
@@ -745,12 +747,6 @@ namespace pwiz.Skyline.Controls.FilesTree
 
     internal class Utils
     {
-        // This should match the check in FileNode.IsDocumentSavedToDisk
-        internal static bool IsDocumentSavedToDisk(string documentPath)
-        {
-            return !string.IsNullOrEmpty(documentPath);
-        }
-
         internal static bool IsPointInRectangle(Point point, Rectangle rectangle)
         {
             return point.X >= rectangle.X && 

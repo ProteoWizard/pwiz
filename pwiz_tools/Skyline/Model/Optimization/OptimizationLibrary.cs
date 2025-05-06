@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Optimization
     public sealed class OptimizationLibraryId : Identity { }
 
     [XmlRoot("optimized_library")]
-    public class OptimizationLibrary : XmlNamedElement, IAuditLogComparable, IFileModel
+    public class OptimizationLibrary : XmlNamedElement, IAuditLogComparable, IFile
     {
         public static readonly OptimizationLibrary NONE = new OptimizationLibrary(@"None", string.Empty);
 
@@ -262,8 +262,6 @@ namespace pwiz.Skyline.Model.Optimization
         }
 
         public Identity Id { get; }
-        public FileType Type { get => FileType.optimization_library; }
-        public string FilePath { get => DatabasePath; }
-        public IList<IFileModel> Files => null;
+        public string FilePath => DatabasePath;
     }
 }

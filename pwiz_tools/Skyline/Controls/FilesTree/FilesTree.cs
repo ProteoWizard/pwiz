@@ -182,8 +182,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 BeginUpdateMS();
 
-                var documentContainer = FileNode.CreateDocumentContainer(document, documentFilePath);
-                var files = new SkylineFile(documentContainer);
+                var files = SkylineFile.Create(document, documentFilePath);
 
                 MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, forceModelUpdate);
 
@@ -197,7 +196,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     }
                 }
 
-                if (Utils.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
+                if (FileNode.IsDocumentSavedToDisk(documentFilePath) && !IsMonitoringFileSystem())
                 {
                     _fsWatcher.Path = Path.GetDirectoryName(documentFilePath);
                     _fsWatcher.SynchronizingObject = this;
@@ -576,7 +575,7 @@ namespace pwiz.Skyline.Controls.FilesTree
             {
                 // Do nothing if the path to a Skyline document is not set. For example, 
                 // before a new .sky file is saved for the first time.
-                if (!Utils.IsDocumentSavedToDisk(node.DocumentPath))
+                if (!FileNode.IsDocumentSavedToDisk(node.DocumentPath))
                     return;
 
                 node.InitLocalFile();

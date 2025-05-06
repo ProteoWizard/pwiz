@@ -352,7 +352,7 @@ namespace pwiz.Skyline.Model.Results
 
     [XmlRoot("replicate")]
     [XmlRootAlias("chromatogram_group")]
-    public sealed class ChromatogramSet : XmlNamedIdElement, IFileModel, IValidating
+    public sealed class ChromatogramSet : XmlNamedIdElement, IFile
     {
         /// <summary>
         /// Info for all files contained in this replicate
@@ -396,28 +396,9 @@ namespace pwiz.Skyline.Model.Results
             Annotations = annotations;
             SampleType = SampleType.DEFAULT;
             SampleDilutionFactor = DEFAULT_DILUTION_FACTOR;
-
-            UpdateFileList();
         }
 
-        public FileType Type => FileType.replicate;
         public string FilePath { get; }
-        public IList<IFileModel> Files { get; private set; }
-
-        public void Validate()
-        {
-            UpdateFileList();
-        }
-
-        private void UpdateFileList()
-        {
-            var newFiles = MSDataFileInfos?.Cast<IFileModel>().ToList();
-
-            if (!ArrayUtil.ReferencesEqual(newFiles, Files))
-            {
-                Files = newFiles;
-            }
-        }
 
         public IList<ChromFileInfo> MSDataFileInfos
         {
@@ -724,7 +705,6 @@ namespace pwiz.Skyline.Model.Results
         private ChromatogramSet()
             : base(new ChromatogramSetId())
         {
-            UpdateFileList();
         }
 
         public static ChromatogramSet Deserialize(XmlReader reader)
@@ -1021,7 +1001,7 @@ namespace pwiz.Skyline.Model.Results
     {        
     }
 
-    public sealed class ChromFileInfo : DocNode, IPathContainer, IFileModel
+    public sealed class ChromFileInfo : DocNode, IPathContainer, IFile
     {
         public ChromFileInfo(MsDataFileUri filePath)
             : base(new ChromFileInfoId())
@@ -1236,11 +1216,8 @@ namespace pwiz.Skyline.Model.Results
             return this;
         }
 
-        public FileType Type { get => FileType.replicate_sample; }
-        public string Name { get => FilePath.GetFileName(); }
-        string IFileModel.FilePath => FilePath.GetFilePath();
-        public IList<IFileModel> Files => null;
-
+        public string Name => FilePath.GetFileName();
+        string IFile.FilePath => FilePath.GetFilePath();
     }
 
     /// <summary>

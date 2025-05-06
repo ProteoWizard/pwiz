@@ -110,5 +110,11 @@ namespace pwiz.Skyline.Model.Files
 
             return list;
         }
+
+        public static SkylineFile Create(SrmDocument document, string documentFilePath) 
+        {
+            var documentContainer = CreateDocumentContainer(document, documentFilePath);
+            return new SkylineFile(documentContainer);
+        }
     }
 }

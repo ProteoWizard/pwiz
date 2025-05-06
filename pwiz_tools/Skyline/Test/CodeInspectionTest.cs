@@ -539,12 +539,12 @@ namespace pwiz.SkylineTest
             }
         }
 
-        // Assert the file data model is not an IIdentityContainer. It would be easy to implement IIC on the base
-        // interface. If done, though, other Skyline tests (esp. tutorials) fail with subtle errors. So check that
-        // hasn't happened.
+        // Assert the file data model is not an IIdentityContainer. Implementing IIdentityContainer on the IFile
+        // interface causes other Skyline tests (esp. tutorials) to fail with subtle errors. It would be easy
+        // to implement so this inspection checks that has not happened.
         private static void FilesTreeDataModelInspection()
         {
-            Assert.IsFalse(typeof(IIdentiyContainer).IsAssignableFrom(typeof(IFileModel)));
+            Assert.IsFalse(typeof(IIdentiyContainer).IsAssignableFrom(typeof(IFile)));
         }
 
         /// <summary>

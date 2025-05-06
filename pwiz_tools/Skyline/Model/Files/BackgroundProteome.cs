@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model.Files
         public override Immutable Immutable => BgProteome;
         public override string Name => BgProteome.Name;
         public override string FilePath => BgProteome.FilePath;
-        public override string FileName => BgProteome.FileName;
+        public override string FileName => BgProteome.Name;
 
         private Proteome.BackgroundProteome BgProteome => Document.Settings.PeptideSettings.BackgroundProteome;
     }

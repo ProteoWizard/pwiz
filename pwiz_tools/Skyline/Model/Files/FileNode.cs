@@ -94,17 +94,23 @@ namespace pwiz.Skyline.Model.Files
         // ReSharper disable once LocalizableElement
         public override string ToString() => "FileNode: " + (Name ?? string.Empty);
 
-        internal bool IsDocumentSavedToDisk()
+        public static bool IsDocumentSavedToDisk(string documentFilePath)
         {
-            return !string.IsNullOrEmpty(DocumentPath);
+            return !string.IsNullOrEmpty(documentFilePath);
         }
 
-        public static IDocumentContainer CreateDocumentContainer(SrmDocument document, string documentFilePath)
+        internal bool IsDocumentSavedToDisk()
+        {
+            return IsDocumentSavedToDisk(DocumentPath);
+        }
+
+        internal static IDocumentContainer CreateDocumentContainer(SrmDocument document, string documentFilePath)
         {
             var documentContainer = new MemoryDocumentContainer
             {
                 DocumentFilePath = documentFilePath
             };
+            // CONSIDER: does docOriginal need to be set differently?
             documentContainer.SetDocument(document, documentContainer.Document);
 
             return documentContainer;

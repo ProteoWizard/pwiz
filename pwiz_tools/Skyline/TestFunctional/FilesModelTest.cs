@@ -45,8 +45,7 @@ namespace pwiz.SkylineTestFunctional
 
             var docSettings = SkylineWindow.Document.Settings;
 
-            var documentContainer = FileNode.CreateDocumentContainer(SkylineWindow.Document, documentPath);
-            var modelFiles = new SkylineFile(documentContainer);
+            var modelFiles = SkylineFile.Create(SkylineWindow.Document, documentPath);
 
             // <root>/
             //      replicates/
@@ -134,8 +133,7 @@ namespace pwiz.SkylineTestFunctional
 
             docSettings = SkylineWindow.Document.Settings;
 
-            documentContainer = FileNode.CreateDocumentContainer(SkylineWindow.Document, documentPath);
-            modelFiles = new SkylineFile(documentContainer);
+            modelFiles = SkylineFile.Create(SkylineWindow.Document, documentPath);
 
             var newDocReplicate = docSettings.MeasuredResults.Chromatograms[0];
             var newModelReplicate = modelFiles.Files[1].Files[0];

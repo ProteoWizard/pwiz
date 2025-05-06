@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.IonMobility
     public sealed class IonMobilityLibrarySpecId : Identity { }
 
     [XmlRoot("ionmobility_library_spec")]
-    public class IonMobilityLibrarySpec : XmlNamedElement, IEquatable<IonMobilityLibrarySpec>, IFileModel
+    public class IonMobilityLibrarySpec : XmlNamedElement, IEquatable<IonMobilityLibrarySpec>, IFile
     {
         public const string EXT = IonMobilityDb.EXT;
 
@@ -105,8 +105,6 @@ namespace pwiz.Skyline.Model.IonMobility
         }
 
         public Identity Id { get; }
-        public FileType Type { get => FileType.ion_mobility_library; }
-        public IList<IFileModel> Files => null;
     }
 
     [XmlRoot("ion_mobility_library")]
