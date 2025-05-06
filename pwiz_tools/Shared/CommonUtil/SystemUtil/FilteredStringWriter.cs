@@ -47,7 +47,7 @@ namespace pwiz.Common.SystemUtil
         }
         public override void WriteLine(string line)
         {
-            string adjustedLine = string.Empty;
+            string adjustedLine = line;
             bool skip_line = false;
 
             if (line.Contains(@"DiaNN/Spectronaut"))
