@@ -629,14 +629,13 @@ namespace pwiz.Skyline.Controls.Graphs
             // ReSharper disable LocalizableElement
             string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
 
-            if (ccs != null) {
-                for (int chargeIndex = 0; chargeIndex < ccs.Length; chargeIndex++)
-                {
-                    if (ccs[chargeIndex] != null)
-                    {
-                        string Asq = "\u00C5\u00B2";
-                        label += string.Format("\n{0} ({1}+): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeIndex +1,  ccs[chargeIndex], Asq);
-                    }
+            if (ccs != null)
+            {
+                var chargeIndex = TransitionGroupNode.PrecursorCharge - 1;
+                if (ccs[chargeIndex] != null)
+                { 
+                    string Asq = "\u00C5\u00B2";
+                    label += string.Format("\n{0} ({1}+): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeIndex +1,  ccs[chargeIndex], Asq);
                 }
             }
 
