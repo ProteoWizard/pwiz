@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Model.Files
@@ -31,5 +32,13 @@ namespace pwiz.Skyline.Model.Files
         public override Immutable Immutable => Document.Settings;
         public override string Name => FileResources.FileModel_ViewFile;
         public override string FilePath => SkylineWindow.GetViewFile(DocumentPath);
+
+        public override bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (!(nodeDoc is SkylineViewFile)) return false;
+
+            return string.Equals(DocumentPath, nodeDoc.DocumentPath, StringComparison.OrdinalIgnoreCase);
+        }
     }
 }

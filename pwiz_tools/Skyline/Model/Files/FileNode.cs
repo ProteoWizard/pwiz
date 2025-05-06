@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.Collections;
@@ -66,8 +67,10 @@ namespace pwiz.Skyline.Model.Files
 
     public abstract class FileNode
     {
-        protected FileNode(IDocumentContainer documentContainer, IdentityPath identityPath,
-                           ImageId available = ImageId.file, ImageId missing = ImageId.file_missing)
+        protected FileNode(IDocumentContainer documentContainer,
+                           IdentityPath identityPath,
+                           ImageId available = ImageId.file,
+                           ImageId missing = ImageId.file_missing)
         {
             DocumentContainer = documentContainer;
             IdentityPath = identityPath;
@@ -75,12 +78,14 @@ namespace pwiz.Skyline.Model.Files
             ImageMissing = missing;
         }
 
-        protected IDocumentContainer DocumentContainer { get; }
-        protected SrmDocument Document => DocumentContainer.Document;
-        protected string DocumentPath => DocumentContainer.DocumentFilePath;
+        internal IDocumentContainer DocumentContainer { get; }
+        internal SrmDocument Document => DocumentContainer.Document;
+        internal string DocumentPath => DocumentContainer.DocumentFilePath;
 
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
+
+        [Obsolete]
         public abstract Immutable Immutable { get; }
         public abstract string Name { get; }
         public abstract string FilePath { get; }
@@ -93,6 +98,14 @@ namespace pwiz.Skyline.Model.Files
 
         // ReSharper disable once LocalizableElement
         public override string ToString() => "FileNode: " + (Name ?? string.Empty);
+
+        public virtual bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (GetType() != nodeDoc.GetType()) return false;
+
+            return ReferenceEquals(Immutable, nodeDoc.Immutable);
+        }
 
         public static bool IsDocumentSavedToDisk(string documentFilePath)
         {

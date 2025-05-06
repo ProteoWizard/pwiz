@@ -151,17 +151,15 @@ namespace pwiz.Skyline.Controls.FilesTree
                 return;
 
             var newDocumentFilePath = args.DocumentFilePath;
-            var forceUpdateModels = false;
 
-            if (IsMonitoringFileSystem() && args.IsSaveAs && !_monitoredFilePath.Equals(newDocumentFilePath, StringComparison.OrdinalIgnoreCase))
+            if (IsMonitoringFileSystem() && args.IsSaveAs && !string.Equals(_monitoredFilePath, newDocumentFilePath, StringComparison.OrdinalIgnoreCase))
             {
                 _fsWatcher.Path = Path.GetDirectoryName(newDocumentFilePath);
                 _monitoredFilePath = newDocumentFilePath;
                 _monitoringFileSystem = true;
-                forceUpdateModels = true;
             }
 
-            UpdateTree(newDocumentFilePath, Document, forceUpdateModels);
+            UpdateTree(Document, newDocumentFilePath);
         }
 
         public void OnDocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -173,10 +171,10 @@ namespace pwiz.Skyline.Controls.FilesTree
                 ReferenceEquals(Document.Settings, args.DocumentPrevious?.Settings))
                 return;
 
-            UpdateTree(DocumentContainer.DocumentFilePath, Document);
+            UpdateTree(Document, DocumentContainer.DocumentFilePath);
         }
 
-        internal void UpdateTree(string documentFilePath, SrmDocument document, bool forceModelUpdate = false) 
+        internal void UpdateTree(SrmDocument document, string documentFilePath) 
         {
             try
             {
@@ -184,7 +182,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                 var files = SkylineFile.Create(document, documentFilePath);
 
-                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode, forceModelUpdate);
+                MergeNodes(new SingletonList<FileNode>(files), Nodes, FilesTreeNode.CreateNode);
 
                 var expandedNodes = IsAnyNodeExpanded(Root);
                 if (!expandedNodes)
@@ -230,15 +228,6 @@ namespace pwiz.Skyline.Controls.FilesTree
             var docFilesList = docFiles.ToList();
             var localFileInitList = new List<FilesTreeNode>();
 
-            // Forces reset of the tree by creating all new tree nodes
-            if (changeAll)
-            {
-                for (var index = treeNodes.Count - 1; index >= 0; index--)
-                {
-                    treeNodes.RemoveAt(index);
-                }
-            }
-
             FileNode nodeDoc = null;
 
             // Keep remaining tree nodes into a map by the identity global index.
@@ -261,7 +250,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                     if (nodeTree == null)
                         break;
 
-                    if (!ReferenceEquals(nodeTree.Model.Immutable, nodeDoc.Immutable))
+                    if (!nodeTree.Model.ModelEquals(nodeDoc))
                     {
                         if(nodeTree.Model.IdentityPath.Equals(nodeDoc.IdentityPath))
                         {
@@ -279,7 +268,7 @@ namespace pwiz.Skyline.Controls.FilesTree
 
                             // Found node with the same ID, so replace its doc node, if not
                             // reference equal to the one looked up.
-                            if (!ReferenceEquals(nodeTree.Model.Immutable, nodeDoc.Immutable))
+                            if (!nodeTree.Model.ModelEquals(nodeDoc)) 
                             {
                                 nodeTree.Model = nodeDoc;
 
@@ -356,7 +345,7 @@ namespace pwiz.Skyline.Controls.FilesTree
                 var nodeTree = (FilesTreeNode)treeNodes[insertNodeIndex + firstInsertPosition];
                 var docNode = docFilesList[insertNodeIndex + firstInsertPosition];
 
-                if (!ReferenceEquals(docNode.Immutable, nodeTree.Model.Immutable))
+                if (!nodeTree.Model.ModelEquals(nodeDoc))
                 {
                     nodeTree.Model = docNode;
 

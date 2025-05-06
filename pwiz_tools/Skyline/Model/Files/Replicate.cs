@@ -152,6 +152,14 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
+        public override bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (!(nodeDoc is Replicate replicate)) return false;
+
+            return ReferenceEquals(ChromatogramSet, replicate.ChromatogramSet);
+        }
+
         private ChromatogramSet ChromatogramSet
         {
             get

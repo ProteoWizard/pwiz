@@ -31,6 +31,14 @@ namespace pwiz.Skyline.Model.Files
         public override string Name => ImsDb.Name;
         public override string FilePath => ImsDb.FilePath;
 
+        public override bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (!(nodeDoc is IonMobilityLibrary library)) return false;
+
+            return ReferenceEquals(ImsDb, library.ImsDb);
+        }
+
         private IonMobility.IonMobilityLibrary ImsDb => Document.Settings.TransitionSettings.IonMobilityFiltering.IonMobilityLibrary;
     }
 }

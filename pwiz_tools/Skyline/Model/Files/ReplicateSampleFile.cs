@@ -45,5 +45,13 @@ namespace pwiz.Skyline.Model.Files
                 else return null;
             }
         }
+
+        public override bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (!(nodeDoc is ReplicateSampleFile sampleFile)) return false;
+
+            return ReferenceEquals(ChromFileInfo, sampleFile.ChromFileInfo);
+        }
     }
 }

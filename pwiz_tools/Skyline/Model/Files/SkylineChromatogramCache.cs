@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
 
@@ -32,5 +33,14 @@ namespace pwiz.Skyline.Model.Files
         public override Immutable Immutable => Document.Settings.MeasuredResults;
         public override string Name => FileResources.FileModel_ChromatogramCache;
         public override string FilePath => ChromatogramCache.FinalPathForName(DocumentPath, null);
+
+        public override bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (!(nodeDoc is SkylineChromatogramCache)) return false;
+
+            return string.Equals(DocumentPath, nodeDoc.DocumentPath, StringComparison.OrdinalIgnoreCase);
+        }
+
     }
 }

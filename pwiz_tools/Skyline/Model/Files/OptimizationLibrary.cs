@@ -30,6 +30,14 @@ namespace pwiz.Skyline.Model.Files
         public override string Name => OptLibrary.Name;
         public override string FilePath => OptLibrary.FilePath;
 
+        public override bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (!(nodeDoc is OptimizationLibrary library)) return false;
+
+            return ReferenceEquals(OptLibrary, library.OptLibrary);
+        }
+
         private Optimization.OptimizationLibrary OptLibrary => 
             Document.Settings.TransitionSettings.Prediction.OptimizedLibrary;
     }

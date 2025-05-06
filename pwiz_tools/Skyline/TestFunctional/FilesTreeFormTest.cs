@@ -61,6 +61,8 @@ namespace pwiz.SkylineTestFunctional
         {
             TestEmptyDocument();
 
+            TestSaveAs();
+
             TestRatPlasmaDocument();
         }
 
@@ -110,6 +112,50 @@ namespace pwiz.SkylineTestFunctional
             AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root.NodeAt(0));
             // Window Layout
             AssertFileState(true, FileState.available, SkylineWindow.FilesTree.Root.NodeAt(1));
+
+            // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
+            RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });
+        }
+
+        protected void TestSaveAs()
+        {
+            const string origFileName = "SaveAsOne.sky";
+            const string saveAsFileName = "SaveAsTwo.sky";
+
+            var emptyDocument = SrmDocumentHelper.MakeEmptyDocument();
+            RunUI(() => SkylineWindow.SwitchDocument(emptyDocument, null));
+            WaitForDocumentLoaded();
+
+            RunUI(() => { SkylineWindow.ShowFilesTreeForm(true); });
+            WaitForConditionUI(() => SkylineWindow.FilesTreeFormIsVisible);
+
+            // Save document for the first time
+            var monitoredPath = Path.Combine(TestFilesDir.FullPath, origFileName);
+            RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
+            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
+
+            Assert.AreEqual(Path.GetDirectoryName(monitoredPath), SkylineWindow.FilesTree.PathMonitoredForFileSystemChanges());
+
+            // Save As - existing document saved to a new location
+            monitoredPath = Path.Combine(TestFilesDir.FullPath, saveAsFileName);
+            RunUI(() => SkylineWindow.SaveDocument(monitoredPath));
+            WaitForCondition(() => File.Exists(monitoredPath) && SkylineWindow.FilesTree.IsMonitoringFileSystem());
+
+            // Verify file state after SaveAs - files are available and paths updated
+            var tree = SkylineWindow.FilesTree;
+            Assert.AreEqual(Path.GetDirectoryName(monitoredPath), tree.PathMonitoredForFileSystemChanges());
+
+            AssertTopLevelFiles(new[] { typeof(SkylineAuditLog), typeof(SkylineViewFile), typeof(ReplicatesFolder) }, SkylineWindow);
+
+            Assert.AreEqual(saveAsFileName, tree.Root.Name);
+            Assert.AreEqual(monitoredPath, tree.Root.FilePath);
+            AssertFileState(true, FileState.available, tree.Root);
+
+            Assert.AreEqual(SrmDocument.GetAuditLogPath(monitoredPath), tree.Root.NodeAt(0).LocalFilePath);
+            AssertFileState(true, FileState.available, tree.Root.NodeAt(0));
+
+            Assert.AreEqual(SkylineWindow.GetViewFile(monitoredPath), tree.Root.NodeAt(1).LocalFilePath);
+            AssertFileState(true, FileState.available, tree.Root.NodeAt(1));
 
             // Close FilesTreeForm so test framework doesn't fail the test due to an unexpected open dialog
             RunUI(() => { SkylineWindow.DestroyFilesTreeForm(); });

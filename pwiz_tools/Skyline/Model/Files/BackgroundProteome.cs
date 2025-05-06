@@ -31,6 +31,14 @@ namespace pwiz.Skyline.Model.Files
         public override string FilePath => BgProteome.FilePath;
         public override string FileName => BgProteome.Name;
 
+        public override bool ModelEquals(FileNode nodeDoc)
+        {
+            if (nodeDoc == null) return false;
+            if (!(nodeDoc is BackgroundProteome library)) return false;
+
+            return ReferenceEquals(BgProteome, library.BgProteome);
+        }
+
         private Proteome.BackgroundProteome BgProteome => Document.Settings.PeptideSettings.BackgroundProteome;
     }
 }

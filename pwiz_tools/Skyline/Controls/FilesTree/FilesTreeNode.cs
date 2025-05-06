@@ -72,22 +72,20 @@ namespace pwiz.Skyline.Controls.FilesTree
 
         internal string DocumentPath => ((FilesTree)TreeView).DocumentContainer.DocumentFilePath;
 
-        // Initialize the path to a local file. This tries exactly once to find a file locally
-        // matching the name of a file from the model.
-        //
-        // This accesses the file system (possibly more than once) and should not run on the UI thread.
+        // Convenience to avoid a cast
+        public FilesTree FilesTree => (FilesTree)TreeView;
+
+        // Try to find the file locally using a file's name / path and the path to a SrmDocument.
+        // This may access the file system 1+ times and should not be called on the UI thread.
         public void InitLocalFile()
         {
-            if (Model.IsBackedByFile && FileState == FileState.not_initialized)
+            if (Model.IsBackedByFile)
             {
                 LocalFilePath = LookForFileInPotentialLocations(FilePath, FileName, DocumentPath);
 
                 FileState = LocalFilePath != null ? FileState.available : FileState.missing;
             }
         }
-
-        // Convenience method to avoid a repetitive cast
-        public FilesTree FilesTree => (FilesTree)TreeView;
 
         private bool IsCurrentDropTarget()
         {
@@ -290,7 +288,7 @@ namespace pwiz.Skyline.Controls.FilesTree
         {
             if (Model.IsBackedByFile)
                 return FileState != FileState.not_initialized;
-            // Consider nodes not backed by files as initialized
+            // Nodes not backed by files are considered initialized by default
             else return true;
         }
     }
