@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Model.Results
                     BestWindowGroupMatchArea = (float)area;
                     BestWindowGroupMatchDistance = (float)distance;
                     BestWindowGroup = proposedBestWindowGroup;
-                    
+                    SetIsKnownWindowGroup(proposedBestWindowGroup);
 //Console.WriteLine($"u{BestWindowGroup} {this.Q1} {distance:F3}");
                     return true;
                 }

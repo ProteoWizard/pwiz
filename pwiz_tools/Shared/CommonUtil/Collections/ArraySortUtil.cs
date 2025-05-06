@@ -85,21 +85,23 @@ namespace pwiz.Common.Collections
             {
                 return;
             }
-                
+
             var sortIndexes = new int[arraySegment.Array!.Length];
-            for (var i = 0; i < arraySegment.Count; i++)
+            var offset = arraySegment.Offset;
+            var len = arraySegment.Count;
+            for (var i = 0; i < len; i++)
             {
-                sortIndexes[arraySegment.Offset+i] = i;
+                sortIndexes[offset++] = i;
             }
             Array.Sort(arraySegment.Array, sortIndexes, arraySegment.Offset, arraySegment.Count);
-            var len = arraySegment.Count;
             var buffer = new TItem[len];
             foreach (var secondaryArray in secondaryArrays.Where(a => a?.Array != null))
             {
                 var asList = secondaryArray.Value as IList<TItem>;
-                for (var i = 0; i <len; i++)
+                offset = arraySegment.Offset;
+                for (var i = 0; i < len; i++)
                 {
-                    buffer[i] = asList[sortIndexes[arraySegment.Offset + i]];
+                    buffer[i] = asList[sortIndexes[offset++]];
                 }
                 // ReSharper disable once AssignNullToNotNullAttribute
                 Array.Copy(buffer, 0, secondaryArray.Value.Array, secondaryArray.Value.Offset, len);
