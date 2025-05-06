@@ -1247,7 +1247,7 @@ Old Localized:445, 38</comment>
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>学習ドキュメント(&amp;e):</value>
+    <value>学習ドキュメント(&amp;E):</value>
   </data>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
@@ -1313,7 +1313,7 @@ Old Localized:445, 38</comment>
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>学習ライブラリ(&amp;e):</value>
+    <value>学習ライブラリ(&amp;E):</value>
   </data>
   <data name="comboLearnFrom.Items" xml:space="preserve">
     <value>Skylineの結果</value>
