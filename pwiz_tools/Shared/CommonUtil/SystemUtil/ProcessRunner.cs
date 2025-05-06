@@ -195,7 +195,7 @@ namespace pwiz.Common.SystemUtil
                             if (double.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
                             {
                                 percentLast = (int)percent;
-                                status = status.ChangePercentComplete(Math.Min(100,percentLast));
+                                status = status.ChangePercentComplete(percentLast);
                                 if (percent >= 100 && status.SegmentCount > 0)
                                     status = status.NextSegment();
                                 progress.UpdateProgress(status);
@@ -258,7 +258,7 @@ namespace pwiz.Common.SystemUtil
                 // printed 100% to the console
                 if (updateProgressPercentage && percentLast < 100 )
                 {
-                    status = status.ChangePercentComplete(Math.Min(percentLast, 100));
+                    status = status.ChangePercentComplete(100);
                     if (status.SegmentCount > 0)
                         status = status.NextSegment();
                     if (progress != null)
