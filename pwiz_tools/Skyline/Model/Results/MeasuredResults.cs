@@ -1937,12 +1937,6 @@ namespace pwiz.Skyline.Model.Results
         {
             return _medianTicArea;
         }
-
-        // TODO(ekoneil): improve perf
-        public ChromatogramSet FindChromatogramSet(ChromatogramSetId chromatogramSetId)
-        {
-            return _chromatograms.FirstOrDefault(chromatogramSet => ReferenceEquals(chromatogramSet.Id, chromatogramSetId));
-        }
     }
 
     public sealed class DataFileReplicates

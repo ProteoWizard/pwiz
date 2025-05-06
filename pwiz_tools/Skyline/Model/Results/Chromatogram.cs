@@ -987,19 +987,12 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
-
-        public ChromFileInfo FindChromFileInfo(ChromFileInfoId chromFileInfoId)
-        {
-            return _msDataFileInfo.FirstOrDefault(chromFileInfo => ReferenceEquals(chromFileInfo.Id, chromFileInfoId));
-        }
     }
 
     /// <summary>
     /// Identity class to allow identity equality on <see cref="ChromatogramSetId"/>.
     /// </summary>
-    public sealed class ChromatogramSetId : Identity
-    {        
-    }
+    public sealed class ChromatogramSetId : Identity { }
 
     public sealed class ChromFileInfo : DocNode, IPathContainer, IFile
     {

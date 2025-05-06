@@ -152,7 +152,14 @@ namespace pwiz.Skyline.Model.Files
             return new ModifiedDocument(newDocument).ChangeAuditLogEntry(entry);
         }
 
-        private ChromatogramSet ChromatogramSet =>
-            DocumentContainer.Document.MeasuredResults.FindChromatogramSet((ChromatogramSetId)IdentityPath.GetIdentity(0));
+        private ChromatogramSet ChromatogramSet
+        {
+            get
+            {
+                var chromSetId = (ChromatogramSetId)IdentityPath.GetIdentity(0);
+                DocumentContainer.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _);
+                return chromSet;
+            }
+        }
     }
 }

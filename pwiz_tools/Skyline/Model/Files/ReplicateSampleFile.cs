@@ -28,12 +28,22 @@ namespace pwiz.Skyline.Model.Files
 
         public override bool IsBackedByFile => true;
         public override Immutable Immutable => ChromFileInfo;
-        public override string Name => ChromFileInfo.Name;
-        public override string FilePath => ChromFileInfo.FilePath.GetFilePath();
-        public override string FileName => ChromFileInfo.FilePath.GetFileName();
+        public override string Name => ChromFileInfo?.Name ?? string.Empty;
+        public override string FilePath => ChromFileInfo?.FilePath.GetFilePath() ?? string.Empty;
+        public override string FileName => ChromFileInfo?.FilePath.GetFileName() ?? string.Empty;
 
-        private ChromFileInfo ChromFileInfo => Document.MeasuredResults?.
-            FindChromatogramSet((ChromatogramSetId)IdentityPath.GetIdentity(0)).
-            FindChromFileInfo((ChromFileInfoId)IdentityPath.GetIdentity(1));
+        private ChromFileInfo ChromFileInfo
+        {
+            get
+            {
+                var chromSetId = (ChromatogramSetId)IdentityPath.GetIdentity(0);
+                if (DocumentContainer.Document.MeasuredResults.TryGetChromatogramSet(chromSetId.GlobalIndex, out var chromSet, out _))
+                {
+                    var chromFileInfoId = (ChromFileInfoId)IdentityPath.GetIdentity(1);
+                    return chromSet.GetFileInfo(chromFileInfoId);
+                }
+                else return null;
+            }
+        }
     }
 }
