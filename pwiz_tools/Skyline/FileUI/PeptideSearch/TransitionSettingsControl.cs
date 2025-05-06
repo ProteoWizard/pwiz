@@ -208,7 +208,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public MzTolerance.Units IonMatchToleranceUnits
         {
             get { return (MzTolerance.Units)comboMatchToleranceUnit.SelectedIndex; }
-            set { comboMatchToleranceUnit.SelectedIndex = (int)value; }
+            set
+            {
+                // DSHTEYN: Don't set the units already set or bug happens where the tolerance gets multiplied or divided by 1e3
+                if (comboMatchToleranceUnit.SelectedIndex != (int) value)
+                    comboMatchToleranceUnit.SelectedIndex = (int)value;
+            }
         }
 
         public int MinIonCount
