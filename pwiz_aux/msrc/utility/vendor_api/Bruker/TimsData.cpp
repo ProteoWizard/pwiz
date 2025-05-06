@@ -331,9 +331,9 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 row.getter() >> windowGroup >> isolationMz >> isolationWidth >> scanBegin >> scanEnd;
 
                 auto& isolationMzLowByScanNumber = isolationMzLowByScanNumberByWindowGroup_[windowGroup - 1];
-                isolationMzLowByScanNumber.resize(maxScanNum);
+                isolationMzLowByScanNumber.resize(maxScanNum + 1);
                 auto& isolationMzHighByScanNumber = isolationMzHighByScanNumberByWindowGroup_[windowGroup - 1];
-                isolationMzHighByScanNumber.resize(maxScanNum);
+                isolationMzHighByScanNumber.resize(maxScanNum + 1);
                 for (; scanBegin <= scanEnd; ++scanBegin)
                 {
                     isolationMzLowByScanNumber[scanBegin] = isolationMz - isolationWidth/2;
