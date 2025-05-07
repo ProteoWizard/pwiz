@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -93,7 +94,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(40, result.PercentComplete); // segment - 1 = 40
             Assert.AreEqual(40, result.PercentZoomStart); // segment - 1 = 40  
             Assert.AreEqual(60, result.PercentZoomEnd); // segment = 60
-            Assert.AreEqual(segmentPercentageEnds, result.SegmentPercentEnds);
+            CollectionAssert.AreEqual(segmentPercentageEnds, result.SegmentPercentEnds.ToArray());
             Assert.AreEqual(5, result.SegmentCount);
             Assert.AreEqual(2, result.Segment);
         }
@@ -104,14 +105,13 @@ namespace pwiz.SkylineTest
             var progress = new ProgressStatus();
             var segmentPercentageEnds = new[] { 20, 40, 60 };
             int segment = 5; // Beyond segmentCount (3)
-
+           
             var result = progress.ChangeSegments(segment, ImmutableList<int>.ValueOf(segmentPercentageEnds));
-
             Assert.AreNotEqual(result, null);
             Assert.AreEqual(60, result.PercentComplete); // Last end
             Assert.AreEqual(60, result.PercentZoomStart); // Last end
             Assert.AreEqual(100, result.PercentZoomEnd); // 100
-            Assert.AreEqual(segmentPercentageEnds, result.SegmentPercentEnds);
+            CollectionAssert.AreEqual(segmentPercentageEnds, result.SegmentPercentEnds.ToArray());
             Assert.AreEqual(3, result.SegmentCount);
             Assert.AreEqual(5, result.Segment);
         }
