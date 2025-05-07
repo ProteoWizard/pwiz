@@ -95,7 +95,36 @@ namespace TestPerf
         private const string PROCAL_LIBRARY = "PROCAL";
         private const string PROCAL_KOINA_LIBRARY = "PROCAL-Koina";
 
-        private bool IsConnected => IsPauseForScreenShots;
+        private bool IsConnected => IsRecordingScreenShots;
+
+        protected override Bitmap ProcessCoverShot(Bitmap bmp)
+        {
+            using var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
+            
+            // Draw the figure 1 image from the tutorial in the lower right corner
+            using var figure1 = Image.FromFile(Path.Combine(TutorialPath, "image-figure1.png"));
+            int widthFigure1 = 509;
+            int destX = bmp.Width - widthFigure1 - 15;
+            int destY = bmp.Height - figure1.Height - 55;
+            var rectFigure1 = new Rectangle(destX, destY, widthFigure1, figure1.Height);
+            var rectSrc = new Rectangle(0, 0, widthFigure1, figure1.Height);
+            graph.DrawImage(figure1, rectFigure1, rectSrc, GraphicsUnit.Pixel);
+            
+            // Draw a border around it to make it stand out a bit more
+            using var whitePen = new Pen(Color.White);
+            rectFigure1.X--;
+            rectFigure1.Y--;
+            rectFigure1.Width++;
+            rectFigure1.Height++;
+            graph.DrawRectangle(whitePen, rectFigure1);
+            using var grayPen = new Pen(Color.Gray, 4);
+            rectFigure1.Inflate(2, 2);
+            rectFigure1.Width++;
+            rectFigure1.Height++;
+            graph.DrawRectangle(grayPen, rectFigure1);
+            
+            return bmp;
+        }
 
         protected override void DoTest()
         {
@@ -106,6 +135,8 @@ namespace TestPerf
                 SkipScreenshots(8);
             RunUI(() => SkylineWindow.SaveDocument(GetTestPath("Tutorial_Libraries" + SrmDocument.EXT)));
             ProcessPrmData();
+            if (IsCoverShotMode)
+                return;
             ProcessDiaData();
             ProcessDdaData();
         }
@@ -249,6 +280,10 @@ namespace TestPerf
 
             RunUI(() => Settings.Default.Koina = true);
             RunUI(SkylineWindow.UpdateGraphPanes);
+
+            if (IsCoverShotMode)
+                return;
+
             WaitForConditionUI(() => SkylineWindow.GraphSpectrum.KoinaNCE == 31);
             RunUI(() => SkylineWindow.GraphSpectrum.KoinaNCE = 18);
             WaitForGraphs();
@@ -258,7 +293,7 @@ namespace TestPerf
             RunUI(SkylineWindow.UpdateGraphPanes);
             WaitForGraphs();
             PauseForScreenShot<GraphSpectrum>("Library Match with PROCAL v Koina mirror and 39 NCE");
-            
+
             RunUI(() =>
             {
                 Settings.Default.Koina = false;
@@ -320,6 +355,11 @@ namespace TestPerf
             RestoreViewOnScreen(11);
             RunUIForScreenShot(() => SkylineWindow.ActivateReplicate("PRM_100fmol"));
             RunUI(() => SkylineWindow.SynchronizeZooming(true));
+            if (IsCoverShotMode)
+            {
+                TakeCoverShot();
+                return;
+            }
             PauseForScreenShot("Skyline main window with PRM data");
             RunUI(() => SkylineWindow.SaveDocument());
         }
