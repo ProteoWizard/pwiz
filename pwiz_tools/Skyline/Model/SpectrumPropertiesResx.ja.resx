@@ -157,6 +157,12 @@
   <data name="Description_SpectrumCount" xml:space="preserve">
     <value>ライブラリ内にあるこのペプチドに対して測定されたスペクトルの数</value>
   </data>
+  <data name="Description_KoinaDotpMatch" xml:space="preserve">
+    <value>ライブラリとKoinaスペクトルの注釈付きピーク間のドット積（実際には正規化平方根コントラストアングル、こちらの例を参照: https://doi.org/10.1007/s13361-016-1408-y)イオンタイプが注釈付きで、したがって計算に含まれたユーザーのコントロール。</value>
+  </data>
+  <data name="Description_KoinaDotpMatchFull" xml:space="preserve">
+    <value>Koinaスペクトルの全ピークと、それらに一致するライブラリスペクトルのピークの間のドット積 (実際には、正規化平方根コントラストアングル)。</value>
+  </data>
   <data name="Adduct" xml:space="preserve">
     <value>付加物</value>
   </data>
@@ -198,5 +204,11 @@
   </data>
   <data name="SpectrumCount" xml:space="preserve">
     <value>スペクトル数</value>
+  </data>
+  <data name="KoinaDotpMatch" xml:space="preserve">
+    <value>Koinaドット積</value>
+  </data>
+  <data name="KoinaDotpMatchFull" xml:space="preserve">
+    <value>Koinaドット積詳細</value>
   </data>
 </root>
