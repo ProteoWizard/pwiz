@@ -1394,7 +1394,7 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
-        private string TutorialPath
+        protected string TutorialPath
         {
             get
             {
@@ -1415,6 +1415,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         private int ScreenshotCounter = 1;
+
+        public void SkipScreenshots(int numToSkip)
+        {
+            ScreenshotCounter += numToSkip;
+        }
 
         public virtual bool AuditLogCompareLogs
         {
