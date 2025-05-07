@@ -1371,7 +1371,7 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
-        private string TutorialPath
+        protected string TutorialPath
         {
             get
             {
