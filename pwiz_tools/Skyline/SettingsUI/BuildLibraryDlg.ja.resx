@@ -647,6 +647,9 @@ Old Localized:N&amp;CE：</comment>
   <data name="radioCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <data name="radioCarafeSource.Text" xml:space="preserve">
+    <value>カラフ(&amp;C)</value>
+  </data>
   <data name="radioAlphaSource.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -658,6 +661,9 @@ Old Localized:N&amp;CE：</comment>
   </data>
   <data name="radioAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
+  </data>
+  <data name="radioAlphaSource.Text" xml:space="preserve">
+    <value>AlphaPept&amp;Deep</value>
   </data>
   <data name="koinaInfoSettingsBtn.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Right</value>
@@ -1036,6 +1042,9 @@ Old Localized:445, 38</comment>
   <data name="tabLearn.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
   </data>
+  <data name="tabLearn.Text" xml:space="preserve">
+    <value>学習</value>
+  </data>
   <data name="&gt;&gt;tabLearn.Name" xml:space="preserve">
     <value>tabLearn</value>
   </data>
@@ -1092,6 +1101,9 @@ Old Localized:445, 38</comment>
   </data>
   <data name="tabCarafeSource.TabIndex" type="System.Int32, mscorlib">
     <value>2</value>
+  </data>
+  <data name="tabCarafeSource.Text" xml:space="preserve">
+    <value>カラフ</value>
   </data>
   <data name="tabKoinaSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1235,8 +1247,7 @@ Old Localized:445, 38</comment>
     <value>0</value>
   </data>
   <data name="label5.Text" xml:space="preserve">
-    <value>L&amp;earning document:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>学習ドキュメント(&amp;E):</value>
   </data>
   <data name="&gt;&gt;listLibraries.Name" xml:space="preserve">
     <value>listLibraries</value>
@@ -1302,8 +1313,10 @@ Old Localized:445, 38</comment>
     <value>0</value>
   </data>
   <data name="label3.Text" xml:space="preserve">
-    <value>L&amp;earning Libraries:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>学習ライブラリ(&amp;E):</value>
+  </data>
+  <data name="comboLearnFrom.Items" xml:space="preserve">
+    <value>Skylineの結果</value>
   </data>
   <data name="comboLearnFrom.Items1" xml:space="preserve">
     <value>ライブラリ</value>
@@ -1330,8 +1343,7 @@ Old Localized:445, 38</comment>
     <value>0</value>
   </data>
   <data name="label1.Text" xml:space="preserve">
-    <value>&amp;Learn from:</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>次のドキュメントから学習(&amp;L):</value>
   </data>
   <data name="tabAlphaSource.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -1341,6 +1353,9 @@ Old Localized:445, 38</comment>
   </data>
   <data name="tabAlphaSource.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
+  </data>
+  <data name="tabAlphaSource.Text" xml:space="preserve">
+    <value>AlphaPeptDeep</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
