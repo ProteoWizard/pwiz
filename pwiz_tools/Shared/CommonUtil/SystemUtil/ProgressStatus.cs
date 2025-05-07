@@ -270,8 +270,9 @@ namespace pwiz.Common.SystemUtil
             int segment = Segment + 1;
             if (segment >= SegmentCount)
                 return this;
-            if (SegmentPercentEnds.IsNullOrEmpty())
+            if (SegmentPercentEnds == null || SegmentPercentEnds.Count == 0)
                 return ChangeSegments(segment, SegmentCount);
+
             return ChangeSegments(segment, SegmentPercentEnds as ImmutableList<int>);
         }
 
