@@ -307,4 +307,13 @@
   <data name="AbstractPanoramaClient_ParseUploadFileCompletedEventArgs_There_was_an_error_reading_the_server_response_" xml:space="preserve">
     <value>读取服务器响应出错。</value>
   </data>
+  <data name="AbstractPanoramaClient_CreateTargetedMsFolder_Error_creating_Panorama_folder__0__" xml:space="preserve">
+    <value>创建 Panorama 文件夹{0}时出错。</value>
+  </data>
+  <data name="AbstractPanoramaClient_DeleteFolderIfExists_Error_deleting_Panorama_folder__0__" xml:space="preserve">
+    <value>删除 Panorama 文件夹{0}时出错。</value>
+  </data>
+  <data name="AbstractPanoramaClient_CreateTargetedMsFolder_Folder_already_exists___0__" xml:space="preserve">
+    <value>文件夹已存在：{0}。</value>
+  </data>
 </root>

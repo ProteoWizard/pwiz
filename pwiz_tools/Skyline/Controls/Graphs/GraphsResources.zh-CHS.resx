@@ -746,7 +746,13 @@ Old Localized:点积：{0:0.0000}</comment>
   <data name="RelativeAbundanceGraph_ToolTip_PeakArea" xml:space="preserve">
     <value>峰面积</value>
   </data>
+  <data name="RelativeAbundanceGraph_ToolTip_LogPeakArea" xml:space="preserve">
+    <value>峰面积对数</value>
+  </data>
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>排名</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
+    <value>未找到定量色谱图</value>
   </data>
 </root>

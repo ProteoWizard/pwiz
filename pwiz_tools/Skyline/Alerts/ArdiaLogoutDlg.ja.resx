@@ -117,21 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="label1.Text" xml:space="preserve">
+    <value>以下のArdiaウェブからサインアウト</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="ElementLocator_Parse__0__is_not_a_valid_element_locator_" xml:space="preserve">
-    <value>{0}は有効な要素ロケーターではありません。</value>
-    <comment>"element" just means a generic thing that is in a Skyline document. Could be a peptide, result file, etc.</comment>
-  </data>
-  <data name="ElementLocator_ReadQuotedString_End_of_text" xml:space="preserve">
-    <value>テキスト終了</value>
-  </data>
-  <data name="ElementLocator_UnexpectedException__0__was_unexpected_in___1___at_position__2__" xml:space="preserve">
-    <value>位置{2}にある「{1}」では{0}はあり得ません。</value>
-  </data>
-  <data name="DocumentAnnotations_GetWarningMessage_The_following_element_could_not_be_found_" xml:space="preserve">
-    <value>以下の要素が見つかりませんでした:</value>
-  </data>
-  <data name="DocumentAnnotations_GetWarningMessage_The_following__0__elements_could_not_be_found_" xml:space="preserve">
-    <value>以下の{0}個の要素が見つかりませんでした:</value>
+  <data name="$this.Text" xml:space="preserve">
+    <value>Ardiaからログアウト</value>
   </data>
 </root>

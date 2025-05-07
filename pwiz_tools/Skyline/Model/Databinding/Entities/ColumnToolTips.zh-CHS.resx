@@ -126,6 +126,33 @@
     <value>用于收集谱图的分析器类型。
 如果使用多个分析器，则用斜杠分隔分析器的名称。</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>总离子对强度与最大离子对强度谱图进样时间的乘积</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>总离子对强度与最大离子对强度 MS2 谱图进样时间的乘积</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>总母离子强度与最大母离子强度 MS1 谱图进样时间的乘积</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>最大离子对强度谱图标识</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>最大离子对强度 MS2 谱图标识</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>最大母离子强度 MS1 谱图标识</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>总离子流与最大离子对强度 MS2 谱图进样时间的乘积</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>总离子流与最大离子对强度 MS2 谱图进样时间的乘积</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>总母离子强度与最大母离子强度 MS1 谱图进样时间的乘积</value>
+  </data>
   <data name="Area">
     <value>离子对峰值的曲线下面积 (AUC) 减去背景。</value>
   </data>
@@ -166,7 +193,7 @@
     <value>如果为“true”，则 Skyline 将根据离子对设置筛选器、谱图库等自动添加或删除母离子中的离子对。</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)</value>
+    <value>所有离子对的预期与实测质荷比值（以百万分之几 (PPM) 表示）之差的面积加权平均值</value>
     <comment>Needs Review:English text changed
 Old English:Average Mass Error PPM
 Current English:The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)
@@ -294,9 +321,9 @@ Old Localized:平均质量误差 PPM</comment>
     <value>用于确定对于倍数变化的置信区间的置信水平。</value>
   </data>
   <data name="CountTruncated">
-    <value>The number of transitions for a precursor that integrate a peak with a
-boundary at either end of the acquisition time range, where intensity at the end is
-greater than 25% of the background-subtracted peak height higher than the other extent.</value>
+    <value>峰积分
+边界触及采集时间范围任意一端、末端强度
+超过背景校正峰高 25% 且明显超出另一侧范围的母离子的离子对数量。</value>
     <comment>Needs Review:English text changed
 Old English:The number of transitions for a precursor that integrate a peak with a
 boundary at either end of the acquisition time range, where intensity at the end is
@@ -573,6 +600,10 @@ Old Localized:在采集时间区间的任意一端
   <data name="IsDecoy">
     <value>若是诱饵母离子，则成立。</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>母离子隔离时的质荷比窗口宽度。
+如果隔离了多个母离子，则隔离窗口宽度为各母离子周围窗口宽度之和。</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>单一同位素峰为零，M+1 为 1、M+2 为 2 等。</value>
   </data>
@@ -609,6 +640,39 @@ Old Localized:在采集时间区间的任意一端
   <data name="LastPosition">
     <value>肽段的最后一个 (C-末端) 氨基酸在其包含的蛋白质序列中的位置，
 如果没有可用的蛋白质序列，则为 #N/A</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>离子对强度与峰积分边界间谱图进样时间的乘积之和</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>离子对强度与峰积分边界间 MS2 谱图进样时间的乘积之和</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>总母离子强度与峰积分边界间 MS1 谱图进样时间的乘积之和</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>在峰积分边界间采集 MS2 谱图时，质谱仪内离子数量的相关数值</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>在峰积分边界间采集 MS1 谱图时，质谱仪内离子数量的相关数值</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>总离子流与峰积分边界间谱图进样时间的乘积之和</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>总离子流与峰积分边界间 MS2 谱图进样时间的乘积之和</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>总离子流与峰积分边界间 MS1 谱图进样时间的乘积之和</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>峰积分边界间总离子流的积分</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>峰积分边界间 MS2 谱图总离子流的积分</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>峰积分边界间 MS1 谱图总离子流的积分</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>离子迁移库中母离子的碰撞横截面</value>
@@ -1178,6 +1242,11 @@ Old Localized:在采集时间区间的任意一端
   <data name="ProductNeutralMass">
     <value>子离子肽段片段的中性质量（以道尔顿为单位）。</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>峰积分
+边界触及采集时间范围任意一端、末端强度
+超过背景校正峰高 25% 且明显超出另一侧范围的母离子的离子对面积加权平均值（0 至 1.0）。</value>
+  </data>
   <data name="Protein">
     <value>蛋白质</value>
   </data>
@@ -1482,7 +1551,7 @@ Old Localized:在采集时间区间的任意一端
 偏差。</value>
   </data>
   <data name="Strict">
-    <value>Calculated value unavailable when missing data could impact comparisons between replicates.</value>
+    <value>如果缺少数据可能影响重复测定的比较，则计算值不可用。</value>
     <comment>Needs Review:English text changed
 Old English:Calculated value unavailable when missing data could comparisons between replicates.
 Current English:Calculated value unavailable when missing data could impact comparisons between replicates.
@@ -1585,9 +1654,9 @@ Old Localized:缺失的数据影响到重复测定之间的比较时，不可获
     <value>离子对</value>
   </data>
   <data name="Truncated">
-    <value>True if the integrate peak has a boundary at either end of the acquisition
-time range, where intensity at the end is greater than 25% of the background-subtracted peak height
-higher than the other extent.</value>
+    <value>如果峰积分边界触及采集
+时间范围任意一端、末端强度超过背景校正峰高
+25% 且明显超出另一侧范围，则为真。</value>
     <comment>Needs Review:English text changed
 Old English:True if the integrated a peak has a boundary at either end of the acquisition
 time range, where intensity at the end is greater than 1% of the entire peak height

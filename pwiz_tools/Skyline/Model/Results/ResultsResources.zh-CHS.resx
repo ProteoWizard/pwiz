@@ -333,7 +333,7 @@
     <value>由于明确保留时间 {1} 不介于 {2} 和 {3} 之间，因此丢弃“{0}”的色谱图</value>
   </data>
   <data name="IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type" xml:space="preserve">
-    <value>need a value for Transition Settings, Ion mobility filtering, Window type</value>
+    <value>需要提供离子对设置、离子迁移过滤、窗口类型值</value>
     <comment>Needs Review:English text changed
 Old English:need a value for  Transition Settings  Ion mobility filtering  Window type
 Current English:need a value for Transition Settings, Ion mobility filtering, Window type
@@ -347,5 +347,8 @@ Old Localized:需要提供离子对设置离子迁移过滤窗口类型值</comm
   </data>
   <data name="DataFileInstrumentInfo_IonMobilityFromCCS_no_conversion" xml:space="preserve">
     <value>供应商提供的库无法确定 CCS 为 {1:0.###}、质荷比为 {2:0.####}、电荷为 {3} 的 {0} 的离子迁移。</value>
+  </data>
+  <data name="PeptideChromDataSets_FilterByRetentionTime_Discarding_empty_chromatograms_for__0_" xml:space="preserve">
+    <value>丢弃其空色谱图: {0}</value>
   </data>
 </root>
