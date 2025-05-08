@@ -22,6 +22,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
@@ -170,12 +171,13 @@ namespace pwiz.SkylineTestData
 
         public static IEnumerable<Assembly> GetAssemblies()
         {
-            yield return typeof(Skyline.SkylineWindow).Assembly;
+            var skylineAssembly = typeof(Skyline.SkylineWindow).Assembly;
+            yield return skylineAssembly;
             yield return typeof(ProteomeDatabase.API.ProteomeDb).Assembly;
             yield return typeof(CommonFormEx).Assembly;
             yield return typeof(MSGraph.MSGraphPane).Assembly;
             yield return typeof(ProteowizardWrapper.MsDataFileImpl).Assembly;
-            yield return Assembly.LoadFrom("ZedGraph.dll");
+            yield return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(skylineAssembly.Location)!, "ZedGraph.dll"));
         }
 
         /// <summary>
