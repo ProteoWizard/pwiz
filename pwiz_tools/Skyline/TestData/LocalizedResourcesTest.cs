@@ -30,7 +30,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestFunctional
+namespace pwiz.SkylineTestData
 {
     [TestClass]
     public class LocalizedResourcesTest : AbstractUnitTest
@@ -78,6 +78,24 @@ namespace pwiz.SkylineTestFunctional
                 ValidateLocalizedResource("Two {0} substitutions {1}", "One substitution {0}", string.Empty));
         }
 
+        [TestMethod]
+        public void TestLocalizedResourcesGetAssemblies()
+        {
+            var assemblies = GetAssemblies().ToList();
+            foreach (var assembly in new[]
+                     {
+                         typeof(Skyline.SkylineWindow).Assembly,
+                         typeof(ProteomeDatabase.API.ProteomeDb).Assembly,
+                         typeof(Common.SystemUtil.CommonFormEx).Assembly,
+                         typeof(MSGraph.MSGraphPane).Assembly,
+                         typeof(ProteowizardWrapper.MsDataFileImpl).Assembly
+                     })
+            {
+                Assert.IsTrue(assemblies.Contains(assembly), "Assembly {0} should have been included in list returned by GetAssemblies()", assembly.FullName);
+            }
+        }
+
+        private const string ENGLISH_ERROR_PREFIX = "Error:";
         private static readonly Regex RegexLowercaseMnemonic = new Regex("\\(&[a-z]");
         /// <summary>
         /// Verifies that the localized value is compatible with the invariant value.
@@ -91,6 +109,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 return;
             }
+
             Assert.AreEqual(invariantValue?.GetType(), localizedValue.GetType(), message);
             var invariantText = invariantValue as string;
             if (invariantText != null)
@@ -98,6 +117,15 @@ namespace pwiz.SkylineTestFunctional
                 var localizedText = (string)localizedValue;
                 Assert.AreEqual(MaxSubstitutionIndex(invariantText), MaxSubstitutionIndex(localizedText), message);
                 StringAssert.DoesNotMatch(localizedText, RegexLowercaseMnemonic, "Mnemonic should be uppercase: {0}", message);
+                Assert.IsFalse(localizedText.StartsWith(ENGLISH_ERROR_PREFIX), "Localized text should not start with the English '{0}' {1}", ENGLISH_ERROR_PREFIX, message);
+                if (ErrorChecker.IsErrorLine(invariantText))
+                {
+                    Assert.IsTrue(ErrorChecker.IsErrorLine(localizedText), "Localized text should start with localized form of 'Error:' {0}", message);
+                }
+                else
+                {
+                    Assert.IsFalse(ErrorChecker.IsErrorLine(localizedText), "Localized text should not start with any form of 'Error:' {0}", message);
+                }
             }
         }
 
@@ -105,10 +133,10 @@ namespace pwiz.SkylineTestFunctional
         {
             yield return typeof(Skyline.SkylineWindow).Assembly;
             yield return typeof(ProteomeDatabase.API.ProteomeDb).Assembly;
-            yield return typeof(ZedGraph.ZedGraphControl).Assembly;
             yield return typeof(Common.SystemUtil.CommonFormEx).Assembly;
             yield return typeof(MSGraph.MSGraphPane).Assembly;
             yield return typeof(ProteowizardWrapper.MsDataFileImpl).Assembly;
+            yield return Assembly.LoadFrom("ZedGraph.dll");
         }
 
         /// <summary>
