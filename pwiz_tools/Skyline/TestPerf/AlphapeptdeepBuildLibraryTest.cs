@@ -297,23 +297,17 @@ namespace TestPerf
             {
 
                 // Say 'No'
-                RunDlg<AlertDlg>(nvidiaDlg.ClickNo, confirmDlg => {
-                    ConfirmPythonSuccess(confirmDlg);
-                });
+                RunDlg<AlertDlg>(nvidiaDlg.ClickNo, confirmDlg => { ConfirmPythonSuccess(confirmDlg); });
             }
             else if (clickNo == false)
             {
                 // Say 'Yes'
-                RunDlg<AlertDlg>(nvidiaDlg.ClickYes, confirmDlg =>
-                    ConfirmPythonSuccess(confirmDlg);
-                });
+                RunDlg<AlertDlg>(nvidiaDlg.ClickYes, confirmDlg => { ConfirmPythonSuccess(confirmDlg); });
             }
             else // clickNo == null
             {
                 // Say 'Cancel'
-                RunLongDlg<AlertDlg>(nvidiaDlg.ClickCancel, confirmDlg =>
-                {
-                    ConfirmPythonSuccess(confirmDlg);
+                RunDlg<AlertDlg>(nvidiaDlg.ClickCancel, confirmDlg => { ConfirmPythonSuccess(confirmDlg);
                 });
 
             }
