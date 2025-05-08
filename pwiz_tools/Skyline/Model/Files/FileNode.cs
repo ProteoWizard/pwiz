@@ -85,7 +85,6 @@ namespace pwiz.Skyline.Model.Files
         public IdentityPath IdentityPath { get; }
         public virtual bool IsBackedByFile => false;
 
-        [Obsolete]
         public abstract Immutable Immutable { get; }
         public abstract string Name { get; }
         public abstract string FilePath { get; }
