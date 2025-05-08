@@ -366,13 +366,8 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private string _libFilepath;
 
-        public string BuilderLibFilepath
-        {
-            get => _libFilepath;
-            set => _libFilepath = value;
-        }
+        public string BuilderLibFilepath { get; private set; }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
         {
