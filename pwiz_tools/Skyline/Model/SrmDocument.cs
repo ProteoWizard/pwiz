@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Model
             if (rtRegression == null || rtRegression.Calculator == null)
                 return new HashSet<Target>();
 
-            var regressionPeps = rtRegression.Calculator.GetStandardPeptides(Peptides.Select(
+            var regressionPeps = rtRegression.Calculator.GetStandardPeptides(Molecules.Select(
                 nodePep => Settings.GetModifiedSequence(nodePep)));
             return new HashSet<Target>(regressionPeps);
         }

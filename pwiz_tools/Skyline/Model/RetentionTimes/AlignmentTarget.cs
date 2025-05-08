@@ -64,20 +64,11 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public PiecewiseLinearMap PerformAlignment(IDictionary<Target, double> times,
             CancellationToken cancellationToken)
         {
-            var points = new List<WeightedPoint>();
-            foreach (var kvp in times)
-            {
-                var xValue = ScoreSequence(kvp.Key);
-                if (xValue.HasValue)
-                {
-                    points.Add(new WeightedPoint(xValue.Value, kvp.Value));
-                }
-            }
-
-            return PerformAlignment(points, cancellationToken);
+            return PerformAlignment(times.Select(kvp =>
+                new KeyValuePair<IEnumerable<Target>, double>(new[] { kvp.Key }, kvp.Value)), cancellationToken);
         }
 
-        public PiecewiseLinearMap PerformAlignment(IEnumerable<KeyValuePair<IEnumerable<Target>, double>> times, CancellationToken cancellationToken)
+        public virtual PiecewiseLinearMap PerformAlignment(IEnumerable<KeyValuePair<IEnumerable<Target>, double>> times, CancellationToken cancellationToken)
         {
             var points = new List<WeightedPoint>();
             foreach (var kvp in times)
@@ -99,12 +90,12 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 }
             }
 
-            return PerformAlignment(points, cancellationToken);
+            return PerformAlignment(RegressionMethod, points, cancellationToken);
         }
 
-        public PiecewiseLinearMap PerformAlignment(ICollection<WeightedPoint> points, CancellationToken cancellationToken)
+        public static PiecewiseLinearMap PerformAlignment(RegressionMethodRT regressionMethod, ICollection<WeightedPoint> points, CancellationToken cancellationToken)
         {
-            switch (RegressionMethod)
+            switch (regressionMethod)
             {
                 case RegressionMethodRT.linear:
                 {
@@ -301,6 +292,51 @@ namespace pwiz.Skyline.Model.RetentionTimes
             public override string GetAlignmentMenuItemText()
             {
                 return string.Format(Resources.SkylineWindow_ShowCalculatorScoreFormat, Calculator.Name);
+            }
+
+            public override PiecewiseLinearMap PerformAlignment(IEnumerable<KeyValuePair<IEnumerable<Target>, double>> times, CancellationToken cancellationToken)
+            {
+                var rCalcIrt = Calculator as RCalcIrt;
+                int? standardCount = rCalcIrt?.GetStandardPeptides().Count();
+                if (standardCount == null || standardCount == 0)
+                {
+                    return base.PerformAlignment(times, cancellationToken);
+                }
+
+
+                List<WeightedPoint> standardPoints = new List<WeightedPoint>();
+                List<WeightedPoint> allPoints = new List<WeightedPoint>();
+                
+                foreach (var entry in times)
+                {
+                    var standardTarget = entry.Key.FirstOrDefault(rCalcIrt.IsStandard);
+                    double? score;
+                    if (standardTarget != null)
+                    {
+                        score = rCalcIrt.ScoreSequence(standardTarget);
+                    }
+                    else
+                    {
+                        score = entry.Key.Select(rCalcIrt.ScoreSequence).FirstOrDefault(v => v.HasValue);
+                    }
+
+                    if (score.HasValue)
+                    {
+                        var point = new WeightedPoint(score.Value, entry.Value);
+                        if (standardTarget != null)
+                        {
+                            standardPoints.Add(point);
+                        }
+                        allPoints.Add(point);
+                    }
+                }
+
+                if (standardPoints.Count >= RCalcIrt.MinStandardCount(standardCount.Value))
+                {
+                    return PerformAlignment(RegressionMethod, standardPoints, cancellationToken);
+                }
+                // Consider: fall back to doing a loess alignment using all the points?
+                return null;
             }
         }
 
