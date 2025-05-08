@@ -215,8 +215,6 @@ namespace pwiz.Common.SystemUtil
                     {
                         s.PercentComplete = s.PercentZoomStart = segment*100/segmentCount;
                         s.PercentZoomEnd = (segment + 1)*100/segmentCount;
-                        s.SegmentPercentEnds = ImmutableList<int>.ValueOf(Enumerable.Range(0, segmentCount)
-                            .Select(index => (index + 1)*100/segmentCount));
                     }
                     s.SegmentCount = segmentCount;
                     s.Segment = segment;

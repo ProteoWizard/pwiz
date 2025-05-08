@@ -178,8 +178,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public double? RetentionPrediction { get; set; }
 
         //Collisional Cross Sections
-
-
         public class ChargeAndCollisionalCrossSection
         {
             public ChargeAndCollisionalCrossSection(int charge, double? ccs)

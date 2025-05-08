@@ -751,7 +751,6 @@ namespace pwiz.Skyline.SettingsUI
 
                         return;
                     }
-
                 }
                 BuildLibrary(dlg.Builder);
             }
