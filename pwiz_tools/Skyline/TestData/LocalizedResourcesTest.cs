@@ -28,6 +28,8 @@ using System.Resources;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
 
@@ -62,8 +64,40 @@ namespace pwiz.SkylineTestData
                     var message = string.Format("{0} Entry:{1} Language:{2}", resourceManager.BaseName,
                         invariantEntry.Key, cultureInfo.Name);
                     var resourceSet = resourceManager.GetResourceSet(cultureInfo, true, true);
-                    ValidateLocalizedResource(invariantEntry.Value, resourceSet.GetObject(invariantEntry.Key.ToString()), message);
+                    var localizedValue = resourceSet.GetObject(invariantEntry.Key.ToString());
+                    ValidateLocalizedResource(invariantEntry.Value, localizedValue, message);
+                    ValidateErrorCheckerIsErrorLine(invariantEntry.Value, localizedValue, cultureInfo, message);
                 }
+            }
+        }
+
+        private void ValidateErrorCheckerIsErrorLine(object invariantValue, object localizedValue, CultureInfo cultureInfo,
+            string message)
+        {
+            if (localizedValue == null || !(invariantValue is string invariantText))
+            {
+                return;
+            }
+            var localizedText = (string)localizedValue;
+            if (ErrorChecker.IsErrorLine(invariantText))
+            {
+                StringAssert.StartsWith(invariantText, GetErrorTranslation(CultureInfo.InvariantCulture));
+                if (localizedText != invariantText)
+                {
+                    var localizedError = GetErrorTranslation(cultureInfo);
+                    if (localizedError != null)
+                    {
+                        StringAssert.StartsWith(localizedText, localizedError, message);
+                        var localizedErrorWithColon =
+                            LocalizationHelper.CallWithCulture(cultureInfo, () => TextUtil.AppendColon(localizedError));
+                        StringAssert.StartsWith(localizedText, localizedErrorWithColon, "Localized message should use localized colon character. {0}", message);
+                    }
+                }
+                Assert.IsTrue(ErrorChecker.IsErrorLine(localizedText), "Localized text should start with localized form of 'Error:' {0}", message);
+            }
+            else
+            {
+                Assert.IsFalse(ErrorChecker.IsErrorLine(localizedText), message);
             }
         }
 
@@ -87,7 +121,7 @@ namespace pwiz.SkylineTestData
                      {
                          typeof(Skyline.SkylineWindow).Assembly,
                          typeof(ProteomeDatabase.API.ProteomeDb).Assembly,
-                         typeof(Common.SystemUtil.CommonFormEx).Assembly,
+                         typeof(CommonFormEx).Assembly,
                          typeof(MSGraph.MSGraphPane).Assembly,
                          typeof(ProteowizardWrapper.MsDataFileImpl).Assembly
                      })
@@ -108,7 +142,6 @@ namespace pwiz.SkylineTestData
             Assert.IsNotNull(GetResourceManager(propertiesResourcesType));
         }
 
-        private const string ENGLISH_ERROR_PREFIX = "Error:";
         private static readonly Regex RegexLowercaseMnemonic = new Regex("\\(&[a-z]");
         /// <summary>
         /// Verifies that the localized value is compatible with the invariant value.
@@ -125,28 +158,21 @@ namespace pwiz.SkylineTestData
 
             Assert.AreEqual(invariantValue?.GetType(), localizedValue.GetType(), message);
             var invariantText = invariantValue as string;
-            if (invariantText != null)
+            if (invariantText == null)
             {
-                var localizedText = (string)localizedValue;
-                Assert.AreEqual(MaxSubstitutionIndex(invariantText), MaxSubstitutionIndex(localizedText), message);
-                StringAssert.DoesNotMatch(localizedText, RegexLowercaseMnemonic, "Mnemonic should be uppercase: {0}", message);
-                Assert.IsFalse(localizedText.StartsWith(ENGLISH_ERROR_PREFIX), "Localized text should not start with the English '{0}' {1}", ENGLISH_ERROR_PREFIX, message);
-                if (ErrorChecker.IsErrorLine(invariantText))
-                {
-                    Assert.IsTrue(ErrorChecker.IsErrorLine(localizedText), "Localized text should start with localized form of 'Error:' {0}", message);
-                }
-                else
-                {
-                    Assert.IsFalse(ErrorChecker.IsErrorLine(localizedText), "Localized text should not start with any form of 'Error:' {0}", message);
-                }
+                return;
             }
+
+            var localizedText = (string)localizedValue;
+            Assert.AreEqual(MaxSubstitutionIndex(invariantText), MaxSubstitutionIndex(localizedText), message);
+            StringAssert.DoesNotMatch(localizedText, RegexLowercaseMnemonic, "Mnemonic should be uppercase: {0}", message);
         }
 
         public static IEnumerable<Assembly> GetAssemblies()
         {
             yield return typeof(Skyline.SkylineWindow).Assembly;
             yield return typeof(ProteomeDatabase.API.ProteomeDb).Assembly;
-            yield return typeof(Common.SystemUtil.CommonFormEx).Assembly;
+            yield return typeof(CommonFormEx).Assembly;
             yield return typeof(MSGraph.MSGraphPane).Assembly;
             yield return typeof(ProteowizardWrapper.MsDataFileImpl).Assembly;
             yield return Assembly.LoadFrom("ZedGraph.dll");
@@ -211,6 +237,30 @@ namespace pwiz.SkylineTestData
                 }
             }
 
+            return null;
+        }
+
+        /// <summary>
+        /// Returns the localized text representing the word "Error", or null if this test does not know
+        /// the translation. This text is expected to match what is in <see cref="ErrorChecker.INTL_ERROR_PREFIXES"/>
+        /// without the trailing colon.
+        /// </summary>
+        private static string GetErrorTranslation(CultureInfo cultureInfo)
+        {
+            if (cultureInfo.TwoLetterISOLanguageName == "ja")
+            {
+                return "エラー";
+            }
+
+            if (cultureInfo.TwoLetterISOLanguageName == "zh")
+            {
+                return "错误";
+            }
+
+            if (string.IsNullOrEmpty(cultureInfo.Name) || cultureInfo.TwoLetterISOLanguageName == "en")
+            {
+                return "Error";
+            }
             return null;
         }
     }
