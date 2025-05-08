@@ -276,17 +276,20 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // DSHTEYN:  These should be better balanced as of May 2nd 2025
-            var segmentEndPercentages = new[] { 5, 15, 85 };
+            var segmentEndPercentages = new[] { 5, 10, 15, 95, 100 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf( segmentEndPercentages));
             LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep",
                 IrtStandard);
             progressStatus = progressStatus.NextSegment();
             PrepareSettingsFile(progress, ref progressStatus);
+            progressStatus = progressStatus.NextSegment();
             ExecutePeptdeep(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
+            progressStatus = progressStatus.NextSegment();
+
         }
 
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
