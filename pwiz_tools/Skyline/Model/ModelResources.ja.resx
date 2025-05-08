@@ -825,7 +825,7 @@
     <value>インストールされたThermo装置タイプ「{0}」は、リクエストされた出力メソッドタイプ「 {1}」と一致しません。</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Error__The_specified_instrument_type___0___does_not_match_the_installed_software___1___" xml:space="preserve">
-    <value>エラー: 指定された装置タイプ「{0}」はインストールされたソフトウェア「{1}」に一致しません。</value>
+    <value>エラー： 指定された装置タイプ「{0}」はインストールされたソフトウェア「{1}」に一致しません。</value>
   </data>
   <data name="CommandLine_ExportInstrumentFile_Use_the_instrument_type__Thermo__to_export_a_method_with_the_installed_software_" xml:space="preserve">
     <value>装置タイプ「Thermo」を使用して、インストールされたソフトウェアでメソッドをエクスポートします。</value>
