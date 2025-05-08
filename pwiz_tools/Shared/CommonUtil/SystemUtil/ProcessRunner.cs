@@ -216,7 +216,7 @@ namespace pwiz.Common.SystemUtil
                             {
                                 if (ExpectedOutputLinesCount > 0)
                                 {
-                                    percentLast = Math.Min(100,
+                                    percentLast = Math.Min(99,
                                         outputLinesCount * 100 / ExpectedOutputLinesCount);
                                     status = status.ChangePercentComplete(percentLast);
                                     progress.UpdateProgress(status);
