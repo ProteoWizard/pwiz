@@ -200,6 +200,10 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
         auto serialNumber = compassDataPtr->getInstrumentSerialNumber();
         if (!serialNumber.empty())
             msd.run.defaultInstrumentConfigurationPtr->set(MS_instrument_serial_number, serialNumber);
+
+        auto diaFrameMsMsWindowsTable = compassDataPtr->getDiaFrameMsMsWindowsTable();
+        if (!diaFrameMsMsWindowsTable.empty())
+            msd.run.defaultInstrumentConfigurationPtr->userParams.push_back(UserParam("DiaFrameMsMsWindowsTable", diaFrameMsMsWindowsTable));
     }
 
     msd.run.id = msd.id;

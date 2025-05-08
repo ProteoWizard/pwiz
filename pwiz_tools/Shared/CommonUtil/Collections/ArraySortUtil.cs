@@ -139,6 +139,19 @@ namespace pwiz.Common.Collections
         /// </summary>
         /// <param name="array"></param>
         /// <returns>True if array needs to be sorted</returns>
+        public static bool NeedsDescendingSort<TItem>(IList<TItem> array) where TItem : IComparable<TItem>
+        {
+            for (var i = 0; i < array.Count - 1; i++)
+                if (array[i].CompareTo(array[i + 1]) < 0)
+                    return true;
+            return false;
+        }
+
+        /// <summary>
+        /// Returns true if the given array is not in sort order.
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns>True if array needs to be sorted</returns>
         public static bool NeedsSort(float[] array)
         {
             for (int i = 0; i < array.Length - 1; i++)

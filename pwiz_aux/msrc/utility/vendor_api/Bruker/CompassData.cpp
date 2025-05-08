@@ -630,6 +630,9 @@ struct CompassDataImpl : public CompassData
         try {return ToStdString(msAnalysis_->AnalysisName);} CATCH_AND_FORWARD
     }
 
+
+    virtual std::string TimsDataImpl::getDiaFrameMsMsWindowsTable() const { return ""; }
+
     virtual boost::local_time::local_date_time getAnalysisDateTime() const
     {
         using bpt::ptime;

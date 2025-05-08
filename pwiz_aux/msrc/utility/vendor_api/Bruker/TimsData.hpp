@@ -298,6 +298,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     virtual InstrumentSource getInstrumentSource() const;
     virtual std::string getAcquisitionSoftware() const;
     virtual std::string getAcquisitionSoftwareVersion() const;
+    virtual std::string getDiaFrameMsMsWindowsTable() const;
 
     private:
     std::string tdfFilepath_;
@@ -311,6 +312,7 @@ struct PWIZ_API_DECL TimsDataImpl : public CompassData
     std::string serialNumber_;
     std::string acquisitionDateTime_;
     std::string operatorName_;
+    std::string diaFrameMsMsWindowsTable_;
     bool combineSpectra_;
     bool hasPASEFData_;
     int preferOnlyMsLevel_; // when nonzero, caller only wants spectra at this ms level

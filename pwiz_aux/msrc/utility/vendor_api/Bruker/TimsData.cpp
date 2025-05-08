@@ -485,6 +485,36 @@ TimsDataImpl::TimsDataImpl(const string& rawpath, bool combineIonMobilitySpectra
                 frame->windowGroup_ = windowGroup; 
                 frame->diaPasefIsolationInfoByScanNumber_[scanBegin] = info;
             }
+
+            // Note contents of DiaFrameMsMsWindows, with scan range translated to 1/K0 range
+            if (oneOverK0ByScanNumberByCalibration_.size() == 1) // Only works if calibration doesn't change in run
+            {
+                querySql = "SELECT WindowGroup, ScanNumBegin, ScanNumEnd, IsolationMz, IsolationWidth, CollisionEnergy FROM DiaFrameMsMsWindows";
+                string table = "WindowGroup,invK0Begin,invK0End,IsolationMz,IsolationWidth,CollisionEnergy;";
+
+                sqlite::query qTable(db, querySql.c_str());
+                DiaPasefIsolationInfo info;
+                for (sqlite::query::iterator itr = qTable.begin(); itr != qTable.end(); ++itr)
+                {
+                    sqlite::query::rows row = *itr;
+                    int idx = -1;
+                    int windowGroup = row.get<int>(++idx);
+                    int scanBegin = row.get<int>(++idx);
+                    int scanEnd = row.get<int>(++idx) - 1; // scan end in TDF is exclusive, but in pwiz is inclusive
+
+                    double isolationMz = row.get<double>(++idx);
+                    double isolationWidth = row.get<double>(++idx);
+                    double collisionEnergy = row.get<double>(++idx);
+
+                    table += lexical_cast<string>(windowGroup) + "," +
+                        lexical_cast<string>(oneOverK0ByScanNumberByCalibration_[0][scanBegin]) + "," +
+                        lexical_cast<string>(oneOverK0ByScanNumberByCalibration_[0][scanEnd]) + "," +
+                        lexical_cast<string>(isolationMz) + "," +
+                        lexical_cast<string>(isolationWidth) + "," +
+                        lexical_cast<string>(collisionEnergy) + ";";
+                }
+                diaFrameMsMsWindowsTable_ = table;
+            }
         }
         else // PrmPasef
         {
@@ -712,6 +742,7 @@ InstrumentFamily TimsDataImpl::getInstrumentFamily() const { return instrumentFa
 int TimsDataImpl::getInstrumentRevision() const { return instrumentRevision_; }
 std::string TimsDataImpl::getInstrumentDescription() const { return ""; }
 std::string TimsDataImpl::getInstrumentSerialNumber() const { return serialNumber_; }
+std::string TimsDataImpl::getDiaFrameMsMsWindowsTable() const { return diaFrameMsMsWindowsTable_; }
 InstrumentSource TimsDataImpl::getInstrumentSource() const { return instrumentSource_; }
 std::string TimsDataImpl::getAcquisitionSoftware() const { return acquisitionSoftware_; }
 std::string TimsDataImpl::getAcquisitionSoftwareVersion() const { return acquisitionSoftwareVersion_; }

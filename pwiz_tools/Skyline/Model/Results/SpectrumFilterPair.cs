@@ -99,6 +99,7 @@ namespace pwiz.Skyline.Model.Results
         public double? MinIonMobilityValue { get; set; }
         public double? MaxIonMobilityValue { get; set; }
         public int BestWindowGroup { get; private set; }  // For DIA PASEF
+        public bool HasBestWindowGroup => BestWindowGroup > 0; // For DIA PASEF
         public float BestWindowGroupMatchArea { get; private set; }  // For DIA PASEF
         public float BestWindowGroupMatchDistance { get; private set; }  // For DIA PASEF
         private int _knownWindowGroupsBitField; // For DIA PASEF

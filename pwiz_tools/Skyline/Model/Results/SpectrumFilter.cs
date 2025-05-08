@@ -320,6 +320,7 @@ namespace pwiz.Skyline.Model.Results
                                             dictPrecursorMzToFilter.ContainsKey(BPC_KEY);
 
                 _filterMzValues = dictPrecursorMzToFilter.Values.ToArray();
+                HasIonMobilityFiltering = _filterMzValues.Any(f => f.MinIonMobilityValue.HasValue);
 
                 // For FAIMS chromatogram extraction is a special case for non-contiguous scans, so create convenient subsets of filters
                 foreach (var cv in _filterMzValues.Where(f => f.HasIonMobilityFAIMS())
@@ -354,6 +355,101 @@ namespace pwiz.Skyline.Model.Results
                 _filterRTValues = new SpectrumFilterPair[_filterMzValues.Length];
                 Array.Copy(_filterMzValues, _filterRTValues, _filterMzValues.Length);
                 Array.Sort(_filterRTValues, CompareByRT);
+
+                // If we have DIA-PASEF window group table, use it to prepopulate BestWindowGroup values
+                var table = _configInfoList?.FirstOrDefault(c => c.DiaFrameMsMsWindows != null)?.DiaFrameMsMsWindows;
+
+                if (table != null)
+                {
+                    var imRangeNormalize =
+                        table.Values.SelectMany(value => value.Select(diaFrameMsMsWindowInfo => diaFrameMsMsWindowInfo.ImHigh)).Max() -
+                        table.Values.SelectMany(value => value.Select(diaFrameMsMsWindowInfo => diaFrameMsMsWindowInfo.ImLow)).Min();
+                    if (imRangeNormalize == 0)
+                    {
+                        imRangeNormalize = 1;
+                    }
+                    else
+                    {
+                        imRangeNormalize = 1.0 / imRangeNormalize; // Normalize to 1.0 for distance calculations
+                    }
+                    var isoRangeNormalize =
+                        table.Values.SelectMany(value => value.Select(diaFrameMsMsWindowInfo => diaFrameMsMsWindowInfo.IsoMzHigh)).Max() -
+                        table.Values.SelectMany(value => value.Select(diaFrameMsMsWindowInfo => diaFrameMsMsWindowInfo.IsoMzLow)).Min();
+                    if (isoRangeNormalize == 0)
+                    {
+                        isoRangeNormalize = 1;
+                    }
+                    else
+                    {
+                        isoRangeNormalize = 1.0 / isoRangeNormalize; // Normalize to 1.0 for distance calculations
+                    }
+                    foreach (var filter in _filterMzValues)
+                    {
+                        var halfWidth = 0.5 * (filter.Ms1ProductFilters.Length > 2 ?
+                            filter.Ms1ProductFilters[1].FilterWidth :
+                            _fullScan.GetPrecursorFilterWindow(filter.Q1));
+                        if (halfWidth == 0)
+                            halfWidth = _instrument.MzMatchTolerance;
+                        var mzFilterLow = filter.Q1 - halfWidth;
+                        var mzFilterHigh = filter.Q1 + halfWidth;
+                        var imFilterLow = filter.MinIonMobilityValue ?? double.MinValue;
+                        var imFilterHigh = filter.MaxIonMobilityValue ?? double.MaxValue;
+                        var bestNoOverlapDistance = double.MaxValue;
+                        var bestNoOverlapWindowGroup = -1;
+                        foreach (var kvp in table) // For each window group
+                        {
+                            var windowGroup = kvp.Key;
+                            filter.SetIsKnownWindowGroup(windowGroup);
+                            var overlapAreaTotal = 0.0;
+                            var bestDistance = double.MaxValue;
+                            var windowInfos = kvp.Value;
+                            for (var i = 0; i < windowInfos.Count; i++)
+                            {
+                                var imLow = windowInfos[i].ImLow;
+                                var imHigh = windowInfos[i].ImHigh;
+                                if (imLow == imHigh) // As in DiagonalPASEF - need a nonzero IM width for area calc
+                                {
+                                    var imWidth = i== 0 ? (imLow-windowInfos[i + 1].ImLow) : (windowInfos[i - 1].ImLow - imLow);
+                                    imLow -= imWidth / 2;
+                                    imHigh += imWidth / 2;
+                                }
+
+                                var overlapArea = DiaPasefAwareFilter.CalcOverlapArea(windowInfos[i].IsoMzLow, windowInfos[i].IsoMzHigh, imLow, imHigh,
+                                    mzFilterLow, mzFilterHigh, imFilterLow, imFilterHigh);
+                                var distanceIM = filter.MinIonMobilityValue.HasValue ?
+                                    DiaPasefAwareFilter.CalcCenter(imFilterLow, imFilterHigh) - DiaPasefAwareFilter.CalcCenter(imLow, imHigh) :
+                                    0;
+                                var distanceMz =
+                                    filter.Q1 - DiaPasefAwareFilter.CalcCenter(windowInfos[i].IsoMzLow, windowInfos[i].IsoMzHigh);
+                                var distance = DiaPasefAwareFilter.CalcHypotenuse(distanceIM*imRangeNormalize, distanceMz*isoRangeNormalize);
+                                if (overlapArea > 0)
+                                {
+                                    bestDistance = Math.Min(bestDistance, distance);
+                                    overlapAreaTotal += overlapArea;
+                                }
+                                else if (distance < bestNoOverlapDistance &&
+                                         mzFilterLow < windowInfos[i].IsoMzHigh && mzFilterHigh > windowInfos[i].IsoMzLow)
+                                {
+                                    // Poor IM match but at least the mz isolation matches
+                                    bestNoOverlapDistance = distance;
+                                    bestNoOverlapWindowGroup = windowGroup;
+                                }
+                            }
+
+                            filter.ProposeBestWindowGroup(windowGroup, overlapAreaTotal, bestDistance);
+                        }
+
+                        if (!filter.HasBestWindowGroup)
+                        {
+                            // No actual overlap in isolation,IM space, pick the one that's closest while at least matching mz
+                            if (bestNoOverlapDistance == 0)
+                            {
+                                Console.WriteLine($@"No windowGroup area found for mz={filter.Q1} im={filter.GetIonMobilityWindow()}");
+                            }
+                            filter.ProposeBestWindowGroup(bestNoOverlapWindowGroup,0.0, bestNoOverlapDistance);
+                        }
+                    }
+                }
 
             }
 
@@ -884,9 +980,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 var pasefAwareFilter = new DiaPasefAwareFilter(spectra, _acquisitionMethod, rampedCE);
                 var firstSpectrum = spectra.First();
+                var windowGroup = firstSpectrum.WindowGroup;
                 foreach (var isoWin in GetIsolationWindows(firstSpectrum.GetPrecursorsByMsLevel(1)))
                 {
-                    foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso))
+                    foreach (var filterPair in FindFilterPairs(isoWin, _acquisitionMethod, ignoreIso, windowGroup))
                     {
                         if (!filterPair.ContainsRetentionTime(retentionTime.Value))
                             continue;
@@ -1087,7 +1184,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            private double? CalcCenter(double? v1, double? v2)
+            public static double? CalcCenter(double? v1, double? v2)
             {
                 if (v1.HasValue && v2.HasValue)
                     return (v1.Value + v2.Value) / 2;
@@ -1101,12 +1198,12 @@ namespace pwiz.Skyline.Model.Results
                 return null;
             }
 
-            private double CalcHypotenuse(double? v1, double? v2)
+            public static double CalcHypotenuse(double? v1, double? v2)
             {
                 return Math.Sqrt(((v1 * v1) ?? 0) + ((v2 * v2) ?? 0));
             }
 
-            private double CalcOverlapArea(
+            public static double CalcOverlapArea(
                 double mzLow1, double mzHigh1, double imLow1, double imHigh1,
                 double mzLow2, double mzHigh2, double imLow2, double imHigh2)
             {
@@ -1281,8 +1378,10 @@ namespace pwiz.Skyline.Model.Results
         private readonly IDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>> _filterPairDictionary =
             new ConcurrentDictionary<IsolationWindowFilter, IList<SpectrumFilterPair>>();
 
+        public bool HasIonMobilityFiltering { get; private set; }
+
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(IsolationWindowFilter isoWin,
-                                                                FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false)
+                                                                FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false, int windowGroup = -1)
         {
             if (!isoWin.IsolationMz.HasValue)
                 return new SpectrumFilterPair[0]; // empty
@@ -1292,7 +1391,7 @@ namespace pwiz.Skyline.Model.Results
             IList<SpectrumFilterPair> filterPairsCached;
             if (_filterPairDictionary.TryGetValue(isoWinKey, out filterPairsCached))
             {
-                return filterPairsCached;
+                return (windowGroup <= 0) ? filterPairsCached : filterPairsCached.Where(s => !s.HasBestWindowGroup || s.IsBestWindowGroup(windowGroup));
             }
 
             var filterPairs = new List<SpectrumFilterPair>();
