@@ -262,9 +262,6 @@ namespace pwiz.Common.SystemUtil
                 s.SegmentPercentEnds = ImmutableList<int>.ValueOf(segmentPercentageEnds);
                 s.SegmentCount = segmentCount;
                 s.Segment = segment;
-                s.State = (s.PercentComplete == 100
-                    ? ProgressState.complete
-                    : ProgressState.running);
             });
         }
 
