@@ -569,6 +569,12 @@ bool SpectrumList_IonMobility::isWatersSonarData()
     try { return base_->isWatersSonarData(); } CATCH_AND_FORWARD
 }
 
+/// applicable only to Bruker diagonal PASEF files
+bool SpectrumList_IonMobility::isDiagonalPASEF()
+{
+    try { return base_->isDiagonalPASEF(); } CATCH_AND_FORWARD
+}
+
 void SpectrumList_IonMobility::sonarMzToBinRange(double precursorMz, double tolerance, int% binRangeLow, int% binRangeHigh)
 {
     try

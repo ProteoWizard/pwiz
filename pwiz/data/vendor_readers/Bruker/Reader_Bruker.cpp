@@ -200,6 +200,10 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
         auto serialNumber = compassDataPtr->getInstrumentSerialNumber();
         if (!serialNumber.empty())
             msd.run.defaultInstrumentConfigurationPtr->set(MS_instrument_serial_number, serialNumber);
+
+        auto diaFrameMsMsWindowsTable = compassDataPtr->getDiaFrameMsMsWindowsTable();
+        if (!diaFrameMsMsWindowsTable.empty())
+            msd.run.defaultInstrumentConfigurationPtr->userParams.push_back(UserParam("DiaFrameMsMsWindowsTable", diaFrameMsMsWindowsTable));
     }
 
     msd.run.id = msd.id;
@@ -233,7 +237,7 @@ void Reader_Bruker::read(const string& filename,
         rootpath = rootpath.parent_path();
 
     CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), config.combineIonMobilitySpectra, format, 
-        config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.isolationMzAndMobilityFilter));
+        config.preferOnlyMsLevel, config.allowMsMsWithoutPrecursor, config.singleFrameDiaPASEF, config.isolationMzAndMobilityFilter));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
     ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr, config);
