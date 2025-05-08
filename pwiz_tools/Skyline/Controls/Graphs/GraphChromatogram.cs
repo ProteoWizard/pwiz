@@ -2314,23 +2314,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey) != null)
                     {
-                        if (chromGraphPrimary.CCSPredictions == null)
-                        {
-                            chromGraphPrimary.CCSPredictions = new [] {                           
-                                new ChromGraphItem.ChargeAndCcsIndex(0,
-                                    new ChromGraphItem.ChargeAndCollisionalCrossSection(
-                                        nodeGroups[index].PrecursorCharge,
-                                        libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey)))
-                            };
-                        }
-                        else
-                        {
-                            chromGraphPrimary.CCSPredictions[chromGraphPrimary.CCSPredictions.Count] =
-                                new ChromGraphItem.ChargeAndCcsIndex(chromGraphPrimary.CCSPredictions.Count,
-                                    new ChromGraphItem.ChargeAndCollisionalCrossSection(
-                                        nodeGroups[index].PrecursorCharge,
-                                        libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey)));
-                        }
+                    
+                        chromGraphPrimary.CCSPredictions ??= new List<ChromGraphItem.ChargeAndCcsIndex>();                          
+                        chromGraphPrimary.CCSPredictions.Add(new ChromGraphItem.ChargeAndCcsIndex(chromGraphPrimary.CCSPredictions.Count,
+                                new ChromGraphItem.ChargeAndCollisionalCrossSection(nodeGroups[index].PrecursorCharge, libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey))));
+                        
                     }
                 }
             }

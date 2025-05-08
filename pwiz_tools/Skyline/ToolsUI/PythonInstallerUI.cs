@@ -173,7 +173,7 @@ namespace pwiz.Skyline.ToolsUI
                         if (pythonInstaller.IsNvidiaEnvironmentReady(abortedTasks))
                         {
                             
-                            MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
+                            MessageDlg.Show(parent, ToolsUIResources.NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia);
 
                             pythonInstaller.PendingTasks.Clear();
                             result = DialogResult.OK;

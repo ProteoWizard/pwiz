@@ -297,20 +297,14 @@ namespace TestPerf
             {
 
                 // Say 'No'
-                AbstractFunctionalTest.RunLongDlg<AlertDlg>(nvidiaDlg.ClickNo, confirmDlg =>
-                {
-
-                }, confirmDlg => {
+                AbstractFunctionalTest.RunDlg<AlertDlg>(nvidiaDlg.ClickNo, confirmDlg => {
                     ConfirmPythonSuccess(confirmDlg);
                 });
             }
             else if (clickNo == false)
             {
                 // Say 'Yes'
-                AbstractFunctionalTest.RunLongDlg<AlertDlg>(nvidiaDlg.ClickYes, confirmDlg =>
-                {
-
-                }, confirmDlg => {
+                AbstractFunctionalTest.RunDlg<AlertDlg>(nvidiaDlg.ClickYes, confirmDlg =>
                     ConfirmPythonSuccess(confirmDlg);
                 });
             }
@@ -319,8 +313,6 @@ namespace TestPerf
                 // Say 'Cancel'
                 AbstractFunctionalTest.RunLongDlg<AlertDlg>(nvidiaDlg.ClickCancel, confirmDlg =>
                 {
-
-                }, confirmDlg => {
                     ConfirmPythonSuccess(confirmDlg);
                 });
 
@@ -413,7 +405,7 @@ namespace TestPerf
                     .PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
 
             Assert.AreEqual(expectMsg, confirmDlg.Message);
-            AbstractFunctionalTest.OkDialog(confirmDlg, confirmDlg.OkDialog);
+            confirmDlg.OkDialog();
         }
 
         /// <summary>
