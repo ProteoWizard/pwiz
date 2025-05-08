@@ -28,6 +28,7 @@ using System.Resources;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.SkylineRunner;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestData
@@ -93,6 +94,18 @@ namespace pwiz.SkylineTestData
             {
                 Assert.IsTrue(assemblies.Contains(assembly), "Assembly {0} should have been included in list returned by GetAssemblies()", assembly.FullName);
             }
+        }
+
+        [TestMethod]
+        public void TestLocalizedResourcesGetTypes()
+        {
+            var allTypes = GetAssemblies().SelectMany(assembly => assembly.GetTypes()).ToList();
+            var toolsUiResourcesType = allTypes.FirstOrDefault(type => type == typeof(Skyline.ToolsUI.ToolsUIResources));
+            Assert.IsNotNull(toolsUiResourcesType);
+            Assert.IsNotNull(GetResourceManager(toolsUiResourcesType));
+            var propertiesResourcesType = allTypes.FirstOrDefault(type => type == typeof(Skyline.Properties.Resources));
+            Assert.IsNotNull(propertiesResourcesType);
+            Assert.IsNotNull(GetResourceManager(propertiesResourcesType));
         }
 
         private const string ENGLISH_ERROR_PREFIX = "Error:";
@@ -174,7 +187,7 @@ namespace pwiz.SkylineTestData
         private ResourceManager GetResourceManager(Type type)
         {
             var resourceManagerProperty = type.GetProperty(nameof(Skyline.Properties.Resources.ResourceManager),
-                BindingFlags.Static | BindingFlags.NonPublic);
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
             if (resourceManagerProperty != null)
             {
                 var resourceManager = resourceManagerProperty.GetValue(null) as ResourceManager;
