@@ -49,7 +49,7 @@ namespace pwiz.Common.SystemUtil
         IProgressStatus Cancel();
         IProgressStatus ChangeErrorException(Exception prop);
         IProgressStatus ChangeSegments(int segment, int segmentCount);
-        IProgressStatus ChangeSegments(int segment, ImmutableList<int> segmentEndPercentages);
+        IProgressStatus ChangeSegments(int segment, IList<int> segmentEndPercentages);
         IProgressStatus NextSegment();
         IProgressStatus ChangeSegmentName(string prop); // Changes progress bar text for controls that allow it, otherwise just changes message
         IProgressStatus UpdatePercentCompleteProgress(IProgressMonitor progressMonitor, long currentCount,
@@ -215,8 +215,8 @@ namespace pwiz.Common.SystemUtil
                     {
                         s.PercentComplete = s.PercentZoomStart = segment*100/segmentCount;
                         s.PercentZoomEnd = (segment + 1)*100/segmentCount;
-                        s.SegmentPercentEnds ??= Enumerable.Range(0, segmentCount)
-                            .Select(index => (index + 1) * 100 / segmentCount).ToArray();
+                        s.SegmentPercentEnds = ImmutableList<int>.ValueOf(Enumerable.Range(0, segmentCount)
+                            .Select(index => (index + 1)*100/segmentCount));
                     }
                     s.SegmentCount = segmentCount;
                     s.Segment = segment;
@@ -224,13 +224,13 @@ namespace pwiz.Common.SystemUtil
         }
 
         /// <summary>
-        /// Defines percentage ends (of the total) for the segments
+        /// Defines percentage ends (of the total) for the segments.
         /// </summary>
-        /// <param name="segment">current segment index</param>
-        /// <param name="segmentPercentageEnds">strictly increasing non-empty array of percentage ends for each segment, numbers should be in the range [1,100]</param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentException"></exception>
-        public IProgressStatus ChangeSegments(int segment, ImmutableList<int> segmentPercentageEnds)
+        /// <param name="segment">Current segment index</param>
+        /// <param name="segmentPercentageEnds">Strictly increasing non-empty array of percentage ends for each segment, numbers should be in the range [1,100]</param>
+        /// <returns>A cloned copy of the immutable object with the changes applied</returns>
+        /// <exception cref="ArgumentException">Throws when argument constraints are not met</exception>
+        public IProgressStatus ChangeSegments(int segment, IList<int> segmentPercentageEnds)
         {
             int segmentCount = segmentPercentageEnds.Count;
             
@@ -259,7 +259,7 @@ namespace pwiz.Common.SystemUtil
                     s.PercentZoomEnd = segmentPercentageEnds[segment];
                 }
 
-                s.SegmentPercentEnds = segmentPercentageEnds;
+                s.SegmentPercentEnds = ImmutableList<int>.ValueOf(segmentPercentageEnds);
                 s.SegmentCount = segmentCount;
                 s.Segment = segment;
             });
@@ -273,7 +273,7 @@ namespace pwiz.Common.SystemUtil
             if (SegmentPercentEnds == null || SegmentPercentEnds.Count == 0)
                 return ChangeSegments(segment, SegmentCount);
 
-            return ChangeSegments(segment, SegmentPercentEnds as ImmutableList<int>);
+            return ChangeSegments(segment, SegmentPercentEnds);
         }
 
         public IProgressStatus ChangeErrorException(Exception prop)

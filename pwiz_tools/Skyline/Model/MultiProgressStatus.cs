@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Model
         {
             throw new NotImplementedException();
         }
-        public IProgressStatus ChangeSegments(int segment, ImmutableList<int> segmentEndPercentages)
+        public IProgressStatus ChangeSegments(int segment, IList<int> segmentEndPercentages)
         {
             throw new NotImplementedException();
         }
