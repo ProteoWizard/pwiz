@@ -29,6 +29,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.AlphaPeptDeep
@@ -205,7 +206,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
                 new ArgumentAndValue(@"library--output_tsv--translate_mod_to_unimod_id", @"True"),
                 new ArgumentAndValue(@"library--rt_to_irt", @"True"),
                 new ArgumentAndValue(@"library--decoy", @"diann"),
-                new ArgumentAndValue(@"device", @"gpu"),
+                new ArgumentAndValue(@"device", 
+                    PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD ? @"gpu" : @"cpu")
             };
 
         private Dictionary<string, string> OpenSwathAssayLikeColName =>
@@ -276,7 +278,7 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
             // DSHTEYN:  These should be better balanced as of May 2nd 2025
-            var segmentEndPercentages = new[] { 5, 10, 15, 95, 100 };
+            var segmentEndPercentages = new[] { 5, 10, 15, 95 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf( segmentEndPercentages));
             LibraryHelper.PreparePrecursorInputFile(Document, progress, ref progressStatus, @"AlphaPeptDeep",
                 IrtStandard);
@@ -288,7 +290,6 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
-            progressStatus = progressStatus.NextSegment();
 
         }
 

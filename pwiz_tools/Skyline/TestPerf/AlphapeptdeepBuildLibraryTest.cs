@@ -36,10 +36,15 @@ namespace TestPerf
     [TestClass]
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        // setting _deletePython to false allows the test to reuse existing installation
+        private bool _deletePython = true;
+
+        [TestMethod] 
         public void TestAlphaPeptDeepBuildLibrary()
         {
-            AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
+            if (_deletePython) 
+                AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
+            
             TestFilesZip = "TestPerf/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
         }
@@ -121,6 +126,8 @@ namespace TestPerf
                 }
                 else
                 {
+                    PythonInstaller.SimulatedInstallationState =
+                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
                     RunUI(() => { buildLibraryDlg.OkWizardPage(); });
                     WaitForClosedForm<BuildLibraryDlg>();
                 }
@@ -307,8 +314,7 @@ namespace TestPerf
             else // clickNo == null
             {
                 // Say 'Cancel'
-                RunDlg<AlertDlg>(nvidiaDlg.ClickCancel, confirmDlg => { ConfirmPythonSuccess(confirmDlg);
-                });
+                RunDlg<AlertDlg>(nvidiaDlg.ClickCancel, confirmDlg => { ConfirmPythonSuccess(confirmDlg); });
 
             }
 
