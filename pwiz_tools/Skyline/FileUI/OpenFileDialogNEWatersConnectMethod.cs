@@ -18,13 +18,21 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Skyline.Alerts;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
+using NHibernate.Util;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
+using pwiz.Skyline.Util;
 
 
 namespace pwiz.Skyline.FileUI
 {
+
+    // TODO: [RC] Make sure the path combo dropdown is populated with the correct path
     public class OpenFileDialogNEWatersConnectMethod : OpenFileDialogNE
     {
         /// <summary>
@@ -32,17 +40,28 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         /// <param name="remoteAccounts">For UNIFI</param>
         /// <param name="specificDataSourceFilter">Optional list of specific files the user needs to located, ignoring the rest</param>
-        public OpenFileDialogNEWatersConnectMethod(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null
-            // , IList<RemoteAccountType> remoteAccountTypeCreationRestriction = null   TODO ZZZ  NOT USED
-            )
+        public OpenFileDialogNEWatersConnectMethod(IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null, RemoteUrl templateUrl = null)
             : base( null /* SOURCE_TYPES */, remoteAccounts, specificDataSourceFilter )
         {
+            listView.MultiSelect = false;
+            Text = "Select Template";
+
+            if (templateUrl is WatersConnectAcquisitionMethodUrl mehodUrl)
+            {   // if the template is already set, use its path as the initial directory
+                InitialDirectory = mehodUrl.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+                    .ChangePathParts(UrlPath.GetFilePathParts(templateUrl.EncodedPath)); ;
+            }
+            else
+            {
+                var acctList = remoteAccounts.OfType<WatersConnectAccount>().ToList();
+                if (acctList.Count() == 1)  // if there is only one account, set the initial directory to its root path
+                    InitialDirectory = (acctList.First().GetRootUrl() as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
+                else
+                    InitialDirectory = RemoteUrl.EMPTY;
+            }
         }
 
-        public MsDataFileUri DataSource => FileName;
-        public MsDataFileUri[] DataSources => FileNames;
-
-        // private IList<RemoteAccountType> remoteAccountTypeCreationRestriction;   TODO ZZZ  NOT USED
+        public WatersConnectAcquisitionMethodUrl MethodUrl { get; private set; }
 
         protected override void CreateNewRemoteSession(RemoteAccount remoteAccount)
         {
@@ -55,6 +74,48 @@ namespace pwiz.Skyline.FileUI
             throw new Exception("remoteAccount is NOT WatersConnectAccount");
         }
 
+        protected override void DoMainAction()
+        {
+            Open();
+        }
+
+        protected override void SelectItem()
+        {
+            Open();
+        }
+
+        public void Open()
+        {
+            if (listView.SelectedItems.Count == 0)
+                return;
+
+            var item = listView.SelectedItems[0];
+
+            if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
+            {
+                OpenFolderItem(item);
+                return;
+            }
+
+            if (DataSourceUtil.TYPE_WATERS_ACQUISITION_METHOD.Equals(item.SubItems[1].Text))
+            {
+                if (listView.SelectedItems[0].Tag is SourceInfo sourceInfo)
+                {
+                    MethodUrl = sourceInfo.MsDataFileUri as WatersConnectAcquisitionMethodUrl;
+                }
+                DialogResult = DialogResult.OK;
+                return;
+            }
+
+            try
+            {
+                // perhaps the user has typed an entire filename into the text box - or just garbage
+                OpenFolderFromTextBox();
+                // TODO: Make sure it can open the file from the text box remotely
+            }
+            // ReSharper disable once EmptyGeneralCatchClause
+            catch { } // guard against user typed-in-garbage
+        }
     }
 
 

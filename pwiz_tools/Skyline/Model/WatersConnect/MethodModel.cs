@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Reflection;
 using Newtonsoft.Json;
+using NHibernate.Criterion;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Skyline.Model.WatersConnect
 {
@@ -15,11 +20,36 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("destinationFolderId")]
         public string DestinationFolderId { get; set; }
 
-        [JsonProperty("templateMethodId")]
-        public string TemplateId { get; set; }
+        [JsonProperty("templateMethodVersionId")]
+        public string TemplateVersionId { get; set; }
+
+        [JsonProperty("targets")]
+        public Target[] Targets { get; set; }
     }
 
-    public class Target
+    public abstract class ParseableObject
+    {
+        protected string GetColumnName(string fieldName)
+        {
+            var columnAttribute = GetType().GetProperty(fieldName)?.GetCustomAttribute(typeof(ColumnNameAttribute)) as ColumnNameAttribute;
+            return columnAttribute?.ColumnName ?? string.Empty;
+        }
+
+        public virtual void ParseObject(DsvStreamReader reader)
+        {
+            if (reader == null)
+                return;
+            foreach (var field in GetType().GetProperties())
+            {
+                var columnAttribute = field.GetCustomAttributes(true).ToList().OfType<WatersConnect.ColumnNameAttribute>().FirstOrDefault();
+                if (columnAttribute != null && reader.HasHeader(columnAttribute.ColumnName))
+                    field.SetValue(this, reader[columnAttribute.ColumnName]);
+            }
+        }
+
+    }
+
+    public class Target : ParseableObject
     {
         [JsonProperty("id")]
         public string Id { get; set; }
@@ -28,35 +58,67 @@ namespace pwiz.Skyline.Model.WatersConnect
         [JsonProperty("name")]
         public string Name { get; set; }
 
+        [ColumnName("protein.name")]
         [JsonProperty("group")]
         public string Group { get; set; }
 
         [ColumnName("precursor.retT")]
         [JsonProperty("retentionTime")]
-        public double RetentionTime { get; set; }
+        public string RetentionTime { get; set; }
 
-        [ColumnName("collision_energy")]
-        [JsonProperty("collisionEnergy")]
-        public double CollisionEnergy { get; set; }
-
-        [ColumnName("cone_voltage")]
-        [JsonProperty("coneVoltage")]
-        public double ConeVoltage { get; set; }
-
+        [ColumnName("precursor_charge", doNotParse: true)]
         [JsonProperty("polarity")]
         public string Polarity { get; set; }
 
+        [ColumnName("rt_window", doNotParse: true)]
         [JsonProperty("startTime")]
-        public double StartTime { get; set; }
+        public string StartTime { get; set; }
 
         [JsonProperty("endTime")]
-        public double EndTime { get; set; }
+        public string EndTime { get; set; }
 
-        [JsonProperty("transitions")]
+        [JsonProperty("transitions", Order = 8 )]
         public List<Transition> Transitions;
+
+        public override void ParseObject(DsvStreamReader reader)
+        {
+            base.ParseObject(reader);
+
+            Id = Guid.NewGuid().ToString();
+
+            var polarityHeader = GetColumnName(@"Polarity");
+            if (reader.TryGetColumn(polarityHeader, out var precursorCharge) && int.TryParse(precursorCharge, out var charge))
+            {
+                if (charge > 0)
+                    Polarity = @"Positive";
+                else 
+                    Polarity = @"Negative";
+            }
+            
+            var rtWindowHeader = GetColumnName(@"StartTime");
+            if (reader.TryGetColumn(rtWindowHeader, out var rtWindowString) && !string.IsNullOrEmpty(RetentionTime))
+            {
+                if (double.TryParse(rtWindowString, out var rtWindow) && double.TryParse(RetentionTime, out var rt))
+                {
+                    StartTime = Math.Round(rt - rtWindow/2, 2).ToString(CultureInfo.InvariantCulture);
+                    EndTime = Math.Round(rt + rtWindow/2, 2).ToString(CultureInfo.InvariantCulture);
+                }
+            }
+        }
+
+        public bool IsSameTarget(DsvStreamReader reader)
+        {
+            var colAttribute =  GetType().GetProperty("Name")?.GetCustomAttribute(typeof(ColumnNameAttribute)) as ColumnNameAttribute;
+            if (colAttribute != null)
+            {
+                var name = reader[colAttribute.ColumnName];
+                return string.Equals(Name, name, StringComparison.OrdinalIgnoreCase);
+            }
+            return false;
+        }
     }
 
-    public class Transition
+    public class Transition : ParseableObject
     {
         [ColumnName("precursor.mz")]
         [JsonProperty("precursorMz")]
@@ -64,44 +126,42 @@ namespace pwiz.Skyline.Model.WatersConnect
 
         [ColumnName("product.m_z")]
         [JsonProperty("productMz")]
-        public double ProductMz { get; set; }
+        public string ProductMz { get; set; }
 
-        [ColumnName("")]
+        [ColumnName("is_quant_ion")]
         [JsonProperty("isQuanIon")]
-        public double IsQuanIon { get; set; }
+        public string IsQuanIon { get; set; }
 
         [ColumnName("")]
         [JsonProperty("dwellTime")]
-        public double DwellTime { get; set; }
+        public string DwellTime { get; set; }
 
         [ColumnName("")]
         [JsonProperty("autoDwell")]
-        public double AutoDwell { get; set; }
+        public string AutoDwell { get; set; }
+
+        [ColumnName("collision_energy")]
+        [JsonProperty("collisionEnergy")]
+        public string CollisionEnergy { get; set; }
+
+        [ColumnName("cone_voltage")]
+        [JsonProperty("coneVoltage")]
+        public string ConeVoltage { get; set; }
+
+        public override void ParseObject(DsvStreamReader reader)
+        {
+            base.ParseObject(reader);
+            if (string.IsNullOrEmpty(IsQuanIon))
+                IsQuanIon = "True";
+        }
     }
 
     public class ColumnNameAttribute : Attribute
     {
-        public ColumnNameAttribute(string columnName)
+        public ColumnNameAttribute(string columnName, bool doNotParse = false)
         {
             ColumnName = columnName;
         }
         public string ColumnName { get; }
-        public int ColumnIndex { get; private set; } = -1;
-
-        public void InitIndex(string headers)
-        {
-            if (string.IsNullOrEmpty(headers))
-                return;
-
-            var headerList = headers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            for (var i = 0; i < headerList.Length; i++)
-            {
-                if (headerList[i].Equals(ColumnName))
-                {
-                    ColumnIndex = i;
-                    break;
-                }
-            }
-        }
     }
 }

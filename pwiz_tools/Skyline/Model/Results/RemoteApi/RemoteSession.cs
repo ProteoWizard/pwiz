@@ -113,9 +113,20 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
                 
                 if (_fetchRequests.Contains(key))
                 {
-                    return;
+                    if (_responses.TryGetValue(key, out var response))
+                    {
+                        if (response.Exception == null)
+                        {
+                            // Already have the response data.
+                            return;
+                        }
+                        else
+                            _responses.Remove(key);
+                    }
+                    else 
+                        return; // The request is already in progress.
                 }
-                _responses.Remove(key);
+                _fetchRequests.Remove(key);
                 AsyncFetch(requestUri, fetcher, out _);
             }
 
@@ -211,5 +222,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             public Type Type { get; private set; }
             public Uri Uri { get; private set; }
         }
+    }
+
+    public class ProgressableStreamContents
+    {
+
     }
 }

@@ -64,8 +64,11 @@ namespace pwiz.Skyline.FileUI
 
     }
 
+    // TODO: [RC] Make sure the path combo dropdown is populated with the correct path
     class SaveWatersConnectMethodDialogNE : BaseFileDialogNE
     {
+        public string MethodName { get; private set; }
+
         public SaveWatersConnectMethodDialogNE(IList<RemoteAccount> remoteAccounts,  IList<string> specificDataSourceFilter = null)
             : base(null, remoteAccounts, specificDataSourceFilter)
         {
@@ -74,6 +77,29 @@ namespace pwiz.Skyline.FileUI
             listView.MultiSelect = false;
         }
         protected override void DoMainAction()
+        {
+            Open();
+        }
+
+        protected override void SelectItem()
+        {
+            if (listView.SelectedItems.Count > 0)
+            {
+                var selectedItem = listView.SelectedItems[0];
+                if (DataSourceUtil.IsFolderType(selectedItem.SubItems[1].Text))
+                    OpenFolderItem(selectedItem);
+                else
+                {
+                    if (ConfirmReplace(selectedItem))
+                    {
+                        DialogResult = DialogResult.OK;
+                        Close();
+                    }
+                }
+            }
+        }
+
+        private void Open()
         {
             // take the current directory and combine it with the file name entered in the text box.
             // Make sure the entered string is a valid file name
@@ -96,6 +122,7 @@ namespace pwiz.Skyline.FileUI
                     // if nothing is selected check it there is a file name in the text box
                     if (string.IsNullOrEmpty(sourcePathTextBox.Text))
                         return;
+                    // TODO: [RC] support paths, not just file names
                     var fileOrDirName = sourcePathTextBox.Text;
                     var item = listView.Items.Cast<ListViewItem>().FirstOrDefault(i =>
                         i.Text.Equals(fileOrDirName, StringComparison.CurrentCultureIgnoreCase));
@@ -110,15 +137,9 @@ namespace pwiz.Skyline.FileUI
                                 DialogResult = DialogResult.OK;
                         }
                     }
-                    else if (CurrentDirectory is WatersConnectUrl currentDir)
+                    else
                     {
-                        FileNames = new[]
-                        {
-                            currentDir.ChangeType(WatersConnectUrl.ItemType.acquisition_method)
-                                .ChangeAcquisitionMethodId(null)
-                                .ChangePathParts(currentDir.GetPathParts().Concat(new[] { fileOrDirName }))
-                                
-                        };
+                        MethodName = fileOrDirName;
                         DialogResult = DialogResult.OK;
                     }
                 }
@@ -127,6 +148,7 @@ namespace pwiz.Skyline.FileUI
 
         private bool ConfirmReplace(ListViewItem item)
         {
+            // TODO [RC] The server does not support overwriting files, request a new name
             var dlgResult = MessageDlg.Show(this,
                 string.Format("Are you sure you want to overwrite {0}?", item.Text), false,
                 MessageBoxButtons.YesNo);

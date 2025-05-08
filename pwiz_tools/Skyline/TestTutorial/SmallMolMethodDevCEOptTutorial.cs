@@ -143,7 +143,7 @@ namespace pwiz.SkylineTestTutorial
                     var exportMethodDlg2 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
                     RunUI(() =>
                     {
-                        exportMethodDlg2.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportMethodDlg2.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX;
                         exportMethodDlg2.MethodType = ExportMethodType.Standard;
                         exportMethodDlg2.RunLength = 2;
                         exportMethodDlg2.SetTemplateFile("VerifyETemplate.exp");
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
                     var exportTransitionList = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                     RunUI(() =>
                     {
-                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX;
                         exportTransitionList.MethodType = ExportMethodType.Standard;
                         exportTransitionList.RunLength = 2;
                     });
@@ -278,7 +278,7 @@ namespace pwiz.SkylineTestTutorial
                     var exportTransitionList = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
                     RunUI(() =>
                     {
-                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX;
                         exportTransitionList.MethodType = ExportMethodType.Scheduled;
                         exportTransitionList.OptimizeType = ExportOptimize.NONE;
                     });
@@ -428,7 +428,7 @@ namespace pwiz.SkylineTestTutorial
                         exportTransitionList.ExportStrategy = ExportStrategy.Buckets;
                         exportTransitionList.IgnoreProteins = true;
                         exportTransitionList.MaxTransitions = 100;
-                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX;
                         exportTransitionList.MethodType = ExportMethodType.Scheduled;
                         exportTransitionList.OptimizeType = ExportOptimize.CE;
                     });
@@ -512,7 +512,7 @@ namespace pwiz.SkylineTestTutorial
                         exportTransitionList.ExportStrategy = ExportStrategy.Single;
                         exportTransitionList.IgnoreProteins = true;
                         exportTransitionList.MaxTransitions = 100;
-                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ;
+                        exportTransitionList.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_MASS_LYNX;
                         exportTransitionList.MethodType = ExportMethodType.Scheduled;
                     });
                     PauseForScreenShot<ExportMethodDlg>("Exporting final optimized transition list");

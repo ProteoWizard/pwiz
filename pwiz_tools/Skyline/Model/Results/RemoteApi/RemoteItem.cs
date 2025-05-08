@@ -22,13 +22,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 {
     public class RemoteItem
     {
-        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes)
+        public RemoteItem(MsDataFileUri msDataFileUri, string label, string type, DateTime? lastModified, long fileSizeBytes, object data = null)
         {
             MsDataFileUri = msDataFileUri;
             Label = label;
             Type = type;
             LastModified = lastModified;
             FileSize = (ulong) fileSizeBytes;
+            Data = data;
         }
 
         public MsDataFileUri MsDataFileUri { get; private set; }
@@ -36,5 +37,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public string Type { get; private set; }
         public DateTime? LastModified { get; private set; }
         public ulong FileSize { get; private set; }
+        public object Data { get; private set; }
     }
 }

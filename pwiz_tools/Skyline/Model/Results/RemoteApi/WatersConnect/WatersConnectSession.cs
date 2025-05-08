@@ -113,9 +113,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
 
         protected void EnsureSuccess(System.Net.HttpStatusCode status,  string responseBody)
         {
-            if (status != System.Net.HttpStatusCode.OK)
+            if (status >= System.Net.HttpStatusCode.BadRequest)
             {
-                throw new RemoteServerException(string.Format("Waters Connect server returnes an error: {0}", responseBody));
+                throw new RemoteServerException(string.Format("Waters Connect server returns an error: {0}", responseBody));
             }
         }
         protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                                 ? WatersConnectUrl.ItemType.folder_child_folders_sample_sets
                                 : WatersConnectUrl.ItemType.folder_child_folders_only)
                             .ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] { folderObject.Name }));
-                        yield return new RemoteItem(childUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
+                        yield return new RemoteItem(childUrl, folderObject.Name, DataSourceUtil.FOLDER_TYPE, null, 0, folderObject);
                     }
                 }
             }
@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                             var childUrl = watersConnectUrl.ChangeFolderOrSampleSetId(sampleSet.Id)
                                 .ChangeType(WatersConnectUrl.ItemType.sample_set)
                                 .ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] {sampleSet.Name}));
-                            yield return new RemoteItem(childUrl, sampleSet.Name, DataSourceUtil.FOLDER_TYPE, null, 0);
+                            yield return new RemoteItem(childUrl, sampleSet.Name, DataSourceUtil.FOLDER_TYPE, null, 0, sampleSet);
                         }
                 }
             }
@@ -219,7 +219,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
                                 .ChangeType(WatersConnectUrl.ItemType.injection)
                                 .ChangePathParts(watersConnectUrl.GetPathParts().Concat(new[] {fileObject.Name}))
                                 .ChangeModifiedTime(fileObject.ModifiedAt);
-                            yield return new RemoteItem(childUrl, fileObject.Name, DataSourceUtil.TYPE_WATERS_RAW, fileObject.ModifiedAt, 0);
+                            yield return new RemoteItem(childUrl, fileObject.Name, DataSourceUtil.TYPE_WATERS_RAW, fileObject.ModifiedAt, 0, fileObject);
                         }
                 }
             }

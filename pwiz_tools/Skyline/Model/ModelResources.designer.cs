@@ -2294,6 +2294,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Expected WatersConnectSessionAcquisitionMethod, got {0}..
+        /// </summary>
+        public static string WatersMethodExporter_Wrong_Session_Type {
+            get {
+                return ResourceManager.GetString("WatersMethodExporter_Wrong_Session_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed attempting to add the file {0}.
         /// </summary>
         public static string ZipFileShare_AddFile_Failed_attempting_to_add_the_file__0_ {

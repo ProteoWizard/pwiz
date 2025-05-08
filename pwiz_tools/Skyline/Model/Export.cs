@@ -29,15 +29,16 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using NHibernate.SqlCommand;
 using pwiz.CLI.Bruker.PrmScheduling;
+using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.WatersConnect;
+using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -634,8 +635,7 @@ namespace pwiz.Skyline.Model
                     else
                         return ExportWatersMethod(doc, path, template);
                 case ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT:
-                    //  TODO  ZZZ   NEED To ADD code here
-                    throw new InvalidOperationException(("NO Support yet for: ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT"));
+                    return ExportWatersConnectMethod(doc, path, template);
                 case ExportInstrumentType.WATERS_QUATTRO_PREMIER:
                     return ExportWatersQMethod(doc, path, template);
                 default:
@@ -1016,6 +1016,44 @@ namespace pwiz.Skyline.Model
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
+        }
+        public AbstractMassListExporter ExportWatersConnectMethod(SrmDocument document, string exportMethodUrlString, string templateMethodUrlString)
+        {
+            if (exportMethodUrlString == null)
+            {
+                // doing method file count
+                var exporter = InitExporter(new WatersConnectMethodExporter(document, null)); 
+                PerformLongExport(m => exporter.ExportMethod(null, null, null, m));
+                return exporter;
+            }
+
+            var templateMethodUrl = new WatersConnectAcquisitionMethodUrl(templateMethodUrlString);
+            var exportMethodUrl = new WatersConnectUrl(exportMethodUrlString);
+            var methodPath = exportMethodUrl.GetPathParts().ToList();
+            var targetFolderUrl = (WatersConnectUrl)exportMethodUrl.ChangePathParts(methodPath.Take(methodPath.Count - 1));
+            var methodName = methodPath.Last();
+
+            if (templateMethodUrl.ServerUrl != targetFolderUrl.ServerUrl)
+            {
+                throw new ApplicationException("Cannot use a template method from another server.");
+            }
+
+            // get the account from the settings
+            var account = Settings.Default.RemoteAccountList.GetRemoteAccount(targetFolderUrl);
+            if (account is WatersConnectAccount wcAcct)
+            {
+                var exporter = InitExporter(new WatersConnectMethodExporter(document, wcAcct)); // Load transition data into the memory list
+                if (MethodType == ExportMethodType.Standard)
+                {
+                    exporter.RunLength = RunLength;
+                }
+                // decode URLs from the string parameters
+                // Convert to JSON and upload
+                PerformLongExport(m => exporter.ExportMethod(methodName, targetFolderUrl, templateMethodUrl, m));
+                return exporter;
+            }
+            else
+                throw new ApplicationException("No matching Waters Connect account is found for this URL.");
         }
 
         public abstract void PerformLongExport(Action<IProgressMonitor> performExport);
@@ -4501,6 +4539,8 @@ namespace pwiz.Skyline.Model
             writer.Write("precursor_charge");
             writer.Write(FieldSeparator);
             writer.Write("rt_window");
+            writer.Write(FieldSeparator);
+            writer.Write("is_quant_ion");
             writer.WriteLine();
         }
         // ReSharper restore LocalizableElement
@@ -4600,6 +4640,14 @@ namespace pwiz.Skyline.Model
             writer.Write(nodeTranGroup.PrecursorAdduct.AdductCharge);
             writer.Write(FieldSeparator);
             writer.Write(RTWindow);
+            writer.Write(FieldSeparator);
+            if (nodeTran.ExplicitQuantitative)
+                writer.Write(@"true");
+            else if (nodeTran.QuantInfo.Quantititative)
+                writer.Write(@"true");
+            else
+                writer.Write(@"false");
+
             writer.WriteLine();
         }
 
@@ -4949,38 +4997,63 @@ namespace pwiz.Skyline.Model
 
     public class WatersConnectMethodExporter : WatersMassListExporter
     {
-        private RemoteSession _wcSession;
-        public WatersConnectMethodExporter(SrmDocument document, RemoteSession wcSession)
+        private WatersConnectSessionAcquisitionMethod _wcSession;
+        private string _methodName;
+        public WatersConnectMethodExporter(SrmDocument document, WatersConnectAccount account)
             : base(document)
         {
-            _wcSession = wcSession;
+            _wcSession = new WatersConnectSessionAcquisitionMethod(account);
         }
-        public void ExportMethod(string fileName, string fileFolderId, string templateId, IProgressMonitor progressMonitor)
+        public void ExportMethod(string fileName, WatersConnectUrl targetFolderUrl, WatersConnectAcquisitionMethodUrl templateUrl, IProgressMonitor progressMonitor)
         {
+            // TODO: [RC] Make sure the template URL is valid (i.e. exists on the server)
+            _methodName = fileName;
             if (!InitExport(fileName, progressMonitor))
                 return;
+
+            foreach (var methodData in MemoryOutput)
+            {
+                var method = ParseMethod(methodData.Value.ToString());
+                method.DestinationFolderId = targetFolderUrl.FolderOrSampleSetId;
+                method.TemplateVersionId = templateUrl.MethodVersionId.ToString();
+                if (MemoryOutput.Count == 1)
+                    method.Name = _methodName;
+                else
+                    method.Name = methodData.Key.Replace(MEMORY_KEY_ROOT, _methodName);
+                _wcSession.UploadMethod(method, progressMonitor);
+            }
         }
 
         public WatersConnect.MethodModel ParseMethod(string outputLines)
         {
-            var outputReader = new StringReader(outputLines);
-            var headerLine = outputReader.ReadLine();
-            var lines = outputReader.ReadToEnd()?.Split(new[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            if (lines == null || lines.Length == 0)
-                return null;
-            var methodLines = lines.Select(line => line.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)).ToList();
-
-            var res = new WatersConnect.MethodModel();
-            foreach (var field in res.GetType().GetFields())
+            var linesReader = new DsvStreamReader(new StringReader(outputLines), ',');
+            var targets = new List<WatersConnect.Target>();
+            while (!linesReader.EndOfStream)
             {
-                var columnAttribute = field.GetCustomAttributes(false).ToList().OfType<WatersConnect.ColumnNameAttribute>().FirstOrDefault();
-                if (columnAttribute != null)
+                WatersConnect.Target currentTarget;
+                linesReader.ReadLine();
+                // we assume that the lines are sorted by target
+                if (targets.Count == 0 || !targets.Last().IsSameTarget(linesReader))
                 {
-                    columnAttribute.InitIndex(headerLine);
+                    currentTarget = new WatersConnect.Target();
+                    targets.Add(currentTarget);
+                    currentTarget.ParseObject(linesReader);
+                    currentTarget.Transitions = new List<WatersConnect.Transition>();
                 }
+                else
+                {
+                    currentTarget = targets.Last();
+                }
+                var currentTransition = new WatersConnect.Transition();
+                currentTarget.Transitions.Add(currentTransition);
+                currentTransition.ParseObject(linesReader);
             }
 
-            return null;
+            var res = new WatersConnect.MethodModel();
+            res.Targets = targets.ToArray();
+            res.Description = "Exported from Skyline";
+            res.Name = _methodName;
+            return res;
         }
     }
 

@@ -47,7 +47,7 @@ namespace pwiz.Skyline.FileUI
 
         public void Open()
         {
-            List<MsDataFileUri> dataSourceList = new List<MsDataFileUri>();
+            var dataSourceList = new List<MsDataFileUri>();
             foreach (ListViewItem item in listView.SelectedItems)
             {
                 if (!DataSourceUtil.IsFolderType(item.SubItems[1].Text))

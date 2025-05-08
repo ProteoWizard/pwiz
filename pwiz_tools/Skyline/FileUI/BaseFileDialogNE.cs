@@ -471,7 +471,7 @@ namespace pwiz.Skyline.FileUI
                     bool isComplete = _remoteSession.AsyncFetchContents(remoteUrl, out exception);
                     foreach (var item in _remoteSession.ListContents(remoteUrl))
                     {
-                        //  TODO  ZZZ  Should the Image vary based on the file type?
+                        //  TODO  [RC] Read access levels from the server response
 
                         ImageIndex imageIndex = item.Type switch
                         {
@@ -494,7 +494,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         if (MultiButtonMsgDlg.Show(this, exception.Message, FileUIResources.OpenDataSourceDialog_populateListViewFromDirectory_Retry) != DialogResult.Cancel)
                         {
-                            RemoteSession.RetryFetchContents(remoteUrl);
+                            RemoteSession?.RetryFetchContents(remoteUrl);
                             isComplete = false;
                         }
                     }
@@ -787,19 +787,24 @@ namespace pwiz.Skyline.FileUI
 
         private void listView_ItemActivate( object sender, EventArgs e )
         {
+            SelectItem();
+        }
+
+        protected virtual void SelectItem()
+        {
             var selected = listView.SelectedItems.OfType<ListViewItem>().ToList()
                 .FindAll(item => item.ImageIndex != (int)ImageIndex.NoAccess);
             if (selected.Count == 0)
                 return;
 
             ListViewItem item = selected[0];
-            if( DataSourceUtil.IsFolderType(item.SubItems[1].Text) )
+            if (DataSourceUtil.IsFolderType(item.SubItems[1].Text))
             {
                 OpenFolderItem(item);
             }
             else
             {
-                FileNames = new[] { ((SourceInfo) item.Tag).MsDataFileUri,  };
+                FileNames = new[] { ((SourceInfo)item.Tag).MsDataFileUri };
                 DialogResult = DialogResult.OK;
                 Close();
             }
@@ -807,6 +812,7 @@ namespace pwiz.Skyline.FileUI
 
         protected void OpenFolderItem(ListViewItem listViewItem)
         {
+            // TODO: [RC] Make sure the textbox is cleared when next folder is open
             OpenFolder(((SourceInfo) listViewItem.Tag).MsDataFileUri);
         }
 

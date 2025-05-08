@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
+using System.Web.Configuration;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -45,23 +47,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             base.Init(nameValueParameters);
             InjectionId = nameValueParameters.GetValue(@"injectionId");
-            AcquisitionMethodId = nameValueParameters.GetValue(@"acquisitionMethodId");
             FolderOrSampleSetId = nameValueParameters.GetValue(@"sampleSetId");
             Type = (ItemType?) nameValueParameters.GetLongValue(@"type") ?? ItemType.folder_child_folders_sample_sets;
         }
         public string InjectionId { get; private set; }
-        public string AcquisitionMethodId { get; private set; }
         public string FolderOrSampleSetId { get; private set; }
-        public ItemType Type { get; private set; }
+        public ItemType Type { get; protected set; }
 
         public WatersConnectUrl ChangeInjectionId(string id)
         {
             return ChangeProp(ImClone(this), im => im.InjectionId = id);
-        }
-
-        public WatersConnectUrl ChangeAcquisitionMethodId(string id)
-        {
-            return ChangeProp(ImClone(this), im => im.AcquisitionMethodId = id);
         }
 
         public WatersConnectUrl ChangeFolderOrSampleSetId(string id)
@@ -88,8 +83,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var result = base.GetParameters();
             result.SetValue(@"injectionId", InjectionId);
-            if (AcquisitionMethodId != null)
-                result.SetValue(@"acquisitionMethodId", AcquisitionMethodId);
             result.SetValue(@"sampleSetId", FolderOrSampleSetId);
             result.SetLongValue(@"type", (long) Type);
             return result;
@@ -116,6 +109,64 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             return new MsDataFileImpl(serverUrl, 0, LockMassParameters, openParams.SimAsSpectra,
                 requireVendorCentroidedMS1: openParams.CentroidMs1, requireVendorCentroidedMS2: openParams.CentroidMs2,
                 ignoreZeroIntensityPoints: openParams.IgnoreZeroIntensityPoints, preferOnlyMsLevel: openParams.PreferOnlyMs1 ? 1 : 0);
+        }
+    }
+
+    public class WatersConnectAcquisitionMethodUrl : WatersConnectUrl
+    {
+        public static readonly WatersConnectAcquisitionMethodUrl Empty =
+            new WatersConnectAcquisitionMethodUrl(UrlPrefix);
+
+        public new static string UrlPrefix
+        {
+            get { return RemoteAccountType.WATERS_CONNECT.Name + @":acquisition_method:"; }
+        }
+
+        public Guid MethodVersionId { get; private set; }
+        public string AcquisitionMethodId { get; private set; }
+
+        public WatersConnectAcquisitionMethodUrl(string watersConnectUrl) : base(watersConnectUrl)
+        {
+        }
+
+        public WatersConnectAcquisitionMethodUrl ChangeMethodVersionId(Guid id)
+        {
+            return ChangeProp(ImClone(this), im => im.MethodVersionId = id);
+        }
+        public WatersConnectAcquisitionMethodUrl ChangeAcquisitionMethodId(string id)
+        {
+            return ChangeProp(ImClone(this), im => im.AcquisitionMethodId = id);
+        }
+
+
+        protected override NameValueParameters GetParameters()
+        {
+            var result = base.GetParameters();
+            if (MethodVersionId != Guid.Empty)
+                result.SetValue(@"methodVersionId", MethodVersionId.ToString());
+            if (AcquisitionMethodId != null)
+                result.SetValue(@"acquisitionMethodId", AcquisitionMethodId);
+            return result;
+        }
+
+        protected override void Init(NameValueParameters nameValueParameters)
+        {
+            base.Init(nameValueParameters);
+            var methodVersionId = nameValueParameters.GetValue(@"methodVersionId");
+            if (!string.IsNullOrEmpty(methodVersionId))
+            {
+                Guid id;
+                if (Guid.TryParse(methodVersionId, out id))
+                {
+                    MethodVersionId = id;
+                }
+                else
+                {
+                    throw new InvalidDataException(string.Format("Invalid method version Id", methodVersionId));
+                }
+            }
+            AcquisitionMethodId = nameValueParameters.GetValue(@"acquisitionMethodId");
+            Type = ItemType.acquisition_method;
         }
     }
 }

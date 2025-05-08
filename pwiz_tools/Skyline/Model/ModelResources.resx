@@ -785,6 +785,9 @@
   <data name="WatersMethodExporter_EnsureLibraries_Failed_to_find_a_valid_MassLynx_installation" xml:space="preserve">
     <value>Failed to find a valid MassLynx installation.</value>
   </data>
+  <data name="WatersMethodExporter_Wrong_Session_Type" xml:space="preserve">
+    <value>Expected WatersConnectSessionAcquisitionMethod, got {0}.</value>
+  </data>
   <data name="WatersMethodExporter_EnsureLibraries_MassLynx_may_not_be_installed_correctly_The_library__0__could_not_be_found" xml:space="preserve">
     <value>MassLynx may not be installed correctly. The library {0} could not be found.</value>
   </data>
