@@ -313,7 +313,7 @@ namespace ResourcesOrganizer.ResourcesModel
             for (int i = 0; i < entries.Count; i++)
             {
                 var entry = entries[i];
-                foreach (var record in records[entry.Invariant.Name!])
+                foreach (var record in records[entry.Invariant.Name!].Concat(records[string.Empty]))
                 {
                     if (!string.IsNullOrEmpty(record.File) && record.File != RelativePath)
                     {

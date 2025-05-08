@@ -652,7 +652,7 @@
     <value>20</value>
   </data>
   <data name="label13.Text" xml:space="preserve">
-    <value>Ad&amp;vanced filtering:</value>
+    <value>高级过滤(&amp;V):</value>
     <comment>Needs Review:English text changed
 Old English:Time &amp;window:
 Current English:Ad&amp;vanced filtering:
