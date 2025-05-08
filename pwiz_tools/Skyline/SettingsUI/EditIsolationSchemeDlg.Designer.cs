@@ -242,7 +242,6 @@
             dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridIsolationWindows.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
-            this.gridIsolationWindows.RowHeadersVisible = false;
             // 
             // colStart
             // 

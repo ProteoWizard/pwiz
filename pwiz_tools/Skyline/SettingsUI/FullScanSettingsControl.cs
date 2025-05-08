@@ -588,6 +588,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _driverIsolationScheme = new SettingsListComboDriver<IsolationScheme>(comboIsolationScheme,
                                                                                   Settings.Default.IsolationSchemeList);
+            _driverIsolationScheme.EditItemEvent += DriverIsolationScheme_OnEditItemEvent;
 
             string sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
@@ -613,6 +614,11 @@ namespace pwiz.Skyline.SettingsUI
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
+        }
+
+        private void DriverIsolationScheme_OnEditItemEvent(object sender, SettingsListComboDriver<IsolationScheme>.EditItemEventArgs e)
+        {
+            e.Tag = _documentContainer.Document.Settings;
         }
 
         /// <summary>
@@ -1134,6 +1140,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Hide MS/MS filtering groupbox entirely.
                 groupBoxMS2.Visible = false;
+                // Acquisition method cannot be PRM or DIA
+                if (AcquisitionMethod != FullScanAcquisitionMethod.DDA)
+                    AcquisitionMethod = FullScanAcquisitionMethod.None;
 
                 // Reposition selectivity checkbox and retention time filtering groupbox.
                 cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;

@@ -259,4 +259,69 @@
   <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
     <value>未发现更新。</value>
   </data>
+  <data name="ArdiaLoginDlg_Error_interacting_with_web_page" xml:space="preserve">
+    <value>与网页交互时出错</value>
+  </data>
+  <data name="ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_" xml:space="preserve">
+    <value>角色'{0}'非可用选项。请手动选择您的角色。</value>
+  </data>
+  <data name="ArdiaLogoutDlg_InitializeWebView_User_logged_out_successfully_" xml:space="preserve">
+    <value>用户注销成功</value>
+  </data>
+  <data name="ArdiaLoginDlg_OnShown_Error_connecting_to_Ardia_server" xml:space="preserve">
+    <value>连接 Ardia 服务器时出错</value>
+  </data>
+  <data name="ArdiaLoginDlg_StartRegistrationSkylineWithArdia_ButtonClicked_Error_registering_this_Skyline_instance_to_Ardia" xml:space="preserve">
+    <value>将 Skyline 实例注册到 Ardia 时出错</value>
+  </data>
+  <data name="ArdiaLoginDlg_StartLogin_WithArdia_ButtonClicked_Error_logging_in_to_Ardia" xml:space="preserve">
+    <value>登录 Ardia 时出错</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_as_Client__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>客户端在 Ardia 验证 Skyline 注册时出错。无法连接到 URL {0}。服务器 URL：{1}。错误消息： {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_as_Client__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_" xml:space="preserve">
+    <value>客户端在 Ardia 验证 Skyline 注册时出错。无法处理调用 URL{0} 的 webservice 结果。服务器 URL： {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_" xml:space="preserve">
+    <value>在 Ardia 验证 Skyline 注册时出错。</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>{3}无法连接到 URL {0}。服务器 URL：{1}。错误消息： {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_" xml:space="preserve">
+    <value>{2} 无法处理调用 URL {0} 的 webservice 结果。服务器 URL： {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_process_webservice_response___Probably_failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>{3} 无法处理 webservice 响应。可能无法连接到 URL {0}。服务器 URL：{1}。错误消息： {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_webservice_response__URL__0___Server_URL___1_" xml:space="preserve">
+    <value>{2} 无法处理 webservice 响应。URL {0}。服务器 URL： {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser_Error_registering_Skyline_in_Ardia" xml:space="preserve">
+    <value>在 Ardia 注册 Skyline 时出错。</value>
+  </data>
+  <data name="ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>{3}无法连接到 URL {0}。服务器 URL：{1}。错误消息： {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser__2__Failed_to_connect_to_URL__0___Server_URL___1_" xml:space="preserve">
+    <value>{2}无法连接到 URL {0}。服务器 URL： {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_GetBrowserLoginResponseString_" xml:space="preserve">
+    <value>&lt;html&gt;&lt;head&gt;&lt;/head&gt;&lt;body&gt;&lt;h4&gt;
+&lt;p&gt;您已登录 Ardia 平台。&lt;/p&gt;
+&lt;p&gt;Skyline 中 Ardia 当前会话完成之前，请勿在浏览器中注销 Ardia。&lt;/p&gt;
+&lt;p&gt;关闭浏览器窗口不会结束浏览器中的 Ardia 会话。在浏览器中点击&lt;a href&gt;"{0}"&gt;此处&lt;/a&gt;，转至&lt;/p&gt;
+&lt;p&gt; Ardia 主页。&lt;/p&gt;
+&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</value>
+  </data>
+  <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage_Load_Client_Registration_page_failed_with_HTTP_status_code__0___Page_URL___1_" xml:space="preserve">
+    <value>加载客户端注册页面失败，出现 HTTP 状态码{0}。页面 URL： {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0___Login_Page_URL___1_" xml:space="preserve">
+    <value>加载登录页面失败，出现 HTTP 状态码{0}。登录页面 URL： {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0__Login_Page_URL___1_" xml:space="preserve">
+    <value>加载登录页面失败，出现 HTTP 状态码{0}。客户端注册码很可能无效。刚从服务器接收到新的客户端注册码，这很可能是程序故障。登录页面 URL： {1}</value>
+  </data>
 </root>

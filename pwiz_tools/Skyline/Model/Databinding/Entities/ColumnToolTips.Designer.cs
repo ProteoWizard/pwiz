@@ -336,7 +336,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Average Mass Error PPM.
+        ///   Looks up a localized string similar to The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM).
         /// </summary>
         public static string AverageMassErrorPPM {
             get {
@@ -689,7 +689,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         /// <summary>
         ///   Looks up a localized string similar to The number of transitions for a precursor that integrate a peak with a
         ///boundary at either end of the acquisition time range, where intensity at the end is
-        ///greater than 1% of the entire peak height higher than the other extent..
+        ///greater than 25% of the background-subtracted peak height higher than the other extent..
         /// </summary>
         public static string CountTruncated {
             get {
@@ -3283,6 +3283,17 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The area weighted mean (0 to 1.0) of transitions for a precursor that integrate a peak with a
+        ///boundary at either end of the acquisition time range, where intensity at the end is
+        ///greater than 25% of the background-subtracted peak height higher than the other extent..
+        /// </summary>
+        public static string ProportionTruncated {
+            get {
+                return ResourceManager.GetString("ProportionTruncated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Protein.
         /// </summary>
         public static string Protein {
@@ -4131,7 +4142,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Calculated value unavailable when missing data could comparisons between replicates..
+        ///   Looks up a localized string similar to Calculated value unavailable when missing data could impact comparisons between replicates..
         /// </summary>
         public static string Strict {
             get {
@@ -4408,8 +4419,8 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to True if the integrated a peak has a boundary at either end of the acquisition
-        ///time range, where intensity at the end is greater than 1% of the entire peak height
+        ///   Looks up a localized string similar to True if the integrate peak has a boundary at either end of the acquisition
+        ///time range, where intensity at the end is greater than 25% of the background-subtracted peak height
         ///higher than the other extent..
         /// </summary>
         public static string Truncated {

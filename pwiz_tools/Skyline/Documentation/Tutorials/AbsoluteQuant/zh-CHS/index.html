@@ -238,8 +238,7 @@
         <li>FOXN1-GST.RAW</li>
     </ul>
     <p>
-        这些 RAW 文件以随机顺序收集，并分散在大量的数据采集中。在原始论文 (<a
-            href="http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip">http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip</a>)
+        这些 RAW 文件以随机顺序收集，并分散在大量的数据采集中。在原始论文 (<a href="http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip">http://proteome.gs.washington.edu/supplementary_data/IVT_SRM/Supplementary%20Data%202.sky.zip</a>)
         的<b>补充数据 2</b> 中可以找到使用 Skyline 进行完整处理的结果。 
     </p>
     <p>
@@ -280,7 +279,7 @@
         <li>在<b>视图</b>菜单中选择<b>排列图形</b>，然后单击<b>平铺</b> (Ctrl-T)。 </li>
         <li>在<b>目标</b>视图中选择 IEAIPQIDK 肽段。</li>
     </ul>
-    <p class="keep-next">
+    <p>
         对于每个标准，您会在界面中同时看到轻（红色）重（蓝色）总色谱图，如下所示：
     </p>
     <p>
@@ -379,7 +378,7 @@
     </ul>
     <h2>指定外部标准的分析物浓度：</h2>
     <ul>
-        <li>在<b>视图</b>菜单上，单击<b>文档网格</b>。</li>
+        <li>在“ <b>视图</b> ”菜单中选择“ <b>实时报告</b>”，然后点击“ <b>文档网格”</b>(Alt-3)。</li>
         <li>在<b>文档网格</b>的左上角中单击<b>报告</b>下拉列表，然后选择<b>重复测定</b>。</li>
         <li>复制以下数据并将其粘贴到<b>文档网格</b>，以将每个 "Standard_#" 重复测定<b>样品类型</b>设置为“标准”，并将<b>分析物浓度</b>设为以下值。</li>
     </ul>
@@ -443,7 +442,10 @@
         斜率和截距显示在校准曲线上。使用标准的 <b>y = m * x + b</b> 方程式可以在峰面积比和浓度之间进行转换 
     </p>
     <p>
-        <i>（浓度 = 斜率 * 比率 + 截距）</i>
+        <i>比率 = 斜率 * 浓度 + 截距</i>
+    </p>
+    <p>
+        <i>浓度 = (比率 - 截距) / 斜率</i>
     </p>
     <p>
         另外，当前选择的重复测定样本的计算浓度也显示在校准表上。此处得到未知样品的浓度为 1.8554 fmol/ul。

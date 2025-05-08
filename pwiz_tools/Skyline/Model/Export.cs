@@ -29,7 +29,6 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
-using Microsoft.Win32;
 using pwiz.CLI.Bruker.PrmScheduling;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -186,17 +185,31 @@ namespace pwiz.Skyline.Model
         public const string BRUKER_TIMSTOF = "Bruker timsTOF";
         public const string SHIMADZU = "Shimadzu";
         public const string THERMO = "Thermo";
-        public const string THERMO_TSQ = "Thermo TSQ";
-        public const string THERMO_ENDURA = "Thermo Endura";
-        public const string THERMO_QUANTIVA = "Thermo Quantiva";
-        public const string THERMO_ALTIS = "Thermo Altis";
-        public const string THERMO_STELLAR = "Thermo Stellar";
-        public const string THERMO_FUSION = "Thermo Fusion";
-        public const string THERMO_LTQ = "Thermo LTQ";
-        public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
-        public const string THERMO_EXPLORIS = "Thermo Exploris";
-        public const string THERMO_FUSION_LUMOS = "Thermo Fusion Lumos";
-        public const string THERMO_ECLIPSE = "Thermo Eclipse";
+        public const string THERMO_TSQ = "Thermo TSQ Vantage/Ultra"; // tsq
+        public const string THERMO_LTQ = "Thermo LTQ (legacy)";     // ltq
+        public const string THERMO_ENDURA = "Thermo Endura";        // tsq
+        public const string THERMO_ENDURA_REG = "TSQEndura";
+        public const string THERMO_QUANTIVA = "Thermo Quantiva";    // tsq
+        public const string THERMO_QUANTIVA_REG = "TSQQuantiva";
+        public const string THERMO_ALTIS = "Thermo Altis";          // tsq
+        public const string THERMO_ALTIS_REG = "TSQAltis";
+        public const string THERMO_STELLAR = "Thermo Stellar";      // q-ltq
+        public const string THERMO_STELLAR_REG = "Stellar";
+        public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive"; // q-orbi - no method export, did not support TNG XML API
+        public const string THERMO_EXPLORIS = "Thermo Exploris";    // q-orbi
+        public const string THERMO_EXPLORIS_REG = "OrbitrapExploris480";    // CONSIDER: Other Exploris versions?
+        public const string THERMO_ASCEND = "Thermo Ascend";        // q-orbi
+        public const string THERMO_ASCEND_REG = "OrbitrapAscend";
+        public const string THERMO_FUSION = "Thermo Fusion";        // q-orbi/ltq
+        public const string THERMO_FUSION_REG = "OrbitrapFusion";
+        public const string THERMO_FUSION_LUMOS = "Thermo Fusion Lumos"; // q-orbi/ltq
+        public const string THERMO_FUSION_LUMOS_REG = "OrbitrapFusionLumos";
+        public const string THERMO_ECLIPSE = "Thermo Eclipse";      // q-orbe/ltq
+        public const string THERMO_ECLIPSE_REG = "OrbitrapEclipse";
+        public const string THERMO_ASTRAL = "Thermo Astral";        // q-orbi/tof
+        public const string THERMO_ASTRAL_REG = "OrbitrapAstral";
+        public const string THERMO_ASTRAL_ZOOM = "Thermo Astral Zoom";        // q-orbi/tof
+        public const string THERMO_ASTRAL_ZOOM_REG = "OrbitrapAstralZoom";
         public const string WATERS = "Waters";
         public const string WATERS_XEVO_TQ = "Waters Xevo TQ";
         public const string WATERS_XEVO_QTOF = "Waters Xevo QTOF";
@@ -224,15 +237,9 @@ namespace pwiz.Skyline.Model
                 ABI_7500,
                 ABI_7600,
                 SHIMADZU,
+                THERMO,
                 THERMO_TSQ,
                 THERMO_LTQ,
-                THERMO_QUANTIVA,
-                THERMO_ALTIS,
-                THERMO_STELLAR,
-                THERMO_EXPLORIS,
-                THERMO_ECLIPSE,
-                THERMO_FUSION,
-                THERMO_FUSION_LUMOS,
                 WATERS_XEVO_TQ,
                 WATERS_QUATTRO_PREMIER,
             };
@@ -266,32 +273,53 @@ namespace pwiz.Skyline.Model
             };
 
         private static readonly Dictionary<string, string> METHOD_EXTENSIONS;
+        private static readonly Dictionary<string, string> THERMO_TYPE_TO_INSTALLATION_TYPE;
 
         static ExportInstrumentType()
         {
             METHOD_EXTENSIONS = new Dictionary<string, string>
-                                   {
-                                       {ABI_QTRAP, EXT_AB_SCIEX},
-                                       {ABI_TOF, EXT_AB_SCIEX},
-                                       {ABI_7500, EXT_SCIEX_OS},
-                                       {ABI_7600, EXT_SCIEX_OS},
-                                       {AGILENT6400, EXT_AGILENT},
-                                       {AGILENT_MASSHUNTER_12_METHOD, EXT_AGILENT},
-                                       {BRUKER_TOF, EXT_BRUKER},
-                                       {BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF},
-                                       {SHIMADZU, EXT_SHIMADZU},
-                                       {THERMO_TSQ, EXT_THERMO},
-                                       {THERMO_LTQ, EXT_THERMO},
-                                       {THERMO_QUANTIVA, EXT_THERMO},
-                                       {THERMO_ALTIS, EXT_THERMO},
-                                       {THERMO_EXPLORIS, EXT_THERMO},
-                                       {THERMO_ECLIPSE, EXT_THERMO},
-                                       {THERMO_FUSION, EXT_THERMO},
-                                       {THERMO_FUSION_LUMOS, EXT_THERMO},
-                                       {THERMO_STELLAR, EXT_THERMO},
-                                       {WATERS_XEVO_TQ, EXT_WATERS},
-                                       {WATERS_QUATTRO_PREMIER, EXT_WATERS}
-                                   };
+            {
+                { ABI_QTRAP, EXT_AB_SCIEX },
+                { ABI_TOF, EXT_AB_SCIEX },
+                { ABI_7500, EXT_SCIEX_OS },
+                { ABI_7600, EXT_SCIEX_OS },
+                { AGILENT6400, EXT_AGILENT },
+                { AGILENT_MASSHUNTER_12_METHOD, EXT_AGILENT },
+                { BRUKER_TOF, EXT_BRUKER },
+                { BRUKER_TIMSTOF, EXT_BRUKER_TIMSTOF },
+                { SHIMADZU, EXT_SHIMADZU },
+                { THERMO, EXT_THERMO },
+                { THERMO_TSQ, EXT_THERMO },
+                { THERMO_LTQ, EXT_THERMO },
+                { THERMO_ENDURA, EXT_THERMO },
+                { THERMO_QUANTIVA, EXT_THERMO },
+                { THERMO_ALTIS, EXT_THERMO },
+                { THERMO_STELLAR, EXT_THERMO },
+                { THERMO_EXPLORIS, EXT_THERMO },
+                { THERMO_ASCEND, EXT_THERMO },
+                { THERMO_FUSION, EXT_THERMO },
+                { THERMO_FUSION_LUMOS, EXT_THERMO },
+                { THERMO_ECLIPSE, EXT_THERMO },
+                { THERMO_ASTRAL, EXT_THERMO },
+                { THERMO_ASTRAL_ZOOM, EXT_THERMO },
+                { WATERS_XEVO_TQ, EXT_WATERS },
+                { WATERS_QUATTRO_PREMIER, EXT_WATERS }
+            };
+
+            THERMO_TYPE_TO_INSTALLATION_TYPE = new Dictionary<string, string>
+            {
+                { THERMO_ENDURA, THERMO_ENDURA_REG },
+                { THERMO_QUANTIVA, THERMO_QUANTIVA_REG },
+                { THERMO_ALTIS, THERMO_ALTIS_REG },
+                { THERMO_STELLAR, THERMO_STELLAR_REG },
+                { THERMO_FUSION, THERMO_FUSION_REG },
+                { THERMO_EXPLORIS, THERMO_EXPLORIS_REG },
+                { THERMO_FUSION_LUMOS, THERMO_FUSION_LUMOS_REG },
+                { THERMO_ECLIPSE, THERMO_ECLIPSE_REG },
+                { THERMO_ASTRAL, THERMO_ASTRAL_REG },
+                { THERMO_ASTRAL_ZOOM, THERMO_ASTRAL_ZOOM_REG },
+                { THERMO_ASCEND, THERMO_ASCEND_REG },
+            };
         }
 
         public static string TransitionListExtension(string instrument)
@@ -335,12 +363,34 @@ namespace pwiz.Skyline.Model
             return METHOD_EXTENSIONS.TryGetValue(instrument, out ext) ? ext : null;
         }
 
+        public static string ThermoInstallationType(string instrument)
+        {
+            string installationType;
+            return THERMO_TYPE_TO_INSTALLATION_TYPE.TryGetValue(instrument, out installationType) ? installationType : null;
+        }
+
+        public static string ThermoTypeFromInstallationType(string installationType)
+        {
+            foreach (var typeToInstallationType in THERMO_TYPE_TO_INSTALLATION_TYPE)
+            {
+                if (Equals(installationType, typeToInstallationType.Value))
+                    return typeToInstallationType.Key;
+            }
+            return null;
+        }
+
         public static bool IsFullScanInstrumentType(string type)
         {
             return Equals(type, THERMO_LTQ) ||
-                   Equals(type, THERMO_Q_EXACTIVE) ||
-                   Equals(type, THERMO_FUSION) ||
                    Equals(type, THERMO_STELLAR) ||
+                   Equals(type, THERMO_Q_EXACTIVE) ||
+                   Equals(type, THERMO_EXPLORIS) ||
+                   Equals(type, THERMO_ASCEND) ||
+                   Equals(type, THERMO_FUSION) ||
+                   Equals(type, THERMO_FUSION_LUMOS) ||
+                   Equals(type, THERMO_ECLIPSE) ||
+                   Equals(type, THERMO_ASTRAL) ||
+                   Equals(type, THERMO_ASTRAL_ZOOM) ||
                    Equals(type, AGILENT_TOF) ||
                    Equals(type, WATERS_SYNAPT_TRAP) ||
                    Equals(type, WATERS_SYNAPT_TRANSFER) ||
@@ -378,10 +428,9 @@ namespace pwiz.Skyline.Model
                    Equals(type, AGILENT_MASSHUNTER_12_6495C) ||
                    Equals(type, THERMO) ||
                    Equals(type, ABI_QTRAP) ||
-                   Equals(type, ABI)
-                // TODO: TSQ Method writing API does not yet support triggered methods
-                // || Equals(type, THERMO_TSQ)
-                   ;
+                   Equals(type, ABI);
+            // TSQ Method writing API does not support triggered methods
+            // || Equals(type, THERMO_TSQ)
         }
 
         public static bool CanTrigger(string instrumentType, SrmDocument document, int? replicateIndex)
@@ -549,6 +598,9 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.THERMO_ECLIPSE:
                 case ExportInstrumentType.THERMO_EXPLORIS:
                 case ExportInstrumentType.THERMO_FUSION_LUMOS:
+                case ExportInstrumentType.THERMO_ASTRAL:
+                case ExportInstrumentType.THERMO_ASTRAL_ZOOM:
+                case ExportInstrumentType.THERMO_ASCEND:
                     return ExportThermoSureQuantMethod(doc, path, template, instrumentType);
                 case ExportInstrumentType.SHIMADZU:
                     if (type == ExportFileType.List)
@@ -829,11 +881,6 @@ namespace pwiz.Skyline.Model
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.RetentionStartAndEnd = RetentionStartAndEnd;
-            if (ExportInstrumentType.THERMO_STELLAR.Equals(instrumentType))
-            {
-                exporter.IsolationList = AbstractMassListExporter.IsolationStrategy.precursor;
-                exporter.IsPrecursorLimited = true;
-            }
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, instrumentType, m));
 
             return exporter;
@@ -1183,85 +1230,42 @@ namespace pwiz.Skyline.Model
             writer.WriteLine();
         }
 
-        protected const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
+        public const string EXE_BUILD_METHOD = @"Method\Thermo\BuildThermoMethod";
 
-        // ReSharper disable LocalizableElement
-        private static readonly string[] DEPENDENCY_LIBRARIES = {
-                                                                    "Thermo.TNG.MethodXMLFactory.dll",
-                                                                    "Thermo.TNG.MethodXMLInterface.dll"
-                                                                };
-        // ReSharper restore LocalizableElement
+        public static string ExeBuildRelativePath => Path.GetDirectoryName(EXE_BUILD_METHOD);
 
-        protected static void EnsureLibraries()
+        protected ThermoDllFinder Finder { get; private set; }
+
+        protected bool EnsureLibraries(string expectedInstrumentType)
         {
-            string skylinePath = Assembly.GetExecutingAssembly().Location;
-            if (string.IsNullOrEmpty(skylinePath))
-                throw new IOException(ModelResources.ThermoMassListExporter_EnsureLibraries_Thermo_method_creation_software_may_not_be_installed_correctly_);
-
-            // ReSharper disable ConstantNullCoalescingCondition
-            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_METHOD) ?? string.Empty;
-            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? string.Empty, buildSubdir);
-            string instrumentSoftwarePath = GetSoftwarePath();                                                        
-            if (instrumentSoftwarePath == null)
+            Finder = new ThermoDllFinder();
+            var instrumentInfo = Finder.GetSoftwareInfo();
+            string instrumentType = instrumentInfo.InstrumentType;
+            if (instrumentType == null)
             {
-                // If all the necessary libraries exist, then continue even if MassLynx is gone.
-                foreach (var libraryName in DEPENDENCY_LIBRARIES)
-                {
-                    if (!File.Exists(Path.Combine(exeDir, libraryName)))
-                        throw new IOException(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_);
-                }
-                return;
+                throw new IOException(TextUtil.LineSeparate(ModelResources.ThermoMassListExporter_EnsureLibraries_Failed_to_find_a_valid_Thermo_instrument_installation_,
+                    instrumentInfo.FailureReason));
             }
-
-            // ReSharper restore ConstantNullCoalescingCondition
-            foreach (var library in DEPENDENCY_LIBRARIES)
+            if (!Equals(expectedInstrumentType, instrumentType))
             {
-                string srcFile = Path.Combine(instrumentSoftwarePath, library);
-                if (!File.Exists(srcFile))
-                {
-                    throw new IOException(
-                        string.Format(ModelResources.ThermoMassListExporter_EnsureLibraries_Thermo_instrument_software_may_not_be_installed_correctly__The_library__0__could_not_be_found_,
-                                      srcFile));
-                }
-                // If destination file does not exist or has a different modification time from
-                // the source, then copy the source file from the installation.
-                string destFile = Path.Combine(exeDir, library);
-                if (!File.Exists(destFile) || !Equals(File.GetLastWriteTime(destFile), File.GetLastWriteTime(srcFile)))
-                    File.Copy(srcFile, destFile, true);
+                throw new IOException(string.Format(
+                    ModelResources.ThermoMassListExporter_EnsureLibraries_The_installed_Thermo_instrument_type___0___does_not_match_the_requested_output_method_type___1___,
+                    instrumentType, expectedInstrumentType));
             }
+            return true;
         }
 
-        private static string GetSoftwarePath()
+        protected List<string> GetTypeAndVersionArguments()
         {
-            try
-            {
-                // CONSIDER: Might be worth breaking this up to provide more helpful error messages
-                using (var tngKey = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Wow6432Node\Thermo Instruments\TNG"))
-                using (var machineKey = GetFirstSubKey(tngKey))
-                using (var versionKey = GetFirstSubKey(machineKey))
-                {
-                    if (versionKey == null)
-                        return null;
-                    var valueObject = versionKey.GetValue(@"ProgramPath");
-                    if (valueObject == null)
-                        return null;
-                    return valueObject.ToString();
-                }
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private static RegistryKey GetFirstSubKey(RegistryKey parentKey)
-        {
-            if (parentKey == null)
-                return null;
-            int keyCount = parentKey.SubKeyCount;
-            if (keyCount < 1)
-                return null;
-            return parentKey.OpenSubKey(parentKey.GetSubKeyNames()[0]);
+            var softwareInfo = Finder.GetSoftwareInfo();
+            Assume.IsNotNull(softwareInfo.InstrumentType, @"Missing instrument type running Thermo method export");
+            var argv = new List<string> { @"-t",  softwareInfo.InstrumentType };
+            double registryInstrumentVer = Finder.GetSoftwareInfo().Version;
+            if (registryInstrumentVer > 0)
+                argv.AddRange(new[] { @"-v", registryInstrumentVer.ToString(CultureInfo.InvariantCulture) });
+            // For debugging: export method update XML to a file
+            // argv.Add(@"-x");
+            return argv;
         }
     }
 
@@ -1925,25 +1929,14 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, string instrumentType, IProgressMonitor progressMonitor)
         {
-            if (fileName != null)
-                EnsureLibraries();
+            string registryInstrumentType = ExportInstrumentType.ThermoInstallationType(instrumentType);
+            if (fileName != null && !EnsureLibraries(registryInstrumentType))
+                return;
 
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string>();
-            if (instrumentType.Equals(ExportInstrumentType.THERMO_ENDURA))
-            {
-                argv.Add(@"-e");
-            }
-            else if (instrumentType.Equals(ExportInstrumentType.THERMO_QUANTIVA))
-            {
-                argv.Add(@"-q");
-            }
-            else if (instrumentType.Equals(ExportInstrumentType.THERMO_ALTIS))
-            {
-                argv.Add(@"-a");
-            }
+            var argv = GetTypeAndVersionArguments();
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -1954,14 +1947,14 @@ namespace pwiz.Skyline.Model
 
         public override void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            if (fileName != null)
-                EnsureLibraries();
+            string registryInstrumentType = @"Stellar";
+            if (fileName != null && !EnsureLibraries(registryInstrumentType))
+                return;
 
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string>();
-            argv.Add(@"-t");
+            var argv = GetTypeAndVersionArguments();
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -2171,28 +2164,14 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            if (fileName != null)
-                EnsureLibraries();
+            string registryInstrumentType = ExportInstrumentType.ThermoInstallationType(_instrumentType);
+            if (fileName != null && !EnsureLibraries(registryInstrumentType))
+                return;
 
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string>();
-            switch (_instrumentType)
-            {
-                case ExportInstrumentType.THERMO_EXPLORIS:
-                    argv.Add(@"-p");
-                    break;
-                case ExportInstrumentType.THERMO_FUSION:
-                    argv.Add(@"-f");
-                    break;
-                case ExportInstrumentType.THERMO_FUSION_LUMOS:
-                    argv.Add(@"-l");
-                    break;
-                case ExportInstrumentType.THERMO_ECLIPSE:
-                    argv.Add(@"-c");
-                    break;
-            }
+            var argv = GetTypeAndVersionArguments();
             MethodExporter.ExportMethod(EXE_BUILD_METHOD, argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
@@ -4187,10 +4166,10 @@ namespace pwiz.Skyline.Model
 
         public string GetHeader(char fieldSeparator)
         {
-            var hdr = @"Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE,";
+            var hdr = @"Compound,Mass [m/z],Formula [M],Species,CS [z],Polarity,Start [min],End [min],NCE";
             if (UseSlens)
-                hdr += @"S-lens,";
-            return (hdr+@"Comment").Replace(',', fieldSeparator);
+                hdr += @",S-lens";
+            return hdr.Replace(',', fieldSeparator);
         }
 
         protected override void WriteTransition(TextWriter writer,
@@ -4202,6 +4181,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            string compound = GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement);
             string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
 
             string start = string.Empty;
@@ -4238,19 +4218,15 @@ namespace pwiz.Skyline.Model
                      ?? (wideWindowDia ? WIDE_NCE : NARROW_NCE); // Normalized CE, not a real voltage
             var ceString = ce.ToString(CultureInfo);
 
-            string comment = string.Format(@"{0} ({1})",
-                GetCompound(nodePep, nodeTranGroup),
-                nodeTranGroup.TransitionGroup.LabelType).ToDsvField(FieldSeparator);
-
             var polarity = (nodeTranGroup.PrecursorCharge > 0) ? @"Positive" : @"Negative";
             if (UseSlens)
             {
                 var slens = (ExplicitTransitionValues.Get(nodeTran).SLens ?? DEFAULT_SLENS).ToString(CultureInfo);  
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, slens, comment);
+                Write(writer, compound, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, slens);
             }
             else
             {
-                Write(writer, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString, comment);
+                Write(writer, compound, precursorMz, string.Empty, string.Empty, z, polarity, start, end, ceString);
             }
         }
     }
@@ -4271,6 +4247,8 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
+            writer.Write(@"Compound");
+            writer.Write(FieldSeparator);
             writer.Write(@"m/z");
             writer.Write(FieldSeparator);
             writer.Write(@"z");
@@ -4301,6 +4279,8 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeTranGroup, TransitionGroupDocNode nodeTranGroupPrimary, TransitionDocNode nodeTran,
             int step)
         {
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
+            writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
@@ -4360,7 +4340,7 @@ namespace pwiz.Skyline.Model
         public string GetHeader(char fieldSeparator)
         {
             var hdr = !Tune3Columns
-                ? @"m/z,z,t start (min),t end (min),CID Collision Energy (%)"
+                ? @"Compound,m/z,z,t start (min),t end (min),CID Collision Energy (%)"
                 : @"Compound,Formula,Adduct,m/z,z,Polarity,t start (min),t stop (min),CID Collision Energy (%)";
             if (UseSlens)
                 hdr += @",S-lens";
@@ -4383,12 +4363,11 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
+            writer.Write(GetCompound(nodePep, nodeTranGroup, true).ToDsvField(FieldSeparator, FieldSeparatorReplacement));
+            writer.Write(FieldSeparator);
+
             if (Tune3Columns)
             {
-                writer.Write(@"{0} ({1})",
-                    nodePep.Peptide.IsCustomMolecule ? nodeTranGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence,
-                    nodeTranGroup.TransitionGroup.LabelType);
-                writer.Write(FieldSeparator);
                 writer.Write(string.Empty);
                 writer.Write(FieldSeparator);
                 writer.Write(string.Empty);
@@ -4530,6 +4509,10 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.Write("label_type");                
             }
+            writer.Write(FieldSeparator);
+            writer.Write("precursor_charge");
+            writer.Write(FieldSeparator);
+            writer.Write("rt_window");
             writer.WriteLine();
         }
         // ReSharper restore LocalizableElement
@@ -4625,6 +4608,10 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);
                 writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
+            writer.Write(FieldSeparator);
+            writer.Write(nodeTranGroup.PrecursorAdduct.AdductCharge);
+            writer.Write(FieldSeparator);
+            writer.Write(RTWindow);
             writer.WriteLine();
         }
 
@@ -5023,7 +5010,7 @@ namespace pwiz.Skyline.Model
                         CreateNoWindow = true,
                         UseShellExecute = false,
                         // Common directory includes the directory separator
-                        WorkingDirectory = dirWork + @"\\",
+                        WorkingDirectory = dirWork + @"\",
                         Arguments = string.Join(@" ", argv.ToArray()),
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,

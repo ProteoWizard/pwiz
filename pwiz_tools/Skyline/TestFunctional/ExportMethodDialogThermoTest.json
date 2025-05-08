@@ -1,0 +1,76 @@
+[
+  {
+    "TestName": "OrbitrapAstral succeeds",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapAstral",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\instrumentSoftwarePath"
+          }
+        ]
+      }
+    ],
+    "ExpectedInstrumentType": "OrbitrapAstral",
+    "ExpectedVersion": 4.3
+  },
+  {
+    "TestName": "Unknown instrument",
+    "SkylineExePath": "C:\\Program Files\\Skyline\\Skyline-daily.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      },
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLInterface.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapAstrologicality",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\instrumentSoftwarePath"
+          }
+        ]
+      }
+    ],
+    "ExpectedInstrumentType": "OrbitrapAstrologicality",
+    "ExpectedVersion": 4.3
+  },
+  {
+    "TestName": "No valid installation",
+    "SkylineExePath": "C:\\Users\\brendanx\\AppData\\Local\\Apps\\2.0\\72O3QMMY.A0Y\\HNHQHOX0.GY4\\skyl..tion_9286511f3362df93_0018.0001_cffd08868b9826ec\\Skyline.exe",
+    "Files": [
+      {
+        "Path": "C:\\Thermo\\instrumentSoftwarePath\\Thermo.TNG.MethodXMLFactory.dll"
+      }
+    ],
+    "RegistrySubKeys": [
+      {
+        "SubKeyName": "OrbitrapAstral",
+        "SubKeys": [
+          {
+            "SubKeyName": "4.3",
+            "InstallType": "Full",
+            "ProgramPath": "C:\\Thermo\\instrumentSoftwarePath"
+          }
+        ]
+      }
+    ],
+    "ExpectException": 1
+  }
+]

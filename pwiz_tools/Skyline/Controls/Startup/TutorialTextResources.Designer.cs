@@ -187,6 +187,24 @@ namespace pwiz.Skyline.Controls.Startup {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Library-Free DIA/SWATH.
+        /// </summary>
+        internal static string DIA_Umpire_TTOF_Caption {
+            get {
+                return ResourceManager.GetString("DIA_Umpire_TTOF_Caption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience running a peptide-spectrum search directly on a data independent acquisition (DIA) dataset, from a SCIEX TripleTOF instrument, using a 3-organism mix data set created for instruction, based on the Navarro, Nature Biotech 2016 benchmarking paper..
+        /// </summary>
+        internal static string DIA_Umpire_TTOF_Description {
+            get {
+                return ResourceManager.GetString("DIA_Umpire_TTOF_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Existing &amp; Quantitative Experiments.
         /// </summary>
         internal static string ExistingQuant_Caption {
@@ -381,6 +399,24 @@ namespace pwiz.Skyline.Controls.Startup {
         internal static string PeakPicking_Description {
             get {
                 return ResourceManager.GetString("PeakPicking_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Get hands-on experience setting up an acquisition method to quantify 31 peptides from 19 proteins of interest in murine fibroblasts using Parallel Reaction Monitoring (PRM). Work with three biological replicates measured in 9 runs on a Thermo Fusion mass spectrometer employing the Orbitrap mass analyzer..
+        /// </summary>
+        internal static string PRMOrbitraip_Description {
+            get {
+                return ResourceManager.GetString("PRMOrbitraip_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PRM With and Orbitrap Mass Spec.
+        /// </summary>
+        internal static string PRMOrbitrap_Caption {
+            get {
+                return ResourceManager.GetString("PRMOrbitrap_Caption", resourceCulture);
             }
         }
         

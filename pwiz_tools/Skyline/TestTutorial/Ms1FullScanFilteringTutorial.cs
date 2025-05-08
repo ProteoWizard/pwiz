@@ -55,7 +55,8 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class Ms1FullScanFilteringTutorial : AbstractFunctionalTestEx
     {
-        [TestMethod, MinidumpLeakThreshold(15)]
+        [TestMethod, MinidumpLeakThreshold(15),
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestMs1Tutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -448,7 +449,9 @@ namespace pwiz.SkylineTestTutorial
                 PauseForScreenShot<ScreenForm>("Peak Areas view (show context menu)", null,
                     bmp =>
                     {
-                        bmp = bmp.CleanupBorder(ScreenshotManager.GetFramedWindowBounds(peakAreas),
+                        var rectBorder = ScreenshotProcessingExtensions.GetToolWindowBorderRect(
+                            ScreenshotManager.GetFramedWindowBounds(peakAreas));
+                        bmp = bmp.CleanupBorder(rectBorder,
                             ScreenshotProcessingExtensions.CornerToolWindow, 
                             Rectangle.Union(menuStrip.Bounds, subMenuStrip.Bounds));
 

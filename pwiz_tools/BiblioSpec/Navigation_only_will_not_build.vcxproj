@@ -31,7 +31,7 @@
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='BlibBuild|x64'" Label="Configuration">
-    <ConfigurationType>Makefile</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
@@ -66,10 +66,13 @@
     <NMakeBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeBuildCommandLine>
     <NMakeCleanCommandLine>CleanBiblioSpec.bat</NMakeCleanCommandLine>
     <NMakePreprocessorDefinitions>WIN32;NDEBUG;$(NMakePreprocessorDefinitions)</NMakePreprocessorDefinitions>
-    <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_86_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(ProjectDir)..\..\libraries\expat-2.0.1;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\..;$(ProjectDir)..\..\libraries\zlib-1.2.3;$(ProjectDir)..\..\libraries\boost_1_86_0;$(ProjectDir)..\..\libraries\boost_aux;$(ProjectDir)..\..\libraries\SQLite;$(ProjectDir)..\..\libraries\expat-2.0.1;$(ProjectDir)..\..\libraries\arrow\include;$(IncludePath)</IncludePath>
     <NMakeReBuildCommandLine>cd $(ProjectDir)..\.. &amp;&amp; quickbuild.bat -j24 --abbreviate-paths --verbose-test address-model=64 --i-agree-to-the-vendor-licenses --without-compassxtract  variant=debug debug-symbols=on iterator-debugging=off  --incremental pwiz_tools/BiblioSpec//src</NMakeReBuildCommandLine>
   </PropertyGroup>
-  <ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='BlibBuild|x64'">
+    <ClCompile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\AminoAcidMasses.cpp" />

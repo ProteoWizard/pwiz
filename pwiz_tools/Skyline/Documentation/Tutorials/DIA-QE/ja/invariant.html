@@ -8,10 +8,12 @@
 
 <body onload="skylineOnload();">
     <h1 class="document-title">Analysis of DIA/SWATH data in Skyline</h1>
-    <p>
-       Note: This tutorial uses data from a Thermo Q-Exactive plus instrument. If you prefer to use the data from a Sciex TripleTOF 6600, see
-       the version of this tutorial entitled Skyline DIA TTOF.
-    </p>
+    <table>
+        <tr>
+            <td>Note: This tutorial uses data from a Thermo Q-Exactive plus instrument. If you prefer to use the data from a Sciex TripleTOF 6600, see
+                the version of this tutorial entitled Skyline DIA TTOF.</td>
+        </tr>
+    </table>
     <p>
         In this tutorial you will learn how to use Skyline to perform targeted post-acquisition analysis for peptide and inferred protein detection and
         quantification using a SWATH-MS dataset acquired on a QqOrbi instrument (Q-Exactive Plus, Thermo) using an 18 variable width window precursor
@@ -126,11 +128,6 @@
     <p>
         <img src="s-01.png" />
     </p>
-    <p>
-        Note: 0.95 is the threshold applied to the PeptideProphet probability computed for every peptide spectrum match in the DDA database search – in
-        this particular data set this corresponds to a PSM false discovery rate of 0.2% but this will differ among data sets so a score threshold to
-        achieve the FDR you want to use should be entered here.
-    </p>
     <ul>
         <li>Click the <b>Add Files</b> button.</li>
         <li>Navigate to the DIA-QE folder created earlier and into its DDA_search subfolder.</li>
@@ -143,6 +140,11 @@
     </p>
     <p>
         <img src="s-02.png" />
+    </p>
+    <p>
+        Note: 0.95 is the threshold applied to the PeptideProphet probability computed for every peptide spectrum match in the DDA database search – in
+        this particular data set this corresponds to a PSM false discovery rate of 0.2% but this will differ among data sets so a score threshold to
+        achieve the FDR you want to use should be entered here.
     </p>
     <ul>
         <li>Click the <b>Next</b> button.</li>
@@ -366,11 +368,16 @@
         <img src="s-12.png" />
     </p>
     <p>
-        Notice that with a <b>Min peptides per protein</b> filter of “1” the 13 proteins found in the FASTA file produce 12
-        <b>Remaining</b> proteins. This is because one protein has no peptides which are found in the spectral library. If you click
-        <b>Keep all</b>, you will see a warning “1 empty protein will be added”, but switch back before continuing to avoid adding the empty
-        protein to your targets list.
+        Notice that with a <b>Min peptides per protein</b> filter of “1” the 12 proteins found in the FASTA file produce 11 “Mapped”
+        proteins. This is because 1 “Unmapped” protein has no peptides found in the spectral library.
     </p>
+    <table>
+        <tr>
+            <td>Note: The final document will include a “Biognosys standards” peptide list, for the iRT peptides, and a “Decoys” peptide list, for the
+                decoys you have specified. This will also add 11 iRT peptides and 130 decoy peptides. In the form above, the precursors and
+                transitions count reflect these additions while the proteins and peptides counts do not.</td>
+        </tr>
+    </table>
     <ul>
         <li>Click the <b>OK</b> button.</li>
     </ul>
@@ -436,7 +443,7 @@
         You are now ready to annotate the replicates you have imported:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, choose <b>Document Grid</b> (Alt-3).</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
     </ul>
     <p>
         This brings up the <b>Document Grid</b> window, which will show the <b>Proteins</b> report if you have never used it
@@ -660,7 +667,7 @@
         To perform a simple pairwise group comparison inside Skyline do the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, choose <b>Other Grids</b>, then <b>Group Comparison</b>, and click <b>Add</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, then <b>Group Comparisons</b>, and click <b>Add</b>.</li>
         <li>For the <b>Name</b> field, enter “By Condition”.</li>
         <li>For the <b>Control group annotation</b> field, choose “Condition”.</li>
         <li>For the <b>Control group value</b> field, choose “A”.</li>
@@ -681,7 +688,7 @@
         To see the group comparison you have just created:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, choose <b>Other Grids</b>, then <b>Group Comparison</b>, and click <b>By
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, then <b>Group Comparison</b>, and click <b>By
                 Condition</b>.</li>
     </ul>
     <p>

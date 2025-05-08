@@ -224,9 +224,14 @@ namespace pwiz.Skyline.Model
             fileIterator.NextFile();
         }
 
-        public string GetCompound(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+        public string GetCompound(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, bool showLabelType = false)
         {
-            return nodePep.Peptide.IsCustomMolecule ? nodeGroup.CustomMolecule.InvariantName : Document.Settings.GetModifiedSequence(nodePep).Sequence;
+            string compoundName = nodePep.Peptide.IsCustomMolecule
+                ? nodeGroup.CustomMolecule.InvariantName
+                : Document.Settings.GetModifiedSequence(nodePep).Sequence;
+            if (showLabelType)
+                compoundName = string.Format(@"{0} ({1})", compoundName, nodeGroup.TransitionGroup.LabelType);
+            return compoundName;
         }
 
         public string GetCAS(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)

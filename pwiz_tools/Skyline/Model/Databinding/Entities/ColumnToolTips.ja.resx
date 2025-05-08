@@ -125,6 +125,33 @@
     <value>スペクトルの収集に使用したアナライザーの種類です。
 1つ以上のアナライザーが使用された場合、アナライザー名はスラッシュで区切られます。</value>
   </data>
+  <data name="ApexAnalyteIonCount">
+    <value>総トランジション強度とトランジション強度が最高のスペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>総トランジション強度とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>総プリカーサーとトランジション強度が最高のMS1スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>トランジション強度が最高のスペクトルの識別子</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>トランジション強度が最高のMS2スペクトルの識別子</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>プリカーサー強度が最高のMS1スペクトルの識別子</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>総イオン電流とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>総イオン電流とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>総プリカーサーとトランジション強度が最高のMS1スペクトルの注入時間の積</value>
+  </data>
   <data name="Area">
     <value>トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</value>
   </data>
@@ -162,7 +189,11 @@
     <value>真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどによってプリカーサーから自動的にトランジションを追加または削除します。</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>平均質量誤差(PPM)</value>
+    <value>100万分の1(PPM)の単位で表される予測m/z値と測定m/z値の間の差のすべてのトランジションの荷重面積平均</value>
+    <comment>Needs Review:English text changed
+Old English:Average Mass Error PPM
+Current English:The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)
+Old Localized:平均質量誤差(PPM)</comment>
   </data>
   <data name="AverageMasses">
     <value>「C[+57.05162]」のように平均質量で修飾部分を指定する、修飾シークエンスです。</value>
@@ -279,7 +310,17 @@
     <value>倍率変化を中心とする信頼区間を決定するのに使用された信頼度です。</value>
   </data>
   <data name="CountTruncated">
-    <value>取得時間範囲内のピークの両側で強度が全体のピーク高さの1%より高い 範囲を積分するプリカーサーのトランジション数です。 </value>
+    <value>ピークと解析時間範囲のいずれかの終端の
+境界を積分するプリカーサーのトランジション数。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります。</value>
+    <comment>Needs Review:English text changed
+Old English:The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 1% of the entire peak height higher than the other extent.
+Current English:The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.
+Old Localized:取得時間範囲内のピークの両側で強度が全体のピーク高さの1%より高い 範囲を積分するプリカーサーのトランジション数です。 </comment>
   </data>
   <data name="Cv">
     <value>Cv</value>
@@ -535,6 +576,10 @@
   <data name="IsDecoy">
     <value>デコイのプリカーサーであれば真です。</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>プリカーサ―が単離されたm/zウィンドウの幅。
+2つ以上のプリカーサーが単離された場合、単離ウィンドウ幅は、各プリカーサー周囲のウィンドウの合計です。</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>モノアイソトピックピークであればゼロ、M+1であれば1、M+2であれば2などとなります。 </value>
   </data>
@@ -561,6 +606,39 @@
   </data>
   <data name="LastPosition">
     <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
+  </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>トランジション強度の積とピーク積分境界間のスペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>トランジション強度の積とピーク積分境界間のMS2スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>総プリカーサー強度の積とピーク積分境界間のMS1スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>ピーク積分境界間のMS2スペクトルを収集する間の質量分析装置内のイオン数に関係する値</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>ピーク積分境界間のMS1スペクトルを収集する間の質量分析装置内のイオン数に関係する値</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>総イオン電流の積とピーク積分境界間のスペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>総イオン電流の積とピーク積分境界間のMS2スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>総イオン電流の積とピーク積分境界間のMS1スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>ピーク積分境界間のイオン電流合計の積分</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>ピーク積分境界間のMS2スペクトルのイオン電流合計の積分</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>ピーク積分境界間のMS1スペクトルのイオン電流合計の積分</value>
   </data>
   <data name="LibraryCollisionCrossSection">
     <value>イオン移動度ライブラリからのプリカーサーの衝突断面積</value>
@@ -1096,6 +1174,11 @@
   <data name="ProductNeutralMass">
     <value>ペプチドのプロダクトイオンのニュートラルな質量（Da）。</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>ピークと解析時間範囲のいずれかの終端の
+境界を積分するプリカーサーのトランジションの面積加重平均(0～1.0)。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります。</value>
+  </data>
   <data name="Protein">
     <value>タンパク質</value>
   </data>
@@ -1384,7 +1467,11 @@ Double Blank（ダブルブランク）</value>
     <value>プリカーサーのTotalAreaNormalized値の標準偏差。</value>
   </data>
   <data name="Strict">
-    <value>繰り返し測定間の比較に欠損データが影響する可能性がある場合には計算値が利用できません。</value>
+    <value>データがない場合に計算された値が利用できないと、繰り返し測定間の比較に影響を及ぼす可能性があります。</value>
+    <comment>Needs Review:English text changed
+Old English:Calculated value unavailable when missing data could comparisons between replicates.
+Current English:Calculated value unavailable when missing data could impact comparisons between replicates.
+Old Localized:繰り返し測定間の比較に欠損データが影響する可能性がある場合には計算値が利用できません。</comment>
   </data>
   <data name="SummaryMessage">
     <value>変更の説明</value>
@@ -1476,7 +1563,17 @@ Double Blank（ダブルブランク）</value>
     <value>トランジション</value>
   </data>
   <data name="Truncated">
-    <value>ピークの積分において取得時間の範囲内のピークの両側で強度が全体のピーク高さの1%より高い場合には真です。</value>
+    <value>積分ピークの境界が解析
+時間範囲のいずれかの終端にある場合は真。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります</value>
+    <comment>Needs Review:English text changed
+Old English:True if the integrated a peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 1% of the entire peak height
+higher than the other extent.
+Current English:True if the integrate peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 25% of the background-subtracted peak height
+higher than the other extent.
+Old Localized:ピークの積分において取得時間の範囲内のピークの両側で強度が全体のピーク高さの1%より高い場合には真です。</comment>
   </data>
   <data name="TurningPoint">
     <value>双線形回帰の場合、2つの線が交差するX座標です。</value>

@@ -50,7 +50,8 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class ExistingExperimentsTutorialTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestExistingExperimentsTutorial()
         {
             // Set true to look at tutorial screenshots.
@@ -75,8 +76,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            var excelBmp = new Bitmap(TestContext.GetProjectDirectory(@"TestTutorial\ExistingQuant_excel.png"));
-            var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
+            using var excelBmp = new Bitmap(TestContext.GetProjectDirectory(@"TestTutorial\ExistingQuant_excel.png"));
+            using var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
             graph.DrawImageUnscaled(excelBmp, bmp.Width - excelBmp.Width, bmp.Height - excelBmp.Height);
             return bmp;
         }
