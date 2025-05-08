@@ -244,6 +244,7 @@ namespace pwiz.Skyline
             this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shareDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.publishMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ardiaPublishMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.searchStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.runPeptideSearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1789,6 +1790,7 @@ namespace pwiz.Skyline
             this.saveAsMenuItem,
             this.shareDocumentMenuItem,
             this.publishMenuItem,
+            this.ardiaPublishMenuItem,
             this.toolStripSeparator2,
             this.searchStripMenuItem,
             this.importToolStripMenuItem,
@@ -1864,6 +1866,13 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.publishMenuItem, "publishMenuItem");
             this.publishMenuItem.Name = "publishMenuItem";
             this.publishMenuItem.Click += new System.EventHandler(this.publishMenuItem_Click);
+            // 
+            // ardiaPublishMenuItem
+            // 
+            resources.ApplyResources(this.ardiaPublishMenuItem, "ardiaPublishMenuItem");
+            this.ardiaPublishMenuItem.Name = "ardiaPublishMenuItem";
+            this.ardiaPublishMenuItem.Click += new System.EventHandler(this.ardiaPublishMenuItem_Click);
+
             // 
             // toolStripSeparator2
             // 
@@ -3046,6 +3055,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem runPeptideSearchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem encyclopeDiaSearchMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importFeatureDetectionMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem ardiaPublishMenuItem;
     }
 }
 

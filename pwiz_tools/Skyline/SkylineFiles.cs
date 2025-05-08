@@ -57,6 +57,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -3495,6 +3496,39 @@ namespace pwiz.Skyline
             }
 
             return true;
+        }
+
+        // TODO: only show "Publish to Ardia" if no Ardia server configured
+        // TODO: bug - Ardia account needs to be re-created for each Skyline session
+        private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
+        {
+            var servers = Settings.Default.ServerList;
+            var ardiaEntries = Settings.Default.ArdiaRegistrationCodeEntries;
+            
+            var remoteAccounts = Settings.Default.RemoteAccountList;
+            var ardiaAccount = remoteAccounts[0] as ArdiaAccount;
+            var rootUrl = ardiaAccount.GetRootArdiaUrl();
+            
+            var ardiaSession = ardiaAccount.CreateSession();
+            ardiaSession.ContentsAvailable += () =>
+            {
+                Console.WriteLine($"ardiaSession.ContentsAvailable()");
+                var list = ardiaSession.ListContents(rootUrl).OrderByDescending(item => item.Label).Reverse().ToList();
+                Console.WriteLine($"    Total items: {list.Count}");
+            
+                foreach (var item in list)
+                {
+                    Console.WriteLine($"    {item.Label} {item.Type} {item.MsDataFileUri}");
+                }
+            };
+            var fcUrl = ardiaAccount.GetFolderContentsUrl(rootUrl);
+            
+            var ardiaUrl = ardiaAccount.GetRootUrl();
+            var error = ardiaSession.AsyncFetchContents(ardiaUrl, out var remoteException);
+            
+            // TODO: use existing Ardia server (aka: entry) to get a list of files
+            
+            // TODO: use Create Staged Document API to stage the document - pieceName = SingleDocument
         }
 
         private void publishMenuItem_Click(object sender, EventArgs e)
