@@ -463,8 +463,7 @@ namespace TestPerf
                 if (msfraggerDownloaderDlg != null)
                 {
                     PauseForScreenShot<MsFraggerDownloadDlg>("Import Peptide Search - Download MSFragger"); // Maybe someday
-                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)",
-                        "matt.chambers42@gmail.com", "UW"));
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
                     OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                 }
 
