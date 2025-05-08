@@ -631,7 +631,7 @@ struct CompassDataImpl : public CompassData
     }
 
 
-    virtual std::string TimsDataImpl::getDiaFrameMsMsWindowsTable() const { return ""; }
+    virtual std::string getDiaFrameMsMsWindowsTable() const { return ""; }
 
     virtual boost::local_time::local_date_time getAnalysisDateTime() const
     {
