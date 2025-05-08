@@ -63,19 +63,13 @@ namespace pwiz.Skyline.Alerts
             linkInfos = new List<LinkInfo>();
             formatRichTextMarkup(rtbAgreeToLicense);
             formatRichTextMarkup(rtbUsageConditions);
-
-            tbFirstName.TextChanged += tbTextChanged;
-            tbLastName.TextChanged += tbTextChanged;
-            tbEmail.TextChanged += tbTextChanged;
-            tbInstitution.TextChanged += tbTextChanged;
-            tbVerificationCode.TextChanged += tbVerificationCodeChanged;
         }
 
         private void formatRichTextMarkup(RichTextBox rtb)
         {
             const string BOLD_PATTERN = "<b>(.*?)</b>";
-            var academicBoldMatch = Regex.Match(rtb.Text, BOLD_PATTERN);
-            rtb.Select(academicBoldMatch.Index, academicBoldMatch.Length);
+            var boldMatch = Regex.Match(rtb.Text, BOLD_PATTERN);
+            rtb.Select(boldMatch.Index, boldMatch.Length);
             try
             {
                 rtb.SelectionFont = new Font(rtb.SelectionFont, FontStyle.Bold);
@@ -158,17 +152,12 @@ namespace pwiz.Skyline.Alerts
 
             downloadProgressDlg.PerformWork(this, 50, broker =>
             {
-                // temporarily disable Expect100Continue to avoid (417) Expectation Failed
-                bool lastExpect100ContinueValue = ServicePointManager.Expect100Continue;
-                ServicePointManager.Expect100Continue = false;
-
                 var uploadTask = client.UploadValuesTaskAsync(VERIFY_URL, VERIFY_METHOD, postData);
                 uploadTask.Wait(broker.CancellationToken);
                 if (uploadTask.Exception != null)
                     throw uploadTask.Exception;
 
                 var resultBytes = uploadTask.Result;
-                ServicePointManager.Expect100Continue = lastExpect100ContinueValue;
                 var resultString = Encoding.UTF8.GetString(resultBytes);
 
                 if (!resultString.Contains(VERIFY_SUCCESS))
@@ -195,16 +184,10 @@ namespace pwiz.Skyline.Alerts
 
                     downloadProgressDlg.PerformWork(this, 50, broker =>
                     {
-                        // temporarily disable Expect100Continue to avoid (417) Expectation Failed
-                        bool lastExpect100ContinueValue = ServicePointManager.Expect100Continue;
-                        ServicePointManager.Expect100Continue = false;
-
                         client.DownloadProgressChanged += (sender, args) => broker.ProgressValue = args.ProgressPercentage;
 
                         string downloadUrl = string.Format(DOWNLOAD_URL_WITH_TOKEN, tbVerificationCode.Text);
                         var msFraggerZipBytes = client.DownloadData(downloadUrl);
-
-                        ServicePointManager.Expect100Continue = lastExpect100ContinueValue;
 
                         var installPath = MsFraggerSearchEngine.MsFraggerDirectory;
                         var downloadFilename = Path.Combine(installPath, MsFraggerSearchEngine.MSFRAGGER_FILENAME + @".zip");

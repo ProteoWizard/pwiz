@@ -70,6 +70,7 @@
             // 
             resources.ApplyResources(this.tbFirstName, "tbFirstName");
             this.tbFirstName.Name = "tbFirstName";
+            this.tbFirstName.TextChanged += new System.EventHandler(this.tbTextChanged);
             // 
             // lblFirstName
             // 
@@ -85,6 +86,7 @@
             // 
             resources.ApplyResources(this.tbEmail, "tbEmail");
             this.tbEmail.Name = "tbEmail";
+            this.tbEmail.TextChanged += new System.EventHandler(this.tbTextChanged);
             // 
             // lblInstitution
             // 
@@ -95,6 +97,7 @@
             // 
             resources.ApplyResources(this.tbInstitution, "tbInstitution");
             this.tbInstitution.Name = "tbInstitution";
+            this.tbInstitution.TextChanged += new System.EventHandler(this.tbTextChanged);
             // 
             // btnAccept
             // 
@@ -127,6 +130,7 @@
             // 
             resources.ApplyResources(this.tbLastName, "tbLastName");
             this.tbLastName.Name = "tbLastName";
+            this.tbLastName.TextChanged += new System.EventHandler(this.tbTextChanged);
             // 
             // lblLastName
             // 
@@ -137,6 +141,7 @@
             // 
             resources.ApplyResources(this.tbVerificationCode, "tbVerificationCode");
             this.tbVerificationCode.Name = "tbVerificationCode";
+            this.tbVerificationCode.TextChanged += new System.EventHandler(this.tbVerificationCodeChanged);
             // 
             // lblVerificationCode
             // 

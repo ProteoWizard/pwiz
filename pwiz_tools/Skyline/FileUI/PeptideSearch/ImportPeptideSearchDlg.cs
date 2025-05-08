@@ -1516,7 +1516,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         private bool CanWizardClose()
         {
             var wizardPageControl = GetPageControl(wizardPagesImportPeptideSearch.SelectedTab) as WizardPageControl;
-            return wizardPageControl == null || wizardPageControl.CanWizardClose();
+            return wizardPageControl == null || Program.ClosingForms || wizardPageControl.CanWizardClose();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
