@@ -97,7 +97,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 });
                 WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
                 RunUI(() => Assert.IsTrue(importPeptideSearchDlg.ClickNextButton()));
-                doc = WaitForDocumentChange(doc);
+                doc = WaitForDocumentChangeLoaded(doc);
+                AssertEx.IsDocumentState(doc, null, 4, 63, 6, 42);  // Was 4, 63, 4, 30 before drift time based charge state detection was added to final_fragments reader
 
                 // Verify document library was built
                 string docLibPath = BiblioSpecLiteSpec.GetLibraryFileName(skyfile);
@@ -140,10 +141,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
                 // Add FASTA also skipped because filter for document peptides was chosen.
 
                 WaitForClosedForm(importPeptideSearchDlg);
-                WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
+                var doc1 = WaitForDocumentChangeLoaded(doc, 15 * 60 * 1000); // 15 minutes
 
-                var doc1 = WaitForDocumentLoaded(400000);
-                AssertEx.IsDocumentState(doc1, null, 4, 63, 6, 42);  // Was 4, 63, 4, 30 before drift time based charge state detection was added to final_fragments reader
+                AssertEx.IsDocumentState(doc1, null, 4, 63, 6, 18); // transitions = groups * 3 - fragments turned off by wizard because it is DDA
 
                 loadStopwatch.Stop();
                 DebugLog.Info("load time = {0}", loadStopwatch.ElapsedMilliseconds);

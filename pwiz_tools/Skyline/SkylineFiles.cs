@@ -1877,7 +1877,7 @@ namespace pwiz.Skyline
                 string extraInfo = null;
                 if (importInfo.File)
                 {
-                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, importInfo.Text);
+                    info = new MessageInfo(MessageType.imported_fasta, docPair.NewDocumentType, AuditLogPath.Create(importInfo.Text));
                 }
                 else
                 {

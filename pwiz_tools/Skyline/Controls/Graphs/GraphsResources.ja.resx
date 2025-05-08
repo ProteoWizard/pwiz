@@ -742,7 +742,13 @@
   <data name="RelativeAbundanceGraph_ToolTip_PeakArea" xml:space="preserve">
     <value>ピーク面積</value>
   </data>
+  <data name="RelativeAbundanceGraph_ToolTip_LogPeakArea" xml:space="preserve">
+    <value>ピーク面積をログ</value>
+  </data>
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>ランク</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
+    <value>定量クロマトグラムがありません</value>
   </data>
 </root>

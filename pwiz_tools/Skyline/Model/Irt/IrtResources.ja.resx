@@ -184,4 +184,10 @@
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>初期化成功前の予期せぬiRTカルキュレータの使用。</value>
   </data>
+  <data name="IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_" xml:space="preserve">
+    <value>カルキュレータ{0}には少なくとも{1}つの{2}標準ペプチドが必要です。以下の{3}個のペプチドがありません:</value>
+  </data>
+  <data name="IrtStandard_ReadXml_Standard_peptides_must_specify_a_sequence_and_score_" xml:space="preserve">
+    <value>標準ペプチドにはシークエンスとスコアを指定する必要があります。</value>
+  </data>
 </root>

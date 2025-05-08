@@ -1140,6 +1140,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Hide MS/MS filtering groupbox entirely.
                 groupBoxMS2.Visible = false;
+                // Acquisition method cannot be PRM or DIA
+                if (AcquisitionMethod != FullScanAcquisitionMethod.DDA)
+                    AcquisitionMethod = FullScanAcquisitionMethod.None;
 
                 // Reposition selectivity checkbox and retention time filtering groupbox.
                 cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;
