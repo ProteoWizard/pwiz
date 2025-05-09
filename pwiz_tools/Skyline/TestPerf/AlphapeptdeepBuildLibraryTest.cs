@@ -158,16 +158,16 @@ namespace TestPerf
         {
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
-            MultiButtonMsgDlg installPythonDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
+            MultiButtonMsgDlg installPythonDlg = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
             //PauseTest("install offer");
             CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
             //PauseTest("back to wizard");
-            installPythonDlg = ShowDialog<MultiButtonMsgDlg>(() => buildLibraryDlg.OkWizardPage()); // Expect the offer to install Python
+            installPythonDlg = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
             // PauseTest("install offer again");
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
 
-            OkDialog(installPythonDlg, installPythonDlg.OkDialog);
-            var needAdminDlg = WaitForOpenForm<MessageDlg>(); 
+            var needAdminDlg = ShowDialog<MessageDlg>(installPythonDlg.OkDialog); 
+
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, needAdminDlg.Message);
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
 
@@ -183,7 +183,7 @@ namespace TestPerf
             //Test for LongPaths not set and admin
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
             {
-                MessageDlg adminDlg = ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect request for elevated privileges 
+                MessageDlg adminDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // Expect request for elevated privileges 
                 AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, adminDlg.Message);
                 OkDialog(adminDlg, adminDlg.OkDialog);
             }
@@ -192,20 +192,22 @@ namespace TestPerf
                 Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
             }
 
-            MessageDlg installNvidiaDlg = ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME); // Expect the offer to installNvidia
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
+            var installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // Expect the offer to installNvidia
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
+
             CancelDialog(installNvidiaDlg, installNvidiaDlg.CancelDialog);
-            installNvidiaDlg = ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
+            
+            installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
             OkDialog(installNvidiaDlg, installNvidiaDlg.ClickYes);
             var needAdminDlg = WaitForOpenForm<MessageDlg>();
             AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                 needAdminDlg.Message);
-            CancelDialog(needAdminDlg, () => needAdminDlg.CancelDialog()); // Expect the offer to installNvidia
-            installNvidiaDlg = ShowDialog<MessageDlg>(() => buildLibraryDlg.OkWizardPage(), WAIT_TIME);
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Cuda_Library,
+            CancelDialog(needAdminDlg, needAdminDlg.CancelDialog); // Expect the offer to installNvidia
+            installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
             OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
         }
@@ -252,7 +254,7 @@ namespace TestPerf
                     {
                         Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
                         OkDialog(pythonDlg, pythonDlg.OkDialog);
-                        confirmDlg = WaitForOpenForm<MessageDlg>();
+                        confirmDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
                         ConfirmPythonSuccess(confirmDlg);
 
                     }
@@ -298,23 +300,23 @@ namespace TestPerf
         /// <param name="nvidiaDlg">Nvidia Detected Dialog</param>
         /// <param name="pythonDlg">Python Installer Dialog</param>
         /// <param name="clickNo">true clicks No, false clicks Yes, null clicks Cancel to Nvidia Detected Dialog</param>
-        private void RunNvidiaDialog(MultiButtonMsgDlg nvidiaDlg, MultiButtonMsgDlg pythonDlg, bool? clickNo = true)
+        private void RunNvidiaDialog(MessageDlg nvidiaDlg, MessageDlg pythonDlg, bool? clickNo = true)
         {
             if (clickNo == true)
             {
 
                 // Say 'No'
-                RunDlg<AlertDlg>(nvidiaDlg.ClickNo, confirmDlg => { ConfirmPythonSuccess(confirmDlg); });
+                RunDlg<AlertDlg>(nvidiaDlg.ClickNo, ConfirmPythonSuccess);
             }
             else if (clickNo == false)
             {
                 // Say 'Yes'
-                RunDlg<AlertDlg>(nvidiaDlg.ClickYes, confirmDlg => { ConfirmPythonSuccess(confirmDlg); });
+                RunDlg<AlertDlg>(nvidiaDlg.ClickYes, ConfirmPythonSuccess);
             }
             else // clickNo == null
             {
                 // Say 'Cancel'
-                RunDlg<AlertDlg>(nvidiaDlg.ClickCancel, confirmDlg => { ConfirmPythonSuccess(confirmDlg); });
+                RunDlg<AlertDlg>(nvidiaDlg.ClickCancel, ConfirmPythonSuccess);
 
             }
 
@@ -327,14 +329,14 @@ namespace TestPerf
         /// </summary>
         /// <param name="pythonDlg">Python set up is required dialog</param>
         /// <param name="nvidiaClickNo">What to tell Nvidia Dialog: Yes=install, No=don't install, null=cancel operation</param>
-        private void NvidiaTestHelper(MultiButtonMsgDlg pythonDlg, bool? nvidiaClickNo)
+        private void NvidiaTestHelper(MessageDlg pythonDlg, bool? nvidiaClickNo)
         {
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT;
             if (PythonInstaller.TestForNvidiaGPU() == true && !PythonInstaller.NvidiaLibrariesInstalled())
             {
                 Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
 
-                MultiButtonMsgDlg nvidiaDlg = ShowMultiButtonMsgDlg(pythonDlg.OkDialog, ToolsUIResources.PythonInstaller_Install_Cuda_Library);
+                MessageDlg nvidiaDlg = ShowDialog<MessageDlg>( pythonDlg.OkDialog, WAIT_TIME  );
 
                 RunNvidiaDialog(nvidiaDlg, pythonDlg, nvidiaClickNo);
 

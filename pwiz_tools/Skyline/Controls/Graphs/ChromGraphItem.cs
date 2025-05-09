@@ -23,7 +23,6 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
-using pwiz.Common.Collections;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -202,7 +201,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public int Index { get; private set; }
         }
 
-        [CanBeNull] public IList <ChargeAndCcsIndex> CCSPredictions { get; set; }
+        [CanBeNull] public IList <ChargeAndCollisionalCrossSection> CCSPredictions { get; set; }
         public ExplicitRetentionTimeInfo RetentionExplicit { get; set; }
         public double RetentionWindow { get; set; }
 
@@ -649,19 +648,19 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
             PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime,
-            [CanBeNull] IList<ChargeAndCcsIndex> ccs = null)
+            [CanBeNull] IList<ChargeAndCollisionalCrossSection> ccs = null)
         {
             // ReSharper disable LocalizableElement
             string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
 
-            if (ccs != null)
-            {
-                var matchingCcs = ccs.Where(z => z.ChargeAndCcs.Charge == TransitionGroupNode.PrecursorCharge);
-                string Asq = "\u00C5\u00B2";
-
-                matchingCcs.ForEach(chargeAndCcsIndex => 
-                    label += string.Format("\n{0} ({1}): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeAndCcsIndex.ChargeAndCcs.Charge, chargeAndCcsIndex.ChargeAndCcs.CCS, Asq));
-            }
+            // DSHTEYN: Commented out until we figure where best to display this info
+            //if (ccs != null)
+            //{
+            //    var matchingCcs = ccs.Where(z => z.Charge == TransitionGroupNode.PrecursorCharge);
+            //    string Asq = "\u00C5\u00B2";
+            //    matchingCcs.ForEach(chargeAndCcsIndex => 
+            //        label += string.Format("\n{0} ({1}): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeAndCcsIndex.Charge, chargeAndCcsIndex.CCS, Asq));
+            //}
 
         // ReSharper restore LocalizableElement
             FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);

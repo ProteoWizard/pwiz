@@ -698,7 +698,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return RTGraphItem.RetentionPrediction; }
         }
         [CanBeNull]
-        public IList<ChromGraphItem.ChargeAndCcsIndex> PredictedCCS
+        public IList<ChromGraphItem.ChargeAndCollisionalCrossSection> PredictedCCS
         {
             get { return RTGraphItem.CCSPredictions; }
         }
@@ -2315,9 +2315,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey) != null)
                     {
                     
-                        chromGraphPrimary.CCSPredictions ??= new List<ChromGraphItem.ChargeAndCcsIndex>();                          
-                        chromGraphPrimary.CCSPredictions.Add(new ChromGraphItem.ChargeAndCcsIndex(chromGraphPrimary.CCSPredictions.Count,
-                                new ChromGraphItem.ChargeAndCollisionalCrossSection(nodeGroups[index].PrecursorCharge, libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey))));
+                        chromGraphPrimary.CCSPredictions ??= new List<ChromGraphItem.ChargeAndCollisionalCrossSection>();                          
+                        chromGraphPrimary.CCSPredictions.Add(new ChromGraphItem.ChargeAndCollisionalCrossSection(nodeGroups[index].PrecursorCharge, libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey)));
                         
                     }
                 }

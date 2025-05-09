@@ -59,7 +59,8 @@ namespace pwiz.Skyline.ToolsUI
                         }
                         else if (userAnswerToCuda != @"No")
                         {
-                            var choice = MessageDlg.Show(parent, string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), false, MessageBoxButtons.YesNoCancel);
+                            var choice = MessageDlg.Show(parent, string.Format(
+                                ToolsUIResources.PythonInstaller_Install_Nvidia_Library), false, MessageBoxButtons.YesNoCancel);
                             if (choice == DialogResult.No)
                             {
                                 userAnswerToCuda = @"No";
@@ -75,7 +76,6 @@ namespace pwiz.Skyline.ToolsUI
                             {
                                 userAnswerToCuda = @"Yes";
                                 pythonInstaller.WriteInstallNvidiaBatScript();
-                                
                                 var nvidiaAdminChoice = MessageDlg.Show(parent, string.Format(
                                     ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                                     PythonInstaller.InstallNvidiaLibrariesBat), false, MessageBoxButtons.OKCancel);
@@ -94,7 +94,6 @@ namespace pwiz.Skyline.ToolsUI
                                 }
                             }
                         }
-
                         else
                         {
                             abortTask = !PerformTaskAction(parent, task);
