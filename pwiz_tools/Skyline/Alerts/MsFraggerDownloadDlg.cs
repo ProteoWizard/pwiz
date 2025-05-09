@@ -27,6 +27,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Ionic.Zip;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Util;
@@ -126,7 +127,6 @@ namespace pwiz.Skyline.Alerts
             tbEmail.Text = email;
             tbInstitution.Text = institution;
             cbAgreeToLicense.Checked = true;
-            btnRequestVerificationCode.PerformClick(); // mock requesting verification code
             tbVerificationCode.Text = @"1234";
             // now clicking "Accept" button should start download
         }
@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Alerts
             });
         }
 
-        private void Download()
+        private bool Download()
         {
             using (var downloadProgressDlg = new LongWaitDlg())
             {
@@ -176,19 +176,28 @@ namespace pwiz.Skyline.Alerts
                     var msFraggerDownloadInfo = MsFraggerSearchEngine.MsFraggerDownloadInfo;
                     msFraggerDownloadInfo.DownloadUrl = DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS;
                     downloadProgressDlg.PerformWork(this, 50, pm => SimpleFileDownloader.DownloadRequiredFiles(new[] { msFraggerDownloadInfo }, pm));
-                    return;
+                    return true;
                 }
 
                 using (var client = new WebClient())
                 {
-                    client.UploadProgressChanged += (o, args) => downloadProgressDlg.ProgressValue = Math.Max(0, Math.Min(100, (args.ProgressPercentage - 50) * 2)); // ignore the upload part of the progress calculation
-
-                    downloadProgressDlg.PerformWork(this, 50, broker =>
+                    var status = downloadProgressDlg.PerformWork(this, 50, broker =>
                     {
-                        client.DownloadProgressChanged += (sender, args) => broker.ProgressValue = args.ProgressPercentage;
+                        client.DownloadProgressChanged += (sender, args) => broker.UpdateProgress(new ProgressStatus().ChangePercentComplete(args.ProgressPercentage));
 
                         string downloadUrl = string.Format(DOWNLOAD_URL_WITH_TOKEN, tbVerificationCode.Text);
                         var msFraggerZipBytes = client.DownloadData(downloadUrl);
+
+                        // check if downloaded bytes are actually a zip file
+                        if (!ZipFile.IsZipFile(new MemoryStream(msFraggerZipBytes), false))
+                        {
+                            var resultString = Encoding.UTF8.GetString(msFraggerZipBytes);
+                            broker.UpdateProgress(new ProgressStatus().ChangeErrorException(
+                                new InvalidOperationException(string.Format(@"{0}{1}{1}{2}",
+                                    Resources.TestToolStoreClient_GetToolZipFile_Error_downloading_tool,
+                                    Environment.NewLine, resultString))));
+                            return;
+                        }
 
                         var installPath = MsFraggerSearchEngine.MsFraggerDirectory;
                         var downloadFilename = Path.Combine(installPath, MsFraggerSearchEngine.MSFRAGGER_FILENAME + @".zip");
@@ -205,6 +214,13 @@ namespace pwiz.Skyline.Alerts
                         }
                         FileEx.SafeDelete(downloadFilename);
                     });
+
+                    if (status.IsError)
+                    {
+                        MessageDlg.Show(this, status.ErrorException.Message);
+                        return false;
+                    }
+                    return true;
                 }
             }
         }
@@ -217,7 +233,8 @@ namespace pwiz.Skyline.Alerts
 
         private void btnAccept_Click(object sender, EventArgs e)
         {
-            Download();
+            if (!Download())
+                return;
 
             DialogResult = DialogResult.OK;
         }
@@ -226,6 +243,7 @@ namespace pwiz.Skyline.Alerts
         {
             RequestVerificationCode();
             lblVerificationCode.Enabled = tbVerificationCode.Enabled = true;
+            MessageDlg.Show(this, AlertsResources.MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email);
         }
 
         private bool CheckCursorWithinRange(RichTextBox rtb, MouseEventArgs e, LinkInfo linkInfo)
