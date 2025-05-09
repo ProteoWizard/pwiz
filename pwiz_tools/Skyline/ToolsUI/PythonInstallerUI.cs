@@ -41,7 +41,7 @@ namespace pwiz.Skyline.ToolsUI
                 ? pythonInstaller.ValidatePythonVirtualEnvironment()
                 : pythonInstaller.PendingTasks);
 
-            string userAnswerToCuda = null;
+            string userAnswerToCuda = String.Empty;
             pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
             List<PythonTaskBase> abortedTasks = new List<PythonTaskBase>();
@@ -52,7 +52,12 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     if (task.IsNvidiaTask)
                     {
-                        if (userAnswerToCuda != @"No")
+                        if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD || userAnswerToCuda == @"No")
+                        {
+                            if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                            abortTask = true;
+                        }
+                        else if (userAnswerToCuda != @"No")
                         {
                             var choice = MessageDlg.Show(parent, string.Format(ToolsUIResources.PythonInstaller_Install_Cuda_Library), false, MessageBoxButtons.YesNoCancel);
                             if (choice == DialogResult.No)
@@ -89,11 +94,7 @@ namespace pwiz.Skyline.ToolsUI
                                 }
                             }
                         }
-                        else if (userAnswerToCuda == @"No")
-                        {
-                            if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
-                            abortTask = true;
-                        }
+
                         else
                         {
                             abortTask = !PerformTaskAction(parent, task);
