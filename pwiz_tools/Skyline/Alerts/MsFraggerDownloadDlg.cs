@@ -31,17 +31,18 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Alerts
 {
     public partial class MsFraggerDownloadDlg : FormEx
     {
-        private const string LICENSE_URL = @"https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf";
-        private const string VERIFY_URL = @"http://msfragger-upgrader.nesvilab.org/upgrader/upgrade_download.php";
+        private static readonly string LICENSE_URL = Settings.Default.MsFraggerLicenseUrl;
+        private static readonly string VERIFY_URL = Settings.Default.MsFraggerVerifyUrl;
         private const string VERIFY_SUCCESS = @"download link has been sent";
-        private static readonly string DOWNLOAD_URL_WITH_TOKEN = $@"https://msfragger-upgrader.nesvilab.org/upgrader/download.php?token={{0}}&download=Release%20{MsFraggerSearchEngine.MSFRAGGER_VERSION}%24zip";
+        private static readonly string DOWNLOAD_URL_WITH_TOKEN = $@"{Settings.Default.MsFraggerDownloadUrl}?token={{0}}&download=Release%20{MsFraggerSearchEngine.MSFRAGGER_VERSION}%24zip";
         private const string VERIFY_METHOD = @"POST";
-        private readonly Uri DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/MSFragger-{MsFraggerSearchEngine.MSFRAGGER_VERSION}.zip");
+        private static readonly Uri DOWNLOAD_URL_FOR_FUNCTIONAL_TESTS = new Uri($@"https://ci.skyline.ms/skyline_tool_testing_mirror/MSFragger-{MsFraggerSearchEngine.MSFRAGGER_VERSION}.zip");
 
         public class LinkInfo
         {
