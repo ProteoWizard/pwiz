@@ -772,6 +772,11 @@ namespace pwiz.Skyline.SettingsUI
             set { textPath.Text = value; }
         }
 
+        public void LibraryPathSelectEnd()
+        {
+            textPath.Select(textPath.Text.Length, 0);
+        }
+
         public bool Koina
         {
             get { return radioKoinaSource.Checked; }
