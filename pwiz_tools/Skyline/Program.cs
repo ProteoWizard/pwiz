@@ -80,6 +80,7 @@ namespace pwiz.Skyline
             }
         }
         public static string TestName { get; set; }                 // Set during unit and functional tests
+        public static bool ClosingForms { get; set; }               // Set to true during AbstractFunctionalTest.CloseOpenForm (all forms should check this before cancelling a Close request)
         public static string DefaultUiMode { get; set; }            // Set to avoid seeing NoModeUiDlg at the start of a test
 
         public static bool SkylineOffscreen
