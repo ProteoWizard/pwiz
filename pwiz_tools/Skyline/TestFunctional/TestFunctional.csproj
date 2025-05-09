@@ -202,7 +202,6 @@
     <Compile Include="LegacyScoringModelTest.cs" />
     <Compile Include="LibraryMatchViewTest.cs" />
     <Compile Include="LiteDropdownListTest.cs" />
-    <Compile Include="LocalizedResourcesTest.cs" />
     <Compile Include="LogScaleAxisTest.cs" />
     <Compile Include="MedianNormalizationTest.cs" />
     <Compile Include="MessageBoxHelperTest.cs" />
