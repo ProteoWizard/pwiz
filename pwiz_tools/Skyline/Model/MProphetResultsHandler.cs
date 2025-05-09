@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.RetentionTimes.PeakImputation;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -173,7 +174,7 @@ namespace pwiz.Skyline.Model
             using (settingsChangeMonitor)
             {
                 var settingsNew = Document.Settings.ChangePeptideIntegration(integration =>
-                    integration.ChangeResultsHandler(this));
+                    integration.ChangeResultsHandler(new ReintegrateResultsHandler(this, new PeakBoundaryImputer(Document, this))));
                 // Only update the document if anything has changed
                 var docNew = Document.ChangeSettings(settingsNew, settingsChangeMonitor);
                 if (!Equals(docNew.Settings.PeptideSettings.Integration, Document.Settings.PeptideSettings.Integration) ||

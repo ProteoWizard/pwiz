@@ -678,4 +678,7 @@ For reference, the audit log is located here: "{0}"</value>
   <data name="added_spectrum_filter" xml:space="preserve">
     <value>Added spectrum filter</value>
   </data>
+  <data name="imputed_boundaries" xml:space="preserve">
+    <value>Imputed boundaries for '{0}'</value>
+  </data>
 </root>
