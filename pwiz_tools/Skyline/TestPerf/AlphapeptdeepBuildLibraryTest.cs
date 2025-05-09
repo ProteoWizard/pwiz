@@ -19,14 +19,17 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -37,7 +40,7 @@ namespace TestPerf
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
         // setting _deletePython to false allows the test to reuse existing installation
-        private bool _deletePython = true;
+        private bool _deletePython = false;
 
         [TestMethod] 
         public void TestAlphaPeptDeepBuildLibrary()
@@ -57,20 +60,25 @@ namespace TestPerf
             TestFilesDir.GetTestPath("LibraryWithoutIrt.blib");
 
         private string LibraryPathWithIrt =>
-            TestFilesDir.GetTestPath("LibraryWithoutIrt.blib");
+            TestFilesDir.GetTestPath("LibraryWithIrt.blib");
 
         protected override void DoTest()
         {
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
-            const string answerWithoutIrt = "predict_transformed.speclib.tsv";
+            const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
             const string libraryWithoutIrt = "AlphaPeptDeepLibraryWithoutIrt";
+
             const string libraryWithIrt = "AlphaPeptDeepLibraryWithIrt";
+            const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
+
 
             PeptideSettingsUI peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
+            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt, IrtStandard.BIOGNOSYS_11);
+
             AlphapeptdeepBuildLibrary(peptideSettings,libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
-       
+
             var fileHash = PythonInstallerUtil.GetFileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
             Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
@@ -81,11 +89,14 @@ namespace TestPerf
 
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
+            var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
+            OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
+            
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
-                //spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
+                spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
             });
             
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
@@ -106,38 +117,90 @@ namespace TestPerf
         /// <param name="libraryPath">Path of the library to build</param>
         /// <param name="answerFile">Path to library answersheet</param>
         /// <param name="iRTtype">iRT standard type</param>
-        private void AlphapeptdeepBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName, string libraryPath, string answerFile, IrtStandard iRTtype = null)
+        private void AlphapeptdeepBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName,
+            string libraryPath, string answerFile, IrtStandard iRTtype = null)
         {
             string builtLibraryPath = null;
+
             RunLongDlg<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg, buildLibraryDlg =>
-            {
-                RunUI(() =>
                 {
-                    buildLibraryDlg.LibraryName = libraryName;
-                    buildLibraryDlg.LibraryPath = libraryPath;
-                    buildLibraryDlg.AlphaPeptDeep = true;
-                });
+                    RunUI(() =>
+                    {
+                        buildLibraryDlg.LibraryName = libraryName;
+                        buildLibraryDlg.LibraryPath = libraryPath;
+                        buildLibraryDlg.AlphaPeptDeep = true;
+                        if (iRTtype != null)
+                            buildLibraryDlg.IrtStandard = iRTtype;
 
-                if (!HavePythonPrerequisite(buildLibraryDlg))
-                {
-                    CancelPython(buildLibraryDlg);
+                    });
 
-                    InstallPythonTestNvidia(buildLibraryDlg);
-                }
-                else
-                {
-                    PythonInstaller.SimulatedInstallationState =
-                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
-                    RunUI(() => { buildLibraryDlg.OkWizardPage(); });
-                    WaitForClosedForm<BuildLibraryDlg>();
-                }
+                    if (!HavePythonPrerequisite(buildLibraryDlg))
+                    {
+                        CancelPython(buildLibraryDlg);
 
-                builtLibraryPath = buildLibraryDlg.BuilderLibFilepath;
-            }, _ => { });
+                        InstallPythonTestNvidia(buildLibraryDlg);
+                    }
+                    else
+                    {
+                        PythonInstaller.SimulatedInstallationState =
+                            PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
+
+                        RunUI(buildLibraryDlg.OkWizardPage);
+
+                        if (iRTtype != null)
+                        {
+                            VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
+                            var recalibrateIrtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                            StringAssert.StartsWith(recalibrateIrtDlg.Message, Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_);
+                            OkDialog(recalibrateIrtDlg, recalibrateIrtDlg.ClickNo);
+                            var addRtPredDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
+                            OkDialog(addRtPredDlg, addRtPredDlg.OkDialog);
+                        }
+
+                        WaitForClosedForm<BuildLibraryDlg>();
+                    }
+
+
+                    builtLibraryPath = buildLibraryDlg.BuilderLibFilepath;
+
+                },
+                _ =>
+                { });
 
             TestResultingLibByValues(builtLibraryPath, TestFilesDir.GetTestPath(answerFile));
         }
-        
+
+
+        private static void VerifyAddIrts(AddIrtPeptidesDlg dlg)
+        {
+            RunUI(() =>
+            {
+                Assert.AreEqual(7, dlg.PeptidesCount);
+                Assert.AreEqual(1, dlg.RunsConvertedCount);  // Libraries now convert through internal alignment to single RT scale
+                Assert.AreEqual(0, dlg.RunsFailedCount);
+            });
+
+            VerifyRegression(dlg, 0, true, 11, 0, 0);
+
+            OkDialog(dlg, dlg.OkDialog);
+        }
+
+        private static void VerifyRegression(AddIrtPeptidesDlg dlg, int index, bool converted, int numPoints, int numMissing, int numOutliers)
+        {
+            RunUI(() => Assert.AreEqual(converted, dlg.IsConverted(index)));
+            var regression = ShowDialog<GraphRegression>(() => dlg.ShowRegression(index));
+            RunUI(() =>
+            {
+                Assert.AreEqual(1, regression.RegressionGraphDatas.Count);
+                var data = regression.RegressionGraphDatas.First();
+                Assert.IsTrue(data.XValues.Length == data.YValues.Length);
+                Assert.AreEqual(numPoints, data.XValues.Length);
+                Assert.AreEqual(numMissing, data.MissingIndices.Count);
+                Assert.AreEqual(numOutliers, data.OutlierIndices.Count);
+            });
+            OkDialog(regression, regression.CloseDialog);
+        }
+
         private void TestResultingLibByValues(string product, string answer)
         {
             using (var answerReader = new StreamReader(answer))
