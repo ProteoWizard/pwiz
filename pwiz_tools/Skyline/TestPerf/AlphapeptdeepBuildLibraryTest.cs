@@ -40,7 +40,7 @@ namespace TestPerf
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
         // setting _deletePython to false allows the test to reuse existing installation
-        private bool _deletePython = false;
+        private bool _deletePython = true;
 
         [TestMethod] 
         public void TestAlphaPeptDeepBuildLibrary()
