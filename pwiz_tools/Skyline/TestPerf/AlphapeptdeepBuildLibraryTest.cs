@@ -145,7 +145,7 @@ namespace TestPerf
                         PythonInstaller.SimulatedInstallationState =
                             PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
 
-                        RunUI(buildLibraryDlg.OkWizardPage);
+                        OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
                     }
 
                     if (iRTtype != null)
@@ -287,7 +287,7 @@ namespace TestPerf
 
             bool havePythonPrerequisite = false;
 
-            RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
+            havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet();
             if (!havePythonPrerequisite)
             {
                 MessageDlg confirmDlg = null;
