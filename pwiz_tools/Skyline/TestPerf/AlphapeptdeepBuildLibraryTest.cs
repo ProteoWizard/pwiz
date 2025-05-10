@@ -220,6 +220,7 @@ namespace TestPerf
         /// <param name="buildLibraryDlg">Build Library dialog</param>
         public void CancelPython(BuildLibraryDlg buildLibraryDlg)
         {
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start CancelPython() test ... ");
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
             MultiButtonMsgDlg installPythonDlg = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
@@ -234,6 +235,7 @@ namespace TestPerf
 
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, needAdminDlg.Message);
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish CancelPython() test ... ");
 
 
             // PauseTest("need admin msg");
@@ -242,6 +244,7 @@ namespace TestPerf
 
         public void InstallPythonTestNvidia(BuildLibraryDlg buildLibraryDlg)
         {
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start InstallPythonTestNvidia() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
             //Test for LongPaths not set and admin
@@ -274,6 +277,8 @@ namespace TestPerf
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
             OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish InstallPythonTestNvidia() test ... ");
+
         }
 
         /// <summary>
