@@ -98,6 +98,7 @@ ExportMethodDlg.IsolationListView,TestExportDiaList
 ExportMethodDlg.MethodView,TestExportDiaList
 ExportMethodDlg.TransitionListView,TestExportMethodDlg
 ExportMethodScheduleGraph,TestExportMethodDlg
+FilesTreeForm,TestFilesTreeForm
 FilterMatchedPeptidesDlg,TestInsert
 FilterMidasLibraryDlg,TestMidas
 FindColumnDlg,TestFindColumn
