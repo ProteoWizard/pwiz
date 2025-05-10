@@ -140,13 +140,10 @@ namespace TestPerf
 
                         InstallPythonTestNvidia(buildLibraryDlg);
                     }
-                    else
-                    {
-                        PythonInstaller.SimulatedInstallationState =
-                            PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
 
-                        OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
-                    }
+                    PythonInstaller.SimulatedInstallationState =
+                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
+                    OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
                     if (iRTtype != null)
                     {
@@ -276,7 +273,7 @@ namespace TestPerf
             installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
-            OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
+            CancelDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish InstallPythonTestNvidia() test ... ");
 
         }
