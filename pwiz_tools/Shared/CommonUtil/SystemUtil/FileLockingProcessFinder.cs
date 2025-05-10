@@ -26,12 +26,12 @@
 // Useful for debugging file locking problems
 //
 
-using System.Runtime.InteropServices;
-using System.Diagnostics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
-namespace pwiz.SkylineTestUtil
+namespace pwiz.Common.SystemUtil
 {
 
 public static class FileLockingProcessFinder

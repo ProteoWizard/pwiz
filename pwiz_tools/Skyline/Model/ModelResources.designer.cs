@@ -213,6 +213,92 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder completed ok.
+        /// </summary>
+        public static string Alphapeptdeep_Blib_completed_ok {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Blib_completed_ok", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BlibBuilder failed to complete.
+        /// </summary>
+        public static string Alphapeptdeep_Blib_failed_to_complete {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Blib_failed_to_complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AlphaPeptDeep Finished in {0} minutes {1} seconds.
+        /// </summary>
+        public static string Alphapeptdeep_Process_Finished_in_time {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Process_Finished_in_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+        ///{0}
+        ///	
+        ///Would you like to continue building this predicted library?.
+        /// </summary>
+        public static string Alphapeptdeep_Warn_unknown_modification {
+            get {
+                return ResourceManager.GetString("Alphapeptdeep_Warn_unknown_modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Executing peptdeep.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to build library by executing the peptdeep cmd-flow command..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_" +
+                        "the_peptdeep_cmd_flow_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Importing spectral library.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_Importing_spectral_library {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Importing_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to generate settings.yaml file by executing the peptdeep export-settings command..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_" +
+                        "file_by_executing_the_peptdeep_export_settings_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing settings file.
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid amino acid &apos;{0}&apos; found in the value &apos;{1}&apos;..
         /// </summary>
         public static string AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__ {
@@ -285,6 +371,15 @@ namespace pwiz.Skyline.Model {
         public static string BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_ {
             get {
                 return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Build Library.
+        /// </summary>
+        public static string BuildingPrecursorTable_Build_Library {
+            get {
+                return ResourceManager.GetString("BuildingPrecursorTable_Build_Library", resourceCulture);
             }
         }
         
@@ -948,6 +1043,24 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Preparing prediction input file.
+        /// </summary>
+        public static string LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file {
+            get {
+                return ResourceManager.GetString("LibraryHelper_PreparePrecursorInputFile_Preparing_prediction_input_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing training input file.
+        /// </summary>
+        public static string LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file {
+            get {
+                return ResourceManager.GetString("LibraryHelper_PrepareTrainingInputFile_Preparing_training_input_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Importing {0}.
         /// </summary>
         public static string MassListImporter_Import_Importing__0__ {
@@ -1195,6 +1308,37 @@ namespace pwiz.Skyline.Model {
         public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
             get {
                 return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install.
+        /// </summary>
+        public static string NvidiaInstaller_Install {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Install", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing resource {0}.
+        /// </summary>
+        public static string NvidiaInstaller_Missing_resource_0_ {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Missing_resource_0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
+        ///    {0}
+        ///	
+        ///        Would you like to continue?
+        ///    .
+        /// </summary>
+        public static string NvidiaInstaller_Requesting_Administrator_elevation {
+            get {
+                return ResourceManager.GetString("NvidiaInstaller_Requesting_Administrator_elevation", resourceCulture);
             }
         }
         
@@ -1485,6 +1629,15 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_" +
                         "number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrict" +
                         "ive_or_add_fewer_proteins_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Working....
+        /// </summary>
+        public static string PeptideSettingsUI_working {
+            get {
+                return ResourceManager.GetString("PeptideSettingsUI_working", resourceCulture);
             }
         }
         

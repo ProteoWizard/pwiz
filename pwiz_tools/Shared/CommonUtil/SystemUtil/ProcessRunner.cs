@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.Properties;
@@ -35,7 +36,7 @@ namespace pwiz.Common.SystemUtil
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
                  TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-                 bool forceTempfilesCleanup = false,
+                 bool forceTempfilesCleanup = false, 
                  Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
                  bool updateProgressPercentage = true);
     }
@@ -50,6 +51,10 @@ namespace pwiz.Common.SystemUtil
         public bool ShowCommandAndArgs { get; set; }
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
+
+        public int ExpectedOutputLinesCount { get; set; } 
+        public bool EnableImmediateLog { get; set; }
+        public bool EnableRunningTimeMessage { get; set; }
 
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
@@ -67,12 +72,12 @@ namespace pwiz.Common.SystemUtil
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
-            Run(psi, stdin, progress,ref status, null, priorityClass, forceTempfilesCleanup);
+            Run(psi, stdin, progress, ref status, null, priorityClass, forceTempfilesCleanup);
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-            bool forceTempfilesCleanup = false,
+            bool forceTempfilesCleanup = false, 
             Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
             bool updateProgressPercentage = true)
         {
@@ -118,7 +123,7 @@ namespace pwiz.Common.SystemUtil
             {
                 try
                 {
-                    proc.StandardInput.Write(stdin);
+                    proc.StandardInput.WriteLine(stdin);
                 }
                 finally
                 {
@@ -151,10 +156,14 @@ namespace pwiz.Common.SystemUtil
                 StringBuilder sbError = new StringBuilder();
                 int percentLast = 0;
                 string line;
+                int outputLinesCount = 0;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
+                    {
                         writer.WriteLine(line);
+                        outputLinesCount++;
+                    }
 
                     string lineLower = line.ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
@@ -198,14 +207,31 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            status = status.ChangeMessage(line);
-                            progress.UpdateProgress(status);
+                            if (EnableImmediateLog)
+                                status = status.ChangeMessage(Resources.ProcessRunner_Run_Working_);
+                            else 
+                                status = status.ChangeMessage(line);
+
+                            if (updateProgressPercentage)
+                            {
+                                if (ExpectedOutputLinesCount > 0)
+                                {
+                                    percentLast = Math.Min(99,
+                                        outputLinesCount * 100 / ExpectedOutputLinesCount);
+                                    status = status.ChangePercentComplete(percentLast);
+                                    progress.UpdateProgress(status);
+                                }
+                                else
+                                {
+                                    progress.UpdateProgress(status);
+                                }
+                            }
                         }
                     }
                 }
                 proc.WaitForExit();
-                int exit = proc.ExitCode;
 
+                int exit = proc.ExitCode;
                 if (!outputAndExitCodeAreGoodFunc(reader.GetErrorLines(), exit))
                 {
                     line = proc.StandardError.ReadLine();
@@ -230,7 +256,7 @@ namespace pwiz.Common.SystemUtil
 
                 // Make to complete the status, if the process succeeded, but never
                 // printed 100% to the console
-                if (updateProgressPercentage && percentLast < 100)
+                if (updateProgressPercentage && percentLast < 100 )
                 {
                     status = status.ChangePercentComplete(100);
                     if (status.SegmentCount > 0)
@@ -331,6 +357,17 @@ namespace pwiz.Common.SystemUtil
             }
 
             return tmpDirForCleanup;
+        }
+
+        /// <summary>
+        /// Function to help with filtering lines of output.
+        /// </summary>
+        /// <param name="line">Line of text considered for filtering.</param>
+        /// <param name="filters">Set of text values used to test the line.</param>
+        /// <returns>Return true if the provided line of text contains any of the provided filters of text, false otherwise.</returns>
+        private bool FilterOutputLine(string line, string[] filters)
+        {
+            return filters.Any(filter => line.Contains(filter));
         }
 
         public IEnumerable<string> MessageLog()

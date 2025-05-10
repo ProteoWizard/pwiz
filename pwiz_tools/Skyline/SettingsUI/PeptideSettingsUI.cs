@@ -736,19 +736,22 @@ namespace pwiz.Skyline.SettingsUI
             dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                using (var longWaitDlg = new LongWaitDlg(_parent,false))
                 {
-                    using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
-                    editLibDlg.LibraryPath = dlg.AddLibraryFile;
-                    if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+                    longWaitDlg.Text = string.Format(ModelResources.PeptideSettingsUI_working);
+                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                     {
-                        _driverLibrary.List.Add(editLibDlg.LibrarySpec);
-                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
+                        using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
+                        editLibDlg.LibraryPath = dlg.AddLibraryFile;
+                        if (editLibDlg.ShowDialog(this) == DialogResult.OK)
+                        {
+                            _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                            _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] { editLibDlg.LibrarySpec }).ToArray());
+                        }
+
+                        return;
                     }
-
-                    return;
                 }
-
                 BuildLibrary(dlg.Builder);
             }
         }
@@ -758,12 +761,34 @@ namespace pwiz.Skyline.SettingsUI
             IsBuildingLibrary = true;
 
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
+            if (builder.LibraryHelper != null)
+            {
+                var warningMods = builder.LibraryHelper.GetWarningMods(builder.Document, builder.ToolName);
+
+                if (warningMods?.Count > 0)
+                {
+                    string warningModString = string.Join(Environment.NewLine, warningMods);
+
+                    using (AlertDlg warnMessageDlg =
+                           new AlertDlg(string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
+                                   warningModString), MessageBoxButtons.OKCancel))
+                    {
+                        var warnModChoice = warnMessageDlg.ShowDialog();
+
+                        if (warnModChoice == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
 
             bool retry;
             do
             {
                 using (var longWaitDlg = new LongWaitDlg(_parent))
                 {
+                    longWaitDlg.Text = string.Format(ModelResources.BuildingPrecursorTable_Build_Library);
                     var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
                         _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
 
@@ -792,6 +817,12 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                         }
                     }
+                    else if (status.IsCanceled)
+                    {
+                        IsBuildingLibrary = false;
+                        return;
+                    }
+
                     retry = false;
                 }
             } while (retry);

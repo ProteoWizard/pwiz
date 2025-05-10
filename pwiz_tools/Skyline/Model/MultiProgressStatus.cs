@@ -45,6 +45,9 @@ namespace pwiz.Skyline.Model
         public MultiProgressStatus(bool synchronousMode)
         {
             _synchronousMode = synchronousMode;
+            PercentZoomStart = 0;
+            PercentZoomEnd = 100;
+            SegmentPercentEnds = null;
             ProgressList = ImmutableList<ChromatogramLoadingStatus>.EMPTY;
             Id = new object();
             Tag = 0;
@@ -79,7 +82,10 @@ namespace pwiz.Skyline.Model
         {
             throw new NotImplementedException();
         }
-
+        public IProgressStatus ChangeSegments(int segment, IList<int> segmentEndPercentages)
+        {
+            throw new NotImplementedException();
+        }
         public IProgressStatus NextSegment()
         {
             throw new NotImplementedException();
@@ -96,6 +102,7 @@ namespace pwiz.Skyline.Model
         }
 
         public string Message { get { return string.Empty; } }
+        public IList<int> SegmentPercentEnds { get; }
         public string SegmentName { get { return string.Empty; } }
         public ImmutableList<ChromatogramLoadingStatus> ProgressList { get; private set; }
 
@@ -209,6 +216,9 @@ namespace pwiz.Skyline.Model
                 return percent / ProgressList.Count;
             }
         }
+
+        public int PercentZoomStart { get; }
+        public int PercentZoomEnd { get; }
 
         public int ZoomedPercentComplete => PercentComplete;
 
