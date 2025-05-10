@@ -146,19 +146,20 @@ namespace TestPerf
                             PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
 
                         RunUI(buildLibraryDlg.OkWizardPage);
-
-                        if (iRTtype != null)
-                        {
-                            VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
-                            var recalibrateIrtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                            StringAssert.StartsWith(recalibrateIrtDlg.Message, Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_);
-                            OkDialog(recalibrateIrtDlg, recalibrateIrtDlg.ClickNo);
-                            var addRtPredDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
-                            OkDialog(addRtPredDlg, addRtPredDlg.OkDialog);
-                        }
-
-                        WaitForClosedForm<BuildLibraryDlg>();
                     }
+
+                    if (iRTtype != null)
+                    {
+                        VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
+                        var recalibrateIrtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                        StringAssert.StartsWith(recalibrateIrtDlg.Message, Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_);
+                        OkDialog(recalibrateIrtDlg, recalibrateIrtDlg.ClickNo);
+                        var addRtPredDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
+                        OkDialog(addRtPredDlg, addRtPredDlg.OkDialog);
+                    }
+
+                    WaitForClosedForm<BuildLibraryDlg>();
+                    
 
 
                     builtLibraryPath = buildLibraryDlg.BuilderLibFilepath;
