@@ -386,7 +386,7 @@
     <value>警告： 結果ファイル'{0}'を特定できません</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
-    <value>エラー: iRT標準が{0}に設定されましたが、複数のiRT標準が検出されました。iRT標準は明示的に設定する必要があります。</value>
+    <value>エラー： iRT標準が{0}に設定されましたが、複数のiRT標準が検出されました。iRT標準は明示的に設定する必要があります。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT標準名「{0}」は無効です。</value>
@@ -1187,7 +1187,7 @@
     <value>ファイル「{0}」を更新中にエラーが発生しました。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_" xml:space="preserve">
-    <value>エラー: スペクトルライブラリを構築できませんでした。</value>
+    <value>エラー： スペクトルライブラリを構築できませんでした。</value>
   </data>
   <data name="SkylineWindow_ImportAnnotations_Reading_annotations" xml:space="preserve">
     <value>注釈を読み取り中</value>
