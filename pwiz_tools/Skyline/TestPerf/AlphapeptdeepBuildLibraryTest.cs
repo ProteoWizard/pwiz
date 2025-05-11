@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,6 +32,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -42,12 +44,12 @@ namespace TestPerf
         // setting _deletePython to false allows the test to reuse existing installation
         private bool _deletePython = true;
 
-        [TestMethod] 
+        [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
         {
-            if (_deletePython) 
+            if (_deletePython)
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
-            
+
             TestFilesZip = "TestPerf/AlphapeptdeepBuildLibraryTest.zip";
             RunFunctionalTest();
         }
@@ -75,15 +77,17 @@ namespace TestPerf
 
             PeptideSettingsUI peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
-            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt, IrtStandard.BIOGNOSYS_11);
+            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt,
+                IrtStandard.BIOGNOSYS_11);
 
-            AlphapeptdeepBuildLibrary(peptideSettings,libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
+            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
 
             var fileHash = PythonInstallerUtil.GetFileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
             Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
 
-            fileHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles( PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
+            fileHash = PythonInstallerUtil.GetFilesArrayHash(
+                Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
             Console.WriteLine($@"Computed SearchPathInPythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.SearchPathInPythonEmbeddableHash, fileHash);
 
@@ -91,18 +95,20 @@ namespace TestPerf
 
             var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
             OkDialog(addRtStdDlg, addRtStdDlg.CancelDialog);
-            
+
             var spectralLibraryViewer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
             RunUI(() =>
             {
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithoutIrt);
                 spectralLibraryViewer.ChangeSelectedLibrary(libraryWithIrt);
             });
-            
+
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
 
-            MultiButtonMsgDlg saveChangesDlg = ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
-            AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes, saveChangesDlg.Message);
+            MultiButtonMsgDlg saveChangesDlg =
+                ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
+            AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
+                saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
@@ -133,7 +139,6 @@ namespace TestPerf
                             buildLibraryDlg.IrtStandard = iRTtype;
 
                     });
-
                     if (!HavePythonPrerequisite(buildLibraryDlg))
                     {
                         CancelPython(buildLibraryDlg);
@@ -149,21 +154,22 @@ namespace TestPerf
                     {
                         VerifyAddIrts(WaitForOpenForm<AddIrtPeptidesDlg>());
                         var recalibrateIrtDlg = WaitForOpenForm<MultiButtonMsgDlg>();
-                        StringAssert.StartsWith(recalibrateIrtDlg.Message, Resources.LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_);
+                        StringAssert.StartsWith(recalibrateIrtDlg.Message,
+                            Resources
+                                .LibraryGridViewDriver_AddToLibrary_Do_you_want_to_recalibrate_the_iRT_standard_values_relative_to_the_peptides_being_added_);
                         OkDialog(recalibrateIrtDlg, recalibrateIrtDlg.ClickNo);
                         var addRtPredDlg = WaitForOpenForm<AddRetentionTimePredictorDlg>();
                         OkDialog(addRtPredDlg, addRtPredDlg.OkDialog);
                     }
 
                     WaitForClosedForm<BuildLibraryDlg>();
-                    
+
 
 
                     builtLibraryPath = buildLibraryDlg.BuilderLibFilepath;
 
                 },
-                _ =>
-                { });
+                _ => { });
 
             TestResultingLibByValues(builtLibraryPath, TestFilesDir.GetTestPath(answerFile));
         }
@@ -174,7 +180,8 @@ namespace TestPerf
             RunUI(() =>
             {
                 Assert.AreEqual(7, dlg.PeptidesCount);
-                Assert.AreEqual(1, dlg.RunsConvertedCount);  // Libraries now convert through internal alignment to single RT scale
+                Assert.AreEqual(1,
+                    dlg.RunsConvertedCount); // Libraries now convert through internal alignment to single RT scale
                 Assert.AreEqual(0, dlg.RunsFailedCount);
             });
 
@@ -183,7 +190,8 @@ namespace TestPerf
             OkDialog(dlg, dlg.OkDialog);
         }
 
-        private static void VerifyRegression(AddIrtPeptidesDlg dlg, int index, bool converted, int numPoints, int numMissing, int numOutliers)
+        private static void VerifyRegression(AddIrtPeptidesDlg dlg, int index, bool converted, int numPoints,
+            int numMissing, int numOutliers)
         {
             RunUI(() => Assert.AreEqual(converted, dlg.IsConverted(index)));
             var regression = ShowDialog<GraphRegression>(() => dlg.ShowRegression(index));
@@ -201,9 +209,31 @@ namespace TestPerf
 
         private void TestResultingLibByValues(string product, string answer)
         {
-            using (var answerReader = new StreamReader(answer))
+            var sortFields = new List<(int FieldIndex, bool IsAscending)>
             {
-                using (var productReader = new StreamReader(product))
+                (0, true),  // Peptide 
+                (7, true)   // ion
+            };
+            var product_sorted = product + ".sorted";
+            var answer_sorted = answer + ".sorted";
+
+            DelimitedFileSorter.SortDelimitedFile(
+                inputFilePath: product,
+                outputFilePath: product_sorted,
+                delimiter: TextUtil.SEPARATOR_TSV,
+                sortFields: sortFields,
+                hasHeader: true);
+
+            DelimitedFileSorter.SortDelimitedFile(
+                inputFilePath: answer,
+                outputFilePath: answer_sorted,
+                delimiter: TextUtil.SEPARATOR_TSV,
+                sortFields: sortFields,
+                hasHeader: true);
+
+            using (var answerReader = new StreamReader(answer_sorted))
+            {
+                using (var productReader = new StreamReader(product_sorted))
                 {
                     AssertEx.FieldsEqual(productReader, answerReader, 13, null, true, 0, 1);
                 }
@@ -219,18 +249,25 @@ namespace TestPerf
         {
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start CancelPython() test ... ");
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
-            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
-            MultiButtonMsgDlg installPythonDlg = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
+            PythonInstaller.SimulatedInstallationState =
+                PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
+            MultiButtonMsgDlg
+                installPythonDlg =
+                    ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
             //PauseTest("install offer");
             CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
             //PauseTest("back to wizard");
-            installPythonDlg = ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
+            installPythonDlg =
+                ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
             // PauseTest("install offer again");
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required, installPythonDlg.Message);
+            AssertEx.AreComparableStrings(
+                ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
+                installPythonDlg.Message);
 
-            var needAdminDlg = ShowDialog<MessageDlg>(installPythonDlg.OkDialog); 
+            var needAdminDlg = ShowDialog<MessageDlg>(installPythonDlg.OkDialog);
 
-            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, needAdminDlg.Message);
+            AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation,
+                needAdminDlg.Message);
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish CancelPython() test ... ");
 
@@ -243,25 +280,32 @@ namespace TestPerf
         {
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start InstallPythonTestNvidia() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
-            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
+            PythonInstaller.SimulatedInstallationState =
+                PythonInstaller.eSimulatedInstallationState
+                    .NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
             //Test for LongPaths not set and admin
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
             {
-                MessageDlg adminDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // Expect request for elevated privileges 
-                AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, adminDlg.Message);
+                MessageDlg adminDlg =
+                    ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage,
+                        WAIT_TIME); // Expect request for elevated privileges 
+                AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation,
+                    adminDlg.Message);
                 OkDialog(adminDlg, adminDlg.OkDialog);
             }
             else if (!PythonInstaller.ValidateEnableLongpaths())
             {
-                Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
+                Assert.Fail(
+                    $@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
             }
 
-            var installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // Expect the offer to installNvidia
+            var installNvidiaDlg =
+                ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // Expect the offer to installNvidia
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
 
             CancelDialog(installNvidiaDlg, installNvidiaDlg.CancelDialog);
-            
+
             installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
@@ -285,7 +329,9 @@ namespace TestPerf
         /// <returns></returns>
         public bool InstallPython(BuildLibraryDlg buildLibraryDlg)
         {
-            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Normal tests systems will have registry set suitably
+            PythonInstaller.SimulatedInstallationState =
+                PythonInstaller.eSimulatedInstallationState
+                    .NONVIDIAHARD; // Normal tests systems will have registry set suitably
 
             bool havePythonPrerequisite = false;
 
@@ -295,14 +341,16 @@ namespace TestPerf
                 MessageDlg confirmDlg = null;
                 RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
                 {
-                    Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
+                    Assert.AreEqual(string.Format(
+                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
                         _pythonVersion, _toolName), pythonDlg.Message);
 
                     if (!PythonInstaller.ValidateEnableLongpaths())
                     {
                         MessageDlg longPathDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog);
 
-                        Assert.AreEqual(string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
+                        Assert.AreEqual(
+                            string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
                             longPathDlg.Message);
 
                         if (PythonInstaller.IsRunningElevated())
@@ -313,7 +361,8 @@ namespace TestPerf
                         }
                         else
                         {
-                            Assert.Fail($@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
+                            Assert.Fail(
+                                $@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
                         }
                     }
                     else
@@ -326,9 +375,7 @@ namespace TestPerf
                     }
 
 
-                }, dlg => {
-                    dlg.Close();
-                });
+                }, dlg => { dlg.Close(); });
                 if (_undoRegistry)
                 {
                     PythonInstaller.DisableWindowsLongPaths();
@@ -339,6 +386,7 @@ namespace TestPerf
 
             return false;
         }
+
         /// <summary>
         /// Checks for Python prerequisite
         /// </summary>
@@ -360,6 +408,7 @@ namespace TestPerf
         {
             return PythonInstaller.TestForNvidiaGPU() == true;
         }
+
         /// <summary>
         /// Runs Nvidia Dialog
         /// </summary>
@@ -402,7 +451,7 @@ namespace TestPerf
             {
                 Console.WriteLine(@"Info: NVIDIA GPU DETECTED on test node");
 
-                MessageDlg nvidiaDlg = ShowDialog<MessageDlg>( pythonDlg.OkDialog, WAIT_TIME  );
+                MessageDlg nvidiaDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
 
                 RunNvidiaDialog(nvidiaDlg, pythonDlg, nvidiaClickNo);
 
@@ -450,6 +499,7 @@ namespace TestPerf
         {
             ConfirmPython(confirmDlg);
         }
+
         /// <summary>
         /// Confirms Python installation failure
         /// </summary>
@@ -482,9 +532,99 @@ namespace TestPerf
         /// <param name="confirmDlg">Message dialog to the user with admin instructions</param>
         private void ConfirmInstallNvidiaBatMessage(MessageDlg confirmDlg)
         {
-            AssertEx.AreComparableStrings(string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation, PythonInstaller.GetInstallNvidiaLibrariesBat()),
+            AssertEx.AreComparableStrings(
+                string.Format(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
+                    PythonInstaller.GetInstallNvidiaLibrariesBat()),
                 confirmDlg.Message);
             OkDialog(confirmDlg, confirmDlg.OkDialog);
         }
     }
 }
+
+public class DelimitedFileSorter
+{
+    public static void SortDelimitedFile(
+        string inputFilePath,
+        string outputFilePath,
+        char delimiter,
+        List<(int FieldIndex, bool IsAscending)> sortFields,
+        bool hasHeader = true)
+    {
+        try
+        {
+            // Validate inputs
+            if (string.IsNullOrEmpty(inputFilePath) || !File.Exists(inputFilePath))
+                throw new ArgumentException("Input file does not exist or is invalid.");
+            if (string.IsNullOrEmpty(outputFilePath))
+                throw new ArgumentException("Output file path is invalid.");
+            if (sortFields == null || !sortFields.Any())
+                throw new ArgumentException("At least one sort field must be specified.");
+            if (sortFields.Any(sf => sf.FieldIndex < 0))
+                throw new ArgumentException("Field indices must be non-negative.");
+
+            // Read all lines
+            var lines = File.ReadAllLines(inputFilePath);
+            if (lines.Length == 0)
+                throw new InvalidOperationException("Input file is empty.");
+
+            // Store header if present
+            string header = hasHeader ? lines[0] : null;
+            var dataLines = hasHeader ? lines.Skip(1).ToList() : lines.ToList();
+
+            // Sort data
+            var sortedLines = Enumerable.OrderBy(
+                dataLines.Select(line => line.Split(delimiter)),
+                fields => fields, // Use fields as the key
+                new FieldComparer(sortFields)).Select(fields => string.Join(delimiter.ToString(), fields));
+
+            // Write to output file
+            using (var writer = new StreamWriter(outputFilePath))
+            {
+                if (hasHeader)
+                    writer.WriteLine(header);
+                foreach (var line in sortedLines)
+                    writer.WriteLine(line);
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error sorting file: {ex}");
+            throw;
+        }
+    }
+
+    private class FieldComparer : IComparer<string[]>
+    {
+        private readonly List<(int FieldIndex, bool IsAscending)> _sortFields;
+
+        public FieldComparer(List<(int FieldIndex, bool IsAscending)> sortFields)
+        {
+            _sortFields = sortFields;
+        }
+
+        public int Compare(string[] x, string[] y)
+        {
+            foreach ((int fieldIndex, bool isAscending) in _sortFields)
+            {
+                string xValue = x != null && fieldIndex < x.Length ? x[fieldIndex] : string.Empty;
+                string yValue = y != null && fieldIndex < y.Length ? y[fieldIndex] : string.Empty;
+
+                if (double.TryParse(xValue, out double xNum) && double.TryParse(yValue, out double yNum))
+                {
+                    int comparison = xNum.CompareTo(yNum);
+                    if (comparison != 0)
+                        return isAscending ? comparison : -comparison;
+                }
+                else
+                {
+                    int comparison = string.Compare(xValue, yValue, StringComparison.OrdinalIgnoreCase);
+                    if (comparison != 0)
+                        return isAscending ? comparison : -comparison;
+                }
+            }
+            return 0;
+        }
+    }
+}
+    
+
