@@ -145,6 +145,11 @@ public ref class ReaderConfig
     /// </summary>
     bool ddaProcessing;
 
+    /// <summary>
+    /// when true, diaPASEF data is combined frame-by-frame instead of grouped by isolation window
+    /// </summary>
+    bool singleFrameDiaPASEF;
+
     ReaderConfig()
     : simAsSpectra(false)
     , srmAsSpectra(false)
@@ -160,6 +165,7 @@ public ref class ReaderConfig
     , sortAndJitter(false)
     , globalChromatogramsAreMs1Only(false)
     , ddaProcessing(false)
+    , singleFrameDiaPASEF(false)
     {
     }
 };

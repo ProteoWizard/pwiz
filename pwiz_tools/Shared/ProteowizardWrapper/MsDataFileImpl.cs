@@ -32,6 +32,7 @@ using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using ComponentType = pwiz.CLI.msdata.ComponentType;
 using Version = pwiz.CLI.msdata.Version;
+using static pwiz.ProteowizardWrapper.MsDataFileImpl;
 
 
 namespace pwiz.ProteowizardWrapper
@@ -193,7 +194,8 @@ namespace pwiz.ProteowizardWrapper
                     combineIonMobilitySpectra = !ForceUncombinedIonMobility && combineIonMobilitySpectra,
                     ignoreCalibrationScans = true, // For Waters, we don't need to hear about lockmass values
                     reportSonarBins = true, // For Waters SONAR data, report bin number instead of false drift time
-                    globalChromatogramsAreMs1Only = true
+                    globalChromatogramsAreMs1Only = true,
+                    singleFrameDiaPASEF = false
                 };
                 _lockmassParameters = lockmassParameters;
                 FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -258,12 +260,14 @@ namespace pwiz.ProteowizardWrapper
                 string ionSource = string.Empty;
                 string analyzer = string.Empty;
                 string detector = string.Empty;
+                Dictionary<int,List<DiaFrameMsMsWindowInfo>> diaFrameMsMsWindowInfoList = null;
+
                 foreach (InstrumentConfiguration ic in _msDataFile.instrumentConfigurationList)
                 {
                     string instrumentIonSource;
                     string instrumentAnalyzer;
                     string instrumentDetector;
-                    GetInstrumentConfig(ic, out instrumentIonSource, out instrumentAnalyzer, out instrumentDetector);
+                    GetInstrumentConfig(ic, out instrumentIonSource, out instrumentAnalyzer, out instrumentDetector, out var newDiaFrameMsMsWindowList);
 
                     if (ionSource.Length > 0)
                         ionSource += @", ";
@@ -276,6 +280,9 @@ namespace pwiz.ProteowizardWrapper
                     if (detector.Length > 0)
                         detector += @", ";
                     detector += instrumentDetector;
+
+                    if (newDiaFrameMsMsWindowList != null)
+                        diaFrameMsMsWindowInfoList = newDiaFrameMsMsWindowList;
                 }
 
                 HashSet<string> contentTypeSet = new HashSet<string>();
@@ -292,13 +299,61 @@ namespace pwiz.ProteowizardWrapper
                                ContentType = contentType,
                                Detector = detector,
                                IonSource = ionSource,
-                               Spectra = spectra
+                               Spectra = spectra,
+                               DiaFrameMsMsWindowsTable = diaFrameMsMsWindowInfoList
                            };
             }
         }
 
-        private static void GetInstrumentConfig(InstrumentConfiguration ic, out string ionSource, out string analyzer, out string detector)
+        public class DiaFrameMsMsWindowInfo
         {
+            public DiaFrameMsMsWindowInfo(int windowGroup, double imLow, double imHigh, double isoMzLow, double isoMzHigh, double collisionEnergy)
+            {
+                WindowGroup = windowGroup;
+                ImLow = imLow;
+                ImHigh = imHigh;
+                IsoMzLow = isoMzLow;
+                IsoMzHigh = isoMzHigh;
+                CollisionEnergy = collisionEnergy;
+            }
+
+            public int WindowGroup { get; internal set;}
+            public double ImLow { get; private set; }
+            public double ImHigh { get; private set; }
+            public double IsoMzLow { get; private set; }
+            public double IsoMzHigh { get; private set; }
+            public double CollisionEnergy { get; private set; }
+        }
+        
+        private class InstrumentConfigurationCacheValues
+        {
+            public InstrumentConfigurationCacheValues(string ionSource, string analyzer, string detector, Dictionary<int, List<DiaFrameMsMsWindowInfo>> diaFrameMsMsWindowInfo)
+            {
+                this.ionSource = ionSource;
+                this.analyzer = analyzer;
+                this.detector = detector;
+                this.diaFrameMsMsWindowInfo = diaFrameMsMsWindowInfo;
+            }
+
+            public string ionSource { get; private set; }
+            public string analyzer { get; private set; }
+            public string detector { get; private set; }
+            public Dictionary<int, List<DiaFrameMsMsWindowInfo>> diaFrameMsMsWindowInfo { get; private set; }
+        }
+
+        private Dictionary<string, InstrumentConfigurationCacheValues> InstrumentConfigurationCache = new Dictionary<string, InstrumentConfigurationCacheValues>();
+
+        private void GetInstrumentConfig(InstrumentConfiguration ic, out string ionSource, out string analyzer, out string detector, out Dictionary<int, List<DiaFrameMsMsWindowInfo>> diaFrameMsMsWindowInfo)
+        {
+            if (InstrumentConfigurationCache.TryGetValue(ic.id, out var values))
+            {
+                ionSource = values.ionSource;
+                analyzer = values.analyzer;
+                detector = values.detector;
+                diaFrameMsMsWindowInfo = values.diaFrameMsMsWindowInfo;
+                return;
+            }
+
             // ReSharper disable CollectionNeverQueried.Local  (why does ReSharper warn on this?)
             SortedDictionary<int, string> ionSources = new SortedDictionary<int, string>();
             SortedDictionary<int, string> analyzers = new SortedDictionary<int, string>();
@@ -361,6 +416,43 @@ namespace pwiz.ProteowizardWrapper
             analyzer = String.Join(@"/", new List<string>(analyzers.Values).ToArray());
 
             detector = String.Join(@"/", new List<string>(detectors.Values).ToArray());
+
+            // Parse the Bruker DiaFrameMsMsWindowsTable if available
+            diaFrameMsMsWindowInfo = null;
+            foreach (var u in ic.userParams)
+            {
+                if (u.name.Equals(@"DiaFrameMsMsWindowsTable"))
+                {
+                    var lines = u.value.ToString().Split(';');
+                    diaFrameMsMsWindowInfo = new Dictionary<int, List<DiaFrameMsMsWindowInfo>>();
+                    foreach (var line in lines.Skip(1)) // Skip the header
+                    {
+                        if (string.IsNullOrEmpty(line))
+                            continue;
+                        var columns = line.Split(',');
+                        if (int.TryParse(columns[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var windowGroup) &&
+                            double.TryParse(columns[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var imHigh) &&
+                            double.TryParse(columns[2], NumberStyles.Any, CultureInfo.InvariantCulture, out var imLow) &&
+                            double.TryParse(columns[3], NumberStyles.Any, CultureInfo.InvariantCulture, out var isolationMz) &&
+                            double.TryParse(columns[4], NumberStyles.Any, CultureInfo.InvariantCulture, out var isolationWidth) &&
+                            double.TryParse(columns[5], NumberStyles.Any, CultureInfo.InvariantCulture, out var collisionEnergy))
+                        {
+                            if (!diaFrameMsMsWindowInfo.TryGetValue(windowGroup, out var list))
+                            {
+                                diaFrameMsMsWindowInfo.Add(windowGroup, list = new List<DiaFrameMsMsWindowInfo>());
+                            }
+                            list.Add(new DiaFrameMsMsWindowInfo(windowGroup, imLow, imHigh, isolationMz - isolationWidth / 2, isolationMz + isolationWidth / 2, collisionEnergy));
+                        }
+                        else
+                        {
+                            diaFrameMsMsWindowInfo = null;
+                            throw new ArgumentException(@"unexpected format in DiaFrameMsMsWindowsTable");
+                        }
+                    }
+                }
+            }
+
+            InstrumentConfigurationCache.Add(ic.id, new InstrumentConfigurationCacheValues(ionSource, analyzer, detector, diaFrameMsMsWindowInfo));
         }
 
         public bool IsProcessedBy(string softwareName)
@@ -405,10 +497,14 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        public static MsInstrumentConfigInfo CreateMsInstrumentConfigInfo(InstrumentConfiguration ic)
+        private Dictionary<string, MsInstrumentConfigInfo> MsInstrumentConfigInfoCache = new Dictionary<string, MsInstrumentConfigInfo>();
+
+        public MsInstrumentConfigInfo CreateMsInstrumentConfigInfo(InstrumentConfiguration ic)
         {
             if (ic == null)
                 return null;
+            if (MsInstrumentConfigInfoCache.TryGetValue(ic.id, out var cached))
+                return cached;
             string instrumentModel = null;
             string ionization;
             string analyzer;
@@ -446,11 +542,13 @@ namespace pwiz.ProteowizardWrapper
             }
 
             // get the ionization type, analyzer and detector
-            GetInstrumentConfig(ic, out ionization, out analyzer, out detector);
+            GetInstrumentConfig(ic, out ionization, out analyzer, out detector, out var diaFrameMsMsWindowDict);
 
             if (instrumentModel != null || ionization != null || analyzer != null || detector != null)
             {
-                return new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector);
+                var result = new MsInstrumentConfigInfo(instrumentModel, ionization, analyzer, detector, diaFrameMsMsWindowDict);
+                MsInstrumentConfigInfoCache.Add(ic.id, result);
+                return result;
             }
             else
                 return null;
@@ -696,6 +794,8 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public bool HasCombinedIonMobilitySpectra => SpectrumList != null && IonMobilityUnits != eIonMobilityUnits.none &&  _ionMobilitySpectrumList != null && _ionMobilitySpectrumList.hasCombinedIonMobility();
+
+        public bool IsCombinedDiagonalPASEF => HasCombinedIonMobilitySpectra && _ionMobilitySpectrumList.isDiagonalPASEF();
 
         /// <summary>
         /// Gets the value of the MS_sample_name CV param of first sample in the MSData object, or null if there is no sample information.
@@ -967,14 +1067,14 @@ namespace pwiz.ProteowizardWrapper
                 return -1;
             return index;
         }
-
+/* obsolete?
         public void GetSpectrum(int spectrumIndex, out double[] mzArray, out double[] intensityArray)
         {
             var spectrum = GetSpectrum(spectrumIndex);
             mzArray = spectrum.Mzs;
             intensityArray = spectrum.Intensities;
         }
-
+*/
         public MsDataSpectrum GetSpectrum(int spectrumIndex)
         {
             using (_perf.CreateTimer(@"GetSpectrum(index)"))
@@ -1050,6 +1150,16 @@ namespace pwiz.ProteowizardWrapper
             return data;
         }
 
+        private double[] GetScanningQuadMzLowArray(Spectrum s)
+        {
+            return s.getArrayByCVID(CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array)?.data?.Storage();
+        }
+
+        private double[] GetScanningQuadMzHighArray(Spectrum s)
+        {
+            return s.getArrayByCVID(CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array)?.data?.Storage();
+        }
+
         private double[] TryGetIonMobilityData(Spectrum s, CVID cvid, ref CVID? cvidIonMobility)
         {
             using var data = s.getArrayByCVID(cvid)?.data;
@@ -1063,13 +1173,7 @@ namespace pwiz.ProteowizardWrapper
         {
             if (spectrum == null)
             {
-                return new MsDataSpectrum
-                {
-                    Centroided = true,
-                    Mzs = new double[0],
-                    Intensities = new double[0],
-                    IonMobilities = null
-                };
+                return new MsDataSpectrum();
             }
             string idText = spectrum.id;
             if (idText.Trim().Length == 0)
@@ -1113,9 +1217,7 @@ namespace pwiz.ProteowizardWrapper
 
             if (spectrum.binaryDataArrays.Count <= 1)
             {
-                msDataSpectrum.Mzs = new double[0];
-                msDataSpectrum.Intensities = new double[0];
-                msDataSpectrum.IonMobilities = null;
+                msDataSpectrum.SetArrays(Array.Empty<double>(), Array.Empty<double>());
                 if (expectIonMobilityValue)
                 {
                     msDataSpectrum.IonMobility = GetIonMobility(spectrum);
@@ -1125,9 +1227,11 @@ namespace pwiz.ProteowizardWrapper
             {
                 try
                 {
-                    msDataSpectrum.Mzs = ToArray(spectrum.getMZArray());
-                    msDataSpectrum.Intensities = ToArray(spectrum.getIntensityArray());
-                    msDataSpectrum.IonMobilities = GetIonMobilityArray(spectrum);
+                    msDataSpectrum.SetArrays(ToArray(spectrum.getMZArray()),
+                        ToArray(spectrum.getIntensityArray()),
+                        GetIonMobilityArray(spectrum),
+                        GetScanningQuadMzLowArray(spectrum),GetScanningQuadMzHighArray(spectrum));
+
                     if (msDataSpectrum.IonMobilities != null)
                     {
                         // One more linear walk should be fine, given how much copying and walking gets done
@@ -1211,7 +1315,7 @@ namespace pwiz.ProteowizardWrapper
             var instrumentConfig = spectrum.scanList.scans.FirstOrDefault()?.instrumentConfiguration;
             if (instrumentConfig != null)
             {
-                GetInstrumentConfig(instrumentConfig, out string ionSource, out string analyzer, out string detector);
+                GetInstrumentConfig(instrumentConfig, out _, out string analyzer, out _, out _);
                 if (analyzer != null)
                 {
                     metadata = metadata.ChangeAnalyzer(analyzer);
@@ -1819,11 +1923,13 @@ namespace pwiz.ProteowizardWrapper
 
     public sealed class MsDataConfigInfo
     {
+        public string Id {get; set; }
         public int Spectra { get; set; }
         public string ContentType { get; set; }
         public string IonSource { get; set; }
         public string Analyzer { get; set; }
         public string Detector { get; set; }
+        public Dictionary<int, List<DiaFrameMsMsWindowInfo>> DiaFrameMsMsWindowsTable { get; set; }
     }
 
     /// <summary>
@@ -1947,10 +2053,43 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
         }
+
+        public double IsolationWindowBoundsLow =>
+            (IsolationWindowTargetMz ?? 0.0) - IsolationWindowLower ?? 0;
+        public double IsolationWindowBoundsHigh =>
+            (IsolationWindowTargetMz ?? double.MaxValue) + IsolationWindowUpper ?? 0;
     }
 
     public sealed class MsDataSpectrum
     {
+        public MsDataSpectrum()
+        {
+            Centroided = true;
+            SetArrays(Array.Empty<double>(), Array.Empty<double>());
+        }
+
+        public MsDataSpectrum(double[] mzs, double[] intensities, double[] ionMobilities = null)
+        {
+            SetArrays(mzs, intensities, ionMobilities);
+        }
+
+        public void SetArrays(double[] mzs, double[] intensities, double[] ionMobilities = null,
+            double[] scanningQuadMzLows = null, double[] scanningQuadMzHighs = null)
+        {
+            MzValues = new ArraySegment<double>(mzs);
+            IntensityValues = new ArraySegment<double>(intensities);
+            if (ionMobilities != null)
+            {
+                _ionMobilities = new ArraySegment<double>(ionMobilities);
+            }
+            _scanningQuadMzLows = scanningQuadMzLows;
+            _scanningQuadMzHighs = scanningQuadMzHighs;
+        }
+
+        public void SetEmptyArrays()
+        {
+            SetArrays(Array.Empty<double>(), Array.Empty<double>());
+        }
 
         private IonMobilityValue _ionMobility;
         public SpectrumMetadata Metadata { get; set; }
@@ -1958,6 +2097,7 @@ namespace pwiz.ProteowizardWrapper
         public string Id { get; set; }
         public int Level { get; set; }
         public int Index { get; set; } // index into parent file, if any
+        public int Length => MzValues.Count;
         public double? RetentionTime { get; set; }
 
         /// <summary>
@@ -2001,17 +2141,150 @@ namespace pwiz.ProteowizardWrapper
 
         public bool Centroided { get; set; }
         public bool NegativeCharge { get; set; } // True if negative ion mode
-        public double[] Mzs { get; set; }
-        public double[] Intensities { get; set; }
-        public double[] IonMobilities { get; set; } // for combined-mode IMS (may be null)
+        public IList<double> Mzs => MzValues;
+        public ArraySegment<double> MzValues { get; private set; } // Slice of values that may be shared across scans as in Diagonal PASEF
+        public int FindMzIndex(double mzTarget, int startAt = 0)
+        {
+            // ReSharper disable once AssignNullToNotNullAttribute
+            var iPeak = Array.BinarySearch(MzValues.Array, startAt + MzValues.Offset, MzValues.Count - startAt, mzTarget);
+            if (iPeak < 0)
+                iPeak = ~iPeak; // No exact hit in the binary search
+            return iPeak - MzValues.Offset; // Convert index from shared array space to slice space
+        }
+
+        public IList<double> Intensities => IntensityValues;
+        public ArraySegment<double> IntensityValues { get; private set; } // Slice of values that may be shared across scans as in Diagonal PASEF
+
+        public IList<double> IonMobilities => _ionMobilities;
+        private ArraySegment<double>? _ionMobilities; // Slice of values that may be shared across scans as in Diagonal PASEF
         public double? MinIonMobility { get; set; }
         public double? MaxIonMobility { get; set; }
         public int WindowGroup { get; set; } // For Bruker diaPASEF
+        public bool IsDiagonalPASEF => _scanningQuadMzLows?.Length > 0 && _scanningQuadMzHighs?.Length > 0;
+
+        public double[] ScanningQuadMzLows => _scanningQuadMzLows;
+        public double[] ScanningQuadMzHighs => _scanningQuadMzHighs;
+        internal double[] _scanningQuadMzLows { get; set; } // for combined-mode Bruker diagonal PASEF
+        internal double[] _scanningQuadMzHighs { get; set; } // for combined-mode Bruker diagonal PASEF
+
         public string ScanDescription { get; set; }
 
         public MsInstrumentConfigInfo InstrumentInfo { get; set; }
         public string InstrumentSerialNumber { get; set; }
         public string InstrumentVendor { get; set; }
+
+
+        public void SortByMz()
+        {
+            // ReSharper disable once PossibleNullReferenceException
+            ArraySortUtil.Sort(MzValues, IntensityValues, _ionMobilities);
+        }
+
+        // For dealing with Diagonal PASEF, where we get the entire frame at once -
+        // slice it up into groups of spectra sharing the same isolation window,
+        // so the general code base can handle it
+        public MsDataSpectrum CreateSlice(int offset, int length, MsDataFileImpl dataFile, bool pedantic = false)
+        {
+            var slice = (MsDataSpectrum)MemberwiseClone();
+
+            // ReSharper disable AssignNullToNotNullAttribute
+            slice.MzValues = new ArraySegment<double>(MzValues.Array, offset, length);
+            slice.IntensityValues = new ArraySegment<double>(IntensityValues.Array, offset, length);
+            if (pedantic && slice.Metadata.TotalIonCurrent.HasValue)
+            {
+                slice.Metadata = slice.Metadata.ChangeTotalIonCurrent(slice.IntensityValues.Sum());
+            }
+            if (_ionMobilities != null && _ionMobilities.Value.Count > 0)
+            {
+                // For diagonal DIA these will all be the same, will vary for regular diaPASEF
+                var im = IonMobilities[offset];
+                var singleIM = true;
+                for (var i = 1; i < length; i++)
+                {
+                    if (IonMobilities[offset + i] != im)
+                    {
+                        // Multiple IM values (regular diaPASEF)
+                        slice._ionMobilities = new ArraySegment<double>(_ionMobilities.Value.Array, offset, length);
+                        slice.IonMobilityMeasurementRangeLow = slice._ionMobilities.Min();
+                        slice.IonMobilityMeasurementRangeHigh = slice._ionMobilities.Max();
+                        singleIM = false;
+                        break;
+                    }
+                }
+                if (singleIM)
+                {
+                    // Single IM value
+                    slice.IonMobility = IonMobilityValue.GetIonMobilityValue(im, dataFile.IonMobilityUnits);
+                    slice._ionMobilities = null;
+                    slice.MaxIonMobility = im;
+                    slice.MinIonMobility = im;
+                    slice.IonMobilityMeasurementRangeLow = im; // Single value for this slice
+                    slice.IonMobilityMeasurementRangeHigh = im;
+                }
+            }
+            // ReSharper restore AssignNullToNotNullAttribute
+
+            if (_scanningQuadMzHighs != null) // As in diagonalPASEF
+            {
+                // Diagonal PASEF
+                var isolationWidth = (_scanningQuadMzHighs[offset] - _scanningQuadMzLows[offset]) / 2;
+                if (_scanningQuadMzHighs[offset] != _scanningQuadMzHighs[offset + length - 1])
+                {
+                    throw new InvalidDataException(@"Diagonal PASEF slice has multiple isolation windows. This should not happen.");
+                }
+                var precursor = new MsPrecursor()
+                {
+                    IsolationWindowLower = isolationWidth,
+                    IsolationWindowUpper = isolationWidth,
+                    IsolationWindowTargetMz =
+                        new SignedMz(_scanningQuadMzLows[offset] + isolationWidth, NegativeCharge)
+                };
+                slice.Precursors = ImmutableList.ValueOf(new[] { precursor });
+
+                // TODO(bspratt) CE value varies with isolation window in diagonal PASEF
+
+                var spectrumPrecursor = new SpectrumPrecursor(precursor.IsolationMz ?? SignedMz.ZERO,
+                    precursor.IsolationWindowLower, precursor.IsolationWindowUpper);
+   
+                var precursorsByMsLevel = new List<List<SpectrumPrecursor>>() {new List<SpectrumPrecursor>(){spectrumPrecursor}};
+                slice.Metadata = slice.Metadata.ChangePrecursors(precursorsByMsLevel);
+                slice._scanningQuadMzLows = null; // Single value for this slice
+                slice._scanningQuadMzHighs = null;
+            }
+            return slice;
+        }
+
+        /// <summary>
+        /// Split a diagonalPASEF spectrum with scanning quadruple arrays into a list of virtual spectra:
+        /// each virtual spectrum will have the same scanning quadrupole value as its isolation info.
+        /// Or, do the same for an MS1 spectrum based on ion mobility.
+        /// </summary>
+        public IEnumerable<MsDataSpectrum> GetVirtualSpectra(MsDataFileImpl dataFile)
+        {
+            var sliceStart = 0;
+            var currentValue = double.MinValue;
+            int i;
+            var values = ScanningQuadMzLows ?? _ionMobilities?.Array;
+            for (i = 0; i < values?.Length; i++)
+            {
+                if (values[i] != currentValue)
+                {
+                    if (i != sliceStart)
+                    {
+                        var slice = CreateSlice(sliceStart, i - sliceStart, dataFile);
+                        yield return slice;
+                        sliceStart = i;
+                    }
+                    currentValue =  values[i];
+                }
+            }
+            // Last slice
+            if (i != sliceStart)
+            {
+                yield return CreateSlice(sliceStart, i - sliceStart, dataFile);
+            }
+        }
+
 
         public static int WatersFunctionNumberFromId(string id, bool isCombinedIonMobility)
         {
@@ -2020,7 +2293,7 @@ namespace pwiz.ProteowizardWrapper
 
         public override string ToString() // For debugging convenience, not user-facing
         {
-            return $@"id={Id} idx={Index} mslevel={Level} rt={RetentionTime} im={MinIonMobility??_ionMobility?.Mobility}:{MaxIonMobility??_ionMobility?.Mobility}";
+            return $@"id={Id} idx={Index} msN={Level} rt={RetentionTime:F2} iso={string.Join(@",",Precursors?.Select(p=>p.IsolationMz?.RawValue.ToString(@"F2")) ?? Array.Empty<string>())} im={MinIonMobility??_ionMobility?.Mobility:F4}:{MaxIonMobility??_ionMobility?.Mobility:F4}";
         }
     }
 
@@ -2030,16 +2303,19 @@ namespace pwiz.ProteowizardWrapper
         public string Ionization { get; private set; }
         public string Analyzer { get; private set; }
         public string Detector { get; private set; }
+        public Dictionary<int, List<DiaFrameMsMsWindowInfo>> DiaFrameMsMsWindows { get; private set; } // For Bruker diaPASEF
 
         public static readonly MsInstrumentConfigInfo EMPTY = new MsInstrumentConfigInfo(null, null, null, null);
 
         public MsInstrumentConfigInfo(string model, string ionization,
-                                      string analyzer, string detector)
+                                      string analyzer, string detector,
+                                      Dictionary<int, List<DiaFrameMsMsWindowInfo>> diaFrameMsMsWindows = null)
         {
             Model = model != null ? model.Trim() : string.Empty;
             Ionization = ionization != null ? ionization.Replace('\n', ' ').Trim() : string.Empty;
             Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : string.Empty;
             Detector = detector != null ? detector.Replace('\n', ' ').Trim() : string.Empty;
+            DiaFrameMsMsWindows = diaFrameMsMsWindows;
         }
 
         public bool IsEmpty

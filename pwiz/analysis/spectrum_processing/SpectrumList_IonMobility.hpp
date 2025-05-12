@@ -66,11 +66,15 @@ class PWIZ_API_DECL SpectrumList_IonMobility : public msdata::SpectrumListWrappe
     /// for Waters SONAR data, given a "drift" bin return the nominal m/z filter value of that bin.  If bin is outside the SONAR range, return value will be 0
     virtual double sonarBinToPrecursorMz(int bin) const;
 
+    /// for Bruker TIMS data, returns true if the data is in diagonal PASEF mode
+    virtual bool isDiagonalPASEF() const;
+
 private:
     enum class IonMobilityEquipment { None, AgilentDrift, WatersDrift, WatersSonar, BrukerTIMS, ThermoFAIMS, UIMFDrift, MobilIonDrift };
     IonMobilityEquipment equipment_;
     IonMobilityUnits units_;
     bool has_mzML_combined_ion_mobility_;
+    bool isDiagonalPASEF_;
     msdata::SpectrumListIonMobilityBase* sl_;
 };
 
