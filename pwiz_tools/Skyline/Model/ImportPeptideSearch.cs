@@ -352,7 +352,16 @@ namespace pwiz.Skyline.Model
             {
                 // Search the directories of the search files
                 foreach (var searchFilename in SearchFilenames)
-                    yield return Path.GetDirectoryName(searchFilename);
+                {
+                    string searchFileDirectory = Path.GetDirectoryName(searchFilename);
+                    yield return searchFileDirectory;
+
+                    DirectoryInfo parentDir = Directory.GetParent(searchFileDirectory);
+                    if (parentDir != null)
+                    {
+                        yield return parentDir.ToString();
+                    }
+                }
             }
         }
 

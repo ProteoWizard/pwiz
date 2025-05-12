@@ -342,7 +342,7 @@ namespace pwiz.Skyline.Model.Lib
                     .Where(entry => quantPeptides.Contains(entry.Key))
                     .Select(entry => MakeSpectrumInfo(entry.Key, entry.Value, sourceFileIds));
                 SetLibraryEntries(FilterInvalidLibraryEntries(ref status, spectrumInfos));
-                _sourceFiles = new LibraryFiles(sourceFiles);
+                _sourceFiles = new LibraryFiles(sourceFiles, Enumerable.Repeat(WorkflowType.DIA, sourceFiles.Length));
                 // ReSharper restore PossibleMultipleEnumeration
                 loader.UpdateProgress(status.Complete());
                 Console.Out.WriteLine("Loaded {0} in {1}", FilePath, DateTime.UtcNow - start);
@@ -430,7 +430,7 @@ namespace pwiz.Skyline.Model.Lib
                         sourceFiles.Add(Encoding.UTF8.GetString(bytes));
                     }
                     int spectrumInfoCount = PrimitiveArrays.ReadOneValue<int>(stream);
-                    _sourceFiles = new LibraryFiles(sourceFiles);
+                    _sourceFiles = new LibraryFiles(sourceFiles, Enumerable.Repeat(WorkflowType.DIA, sourceFiles.Count));
                     List<ElibSpectrumInfo> spectrumInfos = new List<ElibSpectrumInfo>();
                     while (spectrumInfos.Count < spectrumInfoCount)
                     {
