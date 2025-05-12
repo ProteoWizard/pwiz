@@ -74,6 +74,20 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public abstract bool AsyncFetchContents(RemoteUrl remoteUrl, out RemoteServerException remoteException);
 
+        /// <summary>
+        /// Call a remote API.
+        ///
+        /// This method first checks to see whether a response already exists for this combination of URI + response type.
+        /// If so, it is returned. If not, it makes the API call asynchronously.
+        ///
+        /// If a new request must be made, this will raise a <see cref="ContentsAvailable"/> event.
+        /// </summary>
+        /// <typeparam name="T">Type created when un-marshaling the response.</typeparam>
+        /// <param name="requestUri">URI of the remote API to call</param>
+        /// <param name="fetcher">Function that makes the request and handles the response. Often, the response body is JSON
+        ///                       that is un-marshaled into one or more strongly typed objects. </param>
+        /// <param name="remoteException">Exception that occurs processing the response. For example: authentication or marshaling issues.</param>
+        /// <returns>True if the response exists in the cache and false otherwise, including when making a new remote request</returns>
         protected bool AsyncFetch<T>(Uri requestUri, Func<Uri, T> fetcher, out RemoteServerException remoteException)
         {
             if (null == requestUri)
@@ -120,6 +134,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         }
 
+        /// <summary>
+        /// Call a remote API, cache the results, and fire the <see cref="ContentsAvailable"/> event.
+        /// </summary>
+        /// <typeparam name="T">Type created when un-marshaling the response.</typeparam>
+        /// <param name="requestUri">URI of the remote API to call</param>
+        /// <param name="fetcher">Function that makes the request and handles the response. Often, the response body is JSON
+        ///                       that is un-marshaled into one or more strongly typed objects. </param>
         private void FetchAndStore<T>(Uri requestUri, Func<Uri, T> fetcher)
         {
             var key = new RequestKey(typeof(T), requestUri);

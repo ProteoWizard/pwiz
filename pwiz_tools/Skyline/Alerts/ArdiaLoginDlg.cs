@@ -39,6 +39,15 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Alerts
 {
+    /// <summary>
+    /// Form for authenticating a connection to the Ardia API. Operates in two modes:
+    ///
+    ///     (1) In tests: using a browser embedded in Skyline
+    ///     (2) Otherwise: using the System Browser running in a remote process
+    ///
+    /// Both experiences authenticate users with the Ardia API and ultimately set a value for 
+    /// the Bff-Host cookie used in subsequent API calls. For example: to import results files.
+    /// </summary>
     public partial class ArdiaLoginDlg : FormEx
     {
         private static readonly bool FORCE_DO_REGISTRATION_WITH_ARDIA_STEP  = false;
@@ -285,6 +294,12 @@ namespace pwiz.Skyline.Alerts
             Settings.Default.ArdiaRegistrationCodeEntries[_ardiaServerURL_BaseURL] = entry;
         }
 
+        /// <summary>
+        /// Gets a function that provides an <see cref="HttpClient"/> for calling the Ardia API.
+        /// The client is pre-configured with auth headers / cookies pre-set and sets the 
+        /// Accept header to "application/json".
+        /// </summary>
+        /// <returns>An <see cref="HttpClient"/> configured for calling the Ardia API.</returns>
         private Func<HttpClient> GetFactory()
         {
             return () =>
@@ -460,6 +475,8 @@ namespace pwiz.Skyline.Alerts
             browserProcess.Start();
         }
 
+        // Login to Ardia using the system browser. If not already set, this makes a sequence of HTTP calls
+        // to obtain a session token (Bff-Host cookie).
         private async void StartLogin_WithArdia_ButtonClicked()
         {
             wizardPagesLoginPhases.SelectedIndex = LOGIN_IN_PROGRESS_wizardPagesLoginPhases_INDEX;
@@ -774,7 +791,17 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        // Method used to initiate the browser login process
+        /// <summary>
+        /// Step #1 (of 3) using the System Browser to authenticate with the Ardia API. This is used by Skyline.exe -
+        /// but IS NOT USED during tests.
+        ///
+        /// This initiates the authentication process, assuming Skyline is already registered as an Ardia client. 
+        /// Opens the System Browser in a new process and starts a System.Net.HttpListener on a port (ex: 5001) to
+        /// receive responses from the System Browser, which redirects to https://localhost:5001/signin-oidc/.
+        /// 
+        /// Sends the first of a series of requests to the Ardia API and registers a callback to handle the response
+        /// in <see>RequestCallback</see>
+        /// </summary>
         private void InitiateBrowserLoginProcess()
         {
             int portNumber_StartNumber = 5001;
@@ -836,7 +863,11 @@ namespace pwiz.Skyline.Alerts
             var result = _httpListener.BeginGetContext(RequestCallback, _httpListener);
         }
 
-        // Method used to handle the request callback from the HttpListener when the user logs in and retrieve the PAT token
+        /// <summary>
+        /// Step #2 (of 3) using the System Browser to authenticate with the Ardia API. Handles the response to the
+        /// initial HTTP call and sends a follow-up request to get a personal access token (PAT).
+        /// <param name="asyncResult">Response for the request to login.</param>
+        /// </summary>
         private async void RequestCallback(IAsyncResult asyncResult)
         {
             try
@@ -889,7 +920,12 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        // Method used to handle the PAT request callback from the HttpListener when the user logs in and retrieve the session cookie
+        /// <summary>
+        /// Step #3 (of 3) using the System Browser to authenticate with the Ardia API.
+        /// Handles the response to the request to get a PAT and sends the next HTTP request to exchange the
+        /// PAT for a session cookie. If successful, this completes the authentication process.
+        /// <param name="asyncResult">Response for the request to obtain a PAT.</param>
+        /// </summary>
         private async void PatRequestCallback(IAsyncResult asyncResult)
         {
             try
@@ -1598,7 +1634,6 @@ namespace pwiz.Skyline.Alerts
 
             await CheckForBffHostCookie();
         }
-
 
         private async Task CheckForBffHostCookie()
         {

@@ -33,6 +33,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public static readonly ArdiaUrl Empty = new ArdiaUrl(UrlPrefix);
         public static string UrlPrefix { get { return RemoteAccountType.ARDIA.Name + @":"; } }
         public string ServerApiUrl => ServerUrl.Replace(@"https://", @"https://api.");
+
+        // The Ardia API expects calls routed through '/session-management/bff' to include:
+        //  (1) the applicationCode header
+        //  (2) Bff-Host cookie
         public string NavigationBaseUrl => $@"{ServerApiUrl}/session-management/bff/navigation/api/v1/navigation";
         public string SequenceBaseUrl => $@"{ServerApiUrl}/session-management/bff/standard-sequence/api/v1/";
         public string SynchronizedSequenceBaseUrl => $@"{ServerApiUrl}/session-management/bff/sequence/api/v1/";
@@ -116,7 +120,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             }
         }
 
-        // Retrieves a presigned download URL for raw file from the Ardia platform.
+        // Retrieves a pre-signed download URL for raw file from the Ardia platform.
         private string GetPresignedUrl(HttpClient client, string storageId)
         {
             // Encode the storageId to be used in the URL
@@ -166,8 +170,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
         }
 
-        // adapted from https://stackoverflow.com/a/57439154/638445
-
+        // Approach to reporting progress from reading from a FileStream adapted from:
+        //      https://stackoverflow.com/a/57439154/638445
         public override MsDataFileImpl OpenMsDataFile(OpenMsDataFileParams openMsDataFileParams)
         {
             var rawFilepath = Path.Combine(openMsDataFileParams.DownloadPath, RawName);
