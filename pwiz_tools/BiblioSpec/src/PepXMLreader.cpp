@@ -80,6 +80,7 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
                            const ProgressIndicator* parentProgress)
 : BuildParser(maker, xmlfilename, parentProgress),
   analysisType_(UNKNOWN_ANALYSIS),
+  workflowType_(DDA),
   scoreType_(PEPTIDE_PROPHET_SOMETHING),
   lastFilePosition_(0),
   state(STATE_INIT),
@@ -162,6 +163,10 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            analysisType_ = CRUX_ANALYSIS;
            setScoreType(PERCOLATOR_QVALUE);
            probCutOff = getScoreThreshold(SQT);
+       }
+       else if (analysisType_ == MSFRAGGER_ANALYSIS && paramName == "data_type")
+       {
+           workflowType_ = paramValue == "0" ? DDA : DIA;
        }
    }
    //get massType and search engine
@@ -495,7 +500,7 @@ void PepXMLreader::endElement(const XML_Char* name)
             }
         }
         if (!isScoreLookup_) {
-            buildTables(scoreType_);
+            buildTables(scoreType_, "", true, workflowType_);
         }
         if (originalReader) {
             delete specReader_;

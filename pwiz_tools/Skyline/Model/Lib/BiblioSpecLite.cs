@@ -313,13 +313,14 @@ namespace pwiz.Skyline.Model.Lib
                         // 1. The number of matching entries in the RefSpectra is "BestSpectra".
                         // 2. The number of entries in the RetentionTimes table is "MatchedSpectra".
                         // 3. The score type for the entry is joined from "ScoreTypes".
-                        // Also, select "ssf.*" because not all tables have a column "cutoffScore" or "idFileName".
                         var cols = new List<string>();
                         cols.Add("ssf.fileName");
                         if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "idFileName"))
                             cols.Add("ssf.idFileName");
                         if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "cutoffScore"))
                             cols.Add("ssf.cutoffScore");
+                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "workflowType"))
+                            cols.Add("ssf.workflowType");
                         cols.Add("st.scoreType");
                         if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "ScoreTypes", "probabilityType"))
                             cols.Add("st.probabilityType");
@@ -338,6 +339,7 @@ namespace pwiz.Skyline.Model.Lib
                             int icolFileName = GetColumnIndex(reader, @"fileName");
                             int icolIdFileName = GetColumnIndex(reader, @"idFileName");           // May be -1
                             int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");         // May be -1
+                            int icolWorkflowType = GetColumnIndex(reader, @"workflowType");       // May be -1
                             int icolBestSpectra = GetColumnIndex(reader, @"BestSpectra");         // May be missing causing exception
                             int icolMatchedSpectra = GetColumnIndex(reader, @"MatchedSpectra");   // May be missing
                             int icolScoreType = GetColumnIndex(reader, @"scoreType");             // May be missing
@@ -351,10 +353,15 @@ namespace pwiz.Skyline.Model.Lib
                                 {
                                     idFilename = reader.GetString(icolIdFileName);
                                 }
+                                WorkflowType workflowType = WorkflowType.DDA;
+                                if (icolWorkflowType > 0 && !reader.IsDBNull(icolWorkflowType))
+                                {
+                                    workflowType = (WorkflowType) reader.GetInt32(icolWorkflowType);
+                                }
                                 SpectrumSourceFileDetails sourceFileDetails;
                                 if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
                                 {
-                                    sourceFileDetails = new SpectrumSourceFileDetails(filename, idFilename);
+                                    sourceFileDetails = new SpectrumSourceFileDetails(filename, idFilename, workflowType);
                                     detailsByFileName.Add(filename, sourceFileDetails);
                                 }
                                 if (!reader.IsDBNull(icolBestSpectra))
@@ -598,7 +605,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             id,
             fileName,
-            idFileName
+            idFileName,
+            workflowType
         }
 
         private enum ScoreTypes
@@ -895,13 +903,15 @@ namespace pwiz.Skyline.Model.Lib
                         int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
                         int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
                         int iIdFilename = reader.GetOrdinal(SpectrumSourceFiles.idFileName); // Save the search result file, too (may be distinct from the spectra source file)
+                        int iWorkflowType = reader.GetOrdinal(SpectrumSourceFiles.workflowType);
 
                         while (reader.Read())
                         {
                             string filename = reader.GetString(iFilename);
                             string idFilename = iIdFilename < 0 || reader.IsDBNull(iIdFilename) ? null : reader.GetString(iIdFilename);
+                            var workflowType = iWorkflowType < 0 || reader.IsDBNull(iWorkflowType) ? WorkflowType.DDA : (WorkflowType) reader.GetInt32(iWorkflowType);
                             int id = reader.GetInt32(iId);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty));
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty, workflowType));
                         }
                     }
 
@@ -970,6 +980,7 @@ namespace pwiz.Skyline.Model.Lib
                         outStream.Write(BitConverter.GetBytes(searchResultsFileNameBytes.Length), 0, sizeof(int));
                         outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
                         outStream.Write(searchResultsFileNameBytes, 0, searchResultsFileNameBytes.Length);
+                        outStream.WriteByte((byte) librarySourceFile.WorkflowType);
                     }
                     // Terminate with zero ID and zero name length
                     var zeroBytes = BitConverter.GetBytes(0);
@@ -977,6 +988,7 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(zeroBytes, 0, sizeof(int));
                     outStream.Write(zeroBytes, 0, sizeof(int));
                     outStream.Write(zeroBytes, 0, sizeof(int));
+                    outStream.WriteByte(0);
                 }
 
                 long scoreTypesPosition = 0;
@@ -1171,12 +1183,14 @@ namespace pwiz.Skyline.Model.Lib
                             int idfilenameLength = GetInt32(sourceHeader, (int)SourceHeader.id_filename_length);
                             string filename = ReadString(stream, filenameLength);
                             string idfilename = ReadString(stream, idfilenameLength);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId, filename, idfilename)); 
+                            var workflowType = (WorkflowType) stream.ReadByte();
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId, filename, idfilename, workflowType)); 
                         }
                     }
 
                     _librarySourceFiles = librarySourceFiles.ToArray();
-                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath));
+                    _libraryFiles = new LibraryFiles(_librarySourceFiles.Select(file => file.FilePath),
+                        _librarySourceFiles.Select(file => file.WorkflowType));
 
                     var scoreTypes = new Dictionary<int, string>();
                     if (locationScoreTypes != 0)
@@ -2390,16 +2404,18 @@ namespace pwiz.Skyline.Model.Lib
 
         private struct BiblioLiteSourceInfo
         {
-            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath) : this()
+            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath, WorkflowType workflowType) : this()
             {
                 Id = id;
                 FilePath = filePath;
                 IdFilePath = idFilePath;
+                WorkflowType = workflowType;
             }
 
             public int Id { get; private set; }
             public string FilePath { get; private set; } // File from which the spectra were taken (may be same as idFilePath if spectra are taken from search file)
             public string IdFilePath { get; private set; } // File from which the IDs were taken (e.g. search results file from Mascot etc)
+            public WorkflowType WorkflowType { get; private set; } // DDA or DIA
 
             public string BaseName
             {

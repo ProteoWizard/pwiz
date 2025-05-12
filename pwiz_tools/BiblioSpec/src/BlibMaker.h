@@ -50,9 +50,10 @@ class BlibMaker
     // integer values minorVersion, the minorVersion field has been taken
     // for use as a schemaVersion
 #define MAJOR_VERSION_CURRENT 0
-#define MINOR_VERSION_CURRENT 10
+#define MINOR_VERSION_CURRENT 11
 
     // Make sure you update version_history_comment (below) when bumping the schema version
+#define MIN_VERSION_WORKFLOW  11 // Version 11 adds Workflow as a column in SpectrumSourceFile
 #define MIN_VERSION_TIC       10 // Version 10 adds TIC as a column
 #define MIN_VERSION_PROTEINS   9 // Version 9 adds Proteins and RefSpectraProteins tables
 #define MIN_VERSION_RT_BOUNDS  8 // Version 8 adds startTime and endTime
@@ -64,6 +65,7 @@ class BlibMaker
 #define MIN_VERSION_IMS        2 // Version 2 adds ion mobility information
 const char * version_history_comment =  // This gets written to the output db
         "-- Schema version number:\n"
+        "-- Version 11 adds Workflow as a column in SpectrumSourceFile\n"
         "-- Version 10 adds TIC as a column\n"
         "-- Version 9 adds Proteins and RefSpectraProteins tables\n"
         "-- Version 8 adds startTime and endTime\n"
@@ -110,7 +112,7 @@ public:
                   const char* msg = NULL) const;
 
     int getFileId(const std::string& file, double cutoffScore);
-    int addFile(const std::string& file, double cutoffScore, const std::string& idFile);
+    int addFile(const std::string& file, double cutoffScore, const std::string& idFile, WORKFLOW_TYPE workflowType);
     void insertPeaks(int spectraID, int levelCompress, int peaksCount, 
                      double* pM, float* pI);
     void beginTransaction();
