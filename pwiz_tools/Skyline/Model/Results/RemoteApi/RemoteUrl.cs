@@ -22,6 +22,7 @@ using System.Collections.Specialized;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Principal;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 
@@ -87,6 +88,31 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public string ServerUrl { get; private set; }
         public string Username { get; private set; }
         public DateTime? ModifiedTime { get; private set; }
+
+        public bool BelongsToAccount(RemoteAccount account)
+        {
+            if (account == null)
+            {
+                return false;
+            }
+            if (account.AccountType != AccountType)
+            {
+                return false;
+            }
+            return account.ServerUrl == ServerUrl && account.Username == Username;
+        }
+        public bool SameAccountAs(RemoteUrl url)
+        {
+            if (url == null)
+            {
+                return false;
+            }
+            if (url.AccountType != AccountType)
+            {
+                return false;
+            }
+            return url.ServerUrl == ServerUrl && url.Username == Username;
+        }
 
         public RemoteUrl ChangeModifiedTime(DateTime? modifiedTime)
         {

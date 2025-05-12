@@ -58,9 +58,6 @@ namespace pwiz.Skyline.FileUI
         private string _instrumentType;
 
 
-        //  TODO  [RC] Save template URL to Settings.
-        private WatersConnectAcquisitionMethodUrl _watersConnectTemplate;
-
         private readonly ExportDlgProperties _exportProperties;
 
         private CancellationTokenSource _cancellationTokenSource;
@@ -331,7 +328,6 @@ namespace pwiz.Skyline.FileUI
             get { return _fileType; }
         }
 
-        public string TemplateMethodFieldContent => textTemplateFile.Text;
         public string InstrumentTypeSelectedText => comboInstrument.SelectedItem.ToString();
 
         /// <summary>
@@ -1005,7 +1001,7 @@ namespace pwiz.Skyline.FileUI
                                             templateName);
                     return;
                 }
-                if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT) && _watersConnectTemplate == null)
+                if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT) && !(textTemplateFile.Tag is WatersConnectAcquisitionMethodUrl methodUrl))
                 {
                     helper.ShowTextBoxError(textTemplateFile, "Instrument Type is Waters Connect but Template file is not selected from Waters Connect");
                     return;
@@ -1239,20 +1235,29 @@ namespace pwiz.Skyline.FileUI
             if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 // Select Output Folder and Name
-                using (var saveDlg = new SaveWatersConnectMethodDialogNE(
-                           Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>().Select(a => a as RemoteAccount).ToList()))
-                {   // Point the browser to the same folder as the template
-                    saveDlg.InitialDirectory = _watersConnectTemplate.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
-                        .ChangePathParts(UrlPath.GetFilePathParts(_watersConnectTemplate.EncodedPath)); 
+                using var saveDlg = new SaveWatersConnectMethodDialogNE(
+                    Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>()
+                        .Select(a => a as RemoteAccount).ToList());
+                var templateUrl = textTemplateFile.Tag as WatersConnectAcquisitionMethodUrl;
+                // Point the browser to the same folder as the template
+                saveDlg.InitialDirectory = templateUrl
+                    .ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+                    .ChangePathParts(UrlPath.GetFilePathParts(templateUrl.EncodedPath));
 
-                    if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
-                        return;
+                if (saveDlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
 
-                    var targetFolder = saveDlg.CurrentDirectory as WatersConnectUrl;
-                    // we save the output method name as element of the target folder path to fit into the common exporter architecture
-                    outputPath = targetFolder.ChangePathParts(targetFolder.GetPathParts().Concat(new[] { saveDlg.MethodName })).ToString();
+                var targetFolder = saveDlg.CurrentDirectory as WatersConnectUrl;
+                if (!targetFolder.SameAccountAs(templateUrl))
+                {
+                    MultiButtonMsgDlg.Show(this,
+                        "Selected folder is on a different Waters Connect account than the template. Please select a folder under the same account.", MessageBoxButtons.OK);
+                    return;
                 }
-                templateName = _watersConnectTemplate.ToString();
+
+                // we save the output method name as element of the target folder path to fit into the common exporter architecture
+                outputPath = targetFolder.ChangePathParts(targetFolder.GetPathParts().Concat(new[] { saveDlg.MethodName })).ToString();
+                templateName = templateUrl.ToString();
             }
             else
             {
@@ -1836,10 +1841,6 @@ namespace pwiz.Skyline.FileUI
             }
             _instrumentType = selectedInstrumentType;
 
-            // User cannot edit remote URL.
-            // TODO: [RC] Add a tooltip with full URL text
-            textTemplateFile.Enabled = !Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT);
-
             // Temporary code until we support Agilent export of DIA isolation lists.
             if (Equals(_instrumentType, ExportInstrumentType.AGILENT_TOF) && IsDia)
             {
@@ -1855,18 +1856,36 @@ namespace pwiz.Skyline.FileUI
 
             MethodTemplateFile templateFile;
 
-            if (!Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
+            if (Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
+            {
+                // User cannot edit remote URL.
+                // TODO: [RC] Add a tooltip with full URL text
+                textTemplateFile.Enabled = !Equals(_instrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT);
+                if (Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out var templateFileUrl))
+                {
+                    try
+                    {
+                        var templateUrl = new WatersConnectAcquisitionMethodUrl(templateFileUrl.FilePath);
+                        textTemplateFile.Text = templateUrl.GetFilePath();
+                        textTemplateFile.Tag = templateUrl;
+                        helpTip.SetToolTip(textTemplateFile, templateUrl.ToString());  // Show full URL string in the tooltip
+                    }
+                    catch (ArgumentException ex)
+                    {   // If settings contain invalid URL, clear the text box and set the tag to null. No need to show the error.
+                        textTemplateFile.Text = string.Empty;
+                        textTemplateFile.Tag = null;
+                        // Reset the tooltip to the original text
+                        var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
+                        helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+                    }
+                }
+            }
+            else
             {
                 textTemplateFile.Text =
                     Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile)
                         ? templateFile.FilePath
-                        : new WatersConnectAcquisitionMethodUrl(templateFile.FilePath).LastPathPart;
-            }
-            else
-            {
-                if (_watersConnectTemplate != null)
-                    textTemplateFile.Text = _watersConnectTemplate.LastPathPart;
-                _watersConnectTemplate = null;
+                        : string.Empty;
             }
 
             var methodType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
@@ -2235,33 +2254,34 @@ namespace pwiz.Skyline.FileUI
 
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
-
-            //var instrument = InstrumentFactory.GetInstrument(InstrumentType);
-
             if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT))
             {
                 using (var dlgOpen = new OpenFileDialogNEWatersConnectMethod(
                            Settings.Default.RemoteAccountList.OfType<WatersConnectAccount>().Select(a => a as RemoteAccount).ToList()))
                 {
+                    if (textTemplateFile.Tag is WatersConnectUrl templateUrl)
+                    {
+                        // Point the browser to the same folder as the selected template if there is one
+                        dlgOpen.InitialDirectory = templateUrl
+                            .ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods)
+                            .ChangePathParts(UrlPath.GetFilePathParts(templateUrl.EncodedPath));
+                    }
                     if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                        return;
 
-
-                   // TODO Probably do something different setting different properties in "Settings.Default"
-
                     var watersConnectUrl = dlgOpen.MethodUrl;
-
-                    _watersConnectTemplate = watersConnectUrl;
-
+                    textTemplateFile.Tag = watersConnectUrl;
                     textTemplateFile.Text = watersConnectUrl.GetFilePath();
+                    helpTip.SetToolTip(textTemplateFile, watersConnectUrl.ToString());  // Show full URL string in the tooltip
                 }
-
                 return;
             }
-
             //  Clear since not Waters Connect
-            _watersConnectTemplate = null;
-            
+            textTemplateFile.Tag = null;
+            // Reset the tooltip to the original text
+            var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
+            helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+
             string templateName = textTemplateFile.Text;
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
                 Equals(InstrumentType, ExportInstrumentType.BRUKER_TOF))

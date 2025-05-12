@@ -99,6 +99,11 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        protected override RemoteUrl GetRootUrl()
+        {
+            return (base.GetRootUrl() as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
+        }
+
         private void Open()
         {
             // take the current directory and combine it with the file name entered in the text box.

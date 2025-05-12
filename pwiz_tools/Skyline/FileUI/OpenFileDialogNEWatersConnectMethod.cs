@@ -84,6 +84,11 @@ namespace pwiz.Skyline.FileUI
             Open();
         }
 
+        protected override RemoteUrl GetRootUrl()
+        {   // We need to make sure the root URL has the correct type for method retrieval
+            return (base.GetRootUrl() as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
+        }
+
         public void Open()
         {
             if (listView.SelectedItems.Count == 0)

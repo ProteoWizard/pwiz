@@ -206,7 +206,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         // If there is exactly one account, then skip the level that
                         // lists the accounts to choose from.
-                        value = _remoteAccounts.First().GetRootUrl();
+                        value = GetRootUrl();
                     }
                 }
                 if (value != null)
@@ -216,6 +216,11 @@ namespace pwiz.Skyline.FileUI
                     populateComboBoxFromDirectory(_currentDirectory);
                 }
             }
+        }
+
+        protected virtual RemoteUrl GetRootUrl()
+        {
+            return _remoteAccounts.First().GetRootUrl();
         }
 
         public RemoteSession RemoteSession
