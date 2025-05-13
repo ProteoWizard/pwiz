@@ -252,7 +252,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Executing peptdeep.
+        ///   Looks up a localized string similar to Running AlphaPeptDeep.
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep {
             get {
@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to build library by executing the peptdeep cmd-flow command..
+        ///   Looks up a localized string similar to Failed to build library by running the AlphaPeptDeep cmd-flow command..
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Failed_to_build_library_by_executing_the_peptdeep_cmd_flow_command_ {
             get {
@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to generate settings.yaml file by executing the peptdeep export-settings command..
+        ///   Looks up a localized string similar to Failed to generate settings.yaml file by running the AlphaPeptDeep export-settings command..
         /// </summary>
         public static string AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Failed_to_generate_settings_yaml_file_by_executing_the_peptdeep_export_settings_command_ {
             get {

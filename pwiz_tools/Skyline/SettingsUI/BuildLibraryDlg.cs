@@ -558,7 +558,7 @@ namespace pwiz.Skyline.SettingsUI
             OkWizardPage();
         }
 
-        public bool PythonRequirementMet()
+        public bool ValidateLibraryBuilderInputs()
         {
             if (radioCarafeSource.Checked || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {

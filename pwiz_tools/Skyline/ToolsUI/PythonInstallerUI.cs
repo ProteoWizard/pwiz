@@ -26,10 +26,10 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    
     public static class PythonInstallerUI
     {
         private static IList<PythonTaskBase> _tasks;
@@ -45,31 +45,39 @@ namespace pwiz.Skyline.ToolsUI
             pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
             List<PythonTaskBase> abortedTasks = new List<PythonTaskBase>();
-            bool abortTask = false;
-            foreach (var task in _tasks)
+            List<PythonTaskBase> tasksToDo = new List<PythonTaskBase>();
+            IProgressStatus _progressStatus = new ProgressStatus();
+
+            using var waitDlg = new LongWaitDlg();
+            try
             {
-                try
+                //waitDlg.PerformWork(parent, 50, progressMonitor =>
+                foreach (var task in _tasks)
                 {
+                     
                     if (task.IsNvidiaTask)
                     {
-                        if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD || userAnswerToCuda == @"No")
+                        if (PythonInstaller.SimulatedInstallationState ==
+                            PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD ||
+                            userAnswerToCuda == @"No")
                         {
-                            if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
-                            abortTask = true;
+                            if (pythonInstaller.NumTotalTasks > 0) 
+                                pythonInstaller.NumTotalTasks--;
                         }
                         else if (userAnswerToCuda != @"No")
                         {
                             var choice = MessageDlg.Show(parent, string.Format(
-                                ToolsUIResources.PythonInstaller_Install_Nvidia_Library), false, MessageBoxButtons.YesNoCancel);
+                                    ToolsUIResources.PythonInstaller_Install_Nvidia_Library), false,
+                                MessageBoxButtons.YesNoCancel);
                             if (choice == DialogResult.No)
                             {
                                 userAnswerToCuda = @"No";
                                 if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
-                                abortTask = true;
                             }
                             else if (choice == DialogResult.Cancel)
                             {
-                                if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                                if (pythonInstaller.NumTotalTasks > 0) 
+                                    pythonInstaller.NumTotalTasks--;
                                 return choice;
                             }
                             else if (choice == DialogResult.Yes)
@@ -77,34 +85,43 @@ namespace pwiz.Skyline.ToolsUI
                                 userAnswerToCuda = @"Yes";
                                 pythonInstaller.WriteInstallNvidiaBatScript();
                                 var nvidiaAdminChoice = MessageDlg.Show(parent, string.Format(
-                                    ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
-                                    PythonInstaller.InstallNvidiaLibrariesBat), false, MessageBoxButtons.OKCancel);
-                         
+                                        ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
+                                        PythonInstaller.InstallNvidiaLibrariesBat), false,
+                                    MessageBoxButtons.OKCancel);
+
                                 //Download
                                 if (nvidiaAdminChoice == DialogResult.Cancel)
                                 {
                                     userAnswerToCuda = @"Cancel";
-                                    if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                                    if (pythonInstaller.NumTotalTasks > 0) 
+                                        pythonInstaller.NumTotalTasks--;
                                     return nvidiaAdminChoice;
                                 }
                                 else if (nvidiaAdminChoice == DialogResult.OK)
                                 {
                                     // Attempt to run
-                                    abortTask = !PerformTaskAction(parent, task);
+                                    //abortTask = !PerformTaskAction(parent, task);
+                                    //task.DoAction(progressMonitor);
+                                    tasksToDo.Add(task);
                                 }
                             }
                         }
                         else
                         {
-                            abortTask = !PerformTaskAction(parent, task);
+                            //                            abortTask = !PerformTaskAction(parent, task);
+                            //task.DoAction(progressMonitor);
+                            tasksToDo.Add(task);
                         }
                     }
                     else if (task.IsEnableLongPathsTask)
                     {
-                        var choice = MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, false, MessageBoxButtons.OKCancel);
+                        var choice = MessageDlg.Show(parent,
+                            ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, false,
+                            MessageBoxButtons.OKCancel);
                         if (choice == DialogResult.Cancel)
                         {
-                            if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
+                            if (pythonInstaller.NumTotalTasks > 0) 
+                                pythonInstaller.NumTotalTasks--;
                             return choice;
                         }
                         else if (choice == DialogResult.OK)
@@ -113,12 +130,27 @@ namespace pwiz.Skyline.ToolsUI
                             pythonInstaller.EnableWindowsLongPaths();
                         }
                     }
-                    else 
+                    else
                     {
-                        abortTask = !PerformTaskAction(parent,task);
+                        //abortTask = !PerformTaskAction(parent, task);
+                        tasksToDo.Add(task);
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageDlg.ShowWithException(parent, (ex.InnerException ?? ex).Message, ex);
+            }
 
-                    if (!abortTask)
+            var dlgResult = DialogResult.OK;
+            waitDlg.PerformWork(parent, 50, progressMonitor =>
+            {
+                foreach (var task in tasksToDo)
+                {
+                    waitDlg.Message = task.InProgressMessage();
+                    waitDlg.ProgressValue = -1;
+                    task.DoAction(progressMonitor);
+                    if (!waitDlg.IsCanceled)
                     {
                         pythonInstaller.NumCompletedTasks++;
                     }
@@ -126,18 +158,23 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         abortedTasks.Add(task);
                         if (userAnswerToCuda == @"No" && abortedTasks.Count == 1)
-                            return DialogResult.No;
-                        return DialogResult.Cancel;
+                        {
+                            dlgResult = DialogResult.No;
+                            return;
+                        }
+
+                        dlgResult = DialogResult.Cancel;
+                        return;
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageDlg.ShowWithException(parent, (ex.InnerException ?? ex).Message, ex);
-                    return DialogResult.Cancel;
-                }
-            }
+            });
+            if (dlgResult != DialogResult.OK)
+                return dlgResult;
+        
+
             Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");
-            
+
+
             pythonInstaller.CheckPendingTasks();
 
             if (pythonInstaller.HavePythonTasks)
@@ -186,15 +223,6 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             return result;
-        }
-
-        private static bool PerformTaskAction(Control parent, PythonTaskBase task, int startProgress = 0)
-        {
-            //IProgressStatus proStatus = null;
-            using var waitDlg = new LongWaitDlg();
-            waitDlg.Message = task.InProgressMessage();
-            waitDlg.PerformWork(parent, 50, progressMonitor => task.DoAction(progressMonitor));
-            return !waitDlg.IsCanceled;
         }
     }
 }

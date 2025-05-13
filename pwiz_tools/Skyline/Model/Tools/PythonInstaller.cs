@@ -115,20 +115,18 @@ namespace pwiz.Skyline.Model.Tools
         {
             return InstallNvidiaLibrariesBat;
         }
-
-        private bool? _NvidiaGpuAvailable;
         public bool? NvidiaGpuAvailable
         {
             get
             {
-                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT) return true;
-                return _NvidiaGpuAvailable;
+                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD || SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
+                    return false;
+                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)  //Also assume we have NVIDIA card when we assume we don't have NVIDIA software
+                    return true;
+
+                return TestForNvidiaGPU();
             }
 
-            internal set
-            {
-                _NvidiaGpuAvailable = value;
-            }
         }
 
         /// <summary>
@@ -244,7 +242,8 @@ namespace pwiz.Skyline.Model.Tools
 
             string targetDirectory = CuDNNInstallDir + @"\bin";
 
-            if (!Directory.Exists(targetDirectory)) return false;
+            if (!Directory.Exists(targetDirectory)) 
+                return false;
 
             string newPath = Environment.GetEnvironmentVariable(@"PATH");
 
@@ -305,7 +304,7 @@ namespace pwiz.Skyline.Model.Tools
         public static bool ValidateEnableLongpaths()
         {
             var task = new EnableLongPathsTask(new PythonInstaller()); 
-            bool? valid = task.ValidateTask();
+            bool? valid = task.IsTaskComplete();
             if (valid != null)
             {
                 return (bool)valid;
@@ -319,10 +318,7 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns></returns>
         public static bool? TestForNvidiaGPU()
         {
-            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD || SimulatedInstallationState == eSimulatedInstallationState.NAIVE) 
-                return false;
-            if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)  //Also assume we have NVIDIA card when we assume we don't have NVIDIA software
-                return true;
+
 
             bool? nvidiaGpu = null;
             try
@@ -334,7 +330,8 @@ namespace pwiz.Skyline.Model.Tools
                 {
                     //  GPU information
                     nvidiaGpu = obj[@"Name"].ToString().StartsWith(@"NVIDIA");
-                    if (nvidiaGpu != false) break;
+                    if (nvidiaGpu != false) 
+                        break;
                 }
             }
             catch (ManagementException e)
@@ -344,22 +341,14 @@ namespace pwiz.Skyline.Model.Tools
             return nvidiaGpu;
         }
 
-        public PythonInstaller()
-        {
-            NvidiaGpuAvailable = TestForNvidiaGPU();
-        }
-
         public PythonInstaller(IEnumerable<PythonPackage> packages,
             TextWriter writer, string virtualEnvironmentName)
         {
-           // SimulatedInstallationState = eSimulatedInstallationState.NONE;
             Writer = writer;
             VirtualEnvironmentName = virtualEnvironmentName;
             PendingTasks = new List<PythonTaskBase>();
             Directory.CreateDirectory(PythonRootDir);
             Directory.CreateDirectory(PythonVersionDir);
-           
-            NvidiaGpuAvailable = TestForNvidiaGPU();
             PythonPackages = packages.ToList();
 
             if (NvidiaGpuAvailable == true)
@@ -369,6 +358,10 @@ namespace pwiz.Skyline.Model.Tools
                 PythonPackages.Add(new PythonPackage { Name = @"torch --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null });
             }
 
+        }
+
+        private PythonInstaller()
+        {
         }
 
         public bool IsNvidiaEnvironmentReady(List<PythonTaskBase> abortedTasks = null)
@@ -396,7 +389,8 @@ namespace pwiz.Skyline.Model.Tools
 
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
 
-            if (abortedTasks != null && abortedTasks.Count > 0) tasks = abortedTasks;
+            if (abortedTasks != null && abortedTasks.Count > 0) 
+                tasks = abortedTasks;
 
             if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
                 return true;
@@ -435,7 +429,7 @@ namespace pwiz.Skyline.Model.Tools
             var hasSeenFailure = false;
             foreach (var task in allTasks)
             {
-                bool? isTaskValid = task.ValidateTask();
+                bool? isTaskValid = task.IsTaskComplete();
 
                 if (hasSeenFailure)
                 {
@@ -1025,7 +1019,7 @@ namespace pwiz.Skyline.Model.Tools
         /// Checks for presence of hashes or expected files and/or directories signifying completion of tasks
         /// </summary>
 
-        public abstract bool? ValidateTask();
+        public abstract bool? IsTaskComplete();
         public abstract void DoAction(ILongWaitBroker broker);
         public virtual bool IsRequiredForPythonEnvironment
         {
@@ -1064,7 +1058,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_downloaded_Python_embeddable_package;
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             var pythonFilePath = PythonInstaller.PythonEmbeddablePackageDownloadPath;
             if (!File.Exists(pythonFilePath))
@@ -1081,10 +1075,11 @@ namespace pwiz.Skyline.Model.Tools
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
         {
             using var webClient = PythonInstaller.TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
-            if (!webClient.DownloadFileAsync(PythonInstaller.PythonEmbeddablePackageUri, PythonInstaller.PythonEmbeddablePackageDownloadPath, out var downloadException))
-                throw new ToolExecutionException(
-                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, downloadException);
-
+            using var fileSaver = new FileSaver(PythonInstaller.PythonEmbeddablePackageDownloadPath);
+            if (!webClient.DownloadFileAsync(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName, out var downloadException))
+                throw new ToolExecutionException(ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, 
+                    downloadException);
+            fileSaver.Commit();
         }
     }
 
@@ -1108,7 +1103,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_unzipped_Python_embeddable_package;
         }
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
@@ -1152,7 +1147,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_enabled_search_path_in_Python_embeddable_package;
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
@@ -1194,7 +1189,7 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_enabled_long_paths_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE &&
                    (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
@@ -1220,7 +1215,8 @@ namespace pwiz.Skyline.Model.Tools
             var processRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
 
             CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
+            if (broker != null) 
+                cancelToken = broker.CancellationToken;
 
             if (processRunner.RunProcess(cmd, true, PythonInstaller.Writer, false, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
@@ -1257,7 +1253,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_downloaded_the_get_pip_py_script;
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             var filePath = PythonInstaller.GetPipScriptDownloadPath;
 
@@ -1307,7 +1303,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_ran_the_get_pip_py_script; 
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
 
@@ -1328,7 +1324,9 @@ namespace pwiz.Skyline.Model.Tools
             cmd += cmdBuilder;
             var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
             CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
+            if (broker != null) 
+                cancelToken = broker.CancellationToken;
+
             if (pipedProcessRunner.RunProcess(cmd, false, PythonInstaller.Writer, true, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
 
@@ -1364,7 +1362,7 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_ran_pip_install__0_, PythonInstaller.VIRTUALENV);
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.VIRTUALENV_EXE);
 
@@ -1410,7 +1408,7 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_created_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             return Directory.Exists(PythonInstaller.VirtualEnvironmentDir);
         }
@@ -1449,7 +1447,7 @@ namespace pwiz.Skyline.Model.Tools
             return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_installed_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             if (!File.Exists(PythonInstaller.VirtualEnvironmentPythonExecutablePath))
             {
@@ -1552,7 +1550,7 @@ namespace pwiz.Skyline.Model.Tools
             return ToolsResources.NvidiaInstaller_Successfully_Setup_Nvidia_Libraries;
         }
 
-        public override bool? ValidateTask()
+        public override bool? IsTaskComplete()
         {
             return PythonInstaller.NvidiaLibrariesInstalled();
         }
@@ -1564,7 +1562,8 @@ namespace pwiz.Skyline.Model.Tools
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdBuilder, PythonInstaller.CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
             var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (broker != null) cancelToken = broker.CancellationToken;
+            if (broker != null) 
+                cancelToken = broker.CancellationToken;
             if (pipedProcessRunner.RunProcess(cmd, true, PythonInstaller.Writer, false, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }

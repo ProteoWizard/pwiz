@@ -139,16 +139,13 @@ namespace TestPerf
                             buildLibraryDlg.IrtStandard = iRTtype;
 
                     });
-                    if (!HavePythonPrerequisite(buildLibraryDlg))
-                    {
-                        CancelPython(buildLibraryDlg);
 
-                        InstallPythonTestNvidia(buildLibraryDlg);
-                    }
+                    TestCancelPython(buildLibraryDlg);
+                    TestNvidiaInstallPython(buildLibraryDlg);
 
-                    PythonInstaller.SimulatedInstallationState =
-                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
-                    OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+                    //PythonInstaller.SimulatedInstallationState =
+                    //    PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
+                    //OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
 
                     if (iRTtype != null)
                     {
@@ -163,8 +160,6 @@ namespace TestPerf
                     }
 
                     WaitForClosedForm<BuildLibraryDlg>();
-
-
 
                     builtLibraryPath = buildLibraryDlg.BuilderLibFilepath;
 
@@ -211,8 +206,9 @@ namespace TestPerf
         {
             var sortFields = new List<(int FieldIndex, bool IsAscending)>
             {
-                (0, true),  // Peptide 
-                (7, true)   // ion
+                (0, true),  // ModifiedPeptideSequence 
+                (7, true),  // FragmentType
+                (10, true)  // FragmentCharge
             };
             var product_sorted = product + ".sorted";
             var answer_sorted = answer + ".sorted";
@@ -245,7 +241,7 @@ namespace TestPerf
         /// Pretends Python needs installation then Cancels Python install
         /// </summary>
         /// <param name="buildLibraryDlg">Build Library dialog</param>
-        public void CancelPython(BuildLibraryDlg buildLibraryDlg)
+        public void TestCancelPython(BuildLibraryDlg buildLibraryDlg)
         {
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start CancelPython() test ... ");
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
@@ -276,7 +272,7 @@ namespace TestPerf
             // PauseTest("back to wizard");
         }
 
-        public void InstallPythonTestNvidia(BuildLibraryDlg buildLibraryDlg)
+        public void TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
         {
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start InstallPythonTestNvidia() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
@@ -317,7 +313,13 @@ namespace TestPerf
             installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
-            CancelDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
+            //Python installation begins when user ClickNo
+            
+            OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
+            var confirmDlg = WaitForOpenForm<MessageDlg>();
+            ConfirmPythonSuccess(confirmDlg);
+            OkDialog(confirmDlg, confirmDlg.OkDialog);
+
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish InstallPythonTestNvidia() test ... ");
 
         }
@@ -333,77 +335,59 @@ namespace TestPerf
                 PythonInstaller.eSimulatedInstallationState
                     .NONVIDIAHARD; // Normal tests systems will have registry set suitably
 
-            bool havePythonPrerequisite = false;
 
-            havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet();
-            if (!havePythonPrerequisite)
+            MessageDlg confirmDlg = null;
+            RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
             {
-                MessageDlg confirmDlg = null;
-                RunLongDlg<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage, pythonDlg =>
+                Assert.AreEqual(string.Format(
+                    ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
+                    _pythonVersion, _toolName), pythonDlg.Message);
+
+                if (!PythonInstaller.ValidateEnableLongpaths())
                 {
-                    Assert.AreEqual(string.Format(
-                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        _pythonVersion, _toolName), pythonDlg.Message);
+                    MessageDlg longPathDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog);
 
-                    if (!PythonInstaller.ValidateEnableLongpaths())
+                    Assert.AreEqual(
+                        string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
+                        longPathDlg.Message);
+
+                    if (PythonInstaller.IsRunningElevated())
                     {
-                        MessageDlg longPathDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog);
-
-                        Assert.AreEqual(
-                            string.Format(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation),
-                            longPathDlg.Message);
-
-                        if (PythonInstaller.IsRunningElevated())
-                        {
-                            confirmDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
-                            ConfirmPythonSuccess(confirmDlg);
-
-                        }
-                        else
-                        {
-                            Assert.Fail(
-                                $@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
-                        OkDialog(pythonDlg, pythonDlg.OkDialog);
                         confirmDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
                         ConfirmPythonSuccess(confirmDlg);
 
                     }
-
-
-                }, dlg => { dlg.Close(); });
-                if (_undoRegistry)
+                    else
+                    {
+                        Assert.Fail(
+                            $@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
+                    }
+                }
+                else
                 {
-                    PythonInstaller.DisableWindowsLongPaths();
+                    Console.WriteLine(@"Info: LongPathsEnabled registry key is already set to 1");
+                    OkDialog(pythonDlg, pythonDlg.OkDialog);
+                    confirmDlg = ShowDialog<MessageDlg>(pythonDlg.OkDialog, WAIT_TIME);
+                    ConfirmPythonSuccess(confirmDlg);
+
                 }
 
-                return true;
+
+            }, dlg => { dlg.Close(); });
+            if (_undoRegistry)
+            {
+                PythonInstaller.DisableWindowsLongPaths();
             }
 
-            return false;
-        }
+            return true;
 
-        /// <summary>
-        /// Checks for Python prerequisite
-        /// </summary>
-        /// <param name="buildLibraryDlg">Build Library dialog</param>
-        /// <returns></returns>
-        public bool HavePythonPrerequisite(BuildLibraryDlg buildLibraryDlg)
-        {
-            bool havePythonPrerequisite = false;
-            RunUI(() => { havePythonPrerequisite = buildLibraryDlg.PythonRequirementMet(); });
-            return havePythonPrerequisite;
         }
 
         public bool HaveNvidiaSoftware()
         {
             return PythonInstaller.NvidiaLibrariesInstalled();
         }
-
+        
         public bool HaveNvidiaHardware()
         {
             return PythonInstaller.TestForNvidiaGPU() == true;
@@ -514,7 +498,7 @@ namespace TestPerf
         /// </summary>
         /// <param name="confirmDlg">Alert dialog </param>
         /// <param name="confirmSuccess">true for success, false for failure</param>
-        private void ConfirmPython(AlertDlg confirmDlg, bool confirmSuccess = true)
+        public void ConfirmPython(AlertDlg confirmDlg, bool confirmSuccess = true)
         {
             var expectMsg = string.Format(ToolsUIResources
                 .PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);

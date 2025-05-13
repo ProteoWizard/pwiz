@@ -207,9 +207,7 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            if (EnableImmediateLog)
-                                status = status.ChangeMessage(Resources.ProcessRunner_Run_Working_);
-                            else 
+                            if (!EnableImmediateLog)
                                 status = status.ChangeMessage(line);
 
                             if (updateProgressPercentage)
