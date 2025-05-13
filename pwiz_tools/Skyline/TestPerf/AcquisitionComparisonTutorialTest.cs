@@ -390,13 +390,10 @@ namespace TestPerf
 
             WaitForConditionUI(() => importPeptideSearchDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
 
-            var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsDIAControl;
+            var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsControl;
             Assert.IsNotNull(importResults);
 
-            var dataFolder = Path.GetDirectoryName(GetTestPath(Path.Combine(DIA_DATA_DIR, "DIA_100fmol.mzML")));
-            var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResults.Browse(dataFolder));
-            RunUI(() => openDataFiles.SelectAllFileType(DataExt));
-            OkDialog(openDataFiles, openDataFiles.Open);
+            importResults.UpdateResultsFiles(new[] { TestFilesDirs[0].PersistentFilesDir }, true); // Go look in the persistent files dir
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.AreEqual(4, importResults.FoundResultsFiles.Count));

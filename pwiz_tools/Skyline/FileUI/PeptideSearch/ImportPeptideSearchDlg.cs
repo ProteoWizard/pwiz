@@ -626,7 +626,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     var oldImportResultsControl = (Control) ImportResultsControl;
                     getChromatogramsPage.Controls.Remove(oldImportResultsControl);
 
-                    if (WorkflowType != Workflow.dia || HasPeakBoundaries || GetAreLibrarySpectraDIA())
+                    if (WorkflowType != Workflow.dia || HasPeakBoundaries || (IsImportingSearchResults && GetAreLibrarySpectraDIA()))
                     {
                         if (!(ImportResultsControl is ImportResultsControl))
                         {
