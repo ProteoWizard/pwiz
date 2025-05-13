@@ -43,6 +43,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Clustering;
+using pwiz.Skyline.Controls.FilesTree;
 using pwiz.Skyline.Controls.Graphs.Calibration;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Model.AuditLog;
@@ -491,6 +492,7 @@ namespace pwiz.Skyline
             // deserialization has problems using existing windows.
             DestroySequenceTreeForm();
             DestroyGraphSpectrum();
+            DestroyFilesTreeForm();
 
             var type = RTGraphController.GraphType;
             _listGraphRetentionTime.ToList().ForEach(DestroyGraphRetentionTime);
@@ -587,6 +589,11 @@ namespace pwiz.Skyline
             else if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
             {
                 return _graphSpectrum ?? CreateGraphSpectrum();                
+            }
+            else if (persistentString.StartsWith(typeof(FilesTreeForm).ToString()))
+            {
+                // show FilesTree if it has serialized state in the .view file
+                return FilesTreeForm ?? CreateFilesTreeForm(persistentString);
             }
 
             var split = persistentString.Split('|');

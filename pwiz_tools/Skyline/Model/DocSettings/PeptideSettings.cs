@@ -103,6 +103,16 @@ namespace pwiz.Skyline.Model.DocSettings
         [TrackChildren]
         public ProteinAssociation.ParsimonySettings ProteinAssociationSettings { get; private set; }
 
+        public bool HasLibraries { get { return Libraries != null && Libraries.HasLibraries; } }
+
+        public bool HasDocumentLibrary { get { return Libraries != null && Libraries.HasDocumentLibrary; } }
+
+        public bool HasBackgroundProteome { get { return BackgroundProteome != null && !BackgroundProteome.IsNone; } }
+
+        public bool HasRTPrediction { get { return Prediction != null && Prediction.RetentionTime != null; } }
+
+        public bool HasRTCalcPersisted { get { return HasRTPrediction && Prediction.RetentionTime.Calculator.PersistencePath != null; } }
+
         #region Property change methods
 
         public PeptideSettings ChangeEnzyme(Enzyme prop)
@@ -1953,7 +1963,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _librarySpecs; }
             private set { _librarySpecs = MakeReadOnly(value); }
         }
-
+        
         public IEnumerable<LibrarySpec> LibrarySpecsUnloaded
         {
             get
@@ -2728,6 +2738,11 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public LibrarySpec FindLibrarySpec(Identity identity)
+        {
+            return _librarySpecs.FirstOrDefault(librarySpec => ReferenceEquals(librarySpec.Id, identity));
+        }
     }
 
 
