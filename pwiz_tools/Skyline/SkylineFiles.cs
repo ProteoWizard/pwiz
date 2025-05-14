@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -3510,6 +3511,7 @@ namespace pwiz.Skyline
             return ardiaPublishMenuItem.Visible;
         }
 
+        [SuppressMessage("ReSharper", "LocalizableElement")]
         private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, "Expected to find a registered Ardia account but none found");
