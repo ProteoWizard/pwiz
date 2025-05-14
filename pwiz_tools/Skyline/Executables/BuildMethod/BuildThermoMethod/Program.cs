@@ -69,11 +69,11 @@ namespace BuildThermoMethod
     {
         static void Main(string[] args)
         {
+            Environment.ExitCode = -1;  // Failure until success
+            var builder = new BuildThermoMethod();
+
             try
             {
-                Environment.ExitCode = -1;  // Failure until success
-
-                var builder = new BuildThermoMethod();
                 builder.ParseCommandArgs(args);
                 builder.Build();
 
@@ -87,24 +87,12 @@ namespace BuildThermoMethod
             }
             catch (IOException x)
             {
-                Console.Error.Write(GetErrorText(x));
+                builder.WriteError(x);
             }
             catch (Exception x)
             {
-                Console.Error.Write(GetErrorText(x));
+                builder.WriteError(x);
             }
-        }
-
-        private static string GetErrorText(Exception x)
-        {
-            // Thermo libraries can sometimes throw exceptions with multi-line errors
-            // Any lines that do not get ERROR: prepended will not get reported
-            var sb = new StringBuilder();
-            var reader = new StringReader(x.ToString());
-            string line;
-            while ((line = reader.ReadLine()) != null)
-                sb.AppendLine("ERROR: " + line);
-            return sb.ToString();
         }
 
         static void Usage()
@@ -581,9 +569,18 @@ namespace BuildThermoMethod
                         mx.Open(TemplateMethod);
                         mx.EnableValidation(true);
 
-                        var listItems = ParseList(methodTranList.TransitionList).ToArray();
-                        if (!listItems.Any())
-                            throw new IOException("Empty mass list found.");
+                        ListItem[] listItems;
+                        try
+                        {
+                            listItems = ParseList(methodTranList.TransitionList).ToArray();
+                            if (!listItems.Any())
+                                throw new IOException("Empty mass list found.");
+                        }
+                        catch (Exception)
+                        {
+                            File.WriteAllText(Path.ChangeExtension(methodTranList.OutputMethod, ".csv"), methodTranList.TransitionList);
+                            throw;
+                        }
 
                         switch (InstrumentType)
                         {
@@ -595,6 +592,7 @@ namespace BuildThermoMethod
                             case InstrumentExploris:
                                 ApplyExplorisModificationsXml(mx, InstrumentType, listItems, outMeth);
                                 break;
+                            case InstrumentAscend:
                             case InstrumentEclipse:
                             case InstrumentFusionLumos:
                                 ApplyCalciumModificationsXml(mx, InstrumentType, listItems, outMeth);
@@ -602,9 +600,16 @@ namespace BuildThermoMethod
                             case InstrumentStellar:
                                 mx.ApplyMethodModificationsFromXML(GetStellarXml(listItems, outMeth));
                                 break;
-                            default:
+                            case InstrumentAltis:
+                            case InstrumentEndura:
+                            case InstrumentQuantiva:
                                 mx.ImportMassListFromXML(GetHyperionXml(listItems, outMeth));
                                 break;
+                            default:
+                                // In theory, this should have been caught already, but in case
+                                // a new instrument was added without being assigned above, this
+                                // will give a clear error.
+                                throw new UsageException(string.Format("Unknown instrument type {0}", InstrumentType));
                         }
                         mx.SaveAs(outMeth);
                     }
@@ -637,7 +642,8 @@ namespace BuildThermoMethod
 
             for (int i = 0; i < lines.Length; ++i)
             {
-                string[] fields = (lines[i].Contains('\t')) ? lines[i].Split('\t') : lines[i].Split(',');
+                var line = lines[i];
+                string[] fields = line.ParseDsvFields(line.Contains('\t') ? '\t' : ',');
                 int numFields = fields.Length;
                 if (i == 0)
                 {
@@ -1604,7 +1610,19 @@ namespace BuildThermoMethod
             return Serialize(methodModifications, outMethod);
         }
 
-        private static int _tryCount;
+        private class XmlFile
+        {
+            public XmlFile(string path, string unwrittenText)
+            {
+                Path = path;
+                UnwrittenText = unwrittenText;
+            }
+
+            public string Path { get; }
+            public string UnwrittenText { get; }
+        }
+
+        private readonly List<XmlFile> _xmlFiles = new List<XmlFile>();
 
         private string Serialize(object method, string outMethod)
         {
@@ -1612,14 +1630,126 @@ namespace BuildThermoMethod
             var writer = new StringWriter();
             serializer.Serialize(writer, method);
             string xmlText = writer.ToString();
-            if (ExportXml)
+            string extPrefix = _xmlFiles.Count > 0 ? _xmlFiles.Count.ToString() : string.Empty;
+            string xmlPath = Path.ChangeExtension(outMethod, extPrefix + ".xml");
+            if (xmlPath != null)
             {
-                string extPrefix = _tryCount++ > 0 ? _tryCount.ToString() : string.Empty;
-                string xmlPath = Path.ChangeExtension(outMethod, extPrefix + ".xml");
-                if (xmlPath != null)
+                if (!ExportXml)
+                    _xmlFiles.Add(new XmlFile(xmlPath, xmlText));
+                else
+                {
+                    _xmlFiles.Add(new XmlFile(xmlPath, string.Empty));
                     File.WriteAllText(xmlPath, xmlText);
+                }
+
             }
             return xmlText;
+        }
+
+        private void WriteUnsavedXml()
+        {
+            foreach (var xmlFile in _xmlFiles.Where(xmlFile => !string.IsNullOrEmpty(xmlFile.UnwrittenText)))
+            {
+                File.WriteAllText(xmlFile.Path, xmlFile.UnwrittenText);
+            }
+        }
+
+        public void WriteError(Exception x)
+        {
+            Console.Error.Write(GetErrorText(x));
+            WriteUnsavedXml();
+        }
+
+        private static string GetErrorText(Exception x)
+        {
+            // Thermo libraries can sometimes throw exceptions with multi-line errors
+            // Any lines that do not get ERROR: prepended will not get reported
+            var sb = new StringBuilder();
+            var reader = new StringReader(x.ToString());
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                sb.AppendLine("ERROR: " + line);
+            return sb.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Copied from Skyline.Util.Extensions.TextUtil
+    /// </summary>
+    internal static class TextUtil
+    {
+        /// <summary>
+        /// Splits a line of text in delimiter-separated value format into an array of fields.
+        /// The function correctly handles quotation marks.
+        /// (N.B. our quotation mark handling now differs from the (March 2018) behavior of Excel and Google Spreadsheets
+        /// when dealing with somewhat absurd uses of quotes as found in our tests, but that seems to be OK for  general use.
+        /// </summary>
+        /// <param name="line">The line to be split into fields</param>
+        /// <param name="separator">The separator being used</param>
+        /// <returns>An array of field strings</returns>
+        public static string[] ParseDsvFields(this string line, char separator)
+        {
+            var listFields = new List<string>();
+            var sbField = new StringBuilder();
+            bool inQuotes = false;
+            for (var chIndex = 0; chIndex < line.Length; chIndex++)
+            {
+                var ch = line[chIndex];
+                if (inQuotes)
+                {
+                    if (ch == '"')
+                    {
+                        // Is this the closing quote, or is this an escaped quote?
+                        if (chIndex + 1 < line.Length && line[chIndex + 1] == '"')
+                        {
+                            sbField.Append(ch); // Treat "" as an escaped quote
+                            chIndex++; // Consume both quotes
+                        }
+                        else
+                        {
+                            inQuotes = false;
+                        }
+                    }
+                    else
+                    {
+                        sbField.Append(ch);
+                    }
+                }
+                else if (ch == '"')
+                {
+                    if (sbField.Length == 0) // Quote at start of field is special case
+                    {
+                        inQuotes = true;
+                    }
+                    else
+                    {
+                        if (chIndex + 1 < line.Length && line[chIndex + 1] == '"')
+                        {
+                            sbField.Append(ch); // Treat "" as an escaped quote
+                            chIndex++; // Consume both quotes
+                        }
+                        else
+                        {
+                            // N.B. we effectively ignore a bare quote in an unquoted string. 
+                            // This is technically an undefined behavior, so that's probably OK.
+                            // Excel and Google sheets treat it as a literal quote, but that 
+                            // would be a change in our established behavior
+                            inQuotes = true;
+                        }
+                    }
+                }
+                else if (ch == separator)
+                {
+                    listFields.Add(sbField.ToString());
+                    sbField.Remove(0, sbField.Length);
+                }
+                else
+                {
+                    sbField.Append(ch);
+                }
+            }
+            listFields.Add(sbField.ToString());
+            return listFields.ToArray();
         }
     }
 }
