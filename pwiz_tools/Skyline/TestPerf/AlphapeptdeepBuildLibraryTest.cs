@@ -261,7 +261,8 @@ namespace TestPerf
         /// <param name="buildLibraryDlg">Build Library dialog</param>
         public void TestCancelPython(BuildLibraryDlg buildLibraryDlg)
         {
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start CancelPython() test ... ");
+            Console.WriteLine();
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestCancelPython() test ... ");
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState =
                 PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
@@ -284,7 +285,7 @@ namespace TestPerf
                 needAdminDlg.Message);
             // PauseTest();
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish CancelPython() test ... ");
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestCancelPython() test ... ");
 
             // PauseTest();
 
@@ -336,7 +337,7 @@ namespace TestPerf
             MessageDlg pythonConfirm = null;
             if (_deletePython)
                 pythonConfirm = WaitForOpenForm<MessageDlg>();
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish InstallPythonTestNvidia() test ... ");
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
             return pythonConfirm;
         }
 
