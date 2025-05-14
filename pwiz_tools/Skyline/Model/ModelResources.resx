@@ -886,7 +886,7 @@ in the Windows registry key '{0}' from:</value>
   <data name="AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file" xml:space="preserve">
       <value>Preparing settings file</value>
   </data>
-  <data name="AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep" xml:space="preserve">
+  <data name="AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep" xml:space="preserve">
       <value>Running AlphaPeptDeep</value>
   </data>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">

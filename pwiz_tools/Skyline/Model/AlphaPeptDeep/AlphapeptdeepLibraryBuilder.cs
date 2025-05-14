@@ -325,7 +325,8 @@ namespace pwiz.Skyline.Model.AlphaPeptDeep
         {
             Stopwatch timer = new Stopwatch();
             progress.UpdateProgress(progressStatus = progressStatus
-                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_Executing_peptdeep));
+                .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep));
+
             progressStatus.ChangePercentComplete(0);
             // compose peptdeep cmd-flow command arguments to build library
             var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
