@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:openswath.blib	99	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:openswath.blib	99	1	11
 id	RefSpectraID	position	mass
 1	24	3	57.021464
 2	54	6	57.021464
@@ -104,8 +104,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 97	VTLEYRPVIDK	444.92224368	3	VTLEYRPVIDK	-	-	1	6	0.0	0.0	0.0	0	54.14677590	53.91750081	54.39616699	707.27725219	N/A	N/A	N/A	N/A	N/A	1	98	7.46959412e-05	19
 98	ATHFYVAPTALR	449.57869987	3	ATHFYVAPTALR	-	-	1	6	0.0	0.0	0.0	0	54.95900383	54.75516764	55.17399902	729.53681945	N/A	N/A	N/A	N/A	N/A	1	99	1.49034931e-05	19
 99	YAWVLDK	447.73962846	2	YAWVLDK	-	-	1	6	0.0	0.0	0.0	0	63.37527721	63.07150065	63.72966715	32321.89	N/A	N/A	N/A	N/A	N/A	1	100	2.31307913e-05	19
-id	fileName	idFileName	cutoffScore
-1	/DIA_Course/Data/DIA_data/lgillet_I150211_008_cent_thresh2.mzXML	/BiblioSpec/tests/inputs/试验_openswath_test.tsv	-1.0
+id	fileName	idFileName	cutoffScore	workflowType
+1	/DIA_Course/Data/DIA_data/lgillet_I150211_008_cent_thresh2.mzXML	/BiblioSpec/tests/inputs/试验_openswath_test.tsv	-1.0	1
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
@@ -127,3 +127,4 @@ id	scoreType	probabilityType
 17	BYONIC SCORE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
 18	PEPTIDE SHAKER CONFIDENCE	PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT
 19	GENERIC Q-VALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
+20	HARDKLOR IDOTP	PROBABILITY_THAT_IDENTIFICATION_IS_CORRECT

@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:comet.blib	69	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:comet.blib	69	1	11
 id	RefSpectraID	position	mass
 1	18	6	57.021464
 2	18	9	57.021464
@@ -81,8 +81,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 67	NGFQTGSASKASA	613.79	2	NGFQTGSASKASA	-	-	1	314	0.0	0.0	0.0	0	N/A	N/A	N/A	3071.09999614	N/A	N/A	N/A	N/A	N/A	1	153	2.04e-07	6
 68	ELESAAYDHAEPVQPEDAPQDIANDELK	1032.44	3	ELESAAYDHAEPVQPEDAPQDIANDELK	-	-	1	795	0.0	0.0	0.0	0	N/A	N/A	N/A	18881.00	N/A	N/A	N/A	N/A	N/A	1	156	6.46e-09	6
 69	NFLETVELQVGLK	745.75	2	NFLETVELQVGLK	-	-	1	635	0.0	0.0	0.0	0	N/A	N/A	N/A	39862.69	N/A	N/A	N/A	N/A	N/A	1	159	4.16e-07	6
-id	fileName	idFileName	cutoffScore
-1	/BiblioSpec/tests/inputs/demo1.ms2	/BiblioSpec/tests/inputs/comet.demo1.target.pep.xml	-1.0
+id	fileName	idFileName	cutoffScore	workflowType
+1	/BiblioSpec/tests/inputs/demo1.ms2	/BiblioSpec/tests/inputs/comet.demo1.target.pep.xml	-1.0	0
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT

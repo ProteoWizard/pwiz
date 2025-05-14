@@ -1,5 +1,5 @@
 libLSID	numSpecs	majorVersion	minorVersion
-urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:diann-mass-mod-test.blib	445	1	10
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:diann-mass-mod-test.blib	445	1	11
 id	RefSpectraID	position	mass
 1	1	1	42.010565
 2	1	21	15.994915
@@ -791,8 +791,8 @@ id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	num
 443	KLGNQYYNDTQWLK	1266.52746582	3	KLGNQYYN[+2140.7]DTQWLK	-	-	1	4	0.0	0.0	0.0	0	21.48970031	21.37439918	21.60490036	1.82685583	N/A	N/A	N/A	N/A	N/A	1	504	0.00100401	19
 444	KLVDATQGGPNITFSSIR	1364.92602539	3	KLVDATQGGPN[+2302.8]ITFSSIR	-	-	1	7	0.0	0.0	0.0	0	24.96589851	24.85079765	25.08440017	3.23755607	N/A	N/A	N/A	N/A	N/A	1	505	0.00100401	19
 445	KLVDATQGGPNITFSSIR	1418.94360351	3	KLVDATQGGPN[+2464.8]ITFSSIR	-	-	1	14	0.0	0.0	0.0	0	24.91099929	24.79570007	25.08699989	4.65936931	N/A	N/A	N/A	N/A	N/A	1	506	0.00027532	19
-id	fileName	idFileName	cutoffScore
-1	fissionyeast_NGP_DIA_1.mzML	/BiblioSpec/tests/inputs/diann-mass-mods.tsv.speclib	0.0
+id	fileName	idFileName	cutoffScore	workflowType
+1	fissionyeast_NGP_DIA_1.mzML	/BiblioSpec/tests/inputs/diann-mass-mods.tsv.speclib	0.0	1
 id	scoreType	probabilityType
 0	UNKNOWN	NOT_A_PROBABILITY_VALUE
 1	PERCOLATOR QVALUE	PROBABILITY_THAT_IDENTIFICATION_IS_INCORRECT
