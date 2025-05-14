@@ -1151,7 +1151,6 @@ namespace pwiz.Skyline.Model.Tools
 
     public class EnableSearchPathInPythonEmbeddablePackageTask : PythonTaskBase
     {
-        //private string _storedHash = Settings.Default.SearchPathInPythonEmbeddableHash;
         public EnableSearchPathInPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.unzip_python_embeddable_package, new UnzipPythonEmbeddablePackageTask(installer))
         {
         }
@@ -1178,9 +1177,6 @@ namespace pwiz.Skyline.Model.Tools
 
             return PythonInstallerUtil.IsSignatureValid(PythonInstaller.PythonEmbeddablePackageExtractDir,
                 PythonInstallerUtil.GetDirectoryHash(PythonInstaller.PythonEmbeddablePackageExtractDir));
-            
-           // var computeHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
-           // return computeHash == _storedHash;
         }
         public override void DoAction(ILongWaitBroker broker)
         {
