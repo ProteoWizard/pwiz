@@ -393,7 +393,8 @@ namespace TestPerf
             var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsControl;
             Assert.IsNotNull(importResults);
 
-            importResults.UpdateResultsFiles(new[] { TestFilesDirs[0].PersistentFilesDir }, true); // Go look in the persistent files dir
+            var dataFolder = Path.GetDirectoryName(GetTestPath(Path.Combine(DIA_DATA_DIR, "DIA_100fmol.mzML")));
+            importResults.UpdateResultsFiles(new[] { dataFolder }, true);
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() => Assert.AreEqual(4, importResults.FoundResultsFiles.Count));
