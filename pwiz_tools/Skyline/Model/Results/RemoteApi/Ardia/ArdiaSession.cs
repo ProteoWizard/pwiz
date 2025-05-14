@@ -30,8 +30,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         {
         }
 
-        public ArdiaAccount ArdiaAccount { get { return (ArdiaAccount) Account; } }
+        public ArdiaAccount ArdiaAccount => (ArdiaAccount)Account;
 
+        /// <summary>
+        /// The primary entry point for Skyline code reading folders, sequences, or raw files from the Ardia API.
+        /// </summary>
+        /// <param name="remoteUrl">URL to call</param>
+        /// <param name="remoteException">Errors that happen making the request or handling the response.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentException"></exception>
         public override bool AsyncFetchContents(RemoteUrl remoteUrl, out RemoteServerException remoteException)
         {
             if (!(remoteUrl is ArdiaUrl ardiaUrl))

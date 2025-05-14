@@ -238,6 +238,7 @@
     <Compile Include="SkipZoomScansTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
+    <Compile Include="ArdiaUploadTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />
     <Compile Include="SpectrumGridTest.cs" />
