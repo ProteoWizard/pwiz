@@ -66,6 +66,7 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            PythonInstaller.SimulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
             const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
