@@ -590,6 +590,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
+    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaStagedDocumentResponse.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\LcPeakIonMetrics.cs" />

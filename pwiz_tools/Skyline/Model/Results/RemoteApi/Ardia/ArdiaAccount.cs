@@ -27,6 +27,19 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 {
+    /// <summary>
+    /// Wiki docs about configuring Ardia accounts in Skyline:
+    ///     https://skyline.ms/wiki/home/software/Skyline/page.view?name=Ardia%20setup%20and%20importing%20a%20file%20from%20Ardia
+    ///
+    /// Once added, the account is listed under Tools => Options => Remote Accounts and can be accessed by Skyline developers using
+    /// <see cref="Properties.Settings.RemoteAccountList"/>.
+    ///
+    /// When Skyline closes, configuration info about the account is stored in Skyline's user.config file whose path
+    /// can be found under Tools => Options => Miscellaneous and is stored in a directory like:
+    /// 
+    ///     C:\Users\%USERNAME%\AppData\Local\University_of_Washington\Skyline-daily.exe_Url_db2lbzhuk4iiqiyc522okkxewhxy1qsq\24.1.1.493\user.config
+    /// 
+    /// </summary>
     [XmlRoot("ardia_account")]
     public class ArdiaAccount : RemoteAccount
     {
@@ -55,7 +68,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             _sessionCookieStrings.Clear();
         }
 
-
+        // Use only in tests?
         public static readonly ArdiaAccount DEFAULT = new ArdiaAccount(string.Empty, string.Empty, string.Empty);
 
         public bool DeleteRawAfterImport { get; private set; }
@@ -165,10 +178,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             _authenticatedHttpClientFactory = null;
         }
 
-        public override RemoteAccountType AccountType
-        {
-            get { return RemoteAccountType.ARDIA; }
-        }
+        public override RemoteAccountType AccountType => RemoteAccountType.ARDIA;
 
         public override RemoteSession CreateSession()
         {
@@ -215,6 +225,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         private ArdiaAccount()
         {
         }
+
         public static ArdiaAccount Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new ArdiaAccount());

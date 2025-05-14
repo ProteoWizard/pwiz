@@ -84,10 +84,11 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         /// </summary>
         /// <typeparam name="T">Type created when un-marshaling the response.</typeparam>
         /// <param name="requestUri">URI of the remote API to call</param>
-        /// <param name="fetcher">Function that makes the request and handles the response. Often, the response body is JSON
-        ///                       that is un-marshaled into one or more strongly typed objects. </param>
+        /// <param name="fetcher">Function that makes an HTTP request and handles the response. The fetcher configures the request
+        ///                       (verb, auth headers / cookies) and handles the response (response code, parsing the body, etc).
+        ///                       The fetcher also un-marshals the response into strongly typed objects.</param>
         /// <param name="remoteException">Exception that occurs processing the response. For example: authentication or marshaling issues.</param>
-        /// <returns>True if the response exists in the cache and false otherwise, including when making a new remote request</returns>
+        /// <returns>True if the response exists in the cache and false otherwise. Remote requests to previously unfetched URLs will return false.</returns>
         protected bool AsyncFetch<T>(Uri requestUri, Func<Uri, T> fetcher, out RemoteServerException remoteException)
         {
             if (null == requestUri)

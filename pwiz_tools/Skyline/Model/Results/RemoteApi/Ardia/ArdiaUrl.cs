@@ -34,8 +34,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public static string UrlPrefix { get { return RemoteAccountType.ARDIA.Name + @":"; } }
         public string ServerApiUrl => ServerUrl.Replace(@"https://", @"https://api.");
 
-        // The Ardia API expects calls routed through '/session-management/bff' to include:
-        //  (1) the applicationCode header
+        // The Ardia API expects calls routed through '/session-management/bff' include auth information:
+        //  (1) applicationCode header
         //  (2) Bff-Host cookie
         public string NavigationBaseUrl => $@"{ServerApiUrl}/session-management/bff/navigation/api/v1/navigation";
         public string SequenceBaseUrl => $@"{ServerApiUrl}/session-management/bff/standard-sequence/api/v1/";

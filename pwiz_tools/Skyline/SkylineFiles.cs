@@ -57,7 +57,7 @@ using pwiz.Skyline.Model.Lib.Midas;
 using pwiz.Skyline.Model.Optimization;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -79,6 +79,9 @@ namespace pwiz.Skyline
             ToolStripMenuItem menu = fileToolStripMenuItem;
             List<string> mruList = Settings.Default.MruList;
             string curDir = Settings.Default.ActiveDirectory;
+
+            // If an ArdiaAccount is registered, include an "Upload to..." menu item
+            ardiaPublishMenuItem.Visible = HasRegisteredArdiaAccount;
 
             int start = menu.DropDownItems.IndexOf(mruBeforeToolStripSeparator) + 1;
             while (!ReferenceEquals(menu.DropDownItems[start], mruAfterToolStripSeparator))
@@ -3498,38 +3501,21 @@ namespace pwiz.Skyline
             return true;
         }
 
-        // TODO: only show "Publish to Ardia" if no Ardia server configured
-        // TODO: bug - Ardia account needs to be re-created for each Skyline session
+        // TODO: BUG? Ardia account needs to be re-initialized each time Skyline starts
+        private bool HasRegisteredArdiaAccount => 
+            Settings.Default.RemoteAccountList.Any(account => account.AccountType == RemoteAccountType.ARDIA);
+
+        public bool UploadToArdiaMenuVisible()
+        {
+            return ardiaPublishMenuItem.Visible;
+        }
+
+        // ReSharper disable LocalizableElement
         private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
         {
-            var servers = Settings.Default.ServerList;
-            var ardiaEntries = Settings.Default.ArdiaRegistrationCodeEntries;
-            
-            var remoteAccounts = Settings.Default.RemoteAccountList;
-            var ardiaAccount = remoteAccounts[0] as ArdiaAccount;
-            var rootUrl = ardiaAccount.GetRootArdiaUrl();
-            
-            var ardiaSession = ardiaAccount.CreateSession();
-            ardiaSession.ContentsAvailable += () =>
-            {
-                Console.WriteLine($"ardiaSession.ContentsAvailable()");
-                var list = ardiaSession.ListContents(rootUrl).OrderByDescending(item => item.Label).Reverse().ToList();
-                Console.WriteLine($"    Total items: {list.Count}");
-            
-                foreach (var item in list)
-                {
-                    Console.WriteLine($"    {item.Label} {item.Type} {item.MsDataFileUri}");
-                }
-            };
-            var fcUrl = ardiaAccount.GetFolderContentsUrl(rootUrl);
-            
-            var ardiaUrl = ardiaAccount.GetRootUrl();
-            var error = ardiaSession.AsyncFetchContents(ardiaUrl, out var remoteException);
-            
-            // TODO: use existing Ardia server (aka: entry) to get a list of files
-            
-            // TODO: use Create Staged Document API to stage the document - pieceName = SingleDocument
+            Assume.IsTrue(HasRegisteredArdiaAccount, "Expected to find a registered Ardia account but none found");
         }
+        // ReSharper enable LocalizableElement
 
         private void publishMenuItem_Click(object sender, EventArgs e)
         {

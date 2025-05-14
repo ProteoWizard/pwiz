@@ -27,6 +27,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     {
         public string Id { get; protected set; }
         public string Name { get; protected set; }
+
         public static string GetProperty(JObject jobject, string propertyName)
         {
             var property = jobject.Property(propertyName);
