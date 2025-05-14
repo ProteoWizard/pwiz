@@ -80,6 +80,9 @@ namespace pwiz.Skyline
             List<string> mruList = Settings.Default.MruList;
             string curDir = Settings.Default.ActiveDirectory;
 
+            // If an ArdiaAccount is registered, include an "Upload to..." menu item
+            ardiaPublishMenuItem.Visible = HasRegisteredArdiaAccount;
+
             int start = menu.DropDownItems.IndexOf(mruBeforeToolStripSeparator) + 1;
             while (!ReferenceEquals(menu.DropDownItems[start], mruAfterToolStripSeparator))
                 menu.DropDownItems.RemoveAt(start);
@@ -3498,7 +3501,19 @@ namespace pwiz.Skyline
             return true;
         }
 
+        // TODO: BUG? Ardia account needs to be re-initialized each time Skyline starts
+        private bool HasRegisteredArdiaAccount =>
+            Settings.Default.RemoteAccountList.Any(account => account.AccountType == RemoteAccountType.ARDIA);
 
+        public bool UploadToArdiaMenuVisible()
+        {
+            return ardiaPublishMenuItem.Visible;
+        }
+
+        private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
+        {
+            Assume.IsTrue(HasRegisteredArdiaAccount, "Expected to find a registered Ardia account but none found");
+        }
 
         private void publishMenuItem_Click(object sender, EventArgs e)
         {
