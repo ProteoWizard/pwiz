@@ -199,11 +199,7 @@
     <value>ポイント数</value>
   </data>
   <data name="Points.MinimumWidth" type="System.Int32, mscorlib">
-    <value>30</value>
-    <comment>Needs Review:English text changed
-Old English:24
-Current English:30
-Old Localized:32</comment>
+    <value>80</value>
   </data>
   <metadata name="Equation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>

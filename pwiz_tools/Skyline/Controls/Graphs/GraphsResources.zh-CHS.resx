@@ -539,7 +539,11 @@
     <value>{0} 谱图在此数据文件中不可用。改为显示 {1}。</value>
   </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
-    <value>点积：{0:0.0000}</value>
+    <value>{0:0.0000}</value>
+    <comment>Needs Review:English text changed
+Old English:dotp: {0:0.0000}
+Current English:{0:0.0000}
+Old Localized:点积：{0:0.0000}</comment>
   </data>
   <data name="GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted" xml:space="preserve">
     <value>加载谱图失败。库可能已损坏。</value>
@@ -738,5 +742,17 @@
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
     <value>肽段</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_PeakArea" xml:space="preserve">
+    <value>峰面积</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_LogPeakArea" xml:space="preserve">
+    <value>峰面积对数</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
+    <value>排名</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
+    <value>未找到定量色谱图</value>
   </data>
 </root>

@@ -150,6 +150,18 @@
   <data name="TargetedMSMS_Caption" xml:space="preserve">
     <value>ターゲットMS/MS (PRM)</value>
   </data>
+  <data name="PRMOrbitraip_Description" xml:space="preserve">
+    <value>並列反応モニタリング（PRM）を使用してマウス線維芽細胞の19のタンパク質から31個のペプチドを定量化するための解析メソッドを設定してみましょう。Orbitrap質量アナライザーを採用しているThermo Fusion質量分析装置上で9回のランを実施して測定された3回の生物学的繰り返し測定をとりあげます。</value>
+  </data>
+  <data name="PRMOrbitrap_Caption" xml:space="preserve">
+    <value>PRMの利用とOrbitrap質量分析装置</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Description" xml:space="preserve">
+    <value>NavarroのNature Biotech 2016ベンチマーク資料に基づいて、説明用に作成された3つの有機体混合データセットを使用し、SCIEX TripleTOF装置から、データ非依存性解析（DIA）データセットで直接ペプチドスペクトル検索を実行してみましょう。</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_Caption" xml:space="preserve">
+    <value>ライブラリフリーのDIA/SWATH</value>
+  </data>
   <data name="iRT_Caption" xml:space="preserve">
     <value>iRT保持時間予測</value>
   </data>

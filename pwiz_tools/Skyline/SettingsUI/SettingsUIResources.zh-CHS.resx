@@ -1181,4 +1181,10 @@
   <data name="EditPeakScoringModelDlg_ShowEditPeakScoringModelDlg_Train_Model" xml:space="preserve">
     <value>训练模型</value>
   </data>
+  <data name="BuildLibraryDlg_ValidateBuilder_You_must_specify_a_valid_path_to_a_Skyline_document_to_learn_from_" xml:space="preserve">
+    <value>必须指定需要从中学习的 Skyline 文档的有效路径。</value>
+  </data>
+  <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
+    <value>必须先在“全扫描”选项卡中启用 MS1 或 MS/MS 过滤，才能使用该功能。</value>
+  </data>
 </root>

@@ -137,6 +137,7 @@ namespace pwiz.BiblioSpec
         public EnumProbabilityType ProbabilityType { get; }
 
         public static ScoreType GenericQValue => new ScoreType(GENERIC_QVALUE, PROBABILITY_INCORRECT);
+        public static ScoreType MaxQuant => new ScoreType(MAXQUANT_SCORE, PROBABILITY_INCORRECT);
         public static ScoreType HardklorIdotp => new ScoreType(HARDKLOR_IDOTP, PROBABILITY_CORRECT);
 
         public ScoreType(string name, string probabilityType)

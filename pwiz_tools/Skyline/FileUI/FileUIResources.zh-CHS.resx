@@ -655,4 +655,7 @@
   <data name="SkypSupport_ShowDownloadError_There_was_an_error_downloading_the_Skyline_document__0__from__1__" xml:space="preserve">
     <value>从 {1} 下载 Skyline 文档 {0} 时出错。</value>
   </data>
+  <data name="ChooseIrtStandardPeptidesDlg_ChooseIrtStandardPeptidesDlg_Unavailable__no_matching_iRT_standards_found" xml:space="preserve">
+    <value>不可用：未找到匹配的 iRT 标准品。</value>
+  </data>
 </root>
