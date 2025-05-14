@@ -122,7 +122,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 19;
+        private const int FORMAT_VERSION_CACHE = 20;
+        // V20 add workflowType
         // V19 add protein/MoleculeGroupName
         // V18 crosslinks
         // V17 add ID file (alongside already-cached spectrum source file)
