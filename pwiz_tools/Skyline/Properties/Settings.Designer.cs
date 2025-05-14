@@ -3545,7 +3545,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("938a1f3b80d580320836260612084d74ce094a261e36f9ff3ac7b9463df5f5e4")]
+        [global::System.Configuration.DefaultSettingValueAttribute("57731cf80b1c429a0be7133266d7d7cf")]
         public string PythonEmbeddableHash {
             get {
                 return ((string)(this["PythonEmbeddableHash"]));

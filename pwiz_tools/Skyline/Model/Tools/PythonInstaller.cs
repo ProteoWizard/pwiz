@@ -827,6 +827,25 @@ namespace pwiz.Skyline.Model.Tools
                 return @"F00F00F00";
             }
         }
+        public static string GetMD5FileHash(string filePath)
+        {
+            using (var md5 = MD5.Create())
+            {
+                byte[] hash = { };
+                string fullPath = Path.GetFullPath(filePath);
+
+                RetryAction(() =>
+                {
+                    using var stream = File.OpenRead($@"\\?\{fullPath}");
+                    hash = md5.ComputeHash(stream);
+                });
+
+                if (!hash.IsNullOrEmpty())
+                    return BitConverter.ToString(hash).Replace(@"-", "").ToLowerInvariant();
+
+                return @"F00F00F00";
+            }
+        }
 
         public static void RetryAction([InstantHandle] Action act, int maxRetries = 100)
         {
@@ -1064,7 +1083,7 @@ namespace pwiz.Skyline.Model.Tools
             if (!File.Exists(pythonFilePath))
                 return false;
 
-            return _storedHash == PythonInstallerUtil.GetFileHash(pythonFilePath);
+            return _storedHash == PythonInstallerUtil.GetMD5FileHash(pythonFilePath);
         }
         public override void DoAction(ILongWaitBroker broker)
         {
@@ -1076,9 +1095,14 @@ namespace pwiz.Skyline.Model.Tools
         {
             using var webClient = PythonInstaller.TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
             using var fileSaver = new FileSaver(PythonInstaller.PythonEmbeddablePackageDownloadPath);
-            if (!webClient.DownloadFileAsync(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName, out var downloadException))
-                throw new ToolExecutionException(ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_, 
+            
+             if (!webClient.DownloadFileAsync(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName,
+                    out var downloadException))
+                throw new ToolExecutionException(
+                    ToolsResources
+                        .PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_,
                     downloadException);
+
             fileSaver.Commit();
         }
     }

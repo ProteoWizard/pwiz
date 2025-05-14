@@ -42,7 +42,7 @@ namespace TestPerf
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
         // setting _deletePython to false allows the test to reuse existing installation
-        private bool _deletePython = true;
+        private bool _deletePython = false;
 
         [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
@@ -139,13 +139,16 @@ namespace TestPerf
                             buildLibraryDlg.IrtStandard = iRTtype;
 
                     });
-
+                  
                     TestCancelPython(buildLibraryDlg);
+
+                    PythonInstaller.SimulatedInstallationState =
+                        PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
+
                     TestNvidiaInstallPython(buildLibraryDlg);
 
-                    //PythonInstaller.SimulatedInstallationState =
-                    //    PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD;
-                    //OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+                    PythonInstaller.SimulatedInstallationState =
+                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia hardware
 
                     if (iRTtype != null)
                     {
@@ -250,23 +253,25 @@ namespace TestPerf
             MultiButtonMsgDlg
                 installPythonDlg =
                     ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
-            //PauseTest("install offer");
+            // PauseTest("install offer");
             CancelDialog(installPythonDlg, installPythonDlg.CancelDialog); // Cancel it immediately
-            //PauseTest("back to wizard");
+            // PauseTest("back to wizard");
             installPythonDlg =
                 ShowDialog<MultiButtonMsgDlg>(buildLibraryDlg.OkWizardPage); // Expect the offer to install Python
             // PauseTest("install offer again");
             AssertEx.AreComparableStrings(
                 ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
                 installPythonDlg.Message);
-
+            // PauseTest();
             var needAdminDlg = ShowDialog<MessageDlg>(installPythonDlg.OkDialog);
 
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation,
                 needAdminDlg.Message);
+            // PauseTest();
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish CancelPython() test ... ");
 
+            // PauseTest();
 
             // PauseTest("need admin msg");
             // PauseTest("back to wizard");
@@ -274,11 +279,8 @@ namespace TestPerf
 
         public void TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
         {
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start InstallPythonTestNvidia() test ... ");
+            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestNvidiaInstallPython() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
-            PythonInstaller.SimulatedInstallationState =
-                PythonInstaller.eSimulatedInstallationState
-                    .NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
             //Test for LongPaths not set and admin
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
             {
