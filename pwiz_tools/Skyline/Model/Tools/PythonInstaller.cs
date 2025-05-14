@@ -429,11 +429,11 @@ namespace pwiz.Skyline.Model.Tools
             var hasSeenFailure = false;
             foreach (var task in allTasks)
             {
-                bool? isTaskValid = task.IsTaskComplete();
+                bool? isTaskComplete = task.IsTaskComplete();
 
                 if (hasSeenFailure)
                 {
-                    if ( (isTaskValid == true || isTaskValid == null) && null == task.ParentTask)  
+                    if ( (isTaskComplete == true || isTaskComplete == null) && null == task.ParentTask)  
                         continue; 
                    
                     bool havePrerequisite = false;
@@ -464,7 +464,7 @@ namespace pwiz.Skyline.Model.Tools
                 }
                 else
                 {
-                    if (isTaskValid == true || isTaskValid == null) 
+                    if (isTaskComplete == true || isTaskComplete == null) 
                         continue; 
                     hasSeenFailure = true;
                 }
@@ -1151,7 +1151,7 @@ namespace pwiz.Skyline.Model.Tools
 
     public class EnableSearchPathInPythonEmbeddablePackageTask : PythonTaskBase
     {
-        private string _storedHash = Settings.Default.SearchPathInPythonEmbeddableHash;
+        //private string _storedHash = Settings.Default.SearchPathInPythonEmbeddableHash;
         public EnableSearchPathInPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.unzip_python_embeddable_package, new UnzipPythonEmbeddablePackageTask(installer))
         {
         }
@@ -1176,8 +1176,11 @@ namespace pwiz.Skyline.Model.Tools
             if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
 
-            var computeHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
-            return computeHash == _storedHash;
+            return PythonInstallerUtil.IsSignatureValid(PythonInstaller.PythonEmbeddablePackageExtractDir,
+                PythonInstallerUtil.GetDirectoryHash(PythonInstaller.PythonEmbeddablePackageExtractDir));
+            
+           // var computeHash = PythonInstallerUtil.GetFilesArrayHash(Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
+           // return computeHash == _storedHash;
         }
         public override void DoAction(ILongWaitBroker broker)
         {

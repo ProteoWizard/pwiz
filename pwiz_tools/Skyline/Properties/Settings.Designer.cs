@@ -3554,15 +3554,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("95f29168dc5cf35585a501bf35ec865383300bfac0e2222c7ec7c02ca7bde475")]
-        public string SearchPathInPythonEmbeddableHash {
-            get {
-                return ((string)(this["SearchPathInPythonEmbeddableHash"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf")]
         public string MsFraggerLicenseUrl {
             get {

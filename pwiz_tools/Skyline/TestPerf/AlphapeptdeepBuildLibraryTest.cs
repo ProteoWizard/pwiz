@@ -92,11 +92,6 @@ namespace TestPerf
             Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
 
-            fileHash = PythonInstallerUtil.GetFilesArrayHash(
-                Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*.pth"));
-            Console.WriteLine($@"Computed SearchPathInPythonEmbeddableHash: {fileHash}");
-            Assert.AreEqual(Settings.Default.SearchPathInPythonEmbeddableHash, fileHash);
-
             OkDialog(peptideSettings, peptideSettings.OkDialog);
 
             var addRtStdDlg = WaitForOpenForm<AddIrtStandardsToDocumentDlg>();
