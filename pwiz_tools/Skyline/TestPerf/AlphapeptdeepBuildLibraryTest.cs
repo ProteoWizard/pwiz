@@ -42,7 +42,7 @@ namespace TestPerf
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
         // setting _deletePython to false allows the test to reuse existing installation
-        private bool _deletePython = false;
+        private bool _deletePython = true;
 
         [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
@@ -77,12 +77,17 @@ namespace TestPerf
 
             PeptideSettingsUI peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
-            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt,
-                IrtStandard.BIOGNOSYS_11);
+            var simulatedInstallationState = 
+                PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
 
-            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt);
+            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt, 
+                simulatedInstallationState, IrtStandard.BIOGNOSYS_11);
 
-            var fileHash = PythonInstallerUtil.GetFileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
+            simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia GPU
+            AlphapeptdeepBuildLibrary(peptideSettings, libraryWithoutIrt, LibraryPathWithoutIrt, answerWithoutIrt, 
+                simulatedInstallationState);
+
+            var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
             Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
 
@@ -122,9 +127,12 @@ namespace TestPerf
         /// <param name="libraryName">Name of the library to build</param>
         /// <param name="libraryPath">Path of the library to build</param>
         /// <param name="answerFile">Path to library answersheet</param>
+        /// <param name="simulatedInstallationState">Python Simulated State helps determine whether user is offered Nvidia install</param>
         /// <param name="iRTtype">iRT standard type</param>
         private void AlphapeptdeepBuildLibrary(PeptideSettingsUI peptideSettings, string libraryName,
-            string libraryPath, string answerFile, IrtStandard iRTtype = null)
+            string libraryPath, string answerFile, 
+            PythonInstaller.eSimulatedInstallationState simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT,
+            IrtStandard iRTtype = null)
         {
             string builtLibraryPath = null;
 
@@ -139,16 +147,23 @@ namespace TestPerf
                             buildLibraryDlg.IrtStandard = iRTtype;
 
                     });
-                  
-                    TestCancelPython(buildLibraryDlg);
 
-                    PythonInstaller.SimulatedInstallationState =
-                        PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
-
-                    TestNvidiaInstallPython(buildLibraryDlg);
-
-                    PythonInstaller.SimulatedInstallationState =
-                        PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD; // Simulates not having Nvidia hardware
+                    MessageDlg  confirmDlg;
+                    if (simulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT) 
+                    {
+                        // TestCancelPython always uses NAIVE stat so must reset state
+                        TestCancelPython(buildLibraryDlg);
+                        PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
+                        confirmDlg = TestNvidiaInstallPython(buildLibraryDlg);
+                        if (confirmDlg != null)
+                            OkDialog(confirmDlg, confirmDlg.OkDialog);
+                    }
+                    else
+                    {
+                        PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
+                        OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+                    }
+                    //PauseTest();
 
                     if (iRTtype != null)
                     {
@@ -277,7 +292,7 @@ namespace TestPerf
             // PauseTest("back to wizard");
         }
 
-        public void TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
+        public MessageDlg TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
         {
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestNvidiaInstallPython() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
@@ -318,12 +333,11 @@ namespace TestPerf
             //Python installation begins when user ClickNo
             
             OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
-            var confirmDlg = WaitForOpenForm<MessageDlg>();
-            ConfirmPythonSuccess(confirmDlg);
-            OkDialog(confirmDlg, confirmDlg.OkDialog);
-
+            MessageDlg pythonConfirm = null;
+            if (_deletePython)
+                pythonConfirm = WaitForOpenForm<MessageDlg>();
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish InstallPythonTestNvidia() test ... ");
-
+            return pythonConfirm;
         }
 
         /// <summary>
