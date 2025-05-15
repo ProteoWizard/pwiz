@@ -279,14 +279,26 @@
   <data name="CarafeLibrary_missed_cleavage_long" xml:space="preserve">
     <value>Maximum Missed Cleavages allowed.</value>
   </data>
+  <data name="CarafeLibrary_fixed_modification_types_short" xml:space="preserve">
+    <value>Fixed Modification Available</value>
+  </data>
+  <data name="CarafeLibrary_fixed_modification_types_long" xml:space="preserve">
+    <value>Select an available Fixed Modification to use in the analysis.</value>
+  </data>
   <data name="CarafeLibrary_fixed_modification_short" xml:space="preserve">
-    <value>Fixed Modifications</value>
+    <value>Fixed Modifications Selected</value>
   </data>
   <data name="CarafeLibrary_fixed_modification_long" xml:space="preserve">
     <value>Fixed Modifications to consider for library generation.</value>
   </data>
+  <data name="CarafeLibrary_variable_modification_types_short" xml:space="preserve">
+    <value>Variable Modifications Available</value>
+  </data>
+  <data name="CarafeLibrary_variable_modification_types_long" xml:space="preserve">
+    <value>Select an available Variable Modification to use in the analysis.</value>
+  </data>
   <data name="CarafeLibrary_variable_modification_short" xml:space="preserve">
-    <value>Variable Modifications</value>
+    <value>Variable Modifications Selected</value>
   </data>
   <data name="CarafeLibrary_variable_modification_long" xml:space="preserve">
     <value>Variable Modifications to consider for library generation.</value>

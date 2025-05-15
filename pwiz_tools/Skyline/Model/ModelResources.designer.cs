@@ -429,11 +429,29 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Fixed Modifications.
+        ///   Looks up a localized string similar to Fixed Modifications Selected.
         /// </summary>
         public static string CarafeLibrary_fixed_modification_short {
             get {
                 return ResourceManager.GetString("CarafeLibrary_fixed_modification_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select an available Fixed Modification to use in the analysis..
+        /// </summary>
+        public static string CarafeLibrary_fixed_modification_types_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_fixed_modification_types_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fixed Modification Available.
+        /// </summary>
+        public static string CarafeLibrary_fixed_modification_types_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_fixed_modification_types_short", resourceCulture);
             }
         }
         
@@ -663,11 +681,29 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Variable Modifications.
+        ///   Looks up a localized string similar to Variable Modifications Selected.
         /// </summary>
         public static string CarafeLibrary_variable_modification_short {
             get {
                 return ResourceManager.GetString("CarafeLibrary_variable_modification_short", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select an available Variable Modification to use in the analysis..
+        /// </summary>
+        public static string CarafeLibrary_variable_modification_types_long {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_variable_modification_types_long", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Variable Modifications Available.
+        /// </summary>
+        public static string CarafeLibrary_variable_modification_types_short {
+            get {
+                return ResourceManager.GetString("CarafeLibrary_variable_modification_types_short", resourceCulture);
             }
         }
         

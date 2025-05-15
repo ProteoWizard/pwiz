@@ -95,6 +95,31 @@ namespace pwiz.Skyline.Model
                 _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
             }
+            /// <summary>
+            /// First string is old value, second string is additional value, output is new setting
+            /// </summary>
+            public Func<string, string, string> OtherAction
+            { get; private set; }
+
+            public string OtherSettingName { get; private set; }
+
+            /// <summary>
+            /// Allow to change a second Setting based on the value of this setting and the action
+            /// </summary>
+            /// <param name="name"></param>
+            /// <param name="defaultValue"></param>
+            /// <param name="validValues"></param>
+            /// <param name="otherSettingName">Second setting changed by this setting changing and applying action.</param>
+            /// <param name="doThisAction"></param>
+            public Setting(string name, string defaultValue, IEnumerable<string> validValues, string otherSettingName, Func<string, string, string> doThisAction)
+            {
+                Name = name;
+                MinValue = string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
+                ValidValues = validValues;
+                OtherSettingName = otherSettingName;
+                OtherAction = doThisAction;
+            }
 
             public Setting(Setting other, object newValue = null)
             {
@@ -103,6 +128,8 @@ namespace pwiz.Skyline.Model
                 MaxValue = other.MaxValue;
                 _value = DefaultValue = newValue ?? other.Value;
                 ValidValues = other.ValidValues;
+                OtherSettingName = other.OtherSettingName;
+                OtherAction = other.OtherAction;
             }
             
             public string Name { get; }

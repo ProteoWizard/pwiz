@@ -1089,6 +1089,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 FilterLibraryEnabled = false;
             }
+
+            btnExplore.Enabled = listLibraries.Items.Count > 0;
         }
 
         private void comboMatching_SelectedIndexChanged(object sender, EventArgs e)

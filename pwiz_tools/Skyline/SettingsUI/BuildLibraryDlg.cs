@@ -142,6 +142,15 @@ namespace pwiz.Skyline.SettingsUI
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
         public PythonInstaller pythonInstaller { get; private set; }
+
+        private void TestAndEnableFinish()
+        {
+            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
+                textBoxMsMsData.Text != "" && (textBoxTrainingDoc.Text != "" || comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc))
+                btnNext.Enabled = true;
+            else if (btnNext.Text == Resources.BuildLibraryDlg_OkWizardPage_Finish)
+                btnNext.Enabled = false;
+        }
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -359,7 +368,7 @@ namespace pwiz.Skyline.SettingsUI
                             return false;
                         }
                         Builder ??= new CarafeLibraryBuilder(name, outputPath, CARAFE_PYTHON_VERSION, CARAFE, CarafePythonVirtualEnvironmentDir,
-                            msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI,_skylineWindow.GetTextWriter(), _trainingDocument,
+                            msMsDataFilePath, textBoxTrainingDoc.Text, textBoxProteinDatabase.Text, DocumentUI, _trainingDocument,
                             labelDoc.Text == string.Format(SettingsUIResources.BuildLibraryDlg_DIANN_report_document), IrtStandard);
                         TestLibFilepath = Builder.TestLibraryPath;
                         BuilderLibFilepath = Builder.BuilderLibraryPath;
@@ -582,7 +591,8 @@ namespace pwiz.Skyline.SettingsUI
                 new PythonPackage { Name = @"numpy", Version = @"1.26.4" },
                 new PythonPackage { Name = @"transformers", Version = @"4.36.1" },
                 new PythonPackage { Name = @"torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null },
-                new PythonPackage { Name = @"wheel", Version = null }
+                new PythonPackage { Name = @"wheel", Version = null },
+                new PythonPackage { Name = @"huggingface-hub", Version = null}
             };
 
             if (pythonInstaller == null)
@@ -755,7 +765,7 @@ namespace pwiz.Skyline.SettingsUI
                 btnNext.Enabled = false;
                 if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
                     textBoxMsMsData.Text != "" &&
-                    textBoxTrainingDoc.Text != "")
+                    (textBoxTrainingDoc.Text != "" || comboLearnFrom.SelectedIndex == (int)LearningOptions.this_doc))
                     btnNext.Enabled = true;
 
             }
@@ -1231,6 +1241,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboLearnFrom_Update(LearningOptions learningOption)
         {
+
+            if (_currentLearningOption != learningOption)
+                textBoxTrainingDoc.Text = "";
+            else
+                return;
+
             comboLearnFrom.SelectedIndex = (int)learningOption;
             switch (learningOption)
             {
@@ -1279,9 +1295,7 @@ namespace pwiz.Skyline.SettingsUI
         private void comboBuildLibraryTarget_Update(BuildLibraryTargetOptions targetOption)
         {
             comboBuildLibraryTarget.SelectedIndex = (int)targetOption;
-            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
-                textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "")
-                btnNext.Enabled = true;
+            TestAndEnableFinish();
 
             switch (targetOption)
             {
@@ -1336,8 +1350,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textBoxProteinDatabase.Text = dlg.FileName;
             }
-            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "" && Builder != null)
-                btnNext.Enabled = true;
+            
+            TestAndEnableFinish();
         }
 
         private void buttonMsMsData_Click(object sender, EventArgs e)
@@ -1354,8 +1368,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 textBoxMsMsData.Text = dlg.FileName;
             }
-            if (textBoxProteinDatabase.Text != "" && textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "" && Builder != null)
-                btnNext.Enabled = true;
+            TestAndEnableFinish();
         }
         private void buttonTrainingDoc_Click(object sender, EventArgs e)
         {
@@ -1394,10 +1407,8 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
             }
-
-            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) && 
-                textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "" && Builder != null)
-                btnNext.Enabled = true;
+            
+            TestAndEnableFinish();
         }
 
 
@@ -1415,10 +1426,7 @@ namespace pwiz.Skyline.SettingsUI
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                 _trainingDocument = (SrmDocument)ser.Deserialize(reader);
             }
-            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
-                textBoxMsMsData.Text != "" &&
-                textBoxTrainingDoc.Text != "")
-                btnNext.Enabled = true;
+            TestAndEnableFinish();
         }
 
         private void carafeSettings_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1428,25 +1436,17 @@ namespace pwiz.Skyline.SettingsUI
 
         private void textBoxTrainingDoc_TextChanged(object sender, EventArgs e)
         {
-            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) && 
-                textBoxMsMsData.Text != "" && textBoxTrainingDoc.Text != "")
-                btnNext.Enabled = true;
+            TestAndEnableFinish();
         }
 
         private void textBoxMsMsData_TextChanged(object sender, EventArgs e)
         {
-            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) && 
-                textBoxMsMsData.Text != "" &&
-                textBoxTrainingDoc.Text != "")
-                btnNext.Enabled = true;
+            TestAndEnableFinish();
         }
 
         private void textBoxProteinDatabase_TextChanged(object sender, EventArgs e)
         {
-            if ((textBoxProteinDatabase.Text != "" || comboBuildLibraryTarget.SelectedIndex == (int)BuildLibraryTargetOptions.currentSkylineDocument) &&
-                textBoxMsMsData.Text != "" &&
-                textBoxTrainingDoc.Text != "")
-                btnNext.Enabled = true;
+            TestAndEnableFinish();
         }
     }
 }

@@ -22,6 +22,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -102,6 +103,32 @@ namespace pwiz.Skyline.Alerts
                     };
                     comboBox.Items.AddRange(validValues.Cast<object>().ToArray());
                     comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
+
+                    comboBox.SelectedIndexChanged += (sender, args) =>
+                    {
+                        if (kvp.Value.GetType() == typeof(AbstractDdaSearchEngine.Setting) && sender is ComboBox)
+                        {
+                            AbstractDdaSearchEngine.Setting setting = kvp.Value as AbstractDdaSearchEngine.Setting;
+
+                            foreach (var other_kvp in gridValues)
+                            {
+                                AbstractDdaSearchEngine.Setting other_setting = other_kvp.Value as AbstractDdaSearchEngine.Setting;
+
+                                if (other_setting != null && setting != null && setting.OtherSettingName == other_setting.Name)
+                                {
+                                    var newText = "";
+                                    if (setting.OtherAction != null)
+                                    {
+                                        newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, comboBox.Text);
+                                        keyToControl[other_kvp.Key].Text = newText;
+                                    }
+                                    break;
+                                }
+
+                            }
+                        }
+                    };
+
                     valueControl = comboBox;
                 }
                 else if (bool.TryParse(valueToString(kvp.Value), out bool b))

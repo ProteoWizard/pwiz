@@ -67,8 +67,6 @@ namespace pwiz.Skyline.Model.Carafe
         private const string SPACE = TextUtil.SPACE;
         private const string TAB = @"\t";
 
-        internal TextWriter Writer { get; }
-
         public ISkylineProcessRunnerWrapper SkylineProcessRunner { get; set; }
 
         private string PythonVirtualEnvironmentScriptsDir { get; }
@@ -263,21 +261,24 @@ namespace pwiz.Skyline.Model.Carafe
             cpu
         };
 
-
-        //public enum LibraryFileTypes
-        //{
-        //    tsv,
-        //    parquet
-        //};
-
+        public enum SupportedModificationTypes
+        {
+            [Description("0:None")] NONE = 0,
+            [Description("1:Carbamidomethyl of C")] UNIMOD_4 = 1,
+            [Description("2:Oxidation of M")] UNIMOD_35 = 2,
+            [Description("3:Deamidation of N")] UNIMOD_7_1 = 3,
+            [Description("4:Deamidation of Q")] UNIMOD_7_2 = 4,
+            [Description("5:Acetyl of protein N-terminus")] UNIMOD_1_1 = 5,
+            [Description("6:Acetyl of K")] UNIMOD_1_2 = 6
+        };
 
         public enum LibraryFormats
         {
             [Description("Skyline")] skyline,
             [Description("DIA-NN")] diann,
             [Description("EncyclopeDIA")] encyclopedia
-
         };
+
         //Carafe enzymes
         // 0:Non enzyme, 1:Trypsin (default), 2:Trypsin (no P rule), 3:Arg-C, 4:Arg-C (no P rule), 5:Arg-N, 6:Glu-C, 7:Lys-C.
         public enum SupportedEnzymeTypes
@@ -328,6 +329,12 @@ namespace pwiz.Skyline.Model.Carafe
                     { ModelResources.CarafeModel_device_short,  new AbstractDdaSearchEngine.Setting(ModelResources.CarafeModel_device_long, "gpu", Enum.GetNames(typeof(DeviceTypes))) }
                 });
 
+        public static AbstractDdaSearchEngine.Setting FixedModSetting =
+            new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_long, @"1");
+
+        public static AbstractDdaSearchEngine.Setting VarModSetting =
+            new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_long, @"0");
+
         public static readonly ImmutableDictionary<string, AbstractDdaSearchEngine.Setting> DefaultLibraryParameters =
             new ImmutableDictionary<string, AbstractDdaSearchEngine.Setting>(
                 new Dictionary<string, AbstractDdaSearchEngine.Setting>
@@ -335,8 +342,63 @@ namespace pwiz.Skyline.Model.Carafe
                     { ModelResources.CarafeLibrary_enzyme_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_enzyme_long, GetDescription( SupportedEnzymeTypes.TrypsinDefault ), Enum.GetValues(typeof(SupportedEnzymeTypes)).
                         Cast<SupportedEnzymeTypes>().Select(e => GetDescription(e))) },
                     { ModelResources.CarafeLibrary_missed_cleavage_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_missed_cleavage_long, 1, 0) },
-                    { ModelResources.CarafeLibrary_fixed_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_long, @"1") },
-                    { ModelResources.CarafeLibrary_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_long, @"0") },
+    
+                    { ModelResources.CarafeLibrary_fixed_modification_types_short, 
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_types_long, GetDescription( SupportedModificationTypes.UNIMOD_4 ), 
+                            Enum.GetValues(typeof(SupportedModificationTypes)).
+                                Cast<SupportedModificationTypes>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_fixed_modification_long, (s1, s2) =>
+                            {
+                                var input = "";
+
+                                s2 = s2.Split(':')[0].Trim();
+
+                                if (s1 == "0" || s2 == "0")
+                                    return s2;
+                                      
+                                input = $"{s1},{s2}";
+
+                                if (string.IsNullOrWhiteSpace(input))
+                                {
+                                    return s1;
+                                }
+                                return string.Join(",",
+                                    input.Split(',')
+                                        .Select(s => s.Trim())
+                                        .Where(s => !string.IsNullOrEmpty(s) && int.TryParse(s, out _))
+                                        .Select(s => int.Parse(s)) // Safe to parse after TryParse check
+                                        .Distinct() // Removes duplicates, preserves order
+                                        .Select(n => n.ToString()));
+                            } )  },
+                
+                    { ModelResources.CarafeLibrary_fixed_modification_short, FixedModSetting },
+                    { ModelResources.CarafeLibrary_variable_modification_types_short, 
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_types_long, GetDescription( SupportedModificationTypes.NONE ), 
+                            Enum.GetValues(typeof(SupportedModificationTypes)).
+                                Cast<SupportedModificationTypes>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_variable_modification_long, (s1,s2) =>
+                            {
+                                var input = "";
+
+                                s2 = s2.Split(':')[0].Trim();
+
+                                if (s1 == "0" || s2 == "0")
+                                    return s2;
+
+                                input = $"{s1},{s2}";
+
+                                if (string.IsNullOrWhiteSpace(input))
+                                {
+                                    return s1;
+                                }
+                                return string.Join(",",
+                                    input.Split(',')
+                                        .Select(s => s.Trim())
+                                        .Where(s => !string.IsNullOrEmpty(s) && int.TryParse(s, out _))
+                                        .Select(s => int.Parse(s)) // Safe to parse after TryParse check
+                                        .Distinct() // Removes duplicates, preserves order
+                                        .Select(n => n.ToString()));
+                            } )  },
+
+                    { ModelResources.CarafeLibrary_variable_modification_short, VarModSetting },
                     { ModelResources.CarafeLibrary_max_variable_modification_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_max_variable_modification_long, 1, 0) },
                     { ModelResources.CarafeLibrary_clip_nterm_methionine_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_clip_nterm_methionine_long, false ) },
                     { ModelResources.CarafeLibrary_min_peptide_length_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_min_peptide_length_long, 7, 0 ) },
@@ -413,14 +475,12 @@ namespace pwiz.Skyline.Model.Carafe
             string experimentDataTuningFilePath,
             string dbInputFilePath,
             SrmDocument document,
-            TextWriter textWriter, 
             SrmDocument trainingDocument,
             bool diann_training, 
             IrtStandard irtStandard)
         {
             Document = document;
             IrtStandard = irtStandard;
-            Writer = textWriter;
             TrainingDocument = trainingDocument;
             DbInputFilePath = dbInputFilePath;
             PythonVersion = pythonVersion;
@@ -445,18 +505,11 @@ namespace pwiz.Skyline.Model.Carafe
 
             if (Document.DocumentHash != null || DbInputFilePath != null) InitializeLibraryHelper(RootDir);
 
-            //if (LibraryHelper == null)
-            //{
-            //    LibraryHelper = new LibraryHelper();
-            //    LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, experimentDataFilePath);
-            //}
-            // Directory.CreateDirectory(RootDir);
+
             Directory.CreateDirectory(JavaDir);
             Directory.CreateDirectory(CarafeDir);
 
-
             _diann_training = diann_training;
-            //_builderLibraryPath = builderLibraryPath;
             if (_diann_training)
                 TrainingFilePath = experimentDataTuningFilePath;
 
@@ -496,10 +549,8 @@ namespace pwiz.Skyline.Model.Carafe
             Document = document;
             TrainingDocument = trainingDocument;
             LibraryParameters = libraryParameters;
-            //_builderLibraryPath = builderLibraryPath;
             Directory.CreateDirectory(RootDir);
             Directory.CreateDirectory(JavaDir);
-            //Directory.CreateDirectory(CarafeDir);
             Directory.CreateDirectory(CarafeJavaDir);
 
         }
@@ -509,7 +560,6 @@ namespace pwiz.Skyline.Model.Carafe
             if (LibraryHelper == null)
             {
                 LibraryHelper = new LibraryHelper(rootDir, CARAFE);
-                //LibraryHelper.StampDateTimeNow();
                 RootDir = LibraryHelper.GetRootDir(rootDir, CARAFE);
                 LibraryHelper.InitializeLibraryHelper(InputFilePath, TrainingFilePath, ExperimentDataFilePath);
             }
@@ -525,8 +575,6 @@ namespace pwiz.Skyline.Model.Carafe
                 Directory.CreateDirectory(JavaDir);
                 Directory.CreateDirectory(CarafeJavaDir);
 
-
-                
                 RunCarafe(progress, ref progressStatus);
                 progress.UpdateProgress(progressStatus = progressStatus.Complete());
                 LibraryHelper = null;
@@ -548,9 +596,7 @@ namespace pwiz.Skyline.Model.Carafe
                 .ChangePercentComplete(0));
 
             SetupJavaEnvironment(progress, ref progressStatus);
-            //progressStatus = progressStatus.NextSegment();
-            //if (BuildLibraryForCurrentSkylineDocument)
-            //{
+
             var args = new StringBuilder();
   
 
@@ -917,7 +963,7 @@ namespace pwiz.Skyline.Model.Carafe
             {
                 pr.EnableImmediateLog = true;
                 pr.EnableRunningTimeMessage = true;
-                pr.Run(psi, string.Empty, progress, ref progressStatus, Writer, ProcessPriorityClass.BelowNormal, true);
+                pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
             catch (Exception ex)
             {
