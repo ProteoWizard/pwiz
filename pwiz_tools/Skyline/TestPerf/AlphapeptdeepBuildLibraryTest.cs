@@ -297,11 +297,10 @@ namespace TestPerf
             MessageDlg installNvidiaDlg;
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
             {
-                //MessageDlg adminDlg =
-                //    ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage,
-                //        WAIT_TIME); // Expect request for elevated privileges 
-                OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
-                var adminDlg = WaitForOpenForm<MessageDlg>();
+                MessageDlg adminDlg =
+                    ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage,
+                        WAIT_TIME); // Expect request for elevated privileges 
+                //var adminDlg = WaitForOpenForm<MessageDlg>();
                 AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation,
                     adminDlg.Message);
                 OkDialog(adminDlg, adminDlg.OkDialog);
