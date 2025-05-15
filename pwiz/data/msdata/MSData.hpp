@@ -590,7 +590,7 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 
     /// set m/z and intensity arrays separately (they must be the same size) by swapping the vector contents
     /// this allows for a more nearly zero copy setup.  Contents of mzArray and intensityArray are undefined after calling.
-    void swapMZIntensityArrays(pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, CVID intensityUnits);
+    void swapMZIntensityArrays(pwiz::util::BinaryData<double>& mzArray, pwiz::util::BinaryData<double>& intensityArray, CVID intensityUnits, CVID mzUnits = MS_m_z);
 };
 
 
