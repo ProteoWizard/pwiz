@@ -294,11 +294,14 @@ namespace TestPerf
             Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestNvidiaInstallPython() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             //Test for LongPaths not set and admin
+            MessageDlg installNvidiaDlg;
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
             {
-                MessageDlg adminDlg =
-                    ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage,
-                        WAIT_TIME); // Expect request for elevated privileges 
+                //MessageDlg adminDlg =
+                //    ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage,
+                //        WAIT_TIME); // Expect request for elevated privileges 
+                OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+                var adminDlg = WaitForOpenForm<MessageDlg>();
                 AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation,
                     adminDlg.Message);
                 OkDialog(adminDlg, adminDlg.OkDialog);
@@ -308,9 +311,17 @@ namespace TestPerf
                 Assert.Fail(
                     $@"Error: Cannot finish {_toolName}BuildLibraryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
             }
-
-            var installNvidiaDlg =
+            else
+            {
                 ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME); // Expect the offer to installNvidia
+                //OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+                //PauseTest();
+                // OkDialog(buildLibraryDlg, buildLibraryDlg.OkWizardPage);
+            }
+
+            installNvidiaDlg = WaitForOpenForm<MessageDlg>();
+
+
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
 
@@ -319,10 +330,14 @@ namespace TestPerf
             installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
                 installNvidiaDlg.Message);
+            
             OkDialog(installNvidiaDlg, installNvidiaDlg.ClickYes);
+
             var needAdminDlg = WaitForOpenForm<MessageDlg>();
+            
             AssertEx.AreComparableStrings(ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                 needAdminDlg.Message);
+            //PauseTest();
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog); // Expect the offer to installNvidia
             installNvidiaDlg = ShowDialog<MessageDlg>(buildLibraryDlg.OkWizardPage, WAIT_TIME);
             AssertEx.AreComparableStrings(ToolsUIResources.PythonInstaller_Install_Nvidia_Library,
