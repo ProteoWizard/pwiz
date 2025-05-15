@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Data.SQLite;
 using System.Diagnostics;
@@ -276,109 +277,71 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        private class ScoreTypeRow
+        {
+            public string ScoreType { get; set; }
+            public string ProbabilityType { get; set; }
+        }
+
         public IEnumerable<SpectrumSourceFileDetails> GetDataFileDetails()
         {
+            var detailsByFileId = new Dictionary<int, SpectrumSourceFileDetails>();
+            var scoreTypesByFileId = new Dictionary<int, HashSet<string>>();
+            Dictionary<string, ScoreType> scoreTypesByName = new Dictionary<string, ScoreType>();
             try
             {
-                var detailsByFileName = new Dictionary<string, SpectrumSourceFileDetails>();
-
                 lock (_sqliteConnection)
                 {
-                    using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+                    foreach (var scoreTypeRow in _sqliteConnection.Connection.Query<ScoreTypeRow>(
+                                 @"SELECT * FROM ScoreTypes"))
                     {
-                        // ReSharper disable LocalizableElement
+                        var scoreType = new ScoreType(scoreTypeRow.ScoreType, scoreTypeRow.ProbabilityType);
+                        scoreTypesByName[scoreType.NameInvariant] = scoreType;
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore
+            }
+            foreach (var spectrumSourceFile in _librarySourceFiles)
+            {
+                detailsByFileId.Add(spectrumSourceFile.Id, new SpectrumSourceFileDetails(spectrumSourceFile.FilePath, spectrumSourceFile.IdFilePath));
+                scoreTypesByFileId.Add(spectrumSourceFile.Id, new HashSet<string>());
+            }
 
-                        // Query for the source files detail information.
-                        // If any of the first 3 columns are missing an exception is thrown,
-                        // and only the filenames get listed.
-                        // 1. The number of matching entries in the RefSpectra is "BestSpectra".
-                        // 2. The number of entries in the RetentionTimes table is "MatchedSpectra".
-                        // 3. The score type for the entry is joined from "ScoreTypes".
-                        // Also, select "ssf.*" because not all tables have a column "cutoffScore" or "idFileName".
-                        var cols = new List<string>();
-                        cols.Add("ssf.fileName");
-                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "idFileName"))
-                            cols.Add("ssf.idFileName");
-                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "SpectrumSourceFiles", "cutoffScore"))
-                            cols.Add("ssf.cutoffScore");
-                        cols.Add("st.scoreType");
-                        if (SqliteOperations.ColumnExists(_sqliteConnection.Connection, "ScoreTypes", "probabilityType"))
-                            cols.Add("st.probabilityType");
-                        cols.Add("rs.BestSpectra");
-                        cols.Add("rs.MatchedSpectra");
 
-                        select.CommandText =
-                            "SELECT " + string.Join(", ", cols) + @"
-                            FROM SpectrumSourceFiles ssf
-                            LEFT JOIN (SELECT rsInner.fileId, rsInner.scoreType AS scoreType, COUNT(DISTINCT rsInner.id) AS BestSpectra, (SELECT COUNT(*) AS MatchedSpectra FROM RetentionTimes RT WHERE RT.SpectrumSourceId = rsInner.fileId) AS MatchedSpectra 
-                                FROM RefSpectra rsInner GROUP BY rsInner.fileId, rsInner.scoreType) RS ON RS.fileId = ssf.id
-                            LEFT JOIN ScoreTypes st ON rs.scoreType = st.id";
-                        // ReSharper restore LocalizableElement
-                        using (SQLiteDataReader reader = select.ExecuteReader())
+            foreach (var entry in _libraryEntries)
+            {
+                if (detailsByFileId.TryGetValue(entry.SpectrumSourceId, out var bestDetails))
+                {
+                    bestDetails.BestSpectrum++;
+                    scoreTypesByFileId[entry.SpectrumSourceId].Add(entry.ScoreType);
+                }
+                foreach (var idTimes in entry.RetentionTimesByFileId.GetTimesById())
+                {
+                    if (detailsByFileId.TryGetValue(idTimes.Key, out var details))
+                    {
+                        details.MatchedSpectrum += idTimes.Value.Count;
+                    }
+                }
+            }
+
+            foreach (var file in _librarySourceFiles)
+            {
+                if (scoreTypesByFileId.TryGetValue(file.Id, out var scoreTypes))
+                {
+                    foreach (var scoreTypeName in scoreTypes)
+                    {
+                        if (scoreTypesByName.TryGetValue(scoreTypeName, out var scoreType))
                         {
-                            int icolFileName = GetColumnIndex(reader, @"fileName");
-                            int icolIdFileName = GetColumnIndex(reader, @"idFileName");           // May be -1
-                            int icolCutoffScore = GetColumnIndex(reader, @"cutoffScore");         // May be -1
-                            int icolBestSpectra = GetColumnIndex(reader, @"BestSpectra");         // May be missing causing exception
-                            int icolMatchedSpectra = GetColumnIndex(reader, @"MatchedSpectra");   // May be missing
-                            int icolScoreType = GetColumnIndex(reader, @"scoreType");             // May be missing
-                            int icolProbabilityType = GetColumnIndex(reader, @"probabilityType"); // May be missing
-                            var seenScoreTypes = new HashSet<ScoreType>();
-                            while (reader.Read())
-                            {
-                                string filename = reader.GetString(icolFileName);
-                                string idFilename = null;
-                                if (icolIdFileName > 0 && !reader.IsDBNull(icolIdFileName))
-                                {
-                                    idFilename = reader.GetString(icolIdFileName);
-                                }
-                                SpectrumSourceFileDetails sourceFileDetails;
-                                if (!detailsByFileName.TryGetValue(filename, out sourceFileDetails))
-                                {
-                                    sourceFileDetails = new SpectrumSourceFileDetails(filename, idFilename);
-                                    detailsByFileName.Add(filename, sourceFileDetails);
-                                }
-                                if (!reader.IsDBNull(icolBestSpectra))
-                                    sourceFileDetails.BestSpectrum += Convert.ToInt32(reader.GetValue(icolBestSpectra));
-                                if (!reader.IsDBNull(icolMatchedSpectra))
-                                    sourceFileDetails.MatchedSpectrum += Convert.ToInt32(reader.GetValue(icolMatchedSpectra));
-                                var scoreName = !reader.IsDBNull(icolScoreType) ? reader.GetString(icolScoreType) : string.Empty;
-                                var probabilityType = !reader.IsDBNull(icolProbabilityType) ? reader.GetString(icolProbabilityType) : null;
-                                var cutoffScore = icolCutoffScore >= 0 && !reader.IsDBNull(icolCutoffScore)
-                                    ? Convert.ToDouble(reader.GetValue(icolCutoffScore))
-                                    : (double?)null;
-
-                                if (!string.IsNullOrEmpty(scoreName) && ScoreType.INVARIANT_NAMES.Contains(scoreName))
-                                {
-                                    var scoreType = new ScoreType(scoreName, probabilityType);
-                                    sourceFileDetails.ScoreThresholds[scoreType] = cutoffScore;
-                                    seenScoreTypes.Add(scoreType);
-                                }
-                            }
-
-                            // Cleanup cut-off scores without a score type
-                            // CONSIDER: We should add a score type column to the SpectrumSourceFiles table
-                            if (seenScoreTypes.Count == 1)
-                            {
-                                foreach (var details in detailsByFileName.Values.Where(d => d.ScoreThresholds.Count == 1))
-                                {
-                                    var kvp = details.ScoreThresholds.First();
-                                    if (Equals(kvp.Key.NameInvariant, string.Empty))
-                                    {
-                                        details.ScoreThresholds[seenScoreTypes.First()] = kvp.Value;
-                                        details.ScoreThresholds.Remove(kvp.Key);
-                                    }
-                                }
-                            }
+                            detailsByFileId[file.Id].ScoreThresholds.Add(scoreType, file.CutoffScore);
                         }
                     }
                 }
-                return detailsByFileName.Values.ToArray();
             }
-            catch (Exception)
-            {
-                return _librarySourceFiles.Select(file => new SpectrumSourceFileDetails(file.FilePath, file.IdFilePath));
-            }
+
+            return _librarySourceFiles.Select(file => detailsByFileId[file.Id]);
         }
 
         private static int GetColumnIndex(SQLiteDataReader reader, string columnName)
@@ -502,7 +465,8 @@ namespace pwiz.Skyline.Model.Lib
             score,
             scoreType,
             SpecIDinFile,
-            retentionTime
+            retentionTime,
+            fileId
         }
 
         private enum RefSpectraPeaks
@@ -579,7 +543,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             id,
             fileName,
-            idFileName
+            idFileName,
+            cutoffScore
         }
 
         private enum ScoreTypes
@@ -703,6 +668,7 @@ namespace pwiz.Skyline.Model.Lib
                         int iIdFilename =
                             reader.GetOrdinal(SpectrumSourceFiles
                                 .idFileName); // Save the search result file, too (may be distinct from the spectra source file)
+                        int iIdCutoffScore = reader.GetOrdinal(SpectrumSourceFiles.cutoffScore);
                         while (reader.Read())
                         {
                             string filename = reader.GetString(iFilename);
@@ -710,7 +676,8 @@ namespace pwiz.Skyline.Model.Lib
                                 ? null
                                 : reader.GetString(iIdFilename);
                             int id = reader.GetInt32(iId);
-                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty));
+                            double? cutoffScore = iIdCutoffScore < 0 || reader.IsDBNull(iIdCutoffScore) ? (double?) null : reader.GetDouble(iIdCutoffScore);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename, idFilename ?? string.Empty, cutoffScore));
                         }
                     }
 
@@ -747,6 +714,7 @@ namespace pwiz.Skyline.Model.Lib
                 int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
                 int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
                 int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
+                int iFileId = reader.GetOrdinal(RefSpectra.fileId);
 
                 while (reader.Read())
                 {
@@ -767,6 +735,8 @@ namespace pwiz.Skyline.Model.Lib
 
                     int id = reader.GetInt32(iId);
                     proteinsBySpectraID.TryGetValue(id, out var protein);
+                    int fileId = reader.GetInt32(iFileId);
+
 
                     string sequence = reader.GetString(iModSeq);
                     int charge = reader.GetInt16(iCharge);
@@ -862,7 +832,7 @@ namespace pwiz.Skyline.Model.Lib
                                 scoreTypesById.TryGetValue(scoreType.Value, out scoreName);
                             }
 
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, protein,
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, fileId, protein,
                                 scoreName == null ? null : score, scoreName));
                         }
                     }
@@ -2072,16 +2042,18 @@ namespace pwiz.Skyline.Model.Lib
 
         private struct BiblioLiteSourceInfo
         {
-            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath) : this()
+            public BiblioLiteSourceInfo(int id, string filePath, string idFilePath, double? cutoffScore) : this()
             {
                 Id = id;
                 FilePath = filePath;
                 IdFilePath = idFilePath;
+                CutoffScore = cutoffScore;
             }
 
             public int Id { get; private set; }
             public string FilePath { get; private set; } // File from which the spectra were taken (may be same as idFilePath if spectra are taken from search file)
             public string IdFilePath { get; private set; } // File from which the IDs were taken (e.g. search results file from Mascot etc)
+            public double? CutoffScore { get; }
 
             public string BaseName
             {
@@ -2477,6 +2449,12 @@ namespace pwiz.Skyline.Model.Lib
             }
             return times.Select(time => (double) time).ToArray();
         }
+
+        public IEnumerable<KeyValuePair<int, IList<float>>> GetTimesById()
+        {
+            return _timesById.Select(entry =>
+                new KeyValuePair<int, IList<float>>(entry.Key, new ReadOnlyCollection<float>(entry.Value)));
+        }
       
         public void Write(Stream stream)
         {
@@ -2619,13 +2597,14 @@ namespace pwiz.Skyline.Model.Lib
 
     public class BiblioLiteSpectrumInfo : Immutable, ICachedSpectrumInfo
     {
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, string protein, 
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int spectrumSourceId, string protein, 
             double? score = null, string scoreType = null)
         {
             Key = key;
             Copies = copies;
             NumPeaks = numPeaks;
             Id = id;
+            SpectrumSourceId = spectrumSourceId;
             Protein = protein;
             PeakBoundariesByFileId = ExplicitPeakBoundsDict<int>.EMPTY;
             Score = score;
@@ -2636,6 +2615,7 @@ namespace pwiz.Skyline.Model.Lib
         public int Copies { get; }
         public int NumPeaks { get; }
         public int Id { get; }
+        public int SpectrumSourceId { get; }
         public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
         public IndexedRetentionTimes RetentionTimesByFileId { get; private set; }
         public IndexedIonMobilities IonMobilitiesByFileId { get; private set; }
