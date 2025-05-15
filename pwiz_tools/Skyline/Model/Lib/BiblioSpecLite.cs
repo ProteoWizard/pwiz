@@ -28,6 +28,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Dapper;
 using JetBrains.Annotations;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
@@ -2098,28 +2099,25 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        class RetentionTimeRow
+        {
+            public int? RefSpectraID { get; set; }
+            public int? SpectrumSourceID { get; set; }
+            public double? retentionTime { get; set; }
+            public double? driftTimeMsec { get; set; }
+            public double? collisionalCrossSectionSqA { get; set; }
+            public double? driftTimeHighEnergyOffsetMsec { get; set; }
+            public byte? ionMobilityType { get; set; }
+            public double? ionMobilityValue { get; set; }
+            public double? ionMobilityHighEnergyDriftTimeOffsetMsec { get; set; }
+            public double? startTime { get; set; }
+            public double? endTime { get; set; }
+            public double? ionMobility { get; set; }
+            public double? ionMobilityHighEnergyOffset { get; set; }
+            public double? score { get; set; }
+        }
         class RetentionTimeReader
         {
-            enum Column
-            {
-                RefSpectraID,
-                SpectrumSourceID,
-                retentionTime,
-                driftTimeMsec,
-                collisionalCrossSectionSqA,
-                driftTimeHighEnergyOffsetMsec,
-                ionMobilityType,
-                ionMobilityValue,
-                ionMobilityHighEnergyDriftTimeOffsetMsec,
-                startTime,
-                endTime,
-                ionMobility,
-                ionMobilityHighEnergyOffset,
-                score,
-                MAX_COLUMN
-            }
-
-            private int?[] _columnIndexes;
             private readonly int _schemaVer;
             private readonly string _dbPath;
 
@@ -2170,26 +2168,20 @@ namespace pwiz.Skyline.Model.Lib
                 ParallelEx.For(0, threadCount, threadIndex =>
                 {
                     using var conn = SqliteOperations.OpenConnection(_dbPath);
-                    using var stmt = conn.CreateCommand();
-                    stmt.CommandText = "SELECT * From RetentionTimes WHERE RefSpectraId % "
-                                       + threadCount + " = " + threadIndex;
-                    using var reader = stmt.ExecuteReader();
-                    ReadSubset(reader);
+                    ReadSubset(conn, threadCount, threadIndex);
                 }, maxThreads: threadCount);
                 status = _progressStatus;
             }
 
-            private void ReadSubset(IDataReader reader)
+            private void ReadSubset(IDbConnection connection, int threadCount, int threadIndex)
             {
-                InitializeColumnIndexes(reader);
-                List<object[]> rows = new List<object[]>();
-                int columnCount = reader.FieldCount;
+                var sql = @"SELECT * From RetentionTimes WHERE RefSpectraId % "
+                          + threadCount + @" = " + threadIndex;
+                List<RetentionTimeRow> rows = new List<RetentionTimeRow>();
                 int? lastRefSpectraId = null;
-                while (reader.Read())
+                foreach (var row in connection.Query<RetentionTimeRow>(sql, buffered: false))
                 {
-                    var row = new object[columnCount];
-                    reader.GetValues(row);
-                    int? refSpectraId = GetInt(Column.RefSpectraID, row);
+                    int? refSpectraId = row.RefSpectraID;
                     if (refSpectraId == null)
                     {
                         continue;
@@ -2202,7 +2194,7 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 return;
                             }
-                            rows = new List<object[]>();
+                            rows = new List<RetentionTimeRow>();
                         }
 
                         lastRefSpectraId = refSpectraId;
@@ -2216,45 +2208,23 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            private void InitializeColumnIndexes(IDataReader dataReader)
+            private bool ConsumeRows(List<RetentionTimeRow> rows)
             {
-                lock (this)
-                {
-                    if (_columnIndexes != null)
-                    {
-                        return;
-                    }
-                    _columnIndexes = new int?[(int)Column.MAX_COLUMN];
-                    for (int colEnum = 0; colEnum < (int)Column.MAX_COLUMN; colEnum++)
-                    {
-                        string columnName = ((Column)colEnum).ToString();
-                        int ordinal = dataReader.GetOrdinal(columnName);
-                        if (ordinal >= 0)
-                        {
-                            _columnIndexes[colEnum] = ordinal;
-                        }
-                    }
-                }
-            }
-
-            private bool ConsumeRows(List<object[]> rows)
-            {
-                var refSpectraId = GetInt(Column.RefSpectraID, rows[0]);
+                var refSpectraId = rows[0].RefSpectraID;
                 var retentionTimes = new List<KeyValuePair<int, double>>();
                 var ionMobilities = new List<KeyValuePair<int, IonMobilityAndCCS>>();
                 var explicitPeakBounds = new List<KeyValuePair<int, ExplicitPeakBounds>>();
                 foreach (var row in rows)
                 {
-                    int? fileId = GetInt(Column.SpectrumSourceID, row);
+                    int? fileId = row.SpectrumSourceID;
                     if (!fileId.HasValue)
                     {
                         continue;
                     }
 
-                    var retentionTime = GetDouble(Column.retentionTime, row);
-                    if (retentionTime.HasValue)
+                    if (row.retentionTime.HasValue)
                     {
-                        retentionTimes.Add(new KeyValuePair<int, double>(fileId.Value, retentionTime.Value));
+                        retentionTimes.Add(new KeyValuePair<int, double>(fileId.Value, row.retentionTime.Value));
                     }
 
                     var ionMobility = ReadIonMobilityInfo(row);
@@ -2343,7 +2313,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            public IonMobilityAndCCS ReadIonMobilityInfo(object[] row)
+            public IonMobilityAndCCS ReadIonMobilityInfo(RetentionTimeRow row)
             {
                 if (_schemaVer < 2)
                 {
@@ -2353,16 +2323,14 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     default:
                     {
-                        double mobility = GetDouble(Column.ionMobility, row).GetValueOrDefault();
-                        double collisionalCrossSection =
-                            GetDouble(Column.collisionalCrossSectionSqA, row).GetValueOrDefault();
-                        double highEnergyOffset =
-                            GetDouble(Column.ionMobilityHighEnergyOffset, row).GetValueOrDefault();
-                        var units = (eIonMobilityUnits)GetInt(Column.ionMobilityType, row).GetValueOrDefault();
+                        double mobility = row.ionMobility ?? 0;
+                        double collisionalCrossSection = row.collisionalCrossSectionSqA ?? 0;
+                        double highEnergyOffset = row.ionMobilityHighEnergyOffset ?? 0;
+                        var units = (eIonMobilityUnits)row.ionMobilityType.GetValueOrDefault();
                         if (mobility == 0 && collisionalCrossSection == 0 &&
                             highEnergyOffset == 0)
                         {
-                            return IonMobilityAndCCS.EMPTY;
+                            return null;
                         }
                         return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(mobility, units),
                             collisionalCrossSection, highEnergyOffset);
@@ -2370,15 +2338,14 @@ namespace pwiz.Skyline.Model.Lib
                     case 5:
                     case 4:
                     {
-                        double driftTimeMsec = GetDouble(Column.driftTimeMsec, row).GetValueOrDefault();
+                        double driftTimeMsec = row.driftTimeMsec ?? 0;
                         double collisionalCrossSection =
-                            GetDouble(Column.collisionalCrossSectionSqA, row).GetValueOrDefault();
-                        double highEnergyOffset =
-                            GetDouble(Column.driftTimeHighEnergyOffsetMsec, row).GetValueOrDefault();
+                            row.collisionalCrossSectionSqA ?? 0;
+                        double highEnergyOffset = row.driftTimeHighEnergyOffsetMsec ?? 0;
                         if (driftTimeMsec == 0 && collisionalCrossSection == 0 &&
                             highEnergyOffset == 0)
                         {
-                            return IonMobilityAndCCS.EMPTY;
+                            return null;
                         }
                         return IonMobilityAndCCS.GetIonMobilityAndCCS(IonMobilityValue.GetIonMobilityValue(driftTimeMsec, eIonMobilityUnits.drift_time_msec),
                             collisionalCrossSection, highEnergyOffset);
@@ -2386,12 +2353,12 @@ namespace pwiz.Skyline.Model.Lib
                     case 3:
                     case 2:
                     {
-                        int ionMobilityType = GetInt(Column.ionMobilityType, row).GetValueOrDefault();
-                        double ionMobilityValue = GetDouble(Column.ionMobilityValue, row).GetValueOrDefault();
-                        double highEnergyOffset = GetDouble(Column.ionMobilityHighEnergyDriftTimeOffsetMsec, row).GetValueOrDefault();
+                        int ionMobilityType = row.ionMobilityType ?? 0;
+                        double ionMobilityValue = row.ionMobilityValue ?? 0;
+                        double highEnergyOffset = row.ionMobilityHighEnergyDriftTimeOffsetMsec ?? 0;
                         if (ionMobilityValue == 0 && highEnergyOffset == 0)
                         {
-                            return IonMobilityAndCCS.EMPTY;
+                            return null;
                         }
                         bool isCcs = ionMobilityType == (int) IonMobilityType.collisionalCrossSection;
                         return IonMobilityAndCCS.GetIonMobilityAndCCS(isCcs ? IonMobilityValue.EMPTY : IonMobilityValue.GetIonMobilityValue(ionMobilityValue, eIonMobilityUnits.drift_time_msec), isCcs ? ionMobilityValue : (double?)null, highEnergyOffset);
@@ -2399,60 +2366,13 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            public ExplicitPeakBounds ReadPeakBounds(object[] row)
+            public ExplicitPeakBounds ReadPeakBounds(RetentionTimeRow row)
             {
-                double? startTime = GetDouble(Column.startTime, row);
-                double? endTime = GetDouble(Column.endTime, row);
-                double score = GetDouble(Column.score, row) ?? ExplicitPeakBounds.UNKNOWN_SCORE;
-                if (startTime.HasValue && endTime.HasValue)
+                if (row.startTime.HasValue && row.endTime.HasValue)
                 {
-                    return new ExplicitPeakBounds(startTime.Value, endTime.Value, score);
+                    return new ExplicitPeakBounds(row.startTime.Value, row.endTime.Value, row.score ?? ExplicitPeakBounds.UNKNOWN_SCORE);
                 }
                 return null;
-            }
-
-            private object GetValue(Column column, object[] row)
-            {
-                int? columnIndex = _columnIndexes[(int)column];
-                if (!columnIndex.HasValue)
-                {
-                    return null;
-                }
-
-                object value = row[columnIndex.Value];
-                if (value is DBNull)
-                {
-                    return null;
-                }
-
-                return value;
-            }
-
-            private int? GetInt(Column column, object[] row)
-            {
-                var value = GetValue(column, row);
-                if (value == null)
-                {
-                    return null;
-                }
-
-                if (value is int intValue)
-                {
-                    return intValue;
-                }
-
-                return Convert.ToInt32(value);
-            }
-
-            private double? GetDouble(Column column, object[] row)
-            {
-                var value = GetValue(column, row);
-                if (value == null)
-                {
-                    return null;
-                }
-
-                return Convert.ToDouble(value);
             }
         }
 
