@@ -28,7 +28,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Model.AlphaPeptDeep;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
@@ -39,6 +38,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
 using System.Runtime.CompilerServices;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using File = System.IO.File;
 
 
@@ -408,9 +408,6 @@ namespace pwiz.Skyline.SettingsUI
                     peptidesPerPrecursor, precursors, nce);
                 
                 BuilderLibFilepath = Builder.BuilderLibraryPath;
-
-                
-
             }
             catch (Exception ex)
             {

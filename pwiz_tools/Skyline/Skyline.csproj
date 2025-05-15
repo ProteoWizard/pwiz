@@ -518,7 +518,7 @@
     <Compile Include="FileUI\PeptideSearch\HardklorSearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Model\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\AlphaPeptDeep\AlphapeptdeepLibraryBuilder.cs" />
     <Compile Include="Model\AuditLog\EnumNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -549,7 +549,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>PropertyNames.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\Databinding\Collections\FixedSkylineObjectList.cs" />
     <Compile Include="Model\Databinding\Entities\CalibrationCurveMetrics.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnCaptions.Designer.cs">
@@ -580,6 +579,8 @@
     </Compile>
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
+    <Compile Include="Model\Lib\AlphaPeptDeep\AbstractDeepLibraryBuilder.cs" />
+    <Compile Include="Model\Lib\Carafe\CarafeLibraryBuilder.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
     <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
     <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
@@ -7199,6 +7200,10 @@
     <PackageReference Include="Microsoft.Web.WebView2">
       <Version>1.0.2420.47</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Model\AlphaPeptDeep\" />
+    <Folder Include="Model\Carafe\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">

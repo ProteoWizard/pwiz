@@ -344,6 +344,7 @@ namespace pwiz.Skyline.Model.Tools
         public PythonInstaller(IEnumerable<PythonPackage> packages,
             TextWriter writer, string virtualEnvironmentName)
         {
+            // SimulatedInstallationState = eSimulatedInstallationState.NONE;
             Writer = writer;
             VirtualEnvironmentName = virtualEnvironmentName;
             PendingTasks = new List<PythonTaskBase>();

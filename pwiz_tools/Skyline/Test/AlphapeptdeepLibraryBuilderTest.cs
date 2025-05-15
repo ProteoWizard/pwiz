@@ -17,9 +17,9 @@
  * limitations under the License.
  */
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
-using pwiz.Skyline.Model.Lib;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -30,7 +30,8 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void TestModificationInfo()
         {
-            var groupedByAccession = LibraryHelper.AlphapeptdeepModificationNames.GroupBy(item => item.Accession);
+            var groupedByAccession = AlphapeptdeepLibraryBuilder.MODIFICATION_NAMES
+                .GroupBy(item => item.Accession);
             foreach (var group in groupedByAccession)
             {
                 Assert.AreEqual(1, group.Count(), "Duplicate accession {0}", group.Key);

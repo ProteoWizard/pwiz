@@ -584,6 +584,25 @@ namespace pwiz.Skyline.Util.Extensions
             return sb.ToString();
         }
 
+        private const int TAB_SIZE = 4;
+        
+        public static string GetIndentation(int indentLevel, int tabSize = TAB_SIZE)
+        {
+            if (indentLevel <= 0)
+                return string.Empty;
+
+            return new StringBuilder(tabSize * indentLevel).Insert(0, new string(' ', tabSize), indentLevel)
+                .ToString();
+        }
+
+        public static string Indent(this string s, int indentLevel)
+        {
+            if (s == null || indentLevel <= 0)
+                return s;
+
+            return GetIndentation(indentLevel) + s;
+        }
+
         /// <summary>
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
         /// </summary>

@@ -665,7 +665,7 @@ namespace pwiz.Skyline.Model.Lib
             using (cacheFileStream) 
             {
                 using SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection);
-                int rows = 0;
+                int rows;
                 string lsid;
                 int dataRev, schemaVer;
 
@@ -674,9 +674,7 @@ namespace pwiz.Skyline.Model.Lib
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     if (!reader.Read())
-                        throw new IOException(string.Format(
-                            LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__,
-                            FilePath));
+                        throw new IOException(string.Format(LibResources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
 
                     rows = reader.GetInt32(LibInfo.numSpecs);
 
@@ -690,8 +688,6 @@ namespace pwiz.Skyline.Model.Lib
                     SetRevision(dataRev, schemaVer);
                 }
 
-
- 
                 // Corrupted library without a valid row count, but try to compensate
                 // by using count(*)
                 if (rows == 0)
