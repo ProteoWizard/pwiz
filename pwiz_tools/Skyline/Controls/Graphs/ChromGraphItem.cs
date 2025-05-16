@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
-using JetBrains.Annotations;
 using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
@@ -175,33 +174,6 @@ namespace pwiz.Skyline.Controls.Graphs
         public int? OptimizationStep { get; }
 
         public double? RetentionPrediction { get; set; }
-
-        //Collisional Cross Sections
-        public class ChargeAndCollisionalCrossSection
-        {
-            public ChargeAndCollisionalCrossSection(int charge, double? ccs)
-            {
-                Charge = charge;
-                CCS = ccs;
-            }
-
-            public int Charge { get; private set; }
-            public double? CCS { get; private set; }
-        }
-
-        public class ChargeAndCcsIndex
-        {
-            public ChargeAndCcsIndex(int index, ChargeAndCollisionalCrossSection chargeAndCcs)
-            {
-                Index = index;
-                ChargeAndCcs = chargeAndCcs;
-            }
-
-            public ChargeAndCollisionalCrossSection ChargeAndCcs { get; private set; }
-            public int Index { get; private set; }
-        }
-
-        [CanBeNull] public IList <ChargeAndCollisionalCrossSection> CCSPredictions { get; set; }
         public ExplicitRetentionTimeInfo RetentionExplicit { get; set; }
         public double RetentionWindow { get; set; }
 
@@ -576,8 +548,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         GraphsResources.ChromGraphItem_AddAnnotations_Explicit,
                         GraphObjType.predicted_rt_window,
                         COLOR_RETENTION_TIME,
-                        ScaleRetentionTime(time), 
-                        CCSPredictions != null ? CCSPredictions : null);
+                        ScaleRetentionTime(time));
                 }
                 // Draw background for retention time window
                 if ((RetentionExplicit.RetentionTimeWindow??0) > 0.0)
@@ -611,8 +582,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                GraphsResources.ChromGraphItem_AddAnnotations_Predicted,
                                                GraphObjType.predicted_rt_window,
                                                COLOR_RETENTION_TIME,
-                                               ScaleRetentionTime(time),
-                                               CCSPredictions != null ? CCSPredictions : null);
+                                               ScaleRetentionTime(time));
                 }
 
                 // Draw background for retention time window
@@ -631,7 +601,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-
             for (int i = 0, len = Chromatogram.NumPeaks; i < len; i++)
             {
                 if (_arrayLabelIndexes[i] == -1)
@@ -647,22 +616,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
-            PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime,
-            [CanBeNull] IList<ChargeAndCollisionalCrossSection> ccs = null)
+            PointF ptTop, string title, GraphObjType graphObjType, Color color, ScaledRetentionTime retentionTime)
         {
             // ReSharper disable LocalizableElement
             string label = string.Format("{0}\n{1:F01}", title, retentionTime.DisplayTime);
-
-            // DSHTEYN: Commented out until we figure where best to display this info
-            //if (ccs != null)
-            //{
-            //    var matchingCcs = ccs.Where(z => z.Charge == TransitionGroupNode.PrecursorCharge);
-            //    string Asq = "\u00C5\u00B2";
-            //    matchingCcs.ForEach(chargeAndCcsIndex => 
-            //        label += string.Format("\n{0} ({1}): {2:F02} {3}", FullScanPropertiesRes.CCS, chargeAndCcsIndex.Charge, chargeAndCcsIndex.CCS, Asq));
-            //}
-
-        // ReSharper restore LocalizableElement
+            // ReSharper restore LocalizableElement
             FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);
             SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
             PointF realTopPoint = ptTop;

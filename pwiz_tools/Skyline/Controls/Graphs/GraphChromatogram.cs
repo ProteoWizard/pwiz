@@ -26,7 +26,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using JetBrains.Annotations;
 using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
@@ -697,11 +696,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return RTGraphItem.RetentionPrediction; }
         }
-        [CanBeNull]
-        public IList<ChromGraphItem.ChargeAndCollisionalCrossSection> PredictedCCS
-        {
-            get { return RTGraphItem.CCSPredictions; }
-        }
+
         private ChromGraphItem RTGraphItem
         {
             get { return GetGraphItems(graphControl.GraphPane).Last(); }
@@ -2297,30 +2292,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 nodePeps, lookupSequence, lookupMods);
             SetRetentionTimeIdIndicators(chromGraphPrimary, settings,
                 nodeGroups, lookupSequence, lookupMods);
-
-            if (!settings.PeptideSettings.Libraries.IsLoaded)
-            {
-                // No reason to continue if the Library is still loading or exception will occur in call to TryGetSpectralLibraryIonMobilities
-                return;
-            }
-
-            for (var index = 0; index < nodeGroups.Length; index++)
-            {
-                var libKey = nodeGroups[index].GetLibKey(settings, nodePeps[0]);
-                LibraryIonMobilityInfo libImInfo;
-
-                if (settings.PeptideSettings.Libraries.TryGetSpectralLibraryIonMobilities(new[] { libKey },
-                        chromGraphPrimary.Chromatogram.FilePath, out libImInfo))
-                {
-                    if (libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey) != null)
-                    {
-                    
-                        chromGraphPrimary.CCSPredictions ??= new List<ChromGraphItem.ChargeAndCollisionalCrossSection>();                          
-                        chromGraphPrimary.CCSPredictions.Add(new ChromGraphItem.ChargeAndCollisionalCrossSection(nodeGroups[index].PrecursorCharge, libImInfo.GetLibraryMeasuredCollisionalCrossSection(libKey)));
-                        
-                    }
-                }
-            }
         }
 
         private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary,

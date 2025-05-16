@@ -160,6 +160,7 @@ namespace pwiz.Common.SystemUtil
                 return (PercentComplete == percent);
             return (ZoomedPercentComplete == percent);
         }
+
         private int ZoomedToPercent(int percent)
         {
             return PercentZoomStart + percent*(PercentZoomEnd - PercentZoomStart)/100;

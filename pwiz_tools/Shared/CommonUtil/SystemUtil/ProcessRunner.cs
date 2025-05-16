@@ -36,7 +36,7 @@ namespace pwiz.Common.SystemUtil
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false);
         void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
                  TextWriter writer, ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-                 bool forceTempfilesCleanup = false, 
+                 bool forceTempfilesCleanup = false,
                  Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
                  bool updateProgressPercentage = true);
     }
@@ -77,7 +77,7 @@ namespace pwiz.Common.SystemUtil
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal,
-            bool forceTempfilesCleanup = false, 
+            bool forceTempfilesCleanup = false,
             Func<string, int, bool> outputAndExitCodeAreGoodFunc = null,
             bool updateProgressPercentage = true)
         {
@@ -254,7 +254,7 @@ namespace pwiz.Common.SystemUtil
 
                 // Make to complete the status, if the process succeeded, but never
                 // printed 100% to the console
-                if (updateProgressPercentage && percentLast < 100 )
+                if (updateProgressPercentage && percentLast < 100)
                 {
                     status = status.ChangePercentComplete(100);
                     if (status.SegmentCount > 0)

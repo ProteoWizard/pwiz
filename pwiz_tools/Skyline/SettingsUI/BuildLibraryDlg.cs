@@ -134,7 +134,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
-        public PythonInstaller pythonInstaller { get; private set; }
+        public PythonInstaller PythonInstaller { get; private set; }
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -159,7 +159,6 @@ namespace pwiz.Skyline.SettingsUI
                 Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).Select(c => (object)c)
                     .ToArray());
             ceCombo.SelectedItem = Settings.Default.KoinaNCE;
-
 
             _helper = new MessageBoxHelper(this);
 
@@ -302,9 +301,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!SetupPythonEnvironmentForAlpha(createDlg))
                     {
-                        if (cleanUp) pythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
+                        if (cleanUp) PythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
                         return false;
-
                     }
 
                     if (!_documentUiContainer.Document.HasPeptides)
@@ -366,7 +364,6 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-
         public string BuilderLibFilepath { get; private set; }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
@@ -417,33 +414,28 @@ namespace pwiz.Skyline.SettingsUI
 
             return true;
         }
-       
 
         private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
-            
-            var packages = new List<PythonPackage>()
+            var packages = new List<PythonPackage>
             {
-               
-
-                new PythonPackage {Name = @"peptdeep", Version = null },
+                new PythonPackage { Name = @"peptdeep", Version = null },
                 
                 // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
                 // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
                 // TODO: delete the following line after the issue above is resolved
-                new PythonPackage {Name = @"numpy", Version = @"1.26.4" }
+                new PythonPackage { Name = @"numpy", Version = @"1.26.4" }
             };
 
-            if (pythonInstaller == null)
-                pythonInstaller = new PythonInstaller(packages, new TextBoxStreamWriterHelper(), ALPHAPEPTDEEP);
+            if (PythonInstaller == null)
+                PythonInstaller = new PythonInstaller(packages, new TextBoxStreamWriterHelper(), ALPHAPEPTDEEP);
             else
-                pythonInstaller.ClearPendingTasks();
-
+                PythonInstaller.ClearPendingTasks();
 
             Cursor = Cursors.WaitCursor;
             btnNext.Enabled = false;
 
-            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
+            if (PythonInstaller.IsPythonVirtualEnvironmentReady() && PythonInstaller.IsNvidiaEnvironmentReady())
             {
                 Cursor = Cursors.Default;
                 btnNext.Enabled = true;
@@ -456,9 +448,8 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
+            if (!PythonInstaller.IsPythonVirtualEnvironmentReady())
             {
-
                 PythonDlg = new MultiButtonMsgDlg(
                     string.Format(
                         ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
@@ -470,7 +461,7 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = true;
                     return false;
                 }
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
                 {
                     if (!PythonDlg.IsDisposed) 
                         PythonDlg.Dispose();
@@ -480,9 +471,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
             }
-            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
+            else if (!PythonInstaller.IsNvidiaEnvironmentReady())
             {
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
+                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
                 {
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;

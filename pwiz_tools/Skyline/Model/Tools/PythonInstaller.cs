@@ -72,7 +72,6 @@ namespace pwiz.Skyline.Model.Tools
         internal const string SCRIPTS = @"Scripts";
         internal const string PIP_EXE = @"pip.exe";
         internal const string VIRTUALENV_EXE = @"virtualenv.exe";
-        private const string SPACE = TextUtil.SPACE;
         internal const string VIRTUALENV = @"virtualenv";
         internal const string GIT = @"git";
         internal const string REG_ADD_COMMAND = @"reg add";
@@ -192,6 +191,7 @@ namespace pwiz.Skyline.Model.Tools
         public IAsynchronousDownloadClient TestPipDownloadClient { get; set; }
         public static ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner { get; set; }
         #endregion
+
         public static string PythonVersionDir => Path.Combine(PythonRootDir, PythonVersion);
   
         private static string PythonEmbeddablePackageFileBaseName
@@ -204,11 +204,11 @@ namespace pwiz.Skyline.Model.Tools
                 return fileBaseName;
             }
         }
+
         private static string PythonRootDir => PythonInstallerUtil.PythonRootDir;
         internal static TextWriter Writer { get; set; }
         public bool HavePythonTasks { get; private set;}
         public bool HaveNvidiaTasks { get; private set; }
-
 
         public static bool CudaLibraryInstalled()
         {
@@ -242,7 +242,7 @@ namespace pwiz.Skyline.Model.Tools
 
             string targetDirectory = CuDNNInstallDir + @"\bin";
 
-            if (!Directory.Exists(targetDirectory)) 
+            if (!Directory.Exists(targetDirectory))
                 return false;
 
             string newPath = Environment.GetEnvironmentVariable(@"PATH");
@@ -257,11 +257,11 @@ namespace pwiz.Skyline.Model.Tools
             if (isValid)
             {
                 targetDirectory = CuDNNInstallDir + @"\include";
-                if (!Directory.Exists(targetDirectory)) 
+                if (!Directory.Exists(targetDirectory))
                     return false;
                 
                 targetDirectory = CuDNNInstallDir + @"\lib";
-                if (!Directory.Exists(targetDirectory)) 
+                if (!Directory.Exists(targetDirectory))
                     return false;
 
             }
@@ -292,10 +292,10 @@ namespace pwiz.Skyline.Model.Tools
         public static bool IsRunningElevated()
         {
             // Get current user's Windows identity
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            var identity = WindowsIdentity.GetCurrent();
 
             // Convert identity to WindowsPrincipal to check for roles
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            var principal = new WindowsPrincipal(identity);
 
             // Check if the current user is in the Administrators role
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
@@ -318,19 +318,17 @@ namespace pwiz.Skyline.Model.Tools
         /// <returns></returns>
         public static bool? TestForNvidiaGPU()
         {
-
-
             bool? nvidiaGpu = null;
             try
             {
                 // Query for video controllers using WMI
-                ManagementObjectSearcher searcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_VideoController");
+                var searcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_VideoController");
                 
                 foreach (ManagementObject obj in searcher.Get())
                 {
                     //  GPU information
                     nvidiaGpu = obj[@"Name"].ToString().StartsWith(@"NVIDIA");
-                    if (nvidiaGpu != false) 
+                    if (nvidiaGpu != false)
                         break;
                 }
             }
@@ -390,7 +388,7 @@ namespace pwiz.Skyline.Model.Tools
 
             var tasks = PendingTasks.IsNullOrEmpty() ? ValidatePythonVirtualEnvironment() : PendingTasks;
 
-            if (abortedTasks != null && abortedTasks.Count > 0) 
+            if (abortedTasks != null && abortedTasks.Count > 0)
                 tasks = abortedTasks;
 
             if (NumTotalTasks == NumCompletedTasks && NumCompletedTasks > 0)
@@ -421,7 +419,6 @@ namespace pwiz.Skyline.Model.Tools
             }
         }
 
-
         public List<PythonTaskBase> ValidatePythonVirtualEnvironment()
         {
             var pendingTasks = new List<PythonTaskBase>();
@@ -434,7 +431,7 @@ namespace pwiz.Skyline.Model.Tools
 
                 if (hasSeenFailure)
                 {
-                    if ( (isTaskComplete == true || isTaskComplete == null) && null == task.ParentTask)  
+                    if ((isTaskComplete == true || isTaskComplete == null) && null == task.ParentTask)
                         continue; 
                    
                     bool havePrerequisite = false;
@@ -459,13 +456,13 @@ namespace pwiz.Skyline.Model.Tools
 
                     }
 
-                    if (!havePrerequisite) 
+                    if (!havePrerequisite)
                         continue; 
                     
                 }
                 else
                 {
-                    if (isTaskComplete == true || isTaskComplete == null) 
+                    if (isTaskComplete == true || isTaskComplete == null)
                         continue; 
                     hasSeenFailure = true;
                 }
@@ -477,79 +474,53 @@ namespace pwiz.Skyline.Model.Tools
 
         public void EnableWindowsLongPaths(ILongWaitBroker broker = null)
         {
-            var cmdBuilder = new StringBuilder();
-            cmdBuilder.Append(REG_ADD_COMMAND)
-                .Append(SPACE)
-                .Append(TextUtil.Quote(REG_FILESYSTEM_KEY))
-                .Append(SPACE)
-                .Append(REG_LONGPATH_NAME)
-                .Append(SPACE)
-                .Append(REG_LONGPATH_TYPE)
-                .Append(SPACE)
-                .Append(REG_LONGPATH_VALUE)
-                .Append(SPACE)
-                .Append(REG_LONGPATH_FORCE);
+            var cmdLine = TextUtil.SpaceSeparate(REG_ADD_COMMAND,
+                REG_FILESYSTEM_KEY.Quote(),
+                REG_LONGPATH_NAME,
+                REG_LONGPATH_TYPE,
+                REG_LONGPATH_VALUE,
+                REG_LONGPATH_FORCE);
 
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdLine, CMD_PROCEEDING_SYMBOL);
+            cmd += cmdLine;
 
             var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
 
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
+            var cancelToken = broker.GetSafeCancellationToken();
 
             if (processRunner.RunProcess(cmd, true, Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
 
         }
+
         public static void DisableWindowsLongPaths(ILongWaitBroker broker = null)
         {
-            var cmdBuilder = new StringBuilder();
-            cmdBuilder.Append(REG_ADD_COMMAND)
-                .Append(SPACE)
-                .Append(TextUtil.Quote(REG_FILESYSTEM_KEY))
-                .Append(SPACE)
-                .Append(REG_LONGPATH_NAME)
-                .Append(SPACE)
-                .Append(REG_LONGPATH_TYPE)
-                .Append(SPACE)
-                .Append(REG_LONGPATH_ZERO)
-                .Append(SPACE)
-                .Append(REG_LONGPATH_FORCE);
+            var cmdLine = TextUtil.SpaceSeparate(REG_ADD_COMMAND,
+                REG_FILESYSTEM_KEY.Quote(),
+                REG_LONGPATH_NAME,
+                REG_LONGPATH_TYPE,
+                REG_LONGPATH_ZERO,
+                REG_LONGPATH_FORCE);
 
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdBuilder, CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdLine, CMD_PROCEEDING_SYMBOL);
+            cmd += cmdLine;
 
             var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
 
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
-
+            var cancelToken = broker.GetSafeCancellationToken();
 
             if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
 
         }
 
         internal void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, ILongWaitBroker broker = null)
         {
-            var cmdBuilder = new StringBuilder();
-            CancellationToken cancelToken = CancellationToken.None;
-
             try
             {
                 foreach (var package in packages)
                 {
                     string arg;
-                    cmdBuilder.Clear();
-                    cmdBuilder.Append(pythonExecutablePath)
-                        .Append(SPACE)
-                        .Append(PYTHON_MODULE_OPTION)
-                        .Append(SPACE)
-                        .Append(PIP)
-                        .Append(SPACE)
-                        .Append(INSTALL)
-                        .Append(SPACE);
                     if (package.Version.IsNullOrEmpty())
                     {
                         arg = package.Name;
@@ -565,24 +536,24 @@ namespace pwiz.Skyline.Model.Tools
                         arg = TextUtil.Quote(arg);
                     }
 
-
-                    cmdBuilder.Append(arg).Append(SPACE);
+                    var cmdLine = TextUtil.SpaceSeparate(pythonExecutablePath,
+                        PYTHON_MODULE_OPTION, PIP, INSTALL, arg, string.Empty);
 
                     var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO,
-                        cmdBuilder, CMD_PROCEEDING_SYMBOL);
+                        cmdLine, CMD_PROCEEDING_SYMBOL);
                     cmd += string.Format(
-                        ToolsResources
-                            .PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
+                        ToolsResources.PythonInstaller_PipInstall__0__This_sometimes_could_take_3_5_minutes__Please_be_patient___1__,
                         ECHO, CMD_PROCEEDING_SYMBOL);
-                    cmd += cmdBuilder;
+                    cmd += cmdLine;
+
                     var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
 
-                    if (broker != null) cancelToken = broker.CancellationToken;
+                    var cancelToken = broker.GetSafeCancellationToken();
+
                     if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
                     {
                         throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__,
-                            cmdBuilder));
-    
+                            cmdLine));
                     }
 
                     if (cancelToken.IsCancellationRequested)
@@ -602,37 +573,23 @@ namespace pwiz.Skyline.Model.Tools
 
         internal void RunPythonModule(string pythonExecutablePath, string changeDir, string moduleName, string[] arguments, ILongWaitBroker broker = null)
         {
-            var cmdBuilder = new StringBuilder();
+            var cmdLine = TextUtil.SpaceSeparate(pythonExecutablePath, PYTHON_MODULE_OPTION, moduleName,
+                TextUtil.SpaceSeparate(arguments), string.Empty);
             if (changeDir != null)
             {
-                cmdBuilder.Append(CD)
-                    .Append(SPACE)
-                    .Append(changeDir)
-                    .Append(SPACE)
-                    .Append(CONDITIONAL_CMD_PROCEEDING_SYMBOL)
-                    .Append(SPACE);
+                cmdLine = TextUtil.SpaceSeparate(CD, changeDir.Quote(), CONDITIONAL_CMD_PROCEEDING_SYMBOL, cmdLine);
             }
-            cmdBuilder.Append(pythonExecutablePath)
-                .Append(SPACE)
-                .Append(PYTHON_MODULE_OPTION)
-                .Append(SPACE)
-                .Append(moduleName)
-                .Append(SPACE);
-            foreach (var argument in arguments)
-            {
-                cmdBuilder.Append(argument)
-                    .Append(SPACE);
-            }
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, GetEscapedCmdString(cmdBuilder.ToString()), CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, GetEscapedCmdString(cmdLine.ToString()), CMD_PROCEEDING_SYMBOL);
+            cmd += cmdLine;
+
             var pipedProcessRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
+
+            var cancelToken = broker.GetSafeCancellationToken();
+
             if (pipedProcessRunner.RunProcess(cmd, false, Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
             
             PythonInstallerUtil.SignDirectory(PythonEmbeddablePackageExtractDir);
-
         }
 
         private string GetEscapedCmdString(string cmdString)
@@ -651,14 +608,15 @@ namespace pwiz.Skyline.Model.Tools
                 DirectoryEx.SafeDeleteLongPath(CudaVersionDir);
             if (!PythonInstallerUtil.IsSignedFileOrDirectory(CuDNNVersionDir))
                 DirectoryEx.SafeDeleteLongPath(CuDNNVersionDir);
-            if (!PythonInstallerUtil.IsSignedFileOrDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name))) 
+            if (!PythonInstallerUtil.IsSignedFileOrDirectory(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name)))
                 DirectoryEx.SafeDeleteLongPath(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), name));
         }
 
         public static bool DeleteToolsPythonDirectory()
         {
             DirectoryEx.SafeDeleteLongPath(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python"));
-            if (Directory.Exists(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python"))) return false;
+            if (Directory.Exists(Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"Python")))
+                return false;
             return true;
         }
 
@@ -677,6 +635,7 @@ namespace pwiz.Skyline.Model.Tools
         private const string PYTHON_EXECUTABLE = @"python.exe";
         private const string ACTIVATE_SCRIPT_FILE_NAME = @"activate.bat";
         private const string SIGNATURE_EXTENSION = ".skysign";
+
         /// <summary>
         /// This directory is used to store python executables and virtual environments.
         /// </summary>
@@ -708,13 +667,9 @@ namespace pwiz.Skyline.Model.Tools
             return map[architecture];
         }
 
-
         /// <summary>
         /// Get python virtual environment directory.
         /// </summary>
-        /// <param name="pythonVersion"></param>
-        /// <param name="virtualEnvironmentName"></param>
-        /// <returns></returns>
         public static string GetPythonVirtualEnvironmentDir(string pythonVersion, string virtualEnvironmentName)
         {
             return Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), PYTHON, pythonVersion,
@@ -729,9 +684,6 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Get Python executable path.
         /// </summary>
-        /// <param name="pythonVersion"></param>
-        /// <param name="virtualEnvironmentName"></param>
-        /// <returns></returns>
         public static string GetPythonExecutablePath(string pythonVersion, string virtualEnvironmentName)
         {
             return Path.Combine(GetPythonVirtualEnvironmentScriptsDir(pythonVersion, virtualEnvironmentName),
@@ -741,9 +693,6 @@ namespace pwiz.Skyline.Model.Tools
         /// <summary>
         /// Get Python virtual environment activate.bat script path.
         /// </summary>
-        /// <param name="pythonVersion"></param>
-        /// <param name="virtualEnvironmentName"></param>
-        /// <returns></returns>
         public static string GetPythonVirtualEnvironmentActivationScriptPath(string pythonVersion, string virtualEnvironmentName)
         {
             return Path.Combine(GetPythonVirtualEnvironmentScriptsDir(pythonVersion, virtualEnvironmentName),
@@ -765,9 +714,16 @@ namespace pwiz.Skyline.Model.Tools
                 File.Copy(file, destFile, true); // true for overwrite existing file
             }
         }
+
+        public static CancellationToken GetSafeCancellationToken(this ILongWaitBroker broker)
+        {
+            return broker?.CancellationToken ?? CancellationToken.None;
+        }
+
         public static void CopyFilesElevated(string fromDirectory, string toDirectory, string pattern, ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner, TextWriter Writer, ILongWaitBroker broker = null)
         {
-            if (pattern.IsNullOrEmpty()) pattern = @"*";
+            if (string.IsNullOrEmpty(pattern))
+                pattern = @"*";
 
             if (!Directory.Exists(toDirectory))
             {
@@ -776,8 +732,7 @@ namespace pwiz.Skyline.Model.Tools
             }
 
             string[] files = Directory.GetFiles(fromDirectory, pattern);
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
+            var cancelToken = broker.GetSafeCancellationToken();
 
             for (int i = 0; i < files.Length; i++)
             {
@@ -788,27 +743,31 @@ namespace pwiz.Skyline.Model.Tools
                 cmd += command;
                 if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
                     throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, command));
-                if (cancelToken.IsCancellationRequested) break;
+                if (cancelToken.IsCancellationRequested)
+                    break;
             }
         }
         public static void CreateDirectoriesElevated(string [] directories, ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner, TextWriter Writer, ILongWaitBroker broker = null)
         {
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) cancelToken = broker.CancellationToken;
-            for (int i = 0; i < directories.Length; i++) 
+            var cancelToken = broker.GetSafeCancellationToken();
+            for (int i = 0; i < directories.Length; i++)
             {
-               var directory = directories[i];
-               if (Directory.Exists(directory)) 
-                   continue;
-               var command = $@"mkdir {TextUtil.Quote(directory)}";
-               var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, @"echo", command, TextUtil.AMPERSAND);
-               var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-               cmd += command;
-               if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
-                   throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, command));
-               if (cancelToken.IsCancellationRequested) break;
+                var directory = directories[i];
+                if (Directory.Exists(directory))
+                    continue;
+                var command = $@"mkdir {TextUtil.Quote(directory)}";
+                var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, @"echo",
+                    command, TextUtil.AMPERSAND);
+                var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
+                cmd += command;
+                if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
+                    throw new ToolExecutionException(
+                        string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, command));
+                if (cancelToken.IsCancellationRequested)
+                    break;
             }
         }
+
         public static string GetFileHash(string filePath)
         {
             using (var sha256 = SHA256.Create())
@@ -856,17 +815,17 @@ namespace pwiz.Skyline.Model.Tools
             }
             catch (IOException)
             {
-
+                // Ignore and hope for the best
             }
         }
 
         public static bool IsRunningElevated()
         {
             // Get current user's Windows identity
-            WindowsIdentity identity = WindowsIdentity.GetCurrent();
+            var identity = WindowsIdentity.GetCurrent();
 
             // Convert identity to WindowsPrincipal to check for roles
-            WindowsPrincipal principal = new WindowsPrincipal(identity);
+            var principal = new WindowsPrincipal(identity);
 
             // Check if the current user is in the Administrators role
             return principal.IsInRole(WindowsBuiltInRole.Administrator);
@@ -878,7 +837,6 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         /// <param name="path">path to file or directory</param>
         /// <param name="signature">key</param>
-        /// <returns></returns>
         public static bool? IsSignatureValid(string path, string signature)
         {
             string filePath = Path.GetFullPath(path) + SIGNATURE_EXTENSION;
@@ -887,57 +845,64 @@ namespace pwiz.Skyline.Model.Tools
             if (signature.IsNullOrEmpty())
                 return null;
             if (IsRunningElevated())
-                return signature == File.ReadAllText(filePath);
+                return Equals(signature, File.ReadAllText(filePath));
             else
             {
                 try
                 {
-                    FileInfo fileInfo = new FileInfo(filePath);
-                    using (fileInfo.OpenRead()) ;
+                    var fileInfo = new FileInfo(filePath);
+                    using (fileInfo.OpenRead());
                 }
                 catch (UnauthorizedAccessException)
                 {
                     return null;
                 }
-                if (signature != File.ReadAllText(filePath))
+                if (!Equals(signature, File.ReadAllText(filePath)))
                 {
                     File.Delete(filePath);
                     return false;
                 }
                 return true;
             }
-
         }
+
         public static bool IsSignedFileOrDirectory(string path)
         {
             return File.Exists(Path.GetFullPath(path) + SIGNATURE_EXTENSION);
         }
+
         public static void SignFile(string filePath)
         {
-            if (!File.Exists(filePath)) return;
+            if (!File.Exists(filePath))
+                return;
+
             string signatureFile = Path.GetFullPath(filePath) + SIGNATURE_EXTENSION;
-            using (FileSaver file = new FileSaver(signatureFile))
+            using (var file = new FileSaver(signatureFile))
             {
                 File.WriteAllText(file.SafeName, GetFileHash(filePath));
                 RetryAction(() => { file.Commit(); });
             }
         }
+
         public static void SignDirectory(string dirPath)
         {
-            if (!Directory.Exists(dirPath)) return;
+            if (!Directory.Exists(dirPath))
+                return;
 
             string signatureFile = Path.GetFullPath(dirPath) + SIGNATURE_EXTENSION;
-            using (FileSaver file = new FileSaver(signatureFile))
+            using (var file = new FileSaver(signatureFile))
             {
                 File.WriteAllText(file.SafeName, GetDirectoryHash(dirPath));
                 RetryAction(() => { file.Commit(); });
             }
         }
+
         public static string GetDirectoryHash(string directoryPath)
         {
             string[] filesArray = Directory.GetFiles(directoryPath, @"*", SearchOption.AllDirectories);
             return GetFilesArrayHash(filesArray);
         }
+
         public static string GetFilesArrayHash(string[] filesArray, int maxFilesToCheck = 1000)
         {
             // Use SHA256 for hashing
@@ -1000,6 +965,7 @@ namespace pwiz.Skyline.Model.Tools
         public string Name { get; set; }
         public string Version { get; set; }
     }
+
     internal class PythonInstallerException : Exception
     {
         public PythonInstallerException(string message, Exception inner = null) : base(message, inner)
@@ -1035,10 +1001,10 @@ namespace pwiz.Skyline.Model.Tools
             TaskName = name;
             ParentTask = parentTask;
         }
+
         /// <summary>
         /// Checks for presence of hashes or expected files and/or directories signifying completion of tasks
         /// </summary>
-
         public abstract bool? IsTaskComplete();
         public abstract void DoAction(ILongWaitBroker broker);
         public virtual bool IsRequiredForPythonEnvironment
@@ -1086,6 +1052,7 @@ namespace pwiz.Skyline.Model.Tools
 
             return _storedHash == PythonInstallerUtil.GetMD5FileHash(pythonFilePath);
         }
+
         public override void DoAction(ILongWaitBroker broker)
         {
             var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
@@ -1097,11 +1064,10 @@ namespace pwiz.Skyline.Model.Tools
             using var webClient = PythonInstaller.TestDownloadClient ?? new MultiFileAsynchronousDownloadClient(progressMonitor, 1);
             using var fileSaver = new FileSaver(PythonInstaller.PythonEmbeddablePackageDownloadPath);
             
-             if (!webClient.DownloadFileAsync(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName,
+            if (!webClient.DownloadFileAsync(PythonInstaller.PythonEmbeddablePackageUri, fileSaver.SafeName,
                     out var downloadException))
                 throw new ToolExecutionException(
-                    ToolsResources
-                        .PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_,
+                    ToolsResources.PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_,
                     downloadException);
 
             fileSaver.Commit();
@@ -1128,14 +1094,15 @@ namespace pwiz.Skyline.Model.Tools
         {
             return ToolsResources.PythonInstaller_GetPythonTask_Successfully_unzipped_Python_embeddable_package;
         }
+
         public override bool? IsTaskComplete()
         {
             if (!Directory.Exists(PythonInstaller.PythonEmbeddablePackageExtractDir))
                 return false;
-
            
             return PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.PythonEmbeddablePackageExtractDir);
         }
+
         public override void DoAction(ILongWaitBroker broker)
         {
             var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
@@ -1179,6 +1146,7 @@ namespace pwiz.Skyline.Model.Tools
             return PythonInstallerUtil.IsSignatureValid(PythonInstaller.PythonEmbeddablePackageExtractDir,
                 PythonInstallerUtil.GetDirectoryHash(PythonInstaller.PythonEmbeddablePackageExtractDir));
         }
+
         public override void DoAction(ILongWaitBroker broker)
         {
             var files = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*._pth");
@@ -1189,7 +1157,6 @@ namespace pwiz.Skyline.Model.Tools
             var newFilePath = Path.ChangeExtension(oldFilePath, @".pth");
             File.Move(oldFilePath, newFilePath);
         }
-
     }
 
     public class EnableLongPathsTask : PythonTaskBase
@@ -1218,32 +1185,25 @@ namespace pwiz.Skyline.Model.Tools
             return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE &&
                    (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
         }
+        
         public override void DoAction(ILongWaitBroker broker)
         {
-            var cmdBuilder = new StringBuilder();
-            cmdBuilder.Append(PythonInstaller.REG_ADD_COMMAND)
-                .Append(TextUtil.SPACE)
-                .Append(TextUtil.Quote(PythonInstaller.REG_FILESYSTEM_KEY))
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.REG_LONGPATH_NAME)
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.REG_LONGPATH_TYPE)
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.REG_LONGPATH_VALUE)
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.REG_LONGPATH_FORCE);
+            var cmdLine = TextUtil.SpaceSeparate(PythonInstaller.REG_ADD_COMMAND,
+                PythonInstaller.REG_FILESYSTEM_KEY.Quote(),
+                PythonInstaller.REG_LONGPATH_NAME,
+                PythonInstaller.REG_LONGPATH_TYPE,
+                PythonInstaller.REG_LONGPATH_VALUE,
+                PythonInstaller.REG_LONGPATH_FORCE);
 
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdBuilder, PythonInstaller.CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdLine, PythonInstaller.CMD_PROCEEDING_SYMBOL);
+            cmd += cmdLine;
 
             var processRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
 
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) 
-                cancelToken = broker.CancellationToken;
+            var cancelToken = broker.GetSafeCancellationToken();
 
             if (processRunner.RunProcess(cmd, true, PythonInstaller.Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
         }
 
         private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
@@ -1340,19 +1300,18 @@ namespace pwiz.Skyline.Model.Tools
         }
         public override void DoAction(ILongWaitBroker broker)
         {
-            var cmdBuilder = new StringBuilder();
-            cmdBuilder.Append(PythonInstaller.BasePythonExecutablePath)
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.GetPipScriptDownloadPath);
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdBuilder, PythonInstaller.CMD_PROCEEDING_SYMBOL);
-            cmd += cmdBuilder;
+            // CONSIDER(brendanx): Path quoting?
+            var cmdLine = TextUtil.SpaceSeparate(PythonInstaller.BasePythonExecutablePath,
+                PythonInstaller.GetPipScriptDownloadPath);
+            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdLine, PythonInstaller.CMD_PROCEEDING_SYMBOL);
+            cmd += cmdLine;
+            
             var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            CancellationToken cancelToken = CancellationToken.None;
-            if (broker != null) 
-                cancelToken = broker.CancellationToken;
+            
+            var cancelToken = broker.GetSafeCancellationToken();
 
             if (pipedProcessRunner.RunProcess(cmd, false, PythonInstaller.Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
+                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
 
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
             PythonInstallerUtil.SignFile(filePath);
@@ -1366,7 +1325,6 @@ namespace pwiz.Skyline.Model.Tools
     }
     public class PipInstallVirtualEnvTask : PythonTaskBase
     {
-
         public PipInstallVirtualEnvTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package, new RunGetPipScriptTask(installer))
         {
         }
@@ -1412,7 +1370,6 @@ namespace pwiz.Skyline.Model.Tools
 
     public class CreateVirtualEnvironmentTask : PythonTaskBase
     {
-
         public CreateVirtualEnvironmentTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package, new PipInstallVirtualEnvTask(installer))
         {
         }
@@ -1451,7 +1408,6 @@ namespace pwiz.Skyline.Model.Tools
 
     public class PipInstallPackagesTask : PythonTaskBase
     {
-
         public PipInstallPackagesTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package, new CreateVirtualEnvironmentTask(installer))
         {
         }
@@ -1484,16 +1440,13 @@ namespace pwiz.Skyline.Model.Tools
             if (PythonInstallerUtil.IsSignedFileOrDirectory(PythonInstaller.VirtualEnvironmentDir))
                 return true;
 
-            var argumentsBuilder = new StringBuilder();
-            argumentsBuilder.Append(PythonInstaller.PYTHON_MODULE_OPTION)
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.PIP)
-                .Append(TextUtil.SPACE)
-                .Append(PythonInstaller.FREEZE);
+            var arguments = TextUtil.SpaceSeparate(PythonInstaller.PYTHON_MODULE_OPTION,
+                PythonInstaller.PIP,
+                PythonInstaller.FREEZE);
             var processStartInfo = new ProcessStartInfo
             {
                 FileName = PythonInstaller.VirtualEnvironmentPythonExecutablePath,
-                Arguments = argumentsBuilder.ToString(),
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true,
                 UseShellExecute = false
@@ -1580,14 +1533,15 @@ namespace pwiz.Skyline.Model.Tools
         }
         public override void DoAction(ILongWaitBroker broker)
         {
-            CancellationToken cancelToken = CancellationToken.None;
             var cmdBuilder = new StringBuilder();
             cmdBuilder.Append(PythonInstaller.InstallNvidiaLibrariesBat);
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdBuilder, PythonInstaller.CMD_PROCEEDING_SYMBOL);
             cmd += cmdBuilder;
+
             var pipedProcessRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-            if (broker != null) 
-                cancelToken = broker.CancellationToken;
+
+            var cancelToken = broker.GetSafeCancellationToken();
+
             if (pipedProcessRunner.RunProcess(cmd, true, PythonInstaller.Writer, false, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }

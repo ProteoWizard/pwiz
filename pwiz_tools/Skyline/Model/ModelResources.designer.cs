@@ -241,6 +241,7 @@ namespace pwiz.Skyline.Model {
         
         /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
+        ///
         ///{0}
         ///	
         ///Would you like to continue building this predicted library?.
@@ -1331,9 +1332,10 @@ namespace pwiz.Skyline.Model {
         
         /// <summary>
         ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
-        ///    {0}
+        ///
+        ///{0}
         ///	
-        ///        Would you like to continue?
+        ///Would you like to continue?
         ///    .
         /// </summary>
         public static string NvidiaInstaller_Requesting_Administrator_elevation {
