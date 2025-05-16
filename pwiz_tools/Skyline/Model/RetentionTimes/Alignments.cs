@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -58,7 +57,13 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
         public IEnumerable<KeyValuePair<string, PiecewiseLinearMap>> GetAllAlignmentFunctions()
         {
-            return _alignmentFunctions.Select(kvp=>new KeyValuePair<string, PiecewiseLinearMap>(kvp.Key, kvp.Value));
+            foreach (var file in LibraryFiles)
+            {
+                if (_alignmentFunctions.TryGetValue(file, out var piecewiseLinearMap))
+                {
+                    yield return new KeyValuePair<string, PiecewiseLinearMap>(file, piecewiseLinearMap);
+                }
+            }
         }
 
         public LibraryFiles LibraryFiles { get; private set; }

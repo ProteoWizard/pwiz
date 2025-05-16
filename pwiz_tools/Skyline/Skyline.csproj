@@ -604,7 +604,7 @@
     <Compile Include="Model\Results\Spectra\SpectrumFilterAutoComplete.cs" />
     <Compile Include="Model\Results\Spectra\SpectrumMetadatas.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentFunction.cs" />
-    <Compile Include="Model\RetentionTimes\AlignmentResults.cs" />
+    <Compile Include="Model\RetentionTimes\Alignments.cs" />
     <Compile Include="Model\RetentionTimes\AlignmentTarget.cs" />
     <Compile Include="Model\RetentionTimes\ResultFileAlignments.cs" />
     <Compile Include="Model\RetentionTimes\LibraryAlignment.cs" />

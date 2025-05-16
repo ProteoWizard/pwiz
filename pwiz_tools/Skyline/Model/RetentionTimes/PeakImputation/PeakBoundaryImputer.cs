@@ -179,16 +179,16 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
                 return new ExemplaryPeak(Library, bestFile, new PeakBounds(bestPeakBounds.StartTime, bestPeakBounds.EndTime));
             }
 
-            public LibraryInfo ChangeAlignment(Alignments alignment)
+            public LibraryInfo ChangeAlignment(Alignments alignments)
             {
-                if (Equals(alignment, Alignments))
+                if (Equals(alignments, Alignments))
                 {
                     return this;
                 }
 
                 lock (this)
                 {
-                    var newLibraryInfo = new LibraryInfo(Library, LibraryFiles, alignment);
+                    var newLibraryInfo = new LibraryInfo(Library, LibraryFiles, alignments);
                     foreach (var bestPeakBounds in _bestPeakBounds)
                     {
                         newLibraryInfo._bestPeakBounds.Add(bestPeakBounds.Key, bestPeakBounds.Value);
@@ -371,6 +371,15 @@ namespace pwiz.Skyline.Model.RetentionTimes.PeakImputation
         public static ImputedPeak MakeImputedPeak(AlignmentFunction sourceAlignmentFunction, ExemplaryPeak exemplaryPeak,
             AlignmentFunction targetAlignmentFunction)
         {
+            // Console.Out.WriteLine("Start time {0} in file {1} normalized to {2} aligned to {3}",
+            //     exemplaryPeak.PeakBounds.StartTime, exemplaryPeak.SpectrumSourceFile,
+            //     sourceAlignmentFunction.GetX(exemplaryPeak.PeakBounds.StartTime),
+            //     targetAlignmentFunction.GetY(sourceAlignmentFunction.GetX(exemplaryPeak.PeakBounds.StartTime)));
+            // Console.Out.WriteLine("End time {0} in file {1} normalized to {2} aligned to {3}",
+            //     exemplaryPeak.PeakBounds.EndTime, exemplaryPeak.SpectrumSourceFile,
+            //     sourceAlignmentFunction.GetX(exemplaryPeak.PeakBounds.EndTime),
+            //     targetAlignmentFunction.GetY(sourceAlignmentFunction.GetX(exemplaryPeak.PeakBounds.EndTime)));
+
             var imputedBounds = new PeakBounds(
                 targetAlignmentFunction.GetY(sourceAlignmentFunction.GetX(exemplaryPeak.PeakBounds.StartTime)),
                 targetAlignmentFunction.GetY(sourceAlignmentFunction.GetX(exemplaryPeak.PeakBounds.EndTime)));

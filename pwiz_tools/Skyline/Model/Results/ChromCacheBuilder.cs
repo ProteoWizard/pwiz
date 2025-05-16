@@ -448,8 +448,10 @@ namespace pwiz.Skyline.Model.Results
 
             // Write scan ids
             _currentFileInfo.WriteResultFileMetadata(provider.ResultFileData, _fsScans.Stream);
+            var resultFileData = provider.ResultFileData;
             // Release all provider memory before waiting for write completion
             provider.ReleaseMemory();
+
 
             //LOG.InfoFormat(@"Scans read: {0}", MSDataFilePath.GetFileName());
             _chromDataSets.DoneAdding(true);
@@ -473,7 +475,7 @@ namespace pwiz.Skyline.Model.Results
                                      _currentFileInfo.SampleId,
                                      _currentFileInfo.SerialNumber,
                                      _currentFileInfo.InstrumentInfoList));
-            _listResultFileDatas.Add(provider.ResultFileData as ResultFileMetaData);
+            _listResultFileDatas.Add(resultFileData as ResultFileMetaData);
         }
 
         private bool CreateRetentionTimeEquation(ChromDataProvider provider,

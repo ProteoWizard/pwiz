@@ -2745,20 +2745,20 @@ namespace pwiz.Skyline.Model.Lib
             }
             foreach (var entry in _timesById)
             {
-                if (enFileIds == null || entry.Key == enFileIds.Current)
-                {
-                    yield return new KeyValuePair<int, float[]>(entry.Key, entry.Value);
-                }
-
                 if (enFileIds != null)
                 {
-                    while (entry.Key >= enFileIds.Current)
+                    while (entry.Key > enFileIds.Current)
                     {
                         if (!enFileIds.MoveNext())
                         {
                             yield break;
                         }
                     }
+                }
+
+                if (enFileIds == null || entry.Key == enFileIds.Current)
+                {
+                    yield return new KeyValuePair<int, float[]>(entry.Key, entry.Value);
                 }
             }
         }

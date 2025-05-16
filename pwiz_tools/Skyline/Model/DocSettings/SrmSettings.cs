@@ -1258,15 +1258,20 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
 
-                    var alignmentFunction = libraryAlignment.Alignments.GetAlignmentFunction(filePath, false);
+                    var alignmentFunction = libraryAlignment.Alignments.GetAlignmentFunction(filePath, true);
                     if (alignmentFunction != null)
                     {
-                        var times = libraryAlignment.GetAlignedRetentionTimes(spectrumSourceFiles, targets)
-                            .Select(alignmentFunction.GetY)
-                            .ToArray();
-                        if (times.Length > 0)
+                        var times = new List<double>();
+                        foreach (var normalizedTime in libraryAlignment.GetNormalizedRetentionTimes(spectrumSourceFiles,
+                                     targets))
                         {
-                            return times;
+                            var alignedTime = alignmentFunction.GetY(normalizedTime);
+                            // Console.Out.WriteLine("Mapping normalized time {0} to {1} for file {2}", normalizedTime, alignedTime, filePath.GetFileName());
+                            times.Add(alignedTime);
+                        }
+                        if (times.Count > 0)
+                        {
+                            return times.ToArray();
                         }
 
                     }

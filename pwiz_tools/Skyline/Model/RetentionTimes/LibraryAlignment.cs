@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.RetentionTimes
@@ -14,7 +15,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
         public Library Library { get; private set; }
         public Alignments Alignments { get; private set; }
 
-        public IEnumerable<double> GetAlignedRetentionTimes(ICollection<string> spectrumSourceFiles, IList<Target> targets)
+        public IEnumerable<double> GetNormalizedRetentionTimes(ICollection<string> spectrumSourceFiles, IList<Target> targets)
         {
             var times = Library.GetRetentionTimesWithSequences(Alignments.LibraryFiles, targets);
             if (times == null)
@@ -35,7 +36,9 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     {
                         foreach (var time in times[iFile])
                         {
-                            yield return alignment.GetX(time);
+                            var normalizedTime = alignment.GetX(time);
+                            // Console.Out.WriteLine("Normalizing time {0} in file {1} to {2}", time, Alignments.LibraryFiles[iFile], normalizedTime);
+                            yield return normalizedTime;
                         }
                     }
                 }

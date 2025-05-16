@@ -491,67 +491,65 @@ namespace pwiz.Skyline.Controls.Graphs
             // Calculate maximum y for potential retention time indicators
             PointF ptTop = new PointF(0, graphPane.Chart.Rect.Top);
 
-            if (GraphChromatogram.ShowRT != ShowRTChrom.none)
+            if (RetentionMsMs != null)
             {
-                if (RetentionMsMs != null)
+                foreach (double retentionTime in RetentionMsMs)
                 {
-                    foreach (double retentionTime in RetentionMsMs)
+                    Color color = COLOR_MSMSID_TIME;
+                    if (SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs))
                     {
-                        Color color = COLOR_MSMSID_TIME;
-                        if (SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs))
-                        {
-                            color = ColorScheme.ChromGraphItemSelected;
-                        }
-                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
-                            GraphsResources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
-                            ScaleRetentionTime(retentionTime));
+                        color = ColorScheme.ChromGraphItemSelected;
                     }
+                    AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop,
+                        GraphsResources.ChromGraphItem_AddAnnotations_ID, GraphObjType.ms_ms_id, color,
+                        ScaleRetentionTime(retentionTime));
                 }
-                if (MidasRetentionMsMs != null)
-                {
-                    foreach (var retentionTime in MidasRetentionMsMs)
-                    {
-                        var color = SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs)
-                            ? ColorScheme.ChromGraphItemSelected
-                            : COLOR_MSMSID_TIME;
-                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, string.Empty, GraphObjType.midas_spectrum, color, ScaleRetentionTime(retentionTime));
-                    }
-                }
-                if (AlignedRetentionMsMs != null)
-                {
-                    foreach (var time in AlignedRetentionMsMs)
-                    {
-                        var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
-                                               scaledTime.DisplayTime, 1)
-                        {
-                            ZOrder = ZOrder.F_BehindGrid,
-                            Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
-                            IsClippedToChartRect = true,
-                            Tag = new GraphObjTag(this, GraphObjType.aligned_ms_id, scaledTime),
-                        };
-                        annotations.Add(line);
-                    }
-                }
-                if (UnalignedRetentionMsMs != null)
-                {
-                    foreach (var time in UnalignedRetentionMsMs)
-                    {
-                        var scaledTime = ScaleRetentionTime(time);
-                        var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
-                                               scaledTime.DisplayTime, 1)
-                        {
-                            ZOrder = ZOrder.F_BehindGrid,
-                            Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
-                            IsClippedToChartRect = true,
-                            Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
-                        };
-                        annotations.Add(line);
-                    }
-                }
-                AddImputedBoundsAnnotation(ImputedBounds, annotations);
-
             }
+            if (MidasRetentionMsMs != null)
+            {
+                foreach (var retentionTime in MidasRetentionMsMs)
+                {
+                    var color = SelectedRetentionMsMs.HasValue && Equals((float) retentionTime, (float) SelectedRetentionMsMs)
+                        ? ColorScheme.ChromGraphItemSelected
+                        : COLOR_MSMSID_TIME;
+                    AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, string.Empty, GraphObjType.midas_spectrum, color, ScaleRetentionTime(retentionTime));
+                }
+            }
+            if (AlignedRetentionMsMs != null)
+            {
+                foreach (var time in AlignedRetentionMsMs)
+                {
+                    var scaledTime = ScaleRetentionTime(time);
+                    var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
+                                           scaledTime.DisplayTime, 1)
+                    {
+                        ZOrder = ZOrder.F_BehindGrid,
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                        IsClippedToChartRect = true,
+                        Tag = new GraphObjTag(this, GraphObjType.aligned_ms_id, scaledTime),
+                    };
+                    annotations.Add(line);
+                }
+            }
+            if (UnalignedRetentionMsMs != null)
+            {
+                foreach (var time in UnalignedRetentionMsMs)
+                {
+                    var scaledTime = ScaleRetentionTime(time);
+                    var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, 0,
+                                           scaledTime.DisplayTime, 1)
+                    {
+                        ZOrder = ZOrder.F_BehindGrid,
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction },
+                        IsClippedToChartRect = true,
+                        Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
+                    };
+                    annotations.Add(line);
+                }
+            }
+
+            AddImputedBoundsAnnotation(ImputedBounds, annotations);
+
 
             // If explicit retention time is in use, show that instead of predicted since it overrides
             if (RetentionExplicit != null)
