@@ -353,6 +353,7 @@ namespace pwiz.Skyline.EditUI
             {
                 dgvAssociateResults.Rows.Clear();
                 dgvAssociateResults.Rows.Add(3);
+                dgvAssociateResults.ClearSelection();
             }
 
             var proteinRow = dgvAssociateResults.Rows[0];

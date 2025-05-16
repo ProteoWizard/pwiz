@@ -884,5 +884,14 @@
     <Setting Name="KoinaRetryCount" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">10</Value>
     </Setting>
+    <Setting Name="MsFraggerLicenseUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf</Value>
+    </Setting>
+    <Setting Name="MsFraggerVerifyUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">http://msfragger-upgrader.nesvilab.org/upgrader/upgrade_download.php</Value>
+    </Setting>
+    <Setting Name="MsFraggerDownloadUrl" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">https://msfragger-upgrader.nesvilab.org/upgrader/download.php</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

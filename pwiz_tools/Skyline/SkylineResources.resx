@@ -1187,10 +1187,10 @@ Do you want to save the document now?</value>
     <value>Error updating file '{0}'.</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_" xml:space="preserve">
-      <value>Error: Failed to build the spectral library.</value>
+    <value>Error: Failed to build the spectral library.</value>
   </data>
   <data name="SkylineWindow_ImportAnnotations_Reading_annotations" xml:space="preserve">
-	  <value>Reading annotations</value>
+    <value>Reading annotations</value>
   </data>
   <data name="Select_Training_Document" xml:space="preserve">
     <value>Select Training Document</value>

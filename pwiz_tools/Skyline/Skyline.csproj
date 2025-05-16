@@ -47,14 +47,14 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>false</MapFileExtensions>
     <InstallUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreviewTest/</InstallUrl>
-    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreview/</UpdateUrl>
+    <UpdateUrl>https://proteome.gs.washington.edu/~dshteyn/SkylineCarafePreviewTest/</UpdateUrl>
     <SupportUrl>https://skyline.ms/support.url</SupportUrl>
     <ProductName>Skyline-Carafe-Preview</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>8</ApplicationRevision>
-    <ApplicationVersion>24.1.3.8</ApplicationVersion>
+    <ApplicationRevision>15</ApplicationRevision>
+    <ApplicationVersion>24.1.3.15</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -2507,6 +2507,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ArdiaLoginDlg.resx">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\DetailedReportErrorDlg.ja.resx">
       <DependentUpon>DetailedReportErrorDlg.cs</DependentUpon>
@@ -2668,6 +2669,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.ja.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Clustering\HeatMapGraph.resx">
       <DependentUpon>HeatMapGraph.cs</DependentUpon>
@@ -2691,6 +2693,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Databinding\CandidatePeakForm.zh-CHS.resx">
       <DependentUpon>CandidatePeakForm.cs</DependentUpon>
@@ -2913,9 +2916,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.ja.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\GroupComparison\FoldChangeVolcanoPlot.zh-CHS.resx">
       <DependentUpon>FoldChangeVolcanoPlot.cs</DependentUpon>
@@ -3215,6 +3220,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.ja.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\TransitionSettingsControl.resx">
       <DependentUpon>TransitionSettingsControl.cs</DependentUpon>
@@ -4326,6 +4332,7 @@
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.zh-CHS.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.ja.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>

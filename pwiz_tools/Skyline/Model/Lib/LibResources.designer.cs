@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Lib {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class LibResources {
@@ -289,8 +289,7 @@ namespace pwiz.Skyline.Model.Lib {
         /// </summary>
         public static string EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input" +
-                        "", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertFastaToKoinaInputCsv_Converting_FASTA_to_Koina_input", resourceCulture);
             }
         }
         
@@ -299,8 +298,8 @@ namespace pwiz.Skyline.Model.Lib {
         /// </summary>
         public static string EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_EncyclopeDia_library {
             get {
-                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_Encyclo" +
-                        "peDia_library", resourceCulture);
+                return ResourceManager.GetString("EncyclopeDiaHelpers_ConvertKoinaOutputToDlib_Converting_Koina_output_to_Encyclope" +
+                        "Dia_library", resourceCulture);
             }
         }
         

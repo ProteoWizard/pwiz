@@ -144,6 +144,8 @@ namespace pwiz.Skyline.Model.Lib
         private BiblioLiteSourceInfo[] _librarySourceFiles;
         private LibraryFiles _libraryFiles = LibraryFiles.EMPTY;
         private bool _anyExplicitPeakBounds;
+        // Static lock object to synchronize access
+        private static readonly object _lock = new object();
 
         public static string GetLibraryCachePath(string libraryPath)
         {
@@ -152,13 +154,16 @@ namespace pwiz.Skyline.Model.Lib
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
-            if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
+            lock (_lock)
             {
-                var library = new BiblioSpecLiteLibrary(spec);
-                if (library.Load(loader))
-                    return library;
+                if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
+                {
+                    var library = new BiblioSpecLiteLibrary(spec);
+                    if (library.Load(loader))
+                        return library;
+                }
+                return null;
             }
-            return null;
         }
 
         public static BiblioSpecLiteLibrary GetUnloadedDocumentLibrary(BiblioSpecLiteSpec spec)

@@ -454,7 +454,7 @@ namespace pwiz.Skyline.Model.Results {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to need a value for Ion mobility filtering Window type in Transition Settings.
+        ///   Looks up a localized string similar to need a value for Transition Settings, Ion mobility filtering, Window type.
         /// </summary>
         public static string IonMobilityFinder_EvaluateBestIonMobilityValue_need_a_value_for_Transition_Settings___ion_mobility_filtering___Window_type {
             get {
