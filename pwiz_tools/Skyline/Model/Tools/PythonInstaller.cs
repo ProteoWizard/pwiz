@@ -851,7 +851,10 @@ namespace pwiz.Skyline.Model.Tools
                 try
                 {
                     var fileInfo = new FileInfo(filePath);
-                    using (fileInfo.OpenRead());
+                    using (fileInfo.OpenRead())
+                    {
+                        // Do nothing. Just testing the OpenRead() does not throw.
+                    }
                 }
                 catch (UnauthorizedAccessException)
                 {

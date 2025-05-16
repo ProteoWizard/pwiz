@@ -79,15 +79,6 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Working....
-        /// </summary>
-        internal static string ProcessRunner_Run_Working_ {
-            get {
-                return ResourceManager.GetString("ProcessRunner_Run_Working_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Failed reading {0} bytes. Source may be corrupted..
         /// </summary>
         internal static string StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_ {

@@ -29,63 +29,45 @@ namespace pwiz.SkylineTest
     public class ProgressStatusChangeSegmentsEndPercentageTest : AbstractUnitTest
     {
         [TestMethod]
-        public void ChangeSegments_NullSegmentPercentageEnds_ThrowsArgumentException()
+        public void ProgressStatusChangeSegmentsTest()
         {
             var progress = new ProgressStatus();
             AssertEx.ThrowsException<NullReferenceException>(() => progress.ChangeSegments(0, null));
-        }
 
-        [TestMethod]
-        public void ChangeSegments_EmptySegmentPercentageEnds_ThrowsArgumentException()
-        {
-            var progress = new ProgressStatus();
-            var percents = Array.Empty<int>();
+            var emptyPercents = Array.Empty<int>();
             AssertEx.ThrowsException<ArgumentException>(() =>
-                progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)), "ChangeSegments was passed an empty array of segment ends.");
-        }
+                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(emptyPercents)),
+                "ChangeSegments was passed an empty array of segment ends.");
 
-        [TestMethod]
-        public void ChangeSegments_NonStrictlyIncreasingArray_ThrowsArgumentException()
-        {
-            var progress = new ProgressStatus();
-            var percents = new[] { 20, 40, 40, 80, 100 };
+            var evenPercents = new[] { 20, 40, 40, 80, 100 };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)), "ChangeSegments was passed an array of segment ends that is not strictly increasing.");
-        }
+                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(evenPercents)),
+                "ChangeSegments was passed an array of segment ends that is not strictly increasing.");
 
-        [TestMethod]
-        public void ChangeSegments_OutOfRangeFirstElement_ThrowsArgumentException()
-        {
-            var progress = new ProgressStatus();
-            var percents = new[] { 0, 50, 100 };
+            var outOfRangePercents = new[] { 0, 50, 100 };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)),
+                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(outOfRangePercents)),
                 "ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100].");
-        }
 
-        [TestMethod]
-        public void ChangeSegments_OutOfRangeLastElement_ThrowsArgumentException()
-        {
-            var progress = new ProgressStatus();
-            var percents = new[] { 0, 50, 100 };
+            var outOfRangeEndPercents = new[] { 10, 50, 101 };
             AssertEx.ThrowsException<ArgumentException>(() =>
-                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(percents)),
+                    progress.ChangeSegments(0, ImmutableList<int>.ValueOf(outOfRangeEndPercents)),
                 "ChangeSegments was passed an array of segment ends that contains values out of the expected range [1,100].");
+
+            var negativeIndexPercents = new[] { 20, 40, 60 };
+            AssertEx.ThrowsException<ArgumentException>(() =>
+                    progress.ChangeSegments(-1, ImmutableList<int>.ValueOf(negativeIndexPercents)),
+                "ChangeSegments was passed a negative segment.");
+
+            ChangeSegments_ValidInput_DoesNotThrowAndUpdatesProperties();
+            ChangeSegments_SegmentBeyondCount_DoesNotThrowAndSetsMaxValues();
         }
 
-        [TestMethod]
-        public void ChangeSegments_NegativeSegment_ThrowsArgumentException()
-        {
-            var progress = new ProgressStatus();
-            var percents = new[] { 20, 40, 60 };
-            AssertEx.ThrowsException<ArgumentException>(() => 
-                progress.ChangeSegments(-1, ImmutableList<int>.ValueOf(percents) ), "ChangeSegments was passed a negative segment.");
-        }
-
-        [TestMethod]
         public void ChangeSegments_ValidInput_DoesNotThrowAndUpdatesProperties()
         {
             var progress = new ProgressStatus();
+            
+            // Test with valid input that properties get updated as expected
             var segmentPercentageEnds = new[] { 20, 40, 60, 80, 100 };
             int segment = 2;
 
@@ -99,7 +81,6 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(2, result.Segment);
         }
 
-        [TestMethod]
         public void ChangeSegments_SegmentBeyondCount_DoesNotThrowAndSetsMaxValues()
         {
             var progress = new ProgressStatus();

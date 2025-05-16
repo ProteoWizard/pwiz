@@ -183,7 +183,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>TestUtilSettings.settings</DependentUpon>
     </Compile>
-    <Compile Include="PythonTestUtil.cs" />
     <Compile Include="ScreenshotInfo.cs" />
     <Compile Include="ScreenshotPreviewForm.cs">
       <SubType>Form</SubType>

@@ -130,9 +130,6 @@
   <data name="ProcessRunner_Run_Run_command_" xml:space="preserve">
     <value>Run command:</value>
   </data>
-  <data name="ProcessRunner_Run_Working_" xml:space="preserve">
-    <value>Working...</value>
-  </data>
   <data name="ProcessRunner_Process_Finished_in_time" xml:space="preserve">
     <value>Process Finished in {0} minutes {1} seconds</value>
   </data>

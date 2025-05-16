@@ -306,29 +306,6 @@ namespace pwiz.SkylineTestUtil
             return dlg;
         }
 
-        /// <summary>
-        /// Like ShowDialog - "expect to see a dialog as a consequence of this action" - but specifically for MultiButtonMsgDlg
-        /// showing specific messages, since it's possible to have more than one MultiButtonMsgDlg open at the same time.
-        /// </summary>
-        /// <param name="act"></param>
-        /// <param name="messageFormat">Can be a formatting string e.g. "Please {0} the {1}" etc </param>
-        /// <param name="millis">timeout</param>
-        /// <returns>MultiButtonMsgDlg found to have the expected string</returns>
-        protected static MultiButtonMsgDlg ShowMultiButtonMsgDlg(Action act, string messageFormat, int millis = WAIT_TIME)
-        { 
-            var existingDialog = WaitForMultiButtonMsgDlg(messageFormat, 1);
-            if (existingDialog != null)
-            {
-                Assert.Fail("MultiButtonMsgDlg is already open with the message: " + messageFormat);
-            }
-
-            SkylineBeginInvoke(act);
-            var dlg = WaitForMultiButtonMsgDlg(messageFormat, millis);
-            Assert.IsNotNull(dlg);
-
-            return dlg;
-        }
-
         private static void EnsureScreenshotIcon(Form dlg)
         {
             if (IsRecordingScreenShots && dlg.ShowIcon && !ReferenceEquals(dlg, SkylineWindow))

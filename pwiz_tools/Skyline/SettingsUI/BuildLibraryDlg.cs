@@ -37,13 +37,8 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
-using System.Runtime.CompilerServices;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
-using pwiz.Skyline.Model.Lib.Carafe;
 using File = System.IO.File;
-
-
-[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -86,8 +81,6 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
-        public void ResetBuilder() => Builder = null;
-
         public MultiButtonMsgDlg PythonDlg { get; private set; }
         
         public enum Pages { properties, files, learning }
@@ -104,18 +97,13 @@ namespace pwiz.Skyline.SettingsUI
         private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => false;
         private string AlphapeptdeepPythonVirtualEnvironmentDir => AlphapeptdeepLibraryBuilder.ScriptsDir;
-        private string CarafePythonVirtualEnvironmentDir => CarafeLibraryBuilder.ScriptsDir;
-
-        private string _productPath;
-
-        public string ProductPath { get => _productPath; private set => _productPath = value; }
+        // private string CarafePythonVirtualEnvironmentDir => CarafeLibraryBuilder.ScriptsDir;
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
         private readonly SkylineWindow _skylineWindow;
 
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
-        private SettingsListBoxDriver<LibrarySpec> _driverLibrary;
 
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
@@ -199,7 +187,12 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public ILibraryBuilder Builder { get; internal set; }
+        public ILibraryBuilder Builder { get; private set; }
+
+        public void ResetBuilder()
+        {
+            Builder = null;
+        }
 
         public IEnumerable<string> InputFileNames
         {
@@ -209,10 +202,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public string AddLibraryFile { get; private set; }
 
-        internal SrmDocument DocumentUI
-        {
-            get => _documentUiContainer.DocumentUI;
-        }
+        private SrmDocument DocumentUI => _documentUiContainer.DocumentUI;
       
         private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false, bool newBuilder = false)
         {
@@ -222,7 +212,7 @@ namespace pwiz.Skyline.SettingsUI
 
             string outputPath = textPath.Text;
 
-            if (newBuilder && Builder != null)
+            if (newBuilder)
             {
                 ResetBuilder();
             }
@@ -284,25 +274,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioAlphaSource.Checked)
                 {
-                    if (!SetupPythonEnvironmentForAlpha(createDlg))
-                    {
-                        if (cleanUp)
-                            PythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+                    if (!CreateAlphaBuilder(name, outputPath, createDlg, cleanUp, newBuilder))
                         return false;
-                    }
-
-                    if (!_documentUiContainer.Document.HasPeptides)
-                    {
-                        _helper.ShowTextBoxError(tabControlMain,
-                            SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides);
-                        return false;
-                    }
-                    else if (Builder == null && newBuilder)
-                    {
-                        Builder = new AlphapeptdeepLibraryBuilder(name, outputPath,
-                            AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI, IrtStandard);
-                        BuilderLibFilepath = Builder.BuilderLibraryPath;
-                    }
                 }
                 else
                 {
@@ -350,6 +323,31 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
+        private bool CreateAlphaBuilder(string name, string outputPath, bool createDlg, bool cleanUp, bool newBuilder)
+        {
+            if (!SetupPythonEnvironmentForAlpha(createDlg))
+            {
+                if (cleanUp)
+                    PythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+                return false;
+            }
+
+            if (!_documentUiContainer.Document.HasPeptides)
+            {
+                _helper.ShowTextBoxError(tabControlMain,
+                    SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides);
+                return false;
+            }
+            else if (Builder == null && newBuilder)
+            {
+                Builder = new AlphapeptdeepLibraryBuilder(name, outputPath,
+                    AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI, IrtStandard);
+                BuilderLibFilepath = Builder.BuilderLibraryPath;
+            }
+
+            return true;
+        }
+
         public string BuilderLibFilepath { get; private set; }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
@@ -380,12 +378,10 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
+
                 // Still construct the library builder, otherwise a user might configure Koina
                 // incorrectly, causing the build to silently fail
-                if (Builder != null)
-                {
-                    ResetBuilder();
-                }
+                ResetBuilder();
 
                 Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
                     peptidesPerPrecursor, precursors, nce);
@@ -403,18 +399,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
-            var packages = new List<PythonPackage>
-            {
-                new PythonPackage { Name = @"peptdeep", Version = null },
-                
-                // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
-                // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
-                // TODO: delete the following line after the issue above is resolved
-                new PythonPackage { Name = @"numpy", Version = @"1.26.4" }
-            };
-
             if (PythonInstaller == null)
-                PythonInstaller = new PythonInstaller(packages, new TextBoxStreamWriterHelper(), AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+                PythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller();
             else
                 PythonInstaller.ClearPendingTasks();
 
@@ -495,7 +481,6 @@ namespace pwiz.Skyline.SettingsUI
                 _lastUpdatedLibName = id;
 
             }
-
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -531,16 +516,6 @@ namespace pwiz.Skyline.SettingsUI
             OkWizardPage();
         }
 
-        public bool ValidateLibraryBuilderInputs()
-        {
-            if (radioCarafeSource.Checked || radioAlphaSource.Checked || radioKoinaSource.Checked)
-            {
-                return ValidateBuilder(true);
-            }
-
-            return ValidateBuilder(false);
-
-        }
         public void OkWizardPage()
         {
             Cursor.Current = Cursors.WaitCursor;
@@ -896,11 +871,13 @@ namespace pwiz.Skyline.SettingsUI
             get { return radioKoinaSource.Checked; }
             set { radioKoinaSource.Checked = value; }
         }
+
         public bool AlphaPeptDeep
         {
             get { return radioAlphaSource.Checked; }
             set { radioAlphaSource.Checked = value; }
         }
+
         public bool Carafe
         {
             get { return radioCarafeSource.Checked; }
@@ -980,7 +957,6 @@ namespace pwiz.Skyline.SettingsUI
             // Only respond to the checking event, or this will happen
             // twice for every change.
             var radioSender = (RadioButton)sender;
-            
             if (!radioSender.Checked)
                 return;
 
@@ -993,8 +969,6 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     Settings.Default.IrtStandardList.Insert(1, IrtStandard.AUTO);
                 }
-                comboStandards.Enabled = true;
-
             }
             else
             {
@@ -1008,14 +982,12 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.alpha;
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
-                    comboStandards.Enabled = true;
                 }
                 else // must be Koina
                 {
                     tabControlDataSource.SelectedIndex = (int)DataSourcePages.koina;
                     KoinaUIHelpers.CheckKoinaSettings(this, _skylineWindow);
                     nextText = Resources.BuildLibraryDlg_OkWizardPage_Finish;
-                    comboStandards.Enabled = true;
                 }
             }
             _driverStandards.LoadList(selectedStandard.GetKey());
@@ -1034,33 +1006,6 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 return TAB_PAGES[tabControlMain.SelectedIndex];
-            }
-        }
-
-        private void PopulateLibraries()
-        {
-            if (_driverLibrary == null)
-            {
-                _driverLibrary = new SettingsListBoxDriver<LibrarySpec>(listLibraries, Settings.Default.SpectralLibraryList);
-                _driverLibrary.LoadList(null, Array.Empty<LibrarySpec>());
-            }
-        }
-
-        private void btnLearningDocBrowse_Click(object sender, EventArgs e)
-        {
-            using (var dlg = new OpenFileDialog())
-            {
-                dlg.Title = SkylineResources.SkylineWindow_importDocumentMenuItem_Click_Import_Skyline_Document;
-                dlg.InitialDirectory = Settings.Default.ActiveDirectory;
-                dlg.CheckPathExists = true;
-                dlg.Multiselect = false;
-                dlg.SupportMultiDottedExtensions = true;
-                dlg.DefaultExt = SrmDocument.EXT;
-                dlg.Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC);
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    textLearningDoc.Text = dlg.FileName;
-                }
             }
         }
     }

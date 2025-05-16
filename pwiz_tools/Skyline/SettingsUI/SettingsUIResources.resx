@@ -229,7 +229,7 @@
   <data name="BuildLibraryDlg_Current_Skyline_document_is_missing_peptides" xml:space="preserve">
     <value>Current Skyline document is missing peptides.</value>
   </data>
-	<data name="CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value" xml:space="preserve">
+  <data name="CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value" xml:space="preserve">
     <value>The number of generated windows could not be adjusted to be a multiple of the windows per scan. Try changing the windows per scan or the End value.</value>
   </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_an_integer" xml:space="preserve">

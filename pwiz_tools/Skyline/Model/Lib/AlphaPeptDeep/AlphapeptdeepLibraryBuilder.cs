@@ -27,6 +27,7 @@ using System.Text;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
@@ -136,6 +137,21 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
+
+        public static PythonInstaller CreatePythonInstaller()
+        {
+            var packages = new[]
+            {
+                new PythonPackage { Name = @"peptdeep", Version = null },
+                
+                // We manually set numpy to the latest version before 2.0 because of a backward incompatibility issue
+                // See details for tracking issue in AlphaPeptDeep repo: https://github.com/MannLabs/alphapeptdeep/issues/190
+                // TODO: delete the following line after the issue above is resolved
+                new PythonPackage { Name = @"numpy", Version = @"1.26.4" }
+            };
+
+            return new PythonInstaller(packages, new TextBoxStreamWriterHelper(), AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+        }
 
         /// <summary>
         /// List of UniMod Modifications available

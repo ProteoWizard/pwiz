@@ -243,7 +243,7 @@ namespace pwiz.Skyline.Model {
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
         ///
         ///{0}
-        ///	
+        ///
         ///Would you like to continue building this predicted library?.
         /// </summary>
         public static string Alphapeptdeep_Warn_unknown_modification {
@@ -372,15 +372,6 @@ namespace pwiz.Skyline.Model {
         public static string BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_ {
             get {
                 return ResourceManager.GetString("BrukerTimsTofMethodExporter_ExportMethod_Template_is_required_for_method_export_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Build Library.
-        /// </summary>
-        public static string BuildingPrecursorTable_Build_Library {
-            get {
-                return ResourceManager.GetString("BuildingPrecursorTable_Build_Library", resourceCulture);
             }
         }
         
@@ -1334,7 +1325,7 @@ namespace pwiz.Skyline.Model {
         ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
         ///
         ///{0}
-        ///	
+        ///
         ///Would you like to continue?
         ///    .
         /// </summary>
@@ -1631,15 +1622,6 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("PeptideGroupDocNode_ChangeSettings_The_current_document_settings_would_cause_the_" +
                         "number_of_peptides_to_exceed__0_n0___The_document_settings_must_be_more_restrict" +
                         "ive_or_add_fewer_proteins_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Working....
-        /// </summary>
-        public static string PeptideSettingsUI_working {
-            get {
-                return ResourceManager.GetString("PeptideSettingsUI_working", resourceCulture);
             }
         }
         

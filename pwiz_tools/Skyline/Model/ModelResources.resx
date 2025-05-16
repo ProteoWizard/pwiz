@@ -894,10 +894,4 @@ in the Windows registry key '{0}' from:</value>
   <data name="AlphapeptdeepLibraryBuilder_Importing_spectral_library" xml:space="preserve">
       <value>Importing spectral library</value>
   </data>
-  <data name="BuildingPrecursorTable_Build_Library" xml:space="preserve">
-    <value>Build Library</value>
-  </data>
-  <data name="PeptideSettingsUI_working" xml:space="preserve">
-    <value>Working...</value>
-  </data>
 </root>

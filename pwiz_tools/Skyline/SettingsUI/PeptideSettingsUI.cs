@@ -736,22 +736,19 @@ namespace pwiz.Skyline.SettingsUI
             dlg.LibraryKeepRedundant = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                using (var longWaitDlg = new LongWaitDlg(_parent,false))
+                if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
                 {
-                    longWaitDlg.Text = string.Format(ModelResources.PeptideSettingsUI_working);
-                    if (!string.IsNullOrEmpty(dlg.AddLibraryFile))
+                    using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
+                    editLibDlg.LibraryPath = dlg.AddLibraryFile;
+                    if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                     {
-                        using var editLibDlg = new EditLibraryDlg(Settings.Default.SpectralLibraryList);
-                        editLibDlg.LibraryPath = dlg.AddLibraryFile;
-                        if (editLibDlg.ShowDialog(this) == DialogResult.OK)
-                        {
-                            _driverLibrary.List.Add(editLibDlg.LibrarySpec);
-                            _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] { editLibDlg.LibrarySpec }).ToArray());
-                        }
-
-                        return;
+                        _driverLibrary.List.Add(editLibDlg.LibrarySpec);
+                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] { editLibDlg.LibrarySpec }).ToArray());
                     }
+
+                    return;
                 }
+
                 BuildLibrary(dlg.Builder);
             }
         }
@@ -779,7 +776,6 @@ namespace pwiz.Skyline.SettingsUI
             {
                 using (var longWaitDlg = new LongWaitDlg(_parent))
                 {
-                    longWaitDlg.Text = string.Format(ModelResources.BuildingPrecursorTable_Build_Library);
                     var status = longWaitDlg.PerformWork(_parent, 500, progressMonitor =>
                         _libraryManager.BuildLibraryBackground(_parent, builder, progressMonitor, buildState));
 
