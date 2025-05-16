@@ -204,7 +204,7 @@ namespace pwiz.Skyline.Model.Tools
                 return fileBaseName;
             }
         }
-        private static string PythonRootDir { get; } = PythonInstallerUtil.PythonRootDir;
+        private static string PythonRootDir => PythonInstallerUtil.PythonRootDir;
         internal static TextWriter Writer { get; set; }
         public bool HavePythonTasks { get; private set;}
         public bool HaveNvidiaTasks { get; private set; }
@@ -893,7 +893,7 @@ namespace pwiz.Skyline.Model.Tools
                 try
                 {
                     FileInfo fileInfo = new FileInfo(filePath);
-                    var stream = fileInfo.OpenRead();
+                    using (fileInfo.OpenRead()) ;
                 }
                 catch (UnauthorizedAccessException)
                 {
