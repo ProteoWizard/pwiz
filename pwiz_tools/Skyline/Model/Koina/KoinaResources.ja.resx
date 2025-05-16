@@ -161,6 +161,6 @@
     <value>スペクトルライブラリの一致がありません</value>
   </data>
   <data name="KoinaModel_PredictBatches_Error___0__retrying__1_____2__" xml:space="preserve">
-    <value>エラー: {0} 再試行回数{1}/{2}。</value>
+    <value>エラー： {0} 再試行回数{1}/{2}。</value>
   </data>
 </root>

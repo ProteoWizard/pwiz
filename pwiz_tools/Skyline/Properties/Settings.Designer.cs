@@ -3563,5 +3563,32 @@ namespace pwiz.Skyline.Properties {
                 return ((int)(this["RtRegressionSegmentCount"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf")]
+        public string MsFraggerLicenseUrl {
+            get {
+                return ((string)(this["MsFraggerLicenseUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://msfragger-upgrader.nesvilab.org/upgrader/upgrade_download.php")]
+        public string MsFraggerVerifyUrl {
+            get {
+                return ((string)(this["MsFraggerVerifyUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/download.php")]
+        public string MsFraggerDownloadUrl {
+            get {
+                return ((string)(this["MsFraggerDownloadUrl"]));
+            }
+        }
     }
 }
