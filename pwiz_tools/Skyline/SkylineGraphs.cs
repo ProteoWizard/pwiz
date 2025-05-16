@@ -2821,6 +2821,7 @@ namespace pwiz.Skyline
                     {
                         linearRegressionContextMenuItem,
                         kernelDensityEstimationContextMenuItem,
+                        logRegressionContextMenuItem,
                         loessContextMenuItem
                     });
                 }

@@ -335,8 +335,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                 {
                     return PerformAlignment(RegressionMethod, standardPoints, cancellationToken);
                 }
-                // Consider: fall back to doing a loess alignment using all the points?
-                return null;
+                return PerformAlignment(RegressionMethod, allPoints, cancellationToken);
             }
         }
 
