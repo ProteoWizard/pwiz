@@ -39,6 +39,7 @@ using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Tools;
 using System.Runtime.CompilerServices;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
+using pwiz.Skyline.Model.Lib.Carafe;
 using File = System.IO.File;
 
 
@@ -95,31 +96,15 @@ namespace pwiz.Skyline.SettingsUI
         public class FilesPage : IFormView { }
         public class LearningPage : IFormView { }
 
-        public static readonly string ALPHAPEPTDEEP_PYTHON_VERSION = Settings.Default.PythonEmbeddableVersion;
-        private const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
-        private const string ALPHAPEPTDEEP_DIA = @"alphapeptdeep_dia";
-        internal static readonly string CARAFE_PYTHON_VERSION = Settings.Default.PythonEmbeddableVersion;
-        private const string CARAFE = @"Carafe";
-        private const string WORKSPACES = @"workspaces";
-
         private static readonly IFormView[] TAB_PAGES =
         {
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
         public enum DataSourcePages { files, alpha, carafe, koina }
-        public enum BuildLibraryTargetOptions { currentSkylineDocument }
-        public enum LearningOptions { files, libraries, document }
         private bool IsAlphaEnabled => true;
         private bool IsCarafeEnabled => false;
-        private string AlphapeptdeepPythonVirtualEnvironmentDir =>
-            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(ALPHAPEPTDEEP_PYTHON_VERSION, ALPHAPEPTDEEP);
-        private string CarafePythonVirtualEnvironmentDir =>
-            PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(CARAFE_PYTHON_VERSION, CARAFE);
-        private string UserDir => Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        private string AlphapeptdeepDiaRepo => Path.Combine(UserDir, WORKSPACES, ALPHAPEPTDEEP_DIA);
-        private string ProteinDatabaseFilePath => Path.Combine(UserDir, @"Downloads", @"UP000005640_9606.fasta");
-        private string ExperimentDataFilePath => Path.Combine(UserDir, @"Downloads", @"LFQ_Orbitrap_AIF_Human_01.mzML");
-        private string ExperimentDataSearchResultFilePath => Path.Combine(UserDir, @"Downloads", @"report.tsv");
+        private string AlphapeptdeepPythonVirtualEnvironmentDir => AlphapeptdeepLibraryBuilder.ScriptsDir;
+        private string CarafePythonVirtualEnvironmentDir => CarafeLibraryBuilder.ScriptsDir;
 
         private string _productPath;
 
@@ -301,7 +286,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!SetupPythonEnvironmentForAlpha(createDlg))
                     {
-                        if (cleanUp) PythonInstaller.CleanUpPythonEnvironment(ALPHAPEPTDEEP);
+                        if (cleanUp)
+                            PythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
                         return false;
                     }
 
@@ -428,7 +414,7 @@ namespace pwiz.Skyline.SettingsUI
             };
 
             if (PythonInstaller == null)
-                PythonInstaller = new PythonInstaller(packages, new TextBoxStreamWriterHelper(), ALPHAPEPTDEEP);
+                PythonInstaller = new PythonInstaller(packages, new TextBoxStreamWriterHelper(), AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
             else
                 PythonInstaller.ClearPendingTasks();
 
@@ -451,9 +437,8 @@ namespace pwiz.Skyline.SettingsUI
             if (!PythonInstaller.IsPythonVirtualEnvironmentReady())
             {
                 PythonDlg = new MultiButtonMsgDlg(
-                    string.Format(
-                        ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        ALPHAPEPTDEEP_PYTHON_VERSION, @"AlphaPeptDeep"), string.Format(Resources.OK));
+                    string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
+                        AlphapeptdeepLibraryBuilder.PythonVersion, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP), string.Format(Resources.OK));
                 if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
                     PythonDlg.Dispose();
@@ -463,7 +448,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
                 {
-                    if (!PythonDlg.IsDisposed) 
+                    if (!PythonDlg.IsDisposed)
                         PythonDlg.Dispose();
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;

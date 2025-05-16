@@ -31,6 +31,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -40,6 +41,8 @@ namespace pwiz.Skyline.Model.Lib.Carafe
 {
     public class CarafeLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
+        public const string CARAFE_NAME = @"Carafe";
+        
         private const string PRECURSOR = @"Precursor";
         private const string PEPTIDE = @"Peptide";
         private const string PRECURSOR_CHARGE = @"Precursor Charge";
@@ -93,6 +96,9 @@ namespace pwiz.Skyline.Model.Lib.Carafe
                 PRECURSOR, PEPTIDE, PRECURSOR_CHARGE, ISOTOPE_LABEL_TYPE, PRECURSOR_MZ, MODIFIED_SEQUENCE, PRECURSOR_EXPLICIT_COLLISION_ENERGY,
                 PRECURSOR_NOTE, LIBRARY_NAME, LIBRARY_TYPE, LIBRARY_PROBABILITY_SCORE, PEPTIDE_MODIFIED_SEQUENCE_UNIMOD_IDS
             };
+
+        public static string PythonVersionSetting => Settings.Default.PythonEmbeddableVersion;
+        public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersionSetting, CARAFE_NAME);
 
         private static IList<ModificationIndex> MODIFICATION_INDICES =>
             new[]

@@ -27,6 +27,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Lib.AlphaPeptDeep;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -63,8 +64,9 @@ namespace TestPerf
             }
         }
 
-        private string _pythonVersion = BuildLibraryDlg.ALPHAPEPTDEEP_PYTHON_VERSION;
-        private string _toolName = @"AlphaPeptDeep";
+        private string _toolName = AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP;
+        private string _pythonVersion = AlphapeptdeepLibraryBuilder.PythonVersion;
+
         private bool _undoRegistry;
 
         private string LibraryPathWithoutIrt =>

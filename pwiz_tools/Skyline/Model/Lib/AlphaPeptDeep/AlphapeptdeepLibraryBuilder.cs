@@ -30,6 +30,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
@@ -103,12 +104,13 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
+        public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
+
         private const string SEQUENCE = @"sequence";
         private const string MODS = @"mods";
         private const string MOD_SITES = @"mod_sites";
         private const string CHARGE = @"charge";
 
-        private const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
         private const string CMD_FLOW_COMMAND = @"cmd-flow";
         private const string EXPORT_SETTINGS_COMMAND = @"export-settings";
         private const string EXT_TSV = TextUtil.EXT_TSV;
@@ -131,6 +133,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private const string UNDERSCORE = TextUtil.UNDERSCORE;
 
         private static readonly IEnumerable<string> PrecursorTableColumnNames = new[] { SEQUENCE, MODS, MOD_SITES, CHARGE };
+
+        public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
+        public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
 
         /// <summary>
         /// List of UniMod Modifications available
