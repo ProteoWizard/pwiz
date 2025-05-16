@@ -56,7 +56,7 @@ namespace pwiz.Common.DataBinding
 
         public abstract string GetExportDirectory();
         public abstract void SetExportDirectory(string value);
-        public abstract DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons);
+        public abstract DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons, Exception exception);
         protected virtual string GetDefaultExportFilename(ViewInfo viewInfo)
         {
             string currentViewName = viewInfo.Name;
@@ -260,7 +260,7 @@ namespace pwiz.Common.DataBinding
             catch (Exception exception)
             {
                 ShowMessageBox(owner, Resources.AbstractViewContext_Export_There_was_an_error_writing_to_the_file__ + exception.Message,
-                    MessageBoxButtons.OK);
+                    MessageBoxButtons.OK, exception);
             }
         }
 
@@ -327,7 +327,7 @@ namespace pwiz.Common.DataBinding
             {
                 ShowMessageBox(owner, 
                     Resources.AbstractViewContext_CopyAll_There_was_an_error_copying_the_data_to_the_clipboard__ + exception.Message, 
-                    MessageBoxButtons.OK);
+                    MessageBoxButtons.OK, exception);
             }
         }
 
@@ -416,7 +416,7 @@ namespace pwiz.Common.DataBinding
                     messageLines.Add(Resources.AbstractViewContext_CopyViewsToGroup_Do_you_want_to_replace_them_);
                     message = string.Join(Environment.NewLine, messageLines);
                 }
-                var result = ShowMessageBox(control, message, MessageBoxButtons.YesNoCancel);
+                var result = ShowMessageBox(control, message, MessageBoxButtons.YesNoCancel, null);
                 switch (result)
                 {
                     case DialogResult.Cancel:
@@ -600,14 +600,14 @@ namespace pwiz.Common.DataBinding
                 }
                 if (dataGridView != null && dataGridView.IsCurrentCellInEditMode)
                 {
-                    if (ShowMessageBox(dataGridView, message, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    if (ShowMessageBox(dataGridView, message, MessageBoxButtons.OKCancel, dataGridViewDataErrorEventArgs.Exception) == DialogResult.Cancel)
                     {
                         dataGridView.CancelEdit();
                     }
                 }
                 else
                 {
-                    ShowMessageBox(sender as Control, message, MessageBoxButtons.OK);
+                    ShowMessageBox(sender as Control, message, MessageBoxButtons.OK, dataGridViewDataErrorEventArgs.Exception);
                 }
             }
         }

@@ -110,7 +110,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     if (prediction == null && isFullScan && fullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
                     {
                         var filePath = summaryPeakData.FileInfo != null ? summaryPeakData.FileInfo.FilePath : null;
-                        var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, filePath);
+                        //TODO: ChromatogramSet?
+                        var times = settings.GetBestRetentionTimes(summaryPeakData.NodePep, null, filePath);
                         if (times.Length > 0)
                         {
                             var statTimes = new Statistics(times);

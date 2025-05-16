@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             get
             {
                 return SrmDocument.Settings.GetRetentionTimes(GetResultFile().ChromFileInfo.FilePath,
-                    Peptide.DocNode.Target, Peptide.DocNode.ExplicitMods).Length;
+                    SrmDocument.Settings.GetTargets(Peptide.DocNode).ToList()).Length;
             }
         }
 

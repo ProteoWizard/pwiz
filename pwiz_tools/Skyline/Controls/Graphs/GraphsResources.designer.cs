@@ -1635,33 +1635,6 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to FWB Time.
-        /// </summary>
-        public static string RtGraphValue_FWB_Time {
-            get {
-                return ResourceManager.GetString("RtGraphValue_FWB_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to FWHM Time.
-        /// </summary>
-        public static string RtGraphValue_FWHM_Time {
-            get {
-                return ResourceManager.GetString("RtGraphValue_FWHM_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Retention Time.
-        /// </summary>
-        public static string RtGraphValue_Retention_Time {
-            get {
-                return ResourceManager.GetString("RtGraphValue_Retention_Time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Score.
         /// </summary>
         public static string RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score {

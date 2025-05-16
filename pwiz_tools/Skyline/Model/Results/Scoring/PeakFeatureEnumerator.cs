@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                     }
                 }
                 peakFeatureLists[i] = peakFeatureList.ToArray();
-            });
+            }, threadName:nameof(GetPeakFeatures));
 
             var result = new PeakTransitionGroupFeatures[peakFeatureCount];
             int peakFeatureCurrent = 0;
