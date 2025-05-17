@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Principal;
@@ -37,11 +36,6 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Settings = pwiz.Skyline.Properties.Settings;
-
-[assembly: InternalsVisibleTo("TestFunctional")]
-[assembly: InternalsVisibleTo("TestUtil")]
-[assembly: InternalsVisibleTo("TestPerf")]
-
 
 namespace pwiz.Skyline.Model.Tools
 {
@@ -75,13 +69,14 @@ namespace pwiz.Skyline.Model.Tools
         internal const string VIRTUALENV = @"virtualenv";
         internal const string GIT = @"git";
         internal const string REG_ADD_COMMAND = @"reg add";
-        internal const string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
-        internal const string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
-        internal const string REG_LONGPATH_TYPE = @"/t REG_DWORD";
-        internal const string REG_LONGPATH_VALUE = @"/d 0x00000001";
-        internal const string REG_LONGPATH_ZERO = @"/d 0x00000000";
-        internal const string REG_LONGPATH_FORCE = @"/f";
-        internal static string REG_LONGPATH_NAME = $@"/v {REG_LONGPATHS_ENABLED}";
+
+        public const string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
+        public const string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
+        public const string REG_LONGPATH_TYPE = @"/t REG_DWORD";
+        public const string REG_LONGPATH_VALUE = @"/d 0x00000001";
+        public const string REG_LONGPATH_ZERO = @"/d 0x00000000";
+        public const string REG_LONGPATH_FORCE = @"/f";
+        public static string REG_LONGPATH_NAME = $@"/v {REG_LONGPATHS_ENABLED}";
 
         private static string CUDA_VERSION = @"12.6.3";
         private static string CUDNN_VERSION = @"9.6.0.74_cuda12";

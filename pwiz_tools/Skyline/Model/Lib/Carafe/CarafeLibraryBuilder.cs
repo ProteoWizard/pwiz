@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Ionic.Zip;
 using JetBrains.Annotations;
@@ -34,8 +33,6 @@ using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
-
-[assembly: InternalsVisibleTo("TestFunctional")]
 
 namespace pwiz.Skyline.Model.Lib.Carafe
 {

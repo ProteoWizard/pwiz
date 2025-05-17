@@ -400,7 +400,7 @@ namespace pwiz.Skyline.SettingsUI
         private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
         {
             if (PythonInstaller == null)
-                PythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller();
+                PythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
             else
                 PythonInstaller.ClearPendingTasks();
 

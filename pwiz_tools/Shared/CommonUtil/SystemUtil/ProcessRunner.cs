@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Common.Properties;
@@ -214,8 +213,7 @@ namespace pwiz.Common.SystemUtil
                             {
                                 if (ExpectedOutputLinesCount > 0)
                                 {
-                                    percentLast = Math.Min(99,
-                                        outputLinesCount * 100 / ExpectedOutputLinesCount);
+                                    percentLast = Math.Min(99, outputLinesCount * 100 / ExpectedOutputLinesCount);
                                     status = status.ChangePercentComplete(percentLast);
                                     progress.UpdateProgress(status);
                                 }
@@ -228,8 +226,8 @@ namespace pwiz.Common.SystemUtil
                     }
                 }
                 proc.WaitForExit();
-
                 int exit = proc.ExitCode;
+
                 if (!outputAndExitCodeAreGoodFunc(reader.GetErrorLines(), exit))
                 {
                     line = proc.StandardError.ReadLine();
@@ -355,17 +353,6 @@ namespace pwiz.Common.SystemUtil
             }
 
             return tmpDirForCleanup;
-        }
-
-        /// <summary>
-        /// Function to help with filtering lines of output.
-        /// </summary>
-        /// <param name="line">Line of text considered for filtering.</param>
-        /// <param name="filters">Set of text values used to test the line.</param>
-        /// <returns>Return true if the provided line of text contains any of the provided filters of text, false otherwise.</returns>
-        private bool FilterOutputLine(string line, string[] filters)
-        {
-            return filters.Any(filter => line.Contains(filter));
         }
 
         public IEnumerable<string> MessageLog()

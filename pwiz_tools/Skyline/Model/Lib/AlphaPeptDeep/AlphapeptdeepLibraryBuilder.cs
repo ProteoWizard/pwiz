@@ -27,7 +27,6 @@ using System.Text;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Koina.Models;
 using pwiz.Skyline.Model.Tools;
@@ -138,7 +137,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public static string PythonVersion => Settings.Default.PythonEmbeddableVersion;
         public static string ScriptsDir => PythonInstallerUtil.GetPythonVirtualEnvironmentScriptsDir(PythonVersion, ALPHAPEPTDEEP);
 
-        public static PythonInstaller CreatePythonInstaller()
+        public static PythonInstaller CreatePythonInstaller(TextWriter writer)
         {
             var packages = new[]
             {
@@ -150,7 +149,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 new PythonPackage { Name = @"numpy", Version = @"1.26.4" }
             };
 
-            return new PythonInstaller(packages, new TextBoxStreamWriterHelper(), AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+            return new PythonInstaller(packages, writer, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
         }
 
         /// <summary>
