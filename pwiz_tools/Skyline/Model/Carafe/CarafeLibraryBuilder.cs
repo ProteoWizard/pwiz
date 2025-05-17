@@ -261,16 +261,6 @@ namespace pwiz.Skyline.Model.Carafe
             cpu
         };
 
-        public enum SupportedModificationTypes
-        {
-            [Description("0:None")] NONE = 0,
-            [Description("1:Carbamidomethyl of C")] UNIMOD_4 = 1,
-            [Description("2:Oxidation of M")] UNIMOD_35 = 2,
-            [Description("3:Deamidation of N")] UNIMOD_7_1 = 3,
-            [Description("4:Deamidation of Q")] UNIMOD_7_2 = 4,
-            [Description("5:Acetyl of protein N-terminus")] UNIMOD_1_1 = 5,
-            [Description("6:Acetyl of K")] UNIMOD_1_2 = 6
-        };
 
         public enum LibraryFormats
         {
@@ -344,9 +334,9 @@ namespace pwiz.Skyline.Model.Carafe
                     { ModelResources.CarafeLibrary_missed_cleavage_short, new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_missed_cleavage_long, 1, 0) },
     
                     { ModelResources.CarafeLibrary_fixed_modification_types_short, 
-                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_types_long, GetDescription( SupportedModificationTypes.UNIMOD_4 ), 
-                            Enum.GetValues(typeof(SupportedModificationTypes)).
-                                Cast<SupportedModificationTypes>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_fixed_modification_long, (s1, s2) =>
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_fixed_modification_types_long, GetDescription( CarafeSupportedModifications.MODID_1 ), 
+                            Enum.GetValues(typeof(CarafeSupportedModifications)).
+                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_fixed_modification_long, (s1, s2) =>
                             {
                                 var input = "";
 
@@ -372,9 +362,9 @@ namespace pwiz.Skyline.Model.Carafe
                 
                     { ModelResources.CarafeLibrary_fixed_modification_short, FixedModSetting },
                     { ModelResources.CarafeLibrary_variable_modification_types_short, 
-                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_types_long, GetDescription( SupportedModificationTypes.NONE ), 
-                            Enum.GetValues(typeof(SupportedModificationTypes)).
-                                Cast<SupportedModificationTypes>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_variable_modification_long, (s1,s2) =>
+                        new AbstractDdaSearchEngine.Setting(ModelResources.CarafeLibrary_variable_modification_types_long, GetDescription( CarafeSupportedModifications.NONE ), 
+                            Enum.GetValues(typeof(CarafeSupportedModifications)).
+                                Cast<CarafeSupportedModifications>().Select(e => GetDescription(e)), ModelResources.CarafeLibrary_variable_modification_long, (s1,s2) =>
                             {
                                 var input = "";
 

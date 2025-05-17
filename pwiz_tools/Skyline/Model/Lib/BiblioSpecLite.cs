@@ -154,16 +154,22 @@ namespace pwiz.Skyline.Model.Lib
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
-            lock (_lock)
+            if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
             {
-                if (File.Exists(spec.FilePath) && new FileInfo(spec.FilePath).Length > 0)
+                try
                 {
+                    Console.Out.WriteLine("Beginning load {0}", spec.FilePath);
                     var library = new BiblioSpecLiteLibrary(spec);
                     if (library.Load(loader))
                         return library;
+
                 }
-                return null;
+                finally
+                {
+                    Console.Out.WriteLine("Finished load {0}", spec.FilePath);
+                }
             }
+            return null;
         }
 
         public static BiblioSpecLiteLibrary GetUnloadedDocumentLibrary(BiblioSpecLiteSpec spec)

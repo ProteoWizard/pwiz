@@ -99,13 +99,26 @@ namespace pwiz.Skyline.Alerts
                     {
                         Dock = DockStyle.Fill,
                         Height = lbl.Height,
-                        DropDownStyle = ComboBoxStyle.DropDownList
                     };
+
+
                     comboBox.Items.AddRange(validValues.Cast<object>().ToArray());
-                    comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
+
+                    
+                    if ((kvp.Value as AbstractDdaSearchEngine.Setting)!.OtherAction != null)
+                    {
+                        comboBox.DropDownStyle = ComboBoxStyle.DropDown;
+                        comboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                    }
+                    else
+                    {
+                        comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+                        comboBox.SelectedIndex = validValues.IndexOf(s => s == valueToString(kvp.Value));
+                    }
 
                     comboBox.SelectedIndexChanged += (sender, args) =>
                     {
+                        ComboBox thisBox = sender as ComboBox;
                         if (kvp.Value.GetType() == typeof(AbstractDdaSearchEngine.Setting) && sender is ComboBox)
                         {
                             AbstractDdaSearchEngine.Setting setting = kvp.Value as AbstractDdaSearchEngine.Setting;
@@ -116,12 +129,12 @@ namespace pwiz.Skyline.Alerts
 
                                 if (other_setting != null && setting != null && setting.OtherSettingName == other_setting.Name)
                                 {
-                                    var newText = "";
                                     if (setting.OtherAction != null)
                                     {
-                                        newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, comboBox.Text);
+                                        var newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, comboBox.Text);
                                         keyToControl[other_kvp.Key].Text = newText;
                                     }
+
                                     break;
                                 }
 
@@ -129,6 +142,94 @@ namespace pwiz.Skyline.Alerts
                         }
                     };
 
+                    comboBox.TextChanged += (sender, args) =>
+                    {
+                        ComboBox thisBox = sender as ComboBox;
+                        if (thisBox != null)
+                        {
+                            string currentText = thisBox.Text;
+
+                            // Store cursor position
+                            int selectionStart = currentText.Length;
+
+                            // Clear current items
+                            thisBox.Items.Clear();
+
+                            // Filter items that contain the typed text (case-insensitive)
+                            var filteredItems = validValues.ToList()
+                                .FindAll(item => item.ToLower().Contains(currentText.ToLower()));
+
+                            // Add filtered items back to ComboBox
+                            thisBox.Items.AddRange(filteredItems.Cast<object>().ToArray());
+
+
+                            // Restore text and cursor position
+                            if (thisBox.Text != currentText)
+                                thisBox.Text = currentText;
+
+                            // Use BeginInvoke to ensure cursor is set after UI updates
+                            thisBox.BeginInvoke(new Action(() =>
+                            {
+                                thisBox.Cursor = Cursor.Current;    
+                                thisBox.Focus(); // Ensure focus is retained
+                                thisBox.SelectionLength = 0;
+                                thisBox.SelectionStart = thisBox.Text.Length;
+                                thisBox.DroppedDown = true;
+                            }));
+
+                            thisBox.Cursor = Cursor.Current;
+                            thisBox.Focus(); // Ensure focus is retained
+                            thisBox.SelectionLength = 0;
+                            thisBox.SelectionStart = thisBox.Text.Length;
+                            // Keep the dropdown open
+                            thisBox.DroppedDown = true;
+                            if (thisBox.Items.Count == 0)
+                            {
+                                thisBox.Items.AddRange(validValues.Cast<object>().ToArray());
+                            }
+
+                        }
+
+                    };
+
+                    comboBox.DropDown += (sender, args) =>
+                    {
+                        // When dropdown opens, show all matching items
+                        ComboBox thisBox = sender as ComboBox;
+                        if (thisBox != null && string.IsNullOrEmpty(thisBox.Text))
+                        {
+                            thisBox.Items.Clear();
+                            thisBox.Items.AddRange(validValues.Cast<object>().ToArray());
+                        }
+                    };
+
+                    comboBox.KeyDown += (sender, args) =>
+                    {
+                        // Handle Enter key to select the first item in the filtered list
+                        ComboBox thisBox = sender as ComboBox;
+                        if (thisBox != null)
+                        {
+                            if (args.KeyCode == Keys.Enter && thisBox.Items.Count > 0)
+                            {
+                                thisBox.SelectedIndex = 0;
+                                args.Handled = true;
+                            }
+                        }
+                    };
+
+                    comboBox.KeyPress += (sender, args) =>
+                    {
+                        // Handle Enter key to select the first item in the filtered list
+                        ComboBox thisBox = sender as ComboBox;
+                        if (thisBox != null)
+                        {
+                            if (!char.IsLetterOrDigit(args.KeyChar) && !char.IsControl(args.KeyChar) && thisBox.Items.Count > 0)
+                            {
+                                thisBox.SelectedIndex = 0;
+                                args.Handled = true;
+                            }
+                        }
+                    };
                     valueControl = comboBox;
                 }
                 else if (bool.TryParse(valueToString(kvp.Value), out bool b))
@@ -203,7 +304,12 @@ namespace pwiz.Skyline.Alerts
                     else if (kvp.Value is CheckBox cb)
                         stringToValue(cb.Checked.ToString(), gridValues[kvp.Key]);
                     else if (kvp.Value is ComboBox cmb)
-                        stringToValue(cmb.SelectedItem.ToString(), gridValues[kvp.Key]);
+                    {
+                        if (cmb.SelectedItem != null)
+                        {
+                            stringToValue(cmb.SelectedItem.ToString(), gridValues[kvp.Key]);
+                        }
+                    }
                     else
                         throw new InvalidOperationException();
                 }
