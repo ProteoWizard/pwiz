@@ -101,7 +101,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         }
     }
 
-
     public class AlphapeptdeepLibraryBuilder : AbstractDeepLibraryBuilder, IiRTCapableLibraryBuilder
     {
         public const string ALPHAPEPTDEEP = @"AlphaPeptDeep";
@@ -257,7 +256,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         private void RunAlphapeptdeep(IProgressMonitor progress, ref IProgressStatus progressStatus)
         {
-            // DSHTEYN:  These should be better balanced as of May 2nd 2025
+            // Note: Segments are distributed to balance the expected work of each task
             var segmentEndPercentages = new[] { 5, 10, 15, 95 };
             progressStatus = progressStatus.ChangeSegments(0, ImmutableList<int>.ValueOf( segmentEndPercentages));
             PreparePrecursorInputFile(MODIFICATION_NAMES, progress, ref progressStatus);
@@ -276,7 +275,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_PrepareSettingsFile_Preparing_settings_file));
 
-            // generate template settings.yaml file
+            // Generate template settings.yaml file
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{EXPORT_SETTINGS_COMMAND} ""{SettingsFilePath}""")
             {
@@ -306,10 +305,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Running_AlphaPeptDeep));
 
             progressStatus.ChangePercentComplete(0);
-            // compose peptdeep cmd-flow command arguments to build library
+            // Compose peptdeep cmd-flow command arguments to build library
             var args = TextUtil.SpaceSeparate(CmdFlowCommandArguments.Select(arg => arg.ToString()));
 
-            // execute command
+            // Execute command
             var pr = new ProcessRunner();
             var psi = new ProcessStartInfo(PeptdeepExecutablePath, $@"{CMD_FLOW_COMMAND} {args}")
             {
@@ -329,7 +328,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     @"  / ____/  __/ /_/ / /_/ /_/ /  __/  __/ /_/ /",
                     @" /_/    \___/ .___/\__/_____/\___/\___/ .___/",
                     @"           /_/                       /_/",
-                    @"s/DiaNN\/Spectronaut/Skyline/"    // replace DiaNN/Spectronaut with Skyline
+                    @"s/DiaNN\/Spectronaut/Skyline/"    // Replace DiaNN/Spectronaut with Skyline
                 };
 
                 pr.EnableImmediateLog = true;
@@ -355,7 +354,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var result = new List<string>();
             var reader = new DsvFileReader(OutputSpectraLibFilepath, TextUtil.SEPARATOR_TSV);
 
-            // transform table header
+            // Transform table header
             var colNames = reader.FieldNames;
             var newColNames = new List<string>();
             foreach (var colName in colNames)
@@ -373,7 +372,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             var header = string.Join(TextUtil.SEPARATOR_TSV_STR, newColNames);
             result.Add(header);
 
-            // transform table body line by line
+            // Transform table body line by line
             while (null != reader.ReadLine())
             {
                 var line = new List<string>();
@@ -402,7 +401,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
             }
 
-            // write to new file
+            // Write to new file
             File.WriteAllLines(TransformedOutputSpectraLibFilepath, result);
         }
 
@@ -411,7 +410,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             string[] inputFile = { TransformedOutputSpectraLibFilepath };
             string incompleteBlibPath = BiblioSpecLiteSpec.GetRedundantName(LibrarySpec.FilePath);
             var build = new BlibBuild(incompleteBlibPath, inputFile);
-
 
             progress.UpdateProgress(progressStatus = progressStatus
                 .ChangeMessage(ModelResources.AlphapeptdeepLibraryBuilder_Importing_spectral_library));
@@ -427,10 +425,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
             }
 
-            BlibFilter blibFilter = new BlibFilter();
+            var blibFilter = new BlibFilter();
             // Build the final filtered library
-            completed = completed &&
-                        blibFilter.Filter(incompleteBlibPath, LibrarySpec.FilePath, progress, ref progressStatus);
+            completed = completed && blibFilter.Filter(incompleteBlibPath, LibrarySpec.FilePath, progress, ref progressStatus);
 
             if (completed)
             {

@@ -76,32 +76,27 @@ namespace pwiz.Skyline.Model.Tools
         public const string REG_LONGPATH_VALUE = @"/d 0x00000001";
         public const string REG_LONGPATH_ZERO = @"/d 0x00000000";
         public const string REG_LONGPATH_FORCE = @"/f";
-        public static string REG_LONGPATH_NAME = $@"/v {REG_LONGPATHS_ENABLED}";
+        public const string REG_LONGPATH_NAME = @"/v " + REG_LONGPATHS_ENABLED;
 
-        private static string CUDA_VERSION = @"12.6.3";
-        private static string CUDNN_VERSION = @"9.6.0.74_cuda12";
-        //private static readonly string CUDA_INSTALLER_URL = $@"https://developer.download.nvidia.com/compute/cuda/{CUDA_VERSION}/local_installers/";
-        private static readonly string CUDA_INSTALLER_URL = $@"https://developer.download.nvidia.com/compute/cuda/{CUDA_VERSION}/network_installers/";
-
-        private static readonly string CUDNN_INSTALLER_URL =
-            @"https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/";
-
-        private string CUDNN_INSTALLER = $@"cudnn-windows-x86_64-{CUDNN_VERSION}-archive.zip";
-        private string CudaVersionDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"cuda", CUDA_VERSION);
-        public string CudaInstallerDownloadPath => Path.Combine(CudaVersionDir, CUDA_INSTALLER);
-
-        public string CuDNNVersionDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"cudnn", CUDNN_VERSION);
-
-        public string CuDNNArchive = $@"cudnn-windows-x86_64-{CUDNN_VERSION}-archive";
+        private const string CUDA_VERSION = @"12.6.3";
+        private const string CUDNN_VERSION = @"9.6.0.74_cuda12";
+        // private static readonly string CUDA_INSTALLER_URL = $@"https://developer.download.nvidia.com/compute/cuda/{CUDA_VERSION}/local_installers/";
+        // private static readonly string CUDA_INSTALLER_URL = $@"https://developer.download.nvidia.com/compute/cuda/{CUDA_VERSION}/network_installers/";
+        // private static readonly string CUDNN_INSTALLER_URL = @"https://developer.download.nvidia.com/compute/cudnn/redist/cudnn/windows-x86_64/";
+        // private static readonly string CUDNN_INSTALLER = $@"cudnn-windows-x86_64-{CUDNN_VERSION}-archive.zip";
+        private static string CudaVersionDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"cuda", CUDA_VERSION);
+        // public static string CudaInstallerDownloadPath => Path.Combine(CudaVersionDir, CUDA_INSTALLER);
+        public static string CuDNNVersionDir => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"cudnn", CUDNN_VERSION);
+        // public static string CuDNNArchive = $@"cudnn-windows-x86_64-{CUDNN_VERSION}-archive";
         public static string CuDNNInstallDir => @"C:\Program Files\NVIDIA\CUDNN\v9.x";
-        public string CuDNNInstallerDownloadPath => Path.Combine(CuDNNVersionDir, CUDNN_INSTALLER);
+        // public static string CuDNNInstallerDownloadPath => Path.Combine(CuDNNVersionDir, CUDNN_INSTALLER);
 
-        //private string CUDA_INSTALLER = $@"cuda_{CUDA_VERSION_FULL}_windows.exe";
-        private string CUDA_INSTALLER = $@"cuda_{CUDA_VERSION}_windows_network.exe";
-        public Uri CudaDownloadUri => new Uri(CUDA_INSTALLER_URL+CUDA_INSTALLER);
-        public string CudaDownloadPath => Path.Combine(CudaVersionDir, CudaInstallerDownloadPath);
-        public Uri CuDNNDownloadUri => new Uri(CUDNN_INSTALLER_URL + CUDNN_INSTALLER);
-        public string CuDNNDownloadPath => Path.Combine(CuDNNVersionDir, CuDNNInstallerDownloadPath);
+        // private static readonly string CUDA_INSTALLER = $@"cuda_{CUDA_VERSION_FULL}_windows.exe";
+        // private static readonly string CUDA_INSTALLER = $@"cuda_{CUDA_VERSION}_windows_network.exe";
+        // public static Uri CudaDownloadUri => new Uri(CUDA_INSTALLER_URL + CUDA_INSTALLER);
+        // public static string CudaDownloadPath => Path.Combine(CudaVersionDir, CudaInstallerDownloadPath);
+        // public static Uri CuDNNDownloadUri => new Uri(CUDNN_INSTALLER_URL + CUDNN_INSTALLER);
+        // public static string CuDNNDownloadPath => Path.Combine(CuDNNVersionDir, CuDNNInstallerDownloadPath);
 
         public static string InstallNvidiaLibrariesBat =>
             Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), "InstallNvidiaLibraries.bat");
@@ -113,14 +108,17 @@ namespace pwiz.Skyline.Model.Tools
         {
             get
             {
-                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD || SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
+                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIAHARD ||
+                    SimulatedInstallationState == eSimulatedInstallationState.NAIVE)
+                {
                     return false;
-                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)  //Also assume we have NVIDIA card when we assume we don't have NVIDIA software
+                }
+                // Also assume we have NVIDIA card when we assume we don't have NVIDIA software
+                if (SimulatedInstallationState == eSimulatedInstallationState.NONVIDIASOFT)
                     return true;
 
                 return TestForNvidiaGPU();
             }
-
         }
 
         /// <summary>
@@ -148,30 +146,24 @@ namespace pwiz.Skyline.Model.Tools
             return tasks;
         }
  
-        public int NumTotalTasks { get; set; }
-        public int NumCompletedTasks { get; set; }
-
         public static ProgramPathContainer PythonPathContainer = new ProgramPathContainer(PYTHON, Settings.Default.PythonEmbeddableVersion);
-        public static string PythonVersion
-        {
-            get => PythonPathContainer.ProgramVersion;
-        }
-
-        public List<PythonPackage> PythonPackages { get; }
+        public static string PythonVersion => PythonPathContainer.ProgramVersion;
         public static string PythonEmbeddablePackageFileName => PythonEmbeddablePackageFileBaseName + DOT_ZIP;
-        public Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        public static Uri PythonEmbeddablePackageUri => new Uri(PYTHON_FTP_SERVER_URL + PythonVersion + FORWARD_SLASH + PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageDownloadPath => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileName);
         public static string PythonEmbeddablePackageExtractDir => Path.Combine(PythonVersionDir, PythonEmbeddablePackageFileBaseName);
-        public Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
-        public string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
-        public string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
+        public static Uri GetPipScriptDownloadUri => new Uri(BOOTSTRAP_PYPA_URL + GET_PIP_SCRIPT_FILE_NAME);
+        public static string GetPipScriptDownloadPath => Path.Combine(PythonVersionDir, GET_PIP_SCRIPT_FILE_NAME);
+        public static string BasePythonExecutablePath => Path.Combine(PythonEmbeddablePackageExtractDir, PYTHON_EXECUTABLE);
+
+        public int NumTotalTasks { get; set; }
+        public int NumCompletedTasks { get; set; }
+        public List<PythonPackage> PythonPackages { get; }
+        public List<PythonTaskBase> PendingTasks { get; set; }
+
         public string VirtualEnvironmentName { get; }
         public string VirtualEnvironmentDir => Path.Combine(PythonVersionDir, VirtualEnvironmentName);
         public string VirtualEnvironmentPythonExecutablePath => Path.Combine(VirtualEnvironmentDir, SCRIPTS, PYTHON_EXECUTABLE);
-        public List<PythonTaskBase> PendingTasks { get; set; }
-
-        public List<PythonTaskBase> PendingPythonTasks { get; set; }
 
         #region Functional testing support
         public enum eSimulatedInstallationState
@@ -202,8 +194,8 @@ namespace pwiz.Skyline.Model.Tools
 
         private static string PythonRootDir => PythonInstallerUtil.PythonRootDir;
         internal static TextWriter Writer { get; set; }
-        public bool HavePythonTasks { get; private set;}
-        public bool HaveNvidiaTasks { get; private set; }
+        public bool HavePythonTasks => PendingTasks.Any(task => task.IsRequiredForPythonEnvironment);
+        public bool HaveNvidiaTasks => PendingTasks.Any(task => task.IsNvidiaTask);
 
         public static bool CudaLibraryInstalled()
         {
@@ -278,9 +270,8 @@ namespace pwiz.Skyline.Model.Tools
             }
             else
             {
-                string msg = string.Format(ModelResources.NvidiaInstaller_Missing_resource_0_,
-                    @"InstallNvidiaLibraries-bat.txt");
-                Console.WriteLine(msg);
+                // Programmer error. This file must be included in the project where it is expected.
+                Assume.Fail(string.Format($@"Missing resource {type}.InstallNvidiaLibraries-bat.txt"));
             }
         }
 
@@ -308,30 +299,29 @@ namespace pwiz.Skyline.Model.Tools
         }
 
         /// <summary>
-        /// False means NONVIDIA hardware, true means NVIDIA hardware, null means don't know
+        /// Returns true for NVIDIA hardware, false for non-NIDIA, and null if unknown
         /// </summary>
-        /// <returns></returns>
         public static bool? TestForNvidiaGPU()
         {
-            bool? nvidiaGpu = null;
             try
             {
                 // Query for video controllers using WMI
                 var searcher = new ManagementObjectSearcher(@"SELECT * FROM Win32_VideoController");
-                
-                foreach (ManagementObject obj in searcher.Get())
+
+                foreach (var obj in searcher.Get())
                 {
                     //  GPU information
-                    nvidiaGpu = obj[@"Name"].ToString().StartsWith(@"NVIDIA");
-                    if (nvidiaGpu != false)
-                        break;
+                    if (obj[@"Name"].ToString().StartsWith(@"NVIDIA"))
+                        return true;
                 }
+
+                return false;
             }
-            catch (ManagementException e)
+            catch (ManagementException)
             {
-                Console.WriteLine(@"An error occurred while querying for WMI data: " + e.Message);
+                // Console.WriteLine(@"An error occurred while querying for WMI data: " + e.Message);
+                return null;
             }
-            return nvidiaGpu;
         }
 
         public PythonInstaller(IEnumerable<PythonPackage> packages,
@@ -351,7 +341,6 @@ namespace pwiz.Skyline.Model.Tools
                 PythonPackages.Add(new PythonPackage { Name = @"nvidia-cudnn-cu12", Version = null });
                 PythonPackages.Add(new PythonPackage { Name = @"torch --extra-index-url https://download.pytorch.org/whl/cu118 --upgrade", Version = null });
             }
-
         }
 
         private PythonInstaller()
@@ -397,23 +386,6 @@ namespace pwiz.Skyline.Model.Tools
             PendingTasks.Clear();
         }
 
-        public void CheckPendingTasks()
-        {
-            var tasks = PendingTasks;
-            HavePythonTasks = false;
-            HaveNvidiaTasks = false;
-
-            if (tasks.Any(task => task.IsRequiredForPythonEnvironment))
-            {
-                HavePythonTasks = true;
-            }
-
-            if (tasks.Any(task => task.IsNvidiaTask))
-            {
-                HaveNvidiaTasks = true;
-            }
-        }
-
         public List<PythonTaskBase> ValidatePythonVirtualEnvironment()
         {
             var pendingTasks = new List<PythonTaskBase>();
@@ -448,7 +420,6 @@ namespace pwiz.Skyline.Model.Tools
                             }
                             prereqTask = prereqTask.ParentTask;
                         }
-
                     }
 
                     if (!havePrerequisite)
@@ -467,13 +438,13 @@ namespace pwiz.Skyline.Model.Tools
             return pendingTasks;
         }
 
-        public void EnableWindowsLongPaths(ILongWaitBroker broker = null)
+        public static void EnableWindowsLongPaths(bool enable, ILongWaitBroker broker = null)
         {
             var cmdLine = TextUtil.SpaceSeparate(REG_ADD_COMMAND,
                 REG_FILESYSTEM_KEY.Quote(),
                 REG_LONGPATH_NAME,
                 REG_LONGPATH_TYPE,
-                REG_LONGPATH_VALUE,
+                enable ? REG_LONGPATH_VALUE : REG_LONGPATH_ZERO,
                 REG_LONGPATH_FORCE);
 
             var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdLine, CMD_PROCEEDING_SYMBOL);
@@ -485,28 +456,6 @@ namespace pwiz.Skyline.Model.Tools
 
             if (processRunner.RunProcess(cmd, true, Writer, false, cancelToken) != 0)
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
-
-        }
-
-        public static void DisableWindowsLongPaths(ILongWaitBroker broker = null)
-        {
-            var cmdLine = TextUtil.SpaceSeparate(REG_ADD_COMMAND,
-                REG_FILESYSTEM_KEY.Quote(),
-                REG_LONGPATH_NAME,
-                REG_LONGPATH_TYPE,
-                REG_LONGPATH_ZERO,
-                REG_LONGPATH_FORCE);
-
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, ECHO, cmdLine, CMD_PROCEEDING_SYMBOL);
-            cmd += cmdLine;
-
-            var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-
-            var cancelToken = broker.GetSafeCancellationToken();
-
-            if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
-
         }
 
         internal void PipInstall(string pythonExecutablePath, IEnumerable<PythonPackage> packages, ILongWaitBroker broker = null)
@@ -563,7 +512,6 @@ namespace pwiz.Skyline.Model.Tools
             var filePath = Path.Combine(PythonEmbeddablePackageExtractDir, SCRIPTS, VIRTUALENV);
             PythonInstallerUtil.SignFile(filePath+DOT_EXE);
             PythonInstallerUtil.SignDirectory(VirtualEnvironmentDir);
-
         }
 
         internal void RunPythonModule(string pythonExecutablePath, string changeDir, string moduleName, string[] arguments, ILongWaitBroker broker = null)
@@ -694,73 +642,9 @@ namespace pwiz.Skyline.Model.Tools
                 ACTIVATE_SCRIPT_FILE_NAME);
         }
 
-        public static void CopyFiles(string fromDirectory, string toDirectory, string pattern = @"*")
-        {
-            // Ensure the target directory exists
-            Directory.CreateDirectory(toDirectory);
-
-            // Get all files matching the pattern
-            string[] files = Directory.GetFiles(fromDirectory, pattern);
-
-            foreach (string file in files)
-            {
-                string fileName = Path.GetFileName(file);
-                string destFile = Path.Combine(toDirectory, fileName);
-                File.Copy(file, destFile, true); // true for overwrite existing file
-            }
-        }
-
         public static CancellationToken GetSafeCancellationToken(this ILongWaitBroker broker)
         {
             return broker?.CancellationToken ?? CancellationToken.None;
-        }
-
-        public static void CopyFilesElevated(string fromDirectory, string toDirectory, string pattern, ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner, TextWriter Writer, ILongWaitBroker broker = null)
-        {
-            if (string.IsNullOrEmpty(pattern))
-                pattern = @"*";
-
-            if (!Directory.Exists(toDirectory))
-            {
-                string[] destination = { toDirectory };
-                CreateDirectoriesElevated(destination, TestPipeSkylineProcessRunner, Writer);
-            }
-
-            string[] files = Directory.GetFiles(fromDirectory, pattern);
-            var cancelToken = broker.GetSafeCancellationToken();
-
-            for (int i = 0; i < files.Length; i++)
-            {
-                var file = files[i];
-                var command = $@"copy {TextUtil.Quote(file)} {TextUtil.Quote(toDirectory)} /y ";
-                var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, @"echo", command, TextUtil.AMPERSAND);
-                var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-                cmd += command;
-                if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
-                    throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, command));
-                if (cancelToken.IsCancellationRequested)
-                    break;
-            }
-        }
-        public static void CreateDirectoriesElevated(string [] directories, ISkylineProcessRunnerWrapper TestPipeSkylineProcessRunner, TextWriter Writer, ILongWaitBroker broker = null)
-        {
-            var cancelToken = broker.GetSafeCancellationToken();
-            for (int i = 0; i < directories.Length; i++)
-            {
-                var directory = directories[i];
-                if (Directory.Exists(directory))
-                    continue;
-                var command = $@"mkdir {TextUtil.Quote(directory)}";
-                var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, @"echo",
-                    command, TextUtil.AMPERSAND);
-                var processRunner = TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-                cmd += command;
-                if (processRunner.RunProcess(cmd, true, Writer, true, cancelToken) != 0)
-                    throw new ToolExecutionException(
-                        string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, command));
-                if (cancelToken.IsCancellationRequested)
-                    break;
-            }
         }
 
         public static string GetFileHash(string filePath)
@@ -782,6 +666,7 @@ namespace pwiz.Skyline.Model.Tools
                 return @"F00F00F00";
             }
         }
+
         public static string GetMD5FileHash(string filePath)
         {
             using (var md5 = MD5.Create())
@@ -935,11 +820,6 @@ namespace pwiz.Skyline.Model.Tools
         }
     }
 
-    public interface IPythonInstallerTaskValidator
-    {
-        bool? Validate(PythonTaskBase python, PythonInstaller pythonInstaller);
-    }
-
     public enum PythonTaskName
     {
         download_python_embeddable_package,
@@ -951,11 +831,7 @@ namespace pwiz.Skyline.Model.Tools
         pip_install_virtualenv,
         create_virtual_environment,
         pip_install_packages,
-        download_cuda_library,
-        install_cuda_library,
-        download_cudnn_library,
-        install_cudnn_library,
-        setup_nvidia_libraries          //Write batch script and execute it with elevation
+        setup_nvidia_libraries          // All NVIDIA tasks in a single batch script and executed with elevation
     }
 
     public class PythonPackage
@@ -971,27 +847,13 @@ namespace pwiz.Skyline.Model.Tools
         }
     }
 
-    internal class PythonInstallerUnsupportedTaskException : PythonInstallerException
-    {
-        public PythonInstallerUnsupportedTaskException(PythonTaskBase pythonTask)
-            : base(string.Format(ToolsResources.PythonInstallerUnsupportedTaskException_Task_with_action_type__0__is_not_supported_by_PythonInstaller_yet, pythonTask.TaskName)) { }
-    }
-
-    internal class PythonInstallerUnsupportedTaskNameException : PythonInstallerException
-    {
-        public PythonInstallerUnsupportedTaskNameException(PythonTaskName pythonTaskName)
-            : base(string.Format(ToolsResources.PythonInstallerUnsupportedTaskNameException_Task_with_task_name__0__is_not_supported_by_PythonInstaller_yet, pythonTaskName)) { }
-    }
-
     public abstract class PythonTaskBase
     {
         public PythonInstaller PythonInstaller { get; }
-        public PythonTaskName TaskName { get; set; }
-        public abstract string InProgressMessage();
-        public abstract string SuccessMessage();
-        public abstract string FailureMessage();
+        public PythonTaskName TaskName { get; }
+        public PythonTaskBase ParentTask { get; }
 
-        public PythonTaskBase ParentTask { get; set; }
+        public abstract string InProgressMessage { get; }
 
         public PythonTaskBase(PythonInstaller pythonInstaller, PythonTaskName name, PythonTaskBase parentTask = null)
         {
@@ -1005,42 +867,20 @@ namespace pwiz.Skyline.Model.Tools
         /// </summary>
         public abstract bool? IsTaskComplete();
         public abstract void DoAction(ILongWaitBroker broker);
-        public virtual bool IsRequiredForPythonEnvironment
-        {
-            get { return true; }
-        }
-
-        public virtual bool IsNvidiaTask
-        {
-            get { return false;  }
-        }
-
-        public virtual bool IsEnableLongPathsTask
-        {
-            get { return false; }
-        }
+        public virtual bool IsRequiredForPythonEnvironment => true;
+        public virtual bool IsNvidiaTask => false;
+        public virtual bool IsEnableLongPathsTask => false;
     }
 
     public class DownloadPythonEmbeddablePackageTask : PythonTaskBase
     {
         private string _storedHash = Settings.Default.PythonEmbeddableHash;
-        public DownloadPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package)
+        public DownloadPythonEmbeddablePackageTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.download_python_embeddable_package)
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package;
-        }
-
-        public override string FailureMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_Python_embeddable_package;
-        }
-        public override string SuccessMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Successfully_downloaded_Python_embeddable_package;
-        }
+        public override string InProgressMessage => ToolsResources.PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package;
 
         public override bool? IsTaskComplete()
         {
@@ -1074,24 +914,12 @@ namespace pwiz.Skyline.Model.Tools
 
     public class UnzipPythonEmbeddablePackageTask : PythonTaskBase
     {
-        public UnzipPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.unzip_python_embeddable_package, new DownloadPythonEmbeddablePackageTask(installer))
+        public UnzipPythonEmbeddablePackageTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.unzip_python_embeddable_package, new DownloadPythonEmbeddablePackageTask(installer))
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package;
-        }
-
-        public override string FailureMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Failed_to_unzip_Python_embeddable_package;
-        }
-
-        public override string SuccessMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Successfully_unzipped_Python_embeddable_package;
-        }
+        public override string InProgressMessage => ToolsResources.PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package;
 
         public override bool? IsTaskComplete()
         {
@@ -1117,24 +945,12 @@ namespace pwiz.Skyline.Model.Tools
 
     public class EnableSearchPathInPythonEmbeddablePackageTask : PythonTaskBase
     {
-        public EnableSearchPathInPythonEmbeddablePackageTask(PythonInstaller installer) : base(installer, PythonTaskName.unzip_python_embeddable_package, new UnzipPythonEmbeddablePackageTask(installer))
+        public EnableSearchPathInPythonEmbeddablePackageTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.enable_search_path_in_python_embeddable_package, new UnzipPythonEmbeddablePackageTask(installer))
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package;
-        }
-
-        public override string FailureMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_search_path_in_Python_embeddable_package;
-        }
-
-        public override string SuccessMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Successfully_enabled_search_path_in_Python_embeddable_package;
-        }
+        public override string InProgressMessage => ToolsResources.PythonInstaller_GetPythonTask_Enabling_search_path_in_Python_embeddable_package;
 
         public override bool? IsTaskComplete()
         {
@@ -1149,8 +965,7 @@ namespace pwiz.Skyline.Model.Tools
         {
             var files = Directory.GetFiles(PythonInstaller.PythonEmbeddablePackageExtractDir, @"python*._pth");
             Assume.IsTrue(files.Length == 1,
-                ToolsResources
-                    .PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected);
+                ToolsResources.PythonInstaller_EnableSearchPathInPythonEmbeddablePackage_Found_0_or_more_than_one_files_with__pth_extension__this_is_unexpected);
             var oldFilePath = files[0];
             var newFilePath = Path.ChangeExtension(oldFilePath, @".pth");
             File.Move(oldFilePath, newFilePath);
@@ -1159,24 +974,12 @@ namespace pwiz.Skyline.Model.Tools
 
     public class EnableLongPathsTask : PythonTaskBase
     {
-        public EnableLongPathsTask(PythonInstaller installer) : base(installer, PythonTaskName.enable_longpaths)
+        public EnableLongPathsTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.enable_longpaths)
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
-
-        public override string FailureMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_enable_long_paths_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
-
-        public override string SuccessMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_enabled_long_paths_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
+        public override string InProgressMessage => string.Format(ToolsResources.PythonInstaller_GetPythonTask_Enable_Long_Paths_For_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
 
         public override bool? IsTaskComplete()
         {
@@ -1186,54 +989,20 @@ namespace pwiz.Skyline.Model.Tools
         
         public override void DoAction(ILongWaitBroker broker)
         {
-            var cmdLine = TextUtil.SpaceSeparate(PythonInstaller.REG_ADD_COMMAND,
-                PythonInstaller.REG_FILESYSTEM_KEY.Quote(),
-                PythonInstaller.REG_LONGPATH_NAME,
-                PythonInstaller.REG_LONGPATH_TYPE,
-                PythonInstaller.REG_LONGPATH_VALUE,
-                PythonInstaller.REG_LONGPATH_FORCE);
-
-            var cmd = string.Format(ToolsResources.PythonInstaller__0__Running_command____1____2__, PythonInstaller.ECHO, cmdLine, PythonInstaller.CMD_PROCEEDING_SYMBOL);
-            cmd += cmdLine;
-
-            var processRunner = PythonInstaller.TestPipeSkylineProcessRunner ?? new SkylineProcessRunnerWrapper();
-
-            var cancelToken = broker.GetSafeCancellationToken();
-
-            if (processRunner.RunProcess(cmd, true, PythonInstaller.Writer, false, cancelToken) != 0)
-                throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdLine));
+            PythonInstaller.EnableWindowsLongPaths(true);
         }
 
-        private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool IsEnableLongPathsTask
-        {
-            get { return true; }
-        }
+        public override bool IsEnableLongPathsTask => true;
     }
 
     public class DownloadGetPipScriptTask : PythonTaskBase
     {
-        public DownloadGetPipScriptTask(PythonInstaller installer) : base(installer, PythonTaskName.download_getpip_script, new EnableSearchPathInPythonEmbeddablePackageTask(installer))
+        public DownloadGetPipScriptTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.download_getpip_script, new EnableSearchPathInPythonEmbeddablePackageTask(installer))
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script;
-        }
-
-        public override string FailureMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Failed_to_download_the_get_pip_py_script;
-        }
-        public override string SuccessMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Successfully_downloaded_the_get_pip_py_script;
-        }
+        public override string InProgressMessage => ToolsResources.PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script;
 
         public override bool? IsTaskComplete()
         {
@@ -1242,10 +1011,9 @@ namespace pwiz.Skyline.Model.Tools
             if (!File.Exists(filePath))
                 return false;
 
-            return
-                PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
-
+            return PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
         }
+
         public override void DoAction(ILongWaitBroker broker)
         {
             var progressWaitBroker = new ProgressWaitBroker(DoActionWithProgressMonitor);
@@ -1266,24 +1034,12 @@ namespace pwiz.Skyline.Model.Tools
 
     public class RunGetPipScriptTask : PythonTaskBase
     {
-        public RunGetPipScriptTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package, new DownloadGetPipScriptTask(installer))
+        public RunGetPipScriptTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.run_getpip_script, new DownloadGetPipScriptTask(installer))
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Running_the_get_pip_py_script;
-        }
-
-        public override string FailureMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_the_get_pip_py_script;
-        }
-
-        public override string SuccessMessage()
-        {
-            return ToolsResources.PythonInstaller_GetPythonTask_Successfully_ran_the_get_pip_py_script; 
-        }
+        public override string InProgressMessage => ToolsResources.PythonInstaller_GetPythonTask_Running_the_get_pip_py_script;
 
         public override bool? IsTaskComplete()
         {
@@ -1292,10 +1048,9 @@ namespace pwiz.Skyline.Model.Tools
             if (!File.Exists(filePath))
                 return false;
 
-            return
-                PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
-
+            return PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
         }
+
         public override void DoAction(ILongWaitBroker broker)
         {
             // CONSIDER(brendanx): Path quoting?
@@ -1313,34 +1068,16 @@ namespace pwiz.Skyline.Model.Tools
 
             var filePath = Path.Combine(PythonInstaller.PythonEmbeddablePackageExtractDir, PythonInstaller.SCRIPTS, PythonInstaller.PIP_EXE);
             PythonInstallerUtil.SignFile(filePath);
-
-        }
-
-        private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
-        {
-            throw new NotImplementedException();
         }
     }
     public class PipInstallVirtualEnvTask : PythonTaskBase
     {
-        public PipInstallVirtualEnvTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package, new RunGetPipScriptTask(installer))
+        public PipInstallVirtualEnvTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.pip_install_virtualenv, new RunGetPipScriptTask(installer))
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Running_pip_install__0_, PythonInstaller.VIRTUALENV);
-        }
-
-        public override string FailureMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_run_pip_install__0_, PythonInstaller.VIRTUALENV);
-        }
-
-        public override string SuccessMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_ran_pip_install__0_, PythonInstaller.VIRTUALENV);
-        }
+        public override string InProgressMessage => string.Format(ToolsResources.PythonInstaller_GetPythonTask_Running_pip_install__0_, PythonInstaller.VIRTUALENV);
 
         public override bool? IsTaskComplete()
         {
@@ -1349,81 +1086,45 @@ namespace pwiz.Skyline.Model.Tools
             if (!File.Exists(filePath))
                 return false;
 
-            return
-                PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
-
+            return PythonInstallerUtil.IsSignatureValid(filePath, PythonInstallerUtil.GetFileHash(filePath));
         }
+        
         public override void DoAction(ILongWaitBroker broker)
         {
             var virtualEnvPackage = new PythonPackage { Name = PythonInstaller.VIRTUALENV, Version = null };
-            string pythonExecutablePath = PythonInstaller.BasePythonExecutablePath;
             PythonInstaller.PipInstall(PythonInstaller.BasePythonExecutablePath, new [] {virtualEnvPackage}, broker);
-        }
-
-        private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
-        {
-            throw new NotImplementedException();
         }
     }
 
     public class CreateVirtualEnvironmentTask : PythonTaskBase
     {
-        public CreateVirtualEnvironmentTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package, new PipInstallVirtualEnvTask(installer))
+        public CreateVirtualEnvironmentTask(PythonInstaller installer) 
+            : base(installer, PythonTaskName.create_virtual_environment, new PipInstallVirtualEnvTask(installer))
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
-
-        public override string FailureMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_create_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
-
-        public override string SuccessMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_created_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
+        public override string InProgressMessage => string.Format(ToolsResources.PythonInstaller_GetPythonTask_Creating_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
 
         public override bool? IsTaskComplete()
         {
             return Directory.Exists(PythonInstaller.VirtualEnvironmentDir);
         }
+        
         public override void DoAction(ILongWaitBroker broker)
         {
-            string pythonExecutablePath = PythonInstaller.BasePythonExecutablePath;
-            PythonInstaller.RunPythonModule(
-                PythonInstaller.BasePythonExecutablePath, PythonInstaller.PythonVersionDir, PythonInstaller.VIRTUALENV, new[] { PythonInstaller.VirtualEnvironmentName }, broker);
-        }
-
-        private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
-        {
-            throw new NotImplementedException();
+            PythonInstaller.RunPythonModule(PythonInstaller.BasePythonExecutablePath, PythonInstaller.PythonVersionDir,
+                PythonInstaller.VIRTUALENV, new[] { PythonInstaller.VirtualEnvironmentName }, broker);
         }
     }
 
     public class PipInstallPackagesTask : PythonTaskBase
     {
-        public PipInstallPackagesTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package, new CreateVirtualEnvironmentTask(installer))
+        public PipInstallPackagesTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.pip_install_packages, new CreateVirtualEnvironmentTask(installer))
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
-
-        public override string FailureMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Failed_to_install_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
-
-        public override string SuccessMessage()
-        {
-            return string.Format(ToolsResources.PythonInstaller_GetPythonTask_Successfully_installed_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
-        }
+        public override string InProgressMessage => string.Format(ToolsResources.PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_, PythonInstaller.VirtualEnvironmentName);
 
         public override bool? IsTaskComplete()
         {
@@ -1497,38 +1198,27 @@ namespace pwiz.Skyline.Model.Tools
             }
             return true;
         }
+        
         public override void DoAction(ILongWaitBroker broker)
         {
-            string pythonExecutablePath = PythonInstaller.BasePythonExecutablePath;
             PythonInstaller.PipInstall(PythonInstaller.VirtualEnvironmentPythonExecutablePath, PythonInstaller.PythonPackages, broker);
         }
     }
+    
     public class SetupNvidiaLibrariesTask : PythonTaskBase
     {
-
-        public SetupNvidiaLibrariesTask(PythonInstaller installer) : base(installer, PythonTaskName.download_python_embeddable_package)
+        public SetupNvidiaLibrariesTask(PythonInstaller installer)
+            : base(installer, PythonTaskName.setup_nvidia_libraries)
         {
         }
 
-        public override string InProgressMessage()
-        {
-            return ToolsResources.NvidiaInstaller_Setup_Nvidia_Libraries;
-        }
-
-        public override string FailureMessage()
-        {
-            return ToolsResources.NvidiaInstaller_Failed_Setup_Nvidia_Libraries;
-        }
-
-        public override string SuccessMessage()
-        {
-            return ToolsResources.NvidiaInstaller_Successfully_Setup_Nvidia_Libraries;
-        }
+        public override string InProgressMessage => ToolsResources.NvidiaInstaller_Setup_Nvidia_Libraries;
 
         public override bool? IsTaskComplete()
         {
             return PythonInstaller.NvidiaLibrariesInstalled();
         }
+
         public override void DoAction(ILongWaitBroker broker)
         {
             var cmdBuilder = new StringBuilder();
@@ -1544,19 +1234,8 @@ namespace pwiz.Skyline.Model.Tools
                 throw new ToolExecutionException(string.Format(ToolsResources.PythonInstaller_Failed_to_execute_command____0__, cmdBuilder));
         }
 
-        private void DoActionWithProgressMonitor(IProgressMonitor progressMonitor)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override bool IsRequiredForPythonEnvironment
-        {
-            get { return false; }
-        }
-        public override bool IsNvidiaTask
-        {
-            get { return true; }
-        }
+        public override bool IsRequiredForPythonEnvironment => false;
+        public override bool IsNvidiaTask => true;
     }
 }
 

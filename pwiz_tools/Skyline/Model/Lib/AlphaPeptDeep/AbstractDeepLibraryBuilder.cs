@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -277,22 +276,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 resultList[i] = resultList[i].Indent(1);
             }
             return resultList;
-        }
-        
-        protected static string LabelPrecursor(TransitionGroup tranGroup, double precursorMz,
-            string resultsText)
-        {
-            return string.Format(@"{0}{1}{2}{3}", LabelMz(tranGroup, precursorMz),
-                Transition.GetChargeIndicator(tranGroup.PrecursorAdduct),
-                tranGroup.LabelTypeText, resultsText);
-        }
-
-        protected static string LabelMz(TransitionGroup tranGroup, double precursorMz)
-        {
-            int? massShift = tranGroup.DecoyMassShift;
-            double shift = SequenceMassCalc.GetPeptideInterval(massShift);
-            return string.Format(CultureInfo.InvariantCulture, @"{0:F04}{1}", precursorMz - shift,
-                Transition.GetDecoyText(massShift));
         }
     }
 }

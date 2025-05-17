@@ -1313,15 +1313,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Missing resource {0}.
-        /// </summary>
-        public static string NvidiaInstaller_Missing_resource_0_ {
-            get {
-                return ResourceManager.GetString("NvidiaInstaller_Missing_resource_0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Administrative privileges are required to install Nvidia Cuda tools the first time. Consult with your system administrator if you don&apos;t have the necessary permissions and ask them to run the following script:
         ///
         ///{0}

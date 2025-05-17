@@ -493,9 +493,6 @@ Would you like to continue?
   <data name="NvidiaInstaller_Install" xml:space="preserve">
     <value>Install</value>
   </data>
-  <data name="NvidiaInstaller_Missing_resource_0_" xml:space="preserve">
-    <value>Missing resource {0}</value>
-  </data>
   <data name="PasteDlg_GetMoleculeTransitionGroup_The_precursor_m_z__0__is_not_measureable_with_your_current_instrument_settings_" xml:space="preserve">
     <value>The precursor m/z {0} is not measureable with your current instrument settings.</value>
   </data>

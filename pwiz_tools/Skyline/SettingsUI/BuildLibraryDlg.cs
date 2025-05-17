@@ -432,7 +432,7 @@ namespace pwiz.Skyline.SettingsUI
                     btnNext.Enabled = true;
                     return false;
                 }
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
+                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
                 {
                     if (!PythonDlg.IsDisposed)
                         PythonDlg.Dispose();
@@ -444,7 +444,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (!PythonInstaller.IsNvidiaEnvironmentReady())
             {
-                if (DialogResult.Cancel == PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
+                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
                 {
                     Cursor = Cursors.Default;
                     btnNext.Enabled = true;

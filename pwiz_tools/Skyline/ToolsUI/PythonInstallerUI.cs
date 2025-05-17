@@ -22,95 +22,72 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Tools;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
-using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.ToolsUI
 {
     public static class PythonInstallerUI
     {
         private static IList<PythonTaskBase> _tasks;
-        public static DialogResult InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
+        public static bool InstallPythonVirtualEnvironment(Control parent, PythonInstaller pythonInstaller)
         {
-            var result = DialogResult.OK;
-            
             _tasks = new List<PythonTaskBase>(pythonInstaller.PendingTasks.IsNullOrEmpty()
                 ? pythonInstaller.ValidatePythonVirtualEnvironment()
                 : pythonInstaller.PendingTasks);
 
-            string userAnswerToCuda = String.Empty;
+            var userAnswerToCuda = DialogResult.None;
             pythonInstaller.NumTotalTasks = _tasks.Count;
             pythonInstaller.NumCompletedTasks = 0;
-            List<PythonTaskBase> abortedTasks = new List<PythonTaskBase>();
-            List<PythonTaskBase> tasksToDo = new List<PythonTaskBase>();
-            IProgressStatus _progressStatus = new ProgressStatus();
+            var abortedTasks = new List<PythonTaskBase>();
+            var tasksToDo = new List<PythonTaskBase>();
 
-            using var waitDlg = new LongWaitDlg();
+            // First ask the user about installing NVIDIA and enabling long paths
             try
             {
-                //waitDlg.PerformWork(parent, 50, progressMonitor =>
                 foreach (var task in _tasks)
                 {
-                     
                     if (task.IsNvidiaTask)
                     {
+                        // If not supposed to install NVIDIA just skip it
                         if (PythonInstaller.SimulatedInstallationState ==
                             PythonInstaller.eSimulatedInstallationState.NONVIDIAHARD ||
-                            userAnswerToCuda == @"No")
+                            userAnswerToCuda == DialogResult.No)
                         {
                             if (pythonInstaller.NumTotalTasks > 0) 
                                 pythonInstaller.NumTotalTasks--;
                         }
-                        else if (userAnswerToCuda != @"No")
+                        else
                         {
                             var choice = MessageDlg.Show(parent, string.Format(
                                     ToolsUIResources.PythonInstaller_Install_Nvidia_Library), false,
                                 MessageBoxButtons.YesNoCancel);
+                            if (choice == DialogResult.Cancel)
+                                return false;
+                            
                             if (choice == DialogResult.No)
                             {
-                                userAnswerToCuda = @"No";
-                                if (pythonInstaller.NumTotalTasks > 0) pythonInstaller.NumTotalTasks--;
-                            }
-                            else if (choice == DialogResult.Cancel)
-                            {
-                                if (pythonInstaller.NumTotalTasks > 0) 
+                                userAnswerToCuda = DialogResult.No;
+                                if (pythonInstaller.NumTotalTasks > 0)
                                     pythonInstaller.NumTotalTasks--;
-                                return choice;
                             }
                             else if (choice == DialogResult.Yes)
                             {
-                                userAnswerToCuda = @"Yes";
+                                userAnswerToCuda = DialogResult.Yes;
                                 pythonInstaller.WriteInstallNvidiaBatScript();
                                 var nvidiaAdminChoice = MessageDlg.Show(parent, string.Format(
                                         ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                                         PythonInstaller.InstallNvidiaLibrariesBat), false,
                                     MessageBoxButtons.OKCancel);
 
-                                //Download
+                                // Download
                                 if (nvidiaAdminChoice == DialogResult.Cancel)
-                                {
-                                    userAnswerToCuda = @"Cancel";
-                                    if (pythonInstaller.NumTotalTasks > 0) 
-                                        pythonInstaller.NumTotalTasks--;
-                                    return nvidiaAdminChoice;
-                                }
-                                else if (nvidiaAdminChoice == DialogResult.OK)
-                                {
-                                    // Attempt to run
-                                    //abortTask = !PerformTaskAction(parent, task);
-                                    //task.DoAction(progressMonitor);
-                                    tasksToDo.Add(task);
-                                }
+                                    return false;
+
+                                // Attempt to run
+                                tasksToDo.Add(task);
                             }
-                        }
-                        else
-                        {
-                            //                            abortTask = !PerformTaskAction(parent, task);
-                            //task.DoAction(progressMonitor);
-                            tasksToDo.Add(task);
                         }
                     }
                     else if (task.IsEnableLongPathsTask)
@@ -119,35 +96,31 @@ namespace pwiz.Skyline.ToolsUI
                             ToolsUIResources.PythonInstaller_Requesting_Administrator_elevation, false,
                             MessageBoxButtons.OKCancel);
                         if (choice == DialogResult.Cancel)
-                        {
-                            if (pythonInstaller.NumTotalTasks > 0) 
-                                pythonInstaller.NumTotalTasks--;
-                            return choice;
-                        }
-                        else if (choice == DialogResult.OK)
-                        {
-                            // Attempt to enable Windows Long Paths
-                            pythonInstaller.EnableWindowsLongPaths();
-                        }
+                            return false;
+
+                        // Attempt to enable Windows Long Paths
+                        PythonInstaller.EnableWindowsLongPaths(true);
                     }
                     else
                     {
-                        //abortTask = !PerformTaskAction(parent, task);
-                        tasksToDo.Add(task);
+                        tasksToDo.Add(task);    // Add all the other tasks without asking
                     }
                 }
             }
             catch (Exception ex)
             {
                 MessageDlg.ShowWithException(parent, (ex.InnerException ?? ex).Message, ex);
+                return false;
             }
 
-            var dlgResult = DialogResult.OK;
+            // Do the actual work
+            bool continueInstallation = true;
+            using var waitDlg = new LongWaitDlg();
             waitDlg.PerformWork(parent, 50, progressMonitor =>
             {
                 foreach (var task in tasksToDo)
                 {
-                    waitDlg.Message = task.InProgressMessage();
+                    waitDlg.Message = task.InProgressMessage;
                     waitDlg.ProgressValue = -1;
                     task.DoAction(progressMonitor);
                     if (!waitDlg.IsCanceled)
@@ -157,72 +130,59 @@ namespace pwiz.Skyline.ToolsUI
                     else
                     {
                         abortedTasks.Add(task);
-                        if (userAnswerToCuda == @"No" && abortedTasks.Count == 1)
+                        if (userAnswerToCuda == DialogResult.No && abortedTasks.Count == 1)
                         {
-                            dlgResult = DialogResult.No;
+                            continueInstallation = false;
                             return;
                         }
 
-                        dlgResult = DialogResult.Cancel;
+                        continueInstallation = false;
                         return;
                     }
                 }
             });
-            if (dlgResult != DialogResult.OK)
-                return dlgResult;
-        
+            if (!continueInstallation)
+                return false;
 
-            Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");
+            // Debug.WriteLine($@"total: {pythonInstaller.NumTotalTasks}, completed: {pythonInstaller.NumCompletedTasks}");
 
-
-            pythonInstaller.CheckPendingTasks();
-
-            if (pythonInstaller.HavePythonTasks)
+            // Complicated logic below for choosing what message to show the user
+            bool havePythonTasks = pythonInstaller.HavePythonTasks;
+            bool haveNvidiaTasks = pythonInstaller.HaveNvidiaTasks;
+            
+            if (havePythonTasks)
             {
-                if (pythonInstaller.IsPythonVirtualEnvironmentReady(abortedTasks))
-                {
-                    if (pythonInstaller.NumTotalTasks == pythonInstaller.NumCompletedTasks &&
-                        pythonInstaller.NumCompletedTasks > 0)
-                    {
-                        MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
-                    }
-
-                    pythonInstaller.PendingTasks.Clear();
-                    result = DialogResult.OK;
-                }
-                else if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
+                if (!pythonInstaller.IsPythonVirtualEnvironmentReady(abortedTasks))
                 {
                     MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Failed_to_set_up_Python_virtual_environment);
-                    result = DialogResult.Cancel;
+                    return false;
                 }
-                else
+                
+                // Don't bother reporting the Python success, if it would be followed by NVIDIA failure,
+                // but potentially show both success messages.
+                if (pythonInstaller.NumTotalTasks == pythonInstaller.NumCompletedTasks &&
+                    pythonInstaller.NumCompletedTasks > 0)
                 {
-                    result = DialogResult.OK;
+                    MessageDlg.Show(parent, ToolsUIResources.PythonInstaller_OkDialog_Successfully_set_up_Python_virtual_environment);
+                    pythonInstaller.PendingTasks.Clear();
                 }
             }
 
-            if (pythonInstaller.HaveNvidiaTasks)
+            if (haveNvidiaTasks)
             {
-                if (PythonInstaller.TestForNvidiaGPU() == true)
+                if (PythonInstaller.TestForNvidiaGPU() == true && userAnswerToCuda == DialogResult.Yes)
                 {
-                    if (userAnswerToCuda == @"Yes")
+                    if (!pythonInstaller.IsNvidiaEnvironmentReady(abortedTasks))
                     {
-                        if (pythonInstaller.IsNvidiaEnvironmentReady(abortedTasks))
-                        {
-                            
-                            MessageDlg.Show(parent, ToolsUIResources.NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia);
-
-                            pythonInstaller.PendingTasks.Clear();
-                            result = DialogResult.OK;
-                        }
-                        else
-                        {
-                            MessageDlg.Show(parent, ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia);
-                        }
+                        MessageDlg.Show(parent, ToolsUIResources.NvidiaInstaller_OkDialog_Failed_to_set_up_Nvidia);
+                        return false;
                     }
+
+                    MessageDlg.Show(parent, ToolsUIResources.NvidiaInstaller_OkDialog_Successfully_set_up_Nvidia);
+                    pythonInstaller.PendingTasks.Clear();
                 }
             }
-            return result;
+            return true;
         }
     }
 }

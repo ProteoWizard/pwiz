@@ -42,13 +42,25 @@ namespace TestPerf
     [TestClass]
     public class AlphapeptdeepBuildLibraryTest : AbstractFunctionalTestEx
     {
-        // setting _deletePython to false allows the test to reuse existing installation
-        private bool _deletePython = true;
+        /// <summary>
+        /// When true Python installation is forced by deleting any old installation
+        /// </summary>
+        private bool IsCleanPythonMode => true;
+
+        /// <summary>
+        /// When true console output is added to clarify what the test has accomplished
+        /// </summary>
+        public bool IsVerboseMode => false;
+
+        /// <summary>
+        /// When true the test write the Python hash value for <see cref="Settings.PythonEmbeddableHash"/>
+        /// </summary>
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void TestAlphaPeptDeepBuildLibrary()
         {
-            if (_deletePython)
+            if (IsCleanPythonMode)
                 AssertEx.IsTrue(PythonInstaller.DeleteToolsPythonDirectory());
 
             TestFilesZip = "TestPerf/AlphapeptdeepBuildLibraryTest.zip";
@@ -97,7 +109,8 @@ namespace TestPerf
                 simulatedInstallationState);
 
             var fileHash = PythonInstallerUtil.GetMD5FileHash(PythonInstaller.PythonEmbeddablePackageDownloadPath);
-            Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
+            if (IsRecordMode)
+                Console.WriteLine($@"Computed PythonEmbeddableHash: {fileHash}");
             Assert.AreEqual(Settings.Default.PythonEmbeddableHash, fileHash);
 
             OkDialog(peptideSettings, peptideSettings.OkDialog);
@@ -254,8 +267,11 @@ namespace TestPerf
         /// <param name="buildLibraryDlg">Build Library dialog</param>
         public void TestCancelPython(BuildLibraryDlg buildLibraryDlg)
         {
-            Console.WriteLine();
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestCancelPython() test ... ");
+            if (IsVerboseMode)
+            {
+                Console.WriteLine();
+                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestCancelPython() test ... ");
+            }
             // Test the control path where Python is not installed, and the user is prompted to deal with admin access
             PythonInstaller.SimulatedInstallationState =
                 PythonInstaller.eSimulatedInstallationState.NAIVE; // Simulates not having the needed registry settings
@@ -276,12 +292,14 @@ namespace TestPerf
                 needAdminDlg.Message);
 
             CancelDialog(needAdminDlg, needAdminDlg.CancelDialog);
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestCancelPython() test ... ");
+            if (IsVerboseMode)
+                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestCancelPython() test ... ");
         }
 
         public MessageDlg TestNvidiaInstallPython(BuildLibraryDlg buildLibraryDlg)
         {
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestNvidiaInstallPython() test ... ");
+            if (IsVerboseMode)
+                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Start TestNvidiaInstallPython() test ... ");
             // Test the control path where Nvidia Card is Available and Nvidia Libraries are not installed, and the user is prompted to deal with Nvidia
             // Test for LongPaths not set and admin
             if (PythonInstaller.IsRunningElevated() && !PythonInstaller.ValidateEnableLongpaths())
@@ -328,11 +346,12 @@ namespace TestPerf
             // Python installation begins when user ClickNo
             OkDialog(installNvidiaDlg, installNvidiaDlg.ClickNo);
             
-            if (!_deletePython)
+            if (!IsCleanPythonMode)
                 return null;
 
             var pythonConfirm = WaitForOpenForm<MessageDlg>();
-            Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
+            if (IsVerboseMode)
+                Console.WriteLine(@"TestAlphaPeptDeepBuildLibrary: Finish TestNvidiaInstallPython() test ... ");
             return pythonConfirm;
         }
 
@@ -382,7 +401,7 @@ namespace TestPerf
             }, dlg => dlg.Close());
             if (_undoRegistry)
             {
-                PythonInstaller.DisableWindowsLongPaths();
+                PythonInstaller.EnableWindowsLongPaths(false);
             }
 
             return true;
