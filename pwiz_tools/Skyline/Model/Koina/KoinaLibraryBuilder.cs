@@ -192,6 +192,8 @@ namespace pwiz.Skyline.Model.Koina
 
         public LibrarySpec LibrarySpec { get; private set; }
 
+        public string BuilderLibraryPath => BuildOutput;
+
         public string AmbiguousMatchesMessage
         {
             get { return null; }

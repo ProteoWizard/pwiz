@@ -743,7 +743,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                     {
                         _driverLibrary.List.Add(editLibDlg.LibrarySpec);
-                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
+                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] { editLibDlg.LibrarySpec }).ToArray());
                     }
 
                     return;
@@ -756,6 +756,18 @@ namespace pwiz.Skyline.SettingsUI
         private void BuildLibrary(ILibraryBuilder builder)
         {
             IsBuildingLibrary = true;
+
+            var warning = (builder as ILibraryBuildWarning)?.GetWarning();
+            if (!string.IsNullOrEmpty(warning))
+            {
+                using (var warnMessageDlg = new AlertDlg(warning, MessageBoxButtons.OKCancel))
+                {
+                    if (warnMessageDlg.ShowDialog() == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                }
+            }
 
             var buildState = new BuildState(builder.LibrarySpec, _libraryManager.BuildLibraryBackground);
 
@@ -792,6 +804,12 @@ namespace pwiz.Skyline.SettingsUI
                             MessageDlg.ShowException(this, status.ErrorException);
                         }
                     }
+                    else if (status.IsCanceled)
+                    {
+                        IsBuildingLibrary = false;
+                        return;
+                    }
+
                     retry = false;
                 }
             } while (retry);

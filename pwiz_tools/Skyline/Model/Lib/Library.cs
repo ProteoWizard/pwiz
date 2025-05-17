@@ -598,11 +598,23 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
         bool BuildLibrary(IProgressMonitor progress);
+        
+        // TODO(brendanx): Is there a reason this is not just always LibrarySpec.FilePath?
+        string BuilderLibraryPath { get; }
 
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>
         LibrarySpec LibrarySpec { get; }
+    }
+
+    /// <summary>
+    /// Extra interface that can be added to an <see cref="ILibraryBuilder"/> class to provide
+    /// a warning to the users before the build begins and possibly to decide not to build.
+    /// </summary>
+    public interface ILibraryBuildWarning
+    {
+        string GetWarning();
     }
 
     public enum LibraryRedundancy { best, all, all_redundant }

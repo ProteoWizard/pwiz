@@ -51,6 +51,10 @@ namespace pwiz.Common.SystemUtil
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
 
+        public int ExpectedOutputLinesCount { get; set; } 
+        public bool EnableImmediateLog { get; set; }
+        public bool EnableRunningTimeMessage { get; set; }
+
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
         /// but we dont want that output to be shown to the user when we display the output
@@ -67,7 +71,7 @@ namespace pwiz.Common.SystemUtil
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status,
             ProcessPriorityClass priorityClass = ProcessPriorityClass.Normal, bool forceTempfilesCleanup = false)
         {
-            Run(psi, stdin, progress,ref status, null, priorityClass, forceTempfilesCleanup);
+            Run(psi, stdin, progress, ref status, null, priorityClass, forceTempfilesCleanup);
         }
 
         public void Run(ProcessStartInfo psi, string stdin, IProgressMonitor progress, ref IProgressStatus status, TextWriter writer,
@@ -118,7 +122,7 @@ namespace pwiz.Common.SystemUtil
             {
                 try
                 {
-                    proc.StandardInput.Write(stdin);
+                    proc.StandardInput.WriteLine(stdin);
                 }
                 finally
                 {
@@ -151,10 +155,14 @@ namespace pwiz.Common.SystemUtil
                 StringBuilder sbError = new StringBuilder();
                 int percentLast = 0;
                 string line;
+                int outputLinesCount = 0;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
+                    {
                         writer.WriteLine(line);
+                        outputLinesCount++;
+                    }
 
                     string lineLower = line.ToLowerInvariant();
                     if (progress == null || lineLower.StartsWith(@"error") || lineLower.StartsWith(@"warning"))
@@ -198,8 +206,22 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            status = status.ChangeMessage(line);
-                            progress.UpdateProgress(status);
+                            if (!EnableImmediateLog)
+                                status = status.ChangeMessage(line);
+
+                            if (updateProgressPercentage)
+                            {
+                                if (ExpectedOutputLinesCount > 0)
+                                {
+                                    percentLast = Math.Min(99, outputLinesCount * 100 / ExpectedOutputLinesCount);
+                                    status = status.ChangePercentComplete(percentLast);
+                                    progress.UpdateProgress(status);
+                                }
+                                else
+                                {
+                                    progress.UpdateProgress(status);
+                                }
+                            }
                         }
                     }
                 }

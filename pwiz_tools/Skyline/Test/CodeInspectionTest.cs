@@ -1151,7 +1151,7 @@ namespace pwiz.SkylineTest
                 @"TestRunner\UnusedPortFinder.cs",
                 @"TestRunnerLib\RunTests.cs",
                 @"TestRunnerLib\MiniDump.cs",
-                @"TestUtil\FileLockingProcessFinder.cs",
+                @"SystemUtil\FileLockingProcessFinder.cs",
 
                 // Ignore 3rd party libraries
                 @"Executables"

@@ -124,5 +124,5 @@ ADISMIGQFGVGFYSAYLVAEKVVVITKHNDDEQYAWESSAGGSFTVRADHGEPIGRGTK";
 
             public CancellationToken CancellationToken => CancellationToken.None;
         }
-}
+    }
 }

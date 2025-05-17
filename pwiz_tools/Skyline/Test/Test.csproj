@@ -159,6 +159,7 @@
     </Compile>
     <Compile Include="AddTransitionsTest.cs" />
     <Compile Include="AdductTest.cs" />
+    <Compile Include="AlphapeptdeepLibraryBuilderTest.cs" />
     <Compile Include="AnalyticsTest.cs" />
     <Compile Include="AnnotatedDoubleTest.cs" />
     <Compile Include="AnnotationUnitTest.cs" />
@@ -175,6 +176,7 @@
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="FilteredMessageWriterTest.cs" />
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
@@ -184,6 +186,7 @@
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
+    <Compile Include="ProgressStatusChangeSegmentsEndPercentageTest.cs" />
     <Compile Include="ProteinAssociationTest.cs" />
     <Compile Include="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs" />
     <Compile Include="ProtocolBuffers\LegacyProtocolBufferFormatsTest.cs" />
