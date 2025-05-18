@@ -262,48 +262,6 @@
   <data name="PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_" xml:space="preserve">
     <value>Python download failed. Check your network connection or contact Skyline team for help.</value>
   </data>
-  <data name="PythonInstaller_Cuda_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_" xml:space="preserve">
-    <value>Cuda library download failed. Check your network connection or contact Skyline team for help.</value>
-  </data>
-  <data name="PythonInstaller_CuDNN_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_" xml:space="preserve">
-    <value>CuDNN library download failed. Check your network connection or contact Skyline team for help.</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_Python_embeddable_package" xml:space="preserve">
-    <value>Downloading Python embeddable package</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_Python_embeddable_package" xml:space="preserve">
-    <value>Failed to download Python embeddable package</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Unzipping_Python_embeddable_package" xml:space="preserve">
-    <value>Unzipping Python embeddable package</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_unzip_Python_embeddable_package" xml:space="preserve">
-    <value>Failed to unzip Python embeddable package</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Enabling_search_path_in_Python_embeddable_package" xml:space="preserve">
-    <value>Enabling search path in Python embeddable package</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_enable_search_path_in_Python_embeddable_package" xml:space="preserve">
-    <value>Failed to enable search path in Python embeddable package</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_the_get_pip_py_script" xml:space="preserve">
-    <value>Downloading the get-pip.py script</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_the_get_pip_py_script" xml:space="preserve">
-    <value>Failed to download the get-pip.py script</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_run_the_get_pip_py_script" xml:space="preserve">
-    <value>Failed to run the get-pip.py script</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_create_virtual_environment__0_" xml:space="preserve">
-    <value>Failed to create virtual environment {0}</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Installing_Python_packages_in_virtual_environment__0_" xml:space="preserve">
-    <value>Installing Python packages in virtual environment {0}</value>
-  </data>
-  <data name="PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_install_Python_packages_in_virtual_environment__0_" xml:space="preserve">
-    <value>Failed to install Python packages in virtual environment {0}</value>
-  </data>
   <data name="PythonInstaller_Failed_to_execute_command____0__" xml:space="preserve">
     <value>Failed to execute command: [{0}]</value>
   </data>
@@ -324,18 +282,6 @@
   </data>
   <data name="PythonInstaller_GetPythonTask_Downloading_the_get_pip_py_script" xml:space="preserve">
     <value>Downloading the get-pip.py script.</value>
-  </data>
-  <data name="PythonInstaller_GetPythonTask_Downloading_Cuda_Installer" xml:space="preserve">
-    <value>Downloading Nvidia Cuda Toolkit installer.</value>
-  </data>
-  <data name="PythonInstaller_GetPythonTask_Installing_Cuda" xml:space="preserve">
-    <value>Installing Nvidia Cuda Toolkit installer.</value>
-  </data>
-  <data name="PythonInstaller_GetPythonTask_Downloading_CuDNN_Installer" xml:space="preserve">
-    <value>Downloading Nvidia Cuda Deep Neural Network.</value>
-  </data>
-  <data name="PythonInstaller_GetPythonTask_Installing_CuDNN" xml:space="preserve">
-    <value>Installing Nvidia Cuda Deep Neural Network.</value>
   </data>
   <data name="PythonInstaller_GetPythonTask_Running_the_get_pip_py_script" xml:space="preserve">
     <value>Running the get-pip.py script.</value>

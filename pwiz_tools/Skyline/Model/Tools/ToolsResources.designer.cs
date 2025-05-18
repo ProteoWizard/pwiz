@@ -116,26 +116,6 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cuda library download failed. Check your network connection or contact Skyline team for help..
-        /// </summary>
-        public static string PythonInstaller_Cuda_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_Cuda_Download_failed__Check_your_network_connection_or_contact_Sk" +
-                        "yline_team_for_help_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to CuDNN library download failed. Check your network connection or contact Skyline team for help..
-        /// </summary>
-        public static string PythonInstaller_CuDNN_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_CuDNN_Download_failed__Check_your_network_connection_or_contact_S" +
-                        "kyline_team_for_help_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Python download failed. Check your network connection or contact Skyline team for help..
         /// </summary>
         public static string PythonInstaller_Download_failed__Check_your_network_connection_or_contact_Skyline_team_for_help_ {
@@ -201,24 +181,6 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Downloading Nvidia Cuda Toolkit installer..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Downloading_Cuda_Installer {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Downloading_Cuda_Installer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloading Nvidia Cuda Deep Neural Network..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Downloading_CuDNN_Installer {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Downloading_CuDNN_Installer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Downloading Python embeddable package..
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Downloading_Python_embeddable_package {
@@ -256,24 +218,6 @@ namespace pwiz.Skyline.Model.Tools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Installing Nvidia Cuda Toolkit installer..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Installing_Cuda {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Installing_Cuda", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Installing Nvidia Cuda Deep Neural Network..
-        /// </summary>
-        public static string PythonInstaller_GetPythonTask_Installing_CuDNN {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonTask_Installing_CuDNN", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Installing Python packages in virtual environment [{0}]. First installs can take up to 10-15 minutes, please be patient ....
         /// </summary>
         public static string PythonInstaller_GetPythonTask_Installing_Python_packages_in_virtual_environment__0_ {
@@ -307,126 +251,6 @@ namespace pwiz.Skyline.Model.Tools {
         public static string PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package {
             get {
                 return ResourceManager.GetString("PythonInstaller_GetPythonTask_Unzipping_Python_embeddable_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloading Python embeddable package.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_Python_embeddable_pac" +
-                        "kage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Downloading the get-pip.py script.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_the_get_pip_py_script {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Downloading_the_get_pip_py_script" +
-                        "", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Enabling search path in Python embeddable package.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Enabling_search_path_in_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Enabling_search_path_in_Python_em" +
-                        "beddable_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to create virtual environment {0}.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_create_virtual_environment__0_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_create_virtual_environm" +
-                        "ent__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to download Python embeddable package.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_Python_embedda" +
-                        "ble_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to download the get-pip.py script.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_the_get_pip_py_script {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_download_the_get_pip_py" +
-                        "_script", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to enable search path in Python embeddable package.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_enable_search_path_in_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_enable_search_path_in_P" +
-                        "ython_embeddable_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to install Python packages in virtual environment {0}.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_install_Python_packages_in_virtual_environment__0_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_install_Python_packages" +
-                        "_in_virtual_environment__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to run the get-pip.py script.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_run_the_get_pip_py_script {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_run_the_get_pip_py_scri" +
-                        "pt", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to unzip Python embeddable package.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_unzip_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Failed_to_unzip_Python_embeddable" +
-                        "_package", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Installing Python packages in virtual environment {0}.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Installing_Python_packages_in_virtual_environment__0_ {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Installing_Python_packages_in_vir" +
-                        "tual_environment__0_", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unzipping Python embeddable package.
-        /// </summary>
-        public static string PythonInstaller_GetPythonVirtualEnvironmentTask_Unzipping_Python_embeddable_package {
-            get {
-                return ResourceManager.GetString("PythonInstaller_GetPythonVirtualEnvironmentTask_Unzipping_Python_embeddable_packa" +
-                        "ge", resourceCulture);
             }
         }
         
