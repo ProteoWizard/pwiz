@@ -1114,6 +1114,11 @@
     <Compile Include="Model\Koina\Config\KoinaConfig.cs" />
     <Compile Include="Model\Koina\Models\KoinaIntensityModel.cs" />
     <Compile Include="Model\Koina\Models\KoinaModel.cs" />
+    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ModelsResources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Model\Koina\KoinaConstants.cs" />
     <Compile Include="Model\Koina\Communication\KoinaPredictionClient.cs" />
     <Compile Include="Model\Koina\Models\KoinaRetentionTimeModel.cs" />
@@ -5843,11 +5848,6 @@
       <DependentUpon>ModelsResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Model\Koina\Models\ModelsResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ModelsResources.resx</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="Controls\Spectra\SpectraResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
