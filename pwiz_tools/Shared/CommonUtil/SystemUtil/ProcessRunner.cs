@@ -51,9 +51,16 @@ namespace pwiz.Common.SystemUtil
         private readonly List<string> _messageLog = new List<string>();
         private string _tmpDirForCleanup;
 
+        /// <summary>
+        /// When greater than zero, this value is used to track progress percent complete.
+        /// </summary>
+        // CONSIDER(dshteyn): With hardcoded line counts, how will we know when these change and keep them in sync with the tool dependencies
         public int ExpectedOutputLinesCount { get; set; } 
-        public bool EnableImmediateLog { get; set; }
-        public bool EnableRunningTimeMessage { get; set; }
+
+        /// <summary>
+        /// When set to true this value prevents progress status message updates based on process output.
+        /// </summary>
+        public bool SilenceStatusMessageUpdates { get; set; }
 
         /// <summary>
         /// Used in R package installation. We print progress % for processRunner progress
@@ -206,7 +213,7 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
-                            if (!EnableImmediateLog)
+                            if (!SilenceStatusMessageUpdates)
                                 status = status.ChangeMessage(line);
 
                             if (updateProgressPercentage)

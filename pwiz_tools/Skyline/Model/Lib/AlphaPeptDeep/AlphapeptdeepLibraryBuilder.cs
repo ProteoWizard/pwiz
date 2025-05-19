@@ -285,8 +285,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             };
             try
             {
-                pr.EnableImmediateLog = false;
-                pr.EnableRunningTimeMessage = false;
                 pr.ExpectedOutputLinesCount = 213;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
             }
@@ -329,7 +327,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                     @"s/DiaNN\/Spectronaut/Skyline/"    // Replace DiaNN/Spectronaut with Skyline
                 };
 
-                pr.EnableImmediateLog = true;
+                pr.SilenceStatusMessageUpdates = true;  // Use FilteredUserMessageWriter to write process output instead of ProgressStatus.ChangeMessage()
                 pr.ExpectedOutputLinesCount = 119;
                 timer.Start();
                 pr.Run(psi, string.Empty, progress, ref progressStatus, new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);

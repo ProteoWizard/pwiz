@@ -29,150 +29,220 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace pwiz.Common.SystemUtil
 {
-
-public static class FileLockingProcessFinder
-{
-    [StructLayout(LayoutKind.Sequential)]
-    struct RM_UNIQUE_PROCESS
+    public static class FileLockingProcessFinder
     {
-        public int dwProcessId;
-        public System.Runtime.InteropServices.ComTypes.FILETIME ProcessStartTime;
-    }
-
-    const int RmRebootReasonNone = 0;
-    const int CCH_RM_MAX_APP_NAME = 255;
-    const int CCH_RM_MAX_SVC_NAME = 63;
-
-    enum RM_APP_TYPE
-    {
-        RmUnknownApp = 0,
-        RmMainWindow = 1,
-        RmOtherWindow = 2,
-        RmService = 3,
-        RmExplorer = 4,
-        RmConsole = 5,
-        RmCritical = 1000
-    }
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    struct RM_PROCESS_INFO
-    {
-        public RM_UNIQUE_PROCESS Process;
-
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CCH_RM_MAX_APP_NAME + 1)]
-        public string strAppName;
-
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CCH_RM_MAX_SVC_NAME + 1)]
-        public string strServiceShortName;
-
-        public RM_APP_TYPE ApplicationType;
-        public uint AppStatus;
-        public uint TSSessionId;
-        [MarshalAs(UnmanagedType.Bool)]
-        public bool bRestartable;
-    }
-
-    [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
-    static extern int RmRegisterResources(uint pSessionHandle,
-        UInt32 nFiles,
-        string[] rgsFilenames,
-        UInt32 nApplications,
-        [In] RM_UNIQUE_PROCESS[] rgApplications,
-        UInt32 nServices,
-        string[] rgsServiceNames);
-
-    [DllImport("rstrtmgr.dll", CharSet = CharSet.Auto)]
-    static extern int RmStartSession(out uint pSessionHandle, int dwSessionFlags, string strSessionKey);
-
-    [DllImport("rstrtmgr.dll")]
-    static extern int RmEndSession(uint pSessionHandle);
-
-    [DllImport("rstrtmgr.dll")]
-    static extern int RmGetList(uint dwSessionHandle,
-        out uint pnProcInfoNeeded,
-        ref uint pnProcInfo,
-        [In, Out] RM_PROCESS_INFO[] rgAffectedApps,
-        ref uint lpdwRebootReasons);
-
-    /// <summary>
-    /// Find out what process(es) have a lock on the specified file.
-    /// </summary>
-    /// <param name="fullPathToFile">Path of the file.</param>
-    /// <returns>Processes locking the file</returns>
-    /// <remarks>See also:
-    /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa373661(v=vs.85).aspx
-    /// http://wyupdate.googlecode.com/svn-history/r401/trunk/frmFilesInUse.cs (no copyright in code at time of viewing)
-    /// 
-    /// </remarks>
-    static public List<Process> GetProcessesUsingFile(string fullPathToFile)
-    {
-        uint handle;
-        string key = Guid.NewGuid().ToString();
-        List<Process> processes = new List<Process>();
-
-        int res = RmStartSession(out handle, 0, key);
-        if (res != 0)
-            throw new Exception(@"Could not begin restart session.  Unable to determine file locker.");
-
-        try
+        [StructLayout(LayoutKind.Sequential)]
+        struct RM_UNIQUE_PROCESS
         {
-            const int ERROR_MORE_DATA = 234;
-            uint pnProcInfoNeeded = 0,
-                pnProcInfo = 0,
-                lpdwRebootReasons = RmRebootReasonNone;
+            public int dwProcessId;
+            public System.Runtime.InteropServices.ComTypes.FILETIME ProcessStartTime;
+        }
 
-            string[] resources = new string[] { fullPathToFile }; // Just checking on one resource.
+        const int RmRebootReasonNone = 0;
+        const int CCH_RM_MAX_APP_NAME = 255;
+        const int CCH_RM_MAX_SVC_NAME = 63;
 
-            res = RmRegisterResources(handle, (uint)resources.Length, resources, 0, null, 0, null);
+        enum RM_APP_TYPE
+        {
+            RmUnknownApp = 0,
+            RmMainWindow = 1,
+            RmOtherWindow = 2,
+            RmService = 3,
+            RmExplorer = 4,
+            RmConsole = 5,
+            RmCritical = 1000
+        }
 
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct RM_PROCESS_INFO
+        {
+            public RM_UNIQUE_PROCESS Process;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CCH_RM_MAX_APP_NAME + 1)]
+            public string strAppName;
+
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CCH_RM_MAX_SVC_NAME + 1)]
+            public string strServiceShortName;
+
+            public RM_APP_TYPE ApplicationType;
+            public uint AppStatus;
+            public uint TSSessionId;
+            [MarshalAs(UnmanagedType.Bool)] public bool bRestartable;
+        }
+
+        [DllImport("rstrtmgr.dll", CharSet = CharSet.Unicode)]
+        static extern int RmRegisterResources(uint pSessionHandle,
+            UInt32 nFiles,
+            string[] rgsFilenames,
+            UInt32 nApplications,
+            [In] RM_UNIQUE_PROCESS[] rgApplications,
+            UInt32 nServices,
+            string[] rgsServiceNames);
+
+        [DllImport("rstrtmgr.dll", CharSet = CharSet.Auto)]
+        static extern int RmStartSession(out uint pSessionHandle, int dwSessionFlags, string strSessionKey);
+
+        [DllImport("rstrtmgr.dll")]
+        static extern int RmEndSession(uint pSessionHandle);
+
+        [DllImport("rstrtmgr.dll")]
+        static extern int RmGetList(uint dwSessionHandle,
+            out uint pnProcInfoNeeded,
+            ref uint pnProcInfo,
+            [In, Out] RM_PROCESS_INFO[] rgAffectedApps,
+            ref uint lpdwRebootReasons);
+
+        /// <summary>
+        /// Find out what process(es) have a lock on the specified file.
+        /// </summary>
+        /// <param name="fullPathToFile">Path of the file.</param>
+        /// <returns>Processes locking the file</returns>
+        /// <remarks>See also:
+        /// http://msdn.microsoft.com/en-us/library/windows/desktop/aa373661(v=vs.85).aspx
+        /// http://wyupdate.googlecode.com/svn-history/r401/trunk/frmFilesInUse.cs (no copyright in code at time of viewing)
+        /// 
+        /// </remarks>
+        static public List<Process> GetProcessesUsingFile(string fullPathToFile)
+        {
+            uint handle;
+            string key = Guid.NewGuid().ToString();
+            List<Process> processes = new List<Process>();
+
+            int res = RmStartSession(out handle, 0, key);
             if (res != 0)
-                throw new Exception(@"Could not register resource.");
+                throw new Exception(@"Could not begin restart session.  Unable to determine file locker.");
 
-            //Note: there's a race condition here -- the first call to RmGetList() returns
-            //      the total number of process. However, when we call RmGetList() again to get
-            //      the actual processes this number may have increased.
-            res = RmGetList(handle, out pnProcInfoNeeded, ref pnProcInfo, null, ref lpdwRebootReasons);
-
-            if (res == ERROR_MORE_DATA)
+            try
             {
-                // Create an array to store the process results
-                RM_PROCESS_INFO[] processInfo = new RM_PROCESS_INFO[pnProcInfoNeeded];
-                pnProcInfo = pnProcInfoNeeded;
+                const int ERROR_MORE_DATA = 234;
+                uint pnProcInfoNeeded = 0,
+                    pnProcInfo = 0,
+                    lpdwRebootReasons = RmRebootReasonNone;
 
-                // Get the list
-                res = RmGetList(handle, out pnProcInfoNeeded, ref pnProcInfo, processInfo, ref lpdwRebootReasons);
-                if (res == 0)
+                string[] resources = new string[] { fullPathToFile }; // Just checking on one resource.
+
+                res = RmRegisterResources(handle, (uint)resources.Length, resources, 0, null, 0, null);
+
+                if (res != 0)
+                    throw new Exception(@"Could not register resource.");
+
+                //Note: there's a race condition here -- the first call to RmGetList() returns
+                //      the total number of process. However, when we call RmGetList() again to get
+                //      the actual processes this number may have increased.
+                res = RmGetList(handle, out pnProcInfoNeeded, ref pnProcInfo, null, ref lpdwRebootReasons);
+
+                if (res == ERROR_MORE_DATA)
                 {
-                    processes = new List<Process>((int)pnProcInfo);
+                    // Create an array to store the process results
+                    RM_PROCESS_INFO[] processInfo = new RM_PROCESS_INFO[pnProcInfoNeeded];
+                    pnProcInfo = pnProcInfoNeeded;
 
-                    // Enumerate all of the results and add them to the 
-                    // list to be returned
-                    for (int i = 0; i < pnProcInfo; i++)
+                    // Get the list
+                    res = RmGetList(handle, out pnProcInfoNeeded, ref pnProcInfo, processInfo, ref lpdwRebootReasons);
+                    if (res == 0)
                     {
-                        try
+                        processes = new List<Process>((int)pnProcInfo);
+
+                        // Enumerate all of the results and add them to the 
+                        // list to be returned
+                        for (int i = 0; i < pnProcInfo; i++)
                         {
-                            processes.Add(Process.GetProcessById(processInfo[i].Process.dwProcessId));
+                            try
+                            {
+                                processes.Add(Process.GetProcessById(processInfo[i].Process.dwProcessId));
+                            }
+                            // catch the error -- in case the process is no longer running
+                            catch (ArgumentException)
+                            {
+                            }
                         }
-                        // catch the error -- in case the process is no longer running
-                        catch (ArgumentException) { }
+                    }
+                    else
+                        throw new Exception(@"Could not list processes locking resource.");
+                }
+                else if (res != 0)
+                    throw new Exception(@"Could not list processes locking resource. Failed to get size of result.");
+            }
+            finally
+            {
+                RmEndSession(handle);
+            }
+
+            return processes;
+        }
+
+        public static void DeleteDirectoryWithFileLockingDetails(string dirPath)
+        {
+            const int maxRetryCount = 4;
+            const int delayMilliseconds = 500;
+
+            int retry = 0;
+            for (; ; )
+            {
+                try
+                {
+                    Directory.Delete(dirPath, true);
+                    return; // Success
+                }
+                catch (Exception x)
+                {
+                    if (retry++ < maxRetryCount)
+                    {
+                        Thread.Sleep(delayMilliseconds);
+                        continue;   // Keep trying
+                    }
+
+                    // Try to get locking information and throw a new exception with more info
+                    var lockingException = ToFileLockingException(x, dirPath);
+                    if (!ReferenceEquals(x, lockingException))
+                        throw lockingException;
+
+                    // But just throw this exception without altering it if that fails
+                    throw;
+                }
+            }
+        }
+
+        private const int ERROR_SHARING_VIOLATION = unchecked((int)0x80070020);
+
+        public static Exception ToFileLockingException(Exception x, string dirPath)
+        {
+            // If it's a file locking issue, wrap the exception to report the locking process
+            if (x is IOException { HResult: ERROR_SHARING_VIOLATION } ioException)
+            {
+                var match = Regex.Match(ioException.Message, "'(.*)'");
+                if (match.Success)
+                {
+                    string lockedFileName = match.Captures[0].Value.Trim('\'');
+                    string[] lockedFilePaths = Directory.GetFiles(dirPath, lockedFileName, SearchOption.AllDirectories);
+                    if (lockedFilePaths.Length == 0)
+                    {
+                        return new IOException(
+                            string.Format("The file '{0}' was locked but has since been deleted from '{1}'", lockedFileName, dirPath), x);
+                    }
+                    else
+                    {
+                        string lockedFilePath = lockedFilePaths[0];
+                        int currentProcessId = Process.GetCurrentProcess().Id;
+                        Func<int, string> pidOrThisProcess = pid =>
+                            pid == currentProcessId ? "this process" : $"PID: {pid}";
+                        var processesLockingFile = GetProcessesUsingFile(lockedFilePath);
+                        var names = string.Join(@", ",
+                            processesLockingFile.Select(p => $"{p.ProcessName} ({pidOrThisProcess(p.Id)})"));
+                        return new IOException(string.Format("The file '{0}' is locked by: {1}", lockedFilePath, names), x);
                     }
                 }
-                else
-                    throw new Exception(@"Could not list processes locking resource.");
             }
-            else if (res != 0)
-                throw new Exception(@"Could not list processes locking resource. Failed to get size of result.");
-        }
-        finally
-        {
-            RmEndSession(handle);
-        }
 
-        return processes;
+            return x;
+        }
     }
-}
 }
