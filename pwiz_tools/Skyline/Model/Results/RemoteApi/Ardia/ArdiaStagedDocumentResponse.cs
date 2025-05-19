@@ -15,81 +15,69 @@
  */
 
 using System.Collections.Generic;
-using System.Linq;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
+// Ardia API StageDocument and Document models
+//     https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
+//
 namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 {
-    /// <summary>
-    /// Ardia API document model
-    ///     https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
-    /// </summary>
-    public class ArdiaStageDocumentRequest : ArdiaObject
+    public class ArdiaStageDocumentRequest
     {
-        private List<ArdiaStageDocumentPieceRequest> _pieces = new List<ArdiaStageDocumentPieceRequest>();
+        public static ArdiaStageDocumentRequest Create()
+        {
+            return new ArdiaStageDocumentRequest();
+        }
 
         private ArdiaStageDocumentRequest() { }
 
-        public IList<ArdiaStageDocumentPieceRequest> Pieces => _pieces;
+        public IList<ArdiaStageDocumentPieceRequest> Pieces { get; } = new List<ArdiaStageDocumentPieceRequest>();
 
-        public void AddPiece(string name = ArdiaStageDocumentPieceRequest.SINGLE_DOCUMENT)
+        public void AddPiece(string name)
         {
             var piece = new ArdiaStageDocumentPieceRequest
             {
                 PieceName = name
             };
-            _pieces.Add(piece);
+            Pieces.Add(piece);
         }
 
-        public static ArdiaStageDocumentRequest Create()
+        // CONSIDER: if SingleDocument, disallow adding additional pieces
+        public void AddSingleDocumentPiece()
         {
-            return new ArdiaStageDocumentRequest();
+            AddPiece(ArdiaStageDocumentPieceRequest.SINGLE_DOCUMENT);
         }
     }
 
-    public class ArdiaStageDocumentPieceRequest : ArdiaObject
+    public class ArdiaStageDocumentPieceRequest
     {
-        public const string SINGLE_DOCUMENT = "[SingleDocument]";
-
-        internal ArdiaStageDocumentPieceRequest() { }
+        internal const string SINGLE_DOCUMENT = "[SingleDocument]";
 
         public string PieceName { get; internal set; }
     }
 
-    public class ArdiaStagedDocumentResponse : ArdiaObject
+    public class ArdiaStagedDocumentResponse
     {
-        public ArdiaStagedDocumentResponse(JObject json)
-        {
-            // ReSharper disable LocalizableElement
-            UploadId = GetProperty(json, "uploadId");
-
-            // CONSIDER: ArdiaObject is an Immutable but has mutable properties (does not use ChangeProperty)?
-            // Converting JArray to List of objects - https://gist.github.com/deostroll/9969331
-            var jArray = json["pieces"].Value<JArray>();
-            Pieces = jArray.ToObject<List<ArdiaStagedDocumentPieceResponse>>();
-        }
-
-        public string UploadId { get; private set; }
-        public IList<ArdiaStagedDocumentPieceResponse> Pieces { get; private set; }
+        public string UploadId { get; set; }
+        public IList<ArdiaStagedDocumentPieceResponse> Pieces { get; set; }
     }
 
-    public class ArdiaStagedDocumentPieceResponse : ArdiaObject
+    public class ArdiaStagedDocumentPieceResponse
     {
-        public ArdiaStagedDocumentPieceResponse() {}
-
-        public ArdiaStagedDocumentPieceResponse(JObject json)
-        {
-            // ReSharper disable LocalizableElement
-            PieceName = GetProperty(json, "pieceName");
-            PiecePath = GetProperty(json, "piecePath");
-            
-            var arrayStr = GetProperty(json, "presignedUrls");
-            PresignedUrls = JsonConvert.DeserializeObject<string[]>(arrayStr).ToList();
-        }
-
         public string PieceName { get; set; }
         public string PiecePath { get; set; }
         public IList<string> PresignedUrls { get; set; } // CONSIDER: URI instead of string
+    }
+
+    public class ArdiaDocumentRequest
+    {
+        public string UploadId { get; set; }
+        public string FileName { get; set; }
+        public string FilePath { get; set; }
+        public int Size { get; set; }
+    }
+
+    public class ArdiaDocumentResponse
+    {
+        public string DocumentId { get; set; }
     }
 }

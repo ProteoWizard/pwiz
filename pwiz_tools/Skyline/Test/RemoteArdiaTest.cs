@@ -15,7 +15,7 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.SkylineTestUtil;
 
@@ -29,18 +29,14 @@ namespace pwiz.SkylineTest
         {
             // StageDocument - Request
             var stagedDocumentRequest = ArdiaStageDocumentRequest.Create();
-            stagedDocumentRequest.AddPiece();
+            stagedDocumentRequest.AddSingleDocumentPiece();
 
             Assert.IsNotNull(stagedDocumentRequest.Pieces);
             Assert.AreEqual(1, stagedDocumentRequest.Pieces.Count);
             Assert.AreEqual(ArdiaStageDocumentPieceRequest.SINGLE_DOCUMENT, stagedDocumentRequest.Pieces[0].PieceName);
 
             // StageDocument - Response
-            var jsonObject = JObject.Parse(SimpleStagedDocument);
-
-            // CONSIDER: assert JSON is valid before proceeding with test and getting weird failures for a malformed document?
-
-            var stagedDocumentResponse = new ArdiaStagedDocumentResponse(jsonObject);
+            var stagedDocumentResponse = JsonConvert.DeserializeObject<ArdiaStagedDocumentResponse>(SimpleStagedDocumentString);
 
             Assert.AreEqual("97088887-788079", stagedDocumentResponse.UploadId);
 
@@ -56,7 +52,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("https://www.example.com/", presignedUrls[0]);
         }
 
-        private static string SimpleStagedDocument =
+        private static string SimpleStagedDocumentString =
             "{pieces: " +
             "   [" +
             "       {pieceName: \"[SingleDocument]\", piecePath: \"/foobar\", presignedUrls: [\"https://www.example.com/\"]}" +
