@@ -5006,7 +5006,6 @@ namespace pwiz.Skyline.Model
         }
         public void ExportMethod(string fileName, WatersConnectUrl targetFolderUrl, WatersConnectAcquisitionMethodUrl templateUrl, IProgressMonitor progressMonitor)
         {
-            // TODO: [RC] Make sure the template URL is valid (i.e. exists on the server)
             _methodName = fileName;
             if (!InitExport(fileName, progressMonitor))
                 return;

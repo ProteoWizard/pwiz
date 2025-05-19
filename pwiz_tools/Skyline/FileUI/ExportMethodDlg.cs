@@ -1886,6 +1886,10 @@ namespace pwiz.Skyline.FileUI
                     Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile)
                         ? templateFile.FilePath
                         : string.Empty;
+                textTemplateFile.Tag = null;
+                textTemplateFile.Enabled = true;
+                var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
+                helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
             }
 
             var methodType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());

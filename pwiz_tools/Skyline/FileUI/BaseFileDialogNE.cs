@@ -206,7 +206,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         // If there is exactly one account, then skip the level that
                         // lists the accounts to choose from.
-                        value = GetRootUrl();
+                        value = GetRootUrl(_remoteAccounts.First());
                     }
                 }
                 if (value != null)
@@ -218,11 +218,10 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        protected virtual RemoteUrl GetRootUrl()
+        protected virtual RemoteUrl GetRootUrl(RemoteAccount account)
         {
-            return _remoteAccounts.First().GetRootUrl();
+            return account.GetRootUrl();
         }
-
         public RemoteSession RemoteSession
         {
             get { return _remoteSession; }

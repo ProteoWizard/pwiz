@@ -84,9 +84,9 @@ namespace pwiz.Skyline.FileUI
             Open();
         }
 
-        protected override RemoteUrl GetRootUrl()
+        protected override RemoteUrl GetRootUrl(RemoteAccount account)
         {   // We need to make sure the root URL has the correct type for method retrieval
-            return (base.GetRootUrl() as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
+            return (base.GetRootUrl(account) as WatersConnectUrl)?.ChangeType(WatersConnectUrl.ItemType.folder_child_folders_acquisition_methods);
         }
 
         public void Open()

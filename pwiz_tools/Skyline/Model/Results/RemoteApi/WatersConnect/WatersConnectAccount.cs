@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = HttpClientFactory.Factory.GetHttpClient(@"wcHandler");
+            var httpClient = HttpClientFactory.Factory.GetHttpClient(@"");
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");
