@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Alerts
                     if ((kvp.Value as AbstractDdaSearchEngine.Setting)!.OtherAction != null)
                     {
                         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
-                        comboBox.AutoCompleteMode = AutoCompleteMode.SuggestAppend;
+                        comboBox.AutoCompleteMode = AutoCompleteMode.Suggest;
                     }
                     else
                     {
@@ -134,7 +134,9 @@ namespace pwiz.Skyline.Alerts
                                         var newText = setting.OtherAction(keyToControl[other_kvp.Key].Text, comboBox.Text);
                                         keyToControl[other_kvp.Key].Text = newText;
                                     }
-
+                                    thisBox.Focus();
+                                    thisBox.Text = String.Empty;
+                                    thisBox.DroppedDown = false;
                                     break;
                                 }
 
@@ -149,9 +151,6 @@ namespace pwiz.Skyline.Alerts
                         {
                             string currentText = thisBox.Text;
 
-                            // Store cursor position
-                            int selectionStart = currentText.Length;
-
                             // Clear current items
                             thisBox.Items.Clear();
 
@@ -161,45 +160,21 @@ namespace pwiz.Skyline.Alerts
 
                             // Add filtered items back to ComboBox
                             thisBox.Items.AddRange(filteredItems.Cast<object>().ToArray());
-
-
+                            
                             // Restore text and cursor position
                             if (thisBox.Text != currentText)
                                 thisBox.Text = currentText;
 
-                            // Use BeginInvoke to ensure cursor is set after UI updates
-                            thisBox.BeginInvoke(new Action(() =>
-                            {
-                                thisBox.Cursor = Cursor.Current;    
-                                thisBox.Focus(); // Ensure focus is retained
-                                thisBox.SelectionLength = 0;
-                                thisBox.SelectionStart = thisBox.Text.Length;
-                                thisBox.DroppedDown = true;
-                            }));
-
-                            thisBox.Cursor = Cursor.Current;
-                            thisBox.Focus(); // Ensure focus is retained
+                            thisBox.Cursor = Cursor.Current;    
+                            //thisBox.Focus(); // Ensure focus is retained
                             thisBox.SelectionLength = 0;
                             thisBox.SelectionStart = thisBox.Text.Length;
-                            // Keep the dropdown open
                             thisBox.DroppedDown = true;
+
                             if (thisBox.Items.Count == 0)
                             {
                                 thisBox.Items.AddRange(validValues.Cast<object>().ToArray());
                             }
-
-                        }
-
-                    };
-
-                    comboBox.DropDown += (sender, args) =>
-                    {
-                        // When dropdown opens, show all matching items
-                        ComboBox thisBox = sender as ComboBox;
-                        if (thisBox != null && string.IsNullOrEmpty(thisBox.Text))
-                        {
-                            thisBox.Items.Clear();
-                            thisBox.Items.AddRange(validValues.Cast<object>().ToArray());
                         }
                     };
 
@@ -211,8 +186,10 @@ namespace pwiz.Skyline.Alerts
                         {
                             if (args.KeyCode == Keys.Enter && thisBox.Items.Count > 0)
                             {
-                                thisBox.SelectedIndex = 0;
                                 args.Handled = true;
+                                thisBox.Focus();
+                                thisBox.Text = String.Empty;
+                                thisBox.DroppedDown = false;
                             }
                         }
                     };
@@ -223,10 +200,12 @@ namespace pwiz.Skyline.Alerts
                         ComboBox thisBox = sender as ComboBox;
                         if (thisBox != null)
                         {
-                            if (!char.IsLetterOrDigit(args.KeyChar) && !char.IsControl(args.KeyChar) && thisBox.Items.Count > 0)
+                            if (!(char.IsLetterOrDigit(args.KeyChar) || char.IsPunctuation(args.KeyChar)) && !char.IsControl(args.KeyChar) && thisBox.Items.Count > 0)
                             {
-                                thisBox.SelectedIndex = 0;
                                 args.Handled = true;
+                                thisBox.Focus();
+                                thisBox.Text = String.Empty;
+                                thisBox.DroppedDown = false;
                             }
                         }
                     };
