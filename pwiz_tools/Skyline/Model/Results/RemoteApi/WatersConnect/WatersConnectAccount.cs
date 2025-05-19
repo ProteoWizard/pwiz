@@ -20,6 +20,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
 using IdentityModel.Client;
+using pwiz.Common.Mock;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -116,40 +117,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
         }
 
-        /*public IEnumerable<WatersConnectFolderObject> GetFolders()
-        {
-            var httpClient = GetAuthenticatedHttpClient();
-            var response = httpClient.GetAsync(GetFoldersUrl()).Result;
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-            var jsonObject = JObject.Parse(responseBody);
-
-            var foldersValue = jsonObject[@"value"] as JArray;
-            if (foldersValue == null)
-            {
-                return new WatersConnectFolderObject[0];
-            }
-            return foldersValue.OfType<JObject>().Select(f => new WatersConnectFolderObject(f));
-        }
-
-        public IEnumerable<WatersConnectFileObject> GetFiles(WatersConnectFolderObject folder)
-        {
-            var httpClient = GetAuthenticatedHttpClient();
-            string url = string.Format(@"/waters_connect/v2.0/sample-sets?folderId={0}", folder.Id);
-            var response = httpClient.GetAsync(ServerUrl + url).Result;
-            string responseBody = response.Content.ReadAsStringAsync().Result;
-            var jsonObject = JObject.Parse(responseBody);
-            var itemsValue = jsonObject[@"value"] as JArray;
-            if (itemsValue == null)
-            {
-                return new WatersConnectFileObject[0];
-            }
-            return itemsValue.OfType<JObject>().Select(f => new WatersConnectFileObject(f));
-        }*/
-
         public HttpClient GetAuthenticatedHttpClient()
         {
             var tokenResponse = Authenticate();
-            var httpClient = new HttpClient();
+            var httpClient = HttpClientFactory.Factory.GetHttpClient(@"wcHandler");
             httpClient.SetBearerToken(tokenResponse.AccessToken);
             //httpClient.DefaultRequestHeaders.Remove(@"Accept");
             //httpClient.DefaultRequestHeaders.Add(@"Accept", @"application/json");

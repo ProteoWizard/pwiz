@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
 
             if (IsGetAcquisitionMethodsNotAllowed(response))
             {
@@ -68,7 +69,6 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             }
 
             string responseBody = response.Content.ReadAsStringAsync().Result;
-            EnsureSuccess(response.StatusCode, responseBody);
             
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
@@ -101,8 +101,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(@"application/json");
             request.Content.Headers.ContentType.CharSet = @"utf-8";
             var response = httpClient.SendAsync(request).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
-            EnsureSuccess(response.StatusCode, responseBody);
         }
         // TODO [RC] Make sure we really need this logic. Access level is read as part of 
         // the folder JSON

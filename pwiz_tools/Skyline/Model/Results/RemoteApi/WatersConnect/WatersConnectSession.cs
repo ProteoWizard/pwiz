@@ -18,7 +18,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text;
 using IdentityModel.Client;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.Collections;
@@ -111,11 +113,16 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             return false;
         }
 
-        protected void EnsureSuccess(System.Net.HttpStatusCode status,  string responseBody)
+        protected void EnsureSuccess(HttpResponseMessage response)
         {
-            if (status >= System.Net.HttpStatusCode.BadRequest)
+            if (response.StatusCode >= System.Net.HttpStatusCode.BadRequest)
             {
-                throw new RemoteServerException(string.Format("Waters Connect server returns an error: {0}", responseBody));
+                var messageBuilder = new StringBuilder(string.Format("Waters Connect server returns an error code: {0}", response.StatusCode));
+                if (response.Content != null)
+                {
+                    messageBuilder.Append(string.Format(@"\n, {0}", response.Content.ReadAsStringAsync()));
+                }
+                throw new RemoteServerException(messageBuilder.ToString());
             }
         }
         protected ImmutableList<WatersConnectFolderObject> GetFolders(Uri requestUri)
@@ -123,7 +130,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
             string responseBody = response.Content.ReadAsStringAsync().Result;
-            EnsureSuccess(response.StatusCode, responseBody);
+            EnsureSuccess(response);
             var jsonObject = JObject.Parse(responseBody);
 
             var foldersValue = jsonObject[@"children"] as JArray;
@@ -138,8 +145,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
-            EnsureSuccess(response.StatusCode, responseBody);
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
             {
@@ -154,8 +161,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.WatersConnect
         {
             var httpClient = WatersConnectAccount.GetAuthenticatedHttpClient();
             var response = httpClient.GetAsync(requestUri).Result;
+            EnsureSuccess(response);
             string responseBody = response.Content.ReadAsStringAsync().Result;
-            EnsureSuccess(response.StatusCode, responseBody);
             var itemsValue = JArray.Parse(responseBody);
             if (itemsValue == null)
             {
