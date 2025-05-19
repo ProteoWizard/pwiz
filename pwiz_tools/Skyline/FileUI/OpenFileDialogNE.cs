@@ -37,7 +37,6 @@ namespace pwiz.Skyline.FileUI
         public OpenFileDialogNE(string[] sourceTypes, IList<RemoteAccount> remoteAccounts, IList<string> specificDataSourceFilter = null)
             : base(sourceTypes, remoteAccounts, specificDataSourceFilter )
         {
-            actionButton.Text = FileUIResources.OpenFileDialogNE_OpenFileDialogNE_Open;
         }
 
         protected override void DoMainAction()

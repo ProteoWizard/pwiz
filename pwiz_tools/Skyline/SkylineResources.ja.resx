@@ -386,7 +386,7 @@
     <value>警告： 結果ファイル'{0}'を特定できません</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_Error__iRT_standard_set_to__0___but_multiple_iRT_standards_were_found__iRT_standard_must_be_set_explicitly_" xml:space="preserve">
-    <value>エラー：iRT標準は{0}に設定されていますが、複数のiRT標準が見つかりました。iRT標準は明示的に設定される必要があります。</value>
+    <value>エラー： iRT標準が{0}に設定されましたが、複数のiRT標準が検出されました。iRT標準は明示的に設定する必要があります。</value>
   </data>
   <data name="CommandLine_ImportSearchInternal_The_iRT_standard_name___0___is_invalid_" xml:space="preserve">
     <value>iRT標準名「{0}」は無効です。</value>
@@ -1176,5 +1176,20 @@
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs" xml:space="preserve">
     <value>シングルプリカーサーMS/MSスペクトルにデコンボリューションしたDIAから得られたライブラリと、同じランの生DIAスペクトルから得られたクロマトグラム</value>
+  </data>
+  <data name="SkylineWindow_SaveDocumentBeforeImportingResults" xml:space="preserve">
+    <value>ディスク上には現在のドキュメントにはない結果があります。
+今すぐドキュメントを保存すると、それらの追加の結果が削除され、現在の設定が新しい結果をインポートするために使用されてしまいます。
+
+今すぐドキュメントを保存しますか？</value>
+  </data>
+  <data name="SkylineWindow_ReimportChromatograms_Error_updating_file___0___" xml:space="preserve">
+    <value>ファイル「{0}」を更新中にエラーが発生しました。</value>
+  </data>
+  <data name="CommandLine_ImportSearchInternal_Error__Failed_to_build_the_spectral_library_" xml:space="preserve">
+    <value>エラー： スペクトルライブラリを構築できませんでした。</value>
+  </data>
+  <data name="SkylineWindow_ImportAnnotations_Reading_annotations" xml:space="preserve">
+    <value>注釈を読み取り中</value>
   </data>
 </root>

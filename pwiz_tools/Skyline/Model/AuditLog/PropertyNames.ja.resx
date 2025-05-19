@@ -1802,4 +1802,19 @@
   <data name="DdaSearchSettings_ScoreType" xml:space="preserve">
     <value>スコアタイプ</value>
   </data>
+  <data name="TransitionGroupDocNode_SpectrumFilter" xml:space="preserve">
+    <value>スペクトルフィルタ</value>
+  </data>
+  <data name="TransitionFullScan_SpectrumFilter" xml:space="preserve">
+    <value>スペクトルフィルタ</value>
+  </data>
+  <data name="ImportResultsSettings_IsGpf" xml:space="preserve">
+    <value>気相分別</value>
+  </data>
+  <data name="BuildPeptideSearchLibrarySettings_UseDiaUmpire" xml:space="preserve">
+    <value>DIA-Umpireでスペクトルをデコンボリューション</value>
+  </data>
+  <data name="TransitionFilterAndLibrariesSettings_SpectrumFilter" xml:space="preserve">
+    <value>スペクトルフィルタ</value>
+  </data>
 </root>
