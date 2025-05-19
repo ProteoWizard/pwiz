@@ -317,6 +317,11 @@ namespace pwiz.Skyline.ToolsUI
             DialogResult = DialogResult.OK;
         }
 
+        /// <summary>
+        /// Button event handler. For Ardia accounts, the label might be [Test] or [Connect].
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnTest_Click(object sender, EventArgs e)
         {
             TestSettings();
