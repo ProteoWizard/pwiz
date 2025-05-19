@@ -201,9 +201,18 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
         if (!serialNumber.empty())
             msd.run.defaultInstrumentConfigurationPtr->set(MS_instrument_serial_number, serialNumber);
 
+        // Write DIA-PASEF window group information if available
         auto diaFrameMsMsWindowsTable = compassDataPtr->getDiaFrameMsMsWindowsTable();
         if (!diaFrameMsMsWindowsTable.empty())
-            msd.run.defaultInstrumentConfigurationPtr->userParams.push_back(UserParam("DiaFrameMsMsWindowsTable", diaFrameMsMsWindowsTable));
+        {
+            std::vector<std::string> lines;
+            boost::split(lines, diaFrameMsMsWindowsTable, boost::is_any_of(";"));
+            msd.run.defaultInstrumentConfigurationPtr->userParams.push_back(UserParam("DiaFrameMsMsWindowsTable", lines[0]));
+            for (size_t i = 1; i < lines.size(); ++i)
+            {
+                msd.run.defaultInstrumentConfigurationPtr->userParams.push_back(UserParam("WindowGroup", lines[i]));
+            }
+        }
     }
 
     msd.run.id = msd.id;

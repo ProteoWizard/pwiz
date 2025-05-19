@@ -421,33 +421,30 @@ namespace pwiz.ProteowizardWrapper
             diaFrameMsMsWindowInfo = null;
             foreach (var u in ic.userParams)
             {
-                if (u.name.Equals(@"DiaFrameMsMsWindowsTable"))
+                if (u.name.Equals(@"WindowGroup"))
                 {
-                    var lines = u.value.ToString().Split(';');
-                    diaFrameMsMsWindowInfo = new Dictionary<int, List<DiaFrameMsMsWindowInfo>>();
-                    foreach (var line in lines.Skip(1)) // Skip the header
+                    diaFrameMsMsWindowInfo ??= new Dictionary<int, List<DiaFrameMsMsWindowInfo>>();
+                    var line = u.value.ToString();
+                    if (string.IsNullOrEmpty(line))
+                        continue;
+                    var columns = line.Split(',');
+                    if (int.TryParse(columns[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var windowGroup) &&
+                        double.TryParse(columns[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var imHigh) &&
+                        double.TryParse(columns[2], NumberStyles.Any, CultureInfo.InvariantCulture, out var imLow) &&
+                        double.TryParse(columns[3], NumberStyles.Any, CultureInfo.InvariantCulture, out var isolationMz) &&
+                        double.TryParse(columns[4], NumberStyles.Any, CultureInfo.InvariantCulture, out var isolationWidth) &&
+                        double.TryParse(columns[5], NumberStyles.Any, CultureInfo.InvariantCulture, out var collisionEnergy))
                     {
-                        if (string.IsNullOrEmpty(line))
-                            continue;
-                        var columns = line.Split(',');
-                        if (int.TryParse(columns[0], NumberStyles.Any, CultureInfo.InvariantCulture, out var windowGroup) &&
-                            double.TryParse(columns[1], NumberStyles.Any, CultureInfo.InvariantCulture, out var imHigh) &&
-                            double.TryParse(columns[2], NumberStyles.Any, CultureInfo.InvariantCulture, out var imLow) &&
-                            double.TryParse(columns[3], NumberStyles.Any, CultureInfo.InvariantCulture, out var isolationMz) &&
-                            double.TryParse(columns[4], NumberStyles.Any, CultureInfo.InvariantCulture, out var isolationWidth) &&
-                            double.TryParse(columns[5], NumberStyles.Any, CultureInfo.InvariantCulture, out var collisionEnergy))
+                        if (!diaFrameMsMsWindowInfo.TryGetValue(windowGroup, out var list))
                         {
-                            if (!diaFrameMsMsWindowInfo.TryGetValue(windowGroup, out var list))
-                            {
-                                diaFrameMsMsWindowInfo.Add(windowGroup, list = new List<DiaFrameMsMsWindowInfo>());
-                            }
-                            list.Add(new DiaFrameMsMsWindowInfo(windowGroup, imLow, imHigh, isolationMz - isolationWidth / 2, isolationMz + isolationWidth / 2, collisionEnergy));
+                            diaFrameMsMsWindowInfo.Add(windowGroup, list = new List<DiaFrameMsMsWindowInfo>());
                         }
-                        else
-                        {
-                            diaFrameMsMsWindowInfo = null;
-                            throw new ArgumentException(@"unexpected format in DiaFrameMsMsWindowsTable");
-                        }
+                        list.Add(new DiaFrameMsMsWindowInfo(windowGroup, imLow, imHigh, isolationMz - isolationWidth / 2, isolationMz + isolationWidth / 2, collisionEnergy));
+                    }
+                    else
+                    {
+                        diaFrameMsMsWindowInfo = null;
+                        throw new ArgumentException(@"unexpected format in DiaFrameMsMsWindowsTable");
                     }
                 }
             }
