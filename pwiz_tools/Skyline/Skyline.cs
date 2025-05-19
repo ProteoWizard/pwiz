@@ -4704,6 +4704,7 @@ namespace pwiz.Skyline
             {
                 case ArdiaAccount ardia:
                 {
+                    // CONSIDER: why does this jump into UI before checking for working account credentials
                     using var loginDlg = new ArdiaLoginDlg(ardia);
                     if (DialogResult.Cancel == loginDlg.ShowDialog(this))
                         throw new OperationCanceledException();

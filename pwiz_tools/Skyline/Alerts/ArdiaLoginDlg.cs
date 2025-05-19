@@ -296,8 +296,11 @@ namespace pwiz.Skyline.Alerts
 
         /// <summary>
         /// Gets a function that provides an <see cref="HttpClient"/> for calling the Ardia API.
-        /// The client is pre-configured with auth headers / cookies pre-set and sets the 
-        /// Accept header to "application/json".
+        /// The client is pre-configured with auth headers / cookies and Accept header as
+        /// "application/json".
+        ///
+        /// Skyline uses this factory to create any <see cref="HttpClient"/> communicating with
+        /// the Ardia API.
         /// </summary>
         /// <returns>An <see cref="HttpClient"/> configured for calling the Ardia API.</returns>
         private Func<HttpClient> GetFactory()
@@ -483,6 +486,7 @@ namespace pwiz.Skyline.Alerts
 
             try
             {
+                // Obtain the Bff-Host token value
                 var bffCookie = await LoginIn_UsingSystemDefaultBrowser();
                 if (bffCookie != null)
                 {

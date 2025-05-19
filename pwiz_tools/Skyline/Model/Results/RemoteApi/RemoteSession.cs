@@ -75,19 +75,20 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         public abstract bool AsyncFetchContents(RemoteUrl remoteUrl, out RemoteServerException remoteException);
 
         /// <summary>
-        /// Call a remote API.
+        /// Make an HTTP GET request to a remote API.
         ///
-        /// This method first checks to see whether a response already exists for this combination of URI + response type.
-        /// If so, it is returned. If not, it makes the API call asynchronously.
+        /// This handles caching, networking, and async. First, it checks whether a response already exists for this URI + response type.
+        /// If so, a C# object of type <list type="T"></list> is returned from the cache. If not, an <see cref="Action"/> starts to 
+        /// make the HTTP request asynchronously and the response is stored in the cache of responses.
         ///
-        /// If a new request must be made, this will raise a <see cref="ContentsAvailable"/> event.
+        /// <see cref="ContentsAvailable"/> is called if an async request was made to fetch the contents. 
         /// </summary>
         /// <typeparam name="T">Type created when un-marshaling the response.</typeparam>
         /// <param name="requestUri">URI of the remote API to call</param>
         /// <param name="fetcher">Function that makes an HTTP request and handles the response. The fetcher configures the request
         ///                       (verb, auth headers / cookies) and handles the response (response code, parsing the body, etc).
         ///                       The fetcher also un-marshals the response into strongly typed objects.</param>
-        /// <param name="remoteException">Exception that occurs processing the response. For example: authentication or marshaling issues.</param>
+        /// <param name="remoteException">Exception that occurs processing the response. For example: authentication or un-marshaling issues.</param>
         /// <returns>True if the response exists in the cache and false otherwise. Remote requests to previously unfetched URLs will return false.</returns>
         protected bool AsyncFetch<T>(Uri requestUri, Func<Uri, T> fetcher, out RemoteServerException remoteException)
         {

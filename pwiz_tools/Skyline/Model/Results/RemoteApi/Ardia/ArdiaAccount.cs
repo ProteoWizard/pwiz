@@ -166,6 +166,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return _authenticatedHttpClientFactory();
         }
 
+        /// <summary>
+        /// Checks whether an HttpClient configured using this account can successfully call the Ardia API. This
+        /// makes a real request requiring authentication.
+        ///
+        /// Returns if the account is properly configured. Throws an <see cref="HttpRequestException"/> otherwise.
+        /// </summary>
+        /// <param name="httpClient"></param>
         private void CheckAuthentication(HttpClient httpClient)
         {
             var response = httpClient.GetAsync(GetFolderContentsUrl()).Result;
