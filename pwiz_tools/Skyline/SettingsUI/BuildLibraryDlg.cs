@@ -308,16 +308,16 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool CreateAlphaBuilder(string name, string outputPath)
         {
-            if (!SetupPythonEnvironmentForAlpha())
-            {
-                return false;
-            }
-
             var doc = _documentUiContainer.DocumentUI;
             if (!doc.HasPeptides)
             {
-                _helper.ShowTextBoxError(tabControlMain,
-                    SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides);
+                MessageDlg.Show(this,
+                    SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_);
+                return false;
+            }
+
+            if (!SetupPythonEnvironmentForAlpha())
+            {
                 return false;
             }
 

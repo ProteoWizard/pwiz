@@ -323,11 +323,12 @@ namespace pwiz.Skyline.SettingsUI {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Current Skyline document is missing peptides..
+        ///   Looks up a localized string similar to Add peptide precursors to the document to build a library from AlphaPeptDeep predictions..
         /// </summary>
-        public static string BuildLibraryDlg_Current_Skyline_document_is_missing_peptides {
+        public static string BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_ {
             get {
-                return ResourceManager.GetString("BuildLibraryDlg_Current_Skyline_document_is_missing_peptides", resourceCulture);
+                return ResourceManager.GetString("BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_buil" +
+                        "d_a_library_from_AlphaPeptDeep_predictions_", resourceCulture);
             }
         }
         

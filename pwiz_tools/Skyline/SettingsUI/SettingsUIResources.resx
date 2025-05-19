@@ -226,9 +226,6 @@
   <data name="BuildLibraryNotification_BuildLibraryNotification_Library__0__" xml:space="preserve">
     <value>Library {0}</value>
   </data>
-  <data name="BuildLibraryDlg_Current_Skyline_document_is_missing_peptides" xml:space="preserve">
-    <value>Current Skyline document is missing peptides.</value>
-  </data>
   <data name="CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value" xml:space="preserve">
     <value>The number of generated windows could not be adjusted to be a multiple of the windows per scan. Try changing the windows per scan or the End value.</value>
   </data>
@@ -1195,5 +1192,8 @@ This will provide Skyline with a variety of candidate peaks to evaluate peak qua
   </data>
   <data name="TransitionSettingsUI_EditSpectrumFilter_MS1_or_MS_MS_filtering_must_be_enabled_on_the_Full_Scan_tab_in_order_to_use_this_feature_" xml:space="preserve">
     <value>MS1 or MS/MS filtering must be enabled on the Full Scan tab in order to use this feature.</value>
+  </data>
+  <data name="BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_" xml:space="preserve">
+      <value>Add peptide precursors to the document to build a library from AlphaPeptDeep predictions.</value>
   </data>
 </root>

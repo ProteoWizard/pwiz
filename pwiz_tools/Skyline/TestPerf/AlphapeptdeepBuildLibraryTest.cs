@@ -89,6 +89,8 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            TestEmptyDocumentMessage();
+            
             RunUI(() => OpenDocument(TestFilesDir.GetTestPath(@"Rat_plasma.sky")));
 
             const string answerWithoutIrt = "without_iRT/predict_transformed.speclib.tsv";
@@ -97,8 +99,7 @@ namespace TestPerf
             const string libraryWithIrt = "AlphaPeptDeepLibraryWithIrt";
             const string answerWithIrt = "with_iRT/predict_transformed.speclib.tsv";
 
-
-            PeptideSettingsUI peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
 
             var simulatedInstallationState = PythonInstaller.eSimulatedInstallationState.NONVIDIASOFT; // Simulates not having Nvidia library but having the GPU
             AlphapeptdeepBuildLibrary(peptideSettings, libraryWithIrt, LibraryPathWithIrt, answerWithIrt, 
@@ -127,14 +128,36 @@ namespace TestPerf
 
             OkDialog(spectralLibraryViewer, spectralLibraryViewer.Close);
 
-            MultiButtonMsgDlg saveChangesDlg =
+            var saveChangesDlg =
                 ShowDialog<MultiButtonMsgDlg>(() => SkylineWindow.NewDocument(), WAIT_TIME);
             AssertEx.AreComparableStrings(SkylineResources.SkylineWindow_CheckSaveDocument_Do_you_want_to_save_changes,
                 saveChangesDlg.Message);
             OkDialog(saveChangesDlg, saveChangesDlg.ClickNo);
 
             TestFilesDir.CheckForFileLocks(TestFilesDir.FullPath);
+        }
 
+        private void TestEmptyDocumentMessage()
+        {
+            var peptideSettings = ShowPeptideSettings(PeptideSettingsUI.TABS.Library);
+            var buildLibraryDlg = ShowDialog<BuildLibraryDlg>(peptideSettings.ShowBuildLibraryDlg);
+
+            RunUI(() =>
+            {
+                buildLibraryDlg.LibraryName = "No peptides prediction";
+                buildLibraryDlg.LibraryPath = LibraryPathWithoutIrt;
+                buildLibraryDlg.AlphaPeptDeep = true;
+            });
+
+            RunDlg<MessageDlg>(buildLibraryDlg.OkWizardPage, dlg =>
+            {
+                Assert.AreEqual(SettingsUIResources.BuildLibraryDlg_CreateAlphaBuilder_Add_peptide_precursors_to_the_document_to_build_a_library_from_AlphaPeptDeep_predictions_,
+                    dlg.Message);
+                dlg.OkDialog();
+            });
+
+            OkDialog(buildLibraryDlg, buildLibraryDlg.CancelDialog);
+            OkDialog(peptideSettings, peptideSettings.OkDialog);
         }
 
         /// <summary>
@@ -195,7 +218,6 @@ namespace TestPerf
 
             TestResultingLibByValues(TestFilesDir.GetTestPath(answerFile), builtLibraryPath);
         }
-
 
         private static void VerifyAddIrts(AddIrtPeptidesDlg dlg)
         {
@@ -259,7 +281,6 @@ namespace TestPerf
                 AssertEx.FieldsEqual(answerReader, productReader, 13, null, true, 0, 1);
             }
         }
-
 
         /// <summary>
         /// Pretends Python needs installation then Cancels Python install
