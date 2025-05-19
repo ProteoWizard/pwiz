@@ -312,7 +312,7 @@ namespace TestPerf
                 },
                 SearchFiles = new[]
                 {
-                    "report-lib.parquet.skyline.speclib"
+                    "DIA-QE\\DIA-QE\\DIA\\DIANN\\report-lib.parquet.skyline.speclib"
                 },
                 HasRedundantLibrary = false,
                 IrtStandard = IrtStandard.AUTO,

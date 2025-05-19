@@ -280,7 +280,14 @@ namespace pwiz.Skyline.Util
             try
             {
                 DataGridView.EditingControlShowing += onEditingControlShowing;
-                DataGridView.CurrentCell = cell;
+                try
+                {
+                    DataGridView.CurrentCell = cell;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
                 DataGridView.BeginEdit(true);
                 if (null != editingControl)
                 {

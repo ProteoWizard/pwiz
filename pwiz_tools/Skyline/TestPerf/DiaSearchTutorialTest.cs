@@ -209,7 +209,7 @@ namespace TestPerf
 
         protected override Bitmap ProcessCoverShot(Bitmap bmp)
         {
-            var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
+            using var graph = Graphics.FromImage(base.ProcessCoverShot(bmp));
             graph.DrawImageUnscaled(_searchLogImage, bmp.Width - _searchLogImage.Width - 10, bmp.Height - _searchLogImage.Height - 30);
             return bmp;
         }
@@ -464,8 +464,7 @@ namespace TestPerf
                 if (msfraggerDownloaderDlg != null)
                 {
                     PauseForScreenShot<MsFraggerDownloadDlg>("Import Peptide Search - Download MSFragger"); // Maybe someday
-                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt Chambers (testing download from Skyline)",
-                        "matt.chambers42@gmail.com", "UW"));
+                    RunUI(() => msfraggerDownloaderDlg.SetValues("Matt (testing download from Skyline)", "Chambers", "chambem2@uw.edu", "UW"));
                     OkDialog(msfraggerDownloaderDlg, msfraggerDownloaderDlg.ClickAccept);
                 }
 

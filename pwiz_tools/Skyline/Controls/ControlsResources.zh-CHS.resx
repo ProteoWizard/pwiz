@@ -169,6 +169,9 @@
   <data name="SequenceTreeForm_UpdateTitle_Targets_by_Preferred_Name" xml:space="preserve">
     <value>取决于首选名称的目标</value>
   </data>
+  <data name="SequenceTree_ExpansionTooLargeMessage" xml:space="preserve">
+    <value>扩展的节点数量为 {0}，超过限制值 {1}，无法扩展</value>
+  </data>
   <data name="StatementCompletionForm_AddDescription_List_view_item_already_has_a_description" xml:space="preserve">
     <value>列表视图项已具备描述</value>
   </data>

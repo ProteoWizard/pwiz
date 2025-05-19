@@ -1372,7 +1372,7 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
-        private string TutorialPath
+        protected string TutorialPath
         {
             get
             {
@@ -1393,6 +1393,11 @@ namespace pwiz.SkylineTestUtil
         }
 
         private int ScreenshotCounter = 1;
+
+        public void SkipScreenshots(int numToSkip)
+        {
+            ScreenshotCounter += numToSkip;
+        }
 
         public virtual bool AuditLogCompareLogs
         {
@@ -2598,33 +2603,42 @@ namespace pwiz.SkylineTestUtil
 
         private void CloseOpenForm(Form formToClose, List<Form> openForms)
         {
-            openForms.Remove(formToClose);
-            // Close any owned forms, since they may be pushing message loops that would keep this form
-            // from closing.
-            foreach (var ownedForm in formToClose.OwnedForms)
+            try
             {
-                CloseOpenForm(ownedForm, openForms);
-            }
+                Program.ClosingForms = true;
 
-            var messageDlg = formToClose as CommonAlertDlg;
-            // ReSharper disable LocalizableElement
-            if (messageDlg == null)
-                Console.WriteLine("\n\nClosing open form of type {0}\n", formToClose.GetType()); // Not L10N
-            else
+                openForms.Remove(formToClose);
+                // Close any owned forms, since they may be pushing message loops that would keep this form
+                // from closing.
+                foreach (var ownedForm in formToClose.OwnedForms)
+                {
+                    CloseOpenForm(ownedForm, openForms);
+                }
+
+                var messageDlg = formToClose as CommonAlertDlg;
+                // ReSharper disable LocalizableElement
+                if (messageDlg == null)
+                    Console.WriteLine("\n\nClosing open form of type {0}\n", formToClose.GetType()); // Not L10N
+                else
                 Console.WriteLine("\n\nClosing open MessageDlg: {0}\n", TextUtil.LineSeparate(messageDlg.Message, messageDlg.DetailMessage)); // Not L10N
-            // ReSharper restore LocalizableElement
+                // ReSharper restore LocalizableElement
 
-            RunUI(() =>
+                RunUI(() =>
+                {
+                    try
+                    {
+                        formToClose.Close();
+                    }
+                    catch
+                    {
+                        // Ignore exceptions
+                    }
+                });
+            }
+            finally
             {
-                try
-                {
-                    formToClose.Close();
-                }
-                catch
-                {
-                    // Ignore exceptions
-                }
-            });
+                Program.ClosingForms = false;
+            }
         }
 
 

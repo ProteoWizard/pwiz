@@ -175,7 +175,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"c,z",
         };
 
-        public static string MSFRAGGER_VERSION = @"4.1";
+        public static string MSFRAGGER_VERSION = @"4.1"; // TODO: after next release and daily, remove outdated rtbUsageConditions.Text translations for ja/zh
         public static string MSFRAGGER_FILENAME = @"MSFragger-4.1";
         public static string MsFraggerDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSFRAGGER_FILENAME);
         public static string MsFraggerBinary => Path.Combine(MsFraggerDirectory, MSFRAGGER_FILENAME, MSFRAGGER_FILENAME + @".jar");
