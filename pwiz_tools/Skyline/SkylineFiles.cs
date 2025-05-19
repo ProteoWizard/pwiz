@@ -65,6 +65,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using DatabaseOpeningException = pwiz.Skyline.Model.Irt.DatabaseOpeningException;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 
 namespace pwiz.Skyline
 {
@@ -3502,7 +3503,6 @@ namespace pwiz.Skyline
             return true;
         }
 
-        // TODO: BUG? Ardia account needs to be re-initialized each time Skyline starts
         private bool HasRegisteredArdiaAccount =>
             Settings.Default.RemoteAccountList.Any(account => account.AccountType == RemoteAccountType.ARDIA);
 
@@ -3511,10 +3511,71 @@ namespace pwiz.Skyline
             return ardiaPublishMenuItem.Visible;
         }
 
-        [SuppressMessage("ReSharper", "LocalizableElement")]
         private void ardiaPublishMenuItem_Click(object sender, EventArgs e)
         {
-            Assume.IsTrue(HasRegisteredArdiaAccount, "Expected to find a registered Ardia account but none found");
+            PublishToArdia();
+        }
+
+        // BUG: users required to log back into their Ardia account each time Skyline starts
+        // BUG: Removing RemoteAccounts using EditRemoteAccountsDlg appears to unexpectedly leave registered Ardia accounts intact
+        // CONSIDER: when should an upload be split into multiple pieces?
+        public void PublishToArdia()
+        {
+            Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected Skyline has a registered Ardia account but none found");
+
+            // TODO: support choosing an Ardia account if > 1 account registered
+            var ardiaAccount = Settings.Default.RemoteAccountList.
+                Where(a => a.AccountType == RemoteAccountType.ARDIA).Cast<ArdiaAccount>().First();
+
+            // Required for now. Triggers an Ardia login while access token bug exists
+            ardiaAccount.GetAuthenticatedHttpClient();
+
+            var localZipFile = string.Empty;
+            try
+            {
+                // TODO: support setting name / location of local zip file
+                localZipFile = FileEx.GetTimeStampedFileName(DocumentFilePath);
+
+                // Archive current Skyline document
+                var zipFileAvailable = ShareDocument(localZipFile, ShareType.COMPLETE);
+
+                // TODO: support choosing a destination directory on the Ardia server
+                // Note: API expects paths to start with "/"
+                const string ardiaPath = @"/ZZZ-Document-Upload";
+
+                if (zipFileAvailable)
+                {
+                    Uri uploadedDocumentUri = null;
+                    var isCanceled = false;
+
+                    using (var waitDlg = new LongWaitDlg())
+                    {
+                        waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
+                        waitDlg.PerformWork(this, 1000, longWaitBroker =>
+                        {
+                            var ardiaClient = ArdiaClient.Instance(ardiaAccount);
+                            uploadedDocumentUri = ardiaClient.SendZipFile(ardiaPath, localZipFile, longWaitBroker);
+
+                            if (longWaitBroker.IsCanceled)
+                                isCanceled = true;
+                        });
+                    }
+
+                    if (!isCanceled)
+                    {
+                        // CONSIDER: the API could include a URI referring to the new document's location in Ardia's Data Explorer. Skyline
+                        //           could offer to open that here, similar to what happens after successful upload to Panorama
+                        MessageDlg.Show(this, ArdiaResources.Ardia_FileUpload_SuccessfulUpload);
+                    }
+                }
+            }
+            finally
+            {
+                // CONSIDER: should this need to happen off the UI thread?
+                // Remove archive created above
+                if (File.Exists(localZipFile))
+                    File.Delete(localZipFile);
+            }
         }
 
         private void publishMenuItem_Click(object sender, EventArgs e)

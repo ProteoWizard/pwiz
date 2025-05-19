@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
@@ -22,12 +23,14 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTest
 {
     [TestClass]
+    [SuppressMessage("ReSharper", "IdentifierTypo")]
+    [SuppressMessage("ReSharper", "StringLiteralTypo")]
     public class RemoteArdiaTest : AbstractUnitTest
     {
         [TestMethod]
         public void RemoteArdiaJsonUnmarshalingTest()
         {
-            // StageDocument - Request
+            // StagedDocument - Request
             var stagedDocumentRequest = ArdiaStageDocumentRequest.Create();
             stagedDocumentRequest.AddSingleDocumentPiece();
 
@@ -35,7 +38,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, stagedDocumentRequest.Pieces.Count);
             Assert.AreEqual(ArdiaStageDocumentPieceRequest.SINGLE_DOCUMENT, stagedDocumentRequest.Pieces[0].PieceName);
 
-            // StageDocument - Response
+            // StagedDocument - Response
             var stagedDocumentResponse = JsonConvert.DeserializeObject<ArdiaStagedDocumentResponse>(SimpleStagedDocumentString);
 
             Assert.AreEqual("97088887-788079", stagedDocumentResponse.UploadId);

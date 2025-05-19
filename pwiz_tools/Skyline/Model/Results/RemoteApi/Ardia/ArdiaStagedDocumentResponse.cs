@@ -15,6 +15,7 @@
  */
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 // Ardia API StageDocument and Document models
 //     https://api.hyperbridge.cmdtest.thermofisher.com/document/api/swagger/index.html
@@ -65,7 +66,8 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     {
         public string PieceName { get; set; }
         public string PiecePath { get; set; }
-        public IList<string> PresignedUrls { get; set; } // CONSIDER: URI instead of string
+        [SuppressMessage("ReSharper", "IdentifierTypo")]
+        public IList<string> PresignedUrls { get; set; } // CONSIDER: URI rather than string
     }
 
     public class ArdiaDocumentRequest
@@ -79,5 +81,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     public class ArdiaDocumentResponse
     {
         public string DocumentId { get; set; }
+        [SuppressMessage("ReSharper", "IdentifierTypo")]
+        public IList<string> PresignedUrls { get; set; } // CONSIDER: URI rather than string
     }
 }
