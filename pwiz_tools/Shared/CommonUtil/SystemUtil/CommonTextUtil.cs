@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -47,6 +48,20 @@ namespace pwiz.Common.SystemUtil
         public static string LineSeparate(params string[] lines)
         {
             return LineSeparate((IEnumerable<string>) lines);
+        }
+
+        public static bool IsUtf8(byte[] bytes)
+        {
+            try
+            {
+                var encoding = new UTF8Encoding(false, true);
+                _ = encoding.GetCharCount(bytes);
+                return true;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
         }
     }
 }

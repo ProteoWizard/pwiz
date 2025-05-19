@@ -104,6 +104,7 @@
     <property name="FileName" column="fileName"/>
     <property name="IdFileName" column="idFileName"/>
     <property name="CutoffScore" column="cutoffScore"/>
+    <property name="WorkflowType" column="workflowType"/>
   </class>
   <class name="DbRefSpectraPeakAnnotations" table="RefSpectraPeakAnnotations">
     <id name="Id">

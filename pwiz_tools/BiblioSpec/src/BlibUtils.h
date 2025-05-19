@@ -71,6 +71,11 @@ enum IONMOBILITY_TYPE { IONMOBILITY_NONE, IONMOBILITY_DRIFTTIME_MSEC, IONMOBILIT
 const char* ionMobilityTypeToString(IONMOBILITY_TYPE ionMobilityType);
 IONMOBILITY_TYPE parseIonMobilityType(const char* ionMobilityType);
 
+
+/* Workflow type for SpectrumSourceFiles */
+enum WORKFLOW_TYPE { DDA=0, DIA };
+
+
 /**
  * All possible scores from different search algorithms.
  */

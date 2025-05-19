@@ -112,6 +112,7 @@ namespace TestPerf
         public string ZipFileName => _instrumentValues.ZipFileName ?? RootName;
 
         public string[] TestFilesZipPaths { get; set; }
+        public bool[] TestFilesZipExtractHere { get; set; }
         public string[] TestFilesPersistent { get; set; }
         public string LinkPdf { get; set; }
 
@@ -311,7 +312,7 @@ namespace TestPerf
                 },
                 SearchFiles = new[]
                 {
-                    "report-lib.parquet.skyline.speclib"
+                    "DIA\\DIANN\\report-lib.parquet.skyline.speclib"
                 },
                 HasRedundantLibrary = false,
                 IrtStandard = IrtStandard.AUTO,
@@ -326,6 +327,8 @@ namespace TestPerf
                 ExamplePeptide = "LPQVEGTGGDVQPSQDLVR"
             });
 
+            // extract the DIA-*-DIANN zipfile inside the DIA-* directory so the DIA mzML files are picked up automatically
+            TestFilesZipExtractHere = new bool[TestFilesZipPaths.Length].Append(true).ToArray();
             TestFilesZipPaths = TestFilesZipPaths
                 .Append(string.Format(@"http://skyline.ms/tutorials/{0}-DIANN.zip", ZipFileName))
                 .ToArray();
@@ -642,6 +645,7 @@ namespace TestPerf
         private void RunTest()
         {
             TestFilesZipPaths = _testInfo.TestFilesZipPaths;
+            TestFilesZipExtractHere = _testInfo.TestFilesZipExtractHere;
             TestFilesPersistent = _testInfo.TestFilesPersistent;
             LinkPdf = _testInfo.LinkPdf;
 
@@ -803,8 +807,7 @@ namespace TestPerf
             var librarySettings = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
             Assert.IsTrue(librarySettings.HasDocumentLibrary);
 
-            var importResults = importPeptideSearchDlg.ImportResultsControl as ImportResultsDIAControl;
-            Assert.IsNotNull(importResults);
+            var importResults = importPeptideSearchDlg.ImportResultsControl;
             string diaDir = GetTestPath("DIA");
             if (IsPauseForScreenShots)
             {
@@ -813,15 +816,20 @@ namespace TestPerf
                     FileEx.SafeDelete(file);
             }
 
-            var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResults.Browse(diaDir));
-            RunUI(() =>
+            if (!IsDiaNN)
             {
-                openDataFiles.SelectAllFileType(_instrumentValues.DiaFilesExtension);
-                foreach (var selectedFile in openDataFiles.SelectedFiles)
-                    Assert.IsTrue(DiaFiles.Contains(selectedFile));
-            });
-            PauseForScreenShot<OpenDataSourceDialog>("Results files form");
-            OkDialog(openDataFiles, openDataFiles.Open);
+                var importResultsDia = importResults as ImportResultsDIAControl;
+                Assert.IsNotNull(importResults);
+                var openDataFiles = ShowDialog<OpenDataSourceDialog>(() => importResultsDia.Browse(diaDir));
+                RunUI(() =>
+                {
+                    openDataFiles.SelectAllFileType(_instrumentValues.DiaFilesExtension);
+                    foreach (var selectedFile in openDataFiles.SelectedFiles)
+                        Assert.IsTrue(DiaFiles.Contains(selectedFile));
+                });
+                PauseForScreenShot<OpenDataSourceDialog>("Results files form");
+                OkDialog(openDataFiles, openDataFiles.Open);
+            }
 
             WaitForConditionUI(() => importPeptideSearchDlg.IsNextButtonEnabled);
             RunUI(() =>
