@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <mzML xmlns="http://psi.hupo.org/ms/mzml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML1.1.0.xsd" id="QC_LCMS2-2_23_268-1-1" version="1.1.0">
   <cvList count="2">
-    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.136" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="4.1.182" URI="https://raw.githubusercontent.com/HUPO-PSI/psi-ms-CV/master/psi-ms.obo"/>
     <cv id="UO" fullName="Unit Ontology" version="09:04:2014" URI="https://raw.githubusercontent.com/bio-ontology-research-group/unit-ontology/master/unit.obo"/>
   </cvList>
   <fileDescription>
@@ -10,78 +10,78 @@
       <cvParam cvRef="MS" accession="MS:1000804" name="electromagnetic radiation spectrum" value=""/>
     </fileContent>
     <sourceFileList count="18">
-      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC001.DAT" name="_FUNC001.DAT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="5a9b6e098d45a15a7753e49c8ebf21a7f7518837"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC002.DAT" name="_FUNC002.DAT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a6b86523129c943a0aa4a03f148d586f2f9b74f2"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC003.DAT" name="_FUNC003.DAT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000769" name="Waters nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000526" name="Waters raw format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="06b513612f65e4f4a4ee5b0e501c187d83d4d9f4"/>
       </sourceFile>
-      <sourceFile id="_CHRO001.DAT" name="_CHRO001.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_CHRO001.DAT" name="_CHRO001.DAT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="b9732144b75cce2dd778a36448fdc834b75d580f"/>
       </sourceFile>
-      <sourceFile id="_CHRO002.DAT" name="_CHRO002.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_CHRO002.DAT" name="_CHRO002.DAT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="d37370abfafe11189a887644cddf3f69a0bed04b"/>
       </sourceFile>
-      <sourceFile id="_CHRO003.DAT" name="_CHRO003.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_CHRO003.DAT" name="_CHRO003.DAT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="413d07fcea8a23557b9f66789fe151283d4e83c1"/>
       </sourceFile>
-      <sourceFile id="_CHRO004.DAT" name="_CHRO004.DAT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_CHRO004.DAT" name="_CHRO004.DAT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="92d79f95a3bdf35f28091ead098ab0595c084066"/>
       </sourceFile>
-      <sourceFile id="_CHROMS.INF" name="_CHROMS.INF" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_CHROMS.INF" name="_CHROMS.INF" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="7df53e62b3e36d508cce879f4bba25f98d92a69b"/>
       </sourceFile>
-      <sourceFile id="_extern.inf" name="_extern.inf" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_extern.inf" name="_extern.inf" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="a82b7c6d24845dd01a5ce18c581b93be65c5d1d8"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC001.IDX" name="_FUNC001.IDX" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="00dc7933d66b784720a96bd6f9f60b413cb57460"/>
       </sourceFile>
-      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC001.STS" name="_FUNC001.STS" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="2f118219c886d2f8f502dc8080b05a3915343250"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC002.IDX" name="_FUNC002.IDX" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="0db4a4010c4ed3c9c7ead0f4f9630fdd41e7f924"/>
       </sourceFile>
-      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC002.STS" name="_FUNC002.STS" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="c2860e61869c9b74548186262c9960eeb8ee42ba"/>
       </sourceFile>
-      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNC003.IDX" name="_FUNC003.IDX" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="3c30a66f87b5d4677eb7dd288485168eec8d5daa"/>
       </sourceFile>
-      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_FUNCTNS.INF" name="_FUNCTNS.INF" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="148bacdcc956a353b38160fb819aa2699d3beef9"/>
       </sourceFile>
-      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_HEADER.TXT" name="_HEADER.TXT" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="e32446c4f141fe7fe3624052fe862b5ed3f9eb95"/>
       </sourceFile>
-      <sourceFile id="_HISTORY.INF" name="_HISTORY.INF" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_HISTORY.INF" name="_HISTORY.INF" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="ca080221cd27bf21e43d1473e694ff61ad377b48"/>
       </sourceFile>
-      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://C:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
+      <sourceFile id="_INLET.INF" name="_INLET.INF" location="file://D:\dev\pwiz\pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data\QC_LCMS2-2_23_268-1-1.raw">
         <cvParam cvRef="MS" accession="MS:1000824" name="no nativeID format" value=""/>
         <cvParam cvRef="MS" accession="MS:1000569" name="SHA-1" value="5c6b38a4060bf77427c0338640abd54ad411c749"/>
       </sourceFile>
@@ -91,7 +91,7 @@
     <software id="MassLynx" version="4.1">
       <cvParam cvRef="MS" accession="MS:1000534" name="MassLynx" value=""/>
     </software>
-    <software id="pwiz_Reader_Waters" version="3.0.23341">
+    <software id="pwiz_Reader_Waters" version="3.0.25134">
       <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard software" value=""/>
     </software>
   </softwareList>
@@ -123,10 +123,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="20">
@@ -151,10 +151,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="448">
@@ -179,10 +179,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="504">
@@ -207,10 +207,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="528">
@@ -271,10 +271,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="544">
@@ -299,10 +299,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="552">
@@ -327,10 +327,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="564">
@@ -409,10 +409,10 @@
           </scan>
         </scanList>
         <binaryDataArrayList count="2">
-          <binaryDataArray encodedLength="344">
+          <binaryDataArray arrayLength="191" encodedLength="344">
             <cvParam cvRef="MS" accession="MS:1000521" name="32-bit float" value=""/>
             <cvParam cvRef="MS" accession="MS:1000574" name="zlib compression" value=""/>
-            <cvParam cvRef="MS" accession="MS:1000514" name="m/z array" value="" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+            <cvParam cvRef="MS" accession="MS:1000617" name="wavelength array" value="" unitCvRef="UO" unitAccession="UO:0000018" unitName="nanometer"/>
             <binary>eJwNxUOSGAAAAMHH7Qti2zYmtm3btq190F42VTmkD109PDRiYHhoJKMYzRjGMo7xTGAik5jMFKYyjenMYCazmM0c5jKP+SxgIYtYzBKWsozlrGAlq1jNGtayjvXEBjayic1sYevAv7YN/PtL2007TDtNu0y7TXtMe037TPtNB0wHTYdMh01HTEdNx0zHTSdMJ02nTKdNZ0xnTedM500XTBdNl0yXTVdMV03XTNdNN0w3TbdMt013THdN90z3TQ9MD02PTI9NT0xPTc9Mz00vTC9Nr0yvTW9Mb03vTO9NH0wfTZ9Mn01fTF9N30zfTT9MP02/TL9Nf0yDHhz4Dx6q8RI=</binary>
           </binaryDataArray>
           <binaryDataArray encodedLength="564">
