@@ -598,7 +598,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
         bool BuildLibrary(IProgressMonitor progress);
-        
+
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>

@@ -464,7 +464,7 @@ namespace pwiz.SkylineTest
                         VerifyDeleteDirectoryWithFileLockingDetails(testFilesDir.FullPath, filePath);
                         
                         // Make sure it works recursively
-                        var subfolderPath = testFilesDir.GetTestPath("sub1/sub2/sub3");
+                        var subfolderPath = testFilesDir.GetTestPath(@"sub1\sub2\sub3");
                         Directory.CreateDirectory(subfolderPath);
                         var filePathDeep = Path.Combine(subfolderPath, "lock.txt");
                         File.WriteAllText(filePathDeep, @"test");

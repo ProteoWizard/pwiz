@@ -30,9 +30,8 @@ namespace SkylineNightly
 {
     public partial class SkylineNightly : Form
     {
-        private static string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
-        private static string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
-        private static int REG_LONGPATH_VALUE = 1;
+        private const string REG_FILESYSTEM_KEY = @"HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem";
+        private const string REG_LONGPATHS_ENABLED = @"LongPathsEnabled";
 
         public static readonly Nightly.RunMode[] RunModes = 
             { Nightly.RunMode.trunk, Nightly.RunMode.perf, Nightly.RunMode.release, Nightly.RunMode.stress, Nightly.RunMode.integration, Nightly.RunMode.release_perf, Nightly.RunMode.integration_perf };
@@ -140,7 +139,7 @@ namespace SkylineNightly
                     ts.RootFolder.RegisterTaskDefinition(Nightly.NightlyTaskNameWithUser, td);
 
                     // Registry setting LongPathsEnabled here for python to install pip and configure packages required to run AlphaPeptDeep
-                    Registry.SetValue(REG_FILESYSTEM_KEY, REG_LONGPATHS_ENABLED, REG_LONGPATH_VALUE);
+                    Registry.SetValue(REG_FILESYSTEM_KEY, REG_LONGPATHS_ENABLED, 1);
                 }
             }
             }
