@@ -213,33 +213,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to BlibBuilder completed ok.
-        /// </summary>
-        public static string Alphapeptdeep_Blib_completed_ok {
-            get {
-                return ResourceManager.GetString("Alphapeptdeep_Blib_completed_ok", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to BlibBuilder failed to complete.
-        /// </summary>
-        public static string Alphapeptdeep_Blib_failed_to_complete {
-            get {
-                return ResourceManager.GetString("Alphapeptdeep_Blib_failed_to_complete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AlphaPeptDeep Finished in {0} minutes {1} seconds.
-        /// </summary>
-        public static string Alphapeptdeep_Process_Finished_in_time {
-            get {
-                return ResourceManager.GetString("Alphapeptdeep_Process_Finished_in_time", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Warning: The predicted library will be incomplete, due to the following unknown modifications detected: 
         ///
         ///{0}
@@ -249,6 +222,16 @@ namespace pwiz.Skyline.Model {
         public static string Alphapeptdeep_Warn_unknown_modification {
             get {
                 return ResourceManager.GetString("Alphapeptdeep_Warn_unknown_modification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AlphaPeptDeep finished in {0} minutes {1} seconds..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes" +
+                        "__1__seconds_", resourceCulture);
             }
         }
         
@@ -268,6 +251,25 @@ namespace pwiz.Skyline.Model {
         public static string AlphapeptdeepLibraryBuilder_Importing_spectral_library {
             get {
                 return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_Importing_spectral_library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BlibBuild completed successfully..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfull" +
+                        "y_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BlibBuild failed to complete..
+        /// </summary>
+        public static string AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_ {
+            get {
+                return ResourceManager.GetString("AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_", resourceCulture);
             }
         }
         
@@ -1300,15 +1302,6 @@ namespace pwiz.Skyline.Model {
         public static string MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries {
             get {
                 return ResourceManager.GetString("MProphetResultsHandler_ChangePeaks_Adjusting_peak_boundaries", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Install.
-        /// </summary>
-        public static string NvidiaInstaller_Install {
-            get {
-                return ResourceManager.GetString("NvidiaInstaller_Install", resourceCulture);
             }
         }
         

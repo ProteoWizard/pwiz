@@ -70,15 +70,6 @@ namespace pwiz.Skyline.Model.Koina.Models {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Warning: Peptide {0} has modification with Unimod accession {1}, which is not unique, Skyline will use modification {2} in this case..
-        /// </summary>
-        public static string BuildPrecursorTable_NonUnique_ModificationAccession {
-            get {
-                return ResourceManager.GetString("BuildPrecursorTable_NonUnique_ModificationAccession", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Warning: Peptide {0} has modification {1} with Unimod ID of UNIMOD:{2}, which is not yet supported by the {2} prediction tool. This peptide will be skipped!.
         /// </summary>
         public static string BuildPrecursorTable_Unimod_UnsupportedModification {

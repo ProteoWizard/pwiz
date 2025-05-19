@@ -81,8 +81,6 @@ namespace pwiz.Skyline.SettingsUI
             BiblioSpecLiteBuilder.EXT_SSL,
         };
 
-        public MultiButtonMsgDlg PythonDlg { get; private set; }
-        
         public enum Pages { properties, files, learning }
 
         public class PropertiesPage : IFormView { }
@@ -93,11 +91,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             new PropertiesPage(), new FilesPage(), new LearningPage(),
         };
-        public enum DataSourcePages { files, alpha, carafe, koina }
         private bool IsAlphaEnabled => true;
-        private bool IsCarafeEnabled => false;
-        private string AlphapeptdeepPythonVirtualEnvironmentDir => AlphapeptdeepLibraryBuilder.ScriptsDir;
-        // private string CarafePythonVirtualEnvironmentDir => CarafeLibraryBuilder.ScriptsDir;
+        private bool IsCarafeEnabled => false;  // TODO(dshteyn): Implement and enable
+        
+        public enum DataSourcePages { files, alpha, carafe, koina }
 
         private readonly MessageBoxHelper _helper;
         private readonly IDocumentUIContainer _documentUiContainer;
@@ -105,9 +102,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<IrtStandard> _driverStandards;
 
+        // Values used to keep from overwriting user changes to synchronized fields
         private string _lastUpdatedFileName;
         private string _lastUpdatedLibName;
-        public PythonInstaller PythonInstaller { get; private set; }
+
         public BuildLibraryDlg(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -189,11 +187,6 @@ namespace pwiz.Skyline.SettingsUI
 
         public ILibraryBuilder Builder { get; private set; }
 
-        public void ResetBuilder()
-        {
-            Builder = null;
-        }
-
         public IEnumerable<string> InputFileNames
         {
             get => Grid.FilePaths;
@@ -202,20 +195,13 @@ namespace pwiz.Skyline.SettingsUI
 
         public string AddLibraryFile { get; private set; }
 
-        private SrmDocument DocumentUI => _documentUiContainer.DocumentUI;
-      
-        private bool ValidateBuilder(bool validateInputFiles, bool createDlg = false, bool cleanUp = false, bool newBuilder = false)
+        private bool ValidateBuilder(bool validateInputFiles)
         {
             string name;
             if (!_helper.ValidateNameTextBox(textName, out name))
                 return false;
 
             string outputPath = textPath.Text;
-
-            if (newBuilder)
-            {
-                ResetBuilder();
-            }
 
             if (string.IsNullOrEmpty(outputPath))
             {
@@ -274,7 +260,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else if (radioAlphaSource.Checked)
                 {
-                    if (!CreateAlphaBuilder(name, outputPath, createDlg, cleanUp, newBuilder))
+                    if (!CreateAlphaBuilder(name, outputPath))
                         return false;
                 }
                 else
@@ -304,46 +290,39 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
 
-                    if (Builder == null && newBuilder)
+                    Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
                     {
-                        Builder = new BiblioSpecLiteBuilder(name, outputPath, InputFileNames.ToArray(), targetPeptidesChosen)
-                        {
-                            Action = LibraryBuildAction,
-                            IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
-                            KeepRedundant = LibraryKeepRedundant,
-                            ScoreThresholdsByFile = thresholdsByFile,
-                            Id = Helpers.MakeId(textName.Text),
-                            IrtStandard = _driverStandards.SelectedItem,
-                            PreferEmbeddedSpectra = PreferEmbeddedSpectra
-                        };
-                        BuilderLibFilepath = Builder.BuilderLibraryPath;
-                    }
+                        Action = LibraryBuildAction,
+                        IncludeAmbiguousMatches = cbIncludeAmbiguousMatches.Checked,
+                        KeepRedundant = LibraryKeepRedundant,
+                        ScoreThresholdsByFile = thresholdsByFile,
+                        Id = Helpers.MakeId(textName.Text),
+                        IrtStandard = _driverStandards.SelectedItem,
+                        PreferEmbeddedSpectra = PreferEmbeddedSpectra
+                    };
+                    BuilderLibFilepath = Builder.BuilderLibraryPath;
                 }
             }
             return true;
         }
 
-        private bool CreateAlphaBuilder(string name, string outputPath, bool createDlg, bool cleanUp, bool newBuilder)
+        private bool CreateAlphaBuilder(string name, string outputPath)
         {
-            if (!SetupPythonEnvironmentForAlpha(createDlg))
+            if (!SetupPythonEnvironmentForAlpha())
             {
-                if (cleanUp)
-                    PythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
                 return false;
             }
 
-            if (!_documentUiContainer.Document.HasPeptides)
+            var doc = _documentUiContainer.DocumentUI;
+            if (!doc.HasPeptides)
             {
                 _helper.ShowTextBoxError(tabControlMain,
                     SettingsUIResources.BuildLibraryDlg_Current_Skyline_document_is_missing_peptides);
                 return false;
             }
-            else if (Builder == null && newBuilder)
-            {
-                Builder = new AlphapeptdeepLibraryBuilder(name, outputPath,
-                    AlphapeptdeepPythonVirtualEnvironmentDir, DocumentUI, IrtStandard);
-                BuilderLibFilepath = Builder.BuilderLibraryPath;
-            }
+
+            Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard);
+            BuilderLibFilepath = Builder.BuilderLibraryPath;
 
             return true;
         }
@@ -381,8 +360,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Still construct the library builder, otherwise a user might configure Koina
                 // incorrectly, causing the build to silently fail
-                ResetBuilder();
-
                 Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
                     peptidesPerPrecursor, precursors, nce);
                 
@@ -397,64 +374,64 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private bool SetupPythonEnvironmentForAlpha(bool createDlg = true)
+        private bool SetupPythonEnvironmentForAlpha()
         {
-            if (PythonInstaller == null)
-                PythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
-            else
-                PythonInstaller.ClearPendingTasks();
+            var pythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
 
-            Cursor = Cursors.WaitCursor;
+            using (new WaitCursor(this));
+            
             btnNext.Enabled = false;
-
-            if (PythonInstaller.IsPythonVirtualEnvironmentReady() && PythonInstaller.IsNvidiaEnvironmentReady())
+            
+            bool setupSuccess = false;
+            try
             {
-                Cursor = Cursors.Default;
+                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
+            }
+            finally
+            {
+                // If not a successful installation, try to clean-up before leaving
+                if (!setupSuccess)
+                    pythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+
                 btnNext.Enabled = true;
+            }
+
+            return setupSuccess;
+        }
+
+        private bool SetupPythonEnvironmentInternal(PythonInstaller pythonInstaller)
+        {
+            if (pythonInstaller.IsPythonVirtualEnvironmentReady() && pythonInstaller.IsNvidiaEnvironmentReady())
+            {
                 return true;
             }
-            else if (!createDlg)
-            {
-                Cursor = Cursors.Default;
-                btnNext.Enabled = true;
-                return false;
-            }
 
-            if (!PythonInstaller.IsPythonVirtualEnvironmentReady())
+            if (!pythonInstaller.IsPythonVirtualEnvironmentReady())
             {
-                PythonDlg = new MultiButtonMsgDlg(
+                using var pythonDlg = new MultiButtonMsgDlg(
                     string.Format(ToolsUIResources.PythonInstaller_BuildPrecursorTable_Python_0_installation_is_required,
-                        AlphapeptdeepLibraryBuilder.PythonVersion, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP), string.Format(Resources.OK));
-                if (PythonDlg.ShowDialog(this) == DialogResult.Cancel)
+                        AlphapeptdeepLibraryBuilder.PythonVersion, AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP), 
+                    Resources.OK);
+                
+                if (pythonDlg.ShowDialog(this) == DialogResult.Cancel)
                 {
-                    PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
                     return false;
                 }
-                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
+                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
-                    if (!PythonDlg.IsDisposed)
-                        PythonDlg.Dispose();
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
                     return false;
                 }
-
             }
-            else if (!PythonInstaller.IsNvidiaEnvironmentReady())
+            else if (!pythonInstaller.IsNvidiaEnvironmentReady())
             {
-                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, PythonInstaller))
+                if (!PythonInstallerUI.InstallPythonVirtualEnvironment(this, pythonInstaller))
                 {
-                    Cursor = Cursors.Default;
-                    btnNext.Enabled = true;
-                    return false;  //Install was cancelled, 
+                    return false;
                 }
             }
-            Cursor = Cursors.Default;
-            btnNext.Enabled = true;
             return true;
         }
+
         private void textName_TextChanged(object sender, EventArgs e)
         {
             string name = textName.Text;
@@ -518,17 +495,18 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            Cursor.Current = Cursors.WaitCursor;
+            using (new WaitCursor(this));
+            
             if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (ValidateBuilder(true, true, true, true))
+                if (ValidateBuilder(true))
                 {
                     Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
                     Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
                     DialogResult = DialogResult.OK;
                 }
             }
-            else if (ValidateBuilder(false, true, false, true))
+            else if (ValidateBuilder(false))
             {
                 Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
@@ -543,7 +521,6 @@ namespace pwiz.Skyline.SettingsUI
                 else
                     btnNext.Enabled = true;
             }
-            Cursor.Current = Cursors.Default;
         }
 
         private void btnPrevious_Click(object sender, EventArgs e)

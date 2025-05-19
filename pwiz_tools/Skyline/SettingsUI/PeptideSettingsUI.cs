@@ -743,7 +743,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (editLibDlg.ShowDialog(this) == DialogResult.OK)
                     {
                         _driverLibrary.List.Add(editLibDlg.LibrarySpec);
-                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] { editLibDlg.LibrarySpec }).ToArray());
+                        _driverLibrary.LoadList(_driverLibrary.Chosen.Concat(new[] {editLibDlg.LibrarySpec}).ToArray());
                     }
 
                     return;
@@ -764,6 +764,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (warnMessageDlg.ShowDialog() == DialogResult.Cancel)
                     {
+                        IsBuildingLibrary = false;
                         return;
                     }
                 }

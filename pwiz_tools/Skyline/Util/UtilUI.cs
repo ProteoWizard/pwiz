@@ -458,5 +458,54 @@ window.onload = submitForm;
             ZedGraphClipboard.AddToContextMenu(graphControl, menuStrip);            
         }
     }
+
+    /// <summary>
+    /// A utility class that sets the cursor to a wait cursor (Cursors.WaitCursor) in its constructor
+    /// and restores it to the default cursor (Cursors.Default) in the Dispose method for use with
+    /// a using clause.
+    /// </summary>
+    public class WaitCursor : IDisposable
+    {
+        private readonly Cursor _previousCursor;
+        private readonly Control _control;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaitCursor"/> class and sets Cursor.Current to Cursors.WaitCursor.
+        /// </summary>
+        public WaitCursor()
+        {
+            _previousCursor = Cursor.Current;
+            Cursor.Current = Cursors.WaitCursor;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="WaitCursor"/> class and sets the specified control's cursor to Cursors.WaitCursor.
+        /// </summary>
+        /// <param name="control">The control whose cursor will be set to Cursors.WaitCursor.</param>
+        /// <exception cref="ArgumentNullException">Thrown if the <paramref name="control"/> is null.</exception>
+        public WaitCursor(Control control)
+        {
+            _control = control ?? throw new ArgumentNullException(nameof(control));
+            _previousCursor = control.Cursor;
+            control.Cursor = Cursors.WaitCursor;
+        }
+
+        /// <summary>
+        /// Restores the cursor to its previous state.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_control != null)
+            {
+                // Restore the control's cursor
+                _control.Cursor = _previousCursor;
+            }
+            else
+            {
+                // Restore Cursor.Current
+                Cursor.Current = _previousCursor;
+            }
+        }
+    }
 }
 

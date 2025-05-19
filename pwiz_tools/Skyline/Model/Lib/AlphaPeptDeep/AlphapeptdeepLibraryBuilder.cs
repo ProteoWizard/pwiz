@@ -176,8 +176,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 .ToDsvLine(TextUtil.SEPARATOR_TSV));
         }
 
-        private string PythonVirtualEnvironmentScriptsDir { get; }
-        private string PeptdeepExecutablePath => Path.Combine(PythonVirtualEnvironmentScriptsDir, PEPTDEEP_EXECUTABLE);
+        private string PeptdeepExecutablePath => Path.Combine(ScriptsDir, PEPTDEEP_EXECUTABLE);
 
         private string SettingsFilePath => Path.Combine(RootDir, SETTINGS_FILE_NAME);
         private string InputFileName => INPUT + UNDERSCORE + EXT_TSV; 
@@ -222,11 +221,10 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 { ION_MOBILITY, null}
             };
 
-        public AlphapeptdeepLibraryBuilder(string libName, string libOutPath, string pythonVirtualEnvironmentScriptsDir,
+        public AlphapeptdeepLibraryBuilder(string libName, string libOutPath,
             SrmDocument document, IrtStandard irtStandard) : base(document, irtStandard)
         {
             LibrarySpec = new BiblioSpecLiteSpec(libName, libOutPath);
-            PythonVirtualEnvironmentScriptsDir = pythonVirtualEnvironmentScriptsDir;
 
             RootDir = Path.GetDirectoryName(libOutPath);
             if (RootDir != null)
@@ -336,7 +334,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 timer.Start();
                 pr.Run(psi, string.Empty, progress, ref progressStatus, new FilteredUserMessageWriter(filterStrings), ProcessPriorityClass.BelowNormal, true);
                 timer.Stop();
-                string message = string.Format(ModelResources.Alphapeptdeep_Process_Finished_in_time, timer.Elapsed.Minutes, timer.Elapsed.Seconds);
+                string message = string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_, timer.Elapsed.Minutes, timer.Elapsed.Seconds);
                 Messages.WriteAsyncUserMessage(message);
             }
             catch (Exception ex)
@@ -431,11 +429,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
             if (completed)
             {
-                Messages.WriteAsyncUserMessage(ModelResources.Alphapeptdeep_Blib_completed_ok);
+                Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_completed_successfully_);
             }
             else
             {
-                Messages.WriteAsyncUserMessage(ModelResources.Alphapeptdeep_Blib_failed_to_complete);
+                Messages.WriteAsyncUserMessage(ModelResources.AlphapeptdeepLibraryBuilder_ImportSpectralLibrary_BlibBuild_failed_to_complete_);
             }
             File.Delete(incompleteBlibPath);
         }
