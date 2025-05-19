@@ -539,7 +539,7 @@
     <value>このデータファイルでは、{0}スペクトルは利用できません。代わりに{1}を表示しています。</value>
   </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
-    <value>dotp: {0:0.0000}</value>
+    <value>{0:0.0000}</value>
   </data>
   <data name="GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted" xml:space="preserve">
     <value>スペクトルの読み込みに失敗しました。ライブラリが破損している可能性があります。</value>
@@ -738,5 +738,17 @@
   </data>
   <data name="AlignmentForm_UpdateGraph_Peptides" xml:space="preserve">
     <value>ペプチド</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_PeakArea" xml:space="preserve">
+    <value>ピーク面積</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_LogPeakArea" xml:space="preserve">
+    <value>ピーク面積をログ</value>
+  </data>
+  <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
+    <value>ランク</value>
+  </data>
+  <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
+    <value>定量クロマトグラムがありません</value>
   </data>
 </root>

@@ -18,12 +18,13 @@
  */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.SkylineTestUtil;
 using ZedGraph;
 
 namespace pwiz.SkylineTest
 {
     [TestClass]
-    public class ZedGraphTest
+    public class ZedGraphTest : AbstractUnitTest
     {
         /// <summary>
         /// Verifies that changing <see cref="FontSpec.Size"/> can be done repeatedly without exception.

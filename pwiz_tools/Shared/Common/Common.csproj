@@ -447,6 +447,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.resx">
       <DependentUpon>FindColumnDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="DataBinding\Controls\Editor\FindColumnDlg.zh-CHS.resx">
       <DependentUpon>FindColumnDlg.cs</DependentUpon>

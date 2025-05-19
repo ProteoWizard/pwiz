@@ -184,4 +184,10 @@
   <data name="RCalcIrt_RequireUsable_Unexpected_use_of_iRT_calculator_before_successful_initialization_" xml:space="preserve">
     <value>初始化成功前对 iRT 计算器的意外使用。</value>
   </data>
+  <data name="IncompleteStandardException_MissingTargetsMessage_The_calculator__0__requires_at_least__1__of_its__2__standard_peptides__The_following__3__peptides_are_missing_" xml:space="preserve">
+    <value>计算器{0}需要至少 {1}个{2}标准肽段。缺少以下 {3} 个肽段：</value>
+  </data>
+  <data name="IrtStandard_ReadXml_Standard_peptides_must_specify_a_sequence_and_score_" xml:space="preserve">
+    <value>标准肽段必须指定序列和得分。</value>
+  </data>
 </root>

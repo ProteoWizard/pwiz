@@ -47,7 +47,7 @@
             this.zedGraphControl1.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl1_ContextMenuBuilder);
             this.zedGraphControl1.Resize += new System.EventHandler(this.zedGraphControl1_Resize);
             // 
-            // HierarchicalClusterGraph
+            // HeatMapGraph
             // 
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;

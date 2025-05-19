@@ -362,4 +362,7 @@
   <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
     <value>正在向文档中添加检测到的特征</value>
   </data>
+  <data name="SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_" xml:space="preserve">
+    <value>进行搜索时无法关闭向导。是否取消搜索？</value>
+  </data>
 </root>

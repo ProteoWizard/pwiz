@@ -345,6 +345,9 @@
   <data name="actionButton.TabIndex" type="System.Int32, mscorlib">
     <value>7</value>
   </data>
+  <data name="actionButton.Text" xml:space="preserve">
+    <value>開く(&amp;O)</value>
+  </data>
   <data name="&gt;&gt;actionButton.Name" xml:space="preserve">
     <value>actionButton</value>
   </data>

@@ -103,6 +103,9 @@
   <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
     <value>Koina 不支持“{1}” 中氨基酸“{0}”</value>
   </data>
+  <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
+    <value>Koina 不支持 '{2}' 中索引 '{1}' 处的修饰 '{0}'</value>
+  </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
     <value>构建 Koina 输入</value>
   </data>
@@ -158,7 +161,6 @@
     <value>无谱图库匹配</value>
   </data>
   <data name="KoinaModel_PredictBatches_Error___0__retrying__1_____2__" xml:space="preserve">
-    <value>Error: {0} retrying {1}/{2}.</value>
-    <comment>Needs Review:Missing translation</comment>
+    <value>错误：{0}正在重试{1}/{2}。</value>
   </data>
 </root>

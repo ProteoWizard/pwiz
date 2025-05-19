@@ -194,8 +194,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
             set
             {
-                IonMatchTolerance = value.Value;
                 IonMatchToleranceUnits = value.Unit;
+                IonMatchTolerance = value.Value;
             }
         }
 
