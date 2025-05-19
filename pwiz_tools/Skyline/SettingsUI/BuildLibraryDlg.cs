@@ -300,7 +300,6 @@ namespace pwiz.Skyline.SettingsUI
                         IrtStandard = _driverStandards.SelectedItem,
                         PreferEmbeddedSpectra = PreferEmbeddedSpectra
                     };
-                    BuilderLibFilepath = Builder.BuilderLibraryPath;
                 }
             }
             return true;
@@ -322,12 +321,9 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             Builder = new AlphapeptdeepLibraryBuilder(name, outputPath, doc, IrtStandard);
-            BuilderLibFilepath = Builder.BuilderLibraryPath;
 
             return true;
         }
-
-        public string BuilderLibFilepath { get; private set; }
 
         private bool CreateKoinaBuilder(string name, string outputPath, int nce = 27)
         {
@@ -362,8 +358,6 @@ namespace pwiz.Skyline.SettingsUI
                 // incorrectly, causing the build to silently fail
                 Builder = new KoinaLibraryBuilder(doc, name, outputPath, () => true, IrtStandard,
                     peptidesPerPrecursor, precursors, nce);
-                
-                BuilderLibFilepath = Builder.BuilderLibraryPath;
             }
             catch (Exception ex)
             {

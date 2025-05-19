@@ -599,9 +599,6 @@ namespace pwiz.Skyline.Model.Lib
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
         bool BuildLibrary(IProgressMonitor progress);
         
-        // TODO(brendanx): Is there a reason this is not just always LibrarySpec.FilePath?
-        string BuilderLibraryPath { get; }
-
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
         /// </summary>

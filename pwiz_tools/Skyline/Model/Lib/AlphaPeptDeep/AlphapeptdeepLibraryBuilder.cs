@@ -162,8 +162,6 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
 
         public LibrarySpec LibrarySpec { get; private set; }
 
-        string ILibraryBuilder.BuilderLibraryPath => TransformedOutputSpectraLibFilepath;
-        
         protected override IEnumerable<string> GetHeaderColumnNames(bool training)
         {
             return PrecursorTableColumnNames;
@@ -183,7 +181,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         private string OutputModelsDir => Path.Combine(RootDir, OUTPUT_MODELS);
         private string OutputSpectralLibsDir => Path.Combine(RootDir, OUTPUT_SPECTRAL_LIBS);
         private string OutputSpectraLibFilepath =>  Path.Combine(OutputSpectralLibsDir, OUTPUT_SPECTRAL_LIB_FILE_NAME);
-        private string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
+
+        public string TransformedOutputSpectraLibFilepath => Path.Combine(OutputSpectralLibsDir, TRANSFORMED_OUTPUT_SPECTRAL_LIB_FILE_NAME);
 
         public string RootDir { get; private set; }
 

@@ -57,7 +57,7 @@ namespace TestPerf
         /// </summary>
         protected override bool IsRecordMode => false;
 
-        [TestMethod]
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)] // Maybe all the setup dependencies also
         public void TestAlphaPeptDeepBuildLibrary()
         {
             if (IsCleanPythonMode)
@@ -198,8 +198,10 @@ namespace TestPerf
                 PythonInstaller.SimulatedInstallationState = simulatedInstallationState;
                 RunUI(buildLibraryDlg.OkWizardPage);
             }
-            
-            string builtLibraryPath = buildLibraryDlg.BuilderLibFilepath;
+
+            var alphaPeptDeepBuilder = buildLibraryDlg.Builder as AlphapeptdeepLibraryBuilder;
+            Assert.IsNotNull(alphaPeptDeepBuilder);
+            string builtLibraryPath = alphaPeptDeepBuilder.TransformedOutputSpectraLibFilepath;
 
             if (iRTtype != null)
             {

@@ -121,8 +121,6 @@ namespace pwiz.Skyline.Model.Lib
         public string BuildCommandArgs { get { return _buildCommandArgs; } }
         public string BuildOutput { get { return _buildOutput; } }
 
-        public string BuilderLibraryPath => BuildOutput;
-
         private string[] _ambiguousMatches;
         private string _buildCommandArgs;
         private string _buildOutput;
