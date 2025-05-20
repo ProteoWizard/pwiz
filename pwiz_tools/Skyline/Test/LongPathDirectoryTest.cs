@@ -28,21 +28,24 @@ namespace pwiz.SkylineTest
     public class LongPathDirectoryTest : AbstractUnitTest
     {
         [TestMethod]
-        //Simple test that creates a long path directory (one with more than 256 characters) then deletes it using DirectoryEx.SafeDeleteLongPath
+        //Simple test to exercise DirectoryEx.SafeDeleteLongPath
         public void DirectoryWithLongPathTest()
         {
-            string inputPath = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"LongPath");
-            
-            //Make the directory path longer than 256 characters
-            for (int i = 0; i < 32; i++)
+            string inputPath = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), @"LongPathDirectoryTest");
+
+            if (PythonInstaller.ValidateEnableLongpaths())
             {
-                inputPath = Path.Combine(inputPath, @"LongPath");
+                //Make the directory path longer than 256 characters, but only when the registry has LongPathsEnabled set
+                for (int i = 0; i < 12; i++)
+                {
+                    inputPath = Path.Combine(inputPath, @"LongPathDirectoryTest");
+                }
+                Assert.IsTrue(inputPath.Length > 256);
             }
-
-            Assert.IsTrue(inputPath.Length > 256);
-
-            if (!PythonInstaller.ValidateEnableLongpaths())
-                Assert.Fail($@"Error: Cannot finish LongPathDirectoryTest because {PythonInstaller.REG_FILESYSTEM_KEY}\{PythonInstaller.REG_LONGPATHS_ENABLED} is not set and have insufficient permissions to set it");
+            else
+            {
+                Assert.IsFalse(inputPath.Length > 256);
+            }
 
             Directory.CreateDirectory(inputPath);
             Assert.IsTrue(Directory.Exists(inputPath));
