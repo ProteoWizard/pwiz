@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.Tools;
@@ -27,6 +29,11 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class LongPathDirectoryTest : AbstractUnitTest
     {
+        /// <summary>
+        /// When true console output is added to clarify what the test has accomplished
+        /// </summary>
+        public bool IsVerboseMode => true;
+
         [TestMethod]
         //Simple test to exercise DirectoryEx.SafeDeleteLongPath
         public void DirectoryWithLongPathTest()
@@ -46,6 +53,9 @@ namespace pwiz.SkylineTest
             {
                 Assert.IsFalse(inputPath.Length > 256);
             }
+
+            if (IsVerboseMode)
+                Console.WriteLine($@"Creating directory with path ""{inputPath}"" that has length {inputPath.Length} characters");
 
             Directory.CreateDirectory(inputPath);
             Assert.IsTrue(Directory.Exists(inputPath));
