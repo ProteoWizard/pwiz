@@ -335,7 +335,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
             getCombinedSpectrumData(ie.function, ie.block, mzArray, intensityArray, mobilityOrQuadLowArray->data, quadHighArray->data, doCentroid);
             result->defaultArrayLength = mzArray.size();
 
-            result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
+            result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts, xUnit); // Donate mass and intensity buffers to result vectors
 
             if (hasSonarFunctions())
             {
@@ -386,7 +386,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLeve
                     *mzArrayItr = masses[i];
                     *intensityArrayItr = intensities[i];
                 }
-                result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts); // Donate mass and intensity buffers to result vectors
+                result->swapMZIntensityArrays(mzArray, intensityArray, MS_number_of_detector_counts, xUnit); // Donate mass and intensity buffers to result vectors
             }
         }
     }
