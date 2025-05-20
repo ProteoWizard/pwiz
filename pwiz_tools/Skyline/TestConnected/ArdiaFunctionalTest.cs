@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -27,6 +28,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model.ElementLocators;
 using pwiz.Skyline.Model.Results.RemoteApi;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -85,6 +87,27 @@ namespace pwiz.SkylineTestConnected
             _openPaths = SmallPaths;
 
             RunFunctionalTest();
+        }
+
+        [TestMethod]
+        public void TestArdiaUserConfigSettings()
+        {
+            var ardiaAccount = new ArdiaAccount("https://ardiaserver.example.com", "ardia_username", "ardia password", "ardia token value");
+
+            var remoteAccountList = new RemoteAccountList { ardiaAccount };
+
+            var stringWriter = new StringWriter();
+            var xmlSerializer = new XmlSerializer(typeof(RemoteAccountList));
+            xmlSerializer.Serialize(stringWriter, remoteAccountList);
+            var accountListXml = stringWriter.ToString();
+            
+            // token's plaintext value should not be in serialized XML
+            Assert.AreEqual(-1, accountListXml.IndexOf(ardiaAccount.Token, StringComparison.Ordinal));
+
+            var deserializedAccountList = (RemoteAccountList)xmlSerializer.Deserialize(new StringReader(accountListXml));
+            Assert.AreEqual(remoteAccountList.Count, deserializedAccountList.Count);
+            Assert.AreEqual(ardiaAccount, deserializedAccountList[0]);
+            Assert.AreEqual(ardiaAccount.Token, ((ArdiaAccount)deserializedAccountList[0]).Token);
         }
 
         //[TestMethod]

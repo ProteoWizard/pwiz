@@ -52,7 +52,6 @@ namespace pwiz.Skyline.Alerts
     {
         private static readonly bool FORCE_DO_REGISTRATION_WITH_ARDIA_STEP  = false;
 
-
         private static readonly int TESTING_WEBVIEW_WIZARD_PAGE_INDEX = 0;
         private static readonly int MAIN_LOADING_MESSAGE_WIZARD_PAGE_INDEX = 1;
         private static readonly int MAIN_REGISTER_SKYLINE_WIZARD_PAGE_INDEX = 2;
@@ -69,17 +68,14 @@ namespace pwiz.Skyline.Alerts
 
         private enum RegisterDevice_UsingSystemDefaultBrowser_ResultEnum
         {
-            SUCCESS, FAIL_GENERAL, FAIL_NOT_AUTHORIZED
+            SUCCESS,
+            FAIL_GENERAL,
+            FAIL_NOT_AUTHORIZED
         }
 
-        public ArdiaAccount Account { get; private set; }
-        public Func<HttpClient> AuthenticatedHttpClientFactory { get; private set; }
-
-        private Uri _ardiaServer_URI;
-        private string _ardiaServerURL_BaseURL;
-        private string _ardiaServerURL_Transport;
-
-
+        private readonly Uri _ardiaServer_URI;
+        private readonly string _ardiaServerURL_BaseURL;
+        private readonly string _ardiaServerURL_Transport;
 
         //  Used for log in to Ardia in Default System Browser
         private Process _browserProcess;
@@ -87,10 +83,8 @@ namespace pwiz.Skyline.Alerts
         private HttpListener _httpListener;
         private int _httpListener_Port;
 
-
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         private CancellationToken _cancellationToken;
-
 
         public ArdiaLoginDlg(ArdiaAccount account/*, bool headless = false*/)
         {
@@ -101,49 +95,26 @@ namespace pwiz.Skyline.Alerts
             Account = account;
             _tempUserDataFolder = new TemporaryDirectory(null, @"~SK_WebView2");
 
-
-            if (string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
-                string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password))
+            // Login via System Default Browser. Standard way to Login
+            if (UseSystemBrowserForLogin())
             {
-                //  Login via System Default Browser.   Standard way to Login
-
                 wizardPagesMain.SelectedIndex = MAIN_LOADING_MESSAGE_WIZARD_PAGE_INDEX;
             }
+            //  Login via Embedded WebView. Used for Programmatic Login for Testing Only
             else
-            {   //   Login via Embedded WebView.    Used for Programmatic Login for Testing Only
-
+            {   
                 wizardPagesMain.SelectedIndex = TESTING_WEBVIEW_WIZARD_PAGE_INDEX;
             }
 
-            {
-                var serverUrl = Account.ServerUrl;
+            // CONSIDER: validate server_url attribute of a user.config <ardia_account> entry is ALWAYS absolute
+            _ardiaServer_URI = new Uri(Account.ServerUrl, UriKind.Absolute);
 
-                _ardiaServer_URI = new Uri(serverUrl, UriKind.Absolute);
+            _ardiaServerURL_BaseURL = _ardiaServer_URI.Host;
 
-                var transport_HTTPS = @"https://";
-                var transport_HTTP = @"http://";
+            // CONSIDER: require https. Is there any scenario for http:// use with Ardia API?
+            _ardiaServerURL_Transport = _ardiaServer_URI.Scheme + Uri.SchemeDelimiter;
 
-                if (serverUrl.StartsWith(transport_HTTPS))
-                {
-                    _ardiaServerURL_BaseURL = serverUrl.Substring(transport_HTTPS.Length);
-                    _ardiaServerURL_Transport = transport_HTTPS;
-                }
-                else if (serverUrl.StartsWith(transport_HTTP))
-                {
-                    _ardiaServerURL_BaseURL = serverUrl.Substring(transport_HTTP.Length);
-                    _ardiaServerURL_Transport = transport_HTTP;
-                }
-                else
-                {
-                    //  Should not get here
-                    _ardiaServerURL_BaseURL = serverUrl;
-                    _ardiaServerURL_Transport = "";
-                }
-                
-            }
-
-
-            this.FormClosing += (sender, e) =>
+            FormClosing += (sender, e) =>
             {
                 _cancellationTokenSource.Cancel();
 
@@ -180,6 +151,15 @@ namespace pwiz.Skyline.Alerts
             //     Visible = false;
             // }
         }
+
+        private bool UseSystemBrowserForLogin()
+        {
+            return string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
+                   string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password);
+        }
+
+        public ArdiaAccount Account { get; }
+        public Func<HttpClient> AuthenticatedHttpClientFactory { get; private set; }
 
         ///////////////////
         ///  
@@ -260,37 +240,14 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        // private ArdiaRegistrationCodeEntry _ardia_ArdiaRegistrationCodeEntry__TEMP; //  TODO  Only used to hold ArdiaRegistrationCodeEntry until store in Settings
-
         private ArdiaRegistrationCodeEntry GetSavedArdiaRegistrationEntry()
         {
-            //  Temp to NOT store in Settings
-
-            // return _ardia_ArdiaRegistrationCodeEntry__TEMP;
-
-            //  END Temp NOT store in Settings
-
-            ArdiaRegistrationCodeEntry entry = null;
-
-            {
-                if (!Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(_ardiaServerURL_BaseURL,
-                        out entry))
-                {
-                    entry = null;
-                }
-            }
-            
+            Settings.Default.ArdiaRegistrationCodeEntries.TryGetValue(_ardiaServerURL_BaseURL, out var entry);
             return entry;
         }
 
         private void SetSavedArdiaRegistrationData(ArdiaRegistrationCodeEntry entry)
         {
-            //  Temp to NOT store in Settings
-
-            // _ardia_ArdiaRegistrationCodeEntry__TEMP = entry;
-
-            //  END Temp NOT store in Settings
-
             Settings.Default.ArdiaRegistrationCodeEntries[_ardiaServerURL_BaseURL] = entry;
         }
 
@@ -303,6 +260,7 @@ namespace pwiz.Skyline.Alerts
         /// the Ardia API.
         /// </summary>
         /// <returns>An <see cref="HttpClient"/> configured for calling the Ardia API.</returns>
+        // TODO: change to a stateless factory
         private Func<HttpClient> GetFactory()
         {
             return () =>
@@ -336,12 +294,12 @@ namespace pwiz.Skyline.Alerts
             {
                 var sessionCookieString = ArdiaAccount.GetSessionCookieString(Account);
 
-                if (sessionCookieString != null && (!sessionCookieString.IsNullOrEmpty()))
+                if (sessionCookieString != null && !sessionCookieString.IsNullOrEmpty())
                 {
                     _bffCookie = new Cookie(@"Bff-Host", sessionCookieString);
                     AuthenticatedHttpClientFactory = GetFactory();
 
-                    // check that cookie is still valid
+                    // Check that cookie is still valid by calling the remote API and checking for a successful response
                     using var client = AuthenticatedHttpClientFactory();
                     var response = client.GetAsync(Account.GetFolderContentsUrl()).Result;
                     try
@@ -356,19 +314,16 @@ namespace pwiz.Skyline.Alerts
                     }
                 }
 
-                if (string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Username) ||
-                    string.IsNullOrEmpty(Account.TestingOnly_NotSerialized_Password))
+                // Login via System Default Browser.   Standard way to Login
+                if (UseSystemBrowserForLogin())
                 {
-                    //  Login via System Default Browser.   Standard way to Login
-
                     Initialize_LoginIn_SystemDefaultBrowser();
                 }
+                // Login via Embedded WebView.    Used for Programmatic Login for Testing Only
                 else
-                {   //   Login via Embedded WebView.    Used for Programmatic Login for Testing Only
-
+                {   
                     Initialize_LoginIn_WebView();
                 }
-
             }
             catch (Exception exception)
             {
@@ -465,7 +420,7 @@ namespace pwiz.Skyline.Alerts
         {
 
             // Create a new browser process to open the verification URL in the default system web browser
-            var browserProcess = new Process()
+            var browserProcess = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -1013,7 +968,7 @@ namespace pwiz.Skyline.Alerts
         // Method used to get the return and redirect URLs for the browser login process
         private string GetBrowserReturnUrl()
         {
-            var uriBuilder = new UriBuilder()
+            var uriBuilder = new UriBuilder
             {
                 Scheme = Uri.UriSchemeHttp,
                 Host = "localhost",
@@ -1492,11 +1447,11 @@ namespace pwiz.Skyline.Alerts
                 AppName = @"SkylineApp",
                 Version = skylineVersion,
                 PCName = Environment.MachineName,
-                RedirectUris = new List<string>() { @"http://localhost:5001/signin-oidc" },
-                PostLogoutRedirectUris = new List<string>() { @"http://localhost:5001/signout-oidc" },
+                RedirectUris = new List<string> { @"http://localhost:5001/signin-oidc" },
+                PostLogoutRedirectUris = new List<string> { @"http://localhost:5001/signout-oidc" },
                 ClientUri = @"http://localhost:5001",
-                Scopes = new List<string>() { @"openid", @"profile", @"offline_access", @"DataServerApi", @"IdentityServerApi" },
-                GrantTypes = new List<string>() { @"authorization_code", @"urn:ietf:params:oauth:grant-type:token-exchange" },
+                Scopes = new List<string> { @"openid", @"profile", @"offline_access", @"DataServerApi", @"IdentityServerApi" },
+                GrantTypes = new List<string> { @"authorization_code", @"urn:ietf:params:oauth:grant-type:token-exchange" },
             };
             var clientActivationInputData = JsonConvert.SerializeObject(clientActivationInput);
 
@@ -1526,7 +1481,6 @@ namespace pwiz.Skyline.Alerts
                 ClientName = clientCredentials.Name,
             };
         }
-
 
         public class CoreWebView2ExceptionWrapper : Exception
         {
@@ -1826,8 +1780,10 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-
         #region Helper classes from Ardia
+
+        // TODO: move model classes to Skyline.Model.Results.RemoteApi.Ardia
+
         // Class to hold the client code
         private class ClientCodeDto
         {
@@ -1841,7 +1797,6 @@ namespace pwiz.Skyline.Alerts
             public string clientIdStatus { get; set; }
             public string clientNameStatus { get; set; }
         }
-
 
         /// <summary>
         /// The New Client model.
@@ -1957,7 +1912,6 @@ namespace pwiz.Skyline.Alerts
             public ushort DeviceCodeLifetime { get; set; } = 300;
         }
 
-
         /// <summary>
         /// The model used to activate a client.
         /// </summary>
@@ -2018,7 +1972,6 @@ namespace pwiz.Skyline.Alerts
             /// </summary>
             public int AccessTokenLifetime { get; set; }
         }
-
 
         /// <summary>
         /// Represents the response from the client application.
@@ -2097,7 +2050,6 @@ namespace pwiz.Skyline.Alerts
             Disabled
         }
 
-
         /// <summary>
         /// Client credentials.
         /// </summary>
@@ -2144,7 +2096,5 @@ namespace pwiz.Skyline.Alerts
             public string ApplicationVersion { get; set; }
         }
         #endregion
-
     }
-
 }
