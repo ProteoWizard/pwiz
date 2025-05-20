@@ -180,6 +180,7 @@
     <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
+    <Compile Include="LongPathDirectoryTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
     <Compile Include="MatchExpressionTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
