@@ -165,7 +165,7 @@ namespace pwiz.Skyline.Alerts
                             if (thisBox.Text != currentText)
                                 thisBox.Text = currentText;
 
-                            thisBox.Cursor = Cursor.Current;    
+                            //thisBox.Cursor = Cursor.Show();    
                             //thisBox.Focus(); // Ensure focus is retained
                             thisBox.SelectionLength = 0;
                             thisBox.SelectionStart = thisBox.Text.Length;
