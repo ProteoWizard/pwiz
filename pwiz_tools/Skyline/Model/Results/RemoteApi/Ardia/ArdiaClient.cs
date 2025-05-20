@@ -204,10 +204,9 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         {
             var statusCode = response.StatusCode;
             var responseBody = response.Content.ReadAsStringAsync().Result;
+            response.Dispose();
 
             var errorMessage = new ErrorMessageBuilder(message).ExceptionMessage(e.Message).Uri(uri).Response(responseBody).ToString();
-
-            response?.Dispose();
 
             return new ArdiaServerException(statusCode, errorMessage, responseBody, e);
         }
