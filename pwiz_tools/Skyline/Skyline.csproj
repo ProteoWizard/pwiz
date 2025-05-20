@@ -29,7 +29,7 @@
     <TargetFrameworkProfile />
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
     <EnableSecurityDebugging>false</EnableSecurityDebugging>
-    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <!-- Make the assembly name configurable -->
     <MSBuildAssemblyName />
     <AssemblyName Condition=" '$(MSBuildAssemblyName)' == '' ">Skyline-daily</AssemblyName>
@@ -583,18 +583,6 @@
     <Compile Include="Model\FullScanProperties.cs" />
     <Compile Include="Model\IdPeptideDocNode.cs" />
     <Compile Include="Model\Proteome\AssociateProteinsResults.cs" />
-    <Compile Include="Model\Results\OpenMsDataFileParams.cs" />
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFileObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaFolderObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaResources.Designer.cs">
-      <DependentUpon>ArdiaResources.resx</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-    </Compile>
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\Ardia\ArdiaUrl.cs" />
     <Compile Include="Model\Lib\LibraryFiles.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectAccount.cs" />
     <Compile Include="Model\Results\RemoteApi\WatersConnect\WatersConnectFileObject.cs" />
@@ -1051,11 +1039,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
     </Compile>
-    <Compile Include="Model\Results\RemoteApi\RemoteApiResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>RemoteApiResources.resx</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\Optimization\OptimizationResources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1090,11 +1073,6 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>IonMobilityResources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiResources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>UnifiResources.resx</DependentUpon>
     </Compile>
     <Compile Include="Controls\Spectra\SpectraResources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -1142,12 +1120,6 @@
     <Compile Include="Model\Results\PeakIntegrator.cs" />
     <Compile Include="Model\Results\NormalizedValueCalculator.cs" />
     <Compile Include="Model\Results\NormalizeOption.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteAccountType.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteItem.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteServerException.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\RemoteUrl.cs" />
     <Compile Include="Model\Results\TimeIntervals.cs" />
     <Compile Include="Model\Results\TriggeredAcquisition.cs" />
     <Compile Include="Model\Serialization\AnnotationScrubber.cs" />
@@ -1198,12 +1170,6 @@
     <Compile Include="Controls\GroupComparison\VolcanoPlotPropertiesDlg.Designer.cs">
       <DependentUpon>VolcanoPlotPropertiesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiAccount.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFileObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiFolderObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiObject.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiSession.cs" />
-    <Compile Include="Model\Results\RemoteApi\Unifi\UnifiUrl.cs" />
     <Compile Include="Model\TargetResolver.cs" />
     <Compile Include="Model\TransitionGroupIonMobilityInfo.cs" />
     <Compile Include="SettingsUI\MetadataRuleEditor.cs">
@@ -2125,7 +2091,6 @@
     <Compile Include="Model\Results\IRetentionTimePredictor.cs" />
     <Compile Include="Model\Results\IsotopeDistInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
-    <Compile Include="Model\Results\MsDataFilePath.cs" />
     <Compile Include="Model\Results\MsxDemultiplexer.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -3750,18 +3715,6 @@
       <DependentUpon>FullScanPropertiesRes.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.ja.resx" />
-    <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>ArdiaResources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Ardia\ArdiaResources.zh-CHS.resx" />
-    <EmbeddedResource Include="Model\Results\RemoteApi\WatersConnect\WatersConnectResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>WatersConnectResources.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="Model\RetentionTimes\RetentionTimesResources.ja.resx">
       <DependentUpon>RetentionTimesResources.resx</DependentUpon>
     </EmbeddedResource>
@@ -5117,7 +5070,6 @@
     <Compile Include="Util\HistogramHelper.cs" />
     <Compile Include="Util\LongOperationRunner.cs" />
     <Compile Include="Util\CultureUtil.cs" />
-    <Compile Include="Util\DataSourceUtil.cs" />
     <Compile Include="Util\DirectSerializer.cs" />
     <Compile Include="Util\DockableFormEx.cs">
       <SubType>Form</SubType>
@@ -5131,7 +5083,6 @@
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />
-    <Compile Include="Util\NameValueParameters.cs" />
     <Compile Include="Util\PanoramaPublishUtil.cs" />
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
@@ -5728,19 +5679,6 @@
       <DependentUpon>GroupComparisonResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\RemoteApiResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>RemoteApiResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\RemoteApiResources.ja.resx">
-      <DependentUpon>RemoteApiResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\RemoteApiResources.zh-CHS.resx">
-      <DependentUpon>RemoteApiResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Optimization\OptimizationResources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
@@ -5830,19 +5768,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Model\IonMobility\IonMobilityResources.zh-CHS.resx">
       <DependentUpon>IonMobilityResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Unifi\UnifiResources.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <SubType>Designer</SubType>
-      <LastGenOutput>UnifiResources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Unifi\UnifiResources.ja.resx">
-      <DependentUpon>UnifiResources.resx</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Model\Results\RemoteApi\Unifi\UnifiResources.zh-CHS.resx">
-      <DependentUpon>UnifiResources.resx</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\Koina\Models\ModelsResources.resx">
@@ -6437,6 +6362,14 @@
       <Link>msconvert.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\ProteowizardWrapper\obj\x86\msconvert.exe.config">
+      <Link>msconvert.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\ProteowizardWrapper\obj\x64\msconvert.exe.config">
+      <Link>msconvert.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -6445,12 +6378,28 @@
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe.config">
+      <Link>BlibBuild.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibBuild.exe.config">
+      <Link>BlibBuild.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibFilter.exe">
       <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibFilter.exe.config">
+      <Link>BlibFilter.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibFilter.exe.config">
+      <Link>BlibFilter.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\libraries\arrow\parquet.dll">
@@ -6925,6 +6874,10 @@
     <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj">
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj">
+      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
+      <Name>CommonMsData</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>

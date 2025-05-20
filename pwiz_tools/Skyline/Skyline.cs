@@ -71,8 +71,8 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -100,7 +100,8 @@ namespace pwiz.Skyline
             IToolMacroProvider,
             IModifyDocumentContainer,
             IRetentionScoreSource,
-            IRemoteAccountUserInteraction
+            IRemoteAccountUserInteraction,
+            IRemoteAccountStorage
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -190,6 +191,7 @@ namespace pwiz.Skyline
             _autoTrainManager.Register(this);
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
             RemoteSession.RemoteAccountUserInteraction = this;
+            RemoteUrl.RemoteAccountStorage = this;
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
@@ -4791,6 +4793,11 @@ namespace pwiz.Skyline
             {
                 throw new ApplicationException(@"Crash Skyline Menu Item Clicked");
             }).Start();
+        }
+
+        public IEnumerable<RemoteAccount> GetRemoteAccounts()
+        {
+            return Settings.Default.RemoteAccountList;
         }
     }
 }

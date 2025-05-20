@@ -29,10 +29,10 @@ using Newtonsoft.Json;
 using pwiz.Common.Collections;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
-using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -621,7 +621,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private void comboAccountType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (RemoteAccountType.UNIFI.Equals(AccountType))
+            if (RemoteAccountType.UNIFI.Equals(AccountType) || RemoteAccountType.WATERS_CONNECT.Equals(AccountType))
             {
                 wizardPagesByAccountType.SelectedIndex = UNIFI_WIZARD_PAGE_INDEX;
 

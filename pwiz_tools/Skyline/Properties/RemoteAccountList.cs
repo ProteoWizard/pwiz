@@ -20,10 +20,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
-using pwiz.Skyline.Model.Results.RemoteApi.WatersConnect;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 

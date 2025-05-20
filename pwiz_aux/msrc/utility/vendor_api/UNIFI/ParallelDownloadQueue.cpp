@@ -92,7 +92,7 @@ public:
     }
 };
 
-ParallelDownloadQueue::ParallelDownloadQueue(Uri^ url, System::String^ token, HttpClient^ client, int numSpectra, const std::vector<double>& binToDriftTime,
+ParallelDownloadQueue::ParallelDownloadQueue(Uri^ url, System::String^ token, IHttpClientFactory^ clientFactory, int numSpectra, const std::vector<double>& binToDriftTime,
     int chunkSize, int concurrentTasks, String^ acceptHeader,
     Action<DownloadInfo^>^ spectrumEndpoint,
     Action<System::IO::Stream^ /*stream*/, DownloadInfo^ /*downloadInfo*/>^ getSpectraFromStream,
@@ -101,7 +101,7 @@ ParallelDownloadQueue::ParallelDownloadQueue(Uri^ url, System::String^ token, Ht
 {
     _sampleResultUrl = url;
     _accessToken = token;
-    _httpClient = client;
+    _clientFactory = clientFactory;
     _numSpectra = numSpectra;
     _binToDriftTime = ToSystemArray<double>(binToDriftTime, toDouble);
     _tasksByIndexProfile = gcnew ConcurrentDictionary<int, Task^>();
@@ -114,11 +114,7 @@ ParallelDownloadQueue::ParallelDownloadQueue(Uri^ url, System::String^ token, Ht
     _userdata = userdata;
     for (int i = 0; i < concurrentTasks+2; ++i)
     {
-        auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-        webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-        webRequestHandler->PreAuthenticate = true;
-
-        auto httpClient = gcnew HttpClient(webRequestHandler);
+        auto httpClient = _clientFactory->CreateClient("customClient");
         httpClient->BaseAddress = gcnew Uri(_sampleResultUrl->GetLeftPart(System::UriPartial::Authority));
         httpClient->DefaultRequestHeaders->Authorization = gcnew AuthenticationHeaderValue("Bearer", _accessToken);
         httpClient->DefaultRequestHeaders->Accept->Add(gcnew MediaTypeWithQualityHeaderValue(_acceptHeader));

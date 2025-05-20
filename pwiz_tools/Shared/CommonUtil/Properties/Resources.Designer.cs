@@ -61,6 +61,96 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Directory could not be found: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_Directory_could_not_be_found___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_Directory_could_not_be_found___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File path is invalid: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_File_path_is_invalid___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_File_path_is_invalid___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File path is too long: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_File_path_is_too_long___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_File_path_is_too_long___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insufficient permission to delete file: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path contains invalid characters: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_Path_contains_invalid_characters___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_Path_contains_invalid_characters___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Path is empty.
+        /// </summary>
+        internal static string FileEx_SafeDelete_Path_is_empty {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_Path_is_empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to delete directory: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_Unable_to_delete_directory___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_Unable_to_delete_directory___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to delete file which is in use: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to delete read-only file: {0}.
+        /// </summary>
+        internal static string FileEx_SafeDelete_Unable_to_delete_read_only_file___0_ {
+            get {
+                return ResourceManager.GetString("FileEx_SafeDelete_Unable_to_delete_read_only_file___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run command:.
+        /// </summary>
+        internal static string ProcessRunner_Run_Run_command_ {
+            get {
+                return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading {0} bytes. Source may be corrupted..
         /// </summary>
         internal static string StreamEx_ReadOrThrow_Failed_reading__0__bytes__Source_may_be_corrupted_ {
@@ -84,14 +174,6 @@ namespace pwiz.Common.Properties {
         internal static string Units_ppm {
             get {
                 return ResourceManager.GetString("Units_ppm", resourceCulture);
-            }
-        }
-        /// <summary>
-        ///   Looks up a localized string similar to Run command:.
-        /// </summary>
-        internal static string ProcessRunner_Run_Run_command_ {
-            get {
-                return ResourceManager.GetString("ProcessRunner_Run_Run_command_", resourceCulture);
             }
         }
     }

@@ -1,4 +1,5 @@
-/*
+
+﻿/*
  * Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
  *
  * Copyright 2009 Vanderbilt University - Nashville, TN 37232
@@ -16,18 +17,17 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Util;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
 
 
 namespace pwiz.Skyline.FileUI
 {
     public class OpenDataSourceDialog : OpenFileDialogNE
     {
-        private static readonly string[] SOURCE_TYPES =
+        private static string[] SOURCE_TYPES => new[]
         {
-            FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
+            FileUIResources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,   // Localized text can't be stored in a static variable
             DataSourceUtil.TYPE_WIFF,
             DataSourceUtil.TYPE_WIFF2,
             DataSourceUtil.TYPE_AGILENT,

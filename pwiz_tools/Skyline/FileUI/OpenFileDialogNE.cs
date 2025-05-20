@@ -18,10 +18,9 @@
 using System.Collections.Generic;
 using System.Windows.Forms;
 using System.IO;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Util;
+using pwiz.CommonMsData.RemoteApi;
 
 
 namespace pwiz.Skyline.FileUI

@@ -22,10 +22,9 @@ using System.Diagnostics;
 using System.IO;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteowizardWrapper;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DdaSearch

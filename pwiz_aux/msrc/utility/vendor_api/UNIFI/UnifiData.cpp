@@ -51,16 +51,17 @@ using namespace pwiz::util;
 using namespace System;
 using namespace System::Web;
 using namespace System::Net;
+using namespace System::Net::Http;
 using namespace System::Net::Http::Headers;
 using namespace Newtonsoft::Json;
 using namespace Newtonsoft::Json::Linq;
 using namespace System::Runtime::Caching::Generic;
 using namespace System::Collections::Generic;
 using namespace System::Collections::Concurrent;
+using namespace Microsoft::Extensions::DependencyInjection;
 using System::Threading::Tasks::Task;
 using System::Threading::Tasks::TaskScheduler;
 using System::Threading::Tasks::Schedulers::QueuedTaskScheduler;
-using System::Net::Http::HttpClient;
 using System::Uri;
 using IdentityModel::Client::TokenClient;
 using IdentityModel::Client::TokenResponse;
@@ -197,12 +198,7 @@ class UnifiData::Impl
             _clientSecret = queryVars[L"secret"] == nullptr ? L"secret" : queryVars[L"secret"];
             _sampleResultUrl = gcnew Uri(temp->GetLeftPart(UriPartial::Path));
 
-            auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-            webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-            webRequestHandler->PreAuthenticate = true;
-
-            _httpClient = gcnew HttpClient(webRequestHandler);
-
+            initHttpClient();
             getAccessToken();
             getHttpClient();
 
@@ -240,7 +236,7 @@ class UnifiData::Impl
             // I would have preferred to use a virtual member function for spectrumEndpoint, but I couldn't figure out how to put it in an Action
             auto spectrumEndpointAction = gcnew Action<ParallelDownloadQueue::DownloadInfo^>(&Impl::spectrumEndpoint);
             auto getSpectraFromStreamAction = gcnew Action<IO::Stream^, ParallelDownloadQueue::DownloadInfo^>(&Impl::getSpectraFromStreamLoop);
-            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClient, _numNetworkSpectra, _binToDriftTime, _chunkSize, _chunkReadahead,
+            _queue = gcnew ParallelDownloadQueue(_sampleResultUrl, _accessToken, _httpClientFactory, _numNetworkSpectra, _binToDriftTime, _chunkSize, _chunkReadahead,
                 acceptHeader, spectrumEndpointAction, getSpectraFromStreamAction, gcnew IntPtr(this));
         }
         CATCH_AND_FORWARD_EX(sampleResultUrl)
@@ -811,6 +807,7 @@ class UnifiData::Impl
     gcroot<System::String^> _clientScope;
     gcroot<System::String^> _clientSecret;
     gcroot<System::String^> _accessToken;
+    gcroot<IHttpClientFactory^> _httpClientFactory;
     gcroot<HttpClient^> _httpClient;
     gcroot<ParallelDownloadQueue^> _queue;
     bool _unifiDebug;
@@ -940,6 +937,25 @@ class UnifiData::Impl
         // 400-599 -> 2
         // etc.
         return (size_t) floor(logicalIndex / 200.0);
+    }
+
+    static System::Net::Http::HttpMessageHandler^ getWebRequestHandler()
+    {
+        auto handler = gcnew System::Net::Http::WebRequestHandler();
+        handler->UnsafeAuthenticatedConnectionSharing = true;
+        handler->PreAuthenticate = true;
+        return handler;
+    }
+
+    void initHttpClient()
+    {
+        auto services = gcnew ServiceCollection();
+        auto builder = HttpClientFactoryServiceCollectionExtensions::AddHttpClient(services, "customClient");
+        Func<HttpMessageHandler^>^ getWebRequestDelegate = gcnew Func<HttpMessageHandler^>(&Impl::getWebRequestHandler);
+        HttpClientBuilderExtensions::ConfigurePrimaryHttpMessageHandler(builder, getWebRequestDelegate);
+        auto provider = ServiceCollectionContainerBuilderExtensions::BuildServiceProvider(services);
+        _httpClientFactory = ServiceProviderServiceExtensions::GetService<IHttpClientFactory^>(provider);
+        _httpClient = _httpClientFactory->CreateClient("customClient");
     }
 
     void getAccessToken()

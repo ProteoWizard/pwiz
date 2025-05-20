@@ -128,12 +128,18 @@ public enum class ScanningMethod
     DDA
 };
 
+namespace
+{
+    gcroot<ConcurrentDictionary<String^, System::String^>^> globalResponseCache = gcnew ConcurrentDictionary<String^, String^>();;
+}
+
 class WatersConnectImpl : public UNIFI::UnifiData::Impl
 {
 public:
     virtual void connect(const std::string& baseUrlWithInjectionAndSampleSetId, bool combineIonMobilitySpectra)
     {
         _combineIonMobilitySpectra = combineIonMobilitySpectra;
+        ServicePointManager::SecurityProtocol = SecurityProtocolType::Tls12;
 
         try
         {
@@ -144,7 +150,7 @@ public:
                 temp = gcnew Uri(ToSystemString("https://" + baseUrlWithInjectionAndSampleSetId));
 
             _apiVersion = 2;
-            String^ defaultIdentityServer = System::String::Format("{0}://{1}@{2}:{3}", temp->Scheme, temp->UserInfo, temp->Host, 48333);
+            String^ defaultIdentityServer = System::String::Format("{0}://{1}:{2}", temp->Scheme, temp->Host, 48333);
             String^ defaultClientScope = L"webapi";
 
             auto queryVars = System::Web::HttpUtility::ParseQueryString(temp->Query);
@@ -155,12 +161,7 @@ public:
             _sampleSetId = queryVars[L"sampleSetId"] != nullptr ? queryVars[L"sampleSetId"] : throw gcnew ArgumentException("sampleSetId parameter is required");
             _injectionId = queryVars[L"injectionId"] != nullptr ? queryVars[L"injectionId"] : throw gcnew ArgumentException("injectionId parameter is required");
 
-            auto webRequestHandler = gcnew System::Net::Http::WebRequestHandler();
-            webRequestHandler->UnsafeAuthenticatedConnectionSharing = true;
-            webRequestHandler->PreAuthenticate = true;
-
-            _httpClient = gcnew HttpClient(webRequestHandler);
-
+            initHttpClient();
             getAccessToken();
             getHttpClient();
 
@@ -209,7 +210,7 @@ public:
                 int perChannelReadahead = std::max(1, _chunkReadahead / static_cast<int>(_channelInfo.size()));
                 for (auto& ci : _channelInfo)
                 {
-                    ci.channelQueue = gcnew ParallelDownloadQueue(_baseUrl, _accessToken, _httpClient, ci.numSpectra, _binToDriftTime, _chunkSize, perChannelReadahead,
+                    ci.channelQueue = gcnew ParallelDownloadQueue(_baseUrl, _accessToken, _httpClientFactory, ci.numSpectra, _binToDriftTime, _chunkSize, perChannelReadahead,
                         acceptHeader, _spectrumEndpoint, _getSpectrumFromStream, gcnew IntPtr(this));
                 }
             }
@@ -480,7 +481,7 @@ private:
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Password, password);
         fields->Add(IdentityModel::OidcConstants::TokenRequest::Scope, _clientScope);
 
-        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient_jwt", _clientSecret, nullptr, IdentityModel::Client::AuthenticationStyle::BasicAuthentication);
+        auto tokenClient = gcnew TokenClient(tokenEndpoint(), "resourceownerclient_jwt", _clientSecret, nullptr);
         TokenResponse^ response = tokenClient->RequestAsync(fields, System::Threading::CancellationToken::None)->Result;
         if (response->IsError)
             throw user_error("authentication error: incorrect hostname, username or password? (" + ToStdString(response->Error) + ")");
@@ -495,21 +496,27 @@ private:
         _httpClient->BaseAddress = gcnew Uri(_baseUrl->GetLeftPart(System::UriPartial::Authority));
     }*/
 
-    void getSampleMetadata()
+    static String^ getHttpResult(String^ uri, HttpClient^ httpClient)
     {
-        String^ json;
         try
         {
-            auto response = _httpClient->GetAsync(injectionsMetadataEndpoint())->Result;
+            auto response = httpClient->GetAsync(uri)->Result;
             if (!response->IsSuccessStatusCode)
-                throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + injectionsMetadataEndpoint());
+                throw gcnew Exception("response status code does not indicate success (" + response->StatusCode.ToString() + "); URL was: " + uri);
 
-            json = response->Content->ReadAsStringAsync()->Result;
+            return response->Content->ReadAsStringAsync()->Result;
         }
         catch (Exception^ e)
         {
             throw std::runtime_error("error getting sample result metadata: " + ToStdString(e->ToString()->Split(L'\n')[0]));
         }
+    }
+
+    void getSampleMetadata()
+    {
+        auto delgt = gcnew Func<String^, HttpClient^, String^>(getHttpResult);
+        HttpClient^ httpClient = _httpClient;
+        String^ json = globalResponseCache->GetOrAdd(injectionsMetadataEndpoint(), delgt, httpClient);
 
         try
         {

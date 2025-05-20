@@ -314,7 +314,7 @@ namespace pwiz.Skyline.Model
                 { THERMO_ECLIPSE, EXT_THERMO },
                 { THERMO_ASTRAL, EXT_THERMO },
                 { THERMO_ASTRAL_ZOOM, EXT_THERMO },
-                { WATERS_XEVO_TQ, EXT_WATERS },
+                { WATERS_XEVO_TQ_MASS_LYNX, EXT_WATERS },
                 { WATERS_QUATTRO_PREMIER, EXT_WATERS }
             };
 
