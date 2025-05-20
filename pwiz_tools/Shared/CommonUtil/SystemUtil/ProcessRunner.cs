@@ -213,22 +213,18 @@ namespace pwiz.Common.SystemUtil
                             if (StatusPrefix != null)
                                 line = line.Substring(StatusPrefix.Length);
 
+                            var statusOld = status;
                             if (!SilenceStatusMessageUpdates)
                                 status = status.ChangeMessage(line);
 
-                            if (updateProgressPercentage)
+                            if (updateProgressPercentage && ExpectedOutputLinesCount > 0)
                             {
-                                if (ExpectedOutputLinesCount > 0)
-                                {
-                                    percentLast = Math.Min(99, outputLinesCount * 100 / ExpectedOutputLinesCount);
+                                percentLast = Math.Min(99, outputLinesCount * 100 / ExpectedOutputLinesCount);
+                                if (percentLast != status.PercentComplete)
                                     status = status.ChangePercentComplete(percentLast);
-                                    progress.UpdateProgress(status);
-                                }
-                                else
-                                {
-                                    progress.UpdateProgress(status);
-                                }
                             }
+                            if (!ReferenceEquals(status, statusOld))
+                                progress.UpdateProgress(status);
                         }
                     }
                 }
