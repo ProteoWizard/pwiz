@@ -120,20 +120,19 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             return mod.Name;
         }
 
-        protected override void AddPrecursorToResult(PeptideDocNode peptide, string unmodifiedSequence, ModifiedSequence modifiedSequence,
-            int charge, bool training, List<string> result, StringBuilder modsBuilder, StringBuilder modSitesBuilder)
+        protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence,
+            int charge, bool training, string modsBuilder, string modSitesBuilder)
         {
-            var docNode = peptide.TransitionGroups.FirstOrDefault(group => group.PrecursorCharge == charge);
-            if (docNode == null)
-            {
-                return;
-            }
+            // CONSIDER: For better error checking, existence of the charge could be checked first and
+            // throw if it is missing with a more informative message. The caller is expected to provide a valid charge.
+            var docNode = peptide.TransitionGroups.First(group => group.PrecursorCharge == charge);
+
             var precursor = LabelPrecursor(docNode.TransitionGroup, docNode.PrecursorMz, string.Empty);
             var collisionEnergy = docNode.ExplicitValues.CollisionEnergy != null ? docNode.ExplicitValues.CollisionEnergy.ToString() : NA;
             var note = docNode.Annotations.Note != null ? TextUtil.Quote(docNode.Annotations.Note) : NA;
-            var libraryName = docNode.LibInfo != null && docNode.LibInfo.LibraryName != null ? docNode.LibInfo.LibraryName : NA;
-            var libraryType = docNode.LibInfo != null && docNode.LibInfo.LibraryTypeName != null ? docNode.LibInfo.LibraryTypeName : NA;
-            var libraryScore = docNode.LibInfo != null && docNode.LibInfo.Score != null ? docNode.LibInfo.Score.ToString() : NA;
+            var libraryName = docNode.LibInfo?.LibraryName ?? NA;
+            var libraryType = docNode.LibInfo?.LibraryTypeName ?? NA;
+            var libraryScore = docNode.LibInfo?.Score != null ? docNode.LibInfo.Score.ToString() : NA;
             var unimodSequence = modifiedSequence.ToString();
             var best_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.RetentionTime;
             var min_rt = docNode.GetSafeChromInfo(peptide.BestResult).FirstOrDefault()?.StartRetentionTime;
@@ -144,22 +143,15 @@ namespace pwiz.Skyline.Model.Lib.Carafe
             var filename = GetDataFileName();
             if (training)
             {
-                result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, new object[]
-                {
-                    precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
-                    docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
-                    note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds,
-                    best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore
-                }));
+                return string.Join(TextUtil.SEPARATOR_TSV_STR, precursor, modifiedSequence.GetUnmodifiedSequence(), charge,
+                    docNode.LabelType, docNode.PrecursorMz, unimodSequence, collisionEnergy, note, libraryName, libraryType,
+                    libraryScore, modifiedSequence.UnimodIds, best_rt, min_rt, max_rt, ionmob_ms1, apex_psm, filename, libraryScore);
             }
             else
             {
-                result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, new[]
-                {
-                    precursor, unmodifiedSequence, charge.ToString(), docNode.LabelType.ToString(),
-                    docNode.PrecursorMz.ToString(), unimodSequence, collisionEnergy,
-                    note, libraryName, libraryType, libraryScore, modifiedSequence.UnimodIds
-                }));
+                return string.Join(TextUtil.SEPARATOR_TSV_STR, precursor, modifiedSequence.GetUnmodifiedSequence(), charge,
+                    docNode.LabelType, docNode.PrecursorMz, unimodSequence, collisionEnergy, note, libraryName, libraryType,
+                    libraryScore, modifiedSequence.UnimodIds);
             }
         }
 

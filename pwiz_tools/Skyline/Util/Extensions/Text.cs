@@ -591,16 +591,15 @@ namespace pwiz.Skyline.Util.Extensions
             if (indentLevel <= 0)
                 return string.Empty;
 
-            return new StringBuilder(tabSize * indentLevel).Insert(0, new string(' ', tabSize), indentLevel)
-                .ToString();
+            return new string(' ', tabSize * indentLevel);
         }
 
-        public static string Indent(this string s, int indentLevel)
+        public static string Indent(this string s, int indentLevel, int tabSize = TAB_SIZE)
         {
             if (s == null || indentLevel <= 0)
                 return s;
 
-            return GetIndentation(indentLevel) + s;
+            return GetIndentation(indentLevel, tabSize) + s;
         }
 
         /// <summary>

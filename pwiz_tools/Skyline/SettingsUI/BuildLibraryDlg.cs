@@ -372,26 +372,23 @@ namespace pwiz.Skyline.SettingsUI
         {
             var pythonInstaller = AlphapeptdeepLibraryBuilder.CreatePythonInstaller(new TextBoxStreamWriterHelper());
 
-            using (new WaitCursor(this))
+            btnNext.Enabled = false;
+
+            bool setupSuccess = false;
+            try
             {
-                btnNext.Enabled = false;
-
-                bool setupSuccess = false;
-                try
-                {
-                    setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
-                }
-                finally
-                {
-                    // If not a successful installation, try to clean-up before leaving
-                    if (!setupSuccess)
-                        pythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
-
-                    btnNext.Enabled = true;
-                }
-
-                return setupSuccess;
+                setupSuccess = SetupPythonEnvironmentInternal(pythonInstaller);
             }
+            finally
+            {
+                // If not a successful installation, try to clean-up before leaving
+                if (!setupSuccess)
+                    pythonInstaller.CleanUpPythonEnvironment(AlphapeptdeepLibraryBuilder.ALPHAPEPTDEEP);
+
+                btnNext.Enabled = true;
+            }
+
+            return setupSuccess;
         }
 
         private bool SetupPythonEnvironmentInternal(PythonInstaller pythonInstaller)
@@ -490,32 +487,29 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkWizardPage()
         {
-            using (new WaitCursor(this))
+            if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
             {
-                if (tabControlMain.SelectedIndex != (int)Pages.properties || radioAlphaSource.Checked || radioKoinaSource.Checked)
+                if (ValidateBuilder(true))
                 {
-                    if (ValidateBuilder(true))
-                    {
-                        Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
-                        Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
-                        DialogResult = DialogResult.OK;
-                    }
+                    Settings.Default.LibraryFilterDocumentPeptides = LibraryFilterPeptides;
+                    Settings.Default.LibraryKeepRedundant = LibraryKeepRedundant;
+                    DialogResult = DialogResult.OK;
                 }
-                else if (ValidateBuilder(false))
-                {
-                    Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
+            }
+            else if (ValidateBuilder(false))
+            {
+                Settings.Default.LibraryDirectory = Path.GetDirectoryName(LibraryPath);
 
-                    tabControlMain.SelectedIndex = (int)(radioFilesSource.Checked
-                        ? Pages.files
-                        : Pages.learning);  // Carafe
-                    btnPrevious.Enabled = true;
-                    btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
-                    AcceptButton = btnNext;
-                    if (radioFilesSource.Checked)
-                        btnNext.Enabled = Grid.IsReady;
-                    else
-                        btnNext.Enabled = true;
-                }
+                tabControlMain.SelectedIndex = (int)(radioFilesSource.Checked
+                    ? Pages.files
+                    : Pages.learning);  // Carafe
+                btnPrevious.Enabled = true;
+                btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
+                AcceptButton = btnNext;
+                if (radioFilesSource.Checked)
+                    btnNext.Enabled = Grid.IsReady;
+                else
+                    btnNext.Enabled = true;
             }
         }
 

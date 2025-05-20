@@ -1017,6 +1017,7 @@ namespace pwiz.Skyline.Util
             catch (Exception) { }
 // ReSharper restore EmptyGeneralCatchClause
         }
+
         public static void SafeDeleteLongPath(string path)
         {
             try
@@ -1024,7 +1025,7 @@ namespace pwiz.Skyline.Util
                 string longPath = $@"\\?\{path}";
                 Helpers.TryTwice(() =>
                     {
-                        if (path != null && Directory.Exists(path)) // Don't waste time trying to delete something that's already deleted
+                        if (path != null && Directory.Exists(longPath)) // Don't waste time trying to delete something that's already deleted
                         {
                             Directory.Delete(longPath, true);
                         }
@@ -1034,6 +1035,7 @@ namespace pwiz.Skyline.Util
             catch (Exception) { }
             // ReSharper restore EmptyGeneralCatchClause
         }
+
         public static string GetUniqueName(string dirName)
         {
             return Directory.Exists(dirName)
@@ -1603,7 +1605,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Kill a process, and all of its children, grandchildren, etc.
         /// </summary>
-        /// <param name="pid">Process ID.</param>
+        /// <param name="pid">The Process ID of the process to be killed</param>
         private static void KillProcessAndDescendants(int pid)
         {
             // Cannot close 'system idle process'.
@@ -1611,16 +1613,15 @@ namespace pwiz.Skyline.Util
             {
                 return;
             }
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher
-                (@"Select * From Win32_Process Where ParentProcessID=" + pid);
-            ManagementObjectCollection moc = searcher.Get();
-            foreach (ManagementObject mo in moc)
+            var searcher = new ManagementObjectSearcher(@"Select * From Win32_Process Where ParentProcessID=" + pid);
+            var moc = searcher.Get();
+            foreach (var mo in moc)
             {
                 KillProcessAndDescendants(Convert.ToInt32(mo[@"ProcessID"]));
             }
             try
             {
-                Process proc = Process.GetProcessById(pid);
+                var proc = Process.GetProcessById(pid);
                 if (!proc.HasExited)
                     proc.Kill();
             }
@@ -1657,7 +1658,6 @@ namespace pwiz.Skyline.Util
                 startInfo.Verb = @"runas";
 
             var process = new Process {StartInfo = startInfo, EnableRaisingEvents = true};
-            int processID = -1;
             string pipeName = @"SkylineProcessRunnerPipe" + guidSuffix;
 
             using (var pipeStream = new NamedPipeServerStream(pipeName))
@@ -1667,7 +1667,6 @@ namespace pwiz.Skyline.Util
                 try
                 {
                     process.Start();
-                    processID = process.Id;
                 }
                 catch (System.ComponentModel.Win32Exception win32Exception)
                 {

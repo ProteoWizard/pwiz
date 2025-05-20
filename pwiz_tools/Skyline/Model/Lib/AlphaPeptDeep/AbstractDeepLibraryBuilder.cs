@@ -134,14 +134,14 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 foreach (var peptide in IrtStandard.GetDocument().Peptides)
                 {
-                    AddPeptideToResult(peptide, result, training);
+                    result.AddRange(GetTableRows(peptide, training));
                 }
             }
 
             // Build precursor table row by row
             foreach (var peptide in Document.Peptides)
             {
-                AddPeptideToResult(peptide, result, training);
+                result.AddRange(GetTableRows(peptide, training));
             }
 
             return result.Distinct();
@@ -151,34 +151,33 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         /// <summary>
         /// Helper function that adds a peptide to the result list
         /// </summary>
-        private void AddPeptideToResult(PeptideDocNode peptide, List<string> result, bool training)
+        private IEnumerable<string> GetTableRows(PeptideDocNode peptide, bool training)
         {
-            var unmodifiedSeq = peptide.Peptide.Sequence;
             var modifiedSeq = ModifiedSequence.GetModifiedSequence(Document.Settings, peptide, IsotopeLabelType.light);
-            var modsBuilder = new StringBuilder();
-            var modSitesBuilder = new StringBuilder();
 
-            if (!ValidateModifications(unmodifiedSeq, modifiedSeq, modsBuilder, modSitesBuilder))
-                return;
+            if (!ValidateModifications(modifiedSeq, out var mods, out var modSites))
+                yield break;
 
             foreach (var charge in peptide.TransitionGroups
                          .Select(transitionGroup => transitionGroup.PrecursorCharge).Distinct())
             {
-                AddPrecursorToResult(peptide, unmodifiedSeq, modifiedSeq, charge, training, result, modsBuilder, modSitesBuilder);
+                yield return GetTableRow(peptide, modifiedSeq, charge, training, mods, modSites);
             }
         }
 
-        protected abstract void AddPrecursorToResult(PeptideDocNode peptide,
-            string unmodifiedSequence, ModifiedSequence modifiedSequence, int charge, bool training,
-            List<string> result, StringBuilder modsBuilder, StringBuilder modSitesBuilder);
+        protected abstract string GetTableRow(PeptideDocNode peptide,
+            ModifiedSequence modifiedSequence, int charge, bool training,
+            string modsBuilder, string modSitesBuilder);
 
         protected abstract string ToolName { get; }
         
         protected abstract IList<ModificationType> ModificationTypes { get; }
         
-        protected bool ValidateModifications(string unmodifiedSequence, ModifiedSequence modifiedSequence,
-            StringBuilder modsBuilder, StringBuilder modSitesBuilder)
+        protected bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
+            var modsBuilder = new StringBuilder();
+            var modSitesBuilder = new StringBuilder();
+
             var warningMods = GetWarningMods();
 
             bool unsupportedModification = false;
@@ -207,7 +206,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 if (modNames.Length == 0)
                     continue;
 
-                string modName = GetModName(modNames.Single(), unmodifiedSequence, mod.IndexAA);
+                string modName = GetModName(modNames.Single(), modifiedSequence.GetUnmodifiedSequence(), mod.IndexAA);
                 modsBuilder.Append(modName);
                 modSitesBuilder.Append((mod.IndexAA + 1).ToString()); // + 1 because alphapeptdeep mod_site number starts from 1 as the first amino acid
                 if (i != modifiedSequence.ExplicitMods.Count - 1)
@@ -217,6 +216,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
             }
 
+            mods = modsBuilder.ToString();
+            modSites = modSitesBuilder.ToString();
+            
             return !unsupportedModification;
         }
 

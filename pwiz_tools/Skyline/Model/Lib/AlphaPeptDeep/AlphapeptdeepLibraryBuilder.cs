@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
@@ -167,11 +166,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             return PrecursorTableColumnNames;
         }
 
-        protected override void AddPrecursorToResult(PeptideDocNode peptide, string unmodifiedSequence, ModifiedSequence modifiedSequence,
-            int charge, bool training, List<string> result, StringBuilder modsBuilder, StringBuilder modSitesBuilder)
+        protected override string GetTableRow(PeptideDocNode peptide, ModifiedSequence modifiedSequence,
+            int charge, bool training, string modsBuilder, string modSitesBuilder)
         {
-            result.Add(new[] { unmodifiedSequence, modsBuilder.ToString(), modSitesBuilder.ToString(), charge.ToString() }
-                .ToDsvLine(TextUtil.SEPARATOR_TSV));
+            return new[] { modifiedSequence.GetUnmodifiedSequence(), modsBuilder, modSitesBuilder, charge.ToString() }
+                .ToDsvLine(TextUtil.SEPARATOR_TSV);
         }
 
         private string PeptdeepExecutablePath => Path.Combine(ScriptsDir, PEPTDEEP_EXECUTABLE);

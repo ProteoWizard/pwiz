@@ -760,13 +760,10 @@ namespace pwiz.Skyline.SettingsUI
             var warning = (builder as ILibraryBuildWarning)?.GetWarning();
             if (!string.IsNullOrEmpty(warning))
             {
-                using (var warnMessageDlg = new AlertDlg(warning, MessageBoxButtons.OKCancel))
+                if (MultiButtonMsgDlg.Show(this, warning, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                 {
-                    if (warnMessageDlg.ShowDialog() == DialogResult.Cancel)
-                    {
-                        IsBuildingLibrary = false;
-                        return;
-                    }
+                    IsBuildingLibrary = false;
+                    return;
                 }
             }
 
