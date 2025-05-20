@@ -111,7 +111,7 @@ matchPaths = [
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All']),
-    (".*\.bat", targets['Windows']),
-    (".*\.sh", targets['Linux'])
+    (".*\\.bat", targets['Windows']),
+    (".*\\.sh", targets['Linux'])
 ]
 

@@ -109,6 +109,8 @@ print(f"Changed files ({len(changed_files)}):\n", changed_files_str)
 base_branch = re.sub("(Skyline/)?skyline_.*", "release", base_branch)
 print("Base branch: '%s'" % base_branch)
 
+possible_base_branches = ["master", "release"]
+
 # promote branch-specific targets into main match dictionaries
 for tuple in matchPaths:
     if base_branch in tuple[1]:
@@ -118,11 +120,12 @@ for tuple in matchPaths:
 triggers = {}
 if (current_branch == "master" or current_branch.startswith("skyline_")) and len(changed_files) == 0:
     print(f"Empty change list on {current_branch} branch; this is some merge I don't know how to get a reliable change list for yet. Building everything!")
-    for target in targets['All']:
-        if target not in triggers:
-            isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
-            if not isBaseBranchDict and target not in triggers:
-                triggers[target] = "merge to %s" % base_branch
+    for key in targets:
+        for target in targets[key]:
+            if target not in triggers:
+                isBaseBranchDict = target in possible_base_branches # these targets were promoted into top-level above
+                if not isBaseBranchDict and target not in triggers:
+                    triggers[target] = "merge to %s" % base_branch
 else:
     for path in changed_files:
         if os.path.basename(path) == "smartBuildTrigger.py":
