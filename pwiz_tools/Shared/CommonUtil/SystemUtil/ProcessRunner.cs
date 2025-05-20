@@ -54,8 +54,10 @@ namespace pwiz.Common.SystemUtil
         /// <summary>
         /// When greater than zero, this value is used to track progress percent complete.
         /// </summary>
-        // CONSIDER(dshteyn): With hardcoded line counts, how will we know when these change and keep them in sync with the tool dependencies
-        public int ExpectedOutputLinesCount { get; set; } 
+        public int ExpectedOutputLinesCount { get; set; }
+        /// <summary>
+        /// This value tracks the total number of lines output on last call to Run, and is used to help track significant deviation from ExpectedOutputLinesCount.
+        /// </summary>
         public int OutputLinesGenerated { get; private set; }
 
         /// <summary>
