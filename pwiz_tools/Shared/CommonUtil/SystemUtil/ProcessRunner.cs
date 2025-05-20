@@ -56,6 +56,7 @@ namespace pwiz.Common.SystemUtil
         /// </summary>
         // CONSIDER(dshteyn): With hardcoded line counts, how will we know when these change and keep them in sync with the tool dependencies
         public int ExpectedOutputLinesCount { get; set; } 
+        public int OutputLinesGenerated { get; private set; }
 
         /// <summary>
         /// When set to true this value prevents progress status message updates based on process output.
@@ -162,13 +163,13 @@ namespace pwiz.Common.SystemUtil
                 StringBuilder sbError = new StringBuilder();
                 int percentLast = 0;
                 string line;
-                int outputLinesCount = 0;
+                OutputLinesGenerated = 0;
                 while ((line = reader.ReadLine(progress)) != null)
                 {
                     if (writer != null && (HideLinePrefix == null || !line.StartsWith(HideLinePrefix)))
                     {
                         writer.WriteLine(line);
-                        outputLinesCount++;
+                        OutputLinesGenerated++;
                     }
 
                     string lineLower = line.ToLowerInvariant();
@@ -219,7 +220,7 @@ namespace pwiz.Common.SystemUtil
 
                             if (updateProgressPercentage && ExpectedOutputLinesCount > 0)
                             {
-                                percentLast = Math.Min(99, outputLinesCount * 100 / ExpectedOutputLinesCount);
+                                percentLast = Math.Min(99, OutputLinesGenerated * 100 / ExpectedOutputLinesCount);
                                 if (percentLast != status.PercentComplete)
                                     status = status.ChangePercentComplete(percentLast);
                             }

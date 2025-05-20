@@ -264,6 +264,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             TransformPeptdeepOutput(progress, ref progressStatus);
             progressStatus = progressStatus.NextSegment();
             ImportSpectralLibrary(progress, ref progressStatus);
+
+            if (TotalExpectedLinesOfOutput > 0)
+                FractionOfExpectedOutputLinesGenerated = (float)TotalGeneratedLinesOfOutput / TotalExpectedLinesOfOutput;
         }
 
         private void PrepareSettingsFile(IProgressMonitor progress, ref IProgressStatus progressStatus)
@@ -283,8 +286,11 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             };
             try
             {
-                pr.ExpectedOutputLinesCount = 213;
+                //REMOVE: This runs so quickly that counting lines here is not necessary for only 5% of the total progress bar
+                //pr.ExpectedOutputLinesCount = 213;
                 pr.Run(psi, string.Empty, progress, ref progressStatus, ProcessPriorityClass.BelowNormal, true);
+                //TotalExpectedLinesOfOutput += pr.ExpectedOutputLinesCount;
+                //TotalGeneratedLinesOfOutput += pr.OutputLinesGenerated;
             }
             catch (Exception ex)
             {
@@ -332,6 +338,8 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 timer.Stop();
                 string message = string.Format(ModelResources.AlphapeptdeepLibraryBuilder_ExecutePeptdeep_AlphaPeptDeep_finished_in__0__minutes__1__seconds_, timer.Elapsed.Minutes, timer.Elapsed.Seconds);
                 Messages.WriteAsyncUserMessage(message);
+                TotalExpectedLinesOfOutput += pr.ExpectedOutputLinesCount;
+                TotalGeneratedLinesOfOutput += pr.OutputLinesGenerated;
             }
             catch (Exception ex)
             {

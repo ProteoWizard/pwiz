@@ -60,6 +60,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         {
             Document = document;
             IrtStandard = irtStandard;
+            FractionOfExpectedOutputLinesGenerated = 1;
+            TotalGeneratedLinesOfOutput = 0;
+            TotalExpectedLinesOfOutput = 0;
         }
 
         public string TimeStamp => _nowTime.ToString(@"yyyy-MM-dd_HH-mm-ss");
@@ -90,6 +93,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         public string TrainingFilePath { get; private set; }
 
         public string DataFilePath { get; private set; }
+        public float FractionOfExpectedOutputLinesGenerated { get; private protected set; }
+        public int TotalExpectedLinesOfOutput { get; private protected set; }
+        public int TotalGeneratedLinesOfOutput { get; private protected set; }
 
         public void InitPaths(string inputFilePath, string trainingFilePath = null, string dataFilePath = null)
         {
