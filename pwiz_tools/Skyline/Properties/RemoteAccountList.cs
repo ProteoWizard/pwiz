@@ -18,10 +18,12 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
-using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.Ardia;
+using pwiz.CommonMsData.RemoteApi.Unifi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 
@@ -60,7 +62,23 @@ namespace pwiz.Skyline.Properties
             {
                 new XmlElementHelper<UnifiAccount>(),
                 new XmlElementHelper<ArdiaAccount>(),
+                new XmlElementHelper<WatersConnectAccount>(),
             };
         }
+
+        /// <summary>
+        /// Retrieves the remote account for the given url.
+        /// </summary>
+        /// <param name="remoteUrl">Server and username from this url are used to search for the account in the list.</param>
+        /// <returns>Matching account or null if nothing is matching.</returns>
+        public RemoteAccount GetRemoteAccount(RemoteUrl remoteUrl)
+        {
+            return
+                this.FirstOrDefault(
+                    remoteAccount =>
+                        Equals(remoteAccount.ServerUrl, remoteUrl.ServerUrl) &&
+                        Equals(remoteAccount.Username, remoteUrl.Username));
+        }
+
     }
 }

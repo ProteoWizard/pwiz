@@ -187,33 +187,6 @@
   <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
     <value>ソースディレクトリが存在しない、または見つかりませんでした： </value>
   </data>
-  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
-    <value>ディレクトリを見つけることができませんでした：{0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_File_path_is_invalid___0_" xml:space="preserve">
-    <value>ファイルパスが無効です：{0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_File_path_is_too_long___0_" xml:space="preserve">
-    <value>ファイルパスが長すぎます：{0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_" xml:space="preserve">
-    <value>ファイルを削除するのに十分な権限がありません：{0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_" xml:space="preserve">
-    <value>パスに無効な文字が含まれています：{0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
-    <value>パスが空です</value>
-  </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_" xml:space="preserve">
-    <value>ディレクトリは削除できません：{0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_" xml:space="preserve">
-    <value>使用中のファイルは削除できません：{0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_" xml:space="preserve">
-    <value>読み取り専用ファイルは削除できません：{0}</value>
-  </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists" xml:space="preserve">
     <value>{0}に保存できません。パスをチェックしてディレクトリが存在することを確認します。</value>
   </data>

@@ -277,6 +277,7 @@ feature.feature embed-manifest-via : mt linker : incidental propagated ;
 
 type.register PDB : pdb ;
 type.register CSPROJ : csproj ;
+type.register CONFIG : config ;
 
 
 ################################################################################
@@ -2101,6 +2102,37 @@ class msvc-linking-generator : linking-generator
                     $(action).replace-targets $(target) : $(registered-target) ;
                 }
                 result += $(registered-target) ;
+            }
+
+            local assemblies = [ $(property-set).get <assembly> ] ;
+            if $(assemblies)
+            {
+                if $(name-main:S) = ".exe"
+                {
+                    local exe-path = [ path.join [ $(result[1]).path ] $(name-main:G=) ] ;
+                    local exe-config = $(exe-path).config ;
+                    local cmd = "BindingRedirectGenerator.exe $(exe-config) " ;
+                    for local assembly in $(assemblies)
+                    {
+                        local assembly-path = [ $(assembly).name ] ;
+                        cmd += [ path.native $(assembly-path) ] ;
+                    }
+
+                    echo [ SHELL "$(cmd:J= )" : strip-eol ] ;
+                    #SHELL "$(cmd:J= )" ;
+                    RESCAN ;
+
+                    if [ path.exists $(exe-config) ]
+                    {
+                        local target = [ class.new file-target $(exe-config) exact : CONFIG : $(project) : $(action) ] ;
+                        local registered-target = [ virtual-target.register $(target) ] ;
+                        if $(target) != $(registered-target)
+                        {
+                            $(action).replace-targets $(target) : $(registered-target) ;
+                        }
+                        result += $(registered-target) ;
+                    }
+                }
             }
         }
         return $(result) ;

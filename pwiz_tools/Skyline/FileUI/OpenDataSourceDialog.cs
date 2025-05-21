@@ -1,3 +1,4 @@
+
 ﻿/*
  * Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
  *
@@ -16,9 +17,8 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Model.Results.RemoteApi;
-using pwiz.Skyline.Util;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
 
 
 namespace pwiz.Skyline.FileUI

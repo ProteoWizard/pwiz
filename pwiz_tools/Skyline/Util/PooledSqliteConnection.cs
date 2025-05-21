@@ -21,6 +21,7 @@ using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
 using pwiz.Common.Database.NHibernate;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util

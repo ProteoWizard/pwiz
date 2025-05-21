@@ -25,11 +25,11 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
-struct IsUrl : public pwiz::util::TestPathPredicate
+struct IsUnifi : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return pwiz::util::isHTTP(rawpath);
+        return pwiz::util::isHTTP(rawpath) && bal::icontains(rawpath, "sampleresults(");
     }
 };
 
@@ -37,7 +37,7 @@ struct IsIonMobility : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return pwiz::util::isHTTP(rawpath) && (bal::icontains(rawpath, "IMS") || bal::icontains(rawpath, "HDMS"));
+        return IsUnifi()(rawpath) && (bal::icontains(rawpath, "IMS") || bal::icontains(rawpath, "HDMS"));
     }
 };
 
@@ -45,8 +45,28 @@ struct IsNotIonMobility : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
     {
-        return pwiz::util::isHTTP(rawpath) && !(bal::icontains(rawpath, "IMS") || bal::icontains(rawpath, "HDMS"));
+        return IsUnifi()(rawpath) && !(bal::icontains(rawpath, "IMS") || bal::icontains(rawpath, "HDMS"));
     }
+};
+
+struct IsWatersConnect : public pwiz::util::TestPathPredicate
+{
+    bool operator() (const string& rawpath) const
+    {
+        return pwiz::util::isHTTP(rawpath) && bal::icontains(rawpath, "sampleSetId");
+    }
+};
+
+struct UrlContains : public pwiz::util::TestPathPredicate
+{
+    UrlContains(const string& findStr): findStr_(findStr) {}
+
+    bool operator() (const string& rawpath) const
+    {
+        return pwiz::util::isHTTP(rawpath) && bal::icontains(rawpath, findStr_);
+    }
+
+    const string& findStr_;
 };
 
 int main(int argc, char* argv[])
@@ -56,10 +76,12 @@ int main(int argc, char* argv[])
     #ifdef PWIZ_READER_UNIFI
     bool testAcceptOnly = false;
 
-    if (::getenv("UNIFI_USERNAME") == nullptr || bal::trim_copy(string(::getenv("UNIFI_USERNAME"))).empty() ||
-        ::getenv("UNIFI_PASSWORD") == nullptr || bal::trim_copy(string(::getenv("UNIFI_PASSWORD"))).empty())
+    if (bal::trim_copy(pwiz::util::env::get("UNIFI_USERNAME")).empty() ||
+        bal::trim_copy(pwiz::util::env::get("UNIFI_PASSWORD")).empty() ||
+        bal::trim_copy(pwiz::util::env::get("WC_USERNAME")).empty() ||
+        bal::trim_copy(pwiz::util::env::get("WC_PASSWORD")).empty())
     {
-        cerr << "UNIFI_USERNAME and UNIFI_PASSWORD are not set; Reader_UNIFI_Test is only testing that it can identify files, not read them." << endl;
+        cerr << "UNIFI_USERNAME, UNIFI_PASSWORD, WC_USERNAME, and WC_PASSWORD are not set; Reader_UNIFI_Test is only testing that it can identify URLs, not download them." << endl;
         testAcceptOnly = true;
     }
     #else
@@ -72,6 +94,17 @@ int main(int argc, char* argv[])
         pwiz::msdata::Reader_UNIFI reader;
         pwiz::util::TestResult result;
         pwiz::util::ReaderTestConfig config;
+        config.reportTimings = true;
+
+        // test only first 2 profile spectra for waters_connect data
+        config.indexRange = make_pair(0, 1);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsWatersConnect(), config);
+
+        // test peak picking for waters_connect MS^e data
+        config.indexRange = make_pair(0, 99);
+        config.peakPicking = true;
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, UrlContains("c21577c6-93c9-4348-ad06-dd38aa5ad8c5"), config);
+        config.peakPicking = false;
 
         config.indexRange = make_pair(0, 399); // 800 drift scans for HDMSe (4 blocks)
         config.peakPickingCWT = true;
@@ -89,7 +122,7 @@ int main(int argc, char* argv[])
         result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsIonMobility(), config);
 
         config.combineIonMobilitySpectra = false;
-        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsUrl(), config);
+        result += pwiz::util::testReader(reader, testArgs, testAcceptOnly, requireUnicodeSupport, IsUnifi(), config);
 
         result.check();
     }

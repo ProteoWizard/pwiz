@@ -19,7 +19,6 @@
 using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using ZedGraph;
 
