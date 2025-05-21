@@ -335,22 +335,11 @@ namespace pwiz.Skyline.FileUI
             using (var dlgOpen = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
                 dlgOpen.Text = FileUIResources.ImportResultsDlg_GetDataSourcePathsFile_Import_Results_Files;
-                // The dialog expects null to mean no directory was supplied, so don't assign
-                // an empty string.
-                string initialDir = Path.GetDirectoryName(documentSavedPath) ?? Settings.Default.SrmResultsDirectory;
-                if (string.IsNullOrEmpty(initialDir))
-                    initialDir = null;
-                dlgOpen.InitialDirectory = new MsDataFilePath(initialDir);
-                // Use saved source type, if there is one.
-                string sourceType = Settings.Default.SrmResultsSourceType;
-                if (!string.IsNullOrEmpty(sourceType))
-                    dlgOpen.SourceTypeName = sourceType;
-
+                dlgOpen.RestoreState(documentSavedPath, Settings.Default.OpenDataSourceState);
                 if (dlgOpen.ShowDialog(parent) != DialogResult.OK)
                     return null;
 
-                Settings.Default.SrmResultsDirectory = dlgOpen.CurrentDirectory.ToString();
-                Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
+                Settings.Default.OpenDataSourceState = dlgOpen.GetState(documentSavedPath);
 
                 var dataSources = dlgOpen.DataSources;
 
@@ -456,6 +445,11 @@ namespace pwiz.Skyline.FileUI
         public KeyValuePair<string, MsDataFileUri[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);
+            // A saved results folder for this document path supersedes the document directory
+            var dlgState = Settings.Default.OpenDataSourceState;
+            if (dlgState != null && Equals(dlgState.DocumentPath, _documentSavedPath))
+                initialDir = dlgState.InitialDirectory;
+
             using (FolderBrowserDialog dlg = new FolderBrowserDialog())
             {
                 dlg.Description = FileUIResources.ImportResultsDlg_GetDataSourcePathsDir_Results_Directory;
@@ -466,7 +460,8 @@ namespace pwiz.Skyline.FileUI
 
                 string dirRoot = dlg.SelectedPath;
 
-                Settings.Default.SrmResultsDirectory = dirRoot;
+                if (dlgState != null && Equals(dlgState.DocumentPath, _documentSavedPath))
+                    dlgState.InitialDirectory = dirRoot;
 
                 KeyValuePair<string, MsDataFileUri[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
                 if (namedPaths.Length == 0)

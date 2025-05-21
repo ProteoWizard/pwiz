@@ -701,8 +701,17 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, 0))
                     {
+                        var productAdduct = PrecursorAdduct;
+                        if (losses != null)
+                        {
+                            productAdduct = losses.GetProductAdduct(PrecursorAdduct);
+                            if (productAdduct == null)
+                            {
+                                continue;
+                            }
+                        }
                         var matchedFragmentIon =
-                            MakeMatchedFragmentIon(type, 0, PrecursorAdduct, losses, out double matchMz);
+                            MakeMatchedFragmentIon(type, 0, productAdduct, losses, out double matchMz);
                         if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, len, len, 0, ref rankedMI))
                         {
                             // If matched return.  Otherwise look for other ion types.
@@ -748,6 +757,10 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             foreach (var losses in TransitionLossMap.CalcTransitionLosses(type, i))
                             {
+                                if (!adduct.IsValidProductAdduct(PrecursorAdduct, losses))
+                                {
+                                    continue;
+                                }
                                 var matchedFragmentIon =
                                     MakeMatchedFragmentIon(type, i, adduct, losses, out double matchMz);
                                 if (!MatchNext(rankingState, matchMz, matchedFragmentIon, filter, end, start, startMz, ref rankedMI))

@@ -72,9 +72,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (_isRunPeptideSearch)
             {
                 panel1.Hide();
-                radioDIA.Text = SkylineResources.BuildPeptideSearchLibraryControl_RunPeptideSearchRadioDIAText_DIA_with_DIA_Umpire;
-                helpTip.SetToolTip(radioDIA, SkylineResources.BuildPeptideSearchLibraryControl_BuildPeptideSearchLibraryControl_Library_from_DIA_deconvoluted_to_single_precursor_MS_MS_spectra_and_chromatograms_from_raw_DIA_spectra_of_same_runs);
-                InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
+                if (ImportPeptideSearch.IsDIASearch)
+                    InputFileType = ImportPeptideSearchDlg.InputFile.dia_raw;
+                else
+                    InputFileType = ImportPeptideSearchDlg.InputFile.dda_raw;
             }
             else
             {
@@ -115,7 +116,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             public BuildPeptideSearchLibrarySettings(IEnumerable<BuildLibraryGridView.File> files, IrtStandard standard,
                 bool includeAmbiguousMatches, bool filterForDocumentPeptides,
-                ImportPeptideSearchDlg.Workflow workFlow, ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
+                ImportPeptideSearchDlg.Workflow workFlow,
+                ImportPeptideSearchDlg.InputFile inputFileType, SrmDocument.DOCUMENT_TYPE docType)
             {
                 SearchFileNames = files?.ToArray() ?? Array.Empty<BuildLibraryGridView.File>();
                 Standard = standard;
@@ -349,7 +351,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
             }
 
-            bool retry = false;
+            bool retry;
             do
             {
                 using (var longWaitDlg = new LongWaitDlg())
@@ -377,10 +379,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                                 var response = ShowLibraryMissingExternalSpectraError(WizardForm, status.ErrorException);
                                 if (response == UpdateProgressResponse.cancel)
                                     return false;
-                                else if (response == UpdateProgressResponse.normal)
-                                    builder.PreferEmbeddedSpectra = true;
+
+                                builder.PreferEmbeddedSpectra = response == UpdateProgressResponse.normal;
 
                                 retry = true;
+                                continue;
                             }
                             else
                             {
@@ -396,7 +399,10 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                         return false;
                     }
                 }
-            } while (retry) ;
+
+                retry = false;
+
+            } while (retry);
 
             var docLibSpec = builder.LibrarySpec;
             BuildLibrarySettings.LibraryName = docLibSpec.Name;
@@ -416,7 +422,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return false;
 
             IrtStandard outStandard = null;
-            var addedIrts = !isFeatureDetection && LibraryBuildNotificationHandler.AddIrts(IrtRegressionType.DEFAULT,
+            var addedIrts = !isFeatureDetection && PeptideSettingsUI.AddIrts(IrtRegressionType.DEFAULT,
                 ImportPeptideSearch.DocLib, docLibSpec, _driverStandards.SelectedItem, WizardForm, false, out outStandard);
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
@@ -473,6 +479,12 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             if (!LoadPeptideSearchLibrary(docLibSpec))
             {
                 return false;
+            }
+
+            if (DocumentContainer.Document.Settings.PeptideSettings.Libraries.LibrarySpecs.Contains(docLibSpec))
+            {
+                // No further work necessary.
+                return true;
             }
 
             var docNew = ImportPeptideSearch.AddDocumentSpectralLibrary(DocumentContainer.Document, docLibSpec);
@@ -668,8 +680,6 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             get { return InputFileType != ImportPeptideSearchDlg.InputFile.search_result; }
         }
-
-        public bool DIAConversionNeeded => InputFileType == ImportPeptideSearchDlg.InputFile.dia_raw;
 
         private void OnGridChange(object sender, EventArgs e)
         {

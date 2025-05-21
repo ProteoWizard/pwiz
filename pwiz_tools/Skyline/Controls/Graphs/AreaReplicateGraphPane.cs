@@ -194,6 +194,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     return BarType.PercentStack;
                 }
 
+                if (Settings.Default.AreaLogScale && AreaGraphController.AreaNormalizeOption.AllowLogScale)
+                {
+                    return BarType.Cluster;
+                }
+
                 return BarType.Stack;
             }
         }
@@ -209,7 +214,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool DotProductLabelsVisible
         {
-            get{return CanShowDotProduct && DotProductDisplayOption.label.IsSet(Settings.Default);}
+            get { return CanShowDotProduct && DotProductDisplayOption.label.IsSet(Settings.Default); }
+        }
+
+        public bool DotProductLineVisible
+        {
+            get { return CanShowDotProduct && DotProductDisplayOption.line.IsSet(Settings.Default); }
         }
 
         public bool IsLineGraph
@@ -648,11 +658,6 @@ namespace pwiz.Skyline.Controls.Graphs
             ParentGroupNode = parentGroupNode;
             SumAreas = sumAreas;
 
-            // Draw a box around the currently selected replicate
-            if (ShowSelection && maxArea >  -double.MaxValue)
-            {
-                AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
-            }
             // Reset the scale when the parent node changes
             bool resetAxes = (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id));
             _parentNode = parentNode;
@@ -668,6 +673,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 Y2Axis.Scale.Min = 0;
                 Y2Axis.Scale.Max = 1.1;
                 Y2Axis.Title.Text = DotpLabelText;
+                Y2Axis.MajorTic.IsOpposite = false;
+                Y2Axis.MinorTic.IsOpposite = false;
                 var dotpLine = new LineItem(DotpLabelText, graphData.DotpData, Color.DimGray, SymbolType.Circle )
                 {
                     IsY2Axis = true, Line = new Line() { Style = DashStyle.Dash, Color = Color.DimGray, Width = 2.0f},
@@ -682,49 +689,63 @@ namespace pwiz.Skyline.Controls.Graphs
                 Y2Axis.IsVisible = false;
             }
 
+            AddDotProductLine(graphData);
+
             UpdateAxes(resetAxes, aggregateOp, dataScalingOption, normalizeOption);
-
-            if (Settings.Default.PeakAreaDotpCutoffShow && DotProductDisplayOption.line.IsSet(Settings.Default) && _dotpData != null)
+            // Draw a box around the currently selected replicate
+            if (ShowSelection && maxArea > -double.MaxValue)
             {
-                var cutoff = ExpectedVisible.GetDotpValueCutoff(Settings.Default);
-                var highlightValues = new PointPairList(graphData.DotpData.Select(point => point.Y < cutoff ? point : new PointPair(){X = point.X, Y = float.NaN}).ToList());
-                var cutoffHighlightLine = new LineItem("", highlightValues, Color.DimGray, SymbolType.Circle)
-                {
-                    IsY2Axis = true,
-                    Line = new Line() { Color = Color.Transparent},
-                    Symbol = new Symbol() { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
-                };
-                cutoffHighlightLine.Label.IsVisible = false;
-                CurveList.Insert(Math.Min(CurveList.Count, 1), cutoffHighlightLine); // Add below cutoff highlight markers
-                ToolTip.TargetCurves.Add(cutoffHighlightLine);
-
-
-                var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
-                var labelText = string.Format(GraphsResources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
-                    _dotpData.Count - belowCutoffCount, belowCutoffCount, DotpLabelText);
-                var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.E_BehindCurves,
-                    FontSpec = GraphSummary.CreateFontSpec(Color.Black),
-                };
-                labelObject.FontSpec.Fill = new Fill(Color.Transparent);
-                GraphObjList.Add(labelObject);
-                var cutoffLine = new LineObj()
-                {
-                    IsClippedToChartRect = true,
-                    Location = new Location(0, cutoff, CoordType.XChartFractionY2Scale){Rect = new RectangleF(0, cutoff, 1, 0)},
-                    Line = new LineBase(Color.Red)
-                };
-                GraphObjList.Add(cutoffLine);                          // Add  cutoff line
-                //This is a placeholder to make sure the line shows in the legend.
-                CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
-                    GraphsResources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
-                {
-                    Points = new PointPairList(new[] { new PointPair(0, 0) }),
-                    Symbol = new Symbol(SymbolType.None, Color.Transparent)
-                });
+                AddSelection(normalizeOption, selectedReplicateIndex, sumArea, maxArea);
             }
+        }
+
+        private void AddDotProductLine(AreaGraphData graphData)
+        {
+            if (!Settings.Default.PeakAreaDotpCutoffShow || !DotProductDisplayOption.line.IsSet(Settings.Default) ||
+                _dotpData == null)
+                return;
+
+            var cutoff = ExpectedVisible.GetDotpValueCutoff(Settings.Default);
+            var highlightValues = new PointPairList(graphData.DotpData
+                .Select(point => point.Y < cutoff ? point : new PointPair() { X = point.X, Y = float.NaN }).ToList());
+            var cutoffHighlightLine = new LineItem("", highlightValues, Color.DimGray, SymbolType.Circle)
+            {
+                IsY2Axis = true,
+                Line = new Line() { Color = Color.Transparent },
+                Symbol = new Symbol()
+                    { Type = SymbolType.Diamond, Size = 9f, Fill = new Fill(Color.Red), Border = new Border(Color.Red, 1) }
+            };
+            cutoffHighlightLine.Label.IsVisible = false;
+            CurveList.Insert(Math.Min(CurveList.Count, 1), cutoffHighlightLine); // Add below cutoff highlight markers
+            ToolTip.TargetCurves.Add(cutoffHighlightLine);
+
+            var belowCutoffCount = _dotpData.Count(dotp => dotp <= cutoff);
+            var labelText = string.Format(GraphsResources.AreaReplicateGraphPane_Replicates_Count_Above_Below_Cutoff,
+                _dotpData.Count - belowCutoffCount, belowCutoffCount, DotpLabelText);
+            var labelObject = new TextObj(labelText, 1, 0, CoordType.ChartFraction, AlignH.Right, AlignV.Top)
+            {
+                IsClippedToChartRect = true,
+                ZOrder = ZOrder.E_BehindCurves,
+                FontSpec = GraphSummary.CreateFontSpec(Color.Black),
+            };
+            labelObject.FontSpec.Fill = new Fill(Color.Transparent);
+            GraphObjList.Add(labelObject);
+            _labelHeight = (int)labelObject.FontSpec.GetHeight(CalcScaleFactor());
+            var cutoffLine = new LineObj()
+            {
+                IsClippedToChartRect = true,
+                Location = new Location(0, cutoff, CoordType.XChartFractionY2Scale)
+                    { Rect = new RectangleF(0, cutoff, 1, 0) },
+                Line = new LineBase(Color.Red)
+            };
+            GraphObjList.Add(cutoffLine); // Add  cutoff line
+            //This is a placeholder to make sure the line shows in the legend.
+            CurveList.Insert(0, new LineItem(string.Format(CultureInfo.CurrentCulture,
+                GraphsResources.AreaReplicateGraphPane_Dotp_Cutoff_Line_Label, DotpLabelText, cutoff))
+            {
+                Points = new PointPairList(new[] { new PointPair(0, 0) }),
+                Symbol = new Symbol(SymbolType.None, Color.Transparent)
+            });
         }
 
         public override void PopulateTooltip(int index, CurveItem targetCurve)
@@ -816,12 +837,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
-                        -yValue, Color.Black, Color.Empty)
-                // Just passing in yValue here doesn't work when log scale is enabled, -yValue works with and without log scale enabled
-                {
-                    IsClippedToChartRect = true,
-                });
+                DrawSelectionBox(selectedReplicateIndex, yValue, 0);
             }
         }
 
@@ -907,11 +923,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
                 }
-                else if (Settings.Default.AreaLogScale)
+                else if (Settings.Default.AreaLogScale && BarSettings.Type == BarType.Cluster)
                 {
-                    // If currently not log scale, reset the y-axis max
-                    if (YAxis.Type != AxisType.Log)
-                        YAxis.Scale.MaxAuto = true;
+                    YAxis.Scale.MaxAuto = true;
                     if (Settings.Default.PeakAreaMaxArea != 0)
                     {
                         YAxis.Scale.MaxAuto = false;
@@ -920,8 +934,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     YAxis.Type = AxisType.Log;
                     YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(GetYAxisTitle(aggregateOp, normalizeOption));
-                    YAxis.Scale.MinAuto = false;
-                    FixedYMin = YAxis.Scale.Min = 1;
+                    YAxis.Scale.MinAuto = true;
+                    FixedYMin = null;
                 }
                 else
                 {
@@ -948,14 +962,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MaxAuto = true;
             }
             Legend.IsVisible = !IsMultiSelect && Settings.Default.ShowPeakAreaLegend;
+            RemoveInvalidPointValues();
             AxisChange();
 
             // Reformat Y-Axis for labels and whiskers
             var maxY = GraphHelper.GetMaxY(CurveList,this);
-            if (DotProductLabelsVisible)
+            if ((DotProductLabelsVisible || DotProductLineVisible) && !YAxis.Scale.IsLog)
             {
-                var extraSpace = _labelHeight*(maxY/(Chart.Rect.Height - _labelHeight*2))*2;
-                maxY += extraSpace;
+                var reservedSpace = _labelHeight * 2;
+                var unitsPerPixel = maxY / (Chart.Rect.Height - reservedSpace);
+                if (unitsPerPixel > 0)
+                {
+                    var extraSpace = reservedSpace * unitsPerPixel;
+                    maxY += extraSpace;
+                }
             }
        
             GraphHelper.ReformatYAxis(this, maxY > 0 ? maxY : 0.1); // Avoid same min and max, since it blanks the entire graph pane
@@ -1019,6 +1039,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (GraphObj pa in _dotpLabels)
                 GraphObjList.Remove(pa);
             _dotpLabels.Clear();
+            _labelHeight = 0;
 
             if (visible)
             {
@@ -1042,7 +1063,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     textObj.FontSpec.Border.IsVisible = false;
                     textObj.FontSpec.Size = pointSize.Value;
                     textObj.FontSpec.Fill = new Fill(Color.Transparent);
-                    _labelHeight =(int) textObj.FontSpec.GetHeight(CalcScaleFactor());
+                    var labelHeight = (int) textObj.FontSpec.GetHeight(CalcScaleFactor());
+                    if (labelHeight > _labelHeight)
+                        _labelHeight = labelHeight;
                     GraphObjList.Add(textObj);
                     _dotpLabels.Add(textObj);
                 }
@@ -1068,7 +1091,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (_dotpData?.Count > 0 && indexResult < _dotpData.Count && !float.IsNaN(_dotpData[indexResult]))
             {
-                var separator = DotProductDisplayOption.line.IsSet(Settings.Default) ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate : TextUtil.LineSeparate;
+                var separator = DotProductDisplayOption.line.IsSet(Settings.Default)
+                    ? (Func<IEnumerable<string>, string>)TextUtil.SpaceSeparate
+                    : TextUtil.LineSeparate;
                 return separator(new [] { DotpLabelText , string.Format(@"{0:F02}", _dotpData[indexResult]) } ) ;
             }
             else

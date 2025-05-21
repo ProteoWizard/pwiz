@@ -592,6 +592,11 @@
     <ClCompile Include="libraries\SQLite\sqlite3pp.cpp" />
     <ClCompile Include="pwiz\data\msdata\mzmlb\Connection_mzMLb.cpp" />
     <ClCompile Include="pwiz\analysis\spectrum_processing\MzShiftFilter.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Mobilion\ChromatogramList_Mobilion.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Mobilion\Reader_Mobilion.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Detail.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Test.cpp" />
+    <ClCompile Include="pwiz\data\vendor_readers\Mobilion\SpectrumList_Mobilion.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -1067,6 +1072,18 @@
     <ClInclude Include="libraries\SQLite\sqlite3pp.h" />
     <ClInclude Include="pwiz\data\msdata\mzmlb\Connection_mzMLb.hpp" />
     <ClInclude Include="pwiz\analysis\spectrum_processing\MzShiftFilter.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Mobilion\ChromatogramList_Mobilion.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Mobilion\Reader_Mobilion.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Detail.hpp" />
+    <ClInclude Include="pwiz\data\vendor_readers\Mobilion\SpectrumList_Mobilion.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIBinning.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIChem.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIExceptions.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIFileHDF5Adapter.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIMerge.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIStitch.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBITrim.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />

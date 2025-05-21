@@ -49,7 +49,8 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PasteMoleculesTest : AbstractFunctionalTestEx
     {
-        [TestMethod]
+        [TestMethod,
+         NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)] // Don't leak test this - it takes a long time to run even once
         public void TestPasteMolecules()
         {
             TestFilesZip = @"TestFunctional\PasteMoleculeTest.zip";
@@ -147,6 +148,8 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             var docEmpty = NewDocument();
+            TestSimilarMzIsotopes();
+            TestIsotopeLabelsInInChi();
             TestNotes();
             TestAutoManage();
             TestErrors();
@@ -1479,6 +1482,16 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
         }
 
+        private void TestIsotopeLabelsInInChi()
+        {
+            // Deal with isotope labels declared in inchi
+            var text = "moleculename\tmolecularformula\tprecursormz\tinchi\nMyMol\tC8H8O\t126.076345\t1S/C8H8O/c1-7(9)8-5-3-2-4-6-8/h2-6H,1H3/i1D3,2C13,4C14"; // "i1D3,2C13,4C14"means Labeled with 3 H', C' at position 2 and C" at position 4
+            TestError(text, String.Empty, null); // Should load with no problem
+            var adduct = SkylineWindow.Document.MoleculeTransitions.First().Transition.Adduct;
+            AssertEx.AreEqual("[M3H2C13C14+]", adduct.ToString());
+            NewDocument();
+        }
+
         private void TestImpliedFragmentAdduct()
         {
             // Test ability to infer fragment adduct from formula and stated m/z
@@ -2765,6 +2778,29 @@ namespace pwiz.SkylineTestFunctional
                 var pastedDoc = WaitForDocumentChange(docOrig);
                 AssertEx.IsDocumentState(pastedDoc, null, 2, 4, 8, 12);
             }
+        }
+
+        void TestSimilarMzIsotopes()
+        {
+            // Check that we are noticing different labels even when m/z is similar
+            var input =
+                "Molecule Name,Molecular Formula,Precursor Adduct,Precursor Charge\r\n"+
+                "Glutamine,C5H10N2O3,M2C13-H,-1\r\n" +
+                "Glutamine,C5H10N2O3,M1C131N15-H,-1\r\n"+ 
+                "Glutamine,C5H10N2O3,M1C131H2-H,-1";
+
+            var docOrig = NewDocument();
+
+            SetClipboardText(input);
+            // Paste directly into targets area, which should send us to ColumnSelectDlg
+            var testImportDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+
+            // Import the list
+            OkDialog(testImportDlg, testImportDlg.OkDialog);
+
+            var pastedDoc = WaitForDocumentChange(docOrig);
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 3, 3);
+
         }
     }
 }

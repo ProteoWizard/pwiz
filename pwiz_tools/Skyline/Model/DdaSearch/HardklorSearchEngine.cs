@@ -785,6 +785,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 DeleteIntermediateFiles();
             }
+            base.Dispose();
         }
 
         public void DeleteIntermediateFiles()
@@ -978,16 +979,26 @@ namespace pwiz.Skyline.Model.DdaSearch
             var summaries = new List<SpectrumSummary>();
             MsDataFileImpl dataFile;
 
+            var openMsDataFileParams = new OpenMsDataFileParams
+            {
+                SimAsSpectra = false,
+                PreferOnlyMs1 = true,
+                CentroidMs1 = true,
+                CentroidMs2 = true,
+                IgnoreZeroIntensityPoints = false
+            };
+
             try
             {
                 // Only need MS1 for our purposes, and centroided data if possible
-                dataFile = msDataFileUri.OpenMsDataFile(false, true, true, true, false);
+                dataFile = msDataFileUri.OpenMsDataFile(openMsDataFileParams);
                 dataFile.GetSpectrum(0);
             }
             catch (Exception)
             {
                 // Retry on the chance that the failure was inability to do centroiding
-                dataFile = msDataFileUri.OpenMsDataFile(false, true, false, false, false);
+                openMsDataFileParams.CentroidMs1 = openMsDataFileParams.CentroidMs2 = false;
+                dataFile = msDataFileUri.OpenMsDataFile(openMsDataFileParams);
             }
             using (dataFile)
             {

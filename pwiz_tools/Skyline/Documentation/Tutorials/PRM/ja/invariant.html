@@ -11,8 +11,8 @@
     <p>
         Skyline supports several methods of extracting chromatography-based quantitative measurements from the raw data files of full-scan mass
         spectrometers, such as ion trap, Orbitrap, and Q-TOF instruments. Skyline supports these methods of analysis for instruments from all 6 major
-        mass spectrometer vendors: Agilent, Bruker, SCIEX, Shimadzu, Thermo-Scientific, and Waters, using an approach flexible enough for both high
-        and low resolution mass analyzers.
+        mass spectrometer vendors: Agilent, Bruker, SCIEX, Shimadzu, Thermo-Scientific, and Waters, using an approach flexible enough for both high-
+        and low-resolution mass analyzers.
     </p>
     <p>
         In this tutorial, you will learn how to use Skyline to analyze MS/MS spectra acquired with a targeted approach called parallel reaction
@@ -40,7 +40,7 @@
         user interface.
     </p>
     <p>
-        <img src="s-intensity-retention-time-graph.png" />
+        <img src="s-intensity-retention-time-graph.png" /> 
     </p>
     <p>
         PRM can be used to provide an alternative for a triple quadrupole when time on such an instrument is not an option. Though, filtering high
@@ -48,14 +48,14 @@
         validate integrated chromatogram peaks. PRM can also be used for system suitability runs on a wide variety of full-scan instruments, even when
         they are predominantly used for data dependent acquisition (DDA) of MS/MS spectra for peptide spectrum matching pipelines. This ID-free
         quality control approach will be presented in a separate tutorial, however. This tutorial will explore the use of PRM for targeted
-        quantitative measurement on a low resolution Thermo LTQ and a high resolution Agilent Q-TOF.
+        quantitative measurement on a low resolution Thermo LTQ and a high-resolution Agilent Q-TOF.
     </p>
     <h1>Getting Started</h1>
     <p>
         To start this tutorial, download the following ZIP file:
     </p>
     <p>
-        <a href="https://skyline.gs.washington.edu/tutorials/TargetedMSMS_2.zip">https://skyline.gs.washington.edu/tutorials/TargetedMSMS_2.zip</a>
+        <a href="https://skyline.ms/tutorials/TargetedMSMS_2.zip">https://skyline.ms/tutorials/TargetedMSMS_2.zip</a>
     </p>
     <p>
         Extract the files in it to a folder on your computer, like:
@@ -78,7 +78,7 @@
         Select the first peptide in the document, and Skyline should look something like this:
     </p>
     <p>
-        <img src="s-1.png" />
+        <img src="s-01.png" />
     </p>
     <p>
         This is a relatively small document. The indicators in the lower right corner, on the status bar, tell you that it contains 10 peptide
@@ -127,7 +127,7 @@
         will need to make some changes to prepare it for importing full-scan data files. The <b>Full-Scan</b> tab will look like this:
     </p>
     <p>
-        <img src="s-2.png" />
+        <img src="s-02.png" />
     </p>
     <p>
         To extract chromatograms from full-scan data, Skyline needs a little more information.
@@ -135,13 +135,13 @@
     <ul>
         <li>For MS1 filtering: from the <b>Isotope peaks included</b> drop list, choose ‘Count’.</li>
         <li>From the <b>Precursor mass analyzer</b> drop list, choose ‘QIT’.</li>
-        <li>For <b>MS/MS filtering</b> from the <b>Acquisition method</b> drop list choose ‘Targeted’.</li>
+        <li>For <b>MS/MS filtering</b> from the <b>Acquisition method</b> drop list choose ‘PRM’.</li>
     </ul>
     <p class="keep-next">
         The <b>Full-Scan</b> tab should now look like this:
     </p>
     <p>
-        <img src="s-3.png" />
+        <img src="s-03.png" />
     </p>
     <p>
         Note that when both MS1 and MS/MS filtering are enabled, all precursor ion chromatograms will be extracted exclusively from MS1 spectra, and
@@ -175,7 +175,7 @@
         The <b>Library</b> tab should look like this:
     </p>
     <p>
-        <img src="s-4.png" />
+        <img src="s-04.png" />
     </p>
     <p>
         The library ion match window is now the same as the chromatogram extraction window. This can be a little more complicated with high resolution
@@ -195,7 +195,7 @@
         The <b>Filter</b> tab should now look like this:
     </p>
     <p>
-        <img src="s-5.png" />
+        <img src="s-05.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -218,7 +218,7 @@
         The form should now look like this:
     </p>
     <p>
-        <img src="s-6.png" />
+        <img src="s-06.png" />
     </p>
     <ul>
         <li>Click the green check button (Enter).</li>
@@ -256,7 +256,7 @@
         The <b>Export Method</b> form should now look like:
     </p>
     <p>
-        <img src="s-7.png" />
+        <img src="s-07.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -275,7 +275,7 @@
         Otherwise, Skyline will show you the following error message:
     </p>
     <p>
-        <img src="s-8.png" />
+        <img src="s-08.png" />
     </p>
     <p>
         Simply click the <b>OK</b> button to continue the rest of the tutorial, but remember that similar steps will work for Thermo Ion Trap
@@ -303,7 +303,7 @@
         The <b>Edit Report</b> form should now look like this:
     </p>
     <p>
-        <img src="s-9.png" />
+        <img src="s-09.png" />
     </p>
     <ul>
         <li>Click the <b>Preview</b> button.</li>
@@ -339,7 +339,6 @@
         The first page of this form can be used to build a spectral library for your Skyline document. To do this now, perform the following steps:
     </p>
     <ul>
-        <li>In the <b>Cut-off score</b> field, enter ‘0.99’.</li>
         <li>Check the <b>Filter for document peptides</b> checkbox to keep only spectra that identify the peptides in your document.</li>
         <li>Click the <b>Add Files</b> button in the <b>Import Peptide Search</b> form.</li>
         <li>Navigate into the ‘search’ subfolder of the ‘Low Res’ folder.</li>
@@ -354,6 +353,8 @@
         <img src="s-12.png" />
     </p>
     <ul>
+        <li>In one of the <b>Score Threshold</b> field, enter ‘0.01’. Both score thresholds will change because they have the same score
+            type.</li>
         <li>Click the <b>Next</b> button.</li>
     </ul>
     <p>
@@ -387,7 +388,7 @@
     </ul>
     <p>
         Skyline shows several of the transition settings you have already adjusted. These settings can be useful when you are starting from scratch, as
-        in the <a href="https://skyline.ms/tutorial_ms1_filtering_ja.url">MS1 Full-Scan Filtering tutorial</a>, but you don’t need to change anything
+        in the <a href="https://skyline.ms/tutorial_ms1_filtering.url">MS1 Full-Scan Filtering tutorial</a>, but you don’t need to change anything
         further here.
     </p>
     <ul>
@@ -482,6 +483,7 @@
     <ul>
         <li>On the <b>View</b> menu, choose <b>Peak Areas</b> and click <b>Replicate Comparison</b> (F7).</li>
         <li>On the <b>View</b> menu, choose <b>Transitions</b> and click <b>Products</b> (Ctrl-Alt-F10).</li>
+        <li>Right-click the <b>Peak Areas – Replicate Comparison</b> graph, choose <b>Show Dot Product</b>, and click <b>Labels</b>.</li>
     </ul>
     <p class="keep-next">
         The <b>Peak Areas</b> graph should now look like this:
@@ -495,7 +497,6 @@
     <ul>
         <li>Right-click the <b>Peak Areas</b> graph, choose <b>Normalize To</b> and click <b>None</b>.</li>
         <li>Right-click the <b>Peak Areas</b> graph, and click <b>Show Library</b>.</li>
-        <li>Right-click the <b>Peak Areas</b> graph, and click <b>Show Dot Product</b>.</li>
     </ul>
     <p>
         You can review all of the target peptides with these settings to see that they all match the search spectra very well, and that the
@@ -556,7 +557,7 @@
     <table class="comp-fig">
         <tr>
             <td  class="comp-fig">
-                R.IKNLQ<strong><u>S</u></strong>LDPSH.- [80, 90]<br />
+                R.IKNLQ<b><u>S</u></b>LDPSH.- [80, 90]<br />
                 <img src="s-23.png" />
             </td>
             <td class="comp-fig">
@@ -607,7 +608,7 @@
             </ul>
         </li>
         <li>For MS/MS filtering:<ul>
-                <li>From the <b>Acquisition method</b> drop list choose ‘Targeted’.</li>
+                <li>From the <b>Acquisition method</b> drop list choose ‘PRM’.</li>
                 <li>From the <b>Product mass analyzer</b> drop list choose ‘Centroided’.</li>
                 <li>In the <b>Mass error</b> field, enter ‘20’ ppm.</li>
             </ul>

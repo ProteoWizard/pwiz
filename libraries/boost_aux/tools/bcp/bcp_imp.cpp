@@ -1,8 +1,8 @@
 /*
  *
  * Copyright (c) 2003 Dr John Maddock
- * Use, modification and distribution is subject to the 
- * Boost Software License, Version 1.0. (See accompanying file 
+ * Use, modification and distribution is subject to the
+ * Boost Software License, Version 1.0. (See accompanying file
  * LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  *
  * This file implements the bcp_implementation virtuals.
@@ -18,8 +18,8 @@
 #include <string>
 
 bcp_implementation::bcp_implementation()
-  : m_list_mode(false), m_list_summary_mode(false), m_license_mode(false), m_cvs_mode(false), 
-  m_svn_mode(false), m_unix_lines(false), m_scan_mode(false), m_bsl_convert_mode(false), 
+  : m_list_mode(false), m_list_summary_mode(false), m_license_mode(false), m_cvs_mode(false),
+  m_svn_mode(false), m_unix_lines(false), m_scan_mode(false), m_bsl_convert_mode(false),
   m_bsl_summary_mode(false), m_namespace_alias(false), m_list_namespaces(false)
 {
 }
@@ -80,8 +80,8 @@ void bcp_implementation::enable_unix_lines()
 
 void bcp_implementation::set_boost_path(const char* p)
 {
-   // Hack to strip trailing slashes from the path 
-   m_boost_path = (fs::path(p) / "boost").parent_path(); 
+   // Hack to strip trailing slashes from the path
+   m_boost_path = (fs::path(p) / "boost").parent_path();
    fs::path check = m_boost_path / "boost" / "version.hpp";
    if(!fs::exists(check))
    {
@@ -143,6 +143,16 @@ void bcp_implementation::set_namespace_list(bool b)
 {
    m_list_namespaces = b;
    m_list_mode = b;
+}
+
+void bcp_implementation::add_excluded(const char* p)
+{
+   if (!fs::exists(p))
+   {
+      std::cerr << "CAUTION: excluded path " << p << " does not exist." << std::endl;
+      return;
+   }
+   m_excluded.insert(p);
 }
 
 fs::path get_short_path(const fs::path& p)
@@ -219,7 +229,7 @@ int bcp_implementation::run()
       fs::path exmodule;
       module = fs::path(*i);
       exmodule = fs::path(*i + ".hpp");
-      
+
       if(m_scan_mode)
       {
          // in scan mode each module must be a real file:
@@ -255,6 +265,11 @@ int bcp_implementation::run()
          }
       }
       ++i;
+   }
+   while (!m_pending_paths.empty())
+   {
+      add_path(m_pending_paths.front());
+      m_pending_paths.pop();
    }
    //
    // now perform output:

@@ -171,9 +171,11 @@
     <Compile Include="ChromatogramExporterTest.cs" />
     <Compile Include="ChromatogramGroupIdsTest.cs" />
     <Compile Include="CmdLineAssociateProteinsTest.cs" />
+    <Compile Include="CommandLineThermoMethodTest.cs" />
     <Compile Include="ElibQuantifiableTransitionTest.cs" />
     <Compile Include="ErrorIfPersistentFilesDirModifiedTest.cs" />
     <Compile Include="FastaSequenceTest.cs" />
+    <Compile Include="ImmutableListTest.cs" />
     <Compile Include="LocalizedHtmlTutorialsTest.cs" />
     <Compile Include="LibraryRankedSpectrumInfoTest.cs" />
     <Compile Include="MassListIonsTest.cs" />
@@ -286,9 +288,11 @@
     <Compile Include="MassListInputsTest.cs" />
     <Compile Include="EncyclopeDiaHelpersTest.cs" />
     <Compile Include="SrmSettingsNewTest.cs" />
+    <Compile Include="DllFinderUnitTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
     <Compile Include="WebEnabledFastaImporterTest.cs" />
+    <Compile Include="ZedGraphTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
@@ -323,6 +327,10 @@
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
+      <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>
+      <Name>TestRunnerLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestUtil\TestUtil.csproj">
       <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
       <Name>TestUtil</Name>
@@ -335,7 +343,9 @@
     <None Include="CommandLineAssayImportTest.zip" />
     <None Include="CommandLineImportAnnotationsTest.zip" />
     <None Include="CommandLineMProphetTest.zip" />
+    <EmbeddedResource Include="CommandLineThermoMethodTest.json" />
     <None Include="DecoysTest.zip" />
+    <EmbeddedResource Include="DllFinderUnitTest.json" />
     <None Include="DocLoadLibraryTest.zip" />
     <EmbeddedResource Include="explicit-losses.sky" />
     <EmbeddedResource Include="DocumentSerializerTest.sky" />

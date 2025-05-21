@@ -129,7 +129,7 @@
   </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="btnOk.Location" type="System.Drawing.Point, System.Drawing">
-    <value>497, 14</value>
+    <value>595, 14</value>
   </data>
   <data name="btnOk.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -160,7 +160,7 @@
     <value>NoControl</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>497, 44</value>
+    <value>595, 44</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -199,7 +199,7 @@
     <value>点</value>
   </data>
   <data name="Points.MinimumWidth" type="System.Int32, mscorlib">
-    <value>32</value>
+    <value>30</value>
   </data>
   <metadata name="Equation.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -208,7 +208,7 @@
     <value>方程式</value>
   </data>
   <data name="Equation.MinimumWidth" type="System.Int32, mscorlib">
-    <value>38</value>
+    <value>100</value>
   </data>
   <metadata name="R.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -217,7 +217,7 @@
     <value>R</value>
   </data>
   <data name="R.MinimumWidth" type="System.Int32, mscorlib">
-    <value>25</value>
+    <value>30</value>
   </data>
   <metadata name="Result.UserAddedColumn" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -232,7 +232,7 @@
     <value>5, 73</value>
   </data>
   <data name="dataGridView.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 106</value>
+    <value>579, 106</value>
   </data>
   <data name="dataGridView.TabIndex" type="System.Int32, mscorlib">
     <value>3</value>
@@ -280,7 +280,7 @@
     <value>5, 306</value>
   </data>
   <data name="panelKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 121</value>
+    <value>579, 121</value>
   </data>
   <data name="panelKeep.TabIndex" type="System.Int32, mscorlib">
     <value>5</value>
@@ -323,7 +323,7 @@
     <value>7, 32</value>
   </data>
   <data name="listKeep.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 69</value>
+    <value>535, 69</value>
   </data>
   <data name="listKeep.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -449,7 +449,7 @@
     <value>5, 185</value>
   </data>
   <data name="panelOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 121</value>
+    <value>579, 121</value>
   </data>
   <data name="panelOverwrite.TabIndex" type="System.Int32, mscorlib">
     <value>4</value>
@@ -492,7 +492,7 @@
     <value>7, 32</value>
   </data>
   <data name="listOverwrite.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 69</value>
+    <value>535, 69</value>
   </data>
   <data name="listOverwrite.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -576,7 +576,7 @@
     <value>5, 427</value>
   </data>
   <data name="panelExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>481, 180</value>
+    <value>579, 180</value>
   </data>
   <data name="panelExisting.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -702,7 +702,7 @@
     <value>7, 19</value>
   </data>
   <data name="listExisting.Size" type="System.Drawing.Size, System.Drawing">
-    <value>437, 56</value>
+    <value>535, 56</value>
   </data>
   <data name="listExisting.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
@@ -714,7 +714,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>584, 613</value>
+    <value>682, 613</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>

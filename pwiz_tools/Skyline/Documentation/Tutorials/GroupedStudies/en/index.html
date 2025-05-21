@@ -113,7 +113,7 @@
         peptides and 789 transitions.
     </p>
     <p>
-        <img src="s-1.png" />
+        <img src="s-01.png" />
     </p>
     <p>
         This is not quite what is promised in the figure above (from a manuscript draft that was never published), but the document also contains one
@@ -128,7 +128,7 @@
         Proteome Machine (GPM). You can explore their coverage by doing the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>On the <b>Reports</b> menu in the upper-left corner of the <b>Document Grid</b> form, click
             <b>Precursors</b>.</li>
         <li>Scroll to the right in the <b>Document Grid</b> to find the “Library Name” column, click it and click <b>Sort
@@ -139,7 +139,7 @@
         (GPM) library (31). Note that the row number of the selected cell is shown in the toolbar above the grid.
     </p>
     <p>
-        <img src="s-2.png" />
+        <img src="s-02.png" />
     </p>
     <p>
         For the current example, this information gives you a sense of the sparse prior knowledge on which the experiment was based. Modern knowledge
@@ -164,7 +164,7 @@
         The files should begin loading, and Skyline will display progress in a window like the one shown below:
     </p>
     <p>
-        <img src="s-3.png" />
+        <img src="s-03.png" />
     </p>
     <p>
         To continue preparing for data processing while Skyline imports the SRM chromatograms, do the following:
@@ -179,7 +179,7 @@
         <li>Drag the cursor into the bottom docking indicator to see a blue rectangle fill the bottom edge of the Skyline window, as shown below.</li>
     </ul>
     <p>
-        <img src="s-4.png" />
+        <img src="s-04.png" />
     </p>
     <ul>
         <li>Release the left mouse button to dock the <b>Retention Times</b> view.</li>
@@ -188,7 +188,7 @@
             share the bottom edge with the <b>Peak Areas</b> view.</li>
     </ul>
     <p>
-        <img src="s-5.png" />
+        <img src="s-05.png" />
     </p>
     <ul>
         <li>Release the left mouse button to dock the <b>Peak Areas</b> view.</li>
@@ -196,7 +196,7 @@
             to the left edge of the Skyline window.</li>
     </ul>
     <p>
-        <img src="s-6.png" />
+        <img src="s-06.png" />
     </p>
     <ul>
         <li>Close any other windows left floating outside the main Skyline window.</li>
@@ -209,7 +209,7 @@
         The form should look like this:
     </p>
     <p>
-        <img src="s-7.png" />
+        <img src="s-07.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -220,7 +220,7 @@
         Your Skyline window should now look something like this:
     </p>
     <p>
-        <img src="s-8.png" />
+        <img src="s-08.png" />
     </p>
     <p>
         <b>Note</b>: This image was taken on a 24” monitor at 1920x1080. If you are viewing this tutorial digitally, you may want to zoom in
@@ -232,7 +232,7 @@
         not very consistent. Most of the chosen peaks elute around 19 minutes. However, nearly one third (12) elute closer to 22 minutes.
     </p>
     <p>
-        <img src="s-9.png" />
+        <img src="s-09.png" />
     </p>
     <p>
         The integration for this peptide is quite poor. While the peak at around 19 minutes appears to be the better peak, it is hard to have much
@@ -328,7 +328,7 @@
     </p>
     <p>
         Skyline defines a truncated peak as any peak where one of its boundaries is at a terminal point of the chromatogram and the intensity at that
-        terminal end is more than 1% of the peak height higher than the intensity at the other integration boundary.
+        terminal end is more than 25% of the peak height higher than the intensity at the other integration boundary.
     </p>
     <p>
         To see other automatically integrated peaks which Skyline has identified as truncated, perform the following steps:
@@ -361,7 +361,7 @@
         You can also use the <b>Document Grid</b> to create a list of all precursors with any peak truncation by doing the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>On the <b>Reports</b> menu in the <b>Document Grid</b> view, click <b>Precursors</b>.</li>
         <li>On the <b>Reports</b> menu in the <b>Document Grid</b> view, click <b>Customize Report</b>.</li>
         <li>In the <b>Report name</b> field, enter “Truncated Precursors”.</li>
@@ -394,7 +394,7 @@
         <li>Click the “Count Truncated” column header and click <b>Sort Descending</b>.</li>
     </ul>
     <p class="keep-next">
-        The <b>Document Grid</b> will show 221 truncated peaks that Skyline has already chosen automatically:
+        The <b>Document Grid</b> will show 129 truncated peaks that Skyline has already chosen automatically:
     </p>
     <p>
         <img src="s-19.png" />
@@ -443,10 +443,18 @@
         <img src="s-22.png" />
     </p>
     <p>
+        Notice the red line and its legend entry "dotp cutoff - 0.90". The right cut-off will depend on the expected similarity between the
+        peak areas and the spectral library used. In thise, case 0.9 is a bit too strict. Do the following to lower the cut-off:
+    </p>
+    <ul>
+        <li>Right-click on the <b>Peak Areas</b> graph, and click <b>Properties</b>.</li>
+        <li>Change the <b>Cutoff</b> value for "dotp" to "0.8".</li>
+        <li>Click <b>OK</b>.</li>
+    </ul>
+    <p>
         Return the <b>Peak Areas</b> view to its former state by doing the following:
     </p>
     <ul>
-        <li>If you used zooming, right-click and click <b>Undo All Zoom/Pan</b>.</li>
         <li>Right-click, choose <b>Normalize To</b> and click <b>Total</b>.</li>
     </ul>
     <p>
@@ -605,7 +613,6 @@
             </td>
         </tr>
     </table>
-    </p>
     <p>
         In a case like this, you want to be very sure you avoid integrating some noise that Skyline fails to identify as a truncated peak. It may just
         be easier to remove the peaks for these replicates.
@@ -669,7 +676,7 @@
     <p>
         Now you can see that the peak area for peptide HLNGFSVPR decreases dramatically from the results acquired for the first sample to the last. The
         total peak area goes from roughly 6,000,000 to 30,000, spanning a 200-fold difference. See if you able to use the <b>Results
-            Grid</b> (under <b>View</b> &gt; <b>Other Grids</b> &gt; <b>Results Grid</b>) with the HLNGFSVPR
+            Grid</b> (under <b>View</b> &gt; <b>Live Reports</b> &gt; <b>Results Grid</b>) with the HLNGFSVPR
         peptide precursor 513.7776++ selected to determine the exact maximum and minimum total peak areas. Looking at the other two standard peptides,
         you will see that they too decrease over time (VVLSGSDATLAYSAFK 2.3 to 1.1 million and AFGLSSPR 23 to 1 million). All 42 runs are supposed to
         be essentially technical replicates for these three peptides. While there is clearly systematic signal degradation for all peptides over time
@@ -1114,7 +1121,7 @@
         To set the annotations you have added to the document, do the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, click <b>Document Grid</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, and click <b>Document Grid</b> (Alt-3).</li>
         <li>On the <b>Reports</b> menu, in the upper left corner of the <b>Document Grid</b>, click <b>Replicates</b>.
         </li>
     </ul>
@@ -1214,7 +1221,7 @@
         <img src="s-77.png" />
     </p>
     <p>
-        Depending on how you processed the rest of your document, there may or may not be exactly 223 truncated precursor peak groups. You could check
+        Depending on how you processed the rest of your document, there may or may not be exactly 133 truncated precursor peak groups. You could check
         the “MissingData” check boxes one peptide at a time. Once you check a box for any peptide, the rest will check automatically, because the
         annotations apply only once to any peptide. Try this now by doing the following:
     </p>
@@ -1229,17 +1236,17 @@
         <img src="s-78.png" />
     </p>
     <p>
-        You can also use Excel and the <b>Document Grid</b> support for pasting values to set all 163 rows in a single paste as follows:
+        You can also use Excel and the <b>Document Grid</b> support for pasting values to set all 133 rows in a single paste as follows:
     </p>
     <ul>
-        <li>In a blank spreadsheet in Excel, scroll down to row 163.</li>
-        <li>Enter “TRUE” in the first column of row 163.</li>
+        <li>In a blank spreadsheet in Excel, scroll down to row 133.</li>
+        <li>Enter “TRUE” in the first column of row 133.</li>
         <li>Select the cell you just entered.</li>
         <li>Click-and-drag the range extension square in the lower right corner of the selection rectangle to fill cells in the first column from row
-            163 to 1 with the value “TRUE”.</li>
+            133 to 1 with the value “TRUE”.</li>
         <li>Press Ctrl-C to copy these cells.</li>
         <li>Return to Skyline and select the first cell in the “MissingData” column.</li>
-        <li>Press Ctrl-V to paste ‘TRUE’ values into all 163 rows from “MissingData”.</li>
+        <li>Press Ctrl-V to paste ‘TRUE’ values into all 133 rows for “MissingData”.</li>
     </ul>
     <p>
         You may realize that this seems a little redundant. You only need to set the MissingData annotation to true once for every peptide. However,
@@ -1377,7 +1384,6 @@
             </td>
         </tr>
     </table>
-    </p>
     <p>
         In these graphs, the bars represent the mean average value (in this case, peak area ratios to global standards) across all replicates and the
         whiskers show one standard deviation to either side of the mean. This gives you some idea of the sample distributions from which the means
@@ -1492,7 +1498,7 @@
         To inspect the group comparison you just defined do the following:
     </p>
     <ul>
-        <li>On the <b>View</b> menu, choose <b>Group Comparisons</b> and click <b>Health v. Diseased</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Live Reports</b>, then <b>Group Comparisons</b>, and click <b>Health v. Diseased</b>.</li>
     </ul>
     <p class="keep-next">
         Skyline will show a grid view that looks like this:

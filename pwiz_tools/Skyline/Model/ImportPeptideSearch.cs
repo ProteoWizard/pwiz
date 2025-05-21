@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.BiblioSpec;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -62,6 +63,7 @@ namespace pwiz.Skyline.Model
         public IrtStandard IrtStandard { get; set; }
         public bool IsDDASearch { get; set; }
         public bool IsDIASearch { get; set; }
+        public bool IsGpfData { get; set; }
         public bool IsFeatureDetection { get; set; }
         public int RemainingStepsInSearch { get; set; } // In the case of Hardklor+Bullseye there may be several steps
         public HardklorSettings SettingsHardklor { get; set; }
@@ -433,15 +435,23 @@ namespace pwiz.Skyline.Model
         public IEnumerable<FoundResultsFile> GetFoundResultsFiles(bool excludeSpectrumSourceFiles = false)
         {
             return !excludeSpectrumSourceFiles
-                ? SpectrumSourceFiles.Values.Where(s => s.HasMatch).Select(s => new FoundResultsFile(s.Name, s.ExactMatch ?? s.AlternateMatch)).ToList()
-                : SpectrumSourceFiles.Values.Where(s => s.HasAlternateMatch).Select(s => new FoundResultsFile(s.Name, s.AlternateMatch)).ToList();
+                ? SpectrumSourceFiles.Values.Where(s => s.HasMatch)
+                    .Select(s => new FoundResultsFile(s.Name, s.ExactMatch ?? s.AlternateMatch))
+                    .OrderBy(fr => fr.Name, new NaturalFilenameComparer()).ToList()
+                : SpectrumSourceFiles.Values.Where(s => s.HasAlternateMatch)
+                    .Select(s => new FoundResultsFile(s.Name, s.AlternateMatch))
+                    .OrderBy(fr => fr.Name, new NaturalFilenameComparer()).ToList();
         }
 
         public IEnumerable<string> GetMissingResultsFiles(bool excludeSpectrumSourceFiles = false)
         {
             return !excludeSpectrumSourceFiles
-                ? SpectrumSourceFiles.Where(s => !s.Value.HasMatch).Select(s => s.Key)
-                : SpectrumSourceFiles.Where(s => !s.Value.HasAlternateMatch).Select(s => s.Key);
+                ? SpectrumSourceFiles.Where(s => !s.Value.HasMatch)
+                    .Select(s => s.Key)
+                    .OrderBy(s => s, new NaturalFilenameComparer())
+                : SpectrumSourceFiles.Where(s => !s.Value.HasAlternateMatch)
+                    .Select(s => s.Key)
+                    .OrderBy(s => s, new NaturalFilenameComparer());
         }
 
         public bool InitializeModifications(SrmDocument document)

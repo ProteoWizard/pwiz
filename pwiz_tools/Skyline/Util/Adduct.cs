@@ -545,6 +545,16 @@ namespace pwiz.Skyline.Util
                         string.Format(Resources.BioMassCalc_ApplyAdductToFormula_Failed_parsing_adduct_description___0__, input));
                 }
             }
+
+            if (!declaredCharge.HasValue)
+            {
+                // Don't override declared charge, e.g. "[M-Br+O]+" as positive wins even if we've seen it claimed as negative in CCS Compendium
+                if (EXOTIC_CHARGE_ADDUCTS != null && EXOTIC_CHARGE_ADDUCTS.TryGetValue(input.Trim(), out var z))
+                {
+                    AdductCharge = z; // We've seen this in the field, and hardcoded it
+                }
+            }
+
             if (declaredCharge.HasValue && calculatedCharge.HasValue && declaredCharge != calculatedCharge)
             {
                 // Only complain if this is an obvious error, like "[M+H]-"
@@ -1158,7 +1168,7 @@ namespace pwiz.Skyline.Util
                 // ReSharper restore LocalizableElement
             };
 
-        // Ion charges seen in XCMS public and ESI-MS-adducts.xls
+        // Ion charges seen in XCMS public and ESI-MS-adducts.xls and CCS Compendium
         public static readonly IDictionary<string, int> DICT_ADDUCT_ION_CHARGES =
             new Dictionary<string, int>
             {
@@ -1169,10 +1179,20 @@ namespace pwiz.Skyline.Util
                 {BioMassCalc.Br,-1},
                 {BioMassCalc.Cl,-1},
                 {BioMassCalc.F, -1},
+                {BioMassCalc.Cu, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Mg, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Ca, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Zn, 2}, // Metal adducts are useful in PFAS analysis
+                {BioMassCalc.Ag, 1}, // Metal adducts are useful in PFAS analysis
                 {@"CH3COO", -1}, // Deprotonated Hac
+                {@"CH­3CO2", -1}, // Deprotonated Hac
                 {@"HCOO", -1}, // Formate (deprotonated FA)  
+                {@"COOH", -1}, // Formate (deprotonated FA)  
+                {@"HCO2", -1}, // Formate (deprotonated FA)  
                 {@"NH4", 1},
-                {@"CH3", 1} // Methyl
+                {@"CH3", 1}, // Methyl
+                {@"CH3O", -1}, // Methoxide 
+                {@"CF3COO",-1}, // Trifluoroacetate
             };
 
         // Popular adducts (declared way down here because it has to follow some other statics)
@@ -1289,6 +1309,13 @@ namespace pwiz.Skyline.Util
             "[3M-H]"        
         };
 
+        // Adducts with weird charges
+        private static readonly Dictionary<string, int> EXOTIC_CHARGE_ADDUCTS = new Dictionary<string, int>
+        {
+            {@"[M-Br+O]", -1}, // Per CCS Compendium
+            {@"[M-Cl+O]", -1}, // Per CCS Compendium
+        };
+
         /// <summary>
         /// Generate a tooltip string that look something like this:
         ///
@@ -1348,6 +1375,20 @@ namespace pwiz.Skyline.Util
                 }
             }
             return charges;
+        }
+
+        public bool TryApplyToMolecule(ParsedMolecule molecule, out ParsedMolecule result)
+        {
+            try
+            {
+                result = ApplyToMolecule(molecule);
+                return true;
+            }
+            catch (InvalidDataException)
+            {
+                result = null; // Trying to remove more O, or label more C, etc, than is present
+                return false;
+            }
         }
 
         public ParsedMolecule ApplyToMolecule(Molecule molecule)

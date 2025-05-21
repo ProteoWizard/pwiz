@@ -259,4 +259,72 @@
   <data name="UpgradeDlg_UpgradeDlg_No_update_was_found_" xml:space="preserve">
     <value>No update was found.</value>
   </data>
+  <data name="ArdiaLoginDlg_Error_interacting_with_web_page" xml:space="preserve">
+    <value>Error interacting with web page</value>
+  </data>
+  <data name="ArdiaLoginDlg_Role___0___is_not_an_available_option__Pick_your_role_manually_" xml:space="preserve">
+    <value>Role '{0}' is not an available option. Pick your role manually.</value>
+  </data>
+  <data name="ArdiaLogoutDlg_InitializeWebView_User_logged_out_successfully_" xml:space="preserve">
+    <value>User logged out successfully.</value>
+  </data>
+  <data name="ArdiaLoginDlg_OnShown_Error_connecting_to_Ardia_server" xml:space="preserve">
+    <value>Error connecting to Ardia server</value>
+  </data>
+  <data name="ArdiaLoginDlg_StartRegistrationSkylineWithArdia_ButtonClicked_Error_registering_this_Skyline_instance_to_Ardia" xml:space="preserve">
+    <value>Error registering this Skyline instance to Ardia</value>
+  </data>
+  <data name="ArdiaLoginDlg_StartLogin_WithArdia_ButtonClicked_Error_logging_in_to_Ardia" xml:space="preserve">
+    <value>Error logging in to Ardia</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_as_Client__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>Error validating Skyline registration in Ardia as Client. Failed to connect to URL {0}. Server URL: {1}. Error message: {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_as_Client__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_" xml:space="preserve">
+    <value>Error validating Skyline registration in Ardia as Client. Failed to process result from webservice call to URL {0}. Server URL: {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus_Error_validating_Skyline_registration_in_Ardia_" xml:space="preserve">
+    <value>Error validating Skyline registration in Ardia.</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>{3} Failed to connect to URL {0}. Server URL: {1}. Error message: {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_result_from_webservice_call_to_URL__0___Server_URL___1_" xml:space="preserve">
+    <value>{2} Failed to process result from webservice call to URL {0}. Server URL: {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__3__Failed_to_process_webservice_response___Probably_failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>{3} Failed to process webservice response.  Probably failed to connect to URL {0}. Server URL: {1}. Error message: {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_ValidateActivationStatus__2__Failed_to_process_webservice_response__URL__0___Server_URL___1_" xml:space="preserve">
+    <value>{2} Failed to process webservice response. URL {0}. Server URL: {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser_Error_registering_Skyline_in_Ardia" xml:space="preserve">
+    <value>Error registering Skyline in Ardia.</value>
+  </data>
+  <data name="ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser__3__Failed_to_connect_to_URL__0___Server_URL___1___Error_message___2_" xml:space="preserve">
+    <value>{3} Failed to connect to URL {0}. Server URL: {1}. Error message: {2}</value>
+  </data>
+  <data name="ArdiaLoginDlg_RegisterDevice_UsingSystemDefaultBrowser__2__Failed_to_connect_to_URL__0___Server_URL___1_" xml:space="preserve">
+    <value>{2} Failed to connect to URL {0}. Server URL: {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_GetBrowserLoginResponseString_" xml:space="preserve">
+    <value>&lt;html&gt;&lt;head&gt;&lt;/head&gt;&lt;body&gt;&lt;h4&gt;
+&lt;p&gt;You are signed in to Ardia platform.&lt;/p&gt;
+&lt;p&gt;Do not log out from Ardia in this browser until done with this Ardia session in Skyline.&lt;/p&gt;
+&lt;p&gt;Closing this browser window will not end this Ardia session in this browser.&lt;/p&gt; 
+&lt;p&gt;Go to the Ardia home page in this browser by clicking &lt;a href="{0}"&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;/h4&gt;&lt;/body&gt;&lt;/html&gt;</value>
+  </data>
+  <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateTo_ClientRegistrationPage_Load_Client_Registration_page_failed_with_HTTP_status_code__0___Page_URL___1_" xml:space="preserve">
+    <value>Load Client Registration page failed with HTTP status code {0}. Page URL: {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0___Login_Page_URL___1_" xml:space="preserve">
+    <value>Load Login page failed with HTTP status code {0}. Login Page URL: {1}</value>
+  </data>
+  <data name="ArdiaLoginDlg_CoreWebView2OnNavigationCompleted_AfterNavigateToLoginURL_Load_Login_page_failed_with_HTTP_status_code__0__Login_Page_URL___1_" xml:space="preserve">
+    <value>Load Login page failed with HTTP status code {0}. It is likely that the Client Registration Code is invalid. A new Client Registration Code was just received from the server so this is probably a bug. Login Page URL: {1}</value>
+  </data>
+  <data name="MsFraggerDownloadDlg_btnRequestVerificationCode_Click_Check_your_email" xml:space="preserve">
+      <value>Check your email for the verification code and copy it into the box.</value>
+  </data>
 </root>

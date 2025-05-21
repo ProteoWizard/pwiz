@@ -562,7 +562,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public PointF TransformCoordinates(double x, double y, PaneKey? paneKey, CoordType coordType = CoordType.AxisXYScale)
         {
-            var graphPane = _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
+            var graphPane = GetGraphPane(paneKey);
             return graphPane.GeneralTransform(new PointF((float)x, (float)y), coordType);
         }
 
@@ -1150,6 +1150,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         case DisplayTypeChrom.qc:
                             message = GraphsResources.GraphChromatogram_UpdateUI_No_QC_chromatogram_found;
                             break;
+                        default:
+                            if (Settings.Default.ShowQuantitativeOnly)
+                            {
+                                message = GraphsResources.GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found;
+                            }
+                            break;
                     }
                     SetErrorGraphItem(new UnavailableChromGraphItem(Helpers.PeptideToMoleculeTextMapper.Translate(message, DocumentUI.DocumentType)));
                 }
@@ -1626,7 +1632,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 iColor++;
             }
 
-            var graphPane = _graphHelper.GetGraphPane(graphPaneKey);
+            var graphPane = GetGraphPane(graphPaneKey);
             if (graphPane == null)
                 _enableTrackingDot = false;
             if (_enableTrackingDot)
@@ -1640,7 +1646,7 @@ namespace pwiz.Skyline.Controls.Graphs
             AlignmentFunction timeRegressionFunction, double[] dotProducts, double bestProduct, bool isFullScanMs,
             int? step, float fontSize, int width, DashStyle dashStyle, FullScanInfo fullScanInfo, PaneKey graphPaneKey)
         {
-            if (tranPeakInfo == null || chromatogramInfo == null)
+            if (tranPeakInfo == null || chromatogramInfo == null || tranPeakInfo.IsEmpty)
                 return; // Nothing to shade
             if (chromatogramInfo.TransformChrom.IsDerivative())
             {
@@ -3534,7 +3540,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string TestFullScanSelection(double x, double y, PaneKey? paneKey)
         {
-            var graphPane = _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
+            var graphPane = GetGraphPane(paneKey);
             var selectionDot = graphPane.CurveList[FULLSCAN_SELECTED_INDEX];
             var mouse = TransformCoordinates(x, y, paneKey);
             var dot = TransformCoordinates(selectionDot[0].X, selectionDot[0].Y, paneKey);
@@ -3544,6 +3550,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Math.Abs(mouse.X - dot.X) > pixelTolerance || Math.Abs(mouse.Y - dot.Y) > pixelTolerance)
                 return $@"mouse coordinates ({x}->{mouse.X}, {y}->{mouse.Y}) and selection dot coordinates ({selectionDot[0].X}->{dot.X}, {selectionDot[0].Y}->{dot.Y}) are too far apart";
             return string.Empty;
+        }
+
+        public GraphPane GetGraphPane(PaneKey? paneKey)
+        {
+            return _graphHelper.GetGraphPane(paneKey ?? PaneKey.DEFAULT);
         }
 
         #endregion Test support

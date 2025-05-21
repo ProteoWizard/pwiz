@@ -40,6 +40,9 @@ using namespace pwiz::util;
 
 namespace {
 
+const char* startTagCCSInTitle = "ccs=";
+const char* endTagsCCSInTitle[] = { " ", ",",";","\t" };
+
 class SpectrumList_MGFImpl : public SpectrumList_MGF
 {
     public:
@@ -218,10 +221,18 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 // Some formats omit RTINSECONDS and store the retention time
                                 // in the title field instead.
                                 double scanTimeMin = getRetentionTimeFromTitle(value);
+
                                 if (scanTimeMin > 0)
                                     scan.set(MS_scan_start_time, scanTimeMin * 60, UO_second);
 
-                                spectrum.set(MS_spectrum_title, value);
+                                double ccs = getCCSFromTitle(value);
+
+                                if (ccs >= 0)
+                                {
+                                    selectedIon.set(MS_collisional_cross_sectional_area, ccs, UO_square_angstrom);
+                                }
+
+                                spectrum.set(MS_spectrum_title, removeCCSFromTitle(value));
                             }
                             else if (name == "PEPMASS")
                             {
@@ -234,6 +245,13 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 }
                                 else
                                     selectedIon.set(MS_selected_ion_m_z, value, MS_m_z);
+                            }
+                            else if (name == "ION_MOBILITY")
+                            {
+                                bal::trim(value);
+                                size_t delim = value.find_last_of(' ');
+
+                                scan.set(MS_inverse_reduced_ion_mobility, value.substr(delim + 1, value.size() - delim - 1), MS_volt_second_per_square_centimeter);
                             }
                             else if (name == "CHARGE")
                             {
@@ -330,6 +348,62 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         spectrum.set(MS_base_peak_intensity, basePeakIntensity);
     }
 
+    static size_t FindEndTag(const string& title, size_t start)
+    {
+        for (int i = 0; i < sizeof(endTagsCCSInTitle) / sizeof(endTagsCCSInTitle[0]); i++)
+        {
+            const size_t tmpEnd = title.find(endTagsCCSInTitle[i], start);
+            if (tmpEnd != string::npos)
+            {
+                return tmpEnd;
+            }
+        }
+
+        return title.length();
+    }
+
+    /**
+    * Parse the spectrum title to look for CCS.
+    */
+    static double getCCSFromTitle(const string& title)
+    {
+	    size_t start = title.find(startTagCCSInTitle, 0);
+
+        if (start == string::npos)
+            return -1; // not found
+
+        start += strlen(startTagCCSInTitle);
+
+        try
+        {
+            return boost::lexical_cast<double>(title.substr(start, FindEndTag(title, start + strlen(startTagCCSInTitle)) - start));
+        }
+        catch (...)
+        {
+            return -1;
+        }
+    }
+
+    /**
+     * Parse the spectrum title to look for CCS.
+    */
+    static string removeCCSFromTitle(const string& title)
+    {
+        size_t start = title.find(startTagCCSInTitle, 0);
+
+        if (start == string::npos)
+            return title; // not found
+
+        try
+        {
+            return title.substr(0, start - 2) + title.substr(FindEndTag(title, start));
+        }
+        catch (...)
+        {
+            return title;
+        }
+    }
+
     /**
      * Parse the spectrum title to look for retention times.  If there are
      * two times, return the center of the range.  Possible formats to look
@@ -346,7 +420,6 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         double secondTime = 0;
         for(int format_idx = 0; format_idx < 2; format_idx++)
         {
-
             size_t position = 0;
             firstTime = getTime(title, startTags[format_idx], 
                                 endTags[format_idx], position);
@@ -376,7 +449,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
      * Update position to the end of the parsed double.
      */
     double getTime(const string& title, const char* startTag,
-                   const char* endTag, size_t position) const
+                   const char* endTag, size_t& position) const
     {
         size_t start = title.find(startTag, position);
         if( start == string::npos )
@@ -403,7 +476,6 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         size_t lineCount = 0;
         bool inBeginIons = false;
         vector<SpectrumIdentity>::iterator curIdentityItr;
-        map<string, size_t>::iterator curIdToIndexItr;
 
         while (std::getline(*is_, lineStr)) // need accurate line length, so do not use pwiz::util convenience wrapper
         {
@@ -421,7 +493,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 curIdentityItr->index = index_.size()-1;
                 curIdentityItr->id = "index=" + lexical_cast<string>(index_.size()-1);
                 curIdentityItr->sourceFilePosition = size_t(is_->tellg())-lineStr.length()-1;
-                curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
+                idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size() - 1)).first;
                 inBeginIons = true;
             }
             else if (lineStr.find("TITLE=") == 0)

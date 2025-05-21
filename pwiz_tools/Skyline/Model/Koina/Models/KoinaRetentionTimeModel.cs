@@ -211,6 +211,10 @@ namespace pwiz.Skyline.Model.Koina.Models
                 }
 
                 public string PeptideSequence { get; private set; }
+                public override string ToString()
+                {
+                    return PeptideSequence;
+                }
             }
         }
 

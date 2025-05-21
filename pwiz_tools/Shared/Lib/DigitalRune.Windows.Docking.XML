@@ -2160,6 +2160,18 @@
             Refreshes this instance.
             </summary>
         </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPanel.BeginDragDisplay(DigitalRune.Windows.Docking.FloatingWindow,System.Drawing.Point)">
+            <summary>
+            Display drag-drop indicators for screenshot during testing
+            </summary>
+            <param name="floatingSource">The <see cref="T:DigitalRune.Windows.Docking.FloatingWindow"/> to use as the window being dragged.</param>
+            <param name="ptDest">Destination on screen where the arrow cursor should end up.</param>
+        </member>
+        <member name="M:DigitalRune.Windows.Docking.DockPanel.EndDragDisplay">
+            <summary>
+            Hide drag-drop indicators for screenshot during testing
+            </summary>
+        </member>
         <member name="M:DigitalRune.Windows.Docking.DockPanel.SaveAsXml(System.String)">
             <overloads>
             <summary>Save the layout to XML data. Overloaded.</summary>
@@ -2742,6 +2754,28 @@
             </item>
             </list>
             </remarks>
+        </member>
+        <member name="T:DigitalRune.Windows.Docking.IMouseDevice">
+            <summary>
+            Used to disable mouse interactions during test mode display.
+            The default implementation listens to mouse and keyboard.
+            The test implementation provides test values.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.IMouseDevice.Position">
+            <summary>
+            The current position of the cursor in screen dimensions.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.IMouseDevice.ModifierKeys">
+            <summary>
+            Keyboard state of modifier keys.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.IMouseDevice.HasCursor">
+            <summary>
+            True if the mouse device shows its own cursor and false if not.
+            </summary>
         </member>
         <member name="T:DigitalRune.Windows.Docking.DockAreas">
             <summary>Specifies all available docking areas.</summary>
@@ -3953,6 +3987,11 @@
         <member name="P:DigitalRune.Windows.Docking.Resources.DocumentWindowList">
             <summary>
               Looks up a localized string similar to Window List.
+            </summary>
+        </member>
+        <member name="P:DigitalRune.Windows.Docking.Resources.larrow_cur">
+            <summary>
+              Looks up a localized resource of type System.Drawing.Bitmap.
             </summary>
         </member>
         <member name="P:DigitalRune.Windows.Docking.Resources.ToolWindowAutoHide">

@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
             RunLongDlg<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(documentSettingsDlg.EditAnnotationList,
                 editAnnotationListDlg =>
                 {
-                    editAnnotationListDlg.SelectItem("MaxProductMz");
+                    RunUI(() => editAnnotationListDlg.SelectItem("MaxProductMz"));
                     RunDlg<DefineAnnotationDlg>(editAnnotationListDlg.EditItem, defineAnnotationDlg =>
                     {
                         Assert.AreEqual(AggregateOperation.Max, defineAnnotationDlg.AggregateOperation);

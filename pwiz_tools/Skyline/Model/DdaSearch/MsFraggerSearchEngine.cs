@@ -54,23 +54,32 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private const string KEEP_INTERMEDIATE_FILES = "keep-intermediate-files";
 
-        private bool DataIsDIA { get; }
-
-        public MsFraggerSearchEngine(double percolatorQvalueCutoff, bool dataIsDIA)
+        public enum DataType
         {
-            DataIsDIA = dataIsDIA;
+            dda = 0,
+            dia = 1,
+            dia_gpf = 2
+        }
+
+        private readonly DataType _initialDataType;
+        private bool DataIsDIA => _initialDataType != DataType.dda;
+        private string PepXmlSuffix => (DataType) AdditionalSettings[@"data_type"].Value != DataType.dda ? @"_rank1.pepXML" : @".pepXML";
+
+        public MsFraggerSearchEngine(DataType dataType)
+        {
+            _initialDataType = dataType;
 
             AdditionalSettings = new Dictionary<string, Setting>
             {
                 {CHECK_SPECTRAL_FILES, new Setting(CHECK_SPECTRAL_FILES, 1, 0, 1)},
                 {CALIBRATE_MASS, new Setting(CALIBRATE_MASS, 0, 0, 2)},
-                {PERCOLATOR_TEST_QVALUE_CUTOFF, new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, percolatorQvalueCutoff, 0, 1)},
+                {PERCOLATOR_TEST_QVALUE_CUTOFF, new Setting(PERCOLATOR_TEST_QVALUE_CUTOFF, 0.01, 0, 1)},
                 {PERCOLATOR_TRAIN_QVALUE_CUTOFF, new Setting(PERCOLATOR_TRAIN_QVALUE_CUTOFF, 0.01, 0, 1)},
                 {KEEP_INTERMEDIATE_FILES, new Setting(KEEP_INTERMEDIATE_FILES, false)},
             };
 
             // ReSharper disable LocalizableElement
-            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting(@"data_type", DataIsDIA ? 1 : 0, 0, 3)); // Data type (0 for DDA, 1 for DIA, 2 for gas-phase fractionation DIA, 3 for DDA+).
+            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting(@"data_type", (int) dataType, 0, 3)); // Data type (0 for DDA, 1 for DIA, 2 for gas-phase fractionation DIA, 3 for DDA+).
 
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("precursor_true_tolerance", 20.0)); //  True precursor mass tolerance (window is +/- this value).
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("precursor_true_units", 1, 0, 1)); //  True precursor mass tolerance units (0 for Da, 1 for ppm).
@@ -110,7 +119,7 @@ namespace pwiz.Skyline.Model.DdaSearch
 
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("allow_multiple_variable_mods_on_residue", 0, 0, 1));
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("max_variable_mods_combinations", 5000, 0, 65534)); //  Maximum number of modified forms allowed for each peptide (up to 65534).
-            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("output_report_topN", 1, 1)); //  Reports top N PSMs per input spectrum.
+            AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("output_report_topN", 1, 1, DataIsDIA ? 1 : 100)); //  Reports top N PSMs per input spectrum.
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("output_max_expect", 50.0, 0)); //  Suppresses reporting of PSM if top hit has expectation value greater than this threshold.
             AddAdditionalSetting(MSFRAGGER_SETTINGS, new Setting("report_alternative_proteins", 1, 0, 1)); //  Report alternative proteins for peptides that are found in multiple proteins (0 for no, 1 for yes).
 
@@ -142,6 +151,23 @@ namespace pwiz.Skyline.Model.DdaSearch
             AdditionalSettings[setting.Name] = setting;
         }
 
+        private Dictionary<string, Setting> _replacedAdditionalSettings = new Dictionary<string, Setting>();
+        private void ReplaceAdditionalSettingIfDefault(string settingName, object newValue)
+        {
+            if (!AdditionalSettings[settingName].IsDefault)
+                return;
+            _replacedAdditionalSettings[settingName] = AdditionalSettings[settingName];
+            AdditionalSettings[settingName] = new Setting(AdditionalSettings[settingName], newValue);
+        }
+
+        private void RestoreAdditionalSettingIfDefault(string settingName)
+        {
+            if (!AdditionalSettings[settingName].IsDefault)
+                return;
+            AdditionalSettings[settingName] = _replacedAdditionalSettings[settingName];
+            _replacedAdditionalSettings.Remove(settingName);
+        }
+
         private static readonly string[] FRAGMENTATION_METHODS =
         {
             @"b,y",
@@ -149,13 +175,13 @@ namespace pwiz.Skyline.Model.DdaSearch
             @"c,z",
         };
 
-        public static string MSFRAGGER_VERSION = @"4.1";
+        public static string MSFRAGGER_VERSION = @"4.1"; // TODO: after next release and daily, remove outdated rtbUsageConditions.Text translations for ja/zh
         public static string MSFRAGGER_FILENAME = @"MSFragger-4.1";
         public static string MsFraggerDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), MSFRAGGER_FILENAME);
         public static string MsFraggerBinary => Path.Combine(MsFraggerDirectory, MSFRAGGER_FILENAME, MSFRAGGER_FILENAME + @".jar");
         public static FileDownloadInfo MsFraggerDownloadInfo => new FileDownloadInfo { Filename = MSFRAGGER_FILENAME, InstallPath = MsFraggerDirectory, OverwriteExisting = true, Unzip = true };
 
-        static string CRUX_FILENAME = @"crux-4.2";
+        static string CRUX_FILENAME = @"crux-4.3";
         static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
         public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
         public static string CruxBinary => Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux");
@@ -286,7 +312,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var spectrumFilename in SpectrumFileNames)
                     {
                         string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                            spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
                         string cruxInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), ".pin");
                         string cruxFixedInputFilepath = Path.ChangeExtension(spectrumFilename.GetFilePath(), "fixed.pin");
                         _intermediateFiles.Add(cruxInputFilepath);
@@ -318,7 +344,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                     foreach (var spectrumFilename in SpectrumFileNames)
                     {
                         string msfraggerPepXmlFilepath = Path.Combine(Path.GetDirectoryName(spectrumFilename.GetFilePath()) ?? "",
-                            spectrumFilename.GetFileNameWithoutExtension() + (DataIsDIA ? @"_rank1.pepXML" : @".pepXML"));
+                            spectrumFilename.GetFileNameWithoutExtension() + PepXmlSuffix);
                         string finalOutputFilepath = GetSearchResultFilepath(spectrumFilename);
                         _intermediateFiles.Add(msfraggerPepXmlFilepath);
                         FixPercolatorPepXml(msfraggerPepXmlFilepath, finalOutputFilepath, spectrumFilename, qvalueByPsmId, this);
@@ -449,7 +475,6 @@ namespace pwiz.Skyline.Model.DdaSearch
             while (percolatorTargetPsmsReader.ReadLine() != null)
             {
                 var psmId = percolatorTargetPsmsReader.GetFieldByIndex(psmIdColumn);
-                psmId = psmId.Substring(0, psmId.Length - 2);
                 var qvalue = Convert.ToDouble(percolatorTargetPsmsReader.GetFieldByIndex(qvalueColumn), CultureInfo.InvariantCulture);
                 qvalueByPsmId[psmId] = qvalue;
             }
@@ -458,8 +483,9 @@ namespace pwiz.Skyline.Model.DdaSearch
         // Add Percolator score to MSFragger pepXML
         private void FixPercolatorPepXml(string cruxOutputFilepath, string finalOutputFilepath, MsDataFileUri spectrumFilename, Dictionary<string, double> qvalueByPsmId, IProgressMonitor monitor)
         {
-            bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
-            var lastPsmIdRegex = new Regex(@".* spectrum=""([^""]+?)"" .*",RegexOptions.Compiled);
+            //bool isBrukerSource = DataSourceUtil.GetSourceType(spectrumFilename.GetFilePath()) == DataSourceUtil.TYPE_BRUKER;
+            var lastPsmIdRegex = new Regex(@".* assumed_charge=""(\d+)"" spectrum=""([^""]+?)\.\d+"" .*", RegexOptions.Compiled);
+            var hitRankRegex = new Regex(@".* hit_rank=""(\d+)"".*", RegexOptions.Compiled);
 
             // This looks for an ampersand that is NOT followed by:
             // - "amp;", "lt;", "gt;", "quot;", "apos;" (predefined XML entities)
@@ -472,6 +498,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 string line;
                 string lastPsmId = "";
+                string lastPsmIdAndRank = "";
                 while ((line = pepXmlFile.ReadLine()) != null)
                 {
                     if (line.Contains(@"&"))
@@ -480,14 +507,23 @@ namespace pwiz.Skyline.Model.DdaSearch
                         line = unescapedAmpersandRegex.Replace(line, @"&amp;");
                     }
                     if (line.Contains(@"<spectrum_query"))
-                        lastPsmId = lastPsmIdRegex.Replace(line, "$1");
+                    {
+                        lastPsmId = lastPsmIdRegex.Replace(line, "$2.$1");
+                    }
+                    else if (line.Contains(@"<search_hit"))
+                    {
+                        lastPsmIdAndRank = lastPsmId + hitRankRegex.Replace(line, @"_$1");
+                    }
                     else if (line.Contains(@"<search_score name=""hyperscore"""))
                     {
-                        if (qvalueByPsmId.ContainsKey(lastPsmId))
-                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""{0}"" />", qvalueByPsmId[lastPsmId].ToString(CultureInfo.InvariantCulture));
+                        if (qvalueByPsmId.TryGetValue(lastPsmIdAndRank, out var qvalue))
+                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""{0}"" />", qvalue.ToString(CultureInfo.InvariantCulture));
                         // MCC: This happens when percolator's text tables drops a PSM that is in pepXML; I'm not sure why it happens though.
-                        //else
-                        //    Console.WriteLine($"{lastPsmId} not found in percolator scores.");
+                        else
+                        {
+                            fixedPepXmlFile.WriteLine(@"<search_score name=""percolator_qvalue"" value=""1"" />");
+                            //Console.WriteLine($"{lastPsmId} not found in percolator scores.");
+                        }
                     }
                     else if (line.Contains(@"</search_summary>"))
                     {
@@ -509,26 +545,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         {
             var nativeIdRegex = new Regex(".* spectrumNativeID=\"controllerType=0 controllerNumber=1 scan=(\\d+)\"", RegexOptions.Compiled);
             var startScanRegex = new Regex(".* start_scan=\"(\\d+)\" .*", RegexOptions.Compiled);
-            var scanNumbers = new List<int>();
-            using (var pepXmlFile = new StreamReader(msfraggerPepxmlFilepath))
-            {
-                string line;
-                while ((line = pepXmlFile.ReadLine()) != null)
-                {
-                    if (line.Contains(@"<spectrum_query"))
-                    {
-                        if (!int.TryParse(nativeIdRegex.Replace(line, "$1"), out int scanNumber))
-                            scanNumber = int.Parse(startScanRegex.Replace(line, "$1"));
 
-                        scanNumbers.Add(scanNumber);
-                    }
-
-                    if (monitor.IsCanceled)
-                        return;
-                }
-            }
-
-            int scanIndex = 0;
             bool headerFixed = false;
             bool addChargeFeatures = false;
             using (var pinFile = new StreamReader(cruxInputFilepath))
@@ -560,12 +577,6 @@ namespace pwiz.Skyline.Model.DdaSearch
                     }
                     else
                     {
-                        if (scanIndex >= scanNumbers.Count)
-                            throw new InvalidDataException(@"while fixing scan numbers in PIN file, ran out of correct scan numbers from pepXML");
-
-                        int fixedScanNumber = scanNumbers[scanIndex++];
-                        line = Regex.Replace(line, "^([^.]*)\\.\\d+\\.\\d+\\.(\\d+_\\d+\t\\d)\t\\d+", $"$1.{fixedScanNumber}.{fixedScanNumber}.$2\t{fixedScanNumber}");
-
                         // move N-terminal mod to after first AA
                         line = Regex.Replace(line, "n(\\[[^]]+\\])([A-Z])", "$2$1");
 
@@ -994,9 +1005,57 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
             // not used by MSFragger
         }
 
+        private static bool IsLowRes(MzTolerance mzTolerance)
+        {
+            if (mzTolerance == null || mzTolerance.Value == 0)
+                return false;
+            return mzTolerance.Unit == MzTolerance.Units.ppm
+                ? mzTolerance.Value > 50
+                : mzTolerance.Value > 0.05 /* Da */;
+        }
+
         public override void SetPrecursorMassTolerance(MzTolerance mzTolerance)
         {
+            bool wasLowRes = IsLowRes(_precursorMzTolerance);
+
             _precursorMzTolerance = mzTolerance;
+
+            if (!DataIsDIA)
+                return;
+
+            // Use DDA settings for DIA if precursor tolerance is not high resolution:
+            // From Alexey: running as DDA data, with +- 3 Da window, 0.2 Da, 100 peaks per spectrum, charge state 1 fragments for scoring only
+            bool nowLowRes = IsLowRes(mzTolerance);
+            bool lowResChanged = wasLowRes != nowLowRes;
+            if (!lowResChanged)
+                return;
+
+            if (nowLowRes)
+            {
+                ReplaceAdditionalSettingIfDefault(@"data_type", (int) DataType.dda);
+                ReplaceAdditionalSettingIfDefault(@"calibrate_mass", 0);
+                ReplaceAdditionalSettingIfDefault(@"deisotope", 0);
+                ReplaceAdditionalSettingIfDefault(@"deneutralloss", 0);
+                ReplaceAdditionalSettingIfDefault(@"intensity_transform", 0);
+                ReplaceAdditionalSettingIfDefault(@"output_report_topN", 1);
+                ReplaceAdditionalSettingIfDefault(@"precursor_charge", @"1 4");
+                ReplaceAdditionalSettingIfDefault(@"max_fragment_charge", 1);
+                ReplaceAdditionalSettingIfDefault(@"use_topN_peaks", 100);
+                ReplaceAdditionalSettingIfDefault(@"minimum_ratio", 0.01);
+            }
+            else
+            {
+                RestoreAdditionalSettingIfDefault(@"data_type");
+                RestoreAdditionalSettingIfDefault(@"calibrate_mass");
+                RestoreAdditionalSettingIfDefault(@"deisotope");
+                RestoreAdditionalSettingIfDefault(@"deneutralloss");
+                RestoreAdditionalSettingIfDefault(@"intensity_transform");
+                RestoreAdditionalSettingIfDefault(@"output_report_topN");
+                RestoreAdditionalSettingIfDefault(@"precursor_charge");
+                RestoreAdditionalSettingIfDefault(@"max_fragment_charge");
+                RestoreAdditionalSettingIfDefault(@"use_topN_peaks");
+                RestoreAdditionalSettingIfDefault(@"minimum_ratio");
+            }
         }
 
         public override void SetCutoffScore(double cutoffScore)
@@ -1036,6 +1095,7 @@ clear_mz_range = 			# Removes peaks in this m/z range prior to matching.
             {
                 DeleteIntermediateFiles(); // In case cancel came at an awkward time
             }
+            base.Dispose();
         }
     }
 }

@@ -1048,13 +1048,13 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>0</value>
   </data>
   <data name="tbxMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 45</value>
+    <value>130, 85</value>
   </data>
   <data name="tbxMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="tbxMaxLoqBias.TabIndex" type="System.Int32, mscorlib">
-    <value>1</value>
+    <value>6</value>
   </data>
   <data name="tbxMaxLoqBias.ToolTip" xml:space="preserve">
     <value>定量下限（LOQ）として指定された濃度の測定面積に基づいたモデル推定の既知許容濃度
@@ -1070,16 +1070,16 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;tbxMaxLoqBias.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>0</value>
   </data>
   <data name="comboLodMethod.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 95</value>
+    <value>6, 39</value>
   </data>
   <data name="comboLodMethod.Size" type="System.Drawing.Size, System.Drawing">
-    <value>133, 21</value>
+    <value>208, 21</value>
   </data>
   <data name="comboLodMethod.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
+    <value>1</value>
   </data>
   <data name="comboLodMethod.ToolTip" xml:space="preserve">
     <value>検出下限(LOD)を決定するメソッド</value>
@@ -1094,16 +1094,16 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;comboLodMethod.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>1</value>
   </data>
   <data name="tbxMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>170, 45</value>
+    <value>6, 85</value>
   </data>
   <data name="tbxMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
   </data>
   <data name="tbxMaxLoqCv.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>3</value>
   </data>
   <data name="tbxMaxLoqCv.ToolTip" xml:space="preserve">
     <value>定量下限（LOQ）として指定された濃度の複数回測定値における最大許容CV</value>
@@ -1118,7 +1118,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;tbxMaxLoqCv.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>6</value>
   </data>
   <data name="tbxQuantUnits.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 239</value>
@@ -1142,7 +1142,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxQuantUnits.ZOrder" xml:space="preserve">
-    <value>2</value>
+    <value>5</value>
   </data>
   <data name="comboQuantMsLevel.Items" xml:space="preserve">
     <value>すべて</value>
@@ -1175,7 +1175,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboQuantMsLevel.ZOrder" xml:space="preserve">
-    <value>4</value>
+    <value>7</value>
   </data>
   <data name="comboNormalizationMethod.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 83</value>
@@ -1199,7 +1199,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>9</value>
   </data>
   <data name="comboRegressionFit.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 36</value>
@@ -1223,7 +1223,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboRegressionFit.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>11</value>
   </data>
   <data name="comboWeighting.Location" type="System.Drawing.Point, System.Drawing">
     <value>28, 145</value>
@@ -1247,10 +1247,10 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;comboWeighting.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>13</value>
   </data>
   <data name="tbxIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>170, 95</value>
+    <value>29, 408</value>
   </data>
   <data name="tbxIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
     <value>100, 20</value>
@@ -1270,7 +1270,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>System.Windows.Forms.TextBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;tbxIonRatioThreshold.Parent" xml:space="preserve">
-    <value>groupBoxFiguresOfMerit</value>
+    <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;tbxIonRatioThreshold.ZOrder" xml:space="preserve">
     <value>2</value>
@@ -1304,28 +1304,10 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;cbxSimpleRatios.ZOrder" xml:space="preserve">
-    <value>0</value>
+    <value>1</value>
   </data>
   <data name="tabControl1.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
-  </data>
-  <data name="labelPeptideUniquenessConstraint.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelPeptideUniquenessConstraint.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 222</value>
-  </data>
-  <data name="labelPeptideUniquenessConstraint.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 13</value>
-  </data>
-  <data name="labelPeptideUniquenessConstraint.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="labelPeptideUniquenessConstraint.Text" xml:space="preserve">
-    <value>次を使用してペプチドの一意性を強制します(&amp;U)：</value>
   </data>
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.Name" xml:space="preserve">
     <value>labelPeptideUniquenessConstraint</value>
@@ -1339,21 +1321,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;labelPeptideUniquenessConstraint.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 71</value>
-  </data>
-  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="label2.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label2.Text" xml:space="preserve">
-    <value>最大未切断数(&amp;M)：</value>
-  </data>
   <data name="&gt;&gt;label2.Name" xml:space="preserve">
     <value>label2</value>
   </data>
@@ -1366,21 +1333,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;label2.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
-    <value>47, 13</value>
-  </data>
-  <data name="label1.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label1.Text" xml:space="preserve">
-    <value>酵素(&amp;E)：</value>
-  </data>
   <data name="&gt;&gt;label1.Name" xml:space="preserve">
     <value>label1</value>
   </data>
@@ -1392,21 +1344,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;label1.ZOrder" xml:space="preserve">
     <value>4</value>
-  </data>
-  <data name="label15.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 172</value>
-  </data>
-  <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
-    <value>115, 13</value>
-  </data>
-  <data name="label15.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label15.Text" xml:space="preserve">
-    <value>バックグラウンドプロテオーム(&amp;B)：</value>
   </data>
   <data name="&gt;&gt;label15.Name" xml:space="preserve">
     <value>label15</value>
@@ -1447,21 +1384,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tabDigestion.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="label14.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
-    <value>134, 136</value>
-  </data>
-  <data name="label14.Size" type="System.Drawing.Size, System.Drawing">
-    <value>23, 13</value>
-  </data>
-  <data name="label14.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="label14.Text" xml:space="preserve">
-    <value>分</value>
-  </data>
   <data name="&gt;&gt;label14.Name" xml:space="preserve">
     <value>label14</value>
   </data>
@@ -1474,21 +1396,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;label14.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="label13.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 116</value>
-  </data>
-  <data name="label13.Size" type="System.Drawing.Size, System.Drawing">
-    <value>72, 13</value>
-  </data>
-  <data name="label13.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
-  </data>
-  <data name="label13.Text" xml:space="preserve">
-    <value>時間ウィンドウ(&amp;W)：</value>
-  </data>
   <data name="&gt;&gt;label13.Name" xml:space="preserve">
     <value>label13</value>
   </data>
@@ -1500,21 +1407,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;label13.ZOrder" xml:space="preserve">
     <value>4</value>
-  </data>
-  <data name="label9.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
-    <value>122, 13</value>
-  </data>
-  <data name="label9.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label9.Text" xml:space="preserve">
-    <value>保持時間予測(&amp;R)：</value>
   </data>
   <data name="&gt;&gt;label9.Name" xml:space="preserve">
     <value>label9</value>
@@ -1552,21 +1444,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tabPrediction.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
-  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 70</value>
-  </data>
-  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 13</value>
-  </data>
-  <data name="label3.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="label3.Text" xml:space="preserve">
-    <value>N末端アミノ酸を除外(&amp;N)：</value>
-  </data>
   <data name="&gt;&gt;label3.Name" xml:space="preserve">
     <value>label3</value>
   </data>
@@ -1578,21 +1455,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;label3.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 160</value>
-  </data>
-  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
-    <value>143, 13</value>
-  </data>
-  <data name="label6.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>以下を含むペプチドを除外(&amp;E)：</value>
   </data>
   <data name="&gt;&gt;label6.Name" xml:space="preserve">
     <value>label6</value>
@@ -1606,21 +1468,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;label6.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
-    <value>112, 20</value>
-  </data>
-  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
-    <value>62, 13</value>
-  </data>
-  <data name="label5.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label5.Text" xml:space="preserve">
-    <value>最大長(&amp;X)：</value>
-  </data>
   <data name="&gt;&gt;label5.Name" xml:space="preserve">
     <value>label5</value>
   </data>
@@ -1632,21 +1479,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;label5.ZOrder" xml:space="preserve">
     <value>7</value>
-  </data>
-  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
-    <value>59, 13</value>
-  </data>
-  <data name="label4.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label4.Text" xml:space="preserve">
-    <value>最小長さ(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label4.Name" xml:space="preserve">
     <value>label4</value>
@@ -1687,96 +1519,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tabFilter.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="labelPeptides.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelPeptides.Location" type="System.Drawing.Point, System.Drawing">
-    <value>99, 159</value>
-  </data>
-  <data name="labelPeptides.Size" type="System.Drawing.Size, System.Drawing">
-    <value>48, 13</value>
-  </data>
-  <data name="labelPeptides.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
-  <data name="labelPeptides.Text" xml:space="preserve">
-    <value>ペプチド</value>
-  </data>
-  <data name="&gt;&gt;labelPeptides.Name" xml:space="preserve">
-    <value>labelPeptides</value>
-  </data>
-  <data name="&gt;&gt;labelPeptides.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;labelPeptides.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;labelPeptides.ZOrder" xml:space="preserve">
-    <value>1</value>
-  </data>
-  <data name="label12.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label12.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 14</value>
-  </data>
-  <data name="label12.Size" type="System.Drawing.Size, System.Drawing">
-    <value>120, 13</value>
-  </data>
-  <data name="label12.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label12.Text" xml:space="preserve">
-    <value>一致するペプチドを選択(&amp;P)：</value>
-  </data>
-  <data name="&gt;&gt;label12.Name" xml:space="preserve">
-    <value>label12</value>
-  </data>
-  <data name="&gt;&gt;label12.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label12.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
-    <value>2</value>
-  </data>
-  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
-    <value>22, 71</value>
-  </data>
-  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 13</value>
-  </data>
-  <data name="label7.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="label7.Text" xml:space="preserve">
-    <value>ペプチドをランク(&amp;R)：</value>
-  </data>
-  <data name="&gt;&gt;label7.Name" xml:space="preserve">
-    <value>label7</value>
-  </data>
-  <data name="&gt;&gt;label7.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
-    <value>panelPick</value>
-  </data>
-  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
-    <value>6</value>
-  </data>
-  <data name="panelPick.Location" type="System.Drawing.Point, System.Drawing">
-    <value>3, 181</value>
-  </data>
-  <data name="panelPick.Size" type="System.Drawing.Size, System.Drawing">
-    <value>357, 190</value>
-  </data>
-  <data name="panelPick.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
-  </data>
   <data name="&gt;&gt;panelPick.Name" xml:space="preserve">
     <value>panelPick</value>
   </data>
@@ -1788,21 +1530,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;panelPick.ZOrder" xml:space="preserve">
     <value>3</value>
-  </data>
-  <data name="label11.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label11.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label11.Size" type="System.Drawing.Size, System.Drawing">
-    <value>49, 13</value>
-  </data>
-  <data name="label11.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label11.Text" xml:space="preserve">
-    <value>ライブラリ(&amp;L)：</value>
   </data>
   <data name="&gt;&gt;label11.Name" xml:space="preserve">
     <value>label11</value>
@@ -1840,21 +1567,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tabLibrary.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
-  <data name="label18.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label18.Location" type="System.Drawing.Point, System.Drawing">
-    <value>152, 145</value>
-  </data>
-  <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
-    <value>62, 13</value>
-  </data>
-  <data name="label18.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="label18.Text" xml:space="preserve">
-    <value>最大ロス数(&amp;L)：</value>
-  </data>
   <data name="&gt;&gt;label18.Name" xml:space="preserve">
     <value>label18</value>
   </data>
@@ -1866,21 +1578,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;label18.ZOrder" xml:space="preserve">
     <value>0</value>
-  </data>
-  <data name="label17.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label17.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 145</value>
-  </data>
-  <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
-    <value>98, 13</value>
-  </data>
-  <data name="label17.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="label17.Text" xml:space="preserve">
-    <value>最大変数修飾(&amp;M)：</value>
   </data>
   <data name="&gt;&gt;label17.Name" xml:space="preserve">
     <value>label17</value>
@@ -1894,21 +1591,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;label17.ZOrder" xml:space="preserve">
     <value>2</value>
   </data>
-  <data name="labelStandardType.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelStandardType.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 379</value>
-  </data>
-  <data name="labelStandardType.Size" type="System.Drawing.Size, System.Drawing">
-    <value>112, 13</value>
-  </data>
-  <data name="labelStandardType.TabIndex" type="System.Int32, mscorlib">
-    <value>12</value>
-  </data>
-  <data name="labelStandardType.Text" xml:space="preserve">
-    <value>内部標準タイプ(&amp;N)：</value>
-  </data>
   <data name="&gt;&gt;labelStandardType.Name" xml:space="preserve">
     <value>labelStandardType</value>
   </data>
@@ -1920,21 +1602,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;labelStandardType.ZOrder" xml:space="preserve">
     <value>5</value>
-  </data>
-  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 207</value>
-  </data>
-  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
-    <value>93, 13</value>
-  </data>
-  <data name="label16.TabIndex" type="System.Int32, mscorlib">
-    <value>7</value>
-  </data>
-  <data name="label16.Text" xml:space="preserve">
-    <value>同位体標識タイプ(&amp;T)：</value>
   </data>
   <data name="&gt;&gt;label16.Name" xml:space="preserve">
     <value>label16</value>
@@ -1948,18 +1615,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;label16.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="btnEditHeavyMods.Location" type="System.Drawing.Point, System.Drawing">
-    <value>211, 269</value>
-  </data>
-  <data name="btnEditHeavyMods.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 23</value>
-  </data>
-  <data name="btnEditHeavyMods.TabIndex" type="System.Int32, mscorlib">
-    <value>11</value>
-  </data>
-  <data name="btnEditHeavyMods.Text" xml:space="preserve">
-    <value>リストを編集(&amp;D)...</value>
-  </data>
   <data name="&gt;&gt;btnEditHeavyMods.Name" xml:space="preserve">
     <value>btnEditHeavyMods</value>
   </data>
@@ -1971,21 +1626,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;btnEditHeavyMods.ZOrder" xml:space="preserve">
     <value>8</value>
-  </data>
-  <data name="label10.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 253</value>
-  </data>
-  <data name="label10.Size" type="System.Drawing.Size, System.Drawing">
-    <value>109, 13</value>
-  </data>
-  <data name="label10.TabIndex" type="System.Int32, mscorlib">
-    <value>9</value>
-  </data>
-  <data name="label10.Text" xml:space="preserve">
-    <value>同位体修飾(&amp;I)：</value>
   </data>
   <data name="&gt;&gt;label10.Name" xml:space="preserve">
     <value>label10</value>
@@ -1999,18 +1639,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;label10.ZOrder" xml:space="preserve">
     <value>9</value>
   </data>
-  <data name="btnEditStaticMods.Location" type="System.Drawing.Point, System.Drawing">
-    <value>211, 36</value>
-  </data>
-  <data name="btnEditStaticMods.Size" type="System.Drawing.Size, System.Drawing">
-    <value>100, 23</value>
-  </data>
-  <data name="btnEditStaticMods.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
-  </data>
-  <data name="btnEditStaticMods.Text" xml:space="preserve">
-    <value>リストを編集(&amp;E)...</value>
-  </data>
   <data name="&gt;&gt;btnEditStaticMods.Name" xml:space="preserve">
     <value>btnEditStaticMods</value>
   </data>
@@ -2022,21 +1650,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;btnEditStaticMods.ZOrder" xml:space="preserve">
     <value>11</value>
-  </data>
-  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
-    <value>119, 13</value>
-  </data>
-  <data name="label8.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
-  </data>
-  <data name="label8.Text" xml:space="preserve">
-    <value>構造修飾(&amp;S)：</value>
   </data>
   <data name="&gt;&gt;label8.Name" xml:space="preserve">
     <value>label8</value>
@@ -2074,21 +1687,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tabModifications.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
-  <data name="buttonEditListSmallMolInternalStandardTypes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="buttonEditListSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>211, 39</value>
-  </data>
-  <data name="buttonEditListSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>75, 23</value>
-  </data>
-  <data name="buttonEditListSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
-  </data>
-  <data name="buttonEditListSmallMolInternalStandardTypes.Text" xml:space="preserve">
-    <value>リストを編集(&amp;E)...</value>
-  </data>
   <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.Name" xml:space="preserve">
     <value>buttonEditListSmallMolInternalStandardTypes</value>
   </data>
@@ -2101,24 +1699,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;buttonEditListSmallMolInternalStandardTypes.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="labelSmallMolInternalStandardTypes.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="labelSmallMolInternalStandardTypes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="labelSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 23</value>
-  </data>
-  <data name="labelSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>117, 13</value>
-  </data>
-  <data name="labelSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="labelSmallMolInternalStandardTypes.Text" xml:space="preserve">
-    <value>内部標準タイプ(&amp;I)：</value>
-  </data>
   <data name="&gt;&gt;labelSmallMolInternalStandardTypes.Name" xml:space="preserve">
     <value>labelSmallMolInternalStandardTypes</value>
   </data>
@@ -2130,15 +1710,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;labelSmallMolInternalStandardTypes.ZOrder" xml:space="preserve">
     <value>1</value>
-  </data>
-  <data name="listBoxSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
-    <value>28, 39</value>
-  </data>
-  <data name="listBoxSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
-    <value>177, 154</value>
-  </data>
-  <data name="listBoxSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
   </data>
   <data name="&gt;&gt;listBoxSmallMolInternalStandardTypes.Name" xml:space="preserve">
     <value>listBoxSmallMolInternalStandardTypes</value>
@@ -2175,24 +1746,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="&gt;&gt;tabLabels.ZOrder" xml:space="preserve">
     <value>5</value>
-  </data>
-  <data name="label36.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="label36.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
-    <value>NoControl</value>
-  </data>
-  <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
-    <value>25, 20</value>
-  </data>
-  <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
-    <value>103, 13</value>
-  </data>
-  <data name="label36.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
-  </data>
-  <data name="label36.Text" xml:space="preserve">
-    <value>ピークスコアリングモデル(&amp;P)：</value>
   </data>
   <data name="&gt;&gt;label36.Name" xml:space="preserve">
     <value>label36</value>
@@ -2233,9 +1786,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tabIntegration.ZOrder" xml:space="preserve">
     <value>6</value>
   </data>
-  <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
-    <value>Top, Left, Right</value>
-  </data>
   <data name="label20.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
@@ -2243,7 +1793,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>NoControl</value>
   </data>
   <data name="label20.Location" type="System.Drawing.Point, System.Drawing">
-    <value>273, 98</value>
+    <value>131, 415</value>
   </data>
   <data name="label20.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
@@ -2261,49 +1811,25 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;label20.Parent" xml:space="preserve">
-    <value>groupBoxFiguresOfMerit</value>
+    <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;label20.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
-  <data name="lblIonRatioThreshold.AutoSize" type="System.Boolean, mscorlib">
-    <value>True</value>
-  </data>
-  <data name="lblIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
-    <value>167, 79</value>
-  </data>
-  <data name="lblIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
-    <value>146, 13</value>
-  </data>
-  <data name="lblIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
-    <value>8</value>
-  </data>
-  <data name="lblIonRatioThreshold.Text" xml:space="preserve">
-    <value>定性イオン比閾値(&amp;A)：</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.Name" xml:space="preserve">
-    <value>lblIonRatioThreshold</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.Parent" xml:space="preserve">
-    <value>groupBoxFiguresOfMerit</value>
-  </data>
-  <data name="&gt;&gt;lblIonRatioThreshold.ZOrder" xml:space="preserve">
-    <value>3</value>
+  <data name="groupBoxFiguresOfMerit.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top, Left, Right</value>
   </data>
   <data name="lblCaclulateLodBy.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblCaclulateLodBy.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 79</value>
+    <value>8, 20</value>
   </data>
   <data name="lblCaclulateLodBy.Size" type="System.Drawing.Size, System.Drawing">
     <value>93, 13</value>
   </data>
   <data name="lblCaclulateLodBy.TabIndex" type="System.Int32, mscorlib">
-    <value>6</value>
+    <value>0</value>
   </data>
   <data name="lblCaclulateLodBy.Text" xml:space="preserve">
     <value>LOD計算基準(&amp;C)：</value>
@@ -2318,19 +1844,19 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblCaclulateLodBy.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>2</value>
   </data>
   <data name="lblMaxLoqBias.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqBias.Location" type="System.Drawing.Point, System.Drawing">
-    <value>9, 27</value>
+    <value>127, 67</value>
   </data>
   <data name="lblMaxLoqBias.Size" type="System.Drawing.Size, System.Drawing">
     <value>77, 13</value>
   </data>
   <data name="lblMaxLoqBias.TabIndex" type="System.Int32, mscorlib">
-    <value>0</value>
+    <value>5</value>
   </data>
   <data name="lblMaxLoqBias.Text" xml:space="preserve">
     <value>最大LOQバイアス(&amp;B)：</value>
@@ -2345,19 +1871,19 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBias.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>3</value>
   </data>
   <data name="lblMaxLoqBiasPct.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqBiasPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>112, 48</value>
+    <value>236, 88</value>
   </data>
   <data name="lblMaxLoqBiasPct.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
   </data>
   <data name="lblMaxLoqBiasPct.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>7</value>
   </data>
   <data name="lblMaxLoqBiasPct.Text" xml:space="preserve">
     <value>%</value>
@@ -2372,7 +1898,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqBiasPct.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>4</value>
   </data>
   <data name="lblMaxLoqCvPct.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2381,13 +1907,13 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>NoControl</value>
   </data>
   <data name="lblMaxLoqCvPct.Location" type="System.Drawing.Point, System.Drawing">
-    <value>273, 48</value>
+    <value>109, 88</value>
   </data>
   <data name="lblMaxLoqCvPct.Size" type="System.Drawing.Size, System.Drawing">
     <value>15, 13</value>
   </data>
   <data name="lblMaxLoqCvPct.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>4</value>
   </data>
   <data name="lblMaxLoqCvPct.Text" xml:space="preserve">
     <value>%</value>
@@ -2402,19 +1928,19 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCvPct.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>5</value>
   </data>
   <data name="lblMaxLoqCv.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="lblMaxLoqCv.Location" type="System.Drawing.Point, System.Drawing">
-    <value>167, 27</value>
+    <value>8, 67</value>
   </data>
   <data name="lblMaxLoqCv.Size" type="System.Drawing.Size, System.Drawing">
     <value>72, 13</value>
   </data>
   <data name="lblMaxLoqCv.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>2</value>
   </data>
   <data name="lblMaxLoqCv.Text" xml:space="preserve">
     <value>最大LOQ CV(&amp;V)：</value>
@@ -2429,13 +1955,13 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>groupBoxFiguresOfMerit</value>
   </data>
   <data name="&gt;&gt;lblMaxLoqCv.ZOrder" xml:space="preserve">
-    <value>10</value>
+    <value>7</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Location" type="System.Drawing.Point, System.Drawing">
-    <value>16, 270</value>
+    <value>22, 270</value>
   </data>
   <data name="groupBoxFiguresOfMerit.Size" type="System.Drawing.Size, System.Drawing">
-    <value>327, 137</value>
+    <value>288, 118</value>
   </data>
   <data name="groupBoxFiguresOfMerit.TabIndex" type="System.Int32, mscorlib">
     <value>11</value>
@@ -2453,7 +1979,34 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;groupBoxFiguresOfMerit.ZOrder" xml:space="preserve">
-    <value>1</value>
+    <value>3</value>
+  </data>
+  <data name="lblIonRatioThreshold.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="lblIonRatioThreshold.Location" type="System.Drawing.Point, System.Drawing">
+    <value>26, 392</value>
+  </data>
+  <data name="lblIonRatioThreshold.Size" type="System.Drawing.Size, System.Drawing">
+    <value>146, 13</value>
+  </data>
+  <data name="lblIonRatioThreshold.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="lblIonRatioThreshold.Text" xml:space="preserve">
+    <value>定性イオン比閾値(&amp;A)：</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Name" xml:space="preserve">
+    <value>lblIonRatioThreshold</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.Parent" xml:space="preserve">
+    <value>tabQuantification</value>
+  </data>
+  <data name="&gt;&gt;lblIonRatioThreshold.ZOrder" xml:space="preserve">
+    <value>4</value>
   </data>
   <data name="lblQuantUnits.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2483,7 +2036,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblQuantUnits.ZOrder" xml:space="preserve">
-    <value>3</value>
+    <value>6</value>
   </data>
   <data name="lblMsLevel.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2510,7 +2063,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblMsLevel.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>8</value>
   </data>
   <data name="lblNormalizationMethod.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2537,7 +2090,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblNormalizationMethod.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>10</value>
   </data>
   <data name="lblRegressionFit.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2564,7 +2117,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionFit.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>12</value>
   </data>
   <data name="lblRegressionWeighting.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
@@ -2591,7 +2144,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>tabQuantification</value>
   </data>
   <data name="&gt;&gt;lblRegressionWeighting.ZOrder" xml:space="preserve">
-    <value>11</value>
+    <value>14</value>
   </data>
   <data name="tabQuantification.Location" type="System.Drawing.Point, System.Drawing">
     <value>4, 22</value>
@@ -2641,9 +2194,465 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   <data name="&gt;&gt;tabControl1.ZOrder" xml:space="preserve">
     <value>3</value>
   </data>
+  <data name="labelPeptideUniquenessConstraint.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 222</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Size" type="System.Drawing.Size, System.Drawing">
+    <value>156, 13</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelPeptideUniquenessConstraint.Text" xml:space="preserve">
+    <value>次を使用してペプチドの一意性を強制します(&amp;U)：</value>
+  </data>
+  <data name="label2.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 71</value>
+  </data>
+  <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="label2.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label2.Text" xml:space="preserve">
+    <value>最大未切断数(&amp;M)：</value>
+  </data>
+  <data name="label1.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label1.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>47, 13</value>
+  </data>
+  <data name="label1.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label1.Text" xml:space="preserve">
+    <value>酵素(&amp;E)：</value>
+  </data>
+  <data name="label15.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label15.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 172</value>
+  </data>
+  <data name="label15.Size" type="System.Drawing.Size, System.Drawing">
+    <value>115, 13</value>
+  </data>
+  <data name="label15.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label15.Text" xml:space="preserve">
+    <value>バックグラウンドプロテオーム(&amp;B)：</value>
+  </data>
+  <data name="label14.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label14.Location" type="System.Drawing.Point, System.Drawing">
+    <value>134, 136</value>
+  </data>
+  <data name="label14.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 13</value>
+  </data>
+  <data name="label14.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label14.Text" xml:space="preserve">
+    <value>分</value>
+  </data>
+  <data name="label13.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label13.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 116</value>
+  </data>
+  <data name="label13.Size" type="System.Drawing.Size, System.Drawing">
+    <value>72, 13</value>
+  </data>
+  <data name="label13.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="label13.Text" xml:space="preserve">
+    <value>時間ウィンドウ(&amp;W)：</value>
+  </data>
+  <data name="label9.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label9.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label9.Size" type="System.Drawing.Size, System.Drawing">
+    <value>122, 13</value>
+  </data>
+  <data name="label9.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label9.Text" xml:space="preserve">
+    <value>保持時間予測(&amp;R)：</value>
+  </data>
+  <data name="label3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 70</value>
+  </data>
+  <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 13</value>
+  </data>
+  <data name="label3.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>N末端アミノ酸を除外(&amp;N)：</value>
+  </data>
+  <data name="label6.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label6.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 160</value>
+  </data>
+  <data name="label6.Size" type="System.Drawing.Size, System.Drawing">
+    <value>143, 13</value>
+  </data>
+  <data name="label6.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>以下を含むペプチドを除外(&amp;E)：</value>
+  </data>
+  <data name="label5.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label5.Location" type="System.Drawing.Point, System.Drawing">
+    <value>112, 20</value>
+  </data>
+  <data name="label5.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 13</value>
+  </data>
+  <data name="label5.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label5.Text" xml:space="preserve">
+    <value>最大長(&amp;X)：</value>
+  </data>
+  <data name="label4.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
+    <value>59, 13</value>
+  </data>
+  <data name="label4.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label4.Text" xml:space="preserve">
+    <value>最小長さ(&amp;M)：</value>
+  </data>
+  <data name="&gt;&gt;labelPeptides.Name" xml:space="preserve">
+    <value>labelPeptides</value>
+  </data>
+  <data name="&gt;&gt;labelPeptides.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;labelPeptides.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;labelPeptides.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;label12.Name" xml:space="preserve">
+    <value>label12</value>
+  </data>
+  <data name="&gt;&gt;label12.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label12.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;label12.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="&gt;&gt;label7.Name" xml:space="preserve">
+    <value>label7</value>
+  </data>
+  <data name="&gt;&gt;label7.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;label7.Parent" xml:space="preserve">
+    <value>panelPick</value>
+  </data>
+  <data name="&gt;&gt;label7.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="panelPick.Location" type="System.Drawing.Point, System.Drawing">
+    <value>3, 181</value>
+  </data>
+  <data name="panelPick.Size" type="System.Drawing.Size, System.Drawing">
+    <value>357, 190</value>
+  </data>
+  <data name="panelPick.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelPeptides.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelPeptides.Location" type="System.Drawing.Point, System.Drawing">
+    <value>99, 159</value>
+  </data>
+  <data name="labelPeptides.Size" type="System.Drawing.Size, System.Drawing">
+    <value>48, 13</value>
+  </data>
+  <data name="labelPeptides.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="labelPeptides.Text" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="label12.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label12.Location" type="System.Drawing.Point, System.Drawing">
+    <value>22, 14</value>
+  </data>
+  <data name="label12.Size" type="System.Drawing.Size, System.Drawing">
+    <value>120, 13</value>
+  </data>
+  <data name="label12.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label12.Text" xml:space="preserve">
+    <value>一致するペプチドを選択(&amp;P)：</value>
+  </data>
+  <data name="label7.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label7.Location" type="System.Drawing.Point, System.Drawing">
+    <value>22, 71</value>
+  </data>
+  <data name="label7.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 13</value>
+  </data>
+  <data name="label7.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="label7.Text" xml:space="preserve">
+    <value>ペプチドをランク(&amp;R)：</value>
+  </data>
+  <data name="label11.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label11.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label11.Size" type="System.Drawing.Size, System.Drawing">
+    <value>49, 13</value>
+  </data>
+  <data name="label11.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label11.Text" xml:space="preserve">
+    <value>ライブラリ(&amp;L)：</value>
+  </data>
+  <data name="label18.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label18.Location" type="System.Drawing.Point, System.Drawing">
+    <value>152, 145</value>
+  </data>
+  <data name="label18.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 13</value>
+  </data>
+  <data name="label18.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="label18.Text" xml:space="preserve">
+    <value>最大ロス数(&amp;L)：</value>
+  </data>
+  <data name="label17.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label17.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 145</value>
+  </data>
+  <data name="label17.Size" type="System.Drawing.Size, System.Drawing">
+    <value>98, 13</value>
+  </data>
+  <data name="label17.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="label17.Text" xml:space="preserve">
+    <value>最大変数修飾(&amp;M)：</value>
+  </data>
+  <data name="labelStandardType.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelStandardType.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 379</value>
+  </data>
+  <data name="labelStandardType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>112, 13</value>
+  </data>
+  <data name="labelStandardType.TabIndex" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="labelStandardType.Text" xml:space="preserve">
+    <value>内部標準タイプ(&amp;N)：</value>
+  </data>
+  <data name="label16.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label16.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 207</value>
+  </data>
+  <data name="label16.Size" type="System.Drawing.Size, System.Drawing">
+    <value>93, 13</value>
+  </data>
+  <data name="label16.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="label16.Text" xml:space="preserve">
+    <value>同位体標識タイプ(&amp;T)：</value>
+  </data>
+  <data name="btnEditHeavyMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>211, 269</value>
+  </data>
+  <data name="btnEditHeavyMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnEditHeavyMods.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="btnEditHeavyMods.Text" xml:space="preserve">
+    <value>リストを編集(&amp;D)...</value>
+  </data>
+  <data name="label10.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label10.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 253</value>
+  </data>
+  <data name="label10.Size" type="System.Drawing.Size, System.Drawing">
+    <value>109, 13</value>
+  </data>
+  <data name="label10.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="label10.Text" xml:space="preserve">
+    <value>同位体修飾(&amp;I)：</value>
+  </data>
+  <data name="btnEditStaticMods.Location" type="System.Drawing.Point, System.Drawing">
+    <value>211, 36</value>
+  </data>
+  <data name="btnEditStaticMods.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 23</value>
+  </data>
+  <data name="btnEditStaticMods.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="btnEditStaticMods.Text" xml:space="preserve">
+    <value>リストを編集(&amp;E)...</value>
+  </data>
+  <data name="label8.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label8.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label8.Size" type="System.Drawing.Size, System.Drawing">
+    <value>119, 13</value>
+  </data>
+  <data name="label8.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="label8.Text" xml:space="preserve">
+    <value>構造修飾(&amp;S)：</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>211, 39</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>75, 23</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="buttonEditListSmallMolInternalStandardTypes.Text" xml:space="preserve">
+    <value>リストを編集(&amp;E)...</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 23</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="labelSmallMolInternalStandardTypes.Text" xml:space="preserve">
+    <value>内部標準タイプ(&amp;I)：</value>
+  </data>
+  <data name="listBoxSmallMolInternalStandardTypes.Location" type="System.Drawing.Point, System.Drawing">
+    <value>28, 39</value>
+  </data>
+  <data name="listBoxSmallMolInternalStandardTypes.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 154</value>
+  </data>
+  <data name="listBoxSmallMolInternalStandardTypes.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="label36.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="label36.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="label36.Location" type="System.Drawing.Point, System.Drawing">
+    <value>25, 20</value>
+  </data>
+  <data name="label36.Size" type="System.Drawing.Size, System.Drawing">
+    <value>103, 13</value>
+  </data>
+  <data name="label36.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="label36.Text" xml:space="preserve">
+    <value>ピークスコアリングモデル(&amp;P)：</value>
+  </data>
   <metadata name="contextMenuCalculator.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>247, 17</value>
+    <value>248, 17</value>
   </metadata>
+  <data name="contextMenuCalculator.Size" type="System.Drawing.Size, System.Drawing">
+    <value>147, 70</value>
+  </data>
+  <data name="&gt;&gt;contextMenuCalculator.Name" xml:space="preserve">
+    <value>contextMenuCalculator</value>
+  </data>
+  <data name="&gt;&gt;contextMenuCalculator.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="addCalculatorContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>146, 22</value>
   </data>
@@ -2661,15 +2670,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
   </data>
   <data name="editCalculatorListContextMenuItem.Text" xml:space="preserve">
     <value>リストを編集...</value>
-  </data>
-  <data name="contextMenuCalculator.Size" type="System.Drawing.Size, System.Drawing">
-    <value>147, 70</value>
-  </data>
-  <data name="&gt;&gt;contextMenuCalculator.Name" xml:space="preserve">
-    <value>contextMenuCalculator</value>
-  </data>
-  <data name="&gt;&gt;contextMenuCalculator.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
@@ -2693,7 +2693,7 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;helpTip.Name" xml:space="preserve">
     <value>helpTip</value>
@@ -2723,6 +2723,6 @@ MS/MSスペクトルライブラリです。これらのライブラリを使用
     <value>PeptideSettingsUI</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

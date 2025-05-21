@@ -272,7 +272,7 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
                     % pathType
                     % abbreviate_byte_size(pathSize)
                     % pathCreationTime
-                    % path.leaf()
+                    % path.filename()
                     ).str() << flush;
             break;
 
@@ -296,7 +296,7 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
                         % spectraCount
                         % instrumentModel.name()
                         % source.run.id
-                        % path.leaf()
+                        % path.filename()
                         ).str() << flush;
                 }
             }
@@ -310,7 +310,7 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
                         % "error"
                         % "error"
                         % "error"
-                        % path.leaf()
+                        % path.filename()
                         ).str() << endl << e.what() << endl; 
             }
             catch(...)
@@ -323,7 +323,7 @@ bool processPath(const bfs::path& path, const Config& config, const ReaderList& 
                     % "error"
                     % "error"
                     % "error"
-                    % path.leaf()
+                    % path.filename()
                     ).str() << endl << "Unknown error" << endl;
             }
             break;
@@ -354,7 +354,7 @@ void go(const Config& config)
 
     int longestPath = 0;
     BOOST_FOREACH(const bfs::path & path, config.paths)
-        longestPath = max((int) path.leaf().size(), longestPath);
+        longestPath = max((int) path.filename().size(), longestPath);
 
     int longestInstrument = 0;
     for(const auto& cvid : cvids())

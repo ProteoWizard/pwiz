@@ -103,8 +103,8 @@
   <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
     <value>Koina 不支持“{1}” 中氨基酸“{0}”</value>
   </data>
-  <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
-    <value>Koina 不支持“{2}” 中指数“{1}”内的修改“{0}”</value>
+  <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
+    <value>Koina 不支持 '{2}' 中索引 '{1}' 处的修饰 '{0}'</value>
   </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
     <value>构建 Koina 输入</value>
@@ -156,12 +156,11 @@
   </data>
   <data name="ToolOptionsUI_SetServerStatus_Select_both_models" xml:space="preserve">
     <value>选择连接这两个模型</value>
-    <comment>Needs Review:English text changed
-Old English:Select both models
-Current English:Select both models to connect
-Old Localized:选择两个模型</comment>
   </data>
   <data name="GraphSpectrum_UpdateUI_No_spectral_library_match" xml:space="preserve">
     <value>无谱图库匹配</value>
+  </data>
+  <data name="KoinaModel_PredictBatches_Error___0__retrying__1_____2__" xml:space="preserve">
+    <value>错误：{0}正在重试{1}/{2}。</value>
   </data>
 </root>

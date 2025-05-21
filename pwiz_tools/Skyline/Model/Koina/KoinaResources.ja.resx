@@ -103,8 +103,8 @@
   <data name="KoinaPeptideTooLongException_KoinaUnsupportedAminoAcidException_Amino_acid___0___in___1___is_not_supported_by_Koina" xml:space="preserve">
     <value>「{1}」内のアミノ酸「{0}」はKoinaでサポートされません</value>
   </data>
-  <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modifcation___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
-    <value>「{2}」内のインデックス「{1}」における修飾「{0}」はKoinaでサポートされません。</value>
+  <data name="KoinaUnsupportedModificationException_KoinaUnsupportedModificationException_Modification___0___at_index___1___in___2___is_not_supported_by_Koina" xml:space="preserve">
+    <value>「{2}」のインデックス「{1}」の修飾「{0}」はKoinaによりサポートされていません。</value>
   </data>
   <data name="KoinaModel_BatchPredict_Constructing_Koina_inputs" xml:space="preserve">
     <value>Koina入力を構築しています</value>
@@ -156,12 +156,11 @@
   </data>
   <data name="ToolOptionsUI_SetServerStatus_Select_both_models" xml:space="preserve">
     <value>接続する両方のモデルを選択</value>
-    <comment>Needs Review:English text changed
-Old English:Select both models
-Current English:Select both models to connect
-Old Localized:両方のモデルを選択</comment>
   </data>
   <data name="GraphSpectrum_UpdateUI_No_spectral_library_match" xml:space="preserve">
     <value>スペクトルライブラリの一致がありません</value>
+  </data>
+  <data name="KoinaModel_PredictBatches_Error___0__retrying__1_____2__" xml:space="preserve">
+    <value>エラー： {0} 再試行回数{1}/{2}。</value>
   </data>
 </root>

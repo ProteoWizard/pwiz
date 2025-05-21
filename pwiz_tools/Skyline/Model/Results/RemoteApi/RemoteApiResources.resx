@@ -117,8 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Ardia_Label_Ardia" xml:space="preserve">
+    <value>Ardia</value>
+  </data>
   <data name="Unifi_Label_Unifi" xml:space="preserve">
-    <value>Unifi</value>
+    <value>UNIFI</value>
   </data>
 </root>

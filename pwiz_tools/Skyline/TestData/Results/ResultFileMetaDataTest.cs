@@ -36,7 +36,8 @@ namespace pwiz.SkylineTestData.Results
                 testFilesDir
             };
             var msDataFileUri = new MsDataFilePath(testFilesDir.GetTestPath("MsxTest.mzML"));
-            using (var msDataFile = msDataFileUri.OpenMsDataFile(true, false, false, false, false))
+            var openParams = new OpenMsDataFileParams { CentroidMs1 = true };
+            using (var msDataFile = openParams.OpenLocalFile(msDataFileUri))
             {
                 var spectrumMetadatas = Enumerable.Range(0, msDataFile.SpectrumCount)
                     .Select(i => msDataFile.GetSpectrumMetadata(i)).ToList();

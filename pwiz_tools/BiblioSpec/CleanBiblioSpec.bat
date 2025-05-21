@@ -7,8 +7,8 @@ set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd %PWIZ_ROOT%
 
-git clean -f -x tests\output
-git clean -f -x tests\inputs
+git clean -fq -x tests\output
+git clean -fq -x tests\inputs
 
 
 popd

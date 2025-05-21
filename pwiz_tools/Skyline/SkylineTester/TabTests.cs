@@ -72,6 +72,8 @@ namespace SkylineTester
                 args.Append(" pause=-1"); // Magic number that tells TestRunner to pause and show UI for a manual screenshot
             if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Covershot"))
                 args.Append(" pause=-2"); // Magic number that tells TestRunner to grab tutorial cover shot then move on to next test
+            if (Equals(MainWindow.RunTestMode.SelectedItem.ToString(), "Auto-Screenshots"))
+                args.Append(" pause=-3"); // Magic number that tells TestRunner to save the screenshot to the tutorials folder
 
             if (MainWindow.TestsRunSmallMoleculeVersions.Checked)
                 args.Append(" runsmallmoleculeversions=on");
@@ -105,7 +107,8 @@ namespace SkylineTester
             if (GetTestList().Length > 0)
                 args.Append(" perftests=on"); // In case any perf tests were explicitly selected - no harm if they weren't
 
-            if (MainWindow.RunParallel.Checked)
+            if (MainWindow.RunParallel.Checked &&
+                GetTestCount()*cultures.Count > 1) // No need to fire up parallel nodes on a single test in single culture
             {
                 // CONSIDER: Should we add a checkbox for this?
                 // args.Append(" keepworkerlogs=1"); // For debugging startup issues. Look for TestRunner-docker-worker_#-docker.log files in pwiz root
@@ -158,11 +161,23 @@ namespace SkylineTester
             return MainWindow.TestsTree.Find(text.Trim(), position);
         }
 
-        public static string GetTestList()
+        private static List<string> GetAllCheckedTests()
         {
             var testList = new List<string>();
             foreach (TreeNode node in MainWindow.TestsTree.Nodes[0].Nodes)
                 GetCheckedTests(node, testList, MainWindow.SkipCheckedTests.Checked);
+            return testList;
+        }
+
+        public static int GetTestCount()
+        {
+            var testList = GetAllCheckedTests();
+            return (testList.Count == 0) ? int.MaxValue : testList.Count; // No selection implies all should be run
+        }
+
+        public static string GetTestList()
+        {
+            var testList = GetAllCheckedTests();
             if (testList.Count == 0)
                 return "";
             var testListFile = Path.Combine(MainWindow.RootDir, "SkylineTester test list.txt");

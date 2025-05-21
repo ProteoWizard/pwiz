@@ -129,7 +129,7 @@
     <value>6, 42</value>
   </data>
   <data name="radioDIA.Size" type="System.Drawing.Size, System.Drawing">
-    <value>369, 17</value>
+    <value>84, 17</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioDIA.TabIndex" type="System.Int32, mscorlib">
@@ -143,7 +143,6 @@
   </metadata>
   <data name="radioDIA.ToolTip" xml:space="preserve">
     <value>個別のDIAランのクロマトグラムを含むDDA MS/MSのライブラリスペクトル</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioDIA.Name" xml:space="preserve">
     <value>radioDIA</value>
@@ -177,7 +176,6 @@
   </data>
   <data name="radioPRM.ToolTip" xml:space="preserve">
     <value>同じPRMランからのライブラリスペクトルとクロマトグラム</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioPRM.Name" xml:space="preserve">
     <value>radioPRM</value>
@@ -211,7 +209,6 @@
   </data>
   <data name="radioDDA.ToolTip" xml:space="preserve">
     <value>MS1のクロマトグラムを含むDDA MS/MSのライブラリスペクトル</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioDDA.Name" xml:space="preserve">
     <value>radioDDA</value>
@@ -272,7 +269,6 @@
   </data>
   <data name="radioButtonNewLibrary.ToolTip" xml:space="preserve">
     <value>TPP pepXML、Mascot .dat、SEQUEST SQT などの既存の検索結果ファイルから新しいライブラリを構築します。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;radioButtonNewLibrary.Name" xml:space="preserve">
     <value>radioButtonNewLibrary</value>
@@ -354,7 +350,6 @@
   </data>
   <data name="tbxLibraryPath.ToolTip" xml:space="preserve">
     <value>BiblioSpec .blib、EncyclopeDIA .elib、SpectraST .sqtなど認識可能な形式の既存ライブラリへのパス</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;tbxLibraryPath.Name" xml:space="preserve">
     <value>tbxLibraryPath</value>
@@ -471,7 +466,7 @@
     <value>gridSearchFiles</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -525,8 +520,11 @@
     <value>5</value>
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
-    <value>保持時間の正規化に使用する既知のiRT標準ペプチドセットを選択します。</value>
-    <comment>Needs Review:New resource</comment>
+    <value>保持時間の正規化に使用する既知のiRT標準ペプチドのセットを選択してください。</value>
+    <comment>Needs Review:English text changed
+Old English:Choose a set of know iRT standard peptides to use for retention time normalization.
+Current English:Choose a set of known iRT standard peptides to use for retention time normalization.
+Old Localized:保持時間の正規化に使用する既知のiRT標準ペプチドセットを選択します。</comment>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>
@@ -563,7 +561,6 @@
   </data>
   <data name="cbIncludeAmbiguousMatches.ToolTip" xml:space="preserve">
     <value>オンにすると、複数のペプチドに一致するスペクトルが残ります。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbIncludeAmbiguousMatches.Name" xml:space="preserve">
     <value>cbIncludeAmbiguousMatches</value>
@@ -600,7 +597,6 @@
   </data>
   <data name="cbFilterForDocumentPeptides.ToolTip" xml:space="preserve">
     <value>オンにすると、ドキュメント内のペプチドのみに対して一致する結果がフィルタリングされます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbFilterForDocumentPeptides.Name" xml:space="preserve">
     <value>cbFilterForDocumentPeptides</value>

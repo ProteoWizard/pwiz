@@ -199,13 +199,13 @@ PWIZ_API_DECL double SpectrumList_IonMobility::ionMobilityToCCS(double ionMobili
     switch (equipment_)
     {
         default:
-            throw runtime_error("SpectrumList_IonMobility::ionMobilityToCCS] function only supported when reading native Agilent, Bruker, or Waters files with ion mobility data");
+            throw runtime_error("SpectrumList_IonMobility::ionMobilityToCCS] function only supported when reading native Agilent, Bruker, Mobilion, or Waters files with ion mobility data");
 
         case IonMobilityEquipment::AgilentDrift:
         case IonMobilityEquipment::BrukerTIMS:
         case IonMobilityEquipment::WatersDrift:
         case IonMobilityEquipment::UIMFDrift:
-        //case IonMobilityEquipment::MobilIonDrift:         // TODO when API supplies it
+        case IonMobilityEquipment::MobilIonDrift:
             return sl_->ionMobilityToCCS(ionMobility, mz, charge);
     }
 }
@@ -216,13 +216,13 @@ PWIZ_API_DECL double SpectrumList_IonMobility::ccsToIonMobility(double ccs, doub
     switch (equipment_)
     {
         default:
-            throw runtime_error("SpectrumList_IonMobility::ccsToIonMobility] function only supported when reading native Agilent, Bruker, or Waters files with ion mobility data");
+            throw runtime_error("SpectrumList_IonMobility::ccsToIonMobility] function only supported when reading native Agilent, Bruker, Mobilion, or Waters files with ion mobility data");
 
         case IonMobilityEquipment::AgilentDrift:
         case IonMobilityEquipment::BrukerTIMS:
         case IonMobilityEquipment::WatersDrift:
         case IonMobilityEquipment::UIMFDrift:
-        //case IonMobilityEquipment::MobilIonDrift:         // TODO when API supplies it
+        case IonMobilityEquipment::MobilIonDrift:
             return sl_->ccsToIonMobility(ccs, mz, charge);
     }
 }

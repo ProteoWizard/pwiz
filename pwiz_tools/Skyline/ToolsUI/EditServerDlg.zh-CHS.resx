@@ -220,14 +220,12 @@
   </data>
   <data name="cbAnonymous.Text" xml:space="preserve">
     <value>匿名访问</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <metadata name="toolTipAnonymous.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>155, 17</value>
   </metadata>
   <data name="cbAnonymous.ToolTip" xml:space="preserve">
     <value>如果您没有服务器帐户，请选中该复选框。如果没有用户帐户，可以匿名浏览、下载和打开服务器上可以公开获取的文档，但是您不能上传文档到服务器。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="&gt;&gt;cbAnonymous.Name" xml:space="preserve">
     <value>cbAnonymous</value>
@@ -501,10 +499,6 @@
   </data>
   <data name="$this.Text" xml:space="preserve">
     <value>编辑 Panorama 服务器</value>
-    <comment>Needs Review:English text changed
-Old English:Edit Server
-Current English:Edit Panorama Server
-Old Localized:编辑服务器</comment>
   </data>
   <data name="&gt;&gt;toolTipAnonymous.Name" xml:space="preserve">
     <value>toolTipAnonymous</value>

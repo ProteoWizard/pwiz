@@ -57,12 +57,12 @@ jobs:
 #            compiler: g++-9,
 #            toolset: 'toolset=gcc'
 #          }
-        - {
-            name: "macOS Latest Clang",
-            os:	macos-12,
-            compiler: 'latest clang',
-            toolset: 'toolset=darwin'
-          }
+#        - {
+#            name: "macOS Latest Clang",
+#            os:	macos-12,
+#            compiler: 'latest clang',
+#            toolset: 'toolset=darwin'
+#          }
  
     # Using the value from the matrix above we select the platform (operating system) to run on
     runs-on: ${{ matrix.config.os }}

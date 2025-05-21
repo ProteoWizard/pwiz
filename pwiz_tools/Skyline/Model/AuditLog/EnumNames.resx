@@ -598,7 +598,7 @@
     <value>DDA raw (search and build library)</value>
   </data>
   <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA raw (deconvolute, search, and build library)</value>
+    <value>DIA raw (search and build library)</value>
   </data>
   <data name="InputFile_search_result" xml:space="preserve">
     <value>Search results (build library directly)</value>
@@ -737,5 +737,8 @@
   </data>
   <data name="SharedPeptidesGene_Removed" xml:space="preserve">
     <value>Removed (peptides must be unique to a single gene)</value>
+  </data>
+  <data name="SearchEngine_Comet" xml:space="preserve">
+    <value>Comet</value>
   </data>
 </root>

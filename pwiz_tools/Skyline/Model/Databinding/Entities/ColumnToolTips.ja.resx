@@ -108,10 +108,6 @@
   </data>
   <data name="Accuracy">
     <value>指定したアナライト濃度に対する算出された濃度の比率</value>
-    <comment>Needs Review:English text changed
-Old English:Ratio of Calculated Concentration the Analyte Concentration (specified on the Replicate)
-Current English:Ratio of Calculated Concentration to the specified Analyte Concentration
-Old Localized:アナライトの濃度と算出される濃度の比率（繰り返し測定で指定）</comment>
   </data>
   <data name="AcquiredTime">
     <value>質量分析計が前回この繰り返し測定データの取得を開始した日時です。1.1より古いバージョンでファイルがインポートされた場合には#N/Aとなります。</value>
@@ -128,6 +124,33 @@ Old Localized:アナライトの濃度と算出される濃度の比率（繰り
   <data name="Analyzer">
     <value>スペクトルの収集に使用したアナライザーの種類です。
 1つ以上のアナライザーが使用された場合、アナライザー名はスラッシュで区切られます。</value>
+  </data>
+  <data name="ApexAnalyteIonCount">
+    <value>総トランジション強度とトランジション強度が最高のスペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexAnalyteIonCountFragment">
+    <value>総トランジション強度とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexAnalyteIonCountMS1">
+    <value>総プリカーサーとトランジション強度が最高のMS1スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexSpectrumId">
+    <value>トランジション強度が最高のスペクトルの識別子</value>
+  </data>
+  <data name="ApexSpectrumIdFragment">
+    <value>トランジション強度が最高のMS2スペクトルの識別子</value>
+  </data>
+  <data name="ApexSpectrumIdMS1">
+    <value>プリカーサー強度が最高のMS1スペクトルの識別子</value>
+  </data>
+  <data name="ApexTotalIonCount">
+    <value>総イオン電流とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexTotalIonCountFragment">
+    <value>総イオン電流とトランジション強度が最高のMS2スペクトルの注入時間の積</value>
+  </data>
+  <data name="ApexTotalIonCountMS1">
+    <value>総プリカーサーとトランジション強度が最高のMS1スペクトルの注入時間の積</value>
   </data>
   <data name="Area">
     <value>トランジションピークの曲線下の面積（AUC）からバックグラウンドを引いたものです。</value>
@@ -166,7 +189,11 @@ Old Localized:アナライトの濃度と算出される濃度の比率（繰り
     <value>真の場合、Skylineは[トランジションの設定]フィルタ、スペクトルライブラリなどによってプリカーサーから自動的にトランジションを追加または削除します。</value>
   </data>
   <data name="AverageMassErrorPPM">
-    <value>平均質量誤差(PPM)</value>
+    <value>100万分の1(PPM)の単位で表される予測m/z値と測定m/z値の間の差のすべてのトランジションの荷重面積平均</value>
+    <comment>Needs Review:English text changed
+Old English:Average Mass Error PPM
+Current English:The area weighted mean for all transitions of the difference between the expected and measured m/z values expressed in parts per million (PPM)
+Old Localized:平均質量誤差(PPM)</comment>
   </data>
   <data name="AverageMasses">
     <value>「C[+57.05162]」のように平均質量で修飾部分を指定する、修飾シークエンスです。</value>
@@ -205,28 +232,15 @@ Old Localized:アナライトの濃度と算出される濃度の比率（繰り
     <value>アナライト濃度は、以下のいずれかによって計算されます： 
 1. 校正曲線（[ペプチド設定] &gt; [定量] に[回帰適合] が指定されている場合）
 2. 内部標準（またはサロゲート）に対する比率を [内部標準濃度] で乗算</value>
-    <comment>Needs Review:English text changed
-Old English:The concentration of the analyte is calculated by either:
-    1. Using the calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
-    2. Using the ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration
-Current English:The concentration of the analyte calculated using either:
-1. The calibration curve (if the Peptide Settings &gt; Quantification has a Regression Fit specified)
-2. The ratio to internal standard (or surrogate) and multiplying by the Internal Standard Concentration
-Old Localized:アナライト濃度は、以下のいずれかによって計算されます：  
-1. 校正曲線を使用する（[ペプチド設定] &gt; [定量]に[回帰式に合わせる]が指定されている場合）  
-2. 内標準（またはサロゲート）に対する比率を使用し、内標準物質の濃度を乗じる</comment>
   </data>
   <data name="CalculatedConcentrationMessage">
     <value>繰り返し測定間の「計算濃度」の比較に欠損データの影響がある場合に警告を表示</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalculatedConcentrationRaw">
     <value>繰り返し測定間の比較に欠損データの影響がある場合でも計算濃度値が利用可能</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalculatedConcentrationStrict">
     <value>繰り返し測定間の比較に欠損データの影響がある場合には計算濃度値が利用不可能</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="CalibrationCurve">
     <value>試料タイプが[標準]で[アナライト濃度]が指定されている繰り返し測定を使用して計算された校正曲線です。</value>
@@ -296,7 +310,17 @@ Old Localized:アナライト濃度は、以下のいずれかによって計算
     <value>倍率変化を中心とする信頼区間を決定するのに使用された信頼度です。</value>
   </data>
   <data name="CountTruncated">
-    <value>取得時間範囲内のピークの両側で強度が全体のピーク高さの1%より高い 範囲を積分するプリカーサーのトランジション数です。 </value>
+    <value>ピークと解析時間範囲のいずれかの終端の
+境界を積分するプリカーサーのトランジション数。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります。</value>
+    <comment>Needs Review:English text changed
+Old English:The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 1% of the entire peak height higher than the other extent.
+Current English:The number of transitions for a precursor that integrate a peak with a
+boundary at either end of the acquisition time range, where intensity at the end is
+greater than 25% of the background-subtracted peak height higher than the other extent.
+Old Localized:取得時間範囲内のピークの両側で強度が全体のピーク高さの1%より高い 範囲を積分するプリカーサーのトランジション数です。 </comment>
   </data>
   <data name="Cv">
     <value>Cv</value>
@@ -552,6 +576,10 @@ Old Localized:アナライト濃度は、以下のいずれかによって計算
   <data name="IsDecoy">
     <value>デコイのプリカーサーであれば真です。</value>
   </data>
+  <data name="IsolationWindowWidth">
+    <value>プリカーサ―が単離されたm/zウィンドウの幅。
+2つ以上のプリカーサーが単離された場合、単離ウィンドウ幅は、各プリカーサー周囲のウィンドウの合計です。</value>
+  </data>
   <data name="IsotopeDistIndex">
     <value>モノアイソトピックピークであればゼロ、M+1であれば1、M+2であれば2などとなります。 </value>
   </data>
@@ -579,6 +607,39 @@ Old Localized:アナライト濃度は、以下のいずれかによって計算
   <data name="LastPosition">
     <value>ペプチドに含まれるタンパク質シークエンスの最後の（C末端）アミノ酸の位置です。タンパク質シークエンスがない場合には#N/Aとなります。</value>
   </data>
+  <data name="LcPeakAnalyteIonCount">
+    <value>トランジション強度の積とピーク積分境界間のスペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountFragment">
+    <value>トランジション強度の積とピーク積分境界間のMS2スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakAnalyteIonCountMS1">
+    <value>総プリカーサー強度の積とピーク積分境界間のMS1スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakIonMetricsFragment">
+    <value>ピーク積分境界間のMS2スペクトルを収集する間の質量分析装置内のイオン数に関係する値</value>
+  </data>
+  <data name="LcPeakIonMetricsMS1">
+    <value>ピーク積分境界間のMS1スペクトルを収集する間の質量分析装置内のイオン数に関係する値</value>
+  </data>
+  <data name="LcPeakTotalIonCount">
+    <value>総イオン電流の積とピーク積分境界間のスペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakTotalIonCountFragment">
+    <value>総イオン電流の積とピーク積分境界間のMS2スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakTotalIonCountMS1">
+    <value>総イオン電流の積とピーク積分境界間のMS1スペクトルの注入時間の合計</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentArea">
+    <value>ピーク積分境界間のイオン電流合計の積分</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaFragment">
+    <value>ピーク積分境界間のMS2スペクトルのイオン電流合計の積分</value>
+  </data>
+  <data name="LcPeakTotalIonCurrentAreaMS1">
+    <value>ピーク積分境界間のMS1スペクトルのイオン電流合計の積分</value>
+  </data>
   <data name="LibraryCollisionCrossSection">
     <value>イオン移動度ライブラリからのプリカーサーの衝突断面積</value>
   </data>
@@ -588,22 +649,6 @@ Old Localized:アナライト濃度は、以下のいずれかによって計算
 プリカーサーに一致するライブラリスペクトルがない場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、
 メソッドの最適化に使用します。トランジションが6個以上
 ある場合に最もうまく機能します。</value>
-    <comment>Needs Review:English text changed
-Old English:The dot-product between the individual transition peak areas
-of the precursor and the intensities of the matching ion peaks in the matched MS/MS
-spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
-is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
-precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
-useful value for method refinement. It works best when 6 or more transitions are
-present.
-Current English:Equivalent to "dotp" displayed in the user interface. The dot-product between the individual transition peak areas
-of the precursor and the intensities of the matching ion peaks in the matched MS/MS
-spectral library spectrum (Note: as of v1.4, this is now 1 – Arcos(dotp)/(Pi/2) where dotp
-is the value described above. a.k.a. Normalize Spectrum Contrast Angle), or #N/A if the
-precursor has not matching library spectrum or has fewer than 4 transitions. This is a 35
-useful value for method refinement. It works best when 6 or more transitions are
-present.
-Old Localized:プリカーサーの各トランジションのピーク面積と一致したMS/MSスペクトルライブラリスペクトルにおける一致するイオンピークの強度との内積です（注：v1.4同様、 これは現在1 – Arcos(dotp)/(Pi/2)となっています。ここでdotpが上記に説明する値であり、 正規化スペクトルコントラスト角度とも言います）。プリカーサーに一致するライブラリスペクトルがない 場合やトランジションが4個未満の場合には#N/Aとなります。これは35であり、 メソッドの最適化に使用します。トランジションが6個以上ある場合に最もうまく機能します。</comment>
   </data>
   <data name="LibraryIntensity">
     <value>一致するライブラリスペクトルでトランジションのプロダクトイオンに該当するMS/MSのピーク強度です。</value>
@@ -664,10 +709,6 @@ Old Localized:プリカーサーの各トランジションのピーク面積と
   </data>
   <data name="MassErrorPPM">
     <value>期待値と測定値のm/z値の差を百万分率（PPM）で表示</value>
-    <comment>Needs Review:English text changed
-Old English:Mass Error PPM
-Current English:The difference between the expected and measured m/z values expressed in parts per million (PPM)
-Old Localized:質量誤差（ppm）</comment>
   </data>
   <data name="MassErrors">
     <value>クロマトグラムの質量誤差です。</value>
@@ -749,7 +790,6 @@ Old Localized:質量誤差（ppm）</comment>
   </data>
   <data name="Message">
     <value>繰り返し測定間の 「生データ」値の比較に影響を与えうる欠損値がある場合に警告を表示。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="Min">
     <value>最小値</value>
@@ -810,30 +850,18 @@ Old Localized:質量誤差（ppm）</comment>
   </data>
   <data name="MoleculeListAbundance">
     <value>[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the molecule list. This number is obtained by averaging the normalized areas of all of the transitions under this Molecule List.
-The areas are normalized according to the Normalization Method specified in the Molecule Quantification settings.
-The Molecule List Abundance will be blank if any transitions have missing values in this replicate, unless the normalization method is ratio to a label.
-Current English:A number representing the abundance of the molecule list, calculated according to the "Normalization Method" specified in the Molecule Quantification settings
-Old Localized:分子リストの存在量を表す数値です。この数値は、分子リストの下にある正規化面積を平均して得られます。
-面積は分子定量化設定で指定される正規化メソッドに従って正規化されます。
-この繰り返し測定中に値のないトランジションがある場合には、正規化メソッドが標識に対する比率でない限り、分子リスト存在量は空白となります。</comment>
   </data>
   <data name="MoleculeListAbundanceMessage">
     <value>繰り返し測定間の「分子リスト存在量」の比較に欠損データが影響する場合に警告を表示</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceStrict">
     <value>[分子定量化] 設定で指定された「正規化メソッド」に従って算出された、分子リストの存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
     <value>分子リストの下にあるトランジションの平均正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
     <value>分子リストの下にあるトランジションの合計正規化面積。この面積は [分子定量化] 設定で指定された正規化メソッドに従って正規化されます</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="MoleculeListLocator">
     <value>ドキュメント内の分子リストの一意の識別子です。これは「MoleculeGroup:」で始まります。</value>
@@ -897,10 +925,6 @@ Old Localized:分子リストの存在量を表す数値です。この数値は
   </data>
   <data name="NextAa">
     <value>タンパク質配列中のペプチドの直後に位置するアミノ酸残基。</value>
-    <comment>Needs Review:English text changed
-Old English:Next Aa
-Current English:The amino acid residue found immediately after the peptide in the protein sequence.
-Old Localized:次のAa</comment>
   </data>
   <data name="NormalizationDivisor">
     <value>デフォルトの正規化メソッドの使用時に観測値を割った数字。
@@ -911,25 +935,15 @@ Old Localized:次のAa</comment>
   </data>
   <data name="NormalizedArea">
     <value>そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。</value>
-    <comment>Needs Review:English text changed
-Old English:Value obtained by normalizing the peptide/molecule intensity according to either the explicit "Normalization Method" for the peptide/molecule or the normalization method specified on:
-    Settings &gt; Peptide Settings &gt; Quantification
-Current English:Value obtained by normalizing the peptide/molecule intensity according to either
-the explicit "Normalization Method" for the peptide/molecule 
-or the normalization method specified on Settings &gt; Peptide Settings &gt; Quantification
-Old Localized:そのペプチド/分子に指定された「正規化メソッド」または  [設定] &gt; [ペプチド設定] &gt; [定量化]で指定される正規化メソッドを使用したペプチド/分子の強度の正規化によって取得される値です。</comment>
   </data>
   <data name="NormalizedAreaMessage">
     <value>繰り返し測定間で「正規化面積」の値に欠損データの影響がある場合に警告を表示</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaRaw">
     <value>そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。繰り返し測定間の比較に欠損データの影響がある場合に利用可能です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NormalizedAreaStrict">
     <value>そのペプチド/分子に対する「正規化メソッド」あるいは [設定] &gt; [ペプチド設定] &gt; [定量化]で指定した正規化メソッドによってペプチド/分子強度を正規化した数値です。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="NumberOfPoints">
     <value>クロマトグラムにある点の数です。</value>
@@ -1031,7 +1045,6 @@ Old Localized:そのペプチド/分子に指定された「正規化メソッ�
   </data>
   <data name="PeptideSpectrumMatchCount">
     <value>ペプチドと結果ファイルに一致するスペクトルライブラリ内のスペクトル数。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PointCount">
     <value>曲線のフィッティングで使用されたデータポイント数です。</value>
@@ -1053,24 +1066,15 @@ Old Localized:そのペプチド/分子に指定された「正規化メソッ�
   </data>
   <data name="PrecursorCalculatedConcentrationMessage">
     <value>繰り返し測定間の「プリカーサー計算濃度」の比較に欠損データの影響がある場合に警告を表示</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationRaw">
     <value>アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。繰り返し測定間の比較に欠損データの影響がある場合でも利用可能です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCalculatedConcentrationStrict">
     <value>アイソトポログ反応曲線を使用して計算されたプリカーサー結果の濃度です。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorCharge">
     <value>プリカーサーイオンと関連付けられた電荷。</value>
-    <comment>Needs Review:English text changed
-Old English:
-      The charge associated with the precursor ion.
-    
-Current English:The charge associated with the precursor ion.
-Old Localized:  プリカーサーイオンと関連付けられた電荷。</comment>
   </data>
   <data name="PrecursorConcentration">
     <value>このプリカーサーが試料にスパイクされた濃度です。これを使用してアイソトポログ反応曲線を作成します。</value>
@@ -1099,28 +1103,15 @@ Old Localized:  プリカーサーイオンと関連付けられた電荷。</co
   </data>
   <data name="PrecursorNormalizedArea">
     <value>プリカーサー結果の正規化面積。ペプチド正規化メソッドに従って正規化されたプリカーサー結果の総面積に等しい。ペプチド正規化メソッドが「なし」またはラベルに対する比率の場合、プリカーサーの正規化面積はプリカーサーの総面積と等しくなります。</value>
-    <comment>Needs Review:English text changed
-Old English:The normalized area of the Precursor Result.
-This is equal to the Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
-If the Peptide Normalization Method is "None" or ratio to a label, then the Precursor Normalized Area will be equal to the Precursor Total Area.
-Current English:Normalized area of the Precursor Result.
-Equal to Total Area of the Precursor Result normalized according to the Normalization Method of the Peptide.
-If Peptide Normalization Method is "None" or ratio to a label, then Precursor Normalized Area will be equal to the Total Area of the Precursor.
-Old Localized:プリカーサー結果の正規化面積。
-これはペプチドの正規化メソッドに従い正規化されたプリカーサー結果の合計面積と同じです。
-ペプチド正規化メソッドが「なし」または標識に対する比率である場合、プリカーサー正規化面積はプリカーサー合計面積と同じです。</comment>
   </data>
   <data name="PrecursorNormalizedAreaMessage">
     <value>繰り返し測定間の「プリカーサー正規化面積」の値の比較に欠損値の影響がある場合に警告を表示</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNormalizedAreaRaw">
     <value>プリカーサー結果の正規化面積。ペプチドの正規化メソッドに従って正規化されたプリカーサー結果の総面積に等しい。ペプチド正規化メソッドが「なし」またはラベルに対する比率の場合、プリカーサーの正規化面積はプリカーサーの総面積と等しくなります。繰り返し測定間の比較に欠損データの影響がある場合でも利用可能です。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNormalizedAreaStrict">
     <value>プリカーサー結果の正規化面積。ペプチドの正規化メソッドに従って正規化されたプリカーサー結果の総面積に等しい。ペプチド正規化メソッドが「なし」またはラベルに対する比率の場合、プリカーサーの正規化面積はプリカーサーの総面積と等しくなります。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="PrecursorNote">
     <value>編集メニューで[メモを編集]をクリックすると表示される、プリカーサーに関連付けられるフリーテキストのメモ</value>
@@ -1183,37 +1174,28 @@ Old Localized:プリカーサー結果の正規化面積。
   <data name="ProductNeutralMass">
     <value>ペプチドのプロダクトイオンのニュートラルな質量（Da）。</value>
   </data>
+  <data name="ProportionTruncated">
+    <value>ピークと解析時間範囲のいずれかの終端の
+境界を積分するプリカーサーのトランジションの面積加重平均(0～1.0)。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります。</value>
+  </data>
   <data name="Protein">
     <value>タンパク質</value>
   </data>
   <data name="ProteinAbundance">
     <value>[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。</value>
-    <comment>Needs Review:English text changed
-Old English:A number representing the abundance of the protein in the particular replicate.
-The Protein Abundance is calculated by taking the average of the normalized areas of all of the Transitions under the Protein.
-The Transition Areas are normalized according to the Normalization Method specified in the Peptide Quantification settings.
-The Protein Abundance will be blank if any transitions have missing peak areas in the Replicate, unless the normalization method is ratio to a label.
-Current English:A number representing the abundance of the protein, calculated according to the "Normalization Method" specified in the Peptide Quantification settings.
-Old Localized:特定の繰り返し測定のタンパク質の存在量を表す数値です。
-タンパク質存在量は、タンパク質に帰属するすべてのトランジションの正規化面積の平均を使用して計算されます。
-トランジション面積はペプチド定量設定で指定される正規化メソッドに従って正規化されます。
-この繰り返し測定中にピーク面積のないトランジションがある場合、又は正規化メソッドが標識に対する比率でない限り、タンパク質リスト存在量は空白となります。</comment>
   </data>
   <data name="ProteinAbundanceMessage">
     <value>繰り返し測定間の「タンパク質存在量」の比較に欠損データが影響がある場合に警告を表示</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceStrict">
     <value>[ペプチド定量化] 設定で指定された「正規化メソッド」に従って算出された、タンパク質の存在量を示す数値。繰り返し測定間の比較に欠損データの影響がある場合には利用できません。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
     <value>[タンパク質] の下にあるトランジションの平均正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
     <value>[タンパク質] の下にあるトランジションの合計正規化面積。この面積は、[ペプチド定量化] 設定で指定された正規化メソッドに従って正規化されます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ProteinAccession">
     <value>タンパク質アクセッション番号</value>
@@ -1286,17 +1268,12 @@ Old Localized:特定の繰り返し測定のタンパク質の存在量を表す
   </data>
   <data name="RatioDotProduct">
     <value>ユーザーインターフェイスに表示される「rdotp」と同じ意味です。[ライブラリ内積] の内積計算を示していますが、これはプリカーサーのピーク面積（例えばlight）と標準用プリカーサーのピーク面積（例えばheavy）との間の場合であり、標準が存在しないまたはプリカーサーが標準の場合は#N/Aとなります。</value>
-    <comment>Needs Review:English text changed
-Old English:Ratio Dot Product
-Current English:Equivalent to "rdotp" displayed in the user interface. The dot-product calculation described for Library Dot Product, but between the peak areas of the precursor (e.g. light) and the peak areas of the standard type precursor (e.g. heavy), or #N/A if there is either no standard type or the precursor is the standard type.
-Old Localized:内積比率</comment>
   </data>
   <data name="RatioToStandard">
     <value>LightのHeavyに対するペプチドの面積比</value>
   </data>
   <data name="Raw">
     <value>繰り返し測定間の比較に欠損データの影響がある場合でも計算値が利用できます。</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="RawData">
     <value>生（未補間）のクロマトグラムデータです。クロマトグラムの間隔が均一でなく、各トランジションのクロマトグラムにはそれぞれ異なる点の数があります。</value>
@@ -1490,15 +1467,17 @@ Double Blank（ダブルブランク）</value>
     <value>プリカーサーのTotalAreaNormalized値の標準偏差。</value>
   </data>
   <data name="Strict">
-    <value>繰り返し測定間の比較に欠損データが影響する可能性がある場合には計算値が利用できません。</value>
-    <comment>Needs Review:New resource</comment>
+    <value>データがない場合に計算された値が利用できないと、繰り返し測定間の比較に影響を及ぼす可能性があります。</value>
+    <comment>Needs Review:English text changed
+Old English:Calculated value unavailable when missing data could comparisons between replicates.
+Current English:Calculated value unavailable when missing data could impact comparisons between replicates.
+Old Localized:繰り返し測定間の比較に欠損データが影響する可能性がある場合には計算値が利用できません。</comment>
   </data>
   <data name="SummaryMessage">
     <value>変更の説明</value>
   </data>
   <data name="SurrogateExternalStandard">
     <value>このペプチドまたは分子の定量に使用される、適合した校正曲線を有する別のペプチドまたは分子の名前</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="TargetQualitativeIonRatio">
     <value>校正から除外されていない外部標準繰り返し測定全体での定性イオン比の平均値です。</value>
@@ -1584,7 +1563,17 @@ Double Blank（ダブルブランク）</value>
     <value>トランジション</value>
   </data>
   <data name="Truncated">
-    <value>ピークの積分において取得時間の範囲内のピークの両側で強度が全体のピーク高さの1%より高い場合には真です。</value>
+    <value>積分ピークの境界が解析
+時間範囲のいずれかの終端にある場合は真。この場合、その終端の強度は
+もう一方の終端よりもバックグラウンドを差し引いたピークの高さが25%高くなります</value>
+    <comment>Needs Review:English text changed
+Old English:True if the integrated a peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 1% of the entire peak height
+higher than the other extent.
+Current English:True if the integrate peak has a boundary at either end of the acquisition
+time range, where intensity at the end is greater than 25% of the background-subtracted peak height
+higher than the other extent.
+Old Localized:ピークの積分において取得時間の範囲内のピークの両側で強度が全体のピーク高さの1%より高い場合には真です。</comment>
   </data>
   <data name="TurningPoint">
     <value>双線形回帰の場合、2つの線が交差するX座標です。</value>

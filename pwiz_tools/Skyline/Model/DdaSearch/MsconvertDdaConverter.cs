@@ -17,8 +17,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results;
@@ -112,6 +114,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                             " --acceptZeroLengthSpectra --simAsSpectra --combineIonMobilitySpectra" +
                             @" --filter ""peakPicking true 1-"" " +
                             FilterMslevel() +
+                            TextUtil.SpaceSeparate(GetSpectrumFilters()) +
                             spectrumSource.ToString().Quote()
                     };
 
@@ -150,6 +153,11 @@ namespace pwiz.Skyline.Model.DdaSearch
         public virtual string FilterMslevel()
         {
             return @" --filter ""msLevel 2-"" ";
+        }
+
+        public virtual string[] GetSpectrumFilters()
+        {
+            return Array.Empty<string>();
         }
 
         private void UpdateProgress(Func<IProgressStatus, IProgressStatus> updater)
@@ -205,6 +213,34 @@ namespace pwiz.Skyline.Model.DdaSearch
             status = status.ChangePercentComplete(_lastPercentComplete);
 
             return _parentProgressMonitor.UpdateProgress(status);
+        }
+    }
+
+    /// <summary>
+    /// An MsconvertDdaConverter with slightly different settings, for DIA search
+    /// </summary>
+    public class DiaConverter : MsconvertDdaConverter
+    {
+        //private readonly IList<FilterClause> _fullScanSpectrumFilter;
+
+        public DiaConverter(ImportPeptideSearch importPeptideSearch, IList<FilterClause> fullScanSpectrumFilter) : base(importPeptideSearch)
+        {
+            //_fullScanSpectrumFilter = fullScanSpectrumFilter;
+        }
+
+        public override string FilterMslevel()
+        {
+            return ""; // DIA needs both levels
+        }
+
+        public override string[] GetSpectrumFilters()
+        {
+            // TODO (MCC): translate _fullScanSpectrumFilter filters to msconvert filters when possible and desirable;
+            // How to decide when desirable? For example, isolation width filter is needed in Skyline for Stellar DIA, but not in newest MSFragger version
+            //foreach (var filter in _fullScanSpectrumFilter)
+            //{ }
+
+            return Array.Empty<string>();
         }
     }
 

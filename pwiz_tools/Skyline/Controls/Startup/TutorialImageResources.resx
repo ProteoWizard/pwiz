@@ -179,12 +179,18 @@
     <value>..\..\resources\startpage\smallmoleculequantification_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SmallMolLibraries_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\resources\startpage\smallmollibraries_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\..\resources\startpage\smallmoleculeimslibraries_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="SmallMolecule_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\..\resources\startpage\smallmolecule_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="TargetedMSMS_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\..\resources\startpage\targetedmsms_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="PRM_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\..\resources\startpage\prm_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PRMOrbitrap_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+      <value>..\..\resources\startpage\prmorbitrap_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DIA_Umpire_TTOF_start" type="System.Resources.ResXFileRef, System.Windows.Forms">
+      <value>..\..\resources\startpage\dia-umpire-ttof_start.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

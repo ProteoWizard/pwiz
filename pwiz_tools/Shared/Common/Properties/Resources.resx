@@ -451,6 +451,9 @@
   <data name="NavBar_UpdateGroupTotalDropdown_Modify_Current_Pivot___" xml:space="preserve">
     <value>Modify Current Pivot...</value>
   </data>
+  <data name="NavBar_UpdateGroupTotalDropdown_FreezeColumns_Default__0_" xml:space="preserve">
+    <value>Default ({0})</value>
+  </data>
   <data name="ManageLayoutsForm_UpdateUi_Manage_layouts_for__0_" xml:space="preserve">
     <value>Manage layouts for {0}</value>
   </data>
@@ -547,5 +550,8 @@
   </data>
   <data name="FilterClause_MakePredicate_Invalid_filter_column___0__" xml:space="preserve">
     <value>Invalid filter column '{0}'</value>
+  </data>
+  <data name="FreezeCells" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FreezeCells.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

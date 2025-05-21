@@ -118,6 +118,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Orbitrap_Fusion_ETD:       return MS_Orbitrap_Fusion_ETD;
         case InstrumentModelType_Orbitrap_Ascend:           return MS_Orbitrap_Ascend;
         case InstrumentModelType_Orbitrap_ID_X:             return MS_Orbitrap_ID_X;
+        case InstrumentModelType_Orbitrap_IQ_X:             return MS_Orbitrap_IQ_X;
         case InstrumentModelType_TSQ_Quantiva:              return MS_TSQ_Quantiva;
         case InstrumentModelType_TSQ_Endura:                return MS_TSQ_Endura;
         case InstrumentModelType_TSQ_Altis:                 return MS_TSQ_Altis;
@@ -127,6 +128,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_TSQ_9000:                  return MS_TSQ_9000;
         case InstrumentModelType_Orbitrap_Exploris_120:     return MS_Orbitrap_Exploris_120;
         case InstrumentModelType_Orbitrap_Exploris_240:     return MS_Orbitrap_Exploris_240;
+        case InstrumentModelType_Orbitrap_Exploris_GC_240:  return MS_Orbitrap_Exploris_GC_240;
         case InstrumentModelType_Orbitrap_Exploris_480:     return MS_Orbitrap_Exploris_480;
         case InstrumentModelType_Orbitrap_Eclipse:          return MS_Orbitrap_Eclipse;
         case InstrumentModelType_Orbitrap_GC:               return MS_Orbitrap_Exploris_480;
@@ -240,6 +242,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Q_Exactive_UHMR:
         case InstrumentModelType_Orbitrap_Exploris_120:
         case InstrumentModelType_Orbitrap_Exploris_240:
+        case InstrumentModelType_Orbitrap_Exploris_GC_240:
         case InstrumentModelType_Orbitrap_Exploris_480:
         case InstrumentModelType_Orbitrap_GC:
             configurations.push_back(InstrumentConfiguration());
@@ -289,6 +292,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Orbitrap_Fusion_ETD:
         case InstrumentModelType_Orbitrap_Ascend:
         case InstrumentModelType_Orbitrap_ID_X:
+        case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Eclipse:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);

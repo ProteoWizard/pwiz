@@ -349,7 +349,7 @@ _currentScanNum(0)
 {
 }
 
-class own_double_less : public std::binary_function<double, double, bool>
+class own_double_less
 {
 public:
     own_double_less(double arg_ = 1e-7) : epsilon(arg_) {}
@@ -362,7 +362,7 @@ public:
     double epsilon;
 };
 
-class own_double_equal : public std::binary_function<double, double, bool>
+class own_double_equal
 {
 public:
     own_double_equal(double arg_ = 1e-7) : epsilon(arg_) {}

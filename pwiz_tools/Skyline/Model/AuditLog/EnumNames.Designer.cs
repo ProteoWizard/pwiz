@@ -574,7 +574,7 @@ namespace pwiz.Skyline.Model.AuditLog {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DIA raw (deconvolute, search, and build library).
+        ///   Looks up a localized string similar to DIA raw (search and build library).
         /// </summary>
         public static string InputFile_dia_raw {
             get {
@@ -1452,6 +1452,15 @@ namespace pwiz.Skyline.Model.AuditLog {
         public static string SampleType_unknown {
             get {
                 return ResourceManager.GetString("SampleType_unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Comet.
+        /// </summary>
+        public static string SearchEngine_Comet {
+            get {
+                return ResourceManager.GetString("SearchEngine_Comet", resourceCulture);
             }
         }
         

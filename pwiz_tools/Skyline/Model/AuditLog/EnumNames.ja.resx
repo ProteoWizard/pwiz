@@ -374,7 +374,6 @@
   </data>
   <data name="Workflow_feature_detection" xml:space="preserve">
     <value>フィーチャーの検出</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="TransitionLibraryPick_none" xml:space="preserve">
     <value>なし</value>
@@ -599,7 +598,11 @@
     <value>DDA生データ (ライブラリの検索と構築)</value>
   </data>
   <data name="InputFile_dia_raw" xml:space="preserve">
-    <value>DIA生データ (ライブラリのデコンボリューション、検索、構築)</value>
+    <value>DIA生データ(検索してライブラリを構築)</value>
+    <comment>Needs Review:English text changed
+Old English:DIA raw (deconvolute, search, and build library)
+Current English:DIA raw (search and build library)
+Old Localized:DIA生データ (ライブラリのデコンボリューション、検索、構築)</comment>
   </data>
   <data name="InputFile_search_result" xml:space="preserve">
     <value>検索結果 (ライブラリを直接構築)</value>
@@ -721,20 +724,25 @@
   <data name="Simple_ratio_to_light" xml:space="preserve">
     <value>Lightに対する比率</value>
   </data>
+  <data name="LodCalculation_turning_point_stderr" xml:space="preserve">
+    <value>双線形転回点標準エラー</value>
+  </data>
+  <data name="BilinearRegressionFit_bilinear" xml:space="preserve">
+    <value>双線形</value>
+  </data>
   <data name="SharedPeptidesGene_AssignedToBestProtein" xml:space="preserve">
     <value>ペプチドの最も多い遺伝子に割り当て</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SharedPeptidesGene_AssignedToFirstProtein" xml:space="preserve">
     <value>最初の遺伝子に割り当て</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SharedPeptidesGene_DuplicatedBetweenProteins" xml:space="preserve">
     <value>遺伝子間で重複</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="SharedPeptidesGene_Removed" xml:space="preserve">
     <value>削除済み（ペプチドは1つの遺伝子に固有の必要がある）</value>
-    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SearchEngine_Comet" xml:space="preserve">
+    <value>Comet</value>
   </data>
 </root>

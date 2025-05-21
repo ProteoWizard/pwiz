@@ -76,13 +76,13 @@ using namespace pwiz::msdata::detail::Mobilion;
 
 namespace {
 
-void fillInMetadata(const string& rawpath, const MBIFilePtr& rawdata, MSData& msd)
+void fillInMetadata(const string& rawpath, MBIFile* rawdata, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
     bool hasMS1 = false, hasMS2 = false;
-    for (size_t i = 0; i < rawdata->NumFrames() && (!hasMS1 || !hasMS2); ++i)
-        if (rawdata->GetFrame(i)->IsFragmentationData())
+    for (size_t i = 1; i <= rawdata->NumFrames() && (!hasMS1 || !hasMS2); ++i)
+        if (rawdata->GetFrame(i)->GetCE(0) > 0)
             hasMS2 = true;
         else
             hasMS1 = true;
@@ -97,22 +97,22 @@ void fillInMetadata(const string& rawpath, const MBIFilePtr& rawdata, MSData& ms
     bfs::path sourcePath(rawpath);
 
     SourceFilePtr sourceFile(new SourceFile);
-    sourceFile->id = BFS_STRING(sourcePath.leaf());
-    sourceFile->name = BFS_STRING(sourcePath.leaf());
-    sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.branch_path()));
-    sourceFile->set(MS_Bruker_TDF_nativeID_format);
-    sourceFile->set(MS_file_format);
+    sourceFile->id = BFS_STRING(sourcePath.filename());
+    sourceFile->name = BFS_STRING(sourcePath.filename());
+    sourceFile->location = "file:///" + BFS_GENERIC_STRING(BFS_COMPLETE(sourcePath.parent_path()));
+    sourceFile->set(MS_Mobilion_MBI_nativeID_format);
+    sourceFile->set(MS_Mobilion_MBI_format);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     msd.id = bfs::basename(sourcePath);
     msd.run.id = msd.id;
 
-    auto metadata = rawdata->Metadata();
-    
+    auto metadata = rawdata->GetGlobalMetaData();
     SoftwarePtr softwareMobilion(new Software);
     softwareMobilion->id = "MOBILion";
     softwareMobilion->set(MS_acquisition_software);
-    softwareMobilion->version = metadata.ReadString("acq-software-version");
+    if (metadata != nullptr)
+        softwareMobilion->version = metadata->ReadString(MBISDK::MBIAttr::GlobalKey::ACQ_SOFTWARE_VERSION);
     msd.softwarePtrs.push_back(softwareMobilion);
 
     SoftwarePtr softwarePwiz(new Software);
@@ -138,7 +138,8 @@ void fillInMetadata(const string& rawpath, const MBIFilePtr& rawdata, MSData& ms
     auto& ic = *msd.instrumentConfigurationPtrs.back();
 
     ic.set(MS_Agilent_instrument_model);
-    ic.userParams.push_back(UserParam("instrument model", metadata.ReadString("acq-ms-model")));
+    if (metadata != nullptr)
+        ic.userParams.push_back(UserParam("instrument model", metadata->ReadString(MBISDK::MBIAttr::GlobalKey::ACQ_MS_MODEL)));
 
     ic.componentList.push_back(Component(MS_electrospray_ionization, 1));
     ic.componentList.push_back(Component(MS_quadrupole, 2));
@@ -149,14 +150,17 @@ void fillInMetadata(const string& rawpath, const MBIFilePtr& rawdata, MSData& ms
     if (!msd.instrumentConfigurationPtrs.empty())
         msd.run.defaultInstrumentConfigurationPtr = msd.instrumentConfigurationPtrs[0];
 
-    string timestamp = metadata.ReadString("acq-timestamp");
-    if (!timestamp.empty())
+    if (metadata != nullptr)
     {
-        vector<string> tokens;
-        bal::split(tokens, timestamp, bal::is_any_of(".")); // trim fractional seconds
-        blt::local_date_time dateTime = parse_date_time("%Y-%m-%d %H:%M:%S", tokens[0]);
-        if (!dateTime.is_not_a_date_time())
-            msd.run.startTimeStamp = encode_xml_datetime(dateTime);
+        string timestamp = metadata->ReadString(MBISDK::MBIAttr::GlobalKey::ACQ_TIMESTAMP);
+        if (!timestamp.empty())
+        {
+            vector<string> tokens;
+            bal::split(tokens, timestamp, bal::is_any_of(".")); // trim fractional seconds
+            blt::local_date_time dateTime = parse_date_time("%Y-%m-%d %H:%M:%S", tokens[0]);
+            if (!dateTime.is_not_a_date_time())
+                msd.run.startTimeStamp = encode_xml_datetime(dateTime);
+        }
     }
 }
 
@@ -179,12 +183,11 @@ void Reader_Mobilion::read(const string& filename,
         throw ReaderFail(string("[Reader_Mobilion::read()] Mobilion API does not support Unicode in filepaths ('") + utf8CharAsString(unicodeCharItr, filename.end()) + "')");
     }
 
-    MBIFilePtr rawdata(new MBIFile(filename.c_str()));
-
+    MBIFilePtr rawdata(new MBIFileWrapper(filename.c_str()));
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Mobilion(result, rawdata, config));
     result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Mobilion(rawdata, config));
 
-    fillInMetadata(filename, rawdata, result);
+    fillInMetadata(filename, &rawdata->file, result);
 }
 
 

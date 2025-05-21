@@ -9,12 +9,12 @@
 <body onload="skylineOnload();">
     <h1 class="document-title">Skyline Data Independent Acquisition</h1>
     <p>
-        Data-independent acquisition (DIA)<sup>1,2</sup> is an advanced technique for performing large scale targeted proteomics experiments. Targeted
-        acquisition approaches such as selected reaction monitoring (SRM) and parallel reaction monitoring (PRM) are limited to only a handful of
-        peptides without acquisition scheduling or tens to hundreds of peptides per mass spec run with scheduling. DIA allows the measurement of much
-        larger numbers of peptides (thousands or even whole proteomes) with only modest sacrifices in sensitivity, selectivity and reproducibility
-        relative to SRM. DIA also has the advantage that the peptides to be measured do not need to be specified in advance or scheduled, but rather,
-        product ion chromatograms for any desired peptide within a broad range of precursor m/z can be extracted after acquisition from a DIA run.
+        Data-independent acquisition (DIA)<sup>1,2</sup> is an advanced technique for performing large scale targeted proteomics experiments. Targeted acquisition
+        approaches such as selected reaction monitoring (SRM) and parallel reaction monitoring (PRM) are limited to only a handful of peptides without
+        acquisition scheduling or tens to hundreds of peptides per mass spec run with scheduling. DIA allows the measurement of much larger numbers of
+        peptides (thousands or even whole proteomes) with only modest sacrifices in sensitivity, selectivity and reproducibility relative to SRM. DIA
+        also has the advantage that the peptides to be measured do not need to be specified in advance or scheduled, but rather, product ion
+        chromatograms for any desired peptide within a broad range of precursor m/z can be extracted after acquisition from a DIA run.
     </p>
     <p>
         Since support for chromatogram extraction from DIA data was first implemented in Skyline, in October 2010, this support has been improved
@@ -37,7 +37,7 @@
             href="https://skyline.ms/webinar02.url">Skyline
             Tutorial Webinar #2</a> and has since been documented more thoroughly in webinars <a href="https://skyline.ms/webinar14.url">#14</a>, <a
             href="https://skyline.ms/webinar15.url">#15</a>, and <a href="https://skyline.ms/webinar18.url">#18</a> as well as the tutorial <a
-            href="https://skyline.ms/tutorial_dia_swath_ja.url">Analysis of DIA/SWATH Data</a>), a straightforward and accessible way to start DIA
+            href="https://skyline.ms/tutorial_dia_swath.url">Analysis of DIA/SWATH Data</a>), a straightforward and accessible way to start DIA
         analysis is simply to intersperse DDA runs with DIA runs on the same instrument and use the spectra and retention times of the DDA results as
         predictions for the DIA runs.
     </p>
@@ -51,7 +51,7 @@
         To start this tutorial, download the following ZIP file:
     </p>
     <p>
-        <a href="https://skyline.ms/DIA-20_2.zip">https://skyline.ms/DIA-20_2.zip</a>
+        <a href="https://skyline.ms/tutorials/DIA-20_2.zip">https://skyline.ms/tutorials/DIA-20_2.zip</a>
     </p>
     <p>
         Note that the file is very large (4.5 GB download, and 6.0 GB uncompressed), because it includes DIA runs which are generally very large files,
@@ -59,7 +59,7 @@
         disk space, you can alternatively download a smaller (660 MB download, and 918 MB uncompressed) version of the tutorial here:
     </p>
     <p>
-        <a href="https://skyline.ms/DIALibrary-20_2.zip">https://skyline.ms/DIALibrary-20_2.zip</a>
+        <a href="https://skyline.ms/tutorials/DIALibrary-20_2.zip">https://skyline.ms/tutorials/DIALibrary-20_2.zip</a>
     </p>
     <p>
         If you choose the small version, lacking the mass spec raw data files, you will need to skip some steps in the tutorial, which will be noted in
@@ -154,7 +154,7 @@
         The <b>Transition Settings</b> form should look something like this:
     </p>
     <p>
-        <img src="s-1.png" />
+        <img src="s-01.png" />
     </p>
     <table>
         <tr>
@@ -186,7 +186,7 @@
         The <b>Edit Isolation Scheme</b> form should appear as follows:
     </p>
     <p>
-        <img src="s-2.png" />
+        <img src="s-02.png" />
     </p>
     <ul>
         <li>Choose <b>Prespecified isolation windows</b>.</li>
@@ -237,7 +237,7 @@
         The <b>Calculate Isolation Scheme</b> form should look like this:
     </p>
     <p>
-        <img src="s-3.png" />
+        <img src="s-03.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -249,7 +249,7 @@
         The <b>Edit Isolation Scheme</b> form should look like this:
     </p>
     <p>
-        <img src="s-4.png" />
+        <img src="s-04.png" />
     </p>
     <p>
         Skyline also allows you to visualize the precursor <i>m/z</i> range isolations over time, to check that what you have entered is correct:
@@ -262,7 +262,7 @@
         <i>m/z</i> on the x-axis:
     </p>
     <p>
-        <img src="s-5.png" />
+        <img src="s-05.png" />
     </p>
     <ul>
         <li>Click the <b>Close</b> button.</li>
@@ -288,7 +288,7 @@
         The form should look like this:
     </p>
     <p>
-        <img src="s-6.png" />
+        <img src="s-06.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -338,14 +338,7 @@
         The <b>Import Peptide Search</b> wizard should appear looking like this:
     </p>
     <p>
-        <img src="s-7.png" />
-    </p>
-    <p>
-        For this data set a <b>Cut-off score</b> field set to “0.95” means peptide spectrum matches with a PeptideProphet score of 0.95 or
-        better will be included, because the DDA data was processed with the TPP (after peptide spectrum matching with SEQUEST). For other spectrum
-        matching pipelines that use q values or expectation scores, where zero is best and 1 worst, the cut-off score uses 1 – score. So that, 0.95
-        would mean ≤0.05. For a reusable library, you would probably want to use a more stringent cut-off like 0.99 (i.e. ≤0.01 or 1% false discovery
-        rate for q values).
+        <img src="s-07.png" />
     </p>
     <ul>
         <li>Click the <b>Add Files</b> button.</li>
@@ -354,6 +347,11 @@
             </ul>
         </li>
     </ul>
+    <p>
+        For this data set a <b>Score Threshold</b> of “0.95” means peptide spectrum matches with a PeptideProphet score of 0.95 or better
+        will be included, because the DDA data was processed with the TPP (after peptide spectrum matching with SEQUEST). For a reusable library, you
+        would probably want to use a more stringent threshold like 0.99 (i.e. ≤0.01 or 1% false discovery rate for q values).
+    </p>
     <p>
         This file contains peptide spectrum matching results from a single DDA run. For a real experiment, you would actually perform the DDA
         acquisitions on a mass spectrometer, then run the output files through a search engine to produce one or more of these files (usually one for
@@ -372,7 +370,7 @@
         The <b>Spectral Library</b> page of the wizard should now look like this:
     </p>
     <p>
-        <img src="s-8.png" />
+        <img src="s-08.png" />
     </p>
     <ul>
         <li>Click <b>Next</b> to build a spectral library from these search results.</li>
@@ -391,7 +389,7 @@
         The <b>Browse for Results Files</b> form should look like this:
     </p>
     <p>
-        <img src="s-9.png" />
+        <img src="s-09.png" />
     </p>
     <ul>
         <li>Click the <b>Open</b> button.</li>
@@ -487,7 +485,7 @@
     <p>
         In this simple introduction with only 6 targeted proteins in the FASTA text you have just included, you will not use decoys or a dynamic peak
         picking model generated with the mProphet algorithm. For more details on these options, you should consult the <a
-            href="https://skyline.ms/tutorial_dia_swath_ja.url">Analysis of DIA/SWATH Data</a> tutorial.
+            href="https://skyline.ms/tutorial_dia_swath.url">Analysis of DIA/SWATH Data</a> tutorial.
     </p>
     <ul>
         <li>Click the <b>Finish</b> button.</li>
@@ -534,7 +532,7 @@
         strictly necessary for a DIA workflow, and are needed only if you choose to apply a custom peak scoring method. In many cases, the Skyline
         default peak picking performs very well and no custom peak scoring is needed, and even when custom peak scoring is used, alternatives to
         decoys exist (see the <a
-            href="https://skyline.ms/tutorial_peak_picking_ja.url">Advanced Peak Picking
+            href="https://skyline.ms/tutorial_peak_picking.url">Advanced Peak Picking
             Models</a> tutorial). No decoys will be added to the document for this tutorial.
     </p>
     <h1>Exploring DIA Results</h1>
@@ -551,6 +549,7 @@
         <li>Right-click one of the chromatogram graphs, and click <b>Legend</b> to uncheck it.</li>
         <li>Dock the <b>Peak Areas – Replicate Comparison</b> graph to the right edge of the main window on top of the <b>Library
                 Match</b> view.</li>
+        <li>Right-click the <b>Peak Areas – Replicate Comparison</b> graph, choose <b>Show Dot Product</b>, and click <b>Labels</b>.</li>
         <li>Select the first peptide K.YALSQDV<b><u>C</u></b>TYR.D [64, 74] in the <b>Targets</b> view.</li>
     </ul>
     <p class="keep-next">
@@ -908,10 +907,10 @@
         tutorial. You built a spectral library from DDA search results, set up retention time restriction based on the measured RTs in the library,
         defined a set of transitions to be measured based on proteins of interest and matching spectra from the DDA runs, imported DIA runs, and
         analyzed the resulting data quality. Ultimately, as in all Skyline documents, you can produce peak areas and statistical information on the
-        peptides of interest. Several other tutorials (<a href="https://skyline.ms/tutorial_method_edit_ja.url">Targeted Method Editing</a>, <a
-            href="https://skyline.ms/tutorial_existing_quant_ja.url">Existing and Quantitative Experiments</a>, <a
-            href="https://skyline.ms/tutorial_irt_ja.url">iRT Retention Time Prediction</a>, <a
-            href="https://skyline.ms/tutorial_peak_picking_ja.url">Advanced Peak Picking Models</a>, <a
+        peptides of interest. Several other tutorials (<a href="https://skyline.ms/tutorial_method_edit.url">Targeted Method Editing</a>, <a
+            href="https://skyline.ms/tutorial_existing_quant.url">Existing and Quantitative Experiments</a>, <a
+            href="https://skyline.ms/tutorial_irt.url">iRT Retention Time Prediction</a>, <a
+            href="https://skyline.ms/tutorial_peak_picking.url">Advanced Peak Picking Models</a>, <a
             href="https://skyline.gs.washington.edu/labkey/_webdav/home/software/Skyline/%40files/tutorials/ImportingAssayLibraries-2_6.pdf">Importing
             Assay Libraries</a> and <a href="https://panoramaweb.org/labkey/wiki/home/page.view?name=chromatogram_libraries">Panorama Chromatogram
             Libraries</a>) have been mentioned in this tutorial for more advanced study.
@@ -919,7 +918,7 @@
     <p>
         This workflow should enable you to analyze any DIA data set in Skyline, provided it is accompanied by DDA runs acquired before, after or among
         your DIA runs. This is one easy way to get started with DIA data analysis. However, you are strongly encouraged to continue your study with
-        the <a href="https://skyline.ms/tutorial_dia_swath_ja.url">Analysis of DIA/SWATH Data</a> tutorial. In it, you will build a spectral library with
+        the <a href="https://skyline.ms/tutorial_dia_swath.url">Analysis of DIA/SWATH Data</a> tutorial. In it, you will build a spectral library with
         calibrated iRT values and use these normalized retention times and an mProphet statistical model for chromatogram peak scoring and picking.
         You will also use a group comparison in Skyline to estimate fold-change between conditions for each peptide or protein, with adjusted p
         values.

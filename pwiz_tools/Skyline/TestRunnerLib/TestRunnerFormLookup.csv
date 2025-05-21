@@ -14,6 +14,8 @@ AddRetentionTimePredictorDlg,TestAddLibrary
 AlertLinkDlg,TestMiscForms
 AlignmentForm,TestRetentionTimeAlignment
 AllChromatogramsGraph,*
+ArdiaLoginDlg,TestArdia
+ArdiaLogoutDlg,TestArdia
 AreaChartPropertyDlg,TestEditDialogs
 AreaCVToolbarProperties,TestAreaCVHistograms
 AreaGraphController,TestEditDialogs
@@ -21,12 +23,12 @@ ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins
 AuditLogForm,*
 AuditLogExtraInfoForm,TestAuditLogSaving
+BaseFileDialogNE,TestRetentionTimeAlignment
 LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg.PropertiesPage,TestFullScanId
 BuildLibraryDlg.FilesPage,TestFullScanId
 BuildLibraryDlg.LearningPage,*
-BuildLibraryNotification,*
 CalculateIsolationSchemeDlg,TestCalculateIsolationWindows
 CalibrateIrtDlg,IrtFunctionalTest
 CalibrationForm,TestCalibration
@@ -156,6 +158,7 @@ MultiButtonMsgDlg,TestShareSettings
 NameLayoutForm,TestPivotEditor
 NoModeUIDlg,UIModeSettingsTest
 OpenDataSourceDialog,TestRetentionTimeAlignment
+OpenFileDialogNE,TestRetentionTimeAlignment
 PanoramaFilePicker, TestPanorama
 PanoramaDirectoryPicker, TestPanorama
 PasteDlg.FastaTab,ProteinMetadataFunctionalTests

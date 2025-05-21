@@ -115,6 +115,7 @@ void initializeTinyMGF(MSData& msd)
     s21precursor.selectedIons.resize(1);
     s21precursor.selectedIons[0].set(MS_selected_ion_m_z, 424.24, MS_m_z);
     s21precursor.selectedIons[0].set(MS_peak_intensity, 4242.0, MS_number_of_detector_counts);
+    s21precursor.selectedIons[0].set(MS_collisional_cross_sectional_area, 1.376, UO_square_angstrom);
     s21precursor.selectedIons[0].cvParams.push_back(CVParam(MS_possible_charge_state, 2));
     s21precursor.selectedIons[0].cvParams.push_back(CVParam(MS_possible_charge_state, 3));
 
@@ -122,6 +123,7 @@ void initializeTinyMGF(MSData& msd)
     s21.scanList.scans.push_back(Scan());
     Scan& s21scan = s21.scanList.scans.back();
     s21scan.set(MS_scan_start_time, 42.0, UO_second);
+    s21scan.set(MS_inverse_reduced_ion_mobility, 421.0, MS_volt_second_per_square_centimeter);
 
     s21.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_detector_counts);
     BinaryData<double>& s21_mz = s21.getMZArray()->data;
@@ -154,7 +156,7 @@ void testWriteRead(const MSData& msd)
     DiffConfig diffConfig;
     diffConfig.ignoreIdentity = true;
     diffConfig.ignoreChromatograms = true;
-
+    
     Diff<MSData, DiffConfig> diff(msd, msd2, diffConfig);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
@@ -204,4 +206,3 @@ int main(int argc, char* argv[])
 
     TEST_EPILOG
 }
-

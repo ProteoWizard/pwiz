@@ -33,14 +33,12 @@ namespace pwiz.Common.DataAnalysis
         {
             var entries = pValues.Select((pValue, index) => new Tuple<double, int>(pValue, index)).ToArray();
             Array.Sort(entries);
-            double[] cumulativeMins = new double[entries.Length];
             double currentMin = 1.0;
             var result = new double[entries.Length];
             for (int i = entries.Length - 1; i >= 0; i--)
             {
                 double value = entries[i].Item1*entries.Length/(i + 1);
                 currentMin = Math.Min(value, currentMin);
-                cumulativeMins[i] = currentMin;
                 result[entries[i].Item2] = currentMin;
             }
             return result;

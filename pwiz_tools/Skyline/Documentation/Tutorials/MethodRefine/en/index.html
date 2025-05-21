@@ -97,20 +97,20 @@
     <ul>
         <li>Select the first peptide (YLGAYLLATLGGNASPSAQDVLK) in the <b>Targets</b> view.</li>
         <li>On the <b>View</b> menu, choose <b>Auto-Zoom</b>, and click <b>Best Peak</b>.</li>
-        <li>On the <b>View</b> menu, choose <b>Ion Types</b>, and click <b>B</b>.</li>
+        <li>On the <b>View</b> menu, choose <b>Libraries</b>, then <b>Ion Types</b>, and click <b>B</b>.</li>
     </ul>
     <p>
         Skyline should present graphs showing both a corresponding MS/MS spectrum from a library and time-intensity chromatogram data measured for
         product ions y3 – y15 of this peptide on an instrument in the MacCoss lab:
     </p>
     <p>
-        <img src="s-1.png" />
+        <img src="s-01.png" />
     </p>
     <p>
         Note that the MS/MS library spectrum associated with each peptide was derived from experiments conducted on an ion trap mass spectrometer.
     </p>
     <p>
-        In the peptide view on the left, Skyline displays green, yellow, and red dots left of the peptide sequences. There are peak quality icons, and
+        In the peptide view on the left, Skyline displays green circle (with a white check), yellow triangle (with a white dash), and red circle (with a white X) icons left of the peptide sequences. There are peak quality icons, and
         they indicate:
     </p>
     <ul>
@@ -143,7 +143,7 @@
         The <b>Export Transition List</b> form should look like:
     </p>
     <p>
-        <img src="s-2.png" />
+        <img src="s-02.png" />
     </p>
     <ul>
         <li>Click the <b>OK</b> button.</li>
@@ -219,7 +219,7 @@
         form like the one below:
     </p>
     <p>
-        <img src="s-3.png" />
+        <img src="s-03.png" />
     </p>
     <p>
         While Skyline stores this data into its high-performance data file, you are free to continue reviewing the results. You could even begin
@@ -268,7 +268,7 @@
         For the first peptide in the document, that full range looks like:
     </p>
     <p>
-        <img src="s-4.png" />
+        <img src="s-04.png" />
     </p>
     <p>
         This looks like pretty noisy data at first glance, but if you would like to look deeper, you can click and drag a box around any of the large
@@ -296,7 +296,7 @@
         Skyline will display a graph like this:
     </p>
     <p>
-        <img src="s-5.png" />
+        <img src="s-05.png" />
     </p>
     <p>
         Notice the red point positioned on the current Regression Refined line. This point shows the SSRCalc score and measured time for the currently
@@ -315,7 +315,7 @@
         Skyline recalculates the regression, marking more peptides as outliers to change the graph to:
     </p>
     <p>
-        <img src="s-6.png" />
+        <img src="s-06.png" />
     </p>
     <p>
         You can create a new linear equation for retention time prediction by doing the following:
@@ -341,7 +341,7 @@
         to move the regression graph out of the way to see this):
     </p>
     <p>
-        <img src="s-7.png" />
+        <img src="s-07.png" />
     </p>
     <p>
         The shaded rectangle around this indicator shows the window (15.7 minutes) you accepted in the <b>Edit Retention Time Predictor</b>
@@ -361,10 +361,10 @@
         Escape key to return to the <b>Targets</b> view, which should now look something like:
     </p>
     <p>
-        <img src="s-8.png" />
+        <img src="s-08.png" />
     </p>
     <p>
-        The absence of even a red dot peak quality icon indicates that no measurements were present for these 7 peptides in the RAW files imported into
+        The absence of even a red circle peak quality icon indicates that no measurements were present for these 7 peptides in the RAW files imported into
         this document. That was certainly a surprise when we first imported the RAW files into this document. There are 39 transition lists and 39 RAW
         files. What happened?
     </p>
@@ -378,7 +378,7 @@
         The chromatogram graph should now look something like:
     </p>
     <p>
-        <img src="s-9.png" />
+        <img src="s-09.png" />
     </p>
     <p>
         Notice the toolbar that has been added at the top, with the <b>File</b> choice list. If you click on this list, it will show that
@@ -741,7 +741,7 @@
     </p>
     <p>
         When the import is complete, you can see that some of the peptides measured in the unscheduled runs were removed for these scheduled runs
-        because they lack the colored dots. Again, you can reduce the document to just the peptides that were measured by doing the following:
+        because they lack the colored peak quality icons. Again, you can reduce the document to just the peptides that were measured by doing the following:
     </p>
     <ul>
         <li>On the <b>Refine menu</b>, click <b>Remove Missing Results</b>.</li>

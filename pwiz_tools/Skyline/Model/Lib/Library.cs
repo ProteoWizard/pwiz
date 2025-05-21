@@ -2143,6 +2143,14 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
+            IDictionary<string, string> accessions)
+        {
+            accessions.TryGetValue(MoleculeAccessionNumbers.TagInChiKey, out var inChiKey);
+            return Create(moleculeName, chemicalFormulaOrMassesString, inChiKey, 
+                string.Join(@"\t", accessions.Where(kvp => kvp.Key != MoleculeAccessionNumbers.TagInChiKey).Select(kvp => kvp.Key + @":" + kvp.Value)));
+        }
+
+        public static SmallMoleculeLibraryAttributes Create(string moleculeName, string chemicalFormulaOrMassesString,
             string inChiKey, string otherKeys)
         {
             try
@@ -2829,7 +2837,7 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class LibraryDetails
     {
         private readonly IList<LibraryLink> _libLinks;
-        private IEnumerable<SpectrumSourceFileDetails> _dataFiles;
+        private ImmutableList<SpectrumSourceFileDetails> _dataFiles = ImmutableList<SpectrumSourceFileDetails>.EMPTY;
         
         public LibraryDetails()
         {
@@ -2856,8 +2864,8 @@ namespace pwiz.Skyline.Model.Lib
         public int TotalPsmCount { get; set; }
         public IEnumerable<SpectrumSourceFileDetails> DataFiles
         { 
-            get { return _dataFiles ?? (_dataFiles = new List<SpectrumSourceFileDetails>()); }
-            set { _dataFiles = value; }
+            get { return _dataFiles; }
+            set { _dataFiles = ImmutableList.ValueOfOrEmpty(value); }
         }
 
         public IEnumerable<LibraryLink> LibLinks

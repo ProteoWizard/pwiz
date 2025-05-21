@@ -38,7 +38,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public ImportResultsControl(ImportPeptideSearch importPeptideSearch, string documentPath)
         {
             ImportPeptideSearch = importPeptideSearch;
-            DocumentDirectory = Path.GetDirectoryName(documentPath);
+            DocumentPath = documentPath;
 
             InitializeComponent();
 
@@ -86,8 +86,9 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         public bool ResultsFilesMissing { get { return MissingResultsFiles.Any(); } }
 
         private ImportPeptideSearch ImportPeptideSearch { get; set; }
-        private string DocumentDirectory { get; set; }
-        public bool ExcluedSpectrumSourceFilesVisible { get { return cbExcludeSourceFiles.Visible; } }
+        private string DocumentDirectory => Path.GetDirectoryName(DocumentPath);
+        private string DocumentPath { get; set; }
+        public bool ExcludeSpectrumSourceFilesVisible { get { return cbExcludeSourceFiles.Visible; } }
         public bool ExcludeSpectrumSourceFiles
         {
             get { return cbExcludeSourceFiles.Checked; }
@@ -106,14 +107,11 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             using (var dlg = new OpenDataSourceDialog(Settings.Default.RemoteAccountList))
             {
                 dlg.Text = PeptideSearchResources.ImportResultsControl_browseToResultsFileButton_Click_Import_Peptide_Search;
-                dlg.InitialDirectory = new MsDataFilePath(DocumentDirectory);
-                // Use saved source type, if there is one.
-                string sourceType = Settings.Default.SrmResultsSourceType;
-                if (!string.IsNullOrEmpty(sourceType))
-                    dlg.SourceTypeName = sourceType;
-
+                dlg.RestoreState(DocumentPath, Settings.Default.OpenDataSourceState);
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
+
+                Settings.Default.OpenDataSourceState = dlg.GetState(DocumentPath);
 
                 dataSources = dlg.DataSources;
             }

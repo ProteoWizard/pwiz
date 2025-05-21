@@ -221,10 +221,10 @@ namespace pwiz.Common.SystemUtil
                         ? Path.Combine(Environment.CurrentDirectory, psi.FileName)
                         : psi.FileName;
                     // ReSharper disable LocalizableElement
-                    sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}", processPath,
+                    sbError.AppendFormat("\r\nCommand-line: {0} {1}\r\nWorking directory: {2}{3}\r\nExit code: {4}", processPath,
                         // ReSharper restore LocalizableElement
                         string.Join(" ", proc.StartInfo.Arguments), psi.WorkingDirectory,
-                        stdin != null ? "\r\nStandard input:\r\n" + stdin : "");
+                        stdin != null ? "\r\nStandard input:\r\n" + stdin : "", exit);
                     throw new IOException(sbError.ToString());
                 }
 

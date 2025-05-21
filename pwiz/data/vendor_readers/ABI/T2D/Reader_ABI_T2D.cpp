@@ -80,19 +80,19 @@ void fillInSources(const string& datapath, MSData& msd, DataPtr t2d_data)
     {
         // in "/foo/bar/SomeT2Ds/MS/A1.t2d", replace "/foo/bar/SomeT2Ds/" with "" so relativePath is "MS/A1.t2d"
         bfs::path relativePath = t2d_filepath;
-        if (rootpath.has_branch_path())
-            relativePath = bal::replace_first_copy(relativePath.string(), rootpath.branch_path().string() + "/", "");
+        if (rootpath.has_parent_path())
+            relativePath = bal::replace_first_copy(relativePath.string(), rootpath.parent_path().string() + "/", "");
 
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = relativePath.string();
-        sourceFile->name = BFS_STRING(relativePath.leaf());
+        sourceFile->name = BFS_STRING(relativePath.filename());
 
         // relativePath: <source>\MS\A1.t2d
         // rootpath: c:\path\to\<source>\A1.t2d
-        bfs::path location = rootpath.has_branch_path() ?
-                             BFS_COMPLETE(rootpath.branch_path() / relativePath) :
+        bfs::path location = rootpath.has_parent_path() ?
+                             BFS_COMPLETE(rootpath.parent_path() / relativePath) :
                              BFS_COMPLETE(relativePath); // uses initial path
-        sourceFile->location = "file://" + location.branch_path().string();
+        sourceFile->location = "file://" + location.parent_path().string();
 
         sourceFile->set(MS_SCIEX_TOF_TOF_T2D_nativeID_format);
         sourceFile->set(MS_SCIEX_TOF_TOF_T2D_format);

@@ -18,13 +18,15 @@
  */
 using pwiz.Common.Collections;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
 {
     public abstract class RemoteAccountType
     {
         public static readonly RemoteAccountType UNIFI = new Unifi();
-        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {UNIFI});
+        public static readonly RemoteAccountType ARDIA = new Ardia();
+        public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {UNIFI, ARDIA});
 
         public abstract string Name { get;  }
         public abstract string Label { get; }
@@ -55,6 +57,29 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
             public override RemoteAccount GetEmptyAccount()
             {
                 return new UnifiAccount(@"https://democonnect.waters.com:48505", null, null);
+            }
+        }
+
+        private class Ardia : RemoteAccountType
+        {
+            public override RemoteUrl GetEmptyUrl()
+            {
+                return ArdiaUrl.Empty;
+            }
+
+            public override string Label
+            {
+                get { return RemoteApiResources.Ardia_Label_Ardia; }
+            }
+
+            public override string Name
+            {
+                get { return @"ardia"; }
+            }
+
+            public override RemoteAccount GetEmptyAccount()
+            {
+                return new ArdiaAccount(string.Empty, null, null);
             }
         }
     }

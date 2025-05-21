@@ -430,56 +430,14 @@ namespace pwiz.SkylineTestFunctional
                 return obj;
             }
 
-            public JObject CreatePrivateFolder(string name)
+            public JObject CreateFolder(string name, bool writable, bool targeted, bool collaboration = false, bool library = false)
             {
-                JObject obj = new JObject();
-                obj["name"] = name;
-                obj["path"] = "/" + name + "/";
-                obj["userPermissions"] = 0;
-                obj["children"] = new JArray();
-                obj["folderType"] = "Targeted MS";
-                obj["activeModules"] = new JArray("MS0", "MS1", "MS3");
-
-                return obj;
-            }
-
-            public JObject CreateFolder(string name, bool subfolder, bool targeted, bool collaboration = false, bool library = false)
-            {
-                JObject obj = new JObject();
-                obj["name"] = name;
-                obj["path"] = "/" + name + "/";
-                obj["userPermissions"] = subfolder ? 3 : 1;
-                if (subfolder || !targeted)
-                {
-                    // Create a writable subfolder if this folder is not writable, i.e. it is
-                    // not a targetedMS folder or the user does not have write permissions in this folder.
-                    // Otherwise, it will not get added to the folder tree (PublishDocumentDlg.AddChildContainers()).
-                    obj["children"] = new JArray(CreateFolder("Subfolder", false, true));
-                }
-                else
-                {
-                    obj["children"] = new JArray();
-                }
-
-                if (library)
-                {
-                    JObject objChild = new JObject();
-                    objChild["effectiveValue"] = "Library";
-                    obj["moduleProperties"] = new JArray(objChild);
-                }
-                obj["folderType"] = collaboration ? "Collaboration" : "Targeted MS";
-
-                obj["activeModules"] = targeted
-                    ? new JArray("MS0", "MS1", "TargetedMS", "MS3")
-                    : new JArray("MS0", "MS1", "MS3");
-
-                return obj;
+                return new BaseTestPanoramaClient.PanoramaFolder(name, writable, !collaboration, targeted, library).ToJson();
             }
 
             public JToken GetInfoForFolders(PanoramaServer server, string folder)
             {
-                JObject testFolders = new JObject();
-                testFolders = CreateFolder(TARGETED, true, true);
+                var testFolders = CreateFolder(TARGETED, true, true);
                 testFolders["children"] = new JArray(
                     CreateFolder(TARGETED_LIBRARY, true, true, false, true),
                     CreateFolder(TARGETED, true, true),

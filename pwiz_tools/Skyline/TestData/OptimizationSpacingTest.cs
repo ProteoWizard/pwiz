@@ -82,7 +82,7 @@ namespace pwiz.SkylineTestData
 
         private IEnumerable<ChromKey> ReadChromatogramKeys(MsDataFileUri msDataFileUri)
         {
-            using var msDataFile = msDataFileUri.OpenMsDataFile(false, false, false, false, false);
+            using var msDataFile = msDataFileUri.OpenMsDataFile(new OpenMsDataFileParams());
             for (int i = 0; i < msDataFile.ChromatogramCount; i++)
             {
                 var id = msDataFile.GetChromatogramId(i, out _);

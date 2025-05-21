@@ -46,14 +46,12 @@ namespace pwiz.SkylineTestFunctional
         {
             TestFilesZip = @"TestFunctional\PeakScoringModelTest.zip";
             RunFunctionalTest();
-
-            Assert.IsFalse(IsRecordMode);   // Make sure this doesn't get committed as true
         }
 
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         private readonly string[] SCORES_AND_WEIGHTS =
         {

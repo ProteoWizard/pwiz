@@ -35,7 +35,7 @@
 #include <numeric>
 #include <utility>
 #include <boost/foreach.hpp>
-#include <boost/iterator.hpp>
+#include <iterator>
 
 using std::vector;
 using std::list;

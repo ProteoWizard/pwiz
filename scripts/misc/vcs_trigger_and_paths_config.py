@@ -46,6 +46,22 @@ targets['SkylineRelease'] = \
 #targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
 targets['Skyline'] = targets['SkylineRelease']
 
+targets['SkylineWithTestConnected'] = \
+{
+    'master':
+    {
+        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
+        ,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
+        ,"bt209": "Skyline master and PRs (Windows x86_64)"
+    },
+    'release':
+    {
+        "ProteoWizard_SkylineReleaseTestConnectedTests": "Skyline release TestConnected tests" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
+        ,"ProteoWizard_SkylineReleaseBranchCodeInspection": "Skyline release code inspection" # depends on "ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional",
+        ,"ProteoWizard_WindowsX8664SkylineReleaseBranchMsvcProfessional": "Skyline Release Branch x86_64"
+    }
+}
+
 targets['Container'] = \
 {
     'master':
@@ -70,7 +86,9 @@ targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64
 targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
 
 targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
-targets['All'] = merge(targets['Core'], targets['Skyline'], targets['Bumbershoot'], targets['Container'])
+targets['All'] = merge(targets['Core'], targets['SkylineWithTestConnected'], targets['Bumbershoot'], targets['Container'])
+targets['Windows'] = merge(targets['CoreWindows'], targets['SkylineWithTestConnected'], targets['BumbershootRelease'], targets['Container'])
+targets['Linux'] = merge(targets['CoreLinux'], targets['BumbershootLinux'])
 
 # Patterns are processed in order. If a path matches multiple patterns, only the first pattern will trigger. For example,
 # "pwiz_tools/Bumbershoot/Jamfile.jam" matches both "pwiz_tools/Bumbershoot/.*" and "pwiz_tools/.*", but will only trigger "Bumbershoot" targets
@@ -83,9 +101,17 @@ matchPaths = [
     ("scripts/.*", targets['All']),
     ("pwiz_tools/BiblioSpec/.*", merge(targets['Core'], targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
+    ("pwiz_tools/Skyline/Model/Results/RemoteApi/.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/.*Ardia.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/.*Koina.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/.*Panorama.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/.*Unifi.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
+    ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
     ("pwiz_tools/.*", targets['All']),
-    ("Jamroot.jam", targets['All'])
+    ("Jamroot.jam", targets['All']),
+    (".*\\.bat", targets['Windows']),
+    (".*\\.sh", targets['Linux'])
 ]
 

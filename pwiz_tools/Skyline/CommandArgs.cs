@@ -41,6 +41,8 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -58,6 +60,11 @@ namespace pwiz.Skyline
         private static string GetPathToFile(string ext)
         {
             return PATH_TO_FILE() + ext;
+        }
+
+        public static bool IsRemoteUrl(string pathOrUrl)
+        {
+            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix) || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix);
         }
 
         public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);
@@ -451,7 +458,7 @@ namespace pwiz.Skyline
 
         private void ParseImportFile(NameValuePair pair)
         {
-            ReplicateFile.Add(new MsDataFilePath(pair.ValueFullPath));
+            ReplicateFile.Add(MsDataFileUri.Parse(pair.ValueFullPath));
         }
 
         private bool ParseImportNamingPattern(NameValuePair pair)
@@ -1331,7 +1338,7 @@ namespace pwiz.Skyline
             {
                 try
                 {
-                    panoramaClient.ValidateFolder(panoramaFolder, FolderPermission.insert);
+                    panoramaClient.ValidateFolder(panoramaFolder, PermissionSet.AUTHOR);
                     return true;
                 }
                 catch (PanoramaServerException x)
@@ -2029,9 +2036,9 @@ namespace pwiz.Skyline
 
         // Export isolation / transition list
         public static readonly Argument ARG_EXP_ISOLATION_LIST_INSTRUMENT = new DocArgument(@"exp-isolationlist-instrument",
-            ExportInstrumentType.ISOLATION_LIST_TYPES, (c, p) => c.ParseExpIsolationListInstrumentType(p)) {WrapValue = true};
+            ExportInstrumentType.ISOLATION_LIST_TYPES, (c, p) => c.ParseExpIsolationListInstrumentType(p)) { WrapValue = true, HasValueChecking = true };
         public static readonly Argument ARG_EXP_TRANSITION_LIST_INSTRUMENT = new DocArgument(@"exp-translist-instrument",
-            ExportInstrumentType.TRANSITION_LIST_TYPES, (c, p) => c.ParseExpTransitionListInstrumentType(p)) {WrapValue = true};
+            ExportInstrumentType.TRANSITION_LIST_TYPES, (c, p) => c.ParseExpTransitionListInstrumentType(p)) { WrapValue = true, HasValueChecking = true };
         private static readonly ArgumentGroup GROUP_LISTS = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_LISTS_Exporting_isolation_transition_lists, false,
             ARG_EXP_ISOLATION_LIST_INSTRUMENT, ARG_EXP_TRANSITION_LIST_INSTRUMENT) {LeftColumnWidth = 34};
 
@@ -2115,7 +2122,7 @@ namespace pwiz.Skyline
 
         // Export method
         public static readonly Argument ARG_EXP_METHOD_INSTRUMENT = new DocArgument(@"exp-method-instrument",
-            ExportInstrumentType.METHOD_TYPES, (c, p) => c.ParseExpMethodInstrumentType(p)) { WrapValue = true };
+            ExportInstrumentType.METHOD_TYPES, (c, p) => c.ParseExpMethodInstrumentType(p)) { WrapValue = true, HasValueChecking = true };
         public static readonly Argument ARG_EXP_TEMPLATE = new DocArgument(@"exp-template", PATH_TO_FILE,
             (c, p) => c.TemplateFile = p.ValueFullPath);
         private static readonly ArgumentGroup GROUP_METHOD = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_METHOD_Exporting_native_instrument_methods, false,
@@ -2127,7 +2134,8 @@ namespace pwiz.Skyline
             get { return _methodInstrumentType; }
             set
             {
-                if (ExportInstrumentType.METHOD_TYPES.Any(inst => inst.Equals(value)))
+                if (ExportInstrumentType.METHOD_TYPES.Any(inst => inst.Equals(value)) ||
+                    ExportInstrumentType.ThermoInstallationType(value) != null) // Allow Thermo instrument names for which we know the installation type
                 {
                     _methodInstrumentType = value;
                 }
@@ -2701,6 +2709,7 @@ namespace pwiz.Skyline
             public bool WrapValue { get; set; }
             public bool OptionalValue { get; set; }
             public bool InternalUse { get; set; }
+            public bool HasValueChecking { get; set; }  // Set to avoid default checking against values listed for documentation
 
             public string ArgumentText
             {
@@ -3041,6 +3050,8 @@ namespace pwiz.Skyline
                 {
                     try
                     {
+                        if (IsRemoteUrl(Value))
+                            return Value;
                         return Path.GetFullPath(Value);
                     }
                     catch (Exception)
@@ -3069,7 +3080,7 @@ namespace pwiz.Skyline
                     else
                     {
                         var val = Value;
-                        if (arg.Values != null && !arg.Values.Any(v => v.Equals(val, StringComparison.CurrentCultureIgnoreCase)))
+                        if (arg.Values != null && !arg.HasValueChecking && !arg.Values.Any(v => v.Equals(val, StringComparison.CurrentCultureIgnoreCase)))
                             throw new ValueInvalidException(arg, Value, arg.Values);
                     }
                 }

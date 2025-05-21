@@ -785,7 +785,7 @@ namespace pwiz.Skyline.Model.DocSettings
         bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods);
 
         /// <summary>
-        /// Returns a potential override to the maximum number of variable modifcations in the SrmSettings.
+        /// Returns a potential override to the maximum number of variable modifications in the SrmSettings.
         /// </summary>
         int? MaxVariableMods { get; }
     }
@@ -1306,7 +1306,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 var modLosses = StaticModifications.SelectMany(mod => mod.Losses ?? (new List<FragmentLoss>())).ToList();
                 //Deduplicate the losses on formula
-                modLosses = modLosses.GroupBy(loss => loss.Formula, loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
+                modLosses = modLosses.GroupBy(loss => new Tuple<string, int>(loss.Formula, loss.Charge), loss => loss, (formula, losses) => losses.FirstOrDefault()).ToList();
                 return ImmutableList.ValueOf(modLosses);
             }
         }

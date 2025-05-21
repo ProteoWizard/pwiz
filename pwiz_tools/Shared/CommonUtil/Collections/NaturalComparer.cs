@@ -21,8 +21,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using pwiz.Common.SystemUtil.PInvoke;
 
 namespace pwiz.Common.Collections
 {
@@ -36,15 +36,17 @@ namespace pwiz.Common.Collections
     /// e.g. (1AC6, 1AC66, 1AC7, 4C47 --> 1AC6, 1AC7, 1AC66, 4C47)
     /// https://www.pinvoke.net/default.aspx/shlwapi.strcmplogicalw
     /// </summary>
-    public class NaturalFilenameComparer
+    public class NaturalFilenameComparer : IComparer<string>
     {
-        [DllImport("shlwapi.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
-        private static extern int StrCmpLogicalW(string x, string y);
-
-        //Compare strings with natural sort
+        // Compare strings with natural sort
         public static int Compare(string x, string y)
         {
-            return StrCmpLogicalW(x, y);
+            return Shlwapi.StrCmpLogicalW(x, y);
+        }
+        // Implement IComparer<string>
+        int IComparer<string>.Compare(string x, string y)
+        {
+            return Compare(x, y);
         }
     }
 

@@ -176,6 +176,7 @@ namespace TestRunner
         {
             public uint dwNumEntries;
             [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.Struct, SizeConst = 1)]
+            // ReSharper disable once CollectionNeverQueried.Local
             public MIB_TCPROW_OWNER_PID[] table;
         }
 
@@ -241,6 +242,7 @@ namespace TestRunner
         {
             public uint dwNumEntries;
             [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.Struct, SizeConst = 1)]
+            // ReSharper disable once CollectionNeverQueried.Local
             public MIB_TCP6ROW_OWNER_PID[] table;
         }
 

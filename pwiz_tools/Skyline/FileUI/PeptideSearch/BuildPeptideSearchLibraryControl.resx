@@ -129,7 +129,7 @@
     <value>6, 42</value>
   </data>
   <data name="radioDIA.Size" type="System.Drawing.Size, System.Drawing">
-    <value>369, 17</value>
+    <value>84, 17</value>
   </data>
   <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="radioDIA.TabIndex" type="System.Int32, mscorlib">
@@ -468,7 +468,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>gridSearchFiles</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Type" xml:space="preserve">
-    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.FileUI.PeptideSearch.BuildLibraryGridView, Skyline, Version=1.0.0.0 Culture=neutral, PublicKeyToken=null</value>
   </data>
   <data name="&gt;&gt;gridSearchFiles.Parent" xml:space="preserve">
     <value>panelPeptideSearch</value>
@@ -522,7 +522,7 @@ like BiblioSpec .blib, EncyclopeDIA .elib, SpectraST .sqt</value>
     <value>5</value>
   </data>
   <data name="comboStandards.ToolTip" xml:space="preserve">
-    <value>Choose a set of know iRT standard peptides to use for retention time normalization.</value>
+    <value>Choose a set of known iRT standard peptides to use for retention time normalization.</value>
   </data>
   <data name="&gt;&gt;comboStandards.Name" xml:space="preserve">
     <value>comboStandards</value>

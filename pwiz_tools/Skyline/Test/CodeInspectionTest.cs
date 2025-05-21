@@ -31,14 +31,17 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
@@ -46,6 +49,7 @@ using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
+using TestRunnerLib.PInvoke;
 using Environment = System.Environment;
 
 namespace pwiz.SkylineTest
@@ -190,10 +194,25 @@ namespace pwiz.SkylineTest
                 "new System.Windows.Forms.DataGridView()", false,
                 "Must use subclass CommonDataGridView or DataGridViewEx instead of DataGridView.");
 
-            AddTextInspection("*.cs", Inspection.Forbidden, Level.Error,
-                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs"}, 
-                null, "Clipboard(Ex)?\\.SetText", true, 
+            // CONSIDER: remove CommonAlertDlg from the exclusion list, possibly by implementing exception handling in CommonAlertDlg.CopyMessage()
+            AddTextInspection("*.cs", 
+                Inspection.Forbidden, 
+                Level.Error,
+                new[] {"TestFunctional", "TestTutorial", "TestPerf", "Executables", "UtilUIExtra.cs", "ClipboardEx.cs", "CommonAlertDlg.cs"}, 
+                null,
+                "Clipboard(Ex)?\\.SetText", 
+                true, 
                 "Use ClipboardHelper.SetClipboardText instead since it handles exceptions");
+
+            // Looking for non-accepted uses of P/Invoke by searching for the [DllImport] attribute
+            AddTextInspection(@"*.cs", // Examine files with this mask
+                Inspection.Forbidden, // This is a test for things that should NOT be in such files
+                Level.Error, // Any failure is treated as an error, and overall test fails
+                DllImportAllowedUsageFilesAndDirectories(), // Skip this check for specific files where DllImport use is explicitly allowed
+                "DllImport", // Only files containing this string get inspected for this
+                @"DllImport", // Forbidden pattern - match [DllImport
+                false, // Pattern is a regular expression
+                @"Use of P/Invoke is not allowed. Instead, use the interop library in pwiz.Common.SystemUtil.PInvoke."); // Explanation for prohibition, appears in report
 
             // A few lines of fake tests that can be useful in development of this mechanism
             // AddInspection(@"*.Designer.cs", Inspection.Required, Level.Error, null, "Windows Form Designer generated code", @"DetectionsToolbar", @"fake, debug purposes only"); // Uncomment for debug purposes
@@ -392,6 +411,222 @@ namespace pwiz.SkylineTest
                 if (results.Any())
                 {
                     errors.Add(string.Format(@"{0} Error: {1}", test, string.Join(@", ", results)));
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Look for conflicts between settings.settings and app.config
+        /// </summary>
+        void InspectInconsistentSetting(string root, List<string> errors) 
+        {
+            var EMPTY_STRING_ARRAY = "</ArrayOfString>";
+
+            // Extract key-value pairs from settings.settings
+            var settingsValues = ExtractSettingsSettings();
+
+            // Extract key-value pairs from app.config
+            var configValues = ExtractAppConfigSettings();
+
+            // Find keys that exist in both but have different values
+            foreach (var key in settingsValues.Keys.Intersect(configValues.Keys).Where(k => (settingsValues[k] != configValues[k])))
+            {
+                var settingsValue = settingsValues[key];
+                var configValue = configValues[key];
+                // An empty string array in settings.settings is just empty text in app.config
+                if (!(settingsValue.Equals(EMPTY_STRING_ARRAY) && string.IsNullOrEmpty(configValue)))
+                {
+                    NoteMismatch(key, settingsValue, configValue);
+                }
+            }
+
+
+            // Find settings that exist only in one of the files
+            foreach (var key in settingsValues.Keys.Except(configValues.Keys))
+            {
+                var settingsValue = settingsValues[key];
+                // IDE seems to be OK with missing value in app.config if the setting is an empty string array
+                if (!settingsValue.Equals(EMPTY_STRING_ARRAY))
+                {
+                    NoteMismatch(key, settingsValue, null);
+                }
+            }
+            foreach (var key in configValues.Keys.Except(settingsValues.Keys))
+            {
+                NoteMismatch(key, null, configValues[key]);
+            }
+
+            return;
+
+
+            void NoteMismatch(string name, string settingsValue, string configValue)
+            {
+                errors.Add($"Settings mismatch for \"{name}\": {FormatValue(settingsValue)} in Settings.settings, {FormatValue(configValue)} in app.config.");
+                return;
+                string FormatValue(string s) => s == null ? "not found" : $"\"{s}\"";
+            }
+
+            string CheckStringArray(string value)
+            {
+                if (value.Contains("<ArrayOfString"))
+                {
+                    var result = string.Empty;
+                    foreach (var part in value.Split(new[] { "<string>" }, StringSplitOptions.None))
+                    {
+                        if (part.Contains("</string>"))
+                        {
+                            var val = part.Trim().Split(new[] { "</string>" }, StringSplitOptions.None).FirstOrDefault();
+                            if (!string.IsNullOrEmpty(val))
+                            {
+                                result += val.Trim();
+                            }
+                        }
+                    }
+                    return result;
+                }
+                else if (string.IsNullOrEmpty(value))
+                {
+                    // Special case - settings designer won't update app.config if the value is empty (that is, not even an empty description in XML - just blank text)
+                    value = EMPTY_STRING_ARRAY;
+                }
+
+                return value;
+            }
+
+            Dictionary<string, string> ExtractSettingsSettings()
+            {
+                var settingsPath = Path.Combine(root, @"Properties\Settings.settings");
+                var doc = XDocument.Load(settingsPath);
+                var settings = new Dictionary<string, string>();
+                XNamespace settingsNamespace = "http://schemas.microsoft.com/VisualStudio/2004/01/settings";
+                var settingsElements = doc.Descendants(settingsNamespace + "Settings")
+                    .Descendants(settingsNamespace + "Setting")
+                    .ToArray();
+                AssertEx.AreNotEqual(settingsElements.Length, 0, "trouble reading settings.settings");
+                foreach (var setting in settingsElements)
+                {
+                    var key = setting.Attribute("Name")?.Value;
+                    if (key != null)
+                    {
+                        var value = CheckStringArray(setting.Value);
+                        settings[key] = value;
+                    }
+                }
+                return settings;
+            }
+
+            Dictionary<string, string> ExtractAppConfigSettings()
+            {
+                var configPath = Path.Combine(root, @"app.config");
+                var doc = XDocument.Load(configPath);
+                var settings = new Dictionary<string, string>();
+                var appSettingsElements = doc.Descendants(@"setting").ToArray();
+                AssertEx.AreNotEqual(appSettingsElements.Length, 0, "trouble reading app.config");
+                foreach (var setting in appSettingsElements)
+                {
+                    var key = setting.Attribute("name")?.Value;
+                    if (key != null)
+                    {
+                        var value = setting.Value;
+                        settings[key] = value;
+                    }
+                }
+                return settings;
+            }
+        }
+
+        /// <summary>
+        /// Inspect the P/Invoke API. This looks at classes inside the .PInvoke
+        /// namespace to monitor for changes to which Win32 APIs are referenced,
+        /// looking at both DLLs and methods. It also enforces naming conventions.
+        ///
+        /// See PInvokeCommon for more info.
+        /// </summary>
+        private static void InspectPInvokeApi(string root, List<string> errors)
+        {
+            var expectedPInvokeApi = new Dictionary<Type, int>
+            {
+                // {type, expected # of methods with DllImport attribute}
+                { typeof(Advapi32), 3 },
+                { typeof(Gdi32), 4 },
+                { typeof(Kernel32), 6 },
+                { typeof(Shell32), 1 },
+                { typeof(Shlwapi), 1 },
+                { typeof(User32), 33 },
+
+                { typeof(DwmapiTest), 4 },
+                { typeof(Gdi32Test), 1 },
+                { typeof(Kernel32Test), 5 },
+                { typeof(Ole32Test), 1 },
+                { typeof(Shell32Test), 1 },
+                { typeof(User32Test), 9 }
+            };
+
+            // add types from production code
+            var types = typeof(User32).Assembly.GetTypes()
+                .Where(type => type.Namespace is "pwiz.Common.SystemUtil.PInvoke" && type.IsClass).ToList();
+
+            // add types from test code
+            types.AddRange(typeof(User32Test).Assembly.GetTypes()
+                .Where(type => type.Namespace is "TestRunnerLib.PInvoke" && type.IsClass).ToList());
+
+            foreach(var type in types)
+            {
+                var methods = type.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                    .Where(method => method.GetCustomAttributes(typeof(DllImportAttribute), false).Length > 0).ToList();
+
+                if (methods.Count == 0)
+                {
+                    continue;
+                }
+
+                // unexpected class using [DllImport] attributes
+                if (!expectedPInvokeApi.ContainsKey(type))
+                {
+                    errors.Add($"P/Invoke error in {type.Name}. This class is not allowed to use [DllImport]. See the wiki or PInvokeCommon for more information.");
+                }
+                else
+                {
+                    // too many functions in this class marked with [DllImport] attribute
+                    if (methods.Count > expectedPInvokeApi[type])
+                    {
+                        errors.Add(
+                            $"P/Invoke error in {type.Name}. {type.FullName} has more methods marked with [DllImport] than expected. See the wiki or PInvokeCommon for more information.");
+                    }
+                    // too few methods in this class marked with [DllImport] attribute
+                    else if (methods.Count < expectedPInvokeApi[type])
+                    {
+                        errors.Add(
+                            $"P/Invoke error in {type.Name}. {type.FullName} has fewer methods marked with [DllImport] than expected. See the wiki or PInvokeCommon for more information.");
+                    }
+                }
+
+                var expectedDllName = type.Name.EndsWith("Test") ? type.Name.Substring(0, type.Name.Length - 4) : type.Name;
+
+                foreach (var method in methods)
+                {
+                    var dllImportAttribute =
+                        method.GetCustomAttribute(typeof(DllImportAttribute), false) as DllImportAttribute;
+                    // ReSharper disable once PossibleNullReferenceException
+                    var dllName = dllImportAttribute.Value;
+                    
+                    if (dllName.Any(char.IsUpper))
+                    {
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must be all lower case");
+                    }
+
+                    if (!dllName.EndsWith(".dll"))
+                    {
+                        errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter must end in '.dll'.");
+                    }
+                    else
+                    {
+                        var actualDllName = dllName.Substring(0, dllName.Length - ".dll".Length);
+                        if (!actualDllName.Equals(expectedDllName, StringComparison.OrdinalIgnoreCase)) 
+                        {
+                            errors.Add($"P/Invoke error in {type.Name} on {method.Name}. [DllImport]'s dllName parameter '{dllName}' must match the class name and be either {expectedDllName} or {expectedDllName}Test.");
+                        }
+                    }
                 }
             }
         }
@@ -610,12 +845,19 @@ namespace pwiz.SkylineTest
 
             InspectMisplacedResources(root, results); // Look for strings which have been localized but not moved from main Resources.resx to more appropriate locations
 
+            InspectInconsistentSetting(root, results); // Look for conflicts between settings.settings and app.config
+
+            InspectPInvokeApi(root, results);
+
+            InspectRedundantCsprojResourcesFromSolution(root, results); // Look for images in .csproj files that are redundant with the RESX entries
+
             var errorCounts = new Dictionary<PatternDetails, int>();
 
             foreach (var fileMask in allFileMasks)
             {
                 var filenames = Directory.GetFiles(root, fileMask, SearchOption.AllDirectories).ToList();
                 filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"Common"), fileMask, SearchOption.AllDirectories));
+                filenames.AddRange(Directory.GetFiles(Path.Combine(root, @"..", @"Shared", @"CommonUtil"), fileMask, SearchOption.AllDirectories));
 
                 foreach (var filename in filenames)
                 {
@@ -885,6 +1127,37 @@ namespace pwiz.SkylineTest
         {
             return new[] {@"TestRunner", @"SkylineTester", @"SkylineNightly", "Executables", "CommonTest" };
         }
+        
+        // Return a list of files and directories allowed to use PInvoke
+        private string[] DllImportAllowedUsageFilesAndDirectories()
+        {
+            // Paths start in pwiz_tools\Skyline, pwiz_tools\Skyline\..\Shared\Common, or pwiz_tools\Skyline\..\Shared\CommonUtil
+            return new[] {
+                // PInvoke API and associated check are allowed to use [DllImport]
+                @"SystemUtil\PInvoke",
+                @"TestRunnerLib\PInvoke",
+                @"Test\CodeInspectionTest.cs",
+                
+                // Classes allowed limited use of the [DllImport] attribute outside the PInvoke API.
+                // To be added to this list, a class must:
+                //   (1) Use methods marked with [DllImport] not already implemented in PInvoke
+                //   (2) Be the only use of those methods
+                //   (3) Have circumstances where adding new functions to PInvoke (even if only used once)
+                //       is difficult for one or more reasons including:
+                //        * Includes > 20 LOC modeling Win32 types
+                //        * Uses unsafe methods
+                @"Util\MemoryInfo.cs", 
+                @"Util\UtilIO.cs",
+                @"TestRunner\UnusedPortFinder.cs",
+                @"TestRunnerLib\RunTests.cs",
+                @"TestRunnerLib\MiniDump.cs",
+                @"TestUtil\FileLockingProcessFinder.cs",
+
+                // Ignore 3rd party libraries
+                @"Executables"
+                // ZedGraph would also be excluded, but it lives in a directory not covered by static analysis
+            };
+        }
 
         // Prepare a list of files that we never need to deal with for L10N
         // Uses the information found in our KeepResx L10N development tool,
@@ -937,6 +1210,7 @@ namespace pwiz.SkylineTest
             result.Add("Executables\\Tools\\SProCoP");
             result.Add("Executables\\Tools\\TestArgCollector");
             result.Add("Executables\\Tools\\ExampleInteractiveTool");
+            result.Add("Executables\\DevTools");
             return result.ToArray();
         }
 
@@ -980,6 +1254,99 @@ namespace pwiz.SkylineTest
             if (numberToleratedAsWarnings > 0)
             {
                 patternsWithToleranceCounts.Add(patternDetails); // Track these so we know when more are tolerated than necessary
+            }
+        }
+
+        private void InspectRedundantCsprojResourcesFromSolution(string root, List<string> errors)
+        {
+            var redundancyExceptions = new Dictionary<string, HashSet<string>>
+            {
+                // The Skyline document icons need to be Content to be registered with the system
+                {"Skyline.csproj", new HashSet<string>{"Skyline_Daily.ico", "Skyline.ico", "SkylineData.ico", "SkylineDoc.ico"}}
+            };
+
+            string slnPath = Path.Combine(root, "Skyline.sln");
+            if (!File.Exists(slnPath))
+            {
+                errors.Add("Could not find Skyline.sln to inspect project resource redundancy.");
+                return;
+            }
+
+            var csprojPaths = File.ReadAllLines(slnPath)
+                .Where(line => line.Trim().StartsWith("Project(") && line.Contains(".csproj"))
+                .Select(line =>
+                {
+                    var parts = line.Split('"');
+                    return parts.Length >= 6 ? GetFullPath(root, parts[5].Replace('\\', Path.DirectorySeparatorChar)) : null;
+                })
+                .Where(File.Exists)
+                .ToList();
+
+            foreach (var csprojPath in csprojPaths)
+            {
+                var csprojName = Path.GetFileName(csprojPath);
+                var projectDir = Path.GetDirectoryName(csprojPath);
+                if (projectDir == null)
+                    continue;
+
+                var resxPath = Path.Combine(projectDir, "Properties", "Resources.resx");
+                if (!File.Exists(resxPath))
+                    continue;
+
+                var resxDoc = XDocument.Load(resxPath);
+                var resxDir = Path.GetDirectoryName(resxPath) ?? string.Empty;
+                var resxFiles = resxDoc.Descendants("data")
+                    .Where(d =>
+                        d.Attribute("type")?.Value.StartsWith("System.Resources.ResXFileRef") == true &&
+                        d.Element("value") != null)
+                    .Select(d =>
+                    {
+                        var relativePath = d.Element("value")!.Value.Split(';')[0].Trim();
+                        var absolutePath = GetFullPath(resxDir, relativePath);
+                        return absolutePath;
+                    })
+                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                var csprojDoc = XDocument.Load(csprojPath);
+                var includedFiles = csprojDoc.Descendants()
+                    .Where(e =>
+                        // e.Name.LocalName == "None" ||    // Okay as a way to increase visibility in project files
+                        e.Name.LocalName == "Content" ||
+                        e.Name.LocalName == "EmbeddedResource")
+                    .Select(e => e.Attribute("Include")?.Value)
+                    .Where(path => !string.IsNullOrEmpty(path) && !path.Contains("*")) // Avoid wildcard paths like *.xsd
+                    .ToList();
+
+                var redundantItems = includedFiles
+                    .Select(path => new
+                    {
+                        Original = path,
+                        Absolute = GetFullPath(projectDir, path)
+                    })
+                    .Where(p => resxFiles.Contains(p.Absolute))
+                    .Select(p => p.Original)
+                    .ToList();
+
+                foreach (var item in redundantItems)
+                {
+                    if (redundancyExceptions.TryGetValue(csprojName, out var fileExceptions) && fileExceptions.Contains(item))
+                        continue;
+
+                    errors.Add($"Redundant resource declaration in {csprojName}: \"{item}\" is already embedded via Resources.resx.");
+                }
+            }
+        }
+
+        private string GetFullPath(string rootDir, string relativePath)
+        {
+            try
+            {
+                return Path.GetFullPath(Path.Combine(rootDir, relativePath));
+            }
+            catch (Exception e)
+            {
+                Assert.Fail($"Unexpected error creating full path from '{rootDir}' and relative path '{relativePath}'", e);
+                return null;
             }
         }
     }

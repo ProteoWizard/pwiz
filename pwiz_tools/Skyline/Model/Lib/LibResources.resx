@@ -241,7 +241,7 @@
   <data name="NistLibrary_SpecFilter_NIST_Spectral_Library" xml:space="preserve">
     <value>NIST Spectral Library</value>
   </data>
-    <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
+  <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_m_z_value___0__" xml:space="preserve">
     <value>Could not read the precursor m/z value "{0}"</value>
   </data>
   <data name="NistLibraryBase_CreateCache_Could_not_read_the_precursor_CCS_value___0__" xml:space="preserve">
@@ -340,5 +340,11 @@
   </data>
   <data name="XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity" xml:space="preserve">
     <value>Processed intensity</value>
+  </data>
+  <data name="NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_" xml:space="preserve">
+    <value>Unknown modification {0} at line {1}</value>
+  </data>
+  <data name="NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored" xml:space="preserve">
+    <value>Missing details for {0} at line {1}, this entry will be ignored</value>
   </data>
 </root>

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using pwiz.Common.Chemistry;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
@@ -81,6 +82,7 @@ namespace pwiz.Skyline.Model.Results
         private MeasuredResults _measuredResults;
         // And afterward only a weak reference to ensure we are caching values for the same results
         private WeakReference<MeasuredResults> _measuredResultsReference;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public ScanProvider(string docFilePath, MsDataFileUri dataFilePath, ChromSource source,
             IList<float> times, TransitionFullScanInfo[] transitions, MeasuredResults measuredResults) :
@@ -289,9 +291,18 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    dataFile = DataFilePath.OpenMsDataFile(simAsSpectra, preferOnlyMs1,
-                        centroidedMs1 ?? _cachedFile?.UsedMs1Centroids ?? false, 
-                        centroidedMs2 ?? _cachedFile?.UsedMs2Centroids ?? false, ignoreZeroIntensityPoints);
+                    string docDir = Path.GetDirectoryName(DocFilePath) ?? Directory.GetCurrentDirectory();
+                    var openMsDataFileParams =
+                        new OpenMsDataFileParams(_cancellationTokenSource.Token)
+                        {
+                            SimAsSpectra = simAsSpectra,
+                            PreferOnlyMs1 = preferOnlyMs1,
+                            CentroidMs1 = _cachedFile?.UsedMs1Centroids ?? false,
+                            CentroidMs2 = _cachedFile?.UsedMs2Centroids ?? false,
+                            IgnoreZeroIntensityPoints = ignoreZeroIntensityPoints,
+                            DownloadPath = docDir
+                        };
+                    dataFile = DataFilePath.OpenMsDataFile(openMsDataFileParams);
                 }
                 if (centroidedMs1 == null && centroidedMs2 == null)
                     _dataFile = dataFile;
@@ -341,6 +352,7 @@ namespace pwiz.Skyline.Model.Results
                     _dataFileCentroidedMap[key]?.Dispose();
                 _dataFile = null;
                 _dataFileCentroidedMap.Clear();
+                _cancellationTokenSource.Cancel();
             }
         }
     }

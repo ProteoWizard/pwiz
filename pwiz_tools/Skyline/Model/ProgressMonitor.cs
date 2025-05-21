@@ -15,6 +15,7 @@ namespace pwiz.Skyline.Model
 
     public class ProgressMonitor
     {
+        // ReSharper disable once InconsistentlySynchronizedField
         public int ProgressRaw => _progressRaw;
         public int MaxProgressRaw { get; private set; }
         public int ReportingStep { get; private set; }

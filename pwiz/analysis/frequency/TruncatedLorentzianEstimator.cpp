@@ -59,9 +59,9 @@ class TruncatedLorentzianEstimatorImpl : public TruncatedLorentzianEstimator
 };
 
 
-PWIZ_API_DECL auto_ptr<TruncatedLorentzianEstimator> TruncatedLorentzianEstimator::create()
+PWIZ_API_DECL unique_ptr<TruncatedLorentzianEstimator> TruncatedLorentzianEstimator::create()
 {
-    return auto_ptr<TruncatedLorentzianEstimator>(new TruncatedLorentzianEstimatorImpl); 
+    return unique_ptr<TruncatedLorentzianEstimator>(new TruncatedLorentzianEstimatorImpl); 
 }
 
 
@@ -143,7 +143,7 @@ TruncatedLorentzianParameters TruncatedLorentzianEstimatorImpl::iteratedEstimate
     TruncatedLorentzianParameters tlp = tlp_in;
     TruncatedLorentzian L(tlp.T);
 
-    auto_ptr<ParameterEstimator> pe =
+    unique_ptr<ParameterEstimator> pe =
         ParameterEstimator::create(L, fd.data(), tlp.parameters(fd.shift(), fd.scale()));
 
     if (log_) *log_ << tlp << "\ninitial error: " << pe->error() << endl << endl;

@@ -137,6 +137,7 @@ namespace pwiz.BiblioSpec
         public EnumProbabilityType ProbabilityType { get; }
 
         public static ScoreType GenericQValue => new ScoreType(GENERIC_QVALUE, PROBABILITY_INCORRECT);
+        public static ScoreType MaxQuant => new ScoreType(MAXQUANT_SCORE, PROBABILITY_INCORRECT);
         public static ScoreType HardklorIdotp => new ScoreType(HARDKLOR_IDOTP, PROBABILITY_CORRECT);
 
         public ScoreType(string name, string probabilityType)
@@ -399,12 +400,12 @@ namespace pwiz.BiblioSpec
             // ReSharper disable LocalizableElement
             List<string> argv = new List<string> { "-s", "-A", "-H" };  // Read from stdin, get ambiguous match messages, high precision modifications
 
-            argv.Add("-v");
             // Verbose for debugging
             if (DebugMode)
+            {
+                argv.Add("-v");
                 argv.Add("debug");
-            else
-                argv.Add("warn");
+            }
 
             if (libraryBuildAction == LibraryBuildAction.Create)
                 argv.Add("-o");

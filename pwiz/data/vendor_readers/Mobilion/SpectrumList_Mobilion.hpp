@@ -60,7 +60,8 @@ class PWIZ_API_DECL SpectrumList_Mobilion : public SpectrumListIonMobilityBase
     private:
 
     MSData& msd_;
-    MBIFilePtr rawdata_;
+    MBIFilePtr mbiFile_;
+    MBIFile* rawdata_;
     size_t size_;
     Reader::Config config_;
 
@@ -75,9 +76,7 @@ class PWIZ_API_DECL SpectrumList_Mobilion : public SpectrumListIonMobilityBase
     mutable vector<IndexEntry> index_;
     mutable map<string, size_t> idToIndexMap_;
 
-    void getCombinedSpectrumData(MBI::Frame& frame, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const;
-
-    mutable boost::mutex readMutex;
+    void getCombinedSpectrumData(MBISDK::Frame& frame, BinaryData<double>& mz, BinaryData<double>& intensity, BinaryData<double>& driftTime) const;
 
     void createIndex();
 #endif // PWIZ_READER_MOBILION

@@ -33,6 +33,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
 
+using namespace MBISDK;
 
 namespace pwiz {
 namespace msdata {
@@ -41,7 +42,8 @@ namespace detail {
 using namespace Mobilion;
 
 PWIZ_API_DECL ChromatogramList_Mobilion::ChromatogramList_Mobilion(const MBIFilePtr& rawdata, const Reader::Config& config)
-:   rawdata_(rawdata),
+:   mbiFile_(rawdata),
+    rawdata_(&mbiFile_->file),
     size_(0),
     config_(config),
     indexInitialized_(util::init_once_flag_proxy)
@@ -90,7 +92,6 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Mobilion::chromatogram(size_t ind
         throw runtime_error(("[ChromatogramList_Mobilion::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
-    
     // allocate a new Chromatogram
     IndexEntry& ie = index_[index];
     ChromatogramPtr result = ChromatogramPtr(new Chromatogram);
@@ -132,14 +133,17 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Mobilion::chromatogram(size_t ind
             intensityData.resize(result->defaultArrayLength);
             msLevelData.resize(result->defaultArrayLength);
 
+            if (result->defaultArrayLength == 0)
+                break;
+
             auto mzItr = &timeData[0], intItr = &intensityData[0];
             auto msLevelItr = &msLevelData[0];
-            for (int i = 0; i < rawdata_->NumFrames(); ++i, ++mzItr, ++intItr, ++msLevelItr)
+            for (int i = 1; i <= rawdata_->NumFrames(); ++i, ++mzItr, ++intItr, ++msLevelItr)
             {
                 auto frame = rawdata_->GetFrame(i);
                 *mzItr = frame->Time();
-                *intItr = frame->TotalIntensity();
-                *msLevelItr = frame->IsFragmentationData() ? 2 : 1;
+                *intItr = frame->GetFrameTotalIntensity();
+                *msLevelItr = frame->GetCE(0) > 0 ? 2 : 1;
             }
         }
         break;

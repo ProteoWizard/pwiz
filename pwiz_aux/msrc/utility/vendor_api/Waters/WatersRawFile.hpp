@@ -569,7 +569,14 @@ struct PWIZ_API_DECL RawData
 
         for (int ch = 0; ch < channels; ch++)
         {
-            AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
+            try
+            {
+                AnalogChromatogramReader.ReadChannel(ch, analogTimes[ch], analogIntensities[ch]);
+            }
+            catch (MassLynxRawException&)
+            {
+                // Likely just an empty channel - if there's a real problem the folllowing calls will probably throw too
+            }
             analogChannelNames[ch] = AnalogChromatogramReader.GetChannelDescription(ch);
             analogChannelUnits[ch] = AnalogChromatogramReader.GetChannelUnits(ch);
         }

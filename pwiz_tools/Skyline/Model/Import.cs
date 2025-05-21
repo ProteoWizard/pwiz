@@ -630,10 +630,18 @@ namespace pwiz.Skyline.Model
             for (var index = 0; index < lines.Count; index++)
             {
                 string row = lines[index];
-                var errorInfo = RowReader.NextRow(row, ++_linesSeen);
-                if (errorInfo != null)
+                try
                 {
-                    errorList.Add(errorInfo);
+                    var errorInfo = RowReader.NextRow(row, ++_linesSeen);
+                    if (errorInfo != null)
+                    {
+                        errorList.Add(errorInfo);
+                        continue;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    errorList.Add(new TransitionImportErrorInfo(exception.Message, null, _linesSeen, row));
                     continue;
                 }
 
@@ -1572,7 +1580,7 @@ namespace pwiz.Skyline.Model
 
             private static IsotopeLabelType GetLabelType(string typeId)
             {
-                typeId = typeId.ToLower();
+                typeId = typeId.ToLowerInvariant();
                 return ((Equals(typeId, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || Equals(typeId, IsotopeLabelType.HEAVY_NAME)) ? IsotopeLabelType.heavy : IsotopeLabelType.light);
             }
 
@@ -1969,7 +1977,7 @@ namespace pwiz.Skyline.Model
             // Helper method for FindLabelType
             private static bool ContainsLabelType(string field)
             {
-                field = field.ToLower(); // Now our detection is case insensitive
+                field = field.ToLowerInvariant(); // Now our detection is case insensitive
                 if (Equals(field, IsotopeLabelType.LIGHT_NAME.Substring(0, 1)) || // Checks for "L"
                     (Equals(field, IsotopeLabelType.HEAVY_NAME.Substring(0, 1)) || // Checks for "H"
                     (Equals(field, IsotopeLabelType.LIGHT_NAME)) || // Checks for "light"
@@ -2563,11 +2571,11 @@ namespace pwiz.Skyline.Model
                     if (item.Value.Equals(key))
                     {
                         // Remove whitespace and make the strings lowercase for comparison
-                        var lowerValue = item.Key.ToLower();
+                        var lowerValue = item.Key.ToLowerInvariant();
                         lowerValue = lowerValue.Replace(@" ", string.Empty);
-                        var lowerHeader = header.ToLower();
+                        var lowerHeader = header.ToLowerInvariant();
                         lowerHeader = lowerHeader.Replace(@" ", string.Empty);
-                        var lowerKey = item.Value.ToLower();
+                        var lowerKey = item.Value.ToLowerInvariant();
                         lowerKey = lowerKey.Replace(@" ", string.Empty);
                         if (lowerValue.Equals(lowerHeader) || lowerKey.Equals(lowerHeader))
                         {

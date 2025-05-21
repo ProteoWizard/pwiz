@@ -467,6 +467,16 @@ namespace pwiz.Skyline.Model.Lib {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Missing details for {0} at line {1}, this entry will be ignored.
+        /// </summary>
+        public static string NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_be_ignored {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_CreateCache_Missing_details_for__0__at_line__1___this_entry_will_" +
+                        "be_ignored", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to molecule+adduct.
         /// </summary>
         public static string NistLibraryBase_CreateCache_molecule_adduct {
@@ -517,6 +527,15 @@ namespace pwiz.Skyline.Model.Lib {
         public static string NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__ {
             get {
                 return ResourceManager.GetString("NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown modification {0} at line {1}.
+        /// </summary>
+        public static string NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_ {
+            get {
+                return ResourceManager.GetString("NistLibraryBase_GetMod_Unknown_modification__0__at_line__1_", resourceCulture);
             }
         }
         

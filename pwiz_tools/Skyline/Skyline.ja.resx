@@ -245,6 +245,36 @@
   <data name="editSpectrumFilterContextMenuItem.Text" xml:space="preserve">
     <value>スペクトラムフィルタの編集...</value>
   </data>
+  <data name="expandSelectionContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionContextMenuItem.Text" xml:space="preserve">
+    <value>選択部分を展開</value>
+  </data>
+  <data name="expandSelectionNoneContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionNoneContextMenuItem.Text" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionProteinsContextMenuItem.Text" xml:space="preserve">
+    <value>タンパク質</value>
+  </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPeptidesContextMenuItem.Text" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>228, 22</value>
+  </data>
+  <data name="expandSelectionPrecursorsContextMenuItem.Text" xml:space="preserve">
+    <value>プリカーサー</value>
+  </data>
   <data name="toggleQuantitativeContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>228, 22</value>
   </data>
@@ -367,10 +397,6 @@
   </data>
   <data name="massErrorToolStripMenuItem.Text" xml:space="preserve">
     <value>質量誤差を表示</value>
-    <comment>Needs Review:English text changed
-Old English:Mass Error
-Current English:Show Mass Error
-Old Localized:Show Mass Error</comment>
   </data>
   <data name="ionMzValuesContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>193, 22</value>
@@ -782,7 +808,6 @@ Old Localized:Show Mass Error</comment>
   </data>
   <data name="areaRelativeAbundanceContextMenuItem.Text" xml:space="preserve">
     <value>相対的存在量</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="areaCVHistogramContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>190, 22</value>
@@ -903,7 +928,6 @@ Old Localized:Show Mass Error</comment>
   </data>
   <data name="excludeTargetsMenuItem.Text" xml:space="preserve">
     <value>除外</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="showPeakAreaLegendContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
@@ -927,6 +951,12 @@ Old Localized:Show Mass Error</comment>
     <value>209, 22</value>
   </data>
   <data name="peptideLogScaleContextMenuItem.Text" xml:space="preserve">
+    <value>対数目盛り</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>209, 22</value>
+  </data>
+  <data name="relativeAbundanceLogScaleContextMenuItem.Text" xml:space="preserve">
     <value>対数目盛り</value>
   </data>
   <data name="peptideCvsContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
@@ -1075,7 +1105,6 @@ Old Localized:Show Mass Error</comment>
   </data>
   <data name="excludeTargetsPeptideListMenuItem.Text" xml:space="preserve">
     <value>ペプチドのリスト</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="excludeTargetsStandardsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>209, 22</value>
@@ -1398,7 +1427,6 @@ Old Localized:Show Mass Error</comment>
   </data>
   <data name="openPanoramaMenuItem.Text" xml:space="preserve">
     <value>Panoramaから開く(&amp;M)...</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="openContainingFolderMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
@@ -1450,7 +1478,6 @@ Old Localized:Show Mass Error</comment>
   </data>
   <data name="runPeptideSearchToolStripMenuItem.Text" xml:space="preserve">
     <value>ペプチド検索の実行(&amp;R)...</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="encyclopeDiaSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>194, 22</value>
@@ -1463,14 +1490,12 @@ Old Localized:Show Mass Error</comment>
   </data>
   <data name="importFeatureDetectionMenuItem.Text" xml:space="preserve">
     <value>フィーチャーの検出(&amp;F)...</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="searchStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>200, 22</value>
   </data>
   <data name="searchStripMenuItem.Text" xml:space="preserve">
     <value>検索(&amp;S)</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>170, 22</value>
@@ -2300,6 +2325,36 @@ Old Localized:Show Mass Error</comment>
   <data name="&gt;&gt;editSpectrumFilterContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionNoneContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionNoneContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionProteinsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionProteinsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPeptidesContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPeptidesContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Name" xml:space="preserve">
+    <value>expandSelectionPrecursorsContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;expandSelectionPrecursorsContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toggleQuantitativeContextMenuItem.Name" xml:space="preserve">
     <value>toggleQuantitativeContextMenuItem</value>
   </data>
@@ -2976,6 +3031,12 @@ Old Localized:Show Mass Error</comment>
     <value>showDotProductToolStripMenuItem</value>
   </data>
   <data name="&gt;&gt;showDotProductToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;relativeAbundanceLogScaleContextMenuItem.Name" xml:space="preserve">
+    <value>relativeAbundanceLogScaleContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;relativeAbundanceLogScaleContextMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;peptideLogScaleContextMenuItem.Name" xml:space="preserve">

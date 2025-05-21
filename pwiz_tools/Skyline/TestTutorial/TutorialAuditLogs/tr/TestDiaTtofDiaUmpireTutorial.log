@@ -14,7 +14,7 @@ Build Spectral Library > iRT standard peptides is "Biognosys-11 (iRT-C18)"
 Build Spectral Library > Include ambiguous matches is True
 Build Spectral Library > Filter for document peptides is False
 Build Spectral Library > Workflow is "DIA"
-Build Spectral Library > Input File Type is "DIA raw (deconvolute, search, and build library)"
+Build Spectral Library > Input File Type is "DIA raw (search and build library)"
 Extra Info: Search files = 
 [
     {
@@ -32,7 +32,7 @@ iRT standard peptides = "Biognosys-11 (iRT-C18)",
 Include ambiguous matches = True,
 Filter for document peptides = False,
 Workflow = "DIA",
-Input File Type = "DIA raw (deconvolute, search, and build library)"
+Input File Type = "DIA raw (search and build library)"
 
 Undo Redo : Imported a peptide search
 Summary   : Imported a peptide search

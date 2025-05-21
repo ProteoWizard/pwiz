@@ -125,7 +125,7 @@ namespace pwiz.SkylineTest
         /// <summary>
         /// Change to true to write coefficient arrays
         /// </summary>
-        private bool IsRecordMode { get { return false; } }
+        protected override bool IsRecordMode => false;
 
         [TestMethod]
         public void TestMProphetScoringModel()

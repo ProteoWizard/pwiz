@@ -18,13 +18,26 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Threading;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.RemoteApi.Unifi;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi
 {
+    public interface IRemoteAccountUserInteraction
+    {
+        /// <summary>
+        /// Called by a RemoteSession when a user needs to interactively login to their account.
+        /// The implementation must decide what to do for the given type of RemoteAccount.
+        /// </summary>
+        /// <param name="account">The account before user is logged in.</param>
+        /// <returns>A functor used to create an authenticated HttpClient.</returns>
+        public Func<HttpClient> UserLogin(RemoteAccount account);
+    }
+
     public abstract class RemoteSession : IDisposable
     {
         private readonly object _lock = new object();
@@ -56,7 +69,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
         }
 
         public RemoteAccount Account { get; private set; }
-
+        public static IRemoteAccountUserInteraction RemoteAccountUserInteraction { get; set; }
         public abstract IEnumerable<RemoteItem> ListContents(MsDataFileUri parentUrl);
 
         public abstract bool AsyncFetchContents(RemoteUrl remoteUrl, out RemoteServerException remoteException);
@@ -158,11 +171,15 @@ namespace pwiz.Skyline.Model.Results.RemoteApi
 
         public static RemoteSession CreateSession(RemoteAccount remoteAccount)
         {
-            var unifiAccount = remoteAccount as UnifiAccount;
-            if (unifiAccount != null)
-            {
+            if (remoteAccount as UnifiAccount is { } unifiAccount)
                 return new UnifiSession(unifiAccount);
-            }
+
+            if (remoteAccount as ArdiaAccount is { } ardiaAccount)
+                return new ArdiaSession(ardiaAccount);
+
+            if (remoteAccount == null)
+                throw new ArgumentNullException(nameof(remoteAccount));
+
             throw new ArgumentException();
         }
 

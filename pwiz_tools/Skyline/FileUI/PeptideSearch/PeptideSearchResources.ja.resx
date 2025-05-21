@@ -288,7 +288,6 @@
   </data>
   <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Feature_Detection" xml:space="preserve">
     <value>フィーチャーの検出</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchDlg_UpdateFullScanSettings_Full_scan_MS1_filtering_must_be_enabled_in_order_to_import_a_peptide_search_" xml:space="preserve">
     <value>ペプチド検索をインポートするには、フルスキャンMS1フィルタを有効にする必要があります。</value>
@@ -301,7 +300,6 @@
   </data>
   <data name="BuildPeptideSearchLibraryControl_btnAddFile_Click_Select_Files_to_Search" xml:space="preserve">
     <value>検索するファイルを選択</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_" xml:space="preserve">
     <value>欠損したすべての結果ファイルを見つけることができませんでした。</value>
@@ -360,10 +358,11 @@
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Detected_Features_Library" xml:space="preserve">
     <value>検出したフィーチャーライブラリを構築中</value>
-    <comment>Needs Review:New resource</comment>
   </data>
   <data name="ImportPeptideSearchDlg_NextPage_Adding_detected_features_to_document" xml:space="preserve">
     <value>検出したフィーチャーをドキュメントに追加中</value>
-    <comment>Needs Review:New resource</comment>
+  </data>
+  <data name="SearchControl_CanWizardClose_Cannot_close_wizard_while_the_search_is_running_" xml:space="preserve">
+    <value>検索を実行中にウィザードを閉じることはできません。検索をキャンセルしますか？</value>
   </data>
 </root>

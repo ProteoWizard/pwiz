@@ -145,7 +145,7 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.emplace_back("ms levels", msLevelsToPeakPickStr);
 
     if (algorithm_)
-        noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for non-vendor formats (and UNIFI); falling back to ") + algorithm_->name();
+        noVendorCentroidingWarningMessage_ = string("[SpectrumList_PeakPicker]: vendor centroiding requested but not available for this file (non-vendor, UNIFI, Agilent or Waters IMS format); falling back to ") + algorithm_->name();
 
     dp_->processingMethods.push_back(method);
 }

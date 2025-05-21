@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -70,6 +71,8 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lists;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Models;
+using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.SettingsUI;
@@ -94,10 +97,10 @@ namespace pwiz.Skyline
             IUndoable,
             IDocumentUIContainer,
             IProgressMonitor,
-            ILibraryBuildNotificationContainer,
             IToolMacroProvider,
             IModifyDocumentContainer,
-            IRetentionScoreSource
+            IRetentionScoreSource,
+            IRemoteAccountUserInteraction
     {
         private SequenceTreeForm _sequenceTreeForm;
         private ImmediateWindow _immediateWindow;
@@ -107,6 +110,7 @@ namespace pwiz.Skyline
         private int _savedVersion;
         private bool _closing;
         private readonly UndoManager _undoManager;
+        private readonly UndoRedoButtons _undoRedoButtons;
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ProteinMetadataManager _proteinMetadataManager;
         private readonly IrtDbManager _irtDbManager;
@@ -114,7 +118,6 @@ namespace pwiz.Skyline
         private readonly RetentionTimeManager _retentionTimeManager;
         private readonly IonMobilityLibraryManager _ionMobilityLibraryManager;
         private readonly LibraryManager _libraryManager;
-        private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly ChromatogramManager _chromatogramManager;
         private readonly AutoTrainManager _autoTrainManager;
 
@@ -138,11 +141,11 @@ namespace pwiz.Skyline
             InitializeComponent();
             InitializeMenus();
             _undoManager = new UndoManager(this);
-            var undoRedoButtons = new UndoRedoButtons(_undoManager,
+            _undoRedoButtons = new UndoRedoButtons(_undoManager,
                 EditMenu.UndoMenuItem, undoToolBarButton,
                 EditMenu.RedoMenuItem, redoToolBarButton,
                 RunUIAction);
-            undoRedoButtons.AttachEventHandlers();
+            _undoRedoButtons.AttachEventHandlers();
 
             // Setup to manage and interact with mode selector buttons in UI
             SetModeUIToolStripButtons(modeUIToolBarDropDownButton);
@@ -160,7 +163,6 @@ namespace pwiz.Skyline
             _libraryManager = new LibraryManager();
             _libraryManager.ProgressUpdateEvent += UpdateProgress;
             _libraryManager.Register(this);
-            _libraryBuildNotificationHandler = new LibraryBuildNotificationHandler(this);
 
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
@@ -187,6 +189,7 @@ namespace pwiz.Skyline
             _autoTrainManager.ProgressUpdateEvent += UpdateProgress;
             _autoTrainManager.Register(this);
             _immediateWindowWarningListener = new ImmediateWindowWarningListener(this);
+            RemoteSession.RemoteAccountUserInteraction = this;
 
             // RTScoreCalculatorList.DEFAULTS[2].ScoreProvider
             //    .Attach(this);
@@ -897,6 +900,16 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ShowUndo(bool show = true)
+        {
+            _undoRedoButtons.ShowUndo(show);
+        }
+
+        public void ShowRedo(bool show = true)
+        {
+            _undoRedoButtons.ShowRedo(show);
+        }
+
         public IUndoTransaction BeginUndo(IUndoState undoState = null)
         {
             return _undoManager.BeginTransaction(undoState);
@@ -1033,7 +1046,10 @@ namespace pwiz.Skyline
         private void SkylineWindow_Activated(object sender, EventArgs e)
         {
             if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating)
-                FocusDocument();
+            {
+                if (!Program.FunctionalTest || Program.PauseSeconds == 0)  // Avoid doing this during screenshots
+                    FocusDocument();
+            }
         }
 
         protected override void OnGotFocus(EventArgs e)
@@ -1766,6 +1782,26 @@ namespace pwiz.Skyline
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
             deleteContextMenuItem.Enabled = enabled;
+            if (SequenceTree.SelectedNodes.Count > 0)
+            {
+                expandSelectionContextMenuItem.Enabled = true;
+                expandSelectionContextMenuItem.Visible = true;
+            }
+            else
+            {
+                expandSelectionContextMenuItem.Enabled = false;
+                expandSelectionContextMenuItem.Visible = false;
+            }
+            if (Settings.Default.UIMode == UiModes.PROTEOMIC)
+            {
+                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Protein;
+                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title;
+            }
+            else
+            {
+                expandSelectionProteinsContextMenuItem.Text = SeqNodeResources.PeptideGroupTreeNode_Heading_Molecule_List;
+                expandSelectionPeptidesContextMenuItem.Text = SeqNodeResources.PeptideTreeNode_Heading_Title_Molecule;
+            }
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
             editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
             removePeakContextMenuItem.Visible = (SequenceTree.SelectedNode is TransitionTreeNode && enabled);
@@ -1821,7 +1857,22 @@ namespace pwiz.Skyline
         {
             SequenceTree.ShowPickList(okOnDeactivate);
         }
-
+        private void expandSelectionNoneContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(SrmTreeNodeParent));
+        }
+        private void expandSelectionProteinsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(PeptideGroupTreeNode));
+        }
+        private void expandSelectionPeptidesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(PeptideTreeNode));
+        }
+        private void expandSelectionPrecursorsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ExpandSelectionBulk(typeof(TransitionGroupTreeNode));
+        }
         /// <summary>
         /// Shows pop-up pick list for tests, with no automatic OK on deactivation of the pick list,
         /// since this can cause failures, if the test computer is in use during the tests.
@@ -2315,7 +2366,7 @@ namespace pwiz.Skyline
                         var tranGroupList = new List<DocNode>();
                         foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                         {
-                            var transitions = nodeTranGroup.Transitions.Take(numTransitions).ToArray();
+                            var transitions = nodeTranGroup.Transitions.OrderBy(nodeTran => nodeTran.LibInfo?.Rank).Take(numTransitions).ToArray();
                             Array.Sort(transitions, TransitionGroup.CompareTransitions);
                             tranGroupList.Add(nodeTranGroup.ChangeChildren(transitions.Cast<DocNode>().ToList()));
                         }
@@ -3989,13 +4040,6 @@ namespace pwiz.Skyline
                     return;
             }
 
-            // TODO: replace this with more generic logic fed from IProgressMonitor
-            if (BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError(x))
-            {
-                e.Response = BuildPeptideSearchLibraryControl.ShowLibraryMissingExternalSpectraError(this, x);
-                return;
-            }
-
             var message = ExceptionUtil.GetMessage(x);
 
             // Drill down to see if the innermost exception was an out-of-memory exception.
@@ -4056,8 +4100,12 @@ namespace pwiz.Skyline
                     if (!ImportingResultsWindow.IsUserCanceled)
                         Settings.Default.AutoShowAllChromatogramsGraph = ImportingResultsWindow.Visible;
                     ImportingResultsWindow.Finish();
-                    if (!ImportingResultsWindow.HasErrors && Settings.Default.ImportResultsAutoCloseWindow)
+                    if (!ImportingResultsWindow.HasErrors &&
+                        !ImportingResultsWindow.IsProgressFrozen() &&
+                        Settings.Default.ImportResultsAutoCloseWindow)
+                    {
                         DestroyAllChromatogramsGraph();
+                    }
                 }
             }
 
@@ -4124,25 +4172,7 @@ namespace pwiz.Skyline
             ShowAllChromatogramsGraph();
         }
 
-        Point INotificationContainer.NotificationAnchor
-        {
-            get { return new Point(Left, statusStrip.Visible ? Bottom - statusStrip.Height : Bottom); }
-        }
-
-        LibraryManager ILibraryBuildNotificationContainer.LibraryManager
-        {
-            get { return _libraryManager; }
-        }
-
-        public Action<LibraryManager.BuildState, bool> LibraryBuildCompleteCallback
-        {
-            get { return _libraryBuildNotificationHandler.LibraryBuildCompleteCallback; }
-        }
-
-        public void RemoveLibraryBuildNotification()
-        {
-            _libraryBuildNotificationHandler.RemoveLibraryBuildNotification();
-        }
+        public LibraryManager LibraryManager => _libraryManager;
 
         public bool StatusContains(string format)
         {
@@ -4161,7 +4191,15 @@ namespace pwiz.Skyline
             return statusGeneral.Text.Contains(start) && statusGeneral.Text.Contains(end);
         }
 
-        public int StatusBarHeight { get { return statusGeneral.Height; } }
+        public int StatusBarHeight { get { return statusStrip.Height; } }
+
+        public int StatusSelectionWidth
+        {
+            get
+            {
+                return statusSequences.Width + statusPeptides.Width + statusPrecursors.Width + statusIons.Width + 20;
+            }
+        }
 
         #endregion
 
@@ -4651,6 +4689,29 @@ namespace pwiz.Skyline
                 return null;
             return KoinaRetentionTimeModel.Instance?.PredictSingle(KoinaPredictionClient.Current, Document.Settings,
                 node, CancellationToken.None)[node];
+        }
+
+        public Func<HttpClient> UserLogin(RemoteAccount account)
+        {
+            if (InvokeRequired)
+            {
+                Func<HttpClient> client = null;
+                RunUIAction(() => client = UserLogin(account));
+                return client;
+            }
+
+            switch (account)
+            {
+                case ArdiaAccount ardia:
+                {
+                    using var loginDlg = new ArdiaLoginDlg(ardia);
+                    if (DialogResult.Cancel == loginDlg.ShowDialog(this))
+                        throw new OperationCanceledException();
+                    return loginDlg.AuthenticatedHttpClientFactory;
+                }
+                default:
+                    throw new NotImplementedException();
+            }
         }
 
         private void mirrorMenuItem_Click(object sender, EventArgs e)

@@ -191,7 +191,7 @@ namespace pwiz.Skyline.SettingsUI
                 double precursorRes;
                 return double.TryParse(textPrecursorRes.Text, out precursorRes) ? (double?)precursorRes : null;
             }
-            set { textPrecursorRes.Text = FormatPrecursorRes(value, PrecursorMassAnalyzer); }
+            set { textPrecursorRes.Text = FormatRes(value, PrecursorMassAnalyzer); }
         }
 
         public double? PrecursorResMz
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.SettingsUI
                 double productRes;
                 return double.TryParse(textProductRes.Text, out productRes) ? (double?)productRes : null;
             }
-            set { textProductRes.Text = value.ToString(); }
+            set { textProductRes.Text = FormatRes(value, ProductMassAnalyzer); }
         }
 
         public double? ProductResMz
@@ -588,6 +588,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _driverIsolationScheme = new SettingsListComboDriver<IsolationScheme>(comboIsolationScheme,
                                                                                   Settings.Default.IsolationSchemeList);
+            _driverIsolationScheme.EditItemEvent += DriverIsolationScheme_OnEditItemEvent;
 
             string sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
@@ -613,6 +614,11 @@ namespace pwiz.Skyline.SettingsUI
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
+        }
+
+        private void DriverIsolationScheme_OnEditItemEvent(object sender, SettingsListComboDriver<IsolationScheme>.EditItemEventArgs e)
+        {
+            e.Tag = _documentContainer.Document.Settings;
         }
 
         /// <summary>
@@ -885,7 +891,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return double.Parse(tbxTimeAroundPrediction.Text); }
         }
 
-        private static string FormatPrecursorRes(double? resolvingPower, FullScanMassAnalyzerType analyzerType)
+        private static string FormatRes(double? resolvingPower, FullScanMassAnalyzerType analyzerType)
         {
             if (!resolvingPower.HasValue)
                 return string.Empty;
@@ -921,7 +927,7 @@ namespace pwiz.Skyline.SettingsUI
                 labelTh.Visible = false;
                 textAt.Visible = false;
                 textRes.Enabled = true;
-                textRes.Text = FormatPrecursorRes(
+                textRes.Text = FormatRes(
                     resCurrent.HasValue && (analyzerTypeCurrent == analyzerTypeNew)
                         ? resCurrent
                         : TransitionFullScan.DEFAULT_CENTROIDED_PPM,
@@ -951,9 +957,9 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
-                    textRes.Text = FormatPrecursorRes(resCurrent, analyzerTypeNew);
+                    textRes.Text = FormatRes(resCurrent, analyzerTypeNew);
                 else
-                    textRes.Text = FormatPrecursorRes(TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew], analyzerTypeNew);
+                    textRes.Text = FormatRes(TransitionFullScan.DEFAULT_RES_VALUES[(int)analyzerTypeNew], analyzerTypeNew);
 
                 labelAt.Visible = variableRes;
                 textAt.Visible = variableRes;
@@ -1080,7 +1086,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var newRadioTimeAroundTop = workflow == ImportPeptideSearchDlg.Workflow.feature_detection ?
                     radioTimeAroundMs2Ids.Top :
-                    radioKeepAllTime.Top;
+                    radioUseSchedulingWindow.Top;
                 int radioTimeAroundTopDifference = radioKeepAllTime.Top - newRadioTimeAroundTop;
                 radioUseSchedulingWindow.Visible = false;
                 flowLayoutPanelUseSchedulingWindow.Visible = false;
@@ -1134,6 +1140,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Hide MS/MS filtering groupbox entirely.
                 groupBoxMS2.Visible = false;
+                // Acquisition method cannot be PRM or DIA
+                if (AcquisitionMethod != FullScanAcquisitionMethod.DDA)
+                    AcquisitionMethod = FullScanAcquisitionMethod.None;
 
                 // Reposition selectivity checkbox and retention time filtering groupbox.
                 cbHighSelectivity.Top = groupBoxMS1.Bottom + sepMS2FromSel;

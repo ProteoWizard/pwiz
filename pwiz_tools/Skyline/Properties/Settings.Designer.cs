@@ -12,7 +12,7 @@ namespace pwiz.Skyline.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.9.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.11.0.0")]
     public sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -550,18 +550,6 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SrmResultsDirectory {
-            get {
-                return ((string)(this["SrmResultsDirectory"]));
-            }
-            set {
-                this["SrmResultsDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("none")]
         public string AutoZoomChromatogram {
             get {
@@ -581,18 +569,6 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["TransformTypeChromatogram"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string SrmResultsSourceType {
-            get {
-                return ((string)(this["SrmResultsSourceType"]));
-            }
-            set {
-                this["SrmResultsSourceType"] = value;
             }
         }
         
@@ -3479,7 +3455,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("10.0")]
+        [global::System.Configuration.DefaultSettingValueAttribute("100.0")]
         public double FeatureFindingMinIntensityPPM {
             get {
                 return ((double)(this["FeatureFindingMinIntensityPPM"]));
@@ -3491,7 +3467,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.98")]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.9")]
         public double FeatureFindingMinIdotP {
             get {
                 return ((double)(this["FeatureFindingMinIdotP"]));
@@ -3512,35 +3488,31 @@ namespace pwiz.Skyline.Properties {
                 this["FeatureFindingSignalToNoise"] = value;
             }
         }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool GroupComparisonAvoidLabelOverlap
-        {
-            get
-            {
+        public bool GroupComparisonAvoidLabelOverlap {
+            get {
                 return ((bool)(this["GroupComparisonAvoidLabelOverlap"]));
             }
-            set
-            {
+            set {
                 this["GroupComparisonAvoidLabelOverlap"] = value;
             }
         }
-
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool GroupComparisonSuspendLabelLayout
-        {
-            get
-            {
+        public bool GroupComparisonSuspendLabelLayout {
+            get {
                 return ((bool)(this["GroupComparisonSuspendLabelLayout"]));
             }
-            set
-            {
+            set {
                 this["GroupComparisonSuspendLabelLayout"] = value;
             }
         }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
@@ -3551,6 +3523,42 @@ namespace pwiz.Skyline.Properties {
             set {
                 this["RelativeAbundanceLogScale"] = value;
             }
-        }		
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("10")]
+        public int KoinaRetryCount {
+            get {
+                return ((int)(this["KoinaRetryCount"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/LICENSE-ACADEMIC.pdf")]
+        public string MsFraggerLicenseUrl {
+            get {
+                return ((string)(this["MsFraggerLicenseUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://msfragger-upgrader.nesvilab.org/upgrader/upgrade_download.php")]
+        public string MsFraggerVerifyUrl {
+            get {
+                return ((string)(this["MsFraggerVerifyUrl"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("https://msfragger-upgrader.nesvilab.org/upgrader/download.php")]
+        public string MsFraggerDownloadUrl {
+            get {
+                return ((string)(this["MsFraggerDownloadUrl"]));
+            }
+        }
     }
 }
