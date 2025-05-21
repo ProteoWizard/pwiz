@@ -521,15 +521,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             return new TransitionSettings(settings.Prediction, filter, libraries, settings.Integration, instrument, fullScan, settings.IonMobilityFiltering);
         }
 
+        private MzTolerance.Units? _mzMatchToleranceUnitsCurrent;
+
         private void comboMatchToleranceUnit_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (double.TryParse(txtTolerance.Text, out var matchTolerance))
+            // Only perform tolerance scaling when the units are known, and
+            // they are being changed.
+            if (_mzMatchToleranceUnitsCurrent.HasValue &&
+                _mzMatchToleranceUnitsCurrent.Value != IonMatchToleranceUnits)
             {
-                if (IonMatchToleranceUnits == MzTolerance.Units.mz)
-                    IonMatchTolerance = matchTolerance / 1000;
-                else
-                    IonMatchTolerance = matchTolerance * 1000;
+                if (double.TryParse(txtTolerance.Text, out var matchTolerance))
+                {
+                    if (IonMatchToleranceUnits == MzTolerance.Units.mz)
+                        IonMatchTolerance = matchTolerance / 1000;
+                    else
+                        IonMatchTolerance = matchTolerance * 1000;
+                }
             }
+            _mzMatchToleranceUnitsCurrent = IonMatchToleranceUnits;
         }
     }
 }
