@@ -29,6 +29,10 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 {
+    /// <summary>
+    /// To enable verbose logging of HTTP request + response in .NET:
+    ///     https://mikehadlow.blogspot.com/2012/07/tracing-systemnet-to-debug-http-clients.html
+    /// </summary>
     [SuppressMessage("ReSharper", "IdentifierTypo")]
     public class ArdiaClient
     {
@@ -94,20 +98,50 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         }
 
         // TODO: how to user IProgressMonitor for a series of HTTP requests?
-        // CONSIDER: improve error handling throughout, including parsing response body into JSON
-        public Uri SendZipFile(string folderPath, string zipFilePath, IProgressMonitor progressMonitor)
+        // TODO: improve error handling throughout, including parsing response body into JSON
+        // TODO: test success
+        // TODO: test failure - authentication, malformed json, file upload failure
+        // CONSIDER: destinationFolderPath must be an absolute path starting with "/". Add input validation?
+        /// <summary>
+        /// Upload a zip file to the Ardia API. The .zip file must contain Skyline files - including .sky, .sky.view, .skyl, etc.
+        /// </summary>
+        /// <param name="destinationFolderPath">Absolute path to a destination folder on the Ardia Platform</param>
+        /// <param name="localZipFile">Absolute path to a local zip file to upload</param>
+        /// <param name="progressMonitor"></param>
+        /// <param name="uploadUri">URI referencing the location of the uploaded file</param>
+        /// <returns>true if uploaded succeeded, false if upload was canceled. Will throw an exception </returns>
+        public bool SendZipFile(string destinationFolderPath, string localZipFile, IProgressMonitor progressMonitor, out Uri uploadUri)
         {
-            Uri uploadedDocumentUri;
-
             // Step 1 of 3: Ardia API - Create Staged Document
-            HttpResponseMessage response = null;
+            CreateStagedDocument(out var presignedUrl, out var uploadId);
 
-            string singleDocumentPresignedUrl;
-            string uploadId;
+            if (progressMonitor.IsCanceled)
+            {
+                uploadUri = null;
+                return false;
+            }
+
+            // Step 2 of 3: AWS - Upload File
+            StageFileOnAws(localZipFile, presignedUrl, out var uploadBytes);
+
+            if (progressMonitor.IsCanceled)
+            {
+                uploadUri = null;
+                return false;
+            }
+
+            // Step 3 of 3: Ardia API - Create Document
+            var fileName = Path.GetFileName(localZipFile);
+            CreateDocument(destinationFolderPath, fileName, uploadId, uploadBytes, out uploadUri);
+
+            return true;
+        }
+
+        private void CreateStagedDocument(out string presignedUrl, out string uploadId)
+        {
+            HttpResponseMessage response = null;
             try
             {
-                // To enable verbose HTTP logging in .NET
-                //      https://mikehadlow.blogspot.com/2012/07/tracing-systemnet-to-debug-http-clients.html
                 var modelRequest = ArdiaStageDocumentRequest.Create();
                 modelRequest.AddSingleDocumentPiece();
 
@@ -121,22 +155,22 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
                 var responseString = response.Content.ReadAsStringAsync().Result;
                 var modelResponse = JsonConvert.DeserializeObject<ArdiaStagedDocumentResponse>(responseString);
 
-                singleDocumentPresignedUrl = modelResponse.Pieces[0].PresignedUrls[0];
+                presignedUrl = modelResponse.Pieces[0].PresignedUrls[0];
                 uploadId = modelResponse.UploadId;
             }
             catch (Exception e)
             {
                 var uri = new Uri(ServerUri + PATH_STAGE_DOCUMENT);
-                throw ArdiaServerException.CreateWithResponseDisposal(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
+                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
             }
+        }
 
-            // Step 2 of 3: AWS - Upload File
-            response = null;
-
-            int uploadBytes;
+        private static void StageFileOnAws(string zipFilePath, string presignedUrl, out int uploadBytes)
+        {
+            HttpResponseMessage response = null;
             try
             {
-                var awsUri = new Uri(singleDocumentPresignedUrl);
+                var awsUri = new Uri(presignedUrl);
 
                 var awsHttpClient = new HttpClient();
                 var awsRequest = new HttpRequestMessage(HttpMethod.Put, awsUri);
@@ -152,20 +186,23 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             }
             catch (Exception e)
             {
-                var uri = new Uri(singleDocumentPresignedUrl);
-                throw ArdiaServerException.CreateWithResponseDisposal(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
+                var uri = new Uri(presignedUrl);
+                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
             }
+        }
 
-            // Step 3 of 3: Ardia API - Create Document
-            response = null;
+        private void CreateDocument(string destinationFolderPath, string destinationFileName, string uploadId,
+            int uploadBytes, out Uri uploadedUri)
+        {
+            HttpResponseMessage response = null;
             try
             {
                 var modelRequest = new ArdiaDocumentRequest
                 {
                     UploadId = uploadId,
                     Size = uploadBytes,
-                    FileName = Path.GetFileName(zipFilePath),
-                    FilePath = folderPath
+                    FileName = destinationFileName,
+                    FilePath = destinationFolderPath
                 };
 
                 var jsonString = JsonConvert.SerializeObject(modelRequest);
@@ -179,16 +216,14 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 
                 var responseBody = response.Content.ReadAsStringAsync().Result;
                 var ardiaDocumentResponse = JsonConvert.DeserializeObject<ArdiaDocumentResponse>(responseBody);
-                uploadedDocumentUri = new Uri(ardiaDocumentResponse.PresignedUrls.First());
 
+                uploadedUri = new Uri(ardiaDocumentResponse.PresignedUrls.First());
             }
             catch (Exception e)
             {
                 var uri = new Uri(ServerUri + PATH_CREATE_DOCUMENT);
-                throw ArdiaServerException.CreateWithResponseDisposal(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
+                throw ArdiaServerException.Create(ArdiaResources.Ardia_FileUpload_UploadError, uri, response, e);
             }
-
-            return uploadedDocumentUri;
         }
     }
 
@@ -197,19 +232,21 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     // CONSIDER: can more be reused with Panorama's error reporting, including PanoramaServerException?
     public class ArdiaServerException : Exception
     {
-        public HttpStatusCode? HttpStatus { get; }
-        private string ResponseBody { get; }
-
-        public static ArdiaServerException CreateWithResponseDisposal(string message, Uri uri, HttpResponseMessage response, Exception e)
+        public static ArdiaServerException Create(string message, Uri uri, HttpResponseMessage response, Exception e, bool disposeResponse = true)
         {
             var statusCode = response.StatusCode;
             var responseBody = response.Content.ReadAsStringAsync().Result;
-            response.Dispose();
+
+            if(disposeResponse)
+                response.Dispose();
 
             var errorMessage = new ErrorMessageBuilder(message).ExceptionMessage(e.Message).Uri(uri).Response(responseBody).ToString();
 
             return new ArdiaServerException(statusCode, errorMessage, responseBody, e);
         }
+
+        public HttpStatusCode? HttpStatus { get; }
+        private string ResponseBody { get; }
 
         private ArdiaServerException(HttpStatusCode status, string message, string responseBody, Exception e) : base(message, e)
         {

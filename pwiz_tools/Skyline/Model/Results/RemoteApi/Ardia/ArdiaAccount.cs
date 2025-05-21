@@ -233,6 +233,10 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
             return ArdiaUrl.Empty.ChangeServerUrl(ServerUrl).ChangeUsername(Username); //  Copy along the Username value for code that matches the username works;
         }
 
+        public bool HasToken()
+        {
+            return !string.IsNullOrEmpty(Token);
+        }
         private ArdiaAccount() {}
 
         private enum ATTR

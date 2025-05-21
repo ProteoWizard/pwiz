@@ -3522,38 +3522,38 @@ namespace pwiz.Skyline
         {
             Assume.IsTrue(HasRegisteredArdiaAccount, @"Expected Skyline has a registered Ardia account but none found");
 
-            // TODO: support choosing an Ardia account if > 1 account registered
+            // TODO: support choosing an Ardia account if > 1 account registered as part of choosing
+            //       the destination folder in the Ardia Platform
             var ardiaAccount = Settings.Default.RemoteAccountList.
                 Where(a => a.AccountType == RemoteAccountType.ARDIA).Cast<ArdiaAccount>().First();
 
-            // Required for now. Triggers an Ardia login while access token bug exists
-            ardiaAccount.GetAuthenticatedHttpClient();
+            // Required for now - if the token is not set, show the prompt to log in to Ardia
+            if (!ardiaAccount.HasToken())
+                ardiaAccount.GetAuthenticatedHttpClient();
 
             var localZipFile = string.Empty;
             try
             {
-                // TODO: support setting name / location of local zip file
+                // CONSIDER: For now, Skyline automatically sets the name of the .zip file to upload. Consider using
+                // the Windows File Explorer to set the name + location.
                 localZipFile = FileEx.GetTimeStampedFileName(DocumentFilePath);
 
                 // Archive current Skyline document
                 var zipFileAvailable = ShareDocument(localZipFile, ShareType.COMPLETE);
 
                 // TODO: support choosing a destination directory on the Ardia server
-                // Note: API expects paths to start with "/"
                 const string ardiaPath = @"/ZZZ-Document-Upload";
 
                 if (zipFileAvailable)
                 {
-                    Uri uploadedDocumentUri = null;
                     var isCanceled = false;
-
                     using (var waitDlg = new LongWaitDlg())
                     {
                         waitDlg.Text = UtilResources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File;
                         waitDlg.PerformWork(this, 1000, longWaitBroker =>
                         {
                             var ardiaClient = ArdiaClient.Instance(ardiaAccount);
-                            uploadedDocumentUri = ardiaClient.SendZipFile(ardiaPath, localZipFile, longWaitBroker);
+                            ardiaClient.SendZipFile(ardiaPath, localZipFile, longWaitBroker, out _);
 
                             if (longWaitBroker.IsCanceled)
                                 isCanceled = true;
@@ -3570,7 +3570,7 @@ namespace pwiz.Skyline
             }
             finally
             {
-                // CONSIDER: should this need to happen off the UI thread?
+                // CONSIDER: should happen off the UI thread?
                 // Remove archive created above
                 if (File.Exists(localZipFile))
                     File.Delete(localZipFile);

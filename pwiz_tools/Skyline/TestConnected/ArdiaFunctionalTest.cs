@@ -89,27 +89,6 @@ namespace pwiz.SkylineTestConnected
             RunFunctionalTest();
         }
 
-        [TestMethod]
-        public void TestArdiaUserConfigSettings()
-        {
-            var ardiaAccount = new ArdiaAccount("https://ardiaserver.example.com", "ardia_username", "ardia password", "ardia token value");
-
-            var remoteAccountList = new RemoteAccountList { ardiaAccount };
-
-            var stringWriter = new StringWriter();
-            var xmlSerializer = new XmlSerializer(typeof(RemoteAccountList));
-            xmlSerializer.Serialize(stringWriter, remoteAccountList);
-            var accountListXml = stringWriter.ToString();
-            
-            // token's plaintext value should not be in serialized XML
-            Assert.AreEqual(-1, accountListXml.IndexOf(ardiaAccount.Token, StringComparison.Ordinal));
-
-            var deserializedAccountList = (RemoteAccountList)xmlSerializer.Deserialize(new StringReader(accountListXml));
-            Assert.AreEqual(remoteAccountList.Count, deserializedAccountList.Count);
-            Assert.AreEqual(ardiaAccount, deserializedAccountList[0]);
-            Assert.AreEqual(ardiaAccount.Token, ((ArdiaAccount)deserializedAccountList[0]).Token);
-        }
-
         //[TestMethod]
         public void TestArdiaMultiRole()
         {

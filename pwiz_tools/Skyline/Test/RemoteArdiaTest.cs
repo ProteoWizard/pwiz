@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
+using System;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using pwiz.Skyline.Model.Results.RemoteApi.Ardia;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
@@ -28,7 +32,7 @@ namespace pwiz.SkylineTest
     public class RemoteArdiaTest : AbstractUnitTest
     {
         [TestMethod]
-        public void RemoteArdiaJsonUnmarshalingTest()
+        public void TestArdiaJsonUnmarshaling()
         {
             // StagedDocument - Request
             var stagedDocumentRequest = ArdiaStageDocumentRequest.Create();
@@ -53,6 +57,27 @@ namespace pwiz.SkylineTest
             var presignedUrls = piece.PresignedUrls;
             Assert.IsNotNull(presignedUrls);
             Assert.AreEqual("https://www.example.com/", presignedUrls[0]);
+        }
+
+        [TestMethod]
+        public void TestArdiaAccountUserConfigSettings()
+        {
+            var ardiaAccount = new ArdiaAccount("https://ardiaserver.example.com", "ardia_username", "ardia password", "ardia token value");
+
+            var remoteAccountList = new RemoteAccountList { ardiaAccount };
+
+            var stringWriter = new StringWriter();
+            var xmlSerializer = new XmlSerializer(typeof(RemoteAccountList));
+            xmlSerializer.Serialize(stringWriter, remoteAccountList);
+            var accountListXml = stringWriter.ToString();
+
+            // token's plaintext value should not be in serialized XML
+            Assert.AreEqual(-1, accountListXml.IndexOf(ardiaAccount.Token, StringComparison.Ordinal));
+
+            var deserializedAccountList = (RemoteAccountList)xmlSerializer.Deserialize(new StringReader(accountListXml));
+            Assert.AreEqual(remoteAccountList.Count, deserializedAccountList.Count);
+            Assert.AreEqual(ardiaAccount, deserializedAccountList[0]);
+            Assert.AreEqual(ardiaAccount.Token, ((ArdiaAccount)deserializedAccountList[0]).Token);
         }
 
         private static string SimpleStagedDocumentString =
