@@ -983,8 +983,13 @@ namespace pwiz.Skyline.Model.Tools
 
         public override bool? IsTaskComplete()
         {
-            return PythonInstaller.SimulatedInstallationState != PythonInstaller.eSimulatedInstallationState.NAIVE &&
-                   (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
+            if (PythonInstaller.SimulatedInstallationState == PythonInstaller.eSimulatedInstallationState.NAIVE ||
+                Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == null)
+            {
+                return false;
+            }
+
+            return (int)Registry.GetValue(PythonInstaller.REG_FILESYSTEM_KEY, PythonInstaller.REG_LONGPATHS_ENABLED, 0) == 1;
         }
         
         public override void DoAction(ILongWaitBroker broker)
