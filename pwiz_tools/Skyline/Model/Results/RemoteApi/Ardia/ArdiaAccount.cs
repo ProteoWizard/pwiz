@@ -27,6 +27,10 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
+// BUG: now that access tokens are stored across sessions Skyline sessions, a new bug is exposed where EditRemoteAccountDlg shows
+//      the Ardia account as "not logged in" if it has not already talked with the remote API during the Skyline session.
+//      This happens because ArdiaAccount._authenticatedHttpClientFactory is only assigned when a request is made to the Ardia API.
+//      If EditRemoteAccountDlg appears prior to an Ardia API call using a given ArdiaAccount, the Dlg detects the ArdiaAccount as logged out.
 namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
 {
     /// <summary>
@@ -34,7 +38,7 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
     ///     https://skyline.ms/wiki/home/software/Skyline/page.view?name=Ardia%20setup%20and%20importing%20a%20file%20from%20Ardia
     ///
     /// Once added, the account is listed under Tools => Options => Remote Accounts and can be accessed by Skyline developers using
-    /// <see cref="Properties.Settings.RemoteAccountList"/>.
+    /// <see cref="Settings.RemoteAccountList"/>.
     ///
     /// When Skyline closes, configuration info about the account is stored in Skyline's user.config file whose path
     /// can be found under Tools => Options => Miscellaneous and is stored in a directory like:
@@ -53,6 +57,24 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public static void SetSessionCookieString(ArdiaAccount ardiaAccount, string sessionCookieString)
         {
             ardiaAccount.Token = sessionCookieString;
+        }
+
+        public static string GetSessionCookieStringForHostname(ArdiaAccount ardiaAccount)
+        {
+            var hostname = ardiaAccount.ServerUrl;
+            var username = ardiaAccount.Username;
+
+            var ardiaAccounts = Settings.Default.RemoteAccountList
+                .Where(account =>
+                    string.Equals(hostname, account.ServerUrl, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(username, account.Username, StringComparison.OrdinalIgnoreCase)
+                ).Cast<ArdiaAccount>().ToList();
+
+            return ardiaAccounts.Count == 0 ?
+                string.Empty :
+                // CONSIDER: is it possible to register > 1 account with the same ServerUrl + Username? If so,
+                //           be resilient and just take the first one rather than raising an exception
+                ardiaAccounts.First().Token;
         }
 
         // TEST ONLY
@@ -171,6 +193,13 @@ namespace pwiz.Skyline.Model.Results.RemoteApi.Ardia
         public ArdiaAccount ChangeDeleteRawAfterImport(bool deleteAfterImport)
         {
             var result = ChangeProp(ImClone(this), im => im.DeleteRawAfterImport = deleteAfterImport);
+            result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
+            return result;
+        }
+
+        public ArdiaAccount ChangeToken(string token)
+        {
+            var result = ChangeProp(ImClone(this), im => im.Token = token);
             result._authenticatedHttpClientFactory = _authenticatedHttpClientFactory;
             return result;
         }

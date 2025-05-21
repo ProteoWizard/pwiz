@@ -158,8 +158,11 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (accountType == RemoteAccountType.ARDIA)
             {
-                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'))
-                    .ChangeUsername(textArdiaAlias_Username.Text.Trim());
+                // CONSIDER: does serverUrl need more input validation? For example:
+                //              (1) removing the scheme (ex: https://), if provided
+                //              (2) checking for a valid URL?
+                remoteAccount = remoteAccount.ChangeServerUrl(textArdiaServerURL.Text.Trim().TrimEnd('/'));
+                remoteAccount = remoteAccount.ChangeUsername(textArdiaAlias_Username.Text.Trim());
 
                 var ardiaAccount = (ArdiaAccount) remoteAccount;
                 ardiaAccount = ardiaAccount.ChangeDeleteRawAfterImport(cbArdiaDeleteRawAfterImport.Checked);
@@ -174,6 +177,13 @@ namespace pwiz.Skyline.ToolsUI
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Username(_ardia_TestingOnly_NotSerialized_Username);
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Password(_ardia_TestingOnly_NotSerialized_Password);
                 ardiaAccount = ardiaAccount.ChangeTestingOnly_NotSerialized_Role(_ardia_TestingOnly_NotSerialized_Role);
+
+                // Special handling required to set ArdiaAccount's access token. Since the token is not displayed in
+                // this dialog's UI, the token needs to come from somewhere else. The 'originalAccount' variable may not
+                // be type ArdiaAccount (assuming this breaks tests), so if the token is set, get it from the ArdiaAccount
+                // store directly.
+                var sessionString = ArdiaAccount.GetSessionCookieStringForHostname(ardiaAccount);
+                ardiaAccount = ardiaAccount.ChangeToken(sessionString);
 
                 remoteAccount = ardiaAccount;
             }
