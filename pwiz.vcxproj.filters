@@ -597,6 +597,8 @@
     <ClCompile Include="pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Detail.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Test.cpp" />
     <ClCompile Include="pwiz\data\vendor_readers\Mobilion\SpectrumList_Mobilion.cpp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\WatersConnectData.ipp" />
+    <ClCompile Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="libraries\boost_aux\boost\nowide\args.hpp" />
@@ -1084,6 +1086,8 @@
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIStitch.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBITrim.h" />
     <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\Mobilion\MBIWrapper.h" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\WatersConnectProtobuf.hpp" />
+    <ClInclude Include="pwiz_aux\msrc\utility\vendor_api\UNIFI\ParallelDownloadQueue.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Jamroot.jam" />

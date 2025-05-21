@@ -25,7 +25,6 @@ using Google.Protobuf;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results.ProtoBuf;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {

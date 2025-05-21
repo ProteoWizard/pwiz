@@ -26,6 +26,7 @@ using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;

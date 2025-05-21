@@ -23,10 +23,10 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.ElementLocators.ExportAnnotations;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings.MetadataExtraction

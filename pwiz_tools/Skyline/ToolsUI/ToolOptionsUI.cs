@@ -35,7 +35,7 @@ using pwiz.Skyline.Model.Koina;
 using pwiz.Skyline.Model.Koina.Communication;
 using pwiz.Skyline.Model.Koina.Config;
 using pwiz.Skyline.Model.Koina.Models;
-using pwiz.Skyline.Model.Results.RemoteApi;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Themes;
 using pwiz.Skyline.Properties;

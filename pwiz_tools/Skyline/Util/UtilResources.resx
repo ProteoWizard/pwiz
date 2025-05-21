@@ -181,41 +181,8 @@ Recognized isotopes include: {2}</value>
   <data name="DataGridViewPasteHandler_TryConvertValue_Error_converting___0___to_required_type___1_" xml:space="preserve">
     <value>Error converting '{0}' to required type: {1}</value>
   </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__" xml:space="preserve">
-    <value>An error occurred attempting to read sample information from the file {0}.</value>
-  </data>
-  <data name="DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed" xml:space="preserve">
-    <value>The file may be corrupted, missing, or the correct libraries may not be installed.</value>
-  </data>
   <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
     <value>Source directory does not exist or could not be found: </value>
-  </data>
-  <data name="FileEx_SafeDelete_Directory_could_not_be_found___0_" xml:space="preserve">
-    <value>Directory could not be found: {0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_File_path_is_invalid___0_" xml:space="preserve">
-    <value>File path is invalid: {0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_File_path_is_too_long___0_" xml:space="preserve">
-    <value>File path is too long: {0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Insufficient_permission_to_delete_file___0_" xml:space="preserve">
-    <value>Insufficient permission to delete file: {0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Path_contains_invalid_characters___0_" xml:space="preserve">
-    <value>Path contains invalid characters: {0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Path_is_empty" xml:space="preserve">
-    <value>Path is empty</value>
-  </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_directory___0_" xml:space="preserve">
-    <value>Unable to delete directory: {0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_file_which_is_in_use___0_" xml:space="preserve">
-    <value>Unable to delete file which is in use: {0}</value>
-  </data>
-  <data name="FileEx_SafeDelete_Unable_to_delete_read_only_file___0_" xml:space="preserve">
-    <value>Unable to delete read-only file: {0}</value>
   </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists" xml:space="preserve">
     <value>Cannot save to {0}. Check the path to make sure the directory exists.</value>

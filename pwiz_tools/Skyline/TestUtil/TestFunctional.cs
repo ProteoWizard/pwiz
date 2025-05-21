@@ -39,6 +39,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.ProteomeDatabase.Fasta;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline;
@@ -749,7 +750,7 @@ namespace pwiz.SkylineTestUtil
                 // When debugger is attached, some vendor readers are S-L-O-W!
                 waitMultiplier = 10;
             }
-            else if (ExtensionTestContext.IsDebugMode || Helpers.RunningResharperAnalysis)
+            else if (ExtensionTestContext.IsDebugMode || TryHelper.RunningResharperAnalysis)
             {
                 // Wait a little longer for debug build.
                 waitMultiplier = 4;
@@ -2315,7 +2316,7 @@ namespace pwiz.SkylineTestUtil
         {
             var recordedFile = GetLogFilePath(AuditLogDir);
             if (File.Exists(recordedFile))
-                Helpers.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
+                TryHelper.TryTwice(() => File.Delete(recordedFile));    // Avoid appending to the same file on multiple runs
         }
 
         private string GetLogFilePath(string folderPath)
@@ -2537,7 +2538,7 @@ namespace pwiz.SkylineTestUtil
                 // holds no file handles.
                 var docNew = new SrmDocument(SrmSettingsList.GetDefault());
                 // Try twice, because this operation can fail due to active background processing
-                RunUI(() => Helpers.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
+                RunUI(() => TryHelper.TryTwice(() => SkylineWindow.SwitchDocument(docNew, null)));
 
                 WaitForCondition(1000, () => !FileStreamManager.Default.HasPooledStreams, string.Empty, false);
                 if (FileStreamManager.Default.HasPooledStreams)

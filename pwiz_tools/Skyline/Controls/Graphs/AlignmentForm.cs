@@ -24,7 +24,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.Results;
+using pwiz.CommonMsData;
 using ZedGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;

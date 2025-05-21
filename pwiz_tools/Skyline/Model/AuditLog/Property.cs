@@ -21,7 +21,6 @@ using System.Linq;
 using System.Reflection;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.AuditLog
 {

@@ -28,10 +28,10 @@ using pwiz.BiblioSpec;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI.PeptideSearch
