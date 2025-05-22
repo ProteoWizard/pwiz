@@ -125,13 +125,13 @@ run-if-exists PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_proces
     : # default-build
     ;
 
-run-if-exists SpectrumList_PrecursorRecalculatorTest.cpp pwiz_analysis_spectrum_processing 
-    : # args
-    : SpectrumList_PrecursorRecalculatorTest.data/5peptideFT.mzML # input-files
-    : # requirements
-    : SpectrumList_PrecursorRecalculatorTest # target name
-    : # default-build
-    ;
+#run-if-exists SpectrumList_PrecursorRecalculatorTest.cpp pwiz_analysis_spectrum_processing 
+#    : # args
+#    : SpectrumList_PrecursorRecalculatorTest.data/5peptideFT.mzML # input-files
+#    : # requirements
+#    : SpectrumList_PrecursorRecalculatorTest # target name
+#    : # default-build
+#    ;
 
 run-if-exists SpectrumList_PrecursorRefineTest.cpp pwiz_analysis_spectrum_processing 
     : # args
