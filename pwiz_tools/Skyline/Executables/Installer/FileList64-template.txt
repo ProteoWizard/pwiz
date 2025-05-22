@@ -81,6 +81,7 @@ Clearcore2.Utility.dll (included automatically from ProteoWizard; DO NOT ADD TO 
 Clearcore2.XmlHelpers.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CLFIO32.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 CRHAKEI2.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
+Dapper.dll
 de\ZedGraph.resources.dll
 DigitalRune.Windows.Docking.dll
 DotNetZip.dll
@@ -199,6 +200,7 @@ Method\Waters\BuildWatersMethod.exe
 Method\Waters\VerifyESkylineLibrary.dll
 MethodConverter.dll
 MethodWriter.dll
+Microsoft.Bcl.AsyncInterfaces.dll
 Microsoft.ConcurrencyVisualizer.Markers.dll
 Microsoft.Practices.ServiceLocation.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

@@ -163,6 +163,9 @@
       <Component Id="BullseyeSharp.exe">
         <File Source="$(var.Skyline.TargetDir)/BullseyeSharp.exe" KeyPath="yes"/>
       </Component>
+      <Component Id="Dapper.dll">
+        <File Source="$(var.Skyline.TargetDir)/Dapper.dll" KeyPath="yes"/>
+      </Component>
       <Component Id="DigitalRune.Windows.Docking.dll">
         <File Source="$(var.Skyline.TargetDir)/DigitalRune.Windows.Docking.dll" KeyPath="yes"/>
       </Component>
@@ -216,6 +219,9 @@
       </Component>
       <Component Id="MathNet.Numerics.dll">
         <File Source="$(var.Skyline.TargetDir)/MathNet.Numerics.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="Microsoft.Bcl.AsyncInterfaces.dll">
+        <File Source="$(var.Skyline.TargetDir)/Microsoft.Bcl.AsyncInterfaces.dll" KeyPath="yes"/>
       </Component>
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
