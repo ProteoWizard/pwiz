@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 dbRefSpectrum.Copies,
                                 dbRefSpectrum.NumPeaks,
                                 (int)(dbRefSpectrum.Id ?? 0),
-                                (int)(dbRefSpectrum.FileId??0),
+                                (int?)dbRefSpectrum.FileId,
                                 spectrum.Protein).ChangeIonMobilities(ionMobilitiesByFileId));
                             proteinTablesBuilder.Add(dbRefSpectrum, spectrum.Protein);
                             if (progressMonitor != null)
@@ -878,7 +878,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             new BiblioLiteSpectrumInfo(newLibKey, refSpectra.Copies,
                                                 refSpectra.NumPeaks,
                                                 (int) (refSpectra.Id ?? 0),
-                                                (int) (refSpectra.FileId ?? 0),
+                                                (int?) refSpectra.FileId,
                                                 proteinName));
                                     }
 
@@ -928,7 +928,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                             refSpectra.Copies,
                                             refSpectra.NumPeaks,
                                             (int)(refSpectra.Id ?? 0),
-                                            (int)(refSpectra.Id ?? 0),
+                                            (int?)refSpectra.FileId,
                                             proteinName));
 
                                     // Save entries in the redundant library.

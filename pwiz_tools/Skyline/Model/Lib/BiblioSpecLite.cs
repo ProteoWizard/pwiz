@@ -310,19 +310,24 @@ namespace pwiz.Skyline.Model.Lib
                 scoreTypesByFileId.Add(spectrumSourceFile.Id, new HashSet<string>());
             }
 
-
-            foreach (var entry in _libraryEntries)
+            if (_libraryEntries != null)
             {
-                if (detailsByFileId.TryGetValue(entry.SpectrumSourceId, out var bestDetails))
+                foreach (var entry in _libraryEntries)
                 {
-                    bestDetails.BestSpectrum++;
-                    scoreTypesByFileId[entry.SpectrumSourceId].Add(entry.ScoreType);
-                }
-                foreach (var idTimes in entry.RetentionTimesByFileId.GetTimesById())
-                {
-                    if (detailsByFileId.TryGetValue(idTimes.Key, out var details))
+                    if (entry.SpectrumSourceId.HasValue)
                     {
-                        details.MatchedSpectrum += idTimes.Value.Count;
+                        if (detailsByFileId.TryGetValue(entry.SpectrumSourceId.Value, out var bestDetails))
+                        {
+                            bestDetails.BestSpectrum++;
+                            scoreTypesByFileId[entry.SpectrumSourceId.Value].Add(entry.ScoreType);
+                        }
+                    }
+                    foreach (var idTimes in entry.RetentionTimesByFileId.GetTimesById())
+                    {
+                        if (detailsByFileId.TryGetValue(idTimes.Key, out var details))
+                        {
+                            details.MatchedSpectrum += idTimes.Value.Count;
+                        }
                     }
                 }
             }
@@ -344,18 +349,6 @@ namespace pwiz.Skyline.Model.Lib
             return _librarySourceFiles.Select(file => detailsByFileId[file.Id]);
         }
 
-        private static int GetColumnIndex(SQLiteDataReader reader, string columnName)
-        {
-            try
-            {
-                return reader.GetOrdinal(columnName);
-            }
-            catch (IndexOutOfRangeException)
-            {
-                return -1; // SQLite returns -1 if column does not exist, but documentation says can throw IndexOutOfRangeException
-            }
-        }
-        
         /// <summary>
         /// Returns True iff the library is redundant (it has no RetentionTimes table)
         /// </summary>
@@ -588,6 +581,19 @@ namespace pwiz.Skyline.Model.Lib
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
+        class RefSpectrum
+        {
+            public int Id { get; set; }
+            public string PeptideModSeq { get; set; }
+            public int PrecursorCharge { get; set; }
+            public int Copies { get; set; }
+            public int NumPeaks { get; set; }
+            public string PrecursorAdduct { get; set; }
+            public string MoleculeName { get; set; }
+            public string ChemicalFormula { get; set; }
+
+        }
+
         private bool ReadFromDatabase(ILoadMonitor loader, IProgressStatus status)
         {
             var sm = loader.StreamManager;
@@ -713,7 +719,6 @@ namespace pwiz.Skyline.Model.Lib
                 int iScore = reader.GetOrdinal(RefSpectra.score);
                 int iScoreType = reader.GetOrdinal(RefSpectra.scoreType);
                 int iPrecursorMZ = reader.GetOrdinal(RefSpectra.precursorMZ);
-                int iPrecursorAdduct = reader.GetOrdinal(RefSpectra.precursorAdduct);
                 int iFileId = reader.GetOrdinal(RefSpectra.fileId);
 
                 while (reader.Read())
@@ -735,8 +740,11 @@ namespace pwiz.Skyline.Model.Lib
 
                     int id = reader.GetInt32(iId);
                     proteinsBySpectraID.TryGetValue(id, out var protein);
-                    int fileId = reader.GetInt32(iFileId);
-
+                    int? fileId = null;
+                    if (iFileId >= 0 && !reader.IsDBNull(iFileId))
+                    {
+                        fileId = reader.GetInt32(iFileId);
+                    }
 
                     string sequence = reader.GetString(iModSeq);
                     int charge = reader.GetInt16(iCharge);
@@ -1515,49 +1523,6 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return base.TryGetIonMobilityInfos(targetIons, out ionMobilities);
-        }
-
-
-
-        /// <summary>
-        /// Reads all retention times for a specified source file into a dictionary by
-        /// modified peptide sequence, with times stored in an array in ascending order.
-        /// </summary>
-        private IDictionary<string, double[]> ReadRetentionTimes(SQLiteConnection connection, BiblioLiteSourceInfo sourceInfo)
-        {
-            using (SQLiteCommand select = new SQLiteCommand(connection))
-            {
-                select.CommandText = @"SELECT peptideModSeq, t.retentionTime " +
-                    @"FROM [RefSpectra] as s INNER JOIN [RetentionTimes] as t ON s.[id] = t.[RefSpectraID] " +
-                    @"WHERE t.[SpectrumSourceId] = ? " +
-                    @"ORDER BY peptideModSeq, t.retentionTime";
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
-                {
-                    var dictKeyTimes = new Dictionary<string, double[]>();
-                    string sequence = null;
-                    var listTimes = new List<double>();
-                    while (reader.Read())
-                    {
-                        int i = 0;
-                        string sequenceNext = reader.GetString(i++);
-                        double time = reader.GetDouble(i);
-                        if (!Equals(sequence, sequenceNext))
-                        {
-                            if (sequence != null && listTimes.Count > 0)
-                                dictKeyTimes.Add(sequence, listTimes.ToArray());
-
-                            sequence = sequenceNext;
-                            listTimes.Clear();                            
-                        }
-                        listTimes.Add(time);
-                    }
-                    if (sequence != null && listTimes.Count > 0)
-                        dictKeyTimes.Add(sequence, listTimes.ToArray());
-                    return dictKeyTimes;
-                }
-            }
         }
 
         private int FindSource(MsDataFileUri filePath)
@@ -2597,7 +2562,7 @@ namespace pwiz.Skyline.Model.Lib
 
     public class BiblioLiteSpectrumInfo : Immutable, ICachedSpectrumInfo
     {
-        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int spectrumSourceId, string protein, 
+        public BiblioLiteSpectrumInfo(LibKey key, int copies, int numPeaks, int id, int? spectrumSourceId, string protein, 
             double? score = null, string scoreType = null)
         {
             Key = key;
@@ -2615,7 +2580,7 @@ namespace pwiz.Skyline.Model.Lib
         public int Copies { get; }
         public int NumPeaks { get; }
         public int Id { get; }
-        public int SpectrumSourceId { get; }
+        public int? SpectrumSourceId { get; }
         public string Protein { get; } // From the RefSpectraProteins table, either a protein accession or an arbitrary molecule list name
         public IndexedRetentionTimes RetentionTimesByFileId { get; private set; }
         public IndexedIonMobilities IonMobilitiesByFileId { get; private set; }
