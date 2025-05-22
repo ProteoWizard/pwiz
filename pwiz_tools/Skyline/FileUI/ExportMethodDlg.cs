@@ -1888,6 +1888,10 @@ namespace pwiz.Skyline.FileUI
             {
                 comboOptimizing.Enabled = true;
             }
+            else if (IsDia)
+            {
+                comboOptimizing.Enabled = false;    // No optimization for DIA
+            }
             else
             {
                 comboOptimizing.Enabled = Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
