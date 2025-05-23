@@ -89,6 +89,8 @@ namespace pwiz.SkylineTest
 
             TestTransformPeptDeepOutput(outputPath);
             TestImportSpectralLibrary(outputPath);
+
+            Directory.Delete(outputPath, true);
         }
 
         /// <summary>
