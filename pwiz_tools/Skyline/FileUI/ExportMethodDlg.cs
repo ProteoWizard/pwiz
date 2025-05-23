@@ -136,18 +136,12 @@ namespace pwiz.Skyline.FileUI
                 // have been changed to start with SCIEX
                 if (Equals(@"ABI", cePredictorPrefix) || Equals(@"AB", cePredictorPrefix))
                     cePredictorPrefix = ExportInstrumentType.ABI;
-                int i = -1;
-                if (document.Settings.TransitionSettings.FullScan.IsEnabled)
-                {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix) &&
-                        ExportInstrumentType.IsFullScanInstrumentType(GetInstrumentTypeFromSelection(typeName, true)));
-                }
-                if (i == -1)
-                {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(cePredictorPrefix));
-                }
-                if (i != -1)
-                    SelectInstrumentTypeIfValid(listTypes[i], listTypes);
+                // First try matching the entire name
+                string instrumentType = GetInstrumentTypeFromCEPrefix(document, listTypes, cePredictorName);
+                // Then the prefix if the full name is not found
+                instrumentType ??= GetInstrumentTypeFromCEPrefix(document, listTypes, cePredictorPrefix);
+                if (instrumentType != null)
+                    SelectInstrumentTypeIfValid(instrumentType, listTypes);
             }
             // If nothing found based on CE regression name, just use the first instrument in the list
             if (InstrumentType == null)
@@ -259,6 +253,21 @@ namespace pwiz.Skyline.FileUI
             }
             SetBounds(Left, Top, btnOk.Right + 2 * label4.Left, Height);
             UpdateInstrumentControls(MethodType);
+        }
+
+        private string GetInstrumentTypeFromCEPrefix(SrmDocument document, string[] listTypes, string cePredictorPrefix)
+        {
+            string instrumentType = null;
+            if (document.Settings.TransitionSettings.FullScan.IsEnabled)
+            {
+                instrumentType = listTypes.FirstOrDefault(typeName => 
+                    typeName.StartsWith(cePredictorPrefix) &&
+                    ExportInstrumentType.IsFullScanInstrumentType(GetInstrumentTypeFromSelection(typeName, true)));
+            }
+
+            instrumentType ??= listTypes.FirstOrDefault(typeName => typeName.StartsWith(cePredictorPrefix));
+
+            return instrumentType;
         }
 
         /// <summary>
@@ -1879,10 +1888,16 @@ namespace pwiz.Skyline.FileUI
             {
                 comboOptimizing.Enabled = true;
             }
+            else if (IsDia)
+            {
+                comboOptimizing.Enabled = false;    // No optimization for DIA
+            }
             else
             {
                 comboOptimizing.Enabled = Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
-                                          Equals(InstrumentType, ExportInstrumentType.ABI_7600);
+                                          Equals(InstrumentType, ExportInstrumentType.ABI_7600) ||
+                                          Equals(InstrumentType, ExportInstrumentType.THERMO_Q_EXACTIVE) || // Q Exactive
+                                          ExportInstrumentType.ThermoInstallationType(InstrumentType) != null;  // Any modern Thermo instrument supporting XML method export
             }
 
             if (!comboOptimizing.Enabled)
