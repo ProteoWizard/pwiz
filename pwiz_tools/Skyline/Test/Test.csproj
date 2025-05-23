@@ -331,6 +331,10 @@
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestFunctional\TestFunctional.csproj">
+      <Project>{1B7E62FF-463B-4B3E-8E37-72F1A7C2BFD9}</Project>
+      <Name>TestFunctional</Name>
+    </ProjectReference>
     <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
       <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>
       <Name>TestRunnerLib</Name>
@@ -385,6 +389,9 @@
     <None Include="OnDemandFeatureCalculatorTest.zip" />
     <None Include="PeakBoundaryTest.zip" />
     <None Include="PeakGroupIntegratorTest.zip" />
+    <EmbeddedResource Include="predict.speclib.tsv" />
+    <EmbeddedResource Include="predict_transformed.speclib.tsv" />
+    <EmbeddedResource Include="predict_transformed.speclib.blib" />
     <None Include="Proteome\ProteomeDbTest.zip" />
     <EmbeddedResource Include="Reporting\HeavyLabeledLeucine.sky" />
     <EmbeddedResource Include="Reporting\PivotIsotopeLabel.skyr" />
@@ -399,6 +406,7 @@
     <EmbeddedResource Include="SmallMoleculesMzOnly_3-7.sky" />
     <None Include="ProtocolBuffers\generatecode.bat" />
     <None Include="ProtocolBuffers\LegacySkylineDocumentProto.proto" />
+    <EmbeddedResource Include="Test-imported_24-11-short.sky" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0">

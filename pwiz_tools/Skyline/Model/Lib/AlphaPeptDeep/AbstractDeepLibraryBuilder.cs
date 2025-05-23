@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
         
         protected abstract IList<ModificationType> ModificationTypes { get; }
         
-        protected bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
+        protected internal bool ValidateModifications(ModifiedSequence modifiedSequence, out string mods, out string modSites)
         {
             var modsBuilder = new StringBuilder();
             var modSitesBuilder = new StringBuilder();
@@ -239,7 +239,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             if (warningMods.Count == 0)
                 return null;
 
-            string warningModString = string.Join(Environment.NewLine, warningMods);
+            var warningModString = string.Join(Environment.NewLine, warningMods);
             return string.Format(ModelResources.Alphapeptdeep_Warn_unknown_modification,
                 warningModString);
         }
