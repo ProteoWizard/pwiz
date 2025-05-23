@@ -104,6 +104,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Dapper">
+      <HintPath>..\Shared\Lib\Dapper.dll</HintPath>
+    </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
