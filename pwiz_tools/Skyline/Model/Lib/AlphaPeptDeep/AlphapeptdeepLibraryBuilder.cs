@@ -411,7 +411,7 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
                 }
                 result.Add(string.Join(TextUtil.SEPARATOR_TSV_STR, line));
             }
-
+            reader.Dispose();
             // Write to new file
             output ??= TransformedOutputSpectraLibFilepath;
             File.WriteAllLines(output, result);
