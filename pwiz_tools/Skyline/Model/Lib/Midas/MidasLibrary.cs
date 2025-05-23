@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.Lib.Midas
                     continue;
                 var precursor = ms1Precursors.First();
                 yield return new DbSpectrum(new DbResultsFile(msd.FilePath), precursor.PrecursorMz.GetValueOrDefault(),
-                    null, null, null, spectrum.RetentionTime.GetValueOrDefault(), spectrum.Mzs, spectrum.Intensities);
+                    null, null, null, spectrum.RetentionTime.GetValueOrDefault(), spectrum.MzValues, spectrum.IntensityValues);
             }
         }
 
