@@ -75,7 +75,7 @@ namespace pwiz.Skyline.ToolsUI
                             else if (choice == DialogResult.Yes)
                             {
                                 userAnswerToCuda = DialogResult.Yes;
-                                pythonInstaller.WriteInstallNvidiaBatScript();
+                                PythonInstaller.WriteInstallNvidiaBatScript();
                                 var nvidiaAdminChoice = MessageDlg.Show(parent, string.Format(
                                         ModelResources.NvidiaInstaller_Requesting_Administrator_elevation,
                                         PythonInstaller.InstallNvidiaLibrariesBat), false,

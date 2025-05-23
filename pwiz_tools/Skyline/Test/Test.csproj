@@ -288,6 +288,7 @@
     <Compile Include="TypeSafeEnumTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UniModTest.cs" />
+    <Compile Include="InstallNvidiaTest.cs" />
     <Compile Include="UniquePrefixTest.cs" />
     <Compile Include="MassListInputsTest.cs" />
     <Compile Include="EncyclopeDiaHelpersTest.cs" />

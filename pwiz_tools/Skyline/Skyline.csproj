@@ -4219,6 +4219,7 @@
     <EmbeddedResource Include="Model\Tools\InstallNvidiaLibraries-bat.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Model\Tools\UninstallNvidiaLibraries-bat.txt" />
     <Content Include="percolator\msvcp140.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

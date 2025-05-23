@@ -100,9 +100,15 @@ namespace pwiz.Skyline.Model.Tools
 
         public static string InstallNvidiaLibrariesBat =>
             Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), "InstallNvidiaLibraries.bat");
+        public static string UninstallNvidiaLibrariesBat =>
+            Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), "UninstallNvidiaLibraries.bat");
         public static string GetInstallNvidiaLibrariesBat()
         {
             return InstallNvidiaLibrariesBat;
+        }
+        public static string GetUninstallNvidiaLibrariesBat()
+        {
+            return UninstallNvidiaLibrariesBat;
         }
         public bool? NvidiaGpuAvailable
         {
@@ -255,7 +261,7 @@ namespace pwiz.Skyline.Model.Tools
             return isValid;
         }
 
-        public void WriteInstallNvidiaBatScript()
+        public static void WriteInstallNvidiaBatScript()
         {
             FileEx.SafeDelete(InstallNvidiaLibrariesBat);
             var type = typeof(PythonInstaller);
@@ -272,6 +278,26 @@ namespace pwiz.Skyline.Model.Tools
             {
                 // Programmer error. This file must be included in the project where it is expected.
                 Assume.Fail(string.Format($@"Missing resource {type}.InstallNvidiaLibraries-bat.txt"));
+            }
+        }
+
+        public static void WriteUninstallNvidiaBatScript()
+        {
+            FileEx.SafeDelete(UninstallNvidiaLibrariesBat);
+            var type = typeof(PythonInstaller);
+            using var stream = type.Assembly.GetManifestResourceStream(type, "UninstallNvidiaLibraries-bat.txt");
+            if (stream != null)
+            {
+                using var reader = new StreamReader(stream);
+                string resourceString = reader.ReadToEnd();
+                resourceString = resourceString.Replace(@"{{0}}", CUDA_VERSION);
+                resourceString = resourceString.Replace(@"{{1}}", CUDNN_VERSION);
+                File.WriteAllText(UninstallNvidiaLibrariesBat, resourceString);
+            }
+            else
+            {
+                // Programmer error. This file must be included in the project where it is expected.
+                Assume.Fail(string.Format($@"Missing resource {type}.UninstallNvidiaLibraries-bat.txt"));
             }
         }
 
