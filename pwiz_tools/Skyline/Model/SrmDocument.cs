@@ -2357,7 +2357,7 @@ namespace pwiz.Skyline.Model
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, CollisionEnergyRegression regression, int step)
         {
             var ce = GetExplicitCollisionEnergy(nodeGroup, nodeTran);
-            if (regression != null)
+            if (regression != null && !Equals(regression, CollisionEnergyList.NONE))
             {
                 // If still no explicit CE value found the CE is calculated using the provided regression, if any.
                 if (!ce.HasValue)
