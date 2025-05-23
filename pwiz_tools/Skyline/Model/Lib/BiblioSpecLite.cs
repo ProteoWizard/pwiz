@@ -322,6 +322,7 @@ namespace pwiz.Skyline.Model.Lib
                             scoreTypesByFileId[entry.SpectrumSourceId.Value].Add(entry.ScoreType);
                         }
                     }
+
                     foreach (var idTimes in entry.RetentionTimesByFileId.GetTimesById())
                     {
                         if (detailsByFileId.TryGetValue(idTimes.Key, out var details))
@@ -2417,6 +2418,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public IEnumerable<KeyValuePair<int, IList<float>>> GetTimesById()
         {
+            if (_timesById == null)
+            {
+                return Array.Empty<KeyValuePair<int, IList<float>>>();
+            }
             return _timesById.Select(entry =>
                 new KeyValuePair<int, IList<float>>(entry.Key, new ReadOnlyCollection<float>(entry.Value)));
         }
