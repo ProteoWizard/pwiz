@@ -220,9 +220,6 @@
       <Component Id="MathNet.Numerics.dll">
         <File Source="$(var.Skyline.TargetDir)/MathNet.Numerics.dll" KeyPath="yes"/>
       </Component>
-      <Component Id="Microsoft.Bcl.AsyncInterfaces.dll">
-        <File Source="$(var.Skyline.TargetDir)/Microsoft.Bcl.AsyncInterfaces.dll" KeyPath="yes"/>
-      </Component>
       <Component Id="Microsoft.ConcurrencyVisualizer.Markers.dll">
         <File Source="$(var.Skyline.TargetDir)/Microsoft.ConcurrencyVisualizer.Markers.dll" KeyPath="yes"/>
       </Component>

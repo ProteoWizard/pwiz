@@ -200,7 +200,6 @@ Method\Waters\BuildWatersMethod.exe
 Method\Waters\VerifyESkylineLibrary.dll
 MethodConverter.dll
 MethodWriter.dll
-Microsoft.Bcl.AsyncInterfaces.dll
 Microsoft.ConcurrencyVisualizer.Markers.dll
 Microsoft.Practices.ServiceLocation.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Microsoft.Practices.Unity.Configuration.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
